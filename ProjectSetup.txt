@@ -1,0 +1,9 @@
+This project requires the Visual Studio 2012 SDK.
+	
+To set up VS2012 for debugging:
+	Start external program: C:\Program Files (x86)\Microsoft Visual Studio 10.0\Common7\IDE\devenv.exe
+	Command line arguments: /rootsuffix Exp
+
+To reset menus and commands:
+	Open VisualStudio Command Prompt.
+	Command: devenv /rootsuffix Exp /setup

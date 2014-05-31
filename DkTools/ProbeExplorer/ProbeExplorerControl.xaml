@@ -1,0 +1,35 @@
+﻿<UserControl x:Class="DkTools.ProbeExplorer.ProbeExplorerControl"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+			 xmlns:local="clr-namespace:DkTools.ProbeExplorer"
+             mc:Ignorable="d" d:DesignHeight="300" d:DesignWidth="300" Loaded="UserControl_Loaded">
+    <Grid Loaded="Grid_Loaded">
+		<Label Content="App:" Height="25" Name="c_appLabel" VerticalAlignment="Top" HorizontalAlignment="Left" Width="37" />
+		<ComboBox Height="23" Margin="43,2,21,0" Name="c_appCombo" VerticalAlignment="Top" SelectionChanged="AppCombo_SelectionChanged" HorizontalAlignment="Stretch" />
+        <Button Height="21" Width="21" HorizontalAlignment="Right" Margin="0,2,0,0" Name="c_refreshButton" VerticalAlignment="Top" Click="RefreshButton_Click">
+            <Button.Content>
+                <Image Source="/DkTools2012;component/Images/ico_refresh.gif" />
+            </Button.Content>
+        </Button>
+        <TabControl HorizontalAlignment="Stretch" Margin="0,31,0,0" Name="c_tabControl" VerticalAlignment="Stretch">
+            <TabItem Header="Files" Name="c_filesTab">
+                <Grid>
+					<TextBox Height="23" HorizontalAlignment="Stretch" Name="c_fileFilterTextBox" VerticalAlignment="Top" TextChanged="FileFilterTextBox_TextChanged" KeyDown="FileFilterTextBox_KeyDown" PreviewKeyDown="FileFilterTextBox_PreviewKeyDown" Margin="0">
+					</TextBox>
+					<TreeView Name="c_fileTree" Margin="0,25,0,0" PreviewMouseRightButtonDown="FileTree_PreviewMouseRightButtonDown">
+						<TreeView.ContextMenu>
+							<ContextMenu>
+								<MenuItem Header="Refresh" Click="FileTreeRefresh_Click"/>
+							</ContextMenu>
+						</TreeView.ContextMenu>
+					</TreeView>
+                    <ListBox HorizontalAlignment="Stretch" Margin="0,25,0,0" Name="c_fileList" VerticalAlignment="Stretch" KeyDown="FileList_KeyDown">
+					</ListBox>
+					<Image Height="16" HorizontalAlignment="Right" Margin="0,4,4,0" Name="c_clearFileFilterImg" Stretch="Fill" VerticalAlignment="Top" Width="16" Source="/DkTools2012;component/Images/Clear.png" Opacity="0.5" MouseUp="ClearFileFilterImg_MouseUp" MouseEnter="ClearFileFilterImg_MouseEnter" MouseLeave="ClearFileFilterImg_MouseLeave" />
+				</Grid>
+            </TabItem>
+        </TabControl>
+    </Grid>
+</UserControl>

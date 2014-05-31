@@ -1,0 +1,548 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<CommandTable xmlns="http://schemas.microsoft.com/VisualStudio/2005-10-18/CommandTable" xmlns:xs="http://www.w3.org/2001/XMLSchema">
+
+	<!--This is the file that defines the IDs for all the commands exposed by VisualStudio. -->
+	<Extern href="stdidcmd.h" />
+
+	<!--This header contains the command ids for the menus provided by the shell. -->
+	<Extern href="vsshlids.h" />
+
+	<!--Definition of some VSCT specific constants. In this sample we use it for the IDs inside the guidOfficeIcon group. -->
+	<!--<Extern href="msobtnid.h" xmlns="http://schemas.microsoft.com/VisualStudio/2005-10-18/CommandTable" />-->
+	
+	<Commands package="guidProbeToolsPkg">
+
+		<Groups>
+			<Group guid="guidProbeToolsCmdSet" id="ToolWindowGroup" priority="0x0600">
+				<Parent guid="guidSHLMainMenu" id="IDG_VS_WNDO_OTRWNDWS1" />
+			</Group>
+
+			<!-- Probe menu groups -->
+			<Group guid="guidProbeToolsCmdSet" id="FileOperationsGroup" priority="0x0500">
+				<Parent guid="guidProbeToolsCmdSet" id="ProbeMenu" />
+			</Group>
+			<Group guid="guidProbeToolsCmdSet" id="ProbeOperationsGroup" priority="0x0700">
+				<Parent guid="guidProbeToolsCmdSet" id="ProbeMenu" />
+			</Group>
+			<Group guid="guidProbeToolsCmdSet" id="RunOperationsGroup" priority="0x0800">
+				<Parent guid="guidProbeToolsCmdSet" id="ProbeMenu" />
+			</Group>
+			<Group guid="guidProbeToolsCmdSet" id="SettingsGroup" priority="0x0fff">
+				<Parent guid="guidProbeToolsCmdSet" id="ProbeMenu" />
+			</Group>
+			
+			<!-- Tagging menu groups -->
+			<Group guid="guidProbeToolsCmdSet" id="TaggingMenuGroup" priority="0x0010">
+				<Parent guid="guidProbeToolsCmdSet" id="TaggingMenu" />
+			</Group>
+			<Group guid="guidProbeToolsCmdSet" id="TaggingOptionsGroup" priority="0x0020">
+				<Parent guid="guidProbeToolsCmdSet" id="TaggingMenu" />
+			</Group>
+			
+			<!-- Compile menu groups -->
+			<Group guid="guidProbeToolsCmdSet" id="CompileMenuGroup" priority="0x0010">
+				<Parent guid="guidProbeToolsCmdSet" id="CompileMenu" />
+			</Group>
+			
+			<!-- Toolbar groups -->
+			<Group guid="guidProbeToolsCmdSet" id="tbFileOperationsGroup" priority="0x0010">
+				<Parent guid="guidProbeToolsCmdSet" id="ProbeToolbar" />
+			</Group>
+			<Group guid="guidProbeToolsCmdSet" id="tbTaggingGroup" priority="0x0020">
+				<Parent guid="guidProbeToolsCmdSet" id="ProbeToolbar" />
+			</Group>
+			<Group guid="guidProbeToolsCmdSet" id="tbProbeOperationsGroup" priority="0x0030">
+				<Parent guid="guidProbeToolsCmdSet" id="ProbeToolbar" />
+			</Group>
+			<Group guid="guidProbeToolsCmdSet" id="tbCompileGroup" priority="0x0040">
+				<Parent guid="guidProbeToolsCmdSet" id="ProbeToolbar" />
+			</Group>
+			<Group guid="guidProbeToolsCmdSet" id="tbRunGroup" priority="0x0050">
+				<Parent guid="guidProbeToolsCmdSet" id="ProbeToolbar" />
+			</Group>
+			<Group guid="guidProbeToolsCmdSet" id="tbSettingsGroup" priority="0x0060">
+				<Parent guid="guidProbeToolsCmdSet" id="ProbeToolbar" />
+			</Group>
+		</Groups>
+		
+		<Buttons>
+			<!-- View -> Other Windows -> Probe explorer -->
+			<Button guid="guidProbeToolsCmdSet" id="cmdShowProbeExplorer" priority="0x0100" type="Button">
+				<Parent guid="guidSHLMainMenu" id="IDG_VS_WNDO_OTRWNDWS1" />
+				<Icon guid="guidImages" id="bmpProbeExplorer" />
+				<Strings>
+					<CommandName>cmdShowProbeExplorer</CommandName>
+					<ButtonText>DK Explorer</ButtonText>
+				</Strings>
+			</Button>
+			<!-- Probe -> Probe Explorer -->
+			<Button guid="guidProbeToolsCmdSet" id="cmdShowProbeExplorer" priority="0x0010" type="Button">
+				<Parent guid="guidProbeToolsCmdSet" id="FileOperationsGroup" />
+				<Icon guid="guidImages" id="bmpProbeExplorer" />
+				<Strings>
+					<CommandName>cmdShowProbeExplorer</CommandName>
+					<ButtonText>DK Explorer</ButtonText>
+				</Strings>
+			</Button>
+			<!-- Probe -> Find in Probe Files -->
+			<Button guid="guidProbeToolsCmdSet" id="cmdFindInProbeFiles" priority="0x0020" type="Button">
+				<Parent guid="guidProbeToolsCmdSet" id="FileOperationsGroup" />
+				<Icon guid="guidImages" id="bmpFindInProbeFiles" />
+				<Strings>
+					<CommandName>cmdFindInProbeFiles</CommandName>
+					<ButtonText>F&amp;ind in DK Files</ButtonText>
+				</Strings>
+			</Button>
+
+			<!-- Probe -> Tagging -> Add File Header -->
+			<Button guid="guidProbeToolsCmdSet" id="cmdInsertFileHeader" priority="0x0010" type="Button">
+				<Parent guid="guidProbeToolsCmdSet" id="TaggingMenuGroup" />
+				<Icon guid="guidImages" id="bmpInsertFileHeader" />
+				<Strings>
+					<CommandName>cmdInsertFileHeader</CommandName>
+					<ButtonText>Add File &amp;Header</ButtonText>
+				</Strings>
+			</Button>
+			<!-- Probe -> Tagging -> Insert Tag -->
+			<Button guid="guidProbeToolsCmdSet" id="cmdInsertTag" priority="0x0011" type="Button">
+				<Parent guid="guidProbeToolsCmdSet" id="TaggingMenuGroup" />
+				<Icon guid="guidImages" id="bmpInsertTag" />
+				<Strings>
+					<CommandName>cmdInsertTag</CommandName>
+					<ButtonText>Insert &amp;Tag</ButtonText>
+				</Strings>
+			</Button>
+			<!-- Probe -> Tagging -> Insert Diag -->
+			<Button guid="guidProbeToolsCmdSet" id="cmdInsertDiag" priority="0x0012" type="Button">
+				<Parent guid="guidProbeToolsCmdSet" id="TaggingMenuGroup" />
+				<Icon guid="guidImages" id="bmpInsertDiag" />
+				<Strings>
+					<CommandName>cmdInsertDiag</CommandName>
+					<ButtonText>Insert &amp;Diag</ButtonText>
+				</Strings>
+			</Button>
+			<!-- Probe -> Tagging -> Insert Date -->
+			<Button guid="guidProbeToolsCmdSet" id="cmdInsertDate" priority="0x0013" type="Button">
+				<Parent guid="guidProbeToolsCmdSet" id="TaggingMenuGroup" />
+				<Icon guid="guidImages" id="bmpInsertDate" />
+				<Strings>
+					<CommandName>cmdInsertDate</CommandName>
+					<ButtonText>Insert Date</ButtonText>
+				</Strings>
+			</Button>
+			<!-- Probe -> Tagging -> Insert Date -->
+			<Button guid="guidProbeToolsCmdSet" id="cmdTaggingOptions" priority="0x0010" type="Button">
+				<Parent guid="guidProbeToolsCmdSet" id="TaggingOptionsGroup" />
+				<Icon guid="guidImages" id="bmpSettings" />
+				<Strings>
+					<CommandName>cmdTaggingOptions</CommandName>
+					<ButtonText>Tagging Options</ButtonText>
+				</Strings>
+			</Button>
+
+			<!-- Probe -> Compile -> Compile -->
+			<Button guid="guidProbeToolsCmdSet" id="cmdCompile" priority="0x0030" type="Button">
+				<Parent guid="guidProbeToolsCmdSet" id="CompileMenuGroup" />
+				<Icon guid="guidImages" id="bmpCompile" />
+				<Strings>
+					<CommandName>cmdCompile</CommandName>
+					<ButtonText>&amp;Compile</ButtonText>
+				</Strings>
+			</Button>
+			<!-- Probe -> Compile -> Dccmp -->
+			<Button guid="guidProbeToolsCmdSet" id="cmdDccmp" priority="0x0040" type="Button">
+				<Parent guid="guidProbeToolsCmdSet" id="CompileMenuGroup" />
+				<Icon guid="guidImages" id="bmpDccmp" />
+				<Strings>
+					<CommandName>cmdDccmp</CommandName>
+					<ButtonText>&amp;DCCMP</ButtonText>
+				</Strings>
+			</Button>
+			<!-- Probe -> Compile -> Credelix -->
+			<Button guid="guidProbeToolsCmdSet" id="cmdCredelix" priority="0x0050" type="Button">
+				<Parent guid="guidProbeToolsCmdSet" id="CompileMenuGroup" />
+				<Icon guid="guidImages" id="bmpCredelix" />
+				<Strings>
+					<CommandName>cmdCredelix</CommandName>
+					<ButtonText>CREDELI&amp;X</ButtonText>
+				</Strings>
+			</Button>
+			<!-- Probe -> Compile -> Kill Compile -->
+			<Button guid="guidProbeToolsCmdSet" id="cmdKillCompile" priority="0x0060" type="Button">
+				<Parent guid="guidProbeToolsCmdSet" id="CompileMenuGroup" />
+				<Icon guid="guidImages" id="bmpKillCompile" />
+				<Strings>
+					<CommandName>cmdKillCompile</CommandName>
+					<ButtonText>&amp;Kill Compile</ButtonText>
+				</Strings>
+			</Button>
+
+			<!-- Probe -> Fec File -->
+			<Button guid="guidProbeToolsCmdSet" id="cmdFecFile" priority="0x0050" type="Button">
+				<Parent guid="guidProbeToolsCmdSet" id="ProbeOperationsGroup" />
+				<Icon guid="guidImages" id="bmpFecFile" />
+				<Strings>
+					<CommandName>cmdFecFile</CommandName>
+					<ButtonText>FEC Fi&amp;le</ButtonText>
+				</Strings>
+			</Button>
+			<!-- Probe -> Merge File -->
+			<Button guid="guidProbeToolsCmdSet" id="cmdMergeFile" priority="0x0060" type="Button">
+				<Parent guid="guidProbeToolsCmdSet" id="ProbeOperationsGroup" />
+				<Icon guid="guidImages" id="bmpMergeFile" />
+				<Strings>
+					<CommandName>cmdMergeFile</CommandName>
+					<ButtonText>&amp;Merge File</ButtonText>
+				</Strings>
+			</Button>
+			<!-- Probe -> FEC to Visual C -->
+			<Button guid="guidProbeToolsCmdSet" id="cmdFecFileToVisualC" priority="0x0070" type="Button">
+				<Parent guid="guidProbeToolsCmdSet" id="ProbeOperationsGroup" />
+				<Icon guid="guidImages" id="bmpCompileToVisualC" />
+				<Strings>
+					<CommandName>cmdFecFileToVisualC</CommandName>
+					<ButtonText>FEC to &amp;Visual C</ButtonText>
+				</Strings>
+			</Button>
+			<!-- Probe -> PST Table -->
+			<Button guid="guidProbeToolsCmdSet" id="cmdPstTable" priority="0x0080" type="Button">
+				<Parent guid="guidProbeToolsCmdSet" id="ProbeOperationsGroup" />
+				<Icon guid="guidImages" id="bmpPstTable" />
+				<Strings>
+					<CommandName>cmdPstTable</CommandName>
+					<ButtonText>&amp;PST Table</ButtonText>
+				</Strings>
+			</Button>
+			<!-- Probe -> Table Listing -->
+			<Button guid="guidProbeToolsCmdSet" id="cmdTableListing" priority="0x0090" type="Button">
+				<Parent guid="guidProbeToolsCmdSet" id="ProbeOperationsGroup" />
+				<Icon guid="guidImages" id="bmpTableListing" />
+				<Strings>
+					<CommandName>cmdTableListing</CommandName>
+					<ButtonText>&amp;Table Listing</ButtonText>
+				</Strings>
+			</Button>
+			<!-- Probe -> Run SAM/CAM -->
+			<Button guid="guidProbeToolsCmdSet" id="cmdRun" priority="0x0020" type="Button">
+				<Parent guid="guidProbeToolsCmdSet" id="RunOperationsGroup" />
+				<Icon guid="guidImages" id="bmpRun" />
+				<Strings>
+					<CommandName>cmdRun</CommandName>
+					<ButtonText>&amp;Run SAM/CAM</ButtonText>
+				</Strings>
+			</Button>
+			
+			<!-- Probe -> Settings -->
+			<Button guid="guidProbeToolsCmdSet" id="cmdSettings" priority="0x0010" type="Button">
+				<Parent guid="guidProbeToolsCmdSet" id="SettingsGroup" />
+				<Icon guid="guidImages" id="bmpSettings" />
+				<Strings>
+					<CommandName>cmdSettings</CommandName>
+					<ButtonText>DkTools &amp;Settings</ButtonText>
+				</Strings>
+			</Button>
+			<Button guid="guidProbeToolsCmdSet" id="cmdPSelect" priority="0x0020" type="Button">
+				<Parent guid="guidProbeToolsCmdSet" id="SettingsGroup" />
+				<Icon guid="guidImages" id="bmpPSelect" />
+				<Strings>
+					<CommandName>cmdPSelect</CommandName>
+					<ButtonText>Start PS&amp;elect</ButtonText>
+				</Strings>
+			</Button>
+			<Button guid="guidProbeToolsCmdSet" id="cmdShowHelp" priority="0x0030" type="Button">
+				<Parent guid="guidProbeToolsCmdSet" id="SettingsGroup" />
+				<Icon guid="guidImages" id="bmpShowHelp" />
+				<Strings>
+					<CommandName>cmdShowHelp</CommandName>
+					<ButtonText>Show DK Documentation</ButtonText>
+				</Strings>
+			</Button>
+			
+			<!-- Toolbar Buttons -->
+			<Button guid="guidProbeToolsCmdSet" id="cmdShowProbeExplorer" priority="0x0010" type="Button">
+				<Parent guid="guidProbeToolsCmdSet" id="tbFileOperationsGroup" />
+				<Icon guid="guidImages" id="bmpProbeExplorer" />
+				<Strings>
+					<CommandName>tbShowProbeExplorer</CommandName>
+					<ButtonText>DK Explorer</ButtonText>
+				</Strings>
+			</Button>
+			<Button guid="guidProbeToolsCmdSet" id="cmdFindInProbeFiles" priority="0x0020" type="Button">
+				<Parent guid="guidProbeToolsCmdSet" id="tbFileOperationsGroup" />
+				<Icon guid="guidImages" id="bmpFindInProbeFiles" />
+				<Strings>
+					<CommandName>cmdFindInProbeFiles</CommandName>
+					<ButtonText>F&amp;ind in DK Files</ButtonText>
+				</Strings>
+			</Button>
+			
+			<Button guid="guidProbeToolsCmdSet" id="cmdInsertFileHeader" priority="0x0010" type="Button">
+				<Parent guid="guidProbeToolsCmdSet" id="tbTaggingGroup" />
+				<Icon guid="guidImages" id="bmpInsertFileHeader" />
+				<Strings>
+					<CommandName>cmdInsertFileHeader</CommandName>
+					<ButtonText>Add File &amp;Header</ButtonText>
+				</Strings>
+			</Button>
+			<Button guid="guidProbeToolsCmdSet" id="cmdInsertTag" priority="0x0020" type="Button">
+				<Parent guid="guidProbeToolsCmdSet" id="tbTaggingGroup" />
+				<Icon guid="guidImages" id="bmpInsertTag" />
+				<Strings>
+					<CommandName>cmdInsertTag</CommandName>
+					<ButtonText>Insert &amp;Tag</ButtonText>
+				</Strings>
+			</Button>
+			<Button guid="guidProbeToolsCmdSet" id="cmdInsertDiag" priority="0x0030" type="Button">
+				<Parent guid="guidProbeToolsCmdSet" id="tbTaggingGroup" />
+				<Icon guid="guidImages" id="bmpInsertDiag" />
+				<Strings>
+					<CommandName>cmdInsertDiag</CommandName>
+					<ButtonText>Insert &amp;Diag</ButtonText>
+				</Strings>
+			</Button>
+			<Button guid="guidProbeToolsCmdSet" id="cmdInsertDate" priority="0x0040" type="Button">
+				<Parent guid="guidProbeToolsCmdSet" id="tbTaggingGroup" />
+				<Icon guid="guidImages" id="bmpInsertDate" />
+				<Strings>
+					<CommandName>cmdInsertDate</CommandName>
+					<ButtonText>Insert Date</ButtonText>
+				</Strings>
+			</Button>
+
+			<Button guid="guidProbeToolsCmdSet" id="cmdFecFile" priority="0x0010" type="Button">
+				<Parent guid="guidProbeToolsCmdSet" id="tbProbeOperationsGroup" />
+				<Icon guid="guidImages" id="bmpFecFile" />
+				<Strings>
+					<CommandName>cmdFecFile</CommandName>
+					<ButtonText>FEC Fi&amp;le</ButtonText>
+				</Strings>
+			</Button>
+			<Button guid="guidProbeToolsCmdSet" id="cmdMergeFile" priority="0x0020" type="Button">
+				<Parent guid="guidProbeToolsCmdSet" id="tbProbeOperationsGroup" />
+				<Icon guid="guidImages" id="bmpMergeFile" />
+				<Strings>
+					<CommandName>cmdMergeFile</CommandName>
+					<ButtonText>&amp;Merge File</ButtonText>
+				</Strings>
+			</Button>
+			<Button guid="guidProbeToolsCmdSet" id="cmdPstTable" priority="0x0030" type="Button">
+				<Parent guid="guidProbeToolsCmdSet" id="tbProbeOperationsGroup" />
+				<Icon guid="guidImages" id="bmpPstTable" />
+				<Strings>
+					<CommandName>cmdPstTable</CommandName>
+					<ButtonText>&amp;PST Table</ButtonText>
+				</Strings>
+			</Button>
+
+			<Button guid="guidProbeToolsCmdSet" id="cmdCompile" priority="0x0010" type="Button">
+				<Parent guid="guidProbeToolsCmdSet" id="tbCompileGroup" />
+				<Icon guid="guidImages" id="bmpCompile" />
+				<Strings>
+					<CommandName>cmdCompile</CommandName>
+					<ButtonText>&amp;Compile</ButtonText>
+				</Strings>
+			</Button>
+			<Button guid="guidProbeToolsCmdSet" id="cmdDccmp" priority="0x0020" type="Button">
+				<Parent guid="guidProbeToolsCmdSet" id="tbCompileGroup" />
+				<Icon guid="guidImages" id="bmpDccmp" />
+				<Strings>
+					<CommandName>cmdDccmp</CommandName>
+					<ButtonText>&amp;DCCMP</ButtonText>
+				</Strings>
+			</Button>
+			<Button guid="guidProbeToolsCmdSet" id="cmdCredelix" priority="0x0030" type="Button">
+				<Parent guid="guidProbeToolsCmdSet" id="tbCompileGroup" />
+				<Icon guid="guidImages" id="bmpCredelix" />
+				<Strings>
+					<CommandName>cmdCredelix</CommandName>
+					<ButtonText>CREDELI&amp;X</ButtonText>
+				</Strings>
+			</Button>
+			<Button guid="guidProbeToolsCmdSet" id="cmdKillCompile" priority="0x0040" type="Button">
+				<Parent guid="guidProbeToolsCmdSet" id="tbCompileGroup" />
+				<Icon guid="guidImages" id="bmpKillCompile" />
+				<Strings>
+					<CommandName>cmdKillCompile</CommandName>
+					<ButtonText>&amp;Kill Compile</ButtonText>
+				</Strings>
+			</Button>
+
+			<Button guid="guidProbeToolsCmdSet" id="cmdRun" priority="0x0010" type="Button">
+				<Parent guid="guidProbeToolsCmdSet" id="tbRunGroup" />
+				<Icon guid="guidImages" id="bmpRun" />
+				<Strings>
+					<CommandName>cmdRun</CommandName>
+					<ButtonText>&amp;Run SAM/CAM</ButtonText>
+				</Strings>
+			</Button>
+
+			<Button guid="guidProbeToolsCmdSet" id="cmdPSelect" priority="0x0020" type="Button">
+				<Parent guid="guidProbeToolsCmdSet" id="tbSettingsGroup" />
+				<Icon guid="guidImages" id="bmpPSelect" />
+				<Strings>
+					<CommandName>cmdPSelect</CommandName>
+					<ButtonText>Start PS&amp;elect</ButtonText>
+				</Strings>
+			</Button>
+
+			<Button guid="guidProbeToolsCmdSet" id="cmdShowHelp" priority="0x0030" type="Button">
+				<Parent guid="guidProbeToolsCmdSet" id="tbSettingsGroup" />
+				<Icon guid="guidImages" id="bmpShowHelp" />
+				<Strings>
+					<CommandName>cmdShowHelp</CommandName>
+					<ButtonText>DK Platform Documentation</ButtonText>
+				</Strings>
+			</Button>
+		</Buttons>
+
+		<Bitmaps>
+			<Bitmap guid="guidImages" href="Images\ProbeToolsCommandIcons.png" resID="bmpCompile" usedList="bmpCompile, bmpKillCompile, bmpProbeExplorer, bmpFindInProbeFiles, bmpFecFile, bmpPstTable, bmpMergeFile, bmpRun, bmpInsertTag, bmpInsertDiag, bmpInsertDate, bmpInsertFileHeader, bmpSettings, bmpPSelect, bmpDccmp, bmpCredelix, bmpTableListing, bmpCompileToVisualC, bmpShowHelp" />
+		</Bitmaps>
+
+		<Menus>
+			<Menu guid="guidProbeToolsCmdSet" id="ProbeMenu" priority="0x0700" type="Menu">
+				<Parent guid="guidSHLMainMenu" id="IDG_VS_MM_TOOLSADDINS" />
+				<CommandFlag>AlwaysCreate</CommandFlag>
+				<Strings>
+					<ButtonText>Probe</ButtonText>
+					<CommandName>D&amp;K</CommandName>
+				</Strings>
+			</Menu>
+
+			<Menu guid="guidProbeToolsCmdSet" id="TaggingMenu" priority="0x0030" type="Menu">
+				<Parent guid="guidProbeToolsCmdSet" id="FileOperationsGroup" />
+				<CommandFlag>AlwaysCreate</CommandFlag>
+				<Strings>
+					<ButtonText>Tagging</ButtonText>
+					<CommandName>&amp;Tagging</CommandName>
+				</Strings>
+			</Menu>
+
+			<Menu guid="guidProbeToolsCmdSet" id="CompileMenu" priority="0x0010" type="Menu">
+				<Parent guid="guidProbeToolsCmdSet" id="RunOperationsGroup" />
+				<CommandFlag>AlwaysCreate</CommandFlag>
+				<Strings>
+					<ButtonText>Compile</ButtonText>
+					<CommandName>&amp;Compile</CommandName>
+				</Strings>
+			</Menu>
+
+			<Menu guid="guidProbeToolsCmdSet" id="ProbeToolbar" type="Toolbar">
+				<CommandFlag>DefaultDocked</CommandFlag>
+				<Strings>
+					<ButtonText>Probe Toolbar</ButtonText>
+					<CommandName>DK Toolbar</CommandName>
+				</Strings>
+			</Menu>
+			
+		</Menus>
+
+	</Commands>
+
+	<KeyBindings>
+		<!--
+		Probe Explorer:       Alt+O, O
+		Find in Probe Files:  Alt+O, I
+		FEC File:             Alt+O, L
+		Merge File:           Alt+O, M
+		FEC to Visual C:      (none)
+		PST Table:            Alt+O, P
+		Table Listing:        (none)
+		Run SAM/CAM:          Alt+O, R
+		Compile:              Alt+O, C
+		Kill Compile:         Alt+O, K
+		Add File Header:      Alt+O, H
+		Insert Tag:           Alt+O, T
+		Insert Date:          Alt+O, Y
+		Insert Diag:          Alt+O, D
+		Tagging Settings:     Alt+O, Ctrl+T
+		Probe Settings:       (none)
+		-->
+		<KeyBinding guid="guidProbeToolsCmdSet" id="cmdShowProbeExplorer" key1="O" mod1="ALT" key2="O" mod2="ALT" editor="guidVSStd97" />
+		<KeyBinding guid="guidProbeToolsCmdSet" id="cmdRun" key1="O" mod1="ALT" key2="R" mod2="ALT" editor="guidVSStd97" />
+		<KeyBinding guid="guidProbeToolsCmdSet" id="cmdCompile" key1="O" mod1="ALT" key2="C" mod2="ALT" editor="guidVSStd97" />
+		<KeyBinding guid="guidProbeToolsCmdSet" id="cmdKillCompile" key1="O" mod1="ALT" key2="K" mod2="ALT" editor="guidVSStd97" />
+		<KeyBinding guid="guidProbeToolsCmdSet" id="cmdFindInProbeFiles" key1="O" mod1="ALT" key2="I" mod2="ALT" editor="guidVSStd97" />
+		<KeyBinding guid="guidProbeToolsCmdSet" id="cmdInsertFileHeader" key1="O" mod1="ALT" key2="H" mod2="ALT" editor="guidVSStd97" />
+		<KeyBinding guid="guidProbeToolsCmdSet" id="cmdInsertTag" key1="O" mod1="ALT" key2="T" mod2="ALT" editor="guidVSStd97" />
+		<KeyBinding guid="guidProbeToolsCmdSet" id="cmdInsertDate" key1="O" mod1="ALT" key2="Y" mod2="ALT" editor="guidVSStd97" />
+		<KeyBinding guid="guidProbeToolsCmdSet" id="cmdInsertDiag" key1="O" mod1="ALT" key2="D" mod2="ALT" editor="guidVSStd97" />
+		<KeyBinding guid="guidProbeToolsCmdSet" id="cmdTaggingOptions" key1="O" mod1="ALT" key2="T" mod2="CONTROL" editor="guidVSStd97" />
+		<KeyBinding guid="guidProbeToolsCmdSet" id="cmdFindInProbeFiles" key1="O" mod1="ALT" key2="I" mod2="ALT" editor="guidVSStd97" />
+		<KeyBinding guid="guidProbeToolsCmdSet" id="cmdFecFile" key1="O" mod1="ALT" key2="L" mod2="ALT" editor="guidVSStd97" />
+		<KeyBinding guid="guidProbeToolsCmdSet" id="cmdMergeFile" key1="O" mod1="ALT" key2="M" mod2="ALT" editor="guidVSStd97" />
+		<KeyBinding guid="guidProbeToolsCmdSet" id="cmdPstTable" key1="O" mod1="ALT" key2="P" mod2="ALT" editor="guidVSStd97" />
+	</KeyBindings>
+	
+	<Symbols>
+		<!-- Package guid must be defined first. -->
+		<GuidSymbol name="guidProbeToolsPkg" value="{38ad600c-15b8-4899-be00-9361f35cd8d9}" />
+		
+		<GuidSymbol name="guidProbeToolsCmdSet" value="{7a61de10-9508-4214-8946-33f1f60c6747}">
+			<IDSymbol name="ToolWindowGroup" value="0x1020" />
+			<IDSymbol name="cmdShowProbeExplorer" value="0x0100" />
+			
+			<IDSymbol name="ProbeMenu" value="0x0101" />
+			<IDSymbol name="cmdCompile" value="0x0102" />
+			<IDSymbol name="cmdKillCompile" value="0x0103" />
+			<IDSymbol name="cmdFecFile" value="0x0104" />
+			<IDSymbol name="cmdFecFileToVisualC" value="0x0105" />
+			<IDSymbol name="cmdPstTable" value="0x0106" />
+			<IDSymbol name="cmdMergeFile" value="0x0107" />
+			<IDSymbol name="cmdTableListing" value="0x0108" />
+			<IDSymbol name="cmdFindInProbeFiles" value="0x0109" />
+			<IDSymbol name="cmdSettings" value="0x010a" />
+			<IDSymbol name="cmdRun" value="0x010b" />
+			<IDSymbol name="cmdInsertFileHeader" value="0x010c" />
+			<IDSymbol name="cmdInsertTag" value="0x010d" />
+			<IDSymbol name="cmdInsertDiag" value="0x010e" />
+			<IDSymbol name="cmdInsertDate" value="0x010f" />
+			<IDSymbol name="TaggingMenu" value="0x0110" />
+			<IDSymbol name="TaggingMenuGroup" value="0x0111" />
+			<IDSymbol name="CompileMenu" value="0x0112" />
+			<IDSymbol name="CompileMenuGroup" value="0x0113" />
+			<IDSymbol name="cmdTaggingOptions" value="0x0114" />
+			<IDSymbol name="TaggingOptionsGroup" value="0x0115" />
+			<IDSymbol name="ProbeOperationsGroup" value="0x0116" />
+			<IDSymbol name="SettingsGroup" value="0x0117" />
+			<IDSymbol name="FileOperationsGroup" value="0x0118" />
+			<IDSymbol name="RunOperationsGroup" value="0x0119" />
+			<IDSymbol name="cmdPSelect" value="0x011a" />
+			<IDSymbol name="cmdShowCodeModel" value="0x011b" />
+			<IDSymbol name="cmdDccmp" value="0x011c" />
+			<IDSymbol name="cmdCredelix" value="0x011d" />
+			<IDSymbol name="cmdShowHelp" value="0x011e"/>
+
+			<IDSymbol name="ProbeToolbar" value="0x2000" />
+			<IDSymbol name="tbFileOperationsGroup" value="0x2001" />
+			<IDSymbol name="tbTaggingGroup" value="0x2002" />
+			<IDSymbol name="tbProbeOperationsGroup" value="0x2003" />
+			<IDSymbol name="tbCompileGroup" value="0x2004" />
+			<IDSymbol name="tbRunGroup" value="0x2005" />
+			<IDSymbol name="tbSettingsGroup" value="0x2006" />
+		</GuidSymbol>
+
+		<GuidSymbol name="guidImages" value="{82669F39-2B5C-4B32-96E7-D17DCDA9B803}">
+			<IDSymbol name="bmpCompile" value="0x0001" />
+			<IDSymbol name="bmpKillCompile" value="0x0002" />
+			<IDSymbol name="bmpProbeExplorer" value="0x0003" />
+			<IDSymbol name="bmpFindInProbeFiles" value="0x0004" />
+			<IDSymbol name="bmpFecFile" value="0x0005" />
+			<IDSymbol name="bmpPstTable" value="0x0006" />
+			<IDSymbol name="bmpMergeFile" value="0x0007" />
+			<IDSymbol name="bmpRun" value="0x0008" />
+			<IDSymbol name="bmpInsertTag" value="0x0009" />
+			<IDSymbol name="bmpInsertDiag" value="0x000a" />
+			<IDSymbol name="bmpInsertDate" value="0x000b" />
+			<IDSymbol name="bmpInsertFileHeader" value="0x000c" />
+			<IDSymbol name="bmpSettings" value="0x000d" />
+			<IDSymbol name="bmpPSelect" value="0x000e" />
+			<IDSymbol name="bmpDccmp" value="0x000f" />
+			<IDSymbol name="bmpCredelix" value="0x0010" />
+			<IDSymbol name="bmpTableListing" value="0x0011" />
+			<IDSymbol name="bmpCompileToVisualC" value="0x0012" />
+			<IDSymbol name="bmpShowHelp" value="0x0013"/>
+		</GuidSymbol>
+	</Symbols>
+	
+</CommandTable>

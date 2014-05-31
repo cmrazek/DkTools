@@ -1,0 +1,13 @@
+﻿<Window x:Class="DkTools.ProbeExplorer.CreateFileDialog"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Create File" Height="145" Width="401" MaxHeight="145" WindowStartupLocation="CenterOwner" Loaded="Window_Loaded">
+    <Grid>
+		<Label Content="Directory:" Height="28" HorizontalAlignment="Left" Margin="12,12,0,0" Name="c_dirLabel" VerticalAlignment="Top" />
+		<TextBox Height="23" HorizontalAlignment="Stretch" Margin="80,14,10,0" Name="c_dirTextBox" VerticalAlignment="Top" IsReadOnly="True" />
+		<Label Content="File Name:" Height="28" HorizontalAlignment="Left" Margin="12,43,0,0" Name="c_fileNameLabel" VerticalAlignment="Top" />
+		<TextBox Height="23" HorizontalAlignment="Stretch" Margin="80,43,10,0" Name="c_fileNameTextBox" VerticalAlignment="Top" TextChanged="FileNameTextBox_TextChanged" />
+		<Button Content="OK" Height="23" HorizontalAlignment="Right" Margin="0,72,91,0" Name="c_okButton" VerticalAlignment="Top" Width="75" IsDefault="True" Click="c_okButton_Click" />
+		<Button Content="Cancel" Height="23" HorizontalAlignment="Right" Margin="294,72,10,0" Name="c_cancelButton" VerticalAlignment="Top" Width="75" IsCancel="True" Click="c_cancelButton_Click" />
+	</Grid>
+</Window>

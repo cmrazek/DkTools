@@ -1,0 +1,115 @@
+DkTools2010 ChangeLog
+____________________________________________________________________________________________________
+Version 1.2 - May 16, 2014:
+
+Features:
+- Upgraded to Visual Studio 2012, and moved to DK
+  (name changed from ProbeTools2010 to DkTools2012)
+- Added new file types .cc, .nc and .sc
+- Added a toolbar button to start the DK platform help.
+- Added support for stringdefs and typedefs.
+
+____________________________________________________________________________________________________
+Version 1.1.6 - Apr 17, 2014:
+
+Features:
+- Added an option to disable listing all the files in the Probe Explorer tree-view.
+  (can be slow if there are many files)
+- Quick-info text for macros now includes the macro body text.
+
+Bug Fixes:
+- Added support for string data types defined as tring XX'
+- Fixed bug where function drop down would not populate until cursor has been moved.
+- Fixed bug where keywords wouldn't parse correctly if they were followed by brackets.
+- Probe Explorer tree view no longer shows the full path on sub-folders.
+- Fixed bug where help text adds a space after '.' tokens.
+
+____________________________________________________________________________________________________
+Version 1.1.5 - Mar 14, 2014:
+
+Bug Fixes:
+- Fixed parsing problems around select statements.
+- Fixed 'go to definition' not working on #include statements.
+
+____________________________________________________________________________________________________
+Version 1.1.4 - Mar 11, 2014:
+Bug Fixes:
+- Fixed parsing of 'like xxx.xxx' tokens when the table.field is not defined.
+- Added support for select statements.
+- Removed duplicate items from statement completion list.
+- Fixed bug when inserting function name in diags, where the wrong function name was often used.
+
+____________________________________________________________________________________________________
+Version 1.1.3 - Mar 2, 2014:
+Features:
+- When pressing F12 on a table, it brings up a PST of that table.  Similarly, when pressing F12 on a
+  table field or indrel, it brings up a PST and selects the field.
+- Improved the way code is parsed, to support smarter syntax highlighting.
+
+Bug Fixes:
+- #define statements now have a better distinction between a macro with arguments and a constants
+  that has a body surrounded in brackets.
+- When the user presses F12 and no definition can be found, a message saying so will be displayed
+  on the status bar.
+- Fixed a bug where quick-info on a data type keyword didn't show the underlying type definition.
+
+____________________________________________________________________________________________________
+Version 1.1.2 - Feb 27, 2014:
+Features:
+- In Probe Explorer, added 'Find in Files' menu item when right clicking on a directory.
+
+Bug Fixes:
+- When right clicking on file tree item in Probe Explorer, the item will be selected.
+- Fixed #defines that use braces for a body and don't collapse to definitions.
+- Fixed bad smart indenting for 'case' and 'default' inside a 'switch'.
+
+____________________________________________________________________________________________________
+Version 1.1.1 - Feb 26, 2014:
+Features:
+- When collapsing to definitions, #replace sections will be collapsed, while #with sections will
+  remain open.
+
+Bug Fixes:
+- Fixed problem with functions under #replace/#with sections not having outlining.
+- Word highlighting now works on table.field tokens.
+- Word highlighting on a macro definition now matches with the macro calls.
+- Fixed 'unsigned X' which was not being detected as a data type.
+- Fixed errors that occur when running in an environment where Probe isn't installed.
+
+____________________________________________________________________________________________________
+Version 1.1 - Feb 24, 2014:
+Features:
+- Added smart indenting.
+- Constants now have syntax highlighting (appear dark blue) and show quick info.
+- Function file scanner now saves the function's data type for enum auto-completion.
+- Added quick-info for calls to macros.
+- Inserting a diag now includes the function name.
+- Added 'clear' button to file filter text box.
+- Comments will now collapse to definitions if they occupy more than one line.
+- Added support for regions using the comments:
+	// #region (region title)
+	...
+	// #endregion
+- When the cursor is placed on a variable, all references to that variable will be shaded.
+- Pressing F12 on an #include will open the included file.
+- Added option to create a new file from the Probe Explorer via context menu.
+
+Bug Fixes:
+- Enum auto-completion after != operator now works.
+- Data type of extern function definitions are now found correctly.
+- Fixed quick-info for variables defined as 'like table.field'.
+- Fixed 'go-to definition' not working when the entire identifier is selected.
+
+____________________________________________________________________________________________________
+Version 1.0.5 - Feb 18, 2014:
+- Added quick info for table fields, and built-in functions.
+- Added enum auto-completion after assignment or comparison operators, return statement,
+  switch statement.
+- Keyboard shortcut to insert date is now Alt+O, Alt+Y, and to insert diag is Alt+O, Alt+D.
+  This is closer to the old ProbeMacros.
+- Compile status is now written to the status bar when it starts, succeeds or fails.
+- Files with extensions .ic, .id and .ie now appear open as Probe source files.
+- Outlining 'Collapse to Definitions' now works.
+- Fixed redundant code model refreshing.
+- Added menu commands for dccmp and credelix.
+- Added menu icons for 'FEC to Visual C' and 'Table Listing'

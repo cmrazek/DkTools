@@ -1,0 +1,5 @@
+*.csproj.user
+*.suo
+
+/DkTools/bin/
+/DkTools/obj/

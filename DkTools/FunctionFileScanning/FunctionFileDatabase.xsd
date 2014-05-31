@@ -1,0 +1,62 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<xs:schema id="FunctionFileDatabase"
+		targetNamespace="http://ProbeTools/FunctionFileDatabase.xsd"
+		elementFormDefault="qualified"
+		xmlns="http://ProbeTools/FunctionFileDatabase.xsd"
+		xmlns:mstns="http://ProbeTools/FunctionFileDatabase.xsd"
+		xmlns:xs="http://www.w3.org/2001/XMLSchema"
+>
+	<xs:complexType name="Database_t">
+		<xs:sequence>
+			<xs:element name="application" type="Application_t" minOccurs="0" maxOccurs="unbounded"/>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:element name="database" type="Database_t"/>
+
+	<xs:complexType name="Application_t">
+		<xs:sequence>
+			<xs:element name="name" type="xs:string"/>
+			<xs:element name="file" type="FunctionFile_t" minOccurs="0" maxOccurs="unbounded"/>
+			<xs:element name="function" type="Function_t" minOccurs="0" maxOccurs="unbounded"/>
+		</xs:sequence>
+	</xs:complexType>
+
+	<xs:complexType name="FunctionFile_t">
+		<xs:sequence>
+			<xs:element name="fileName" type="xs:string"/>
+			<xs:element name="modified" type="xs:dateTime"/>
+		</xs:sequence>
+	</xs:complexType>
+
+	<xs:complexType name="Function_t">
+		<xs:sequence>
+			<xs:element name="name" type="xs:string"/>
+			<xs:element name="signature" type="xs:string"/>
+			<xs:element name="fileName" type="xs:string" minOccurs="0" maxOccurs="1"/>
+			<xs:element name="span" type="Span_t" minOccurs="0" maxOccurs="1"/>
+			<xs:element name="dataType" type="DataType_t" minOccurs="0" maxOccurs="1"/>
+		</xs:sequence>
+	</xs:complexType>
+
+	<xs:complexType name="Span_t">
+		<xs:sequence>
+			<xs:element name="start" type="Position_t"/>
+			<xs:element name="end" type="Position_t"/>
+		</xs:sequence>
+	</xs:complexType>
+
+	<xs:complexType name="Position_t">
+		<xs:sequence>
+			<xs:element name="offset" type="xs:int"/>
+			<xs:element name="lineNum" type="xs:int"/>
+			<xs:element name="linePos" type="xs:int"/>
+		</xs:sequence>
+	</xs:complexType>
+
+	<xs:complexType name="DataType_t">
+		<xs:sequence>
+			<xs:element name="name" type="xs:string"/>
+			<xs:element name="completionOption" type="xs:string" minOccurs="0" maxOccurs="unbounded"/>
+		</xs:sequence>
+	</xs:complexType>
+</xs:schema>
