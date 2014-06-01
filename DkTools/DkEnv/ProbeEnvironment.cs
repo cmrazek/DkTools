@@ -659,158 +659,101 @@ namespace DkTools
 		{
 			if (_env == null || _currentApp == null) return;
 
-			var setWbdkFrameworkVersion = false;
-			var setPCurrentApp = false;
-			var setInclude = false;
+			var merger = new DkEnv.DkEnvVarMerger();
+			var mergedVars = merger.CreateMergedVarList(_currentApp);
 
-			var platform = _env as PROBEENVSRVRLib.IProbeEnvPlatform;
-
-			var includeDirs = new List<string>();
-			includeDirs.AddRange(IncludeDirs);
-
-			var libDirs = new List<string>();
-			libDirs.AddRange(LibDirs);
-
-			var pathDirs = new List<string>();
-			pathDirs.Add(platform.Folder);
-
-			GetVCDirectories(ref includeDirs, ref libDirs, ref pathDirs);
-
-			var includeSb = new StringBuilder();
-			foreach (var dir in includeDirs)
-			{
-				if (includeSb.Length > 0) includeSb.Append(";");
-				includeSb.Append(dir);
-			}
-
-			var libSb = new StringBuilder();
-			foreach (var dir in libDirs)
-			{
-				if (libSb.Length > 0) libSb.Append(";");
-				libSb.Append(dir);
-			}
-
-			foreach (var key in vars.Keys.Cast<string>().ToArray())
-			{
-				if (key.Equals("WbdkFrameworkVersion", StringComparison.OrdinalIgnoreCase))
-				{
-					vars[key] = platform.Version;
-					setWbdkFrameworkVersion = true;
-				}
-				else if (key.Equals("pcurrentapp", StringComparison.OrdinalIgnoreCase))
-				{
-					vars[key] = _currentApp.Name;
-					setPCurrentApp = true;
-				}
-				else if (key.Equals("include", StringComparison.OrdinalIgnoreCase))
-				{
-					vars[key] = includeSb.ToString();
-					setInclude = true;
-				}
-			}
-
-			if (!setWbdkFrameworkVersion) vars["WbdkFrameworkVersion"] = platform.Version;
-			if (!setPCurrentApp) vars["pcurrentapp"] = _currentApp.Name;
-			if (!setInclude) vars["include"] = includeSb.ToString();
+			foreach (var v in mergedVars) vars[v.Name] = v.Value;
 		}
 
-		private static void GetVCDirectories(ref List<string> includeDirs, ref List<string> libDirs, ref List<string> pathDirs)
-		{
-			var vsInstallDir = GetRegDir("Software\\Microsoft\\VisualStudio\\11.0", "InstallDir");
-			var vcProductDir = GetRegDir("Software\\Microsoft\\VisualStudio\\11.0\\Setup\\VC", "ProductDir");
-			var kitDir = GetRegDir("Software\\Microsoft\\Windows Kits\\Installed Roots", "KitsRoot");
+        class EnvVars : PROBEENVSRVRLib.IPEnvironmentVars
+        {
+            private List<EnvVar> _vars = new List<EnvVar>();
 
-			var dotNet4Dir = Microsoft.Build.Utilities.ToolLocationHelper.GetPathToDotNetFrameworkSdk(Microsoft.Build.Utilities.TargetDotNetFrameworkVersion.Version40);
-			var dotNet35Dir = Microsoft.Build.Utilities.ToolLocationHelper.GetPathToDotNetFrameworkSdk(Microsoft.Build.Utilities.TargetDotNetFrameworkVersion.Version35);
-			var dotNet2Dir = Microsoft.Build.Utilities.ToolLocationHelper.GetPathToDotNetFrameworkSdk(Microsoft.Build.Utilities.TargetDotNetFrameworkVersion.Version20);
+            private class EnvVar
+            {
+                public string name;
+                public string value;
+            }
 
-			string path;
+            public int Count
+            {
+                get { return _vars.Count; }
+            }
 
-			// include dirs
-			if (!string.IsNullOrEmpty(vcProductDir))
-			{
-				path = Path.Combine(vcProductDir, "atlmfc\\include");
-				if (Directory.Exists(path)) includeDirs.Add(path);
+            public string GetItemName(int index)
+            {
+                return _vars[index - 1].name;
+            }
 
-				path = Path.Combine(vcProductDir, "include");
-				if (Directory.Exists(path)) includeDirs.Add(path);
-			}
+            public string GetVariable(string name)
+            {
+                foreach (var v in _vars)
+                {
+                    if (v.name.Equals(name, StringComparison.OrdinalIgnoreCase)) return v.value;
+                }
 
-			if (!string.IsNullOrEmpty(kitDir))
-			{
-				path = Path.Combine(kitDir, "include\\um");
-				if (Directory.Exists(path)) includeDirs.Add(path);
+                return null;
+            }
 
-				path = Path.Combine(kitDir, "include\\shared");
-				if (Directory.Exists(path)) includeDirs.Add(path);
-			}
+            public bool IsExists(string name)
+            {
+                foreach (var v in _vars)
+                {
+                    if (v.name.Equals(name, StringComparison.OrdinalIgnoreCase)) return true;
+                }
 
-			// lib dirs
-			if (!string.IsNullOrEmpty(vcProductDir))
-			{
-				path = Path.Combine(vcProductDir, "atlmfc\\lib");
-				if (Directory.Exists(path)) libDirs.Add(path);
+                return false;
+            }
 
-				path = Path.Combine(vcProductDir, "lib");
-				if (Directory.Exists(path)) libDirs.Add(path);
-			}
+            public void SetVariable(string name, string varvalue)
+            {
+                foreach (var v in _vars)
+                {
+                    if (v.name.Equals(name, StringComparison.OrdinalIgnoreCase))
+                    {
+                        v.value = varvalue;
+                        return;
+                    }
+                }
 
-			if (!string.IsNullOrEmpty(kitDir))
-			{
-				path = Path.Combine(kitDir, "lib\\win8\\um\\x86");
-				if (Directory.Exists(path)) libDirs.Add(path);
-			}
+                _vars.Add(new EnvVar { name = name, value = varvalue });
+            }
 
-			// path dirs
-			if (!string.IsNullOrEmpty(vsInstallDir)) pathDirs.Add(vsInstallDir);
+            public bool TryGetVariable(string name, out string varvalue)
+            {
+                foreach (var v in _vars)
+                {
+                    if (v.name.Equals(name, StringComparison.OrdinalIgnoreCase))
+                    {
+                        varvalue = v.value;
+                        return true;
+                    }
+                }
 
-			if (!string.IsNullOrEmpty(vcProductDir))
-			{
-				path = Path.Combine(vcProductDir, "bin");
-				if (Directory.Exists(path)) pathDirs.Add(path);
-			}
+                varvalue = null;
+                return false;
+            }
 
-			if (!string.IsNullOrEmpty(vcProductDir))
-			{
-				path = Path.Combine(vcProductDir, "bin");
-				if (Directory.Exists(path)) pathDirs.Add(path);
-			}
+            public void ResetToCurrent()
+            {
+                _vars.Clear();
 
-			if (!string.IsNullOrEmpty(dotNet4Dir)) pathDirs.Add(dotNet4Dir);
-			if (!string.IsNullOrEmpty(dotNet35Dir)) pathDirs.Add(dotNet35Dir);
-			if (!string.IsNullOrEmpty(dotNet2Dir)) pathDirs.Add(dotNet2Dir);
-		}
+                var envVars = Environment.GetEnvironmentVariables();
+                foreach (var ev in envVars.Keys)
+                {
+                    var value = envVars[ev];
+                    _vars.Add(new EnvVar { name = ev.ToString(), value = value.ToString() });
+                }
+            }
 
-		private static string GetRegDir(string keyName, string valueName)
-		{
-			try
-			{
-				var key = Microsoft.Win32.Registry.LocalMachine.OpenSubKey(keyName, false);
-				if (key != null)
-				{
-					try
-					{
-						var value = key.GetValue("InstallDir");
-						if (value != null)
-						{
-							var path = value.ToString();
-							if (string.IsNullOrWhiteSpace(path) || !Directory.Exists(path)) return null;
-							return path;
-						}
-					}
-					finally
-					{
-						key.Close();
-					}
-				}
-			}
-			catch (Exception ex)
-			{
-				Log.WriteEx(ex);
-			}
-
-			return null;
-		}
+            public void DumpToConsole()
+            {
+                foreach (var v in _vars)
+                {
+                    Console.WriteLine(string.Concat(v.name, "=", v.value));
+                }
+            }
+        }
 		#endregion
 	}
 }

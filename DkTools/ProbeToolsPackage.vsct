@@ -204,15 +204,6 @@
 					<ButtonText>FEC to &amp;Visual C</ButtonText>
 				</Strings>
 			</Button>
-			<!-- Probe -> PST Table -->
-			<Button guid="guidProbeToolsCmdSet" id="cmdPstTable" priority="0x0080" type="Button">
-				<Parent guid="guidProbeToolsCmdSet" id="ProbeOperationsGroup" />
-				<Icon guid="guidImages" id="bmpPstTable" />
-				<Strings>
-					<CommandName>cmdPstTable</CommandName>
-					<ButtonText>&amp;PST Table</ButtonText>
-				</Strings>
-			</Button>
 			<!-- Probe -> Table Listing -->
 			<Button guid="guidProbeToolsCmdSet" id="cmdTableListing" priority="0x0090" type="Button">
 				<Parent guid="guidProbeToolsCmdSet" id="ProbeOperationsGroup" />
@@ -323,14 +314,6 @@
 				<Strings>
 					<CommandName>cmdMergeFile</CommandName>
 					<ButtonText>&amp;Merge File</ButtonText>
-				</Strings>
-			</Button>
-			<Button guid="guidProbeToolsCmdSet" id="cmdPstTable" priority="0x0030" type="Button">
-				<Parent guid="guidProbeToolsCmdSet" id="tbProbeOperationsGroup" />
-				<Icon guid="guidImages" id="bmpPstTable" />
-				<Strings>
-					<CommandName>cmdPstTable</CommandName>
-					<ButtonText>&amp;PST Table</ButtonText>
 				</Strings>
 			</Button>
 
@@ -446,7 +429,6 @@
 		FEC File:             Alt+O, L
 		Merge File:           Alt+O, M
 		FEC to Visual C:      (none)
-		PST Table:            Alt+O, P
 		Table Listing:        (none)
 		Run SAM/CAM:          Alt+O, R
 		Compile:              Alt+O, C
@@ -471,7 +453,6 @@
 		<KeyBinding guid="guidProbeToolsCmdSet" id="cmdFindInProbeFiles" key1="O" mod1="ALT" key2="I" mod2="ALT" editor="guidVSStd97" />
 		<KeyBinding guid="guidProbeToolsCmdSet" id="cmdFecFile" key1="O" mod1="ALT" key2="L" mod2="ALT" editor="guidVSStd97" />
 		<KeyBinding guid="guidProbeToolsCmdSet" id="cmdMergeFile" key1="O" mod1="ALT" key2="M" mod2="ALT" editor="guidVSStd97" />
-		<KeyBinding guid="guidProbeToolsCmdSet" id="cmdPstTable" key1="O" mod1="ALT" key2="P" mod2="ALT" editor="guidVSStd97" />
 	</KeyBindings>
 	
 	<Symbols>
@@ -487,7 +468,6 @@
 			<IDSymbol name="cmdKillCompile" value="0x0103" />
 			<IDSymbol name="cmdFecFile" value="0x0104" />
 			<IDSymbol name="cmdFecFileToVisualC" value="0x0105" />
-			<IDSymbol name="cmdPstTable" value="0x0106" />
 			<IDSymbol name="cmdMergeFile" value="0x0107" />
 			<IDSymbol name="cmdTableListing" value="0x0108" />
 			<IDSymbol name="cmdFindInProbeFiles" value="0x0109" />

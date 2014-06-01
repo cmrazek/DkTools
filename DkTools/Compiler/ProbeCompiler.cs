@@ -197,6 +197,14 @@ namespace DkTools.Compiler
 				info.RedirectStandardError = true;
 				info.CreateNoWindow = true;
 				info.WorkingDirectory = ProbeEnvironment.ObjectDir;
+                ProbeEnvironment.MergeEnvironmentVariables(info.EnvironmentVariables);
+
+                //foreach (var key in info.EnvironmentVariables.Keys.Cast<string>())
+                //{
+                //    Debug.WriteLine(string.Concat(key, "=", info.EnvironmentVariables[key]));
+                //}
+
+
 				_proc.StartInfo = info;
 				if (!_proc.Start())
 				{

@@ -47,7 +47,6 @@ namespace DkTools
 		private static OleMenuCommand _killCompileCmd;
 		private static OleMenuCommand _fecFileCmd;
 		private static OleMenuCommand _fecFileToVisualCCmd;
-		private static OleMenuCommand _pstTableCmd;
 		private static OleMenuCommand _mergeFileCmd;
 		private static OleMenuCommand _tableListingCmd;
 		private static OleMenuCommand _findInProbeFilesCmd;
@@ -70,7 +69,6 @@ namespace DkTools
 			_killCompileCmd = AddCommand(mcs, KillCompile, CommandIds.KillCompile);
 			_fecFileCmd = AddCommand(mcs, FecFile, CommandIds.FecFile);
 			_fecFileToVisualCCmd = AddCommand(mcs, FecFileToVisualC, CommandIds.FecFileToVisualC);
-			_pstTableCmd = AddCommand(mcs, PstTable, CommandIds.PstTable);
 			_mergeFileCmd = AddCommand(mcs, MergeFile, CommandIds.MergeFile);
 			_tableListingCmd = AddCommand(mcs, TableListing, CommandIds.TableListing);
 			_findInProbeFilesCmd = AddCommand(mcs, FindInProbeFiles, CommandIds.FindInProbeFiles);
@@ -263,86 +261,6 @@ namespace DkTools
 				Shell.ShowError(ex);
 			}
 		}
-
-		private static void PstTable(object sender, EventArgs e)
-		{
-			try
-			{
-				// TODO: remove
-				//using (PromptForm dlg = new PromptForm())
-				//{
-				//	string selected = null;
-				//	var activeDoc = Shell.DTE.ActiveDocument;
-				//	if (activeDoc != null)
-				//	{
-				//		var selection = activeDoc.Selection as EnvDTE.TextSelection;
-				//		if (selection != null)
-				//		{
-				//			selected = selection.Text;
-				//		}
-				//	}
-
-				//	if (!string.IsNullOrEmpty(selected) && ProbeEnvironment.IsProbeTable(selected))
-				//	{
-				//		dlg.Value = selected;
-				//	}
-
-				//	dlg.Text = "PST Table";
-				//	dlg.Prompt = "Enter the name of the table to PST:";
-				//	if (dlg.ShowDialog() == System.Windows.Forms.DialogResult.OK)
-				//	{
-				//		string tableName = dlg.Value.Trim();
-				//		OpenPst(tableName, tableName, null, null);
-				//	}
-				//}
-			}
-			catch (Exception ex)
-			{
-				Shell.ShowError(ex);
-			}
-		}
-
-		// TODO: remove
-		//public static void OpenPst(string baseTableName, string tableName, string fieldName, string relIndName)
-		//{
-		//	int exitCode;
-		//	StringOutput output = new StringOutput();
-
-		//	using (ProcessRunner pr = new ProcessRunner())
-		//	{
-		//		exitCode = pr.CaptureProcess("pst.exe", baseTableName, ProbeEnvironment.TempDir, output);
-		//	}
-		//	if (exitCode != 0)
-		//	{
-		//		Shell.ShowError(string.Format("PST returned exit code {0}.", exitCode));
-		//		return;
-		//	}
-
-		//	string tempFileName = TempManager.GetNewTempFileName(baseTableName, ".pst.t");
-		//	var pstContent = output.Text;
-		//	File.WriteAllText(tempFileName, pstContent);
-
-		//	if (!string.IsNullOrWhiteSpace(fieldName))
-		//	{
-		//		var parser = new Dict.PstParser();
-		//		parser.Process(pstContent, baseTableName);
-		//		var pos = parser.GetFieldPosition(tableName, fieldName).ToCodeModelPosition();
-
-		//		Shell.OpenDocument(tempFileName, new CodeModel.Span(pos, pos.Advance(fieldName)));
-		//	}
-		//	else if (!string.IsNullOrWhiteSpace(relIndName))
-		//	{
-		//		var parser = new Dict.PstParser();
-		//		parser.Process(pstContent, baseTableName);
-		//		var pos = parser.GetRelIndPosition(relIndName).ToCodeModelPosition();
-
-		//		Shell.OpenDocument(tempFileName, new CodeModel.Span(pos, pos.Advance(relIndName)));
-		//	}
-		//	else
-		//	{
-		//		Shell.OpenDocument(tempFileName);
-		//	}
-		//}
 
 		private static void MergeFile(object sender, EventArgs e)
 		{
