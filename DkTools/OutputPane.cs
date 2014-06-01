@@ -27,6 +27,28 @@ namespace DkTools
 #endif
 		}
 
+		public void WriteLineAndTask(string lineText, string taskText, TaskType type, string fileName, uint lineNum)
+		{
+			VSTASKPRIORITY priority = VSTASKPRIORITY.TP_NORMAL;
+			var subCategory = "";
+			switch (type)
+			{
+				case TaskType.Error:
+					priority = VSTASKPRIORITY.TP_HIGH;
+					subCategory = "Error";
+					break;
+				case TaskType.Warning:
+					priority = VSTASKPRIORITY.TP_NORMAL;
+					subCategory = "Warning";
+					break;
+			}
+
+			if (lineNum > 0) lineNum--;
+
+			_pane.OutputTaskItemString(lineText + "\r\n", priority, VSTASKCATEGORY.CAT_BUILDCOMPILE, subCategory, (int)_vstaskbitmap.BMP_COMPILE, fileName, lineNum, taskText);
+			_pane.FlushToTaskList();
+		}
+
 		public void Clear()
 		{
 			_pane.Clear();
@@ -36,6 +58,12 @@ namespace DkTools
 		{
 			_pane.Activate();
 			Shell.DTE.ExecuteCommand("View.Output");
+		}
+
+		public enum TaskType
+		{
+			Error,
+			Warning
 		}
 	}
 }

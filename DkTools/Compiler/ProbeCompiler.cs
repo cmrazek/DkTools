@@ -472,43 +472,37 @@ namespace DkTools.Compiler
 			}
 		}
 
-		private Regex _rxError = new Regex(@"^\s*(.+)\s*\((\d+)\)\s*\:\s*error", RegexOptions.IgnoreCase);
-		private Regex _rxWarning = new Regex(@"^\s*(.+)\s*\((\d+)\)\s*\:\s*warning", RegexOptions.IgnoreCase);
-		private Regex _rxError2 = new Regex(@"^\s*(.+)\s*\((\d+)\)\s*\:");
-
 		private void CompileThreadOutput(string line, bool stdErr)
 		{
-			Match match;
+			if (_pane == null) return;
 
-			if ((match = _rxError.Match(line)).Success)
+			var index = line.IndexOf(": error :");
+			if (index >= 0)
 			{
-				WriteLine(line);
-				_numErrors++;
+				string fileName;
+				uint lineNum;
+				ParseFileNameAndLine(line.Substring(0, index), out fileName, out lineNum);
+				_pane.WriteLineAndTask(line, line.Substring(index + ": error :".Length).Trim(), OutputPane.TaskType.Error, fileName, lineNum);
+				return;
 			}
-			else if ((match = _rxWarning.Match(line)).Success)
+
+			index = line.IndexOf(": warning :");
+			if (index >= 0)
 			{
-				WriteLine(line);
-				_numWarnings++;
+				string fileName;
+				uint lineNum;
+				ParseFileNameAndLine(line.Substring(0, index), out fileName, out lineNum);
+				_pane.WriteLineAndTask(line, line.Substring(index + ": warning :".Length).Trim(), OutputPane.TaskType.Warning, fileName, lineNum);
+				return;
 			}
-			else if ((match = _rxError2.Match(line)).Success)
+
+			if (line.StartsWith("LINK : fatal error"))
 			{
-				WriteLine(line);
-				_numErrors++;
+				_pane.WriteLineAndTask(line, line, OutputPane.TaskType.Error, "", 0);
+				return;
 			}
-			else if (line.StartsWith("LINK : fatal error"))
-			{
-				WriteLine(line);
-				_numErrors++;
-			}
-			else if (line == "PROBE build failed.")
-			{
-				WriteLine(line);
-				if (_numErrors == 0) _numErrors++;
-			}
-			else
-			{
-				WriteLine(line);
-			}
+
+			_pane.WriteLine(line);
 		}
 
 		public void WriteLine(string text)
@@ -519,6 +513,23 @@ namespace DkTools.Compiler
 		public void WriteLine(string format, params object[] args)
 		{
 			if (_pane != null) _pane.WriteLine(string.Format(format, args));
+		}
+
+		private static Regex _rxFileNameAndLine = new Regex(@"(.+)\s*\((\d{1,9})\)\s*$");
+
+		private bool ParseFileNameAndLine(string str, out string fileName, out uint lineNum)
+		{
+			var match = _rxFileNameAndLine.Match(str);
+			if (match.Success)
+			{
+				fileName = match.Groups[1].Value;
+				lineNum = uint.Parse(match.Groups[2].Value);
+				return true;
+			}
+
+			fileName = "";
+			lineNum = 0;
+			return false;
 		}
 	}
 }
