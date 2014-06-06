@@ -22,14 +22,18 @@ namespace DkTools
 					}
 					_sourceExists = true;
 				}
+#if DEBUG
 				catch (Exception ex)
 				{
 					_sourceExists = true;	// Likely permission error.  Set to true with the anticipation that the source was already created manually.
-
-#if DEBUG
 					Debug.WriteLine(string.Concat("Exception when checking event log source: ", ex));
-#endif
 				}
+#else
+				catch (Exception)
+				{
+					_sourceExists = true;	// Likely permission error.  Set to true with the anticipation that the source was already created manually.
+				}
+#endif
 			}
 			
 		}
@@ -44,12 +48,15 @@ namespace DkTools
 				CheckSource();
 				EventLog.WriteEntry(Constants.EventLogSource, message, type);
 			}
+#if DEBUG
 			catch (Exception ex)
 			{
-#if DEBUG
 				Debug.WriteLine(ex.ToString());
-#endif
 			}
+#else
+			catch (Exception)
+			{ }
+#endif
 		}
 
 		public static void WriteEx(Exception ex, string message)
@@ -63,12 +70,15 @@ namespace DkTools
 				CheckSource();
 				EventLog.WriteEntry(Constants.EventLogSource, text, EventLogEntryType.Error);
 			}
+#if DEBUG
 			catch (Exception ex2)
 			{
-#if DEBUG
 				Debug.WriteLine(ex2.ToString());
-#endif
 			}
+#else
+			catch (Exception)
+			{ }
+#endif
 		}
 
 		public static void WriteEx(Exception ex)
@@ -81,12 +91,15 @@ namespace DkTools
 				CheckSource();
 				EventLog.WriteEntry(Constants.EventLogSource, ex.ToString(), EventLogEntryType.Error);
 			}
+#if DEBUG
 			catch (Exception ex2)
 			{
-#if DEBUG
 				Debug.WriteLine(ex2.ToString());
-#endif
 			}
+#else
+			catch (Exception)
+			{ }
+#endif
 		}
 
 		public static void WriteDebug(string message)

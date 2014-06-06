@@ -174,7 +174,7 @@ namespace DkTools.Compiler
 		{
 			try
 			{
-				Shell.SetStatusText("Probe compile starting...");
+				Shell.SetStatusText("DK compile starting...");
 
 				_numErrors = _numWarnings = 0;
 
@@ -182,7 +182,7 @@ namespace DkTools.Compiler
 				if (string.IsNullOrWhiteSpace(workingDir))
 				{
 					WriteLine("Probe object directory not configured.");
-					Shell.SetStatusText("Probe compile failed");
+					Shell.SetStatusText("DK compile failed");
 					return false;
 				}
 				else if (!Directory.Exists(workingDir))
@@ -199,17 +199,11 @@ namespace DkTools.Compiler
 				info.WorkingDirectory = ProbeEnvironment.ObjectDir;
                 ProbeEnvironment.MergeEnvironmentVariables(info.EnvironmentVariables);
 
-                //foreach (var key in info.EnvironmentVariables.Keys.Cast<string>())
-                //{
-                //    Debug.WriteLine(string.Concat(key, "=", info.EnvironmentVariables[key]));
-                //}
-
-
 				_proc.StartInfo = info;
 				if (!_proc.Start())
 				{
 					WriteLine("Unable to start Probe compiler.");
-					Shell.SetStatusText("Probe compile failed");
+					Shell.SetStatusText("DK compile failed");
 					return false;
 				}
 
@@ -229,7 +223,7 @@ namespace DkTools.Compiler
 						stdOutThread.Join();
 						stdErrThread.Join();
 						WriteLine("Compile was stopped before completion.");
-						Shell.SetStatusText("Probe compile stopped");
+						Shell.SetStatusText("DK compile stopped");
 						return false;
 					}
 					Thread.Sleep(k_compileSleep);
@@ -249,7 +243,7 @@ namespace DkTools.Compiler
 
 					if (_numErrors > 0)
 					{
-						Shell.SetStatusText("Probe compile failed");
+						Shell.SetStatusText("DK compile failed");
 						return false;
 					}
 					else
@@ -261,7 +255,7 @@ namespace DkTools.Compiler
 				WriteLine("Compile succeeded; running dccmp...");
 				if (!DoDccmp()) return false;
 
-				Shell.SetStatusText("Probe compile succeeded");
+				Shell.SetStatusText("DK compile succeeded");
 				return true;
 			}
 			catch (Exception ex)
@@ -483,6 +477,7 @@ namespace DkTools.Compiler
 				uint lineNum;
 				ParseFileNameAndLine(line.Substring(0, index), out fileName, out lineNum);
 				_pane.WriteLineAndTask(line, line.Substring(index + ": error :".Length).Trim(), OutputPane.TaskType.Error, fileName, lineNum);
+				_numErrors++;
 				return;
 			}
 
@@ -493,12 +488,14 @@ namespace DkTools.Compiler
 				uint lineNum;
 				ParseFileNameAndLine(line.Substring(0, index), out fileName, out lineNum);
 				_pane.WriteLineAndTask(line, line.Substring(index + ": warning :".Length).Trim(), OutputPane.TaskType.Warning, fileName, lineNum);
+				_numWarnings++;
 				return;
 			}
 
 			if (line.StartsWith("LINK : fatal error"))
 			{
-				_pane.WriteLineAndTask(line, line, OutputPane.TaskType.Error, "", 0);
+				_pane.WriteLineAndTask(line, line.Substring("LINK : fatal error".Length).Trim(), OutputPane.TaskType.Error, "", 0);
+				_numErrors++;
 				return;
 			}
 

@@ -1,6 +1,12 @@
-DkTools2010 ChangeLog
+DkTools2012 ChangeLog
 ____________________________________________________________________________________________________
-Version 1.2 - May 16, 2014:
+Version 1.2.1 - Jun 4, 2014:
+
+Bug Fixes:
+- Fixed problem with compiler not detecting errors and warnings.
+
+____________________________________________________________________________________________________
+Version 1.2 - Jun 3, 2014:
 
 Features:
 - Upgraded to Visual Studio 2012, and moved to DK

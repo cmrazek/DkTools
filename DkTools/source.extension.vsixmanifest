@@ -3,12 +3,12 @@
 	<Identifier Id="A0EF133B-F328-4137-8CCB-9A09EC7E665E">
 		<Name>DkTools2010</Name>
 		<Author>Servus Credit Union Ltd.</Author>
-		<Version>1.2</Version>
+		<Version>1.2.1</Version>
 		<Description xml:space="preserve">DK development tools for Visual Studio 2012.</Description>
 		<Locale>1033</Locale>
 		<InstalledByMsi>false</InstalledByMsi>
 		<SupportedProducts>
-			<VisualStudio Version="10.0">
+			<VisualStudio Version="11.0">
 				<Edition>Ultimate</Edition>
 				<Edition>Premium</Edition>
 				<Edition>Pro</Edition>
