@@ -163,7 +163,7 @@ namespace DkTools.ProbeExplorer
 
 		private void RefreshForEnvironment()
 		{
-			ProbeEnvironment.Reload();
+			ProbeEnvironment.Reload(true);
 			RefreshAppCombo();
 			RefreshFileTree();
 		}

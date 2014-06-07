@@ -313,7 +313,6 @@
     <Compile Include="Constants.cs" />
     <Compile Include="Dict\DictStringDef.cs" />
     <Compile Include="Dict\DictTypeDef.cs" />
-    <Compile Include="Dict\PstDataType.cs" />
     <Compile Include="DkEnv\DkEnvVarMerger.cs" />
     <Compile Include="DkEnv\EnvVarList.cs" />
     <Compile Include="DkEnv\RegUtil.cs" />
@@ -367,7 +366,6 @@
       <DesignTimeSharedInput>True</DesignTimeSharedInput>
       <DependentUpon>Settings.settings</DependentUpon>
     </Compile>
-    <Compile Include="Dict\PstParser.cs" />
     <Compile Include="QuickInfo\QuickInfoController.cs" />
     <Compile Include="QuickInfo\QuickInfoControllerProvider.cs" />
     <Compile Include="QuickInfo\QuickInfoSource.cs" />

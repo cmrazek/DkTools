@@ -20,6 +20,7 @@ namespace DkTools.Compiler
 		private Process _proc = null;
 		private int _numErrors = 0;
 		private int _numWarnings = 0;
+		private bool _buildFailed = false;
 
 		private const int k_compileKillSleep = 10;
 		private const int k_compileSleep = 100;
@@ -177,6 +178,7 @@ namespace DkTools.Compiler
 				Shell.SetStatusText("DK compile starting...");
 
 				_numErrors = _numWarnings = 0;
+				_buildFailed = false;
 
 				var workingDir = ProbeEnvironment.ObjectDir;
 				if (string.IsNullOrWhiteSpace(workingDir))
@@ -229,19 +231,22 @@ namespace DkTools.Compiler
 					Thread.Sleep(k_compileSleep);
 				}
 
-				if (_numErrors > 0 || _numWarnings > 0)
+				if (_numErrors > 0 || _numWarnings > 0 || _buildFailed)
 				{
-					string str = "";
-					if (_numErrors == 1) str = "1 error";
-					else if (_numErrors > 1) str = string.Concat(_numErrors, " errors");
+					if (_numErrors > 0 || _numWarnings > 0)
+					{
+						string str = "";
+						if (_numErrors == 1) str = "1 error";
+						else if (_numErrors > 1) str = string.Concat(_numErrors, " errors");
 
-					if (_numWarnings > 0 && !string.IsNullOrEmpty(str)) str += " ";
-					if (_numWarnings == 1) str += "1 warning";
-					else if (_numWarnings > 1) str += string.Concat(_numWarnings, " warnings");
+						if (_numWarnings > 0 && !string.IsNullOrEmpty(str)) str += " ";
+						if (_numWarnings == 1) str += "1 warning";
+						else if (_numWarnings > 1) str += string.Concat(_numWarnings, " warnings");
 
-					WriteLine(str);
+						WriteLine(str);
+					}
 
-					if (_numErrors > 0)
+					if (_numErrors > 0 || _buildFailed)
 					{
 						Shell.SetStatusText("DK compile failed");
 						return false;
@@ -466,6 +471,8 @@ namespace DkTools.Compiler
 			}
 		}
 
+		private Regex _rxLinkError = new Regex(@"\:\s+error\s+(LNK\d{4}\:)");
+
 		private void CompileThreadOutput(string line, bool stdErr)
 		{
 			if (_pane == null) return;
@@ -495,6 +502,21 @@ namespace DkTools.Compiler
 			if (line.StartsWith("LINK : fatal error"))
 			{
 				_pane.WriteLineAndTask(line, line.Substring("LINK : fatal error".Length).Trim(), OutputPane.TaskType.Error, "", 0);
+				_numErrors++;
+				return;
+			}
+
+			if (line.Equals("Build failed."))
+			{
+				_buildFailed = true;
+				_pane.WriteLine(line);
+				return;
+			}
+
+			Match match;
+			if ((match = _rxLinkError.Match(line)).Success)
+			{
+				_pane.WriteLineAndTask(line, line.Substring(match.Groups[1].Index), OutputPane.TaskType.Error, "", 0);
 				_numErrors++;
 				return;
 			}

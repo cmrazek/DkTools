@@ -4,6 +4,10 @@ Version 1.2.1 - Jun 4, 2014:
 
 Bug Fixes:
 - Fixed problem with compiler not detecting errors and warnings.
+- Switching between DK applications now works.
+- The SAM port number is no longer hardcoded.
+- Changed name of compile output pane to reflect DK.
+- Compiler will now detect build failed lines, and numbered linker errors (e.g. LNK2019)
 
 ____________________________________________________________________________________________________
 Version 1.2 - Jun 3, 2014:

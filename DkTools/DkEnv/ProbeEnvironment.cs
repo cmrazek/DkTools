@@ -17,18 +17,7 @@ namespace DkTools
 		#region Construction
 		public static void Initialize()
 		{
-			Reload();
-
-			// TODO: remove
-			//if (!string.IsNullOrEmpty(_probeIniFileName))
-			//{
-			//	_probeIniWatcher = new FileSystemWatcher();
-			//	_probeIniWatcher.Path = Path.GetDirectoryName(_probeIniFileName);
-			//	_probeIniWatcher.Filter = Path.GetFileName(_probeIniFileName);
-			//	_probeIniWatcher.NotifyFilter = NotifyFilters.LastWrite;
-			//	_probeIniWatcher.Changed += new FileSystemEventHandler(_probeIniWatcher_Changed);
-			//	_probeIniWatcher.EnableRaisingEvents = true;
-			//}
+			Reload(false);
 		}
 
 		internal static void OnSettingsSaved()
@@ -51,7 +40,7 @@ namespace DkTools
 		private static string[] _exeDirs;
 		private static string _platformPath;
 
-		public static void ReloadCurrentApp()
+		public static void ReloadCurrentApp(string appName = "")
 		{
 			_sourceDirs = null;
 			_includeDirs = null;
@@ -59,8 +48,12 @@ namespace DkTools
 			_exeDirs = null;
 
 			_env = new PROBEENVSRVRLib.ProbeEnv();
-			_currentApp = _env.FindApp(_env.DefaultAppName);
-			Debug.WriteLine("Current App: " + _currentApp.Name);
+
+			_currentApp = null;
+			if (!string.IsNullOrEmpty(appName)) _currentApp = _env.FindApp(appName);
+			if (_currentApp == null) _currentApp = _env.FindApp(_env.DefaultAppName);
+			if (_currentApp == null) Debug.WriteLine("No current app found.");
+			else Debug.WriteLine("Current App: " + _currentApp.Name);
 
 			var platform = _env as PROBEENVSRVRLib.IProbeEnvPlatform;
 			_platformPath = platform.Folder;
@@ -76,9 +69,11 @@ namespace DkTools
 			}
 		}
 
-		public static void Reload()
+		public static void Reload(bool keepCurrentApp)
 		{
-			ReloadCurrentApp();
+			var appName = "";
+			if (keepCurrentApp) appName = _currentApp != null ? _currentApp.Name : "";
+			ReloadCurrentApp(appName);
 			ReloadTableList();
 		}
 
@@ -246,16 +241,18 @@ namespace DkTools
 			}
 		}
 
+		private const int k_defaultPort = 5001;
+
 		public static int SamPort
 		{
 			get
 			{
-				return 5001;	// TODO: figure out where to get the port number from
+				var portString = GetRegString("DB1SocketNumber", "");
+				if (string.IsNullOrEmpty(portString)) return k_defaultPort;
 
-				// TODO: remove
-				//int port;
-				//if (!Int32.TryParse(_nvFile[_currentApp, "dp1"].Trim(), out port)) return 0;
-				//return port;
+				int port;
+				if (!int.TryParse(portString, out port)) return k_defaultPort;
+				return port;
 			}
 		}
 
@@ -270,33 +267,18 @@ namespace DkTools
 			{
 				try
 				{
+					var oldCurrentApp = _currentApp;
+
 					if (_currentApp == null || _currentApp.Name != value)
 					{
-						_env.DefaultAppName = value;
+						ReloadCurrentApp(value);
 
-						ReloadCurrentApp();
-
-						EventHandler ev = AppChanged;
-						if (ev != null) ev(null, EventArgs.Empty);
+						if (_currentApp != oldCurrentApp)
+						{
+							EventHandler ev = AppChanged;
+							if (ev != null) ev(null, EventArgs.Empty);
+						}
 					}
-
-					// TODO: remove
-					//if (value != _currentApp)
-					//{
-					//	string exeFileName = LocateFileInPath("ProbeNV.exe");
-					//	if (string.IsNullOrEmpty(exeFileName)) throw new FileNotFoundException("ProbeNV.exe not found.");
-
-					//	using (ProcessRunner pr = new ProcessRunner())
-					//	{
-					//		int exitCode = pr.ExecuteProcess(exeFileName, value, Path.GetDirectoryName(exeFileName), true);
-					//		if (exitCode != 0) throw new ProbeException(string.Format("ProbeNV.exe returned exit code {0}.", exitCode));
-					//	}
-
-					//	ReloadCurrentApp();
-
-					//	EventHandler ev = AppChanged;
-					//	if (ev != null) ev(null, EventArgs.Empty);
-					//}
 				}
 				catch (Exception ex)
 				{
@@ -754,6 +736,25 @@ namespace DkTools
                 }
             }
         }
+		#endregion
+
+		#region DK Registry
+		private const string k_configPath = @"SOFTWARE\Fincentric\WBDK\Configurations\";
+		//private const string k_configPathWow64 = @"SOFTWARE\Wow6432Node\Fincentric\WBDK\Configurations";
+
+		public static string GetRegString(string name, string defaultValue)
+		{
+			if (_currentApp == null) return defaultValue;
+
+			using (var key = Microsoft.Win32.Registry.LocalMachine.OpenSubKey(k_configPath + _currentApp.Name, false))
+			{
+				if (key == null) return defaultValue;
+
+				var obj = key.GetValue(name, defaultValue);
+				if (obj == null) return defaultValue;
+				return obj.ToString();
+			}
+		}
 		#endregion
 	}
 }

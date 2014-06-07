@@ -7,11 +7,11 @@ namespace DkTools
 {
 	class Constants
 	{
-		public const string AppDataDir = "ProbeTools2010";
-		public const string EventLogSource = "ProbeTools2010";
+		public const string AppDataDir = "DkTools2012";
+		public const string EventLogSource = "DkTools2012";
 		public const string TempDir = "Temp";
-		public const string SettingsRegKey = "Software\\ProbeTools2010";
-		public const string CompileOutputPaneTitle = "Probe Compile";
+		public const string SettingsRegKey = "Software\\DkTools2012";
+		public const string CompileOutputPaneTitle = "DK Compile";
 		public const string ErrorCaption = "Error";
 		public const string FunctionFileDatabaseFileName = "FunctionFiles.xml";
 
