@@ -1,13 +1,19 @@
 DkTools2012 ChangeLog
 ____________________________________________________________________________________________________
-Version 1.2.1 - Jun 4, 2014:
+Version 1.2.1 - Jun 7, 2014:
+
+Features:
+- Added 'Explore' context menu item to files and folders in the DK Explorer.
+- Changed default for 'Show Files in Tree' to false, because it's too slow in our environment.
+- Added a DK Toolbar button to start the DRV.
 
 Bug Fixes:
 - Fixed problem with compiler not detecting errors and warnings.
 - Switching between DK applications now works.
-- The SAM port number is no longer hardcoded.
+- SAM port number is no longer hardcoded.
 - Changed name of compile output pane to reflect DK.
 - Compiler will now detect build failed lines, and numbered linker errors (e.g. LNK2019)
+- Cleaned up old Probe menu and toolbar button descriptions/icons.
 
 ____________________________________________________________________________________________________
 Version 1.2 - Jun 3, 2014:

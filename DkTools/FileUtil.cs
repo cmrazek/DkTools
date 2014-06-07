@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -54,6 +55,22 @@ namespace DkTools
 			}
 
 			return null;
+		}
+
+		public static void OpenExplorer(string path)
+		{
+			if (File.Exists(path))
+			{
+				Process.Start("explorer.exe", "/select," + path);
+			}
+			else if (Directory.Exists(path))
+			{
+				Process.Start("explorer.exe", path);
+			}
+			else
+			{
+				Process.Start("explorer.exe", Path.GetDirectoryName(path));
+			}
 		}
 	}
 }

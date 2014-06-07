@@ -18,7 +18,7 @@ namespace DkTools.ProbeExplorer
 
 		public ProbeExplorerOptions()
 		{
-			ShowFilesInTree = true;
+			ShowFilesInTree = false;
 		}
 	}
 }

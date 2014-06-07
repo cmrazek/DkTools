@@ -239,6 +239,12 @@ namespace DkTools.ProbeExplorer
 			menuItem.Click += new RoutedEventHandler(FindInFilesMenuItem_Click);
 			node.ContextMenu.Items.Add(menuItem);
 
+			menuItem = new MenuItem();
+			menuItem.Header = "Explore Folder";
+			menuItem.Tag = tag;
+			menuItem.Click += ExploreDirMenuItem_Click;
+			node.ContextMenu.Items.Add(menuItem);
+
 			node.Expanded += DirNode_Expanded;
 
 			node.Items.Add(new TreeViewItem());	// Add an empty node so the '+' sign is displayed.
@@ -255,6 +261,13 @@ namespace DkTools.ProbeExplorer
 			node.Tag = tag;
 			node.MouseDoubleClick += FileNode_MouseDoubleClick;
 			node.KeyDown += FileNode_KeyDown;
+			node.ContextMenu = new ContextMenu();
+
+			var menuItem = new MenuItem();
+			menuItem.Header = "Explore File";
+			menuItem.Tag = tag;
+			menuItem.Click += ExploreFileMenuItem_Click;
+			node.ContextMenu.Items.Add(menuItem);
 
 			return node;
 		}
@@ -419,6 +432,48 @@ namespace DkTools.ProbeExplorer
 					{
 						e.Handled = true;
 						Shell.ShowFindInFiles(new string[] { tag.path });
+					}
+				}
+			}
+			catch (Exception ex)
+			{
+				this.ShowError(ex);
+			}
+		}
+
+		private void ExploreDirMenuItem_Click(object sender, RoutedEventArgs e)
+		{
+			try
+			{
+				var menuItem = sender as MenuItem;
+				if (menuItem != null)
+				{
+					var tag = menuItem.Tag as FileTreeNode;
+					if (tag != null)
+					{
+						e.Handled = true;
+						FileUtil.OpenExplorer(tag.path);
+					}
+				}
+			}
+			catch (Exception ex)
+			{
+				this.ShowError(ex);
+			}
+		}
+
+		void ExploreFileMenuItem_Click(object sender, RoutedEventArgs e)
+		{
+			try
+			{
+				var menuItem = sender as MenuItem;
+				if (menuItem != null)
+				{
+					var tag = menuItem.Tag as FileTreeNode;
+					if (tag != null)
+					{
+						e.Handled = true;
+						FileUtil.OpenExplorer(tag.path);
 					}
 				}
 			}

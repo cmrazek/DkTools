@@ -38,6 +38,7 @@ namespace DkTools
 		Dccmp = 0x011c,
 		Credelix = 0x011d,
 		ShowHelp = 0x011e,
+		ShowDrv = 0x011f
 	}
 
 	internal static class Commands
@@ -61,6 +62,7 @@ namespace DkTools
 		private static OleMenuCommand _dccmp;
 		private static OleMenuCommand _credelix;
 		private static OleMenuCommand _showHelp;
+		private static OleMenuCommand _showDrv;
 
 		public static void InitCommands(OleMenuCommandService mcs)
 		{
@@ -83,6 +85,7 @@ namespace DkTools
 			_dccmp = AddCommand(mcs, Compile_Dccmp, CommandIds.Dccmp);
 			_credelix = AddCommand(mcs, Compile_Credelix, CommandIds.Credelix);
 			_showHelp = AddCommand(mcs, ShowHelp, CommandIds.ShowHelp);
+			_showDrv = AddCommand(mcs, ShowDrv, CommandIds.ShowDrv);
 		}
 
 		private static OleMenuCommand AddCommand(OleMenuCommandService mcs, EventHandler handler, CommandIds id)
@@ -456,7 +459,7 @@ namespace DkTools
 					}
 					else
 					{
-						Shell.ShowError("Unable to locate platform 'ACM.msc'");
+						Shell.ShowError("Unable to locate 'ACM.msc'");
 					}
 				}
 			}
@@ -480,6 +483,29 @@ namespace DkTools
 					else
 					{
 						Shell.ShowError("Unable to locate 'platform.chm'");
+					}
+				}
+			}
+			catch (Exception ex)
+			{
+				Shell.ShowError(ex);
+			}
+		}
+
+		private static void ShowDrv(object sender, EventArgs e)
+		{
+			try
+			{
+				if (!string.IsNullOrEmpty(ProbeEnvironment.PlatformPath))
+				{
+					var pathName = Path.Combine(ProbeEnvironment.PlatformPath, "DRV.msc");
+					if (File.Exists(pathName))
+					{
+						Process.Start(pathName);
+					}
+					else
+					{
+						Shell.ShowError("Unable to locate 'DRV.msc'");
 					}
 				}
 			}
