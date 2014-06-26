@@ -377,6 +377,20 @@ namespace DkTools
 			}
 		}
 
+		private Microsoft.VisualStudio.Shell.Interop.IVsErrorList _errorListService;
+		internal Microsoft.VisualStudio.Shell.Interop.IVsErrorList ErrorListService
+		{
+			get
+			{
+				if (_errorListService == null)
+				{
+					_errorListService = this.GetService(typeof(SVsErrorList)) as IVsErrorList;
+					if (_errorListService == null) throw new InvalidOperationException("Unable to get service 'Microsoft.VisualStudio.Shell.Interop.IVsErrorList'.");
+				}
+				return _errorListService;
+			}
+		}
+
 		private Microsoft.VisualStudio.Shell.Interop.IVsStatusbar _statusBarService;
 		internal Microsoft.VisualStudio.Shell.Interop.IVsStatusbar StatusBarService
 		{

@@ -6,6 +6,7 @@ Features:
 - Added 'Explore' context menu item to files and folders in the DK Explorer.
 - Changed default for 'Show Files in Tree' to false, because it's too slow in our environment.
 - Added a DK Toolbar button to start the DRV.
+- When a compile finishes, if there are errors or warnings, the error list will be displayed.
 
 Bug Fixes:
 - Fixed problem with compiler not detecting errors and warnings.

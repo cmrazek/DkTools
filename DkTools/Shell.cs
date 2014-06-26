@@ -102,6 +102,11 @@ namespace DkTools
 			return outputPane;
 		}
 
+		internal static void ShowErrorList()
+		{
+			ProbeToolsPackage.Instance.ErrorListService.BringToFront();
+		}
+
 		internal static void SetStatusText(string text)
 		{
 			ProbeToolsPackage.Instance.StatusBarService.SetText(text);

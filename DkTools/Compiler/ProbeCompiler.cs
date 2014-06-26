@@ -244,6 +244,7 @@ namespace DkTools.Compiler
 						else if (_numWarnings > 1) str += string.Concat(_numWarnings, " warnings");
 
 						WriteLine(str);
+						Shell.ShowErrorList();
 					}
 
 					if (_numErrors > 0 || _buildFailed)
@@ -278,7 +279,7 @@ namespace DkTools.Compiler
 				Shell.SetStatusText("Probe dccmp starting...");
 
 				_proc = new Process();
-				var info = new ProcessStartInfo("dccmp.exe", "/z /D");
+				var info = new ProcessStartInfo("dccmp.exe", string.Format("/z /D /P \"{0}\"", ProbeEnvironment.CurrentApp));
 				info.UseShellExecute = false;
 				info.RedirectStandardOutput = true;
 				info.RedirectStandardError = true;
@@ -340,7 +341,7 @@ namespace DkTools.Compiler
 				Shell.SetStatusText("Probe credelix starting...");
 
 				_proc = new Process();
-				var info = new ProcessStartInfo("credelix.exe", "/p");
+				var info = new ProcessStartInfo("credelix.exe", string.Format("/p /P \"{0}\"", ProbeEnvironment.CurrentApp));
 				info.UseShellExecute = false;
 				info.RedirectStandardOutput = true;
 				info.RedirectStandardError = true;
