@@ -7,8 +7,8 @@
              mc:Ignorable="d" d:DesignHeight="300" d:DesignWidth="300" Loaded="UserControl_Loaded">
     <Grid Loaded="Grid_Loaded">
 		<Label Content="App:" Height="25" Name="c_appLabel" VerticalAlignment="Top" HorizontalAlignment="Left" Width="37" />
-		<ComboBox Height="23" Margin="43,2,21,0" Name="c_appCombo" VerticalAlignment="Top" SelectionChanged="AppCombo_SelectionChanged" HorizontalAlignment="Stretch" />
-        <Button Height="21" Width="21" HorizontalAlignment="Right" Margin="0,2,0,0" Name="c_refreshButton" VerticalAlignment="Top" Click="RefreshButton_Click">
+		<ComboBox Height="23" Margin="43,2,27,0" Name="c_appCombo" VerticalAlignment="Top" SelectionChanged="AppCombo_SelectionChanged" HorizontalAlignment="Stretch" />
+        <Button Height="23" Width="23" HorizontalAlignment="Right" Margin="0,2,0,0" Name="c_refreshButton" VerticalAlignment="Top" Click="RefreshButton_Click">
             <Button.Content>
                 <Image Source="/DkTools2012;component/Images/ico_refresh.gif" />
             </Button.Content>
