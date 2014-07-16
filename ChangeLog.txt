@@ -1,5 +1,12 @@
 DkTools2012 ChangeLog
 ____________________________________________________________________________________________________
+Version 1.2.2 - Jul 16, 2014:
+
+Bug Fixes:
+- Corrected package title to "DkTools2012".
+- SAM and CAM are now run under the current application selected.
+
+____________________________________________________________________________________________________
 Version 1.2.1 - Jun 27, 2014:
 
 Features:

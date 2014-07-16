@@ -161,6 +161,7 @@ namespace DkTools.Run
 			args.Append(string.Format(" /y{0:00}{1:00}", options.TransReportTimeout, options.TransAbortTimeout));
 			args.Append(string.Format(" /z{0}", options.MinChannels));
 			args.Append(string.Format(" /Z{0}", options.MaxChannels));
+			args.Append(string.Format(" /P{0}", ProbeEnvironment.CurrentApp));
 			if (options.Diags) args.Append(" /d2");
 
 			using (Process proc = new Process())
@@ -201,8 +202,9 @@ namespace DkTools.Run
 		private bool RunCam(Run.RunOptions options)
 		{
 			StringBuilder args = new StringBuilder();
-			if (options.Diags) args.Append("devmode");
-			else if (options.CamDevMode) args.Append("devmode=2");
+			args.Append("appname=" + ProbeEnvironment.CurrentApp);
+			if (options.Diags) args.Append(" devmode");
+			else if (options.CamDevMode) args.Append(" devmode=2");
 
 			using (Process proc = new Process())
 			{
