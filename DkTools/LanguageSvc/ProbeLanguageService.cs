@@ -57,7 +57,7 @@ namespace DkTools.LanguageSvc
 
 		public override string Name
 		{
-			get { return "probe"; }
+			get { return "DK"; }
 		}
 
 		public override string GetFormatFilterList()

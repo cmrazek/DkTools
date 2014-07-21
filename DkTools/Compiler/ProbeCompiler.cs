@@ -144,7 +144,7 @@ namespace DkTools.Compiler
 
 				case CompileMethod.Dccmp:
 					WriteLine("Starting dccmp for application '{0}' at {1}.", ProbeEnvironment.CurrentApp, startTime.ToString(k_timeStampFormat));
-					Shell.SetStatusText("Probe dccmp starting...");
+					Shell.SetStatusText("DK dccmp starting...");
 
 					if (DoDccmp())
 					{
@@ -156,7 +156,7 @@ namespace DkTools.Compiler
 
 				case CompileMethod.Credelix:
 					WriteLine("Starting credelix for application '{0}' at {1}.", ProbeEnvironment.CurrentApp, startTime.ToString(k_timeStampFormat));
-					Shell.SetStatusText("Probe credelix starting...");
+					Shell.SetStatusText("DK credelix starting...");
 
 					if (DoCredelix())
 					{
@@ -183,7 +183,7 @@ namespace DkTools.Compiler
 				var workingDir = ProbeEnvironment.ObjectDir;
 				if (string.IsNullOrWhiteSpace(workingDir))
 				{
-					WriteLine("Probe object directory not configured.");
+					WriteLine("DK object directory not configured.");
 					Shell.SetStatusText("DK compile failed");
 					return false;
 				}
@@ -204,7 +204,7 @@ namespace DkTools.Compiler
 				_proc.StartInfo = info;
 				if (!_proc.Start())
 				{
-					WriteLine("Unable to start Probe compiler.");
+					WriteLine("Unable to start DK compiler.");
 					Shell.SetStatusText("DK compile failed");
 					return false;
 				}
@@ -267,7 +267,7 @@ namespace DkTools.Compiler
 			catch (Exception ex)
 			{
 				WriteLine(string.Concat("Fatal error in compile thread: ", ex.ToString()));
-				Shell.SetStatusText("Probe compile failed");
+				Shell.SetStatusText("DK compile failed");
 				return false;
 			}
 		}
