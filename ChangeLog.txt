@@ -5,6 +5,7 @@ Version 1.2.3 - Aug 8, 2014:
 Features:
 - Added ability to add custom command line args for SAM or CAM.
 - CAM command line now passes 'networkname' arg consisting of username and machine name.
+- Changed the FEC toolbar icon, to make it look less like the compile one.
 
 ____________________________________________________________________________________________________
 Version 1.2.2 - Jul 21, 2014:

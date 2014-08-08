@@ -22,7 +22,7 @@ namespace DkTools.Run
 
 		private Control _focusControl = null;
 		private RunOptions _options;
-
+		
 		public RunForm()
 		{
 			_options = ProbeToolsPackage.Instance.RunOptions;
