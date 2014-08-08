@@ -21,9 +21,12 @@ namespace DkTools.Run
 		}
 
 		private Control _focusControl = null;
+		private RunOptions _options;
 
 		public RunForm()
 		{
+			_options = ProbeToolsPackage.Instance.RunOptions;
+
 			InitializeComponent();
 		}
 
@@ -31,14 +34,12 @@ namespace DkTools.Run
 		{
 			try
 			{
-				var options = ProbeToolsPackage.Instance.RunOptions;
-
-				if (options.RunSam && !options.RunCam)
+				if (_options.RunSam && !_options.RunCam)
 				{
 					radSam.Checked = true;
 					_focusControl = radSam;
 				}
-				else if (!options.RunSam && options.RunCam)
+				else if (!_options.RunSam && _options.RunCam)
 				{
 					radCam.Checked = true;
 					_focusControl = radCam;
@@ -49,15 +50,19 @@ namespace DkTools.Run
 					_focusControl = radSamAndCam;
 				}
 
-				chkDiags.Checked = options.Diags;
-				chkLoadSam.Checked = options.LoadSam;
-				chkSetDbDate.Checked = options.SetDbDate;
-				txtTransReportTimeout.Text = options.TransReportTimeout.ToString();
-				txtTransAbortTimeout.Text = options.TransAbortTimeout.ToString();
-				txtMinChannels.Text = options.MinChannels.ToString();
-				txtMaxChannels.Text = options.MaxChannels.ToString();
-				txtLoadSamTime.Text = options.LoadSamTime.ToString();
-				chkCamDevMode.Checked = options.CamDevMode;
+				chkDiags.Checked = _options.Diags;
+				chkLoadSam.Checked = _options.LoadSam;
+				chkSetDbDate.Checked = _options.SetDbDate;
+				txtTransReportTimeout.Text = _options.TransReportTimeout.ToString();
+				txtTransAbortTimeout.Text = _options.TransAbortTimeout.ToString();
+				txtMinChannels.Text = _options.MinChannels.ToString();
+				txtMaxChannels.Text = _options.MaxChannels.ToString();
+				txtLoadSamTime.Text = _options.LoadSamTime.ToString();
+				chkCamDevMode.Checked = _options.CamDevMode;
+				c_samExtraArgs.Text = _options.SamArgs;
+				c_camExtraArgs.Text = _options.CamArgs;
+				c_samCmdLine.Text = _options.CreateSamArgsString();
+				c_camCmdLine.Text = _options.CreateCamArgsString();
 			}
 			catch (Exception ex)
 			{
@@ -89,32 +94,32 @@ namespace DkTools.Run
 				if (!ValidateNumericTextBox(txtMaxChannels, "Maximum Resource Channels", 1, 48, out maxChannels)) return;
 				if (!ValidateNumericTextBox(txtLoadSamTime, "LoadSam Time", 0, 1000000, out loadSamTime)) return;
 
-				var options = ProbeToolsPackage.Instance.RunOptions;
+				_options.RunSam = radSam.Checked || radSamAndCam.Checked;
+				_options.RunCam = radCam.Checked || radSamAndCam.Checked;
+				_options.Diags = chkDiags.Checked;
+				_options.SetDbDate = chkSetDbDate.Checked;
+				_options.TransReportTimeout = transReportTimeout;
+				_options.TransAbortTimeout = transAbortTimeout;
+				_options.MinChannels = minChannels;
+				_options.MaxChannels = maxChannels;
+				_options.LoadSamTime = loadSamTime;
+				_options.CamDevMode = chkCamDevMode.Checked;
+				_options.SamArgs = c_samExtraArgs.Text;
+				_options.CamArgs = c_camExtraArgs.Text;
 
-				options.RunSam = radSam.Checked || radSamAndCam.Checked;
-				options.RunCam = radCam.Checked || radSamAndCam.Checked;
-				options.Diags = chkDiags.Checked;
-				options.SetDbDate = chkSetDbDate.Checked;
-				options.TransReportTimeout = transReportTimeout;
-				options.TransAbortTimeout = transAbortTimeout;
-				options.MinChannels = minChannels;
-				options.MaxChannels = maxChannels;
-				options.LoadSamTime = loadSamTime;
-				options.CamDevMode = chkCamDevMode.Checked;
+				_options.SaveSettingsToStorage();
 
-				options.SaveSettingsToStorage();
-
-				if (options.RunSam && options.RunCam)
+				if (_options.RunSam && _options.RunCam)
 				{
-					if (RunSam(options)) RunCam(options);
+					if (RunSam(_options)) RunCam(_options);
 				}
-				else if (options.RunSam)
+				else if (_options.RunSam)
 				{
-					RunSam(options);
+					RunSam(_options);
 				}
-				else if (options.RunCam)
+				else if (_options.RunCam)
 				{
-					RunCam(options);
+					RunCam(_options);
 				}
 
 				DialogResult = DialogResult.OK;
@@ -130,6 +135,7 @@ namespace DkTools.Run
 		{
 			try
 			{
+				_options.LoadSettingsFromStorage();
 				DialogResult = DialogResult.Cancel;
 				Close();
 			}
@@ -154,15 +160,7 @@ namespace DkTools.Run
 				}
 			}
 
-			StringBuilder args = new StringBuilder();
-			args.Append(string.Format("/N{0}", CleanSamName(string.Concat(ProbeEnvironment.CurrentApp, "_", System.Environment.UserName))));
-			args.Append(string.Format(" /p{0}", ProbeEnvironment.SamPort));
-			args.Append(" /o0");
-			args.Append(string.Format(" /y{0:00}{1:00}", options.TransReportTimeout, options.TransAbortTimeout));
-			args.Append(string.Format(" /z{0}", options.MinChannels));
-			args.Append(string.Format(" /Z{0}", options.MaxChannels));
-			args.Append(string.Format(" /P{0}", ProbeEnvironment.CurrentApp));
-			if (options.Diags) args.Append(" /d2");
+			var args = options.CreateSamArgsString();
 
 			using (Process proc = new Process())
 			{
@@ -180,7 +178,7 @@ namespace DkTools.Run
 					return false;
 				}
 
-				ProcessStartInfo info = new ProcessStartInfo(exePathName, args.ToString());
+				ProcessStartInfo info = new ProcessStartInfo(exePathName, args);
 				info.UseShellExecute = false;
 				info.RedirectStandardOutput = false;
 				info.RedirectStandardError = false;
@@ -201,10 +199,7 @@ namespace DkTools.Run
 
 		private bool RunCam(Run.RunOptions options)
 		{
-			StringBuilder args = new StringBuilder();
-			args.Append("appname=" + ProbeEnvironment.CurrentApp);
-			if (options.Diags) args.Append(" devmode");
-			else if (options.CamDevMode) args.Append(" devmode=2");
+			var args = options.CreateCamArgsString();
 
 			using (Process proc = new Process())
 			{
@@ -222,7 +217,7 @@ namespace DkTools.Run
 					return false;
 				}
 
-				ProcessStartInfo info = new ProcessStartInfo(exePathName, args.ToString());
+				ProcessStartInfo info = new ProcessStartInfo(exePathName, args);
 				info.UseShellExecute = false;
 				info.RedirectStandardOutput = false;
 				info.RedirectStandardError = false;
@@ -305,15 +300,178 @@ namespace DkTools.Run
 			ctrl.Focus();
 		}
 
-		private string CleanSamName(string name)
+		private void UpdateSamCmdLine()
 		{
-			StringBuilder sb = new StringBuilder(name.Length);
-			foreach (char ch in name)
-			{
-				if (Char.IsLetterOrDigit(ch) || ch == '_') sb.Append(ch);
-			}
-			return sb.ToString();
+			c_samCmdLine.Text = _options.CreateSamArgsString();
 		}
 
+		private void UpdateCamCmdLine()
+		{
+			c_camCmdLine.Text = _options.CreateCamArgsString();
+		}
+
+		private void chkSetDbDate_CheckedChanged(object sender, EventArgs e)
+		{
+			try
+			{
+				_options.SetDbDate = chkSetDbDate.Checked;
+				UpdateSamCmdLine();
+			}
+			catch (Exception ex)
+			{
+				this.ShowError(ex);
+			}
+		}
+
+		private void chkLoadSam_CheckedChanged(object sender, EventArgs e)
+		{
+			try
+			{
+				_options.LoadSam = chkLoadSam.Checked;
+				UpdateSamCmdLine();
+			}
+			catch (Exception ex)
+			{
+				this.ShowError(ex);
+			}
+		}
+
+		private void txtLoadSamTime_TextChanged(object sender, EventArgs e)
+		{
+			try
+			{
+				int value;
+				if (int.TryParse(txtLoadSamTime.Text, out value) && value >= 0)
+				{
+					_options.LoadSamTime = value;
+					UpdateSamCmdLine();
+				}
+			}
+			catch (Exception ex)
+			{
+				this.ShowError(ex);
+			}
+		}
+
+		private void txtTransReportTimeout_TextChanged(object sender, EventArgs e)
+		{
+			try
+			{
+				int value;
+				if (int.TryParse(txtTransReportTimeout.Text, out value) && value >= 0 && value <= 99)
+				{
+					_options.TransReportTimeout = value;
+					UpdateSamCmdLine();
+				}
+			}
+			catch (Exception ex)
+			{
+				this.ShowError(ex);
+			}
+		}
+
+		private void txtTransAbortTimeout_TextChanged(object sender, EventArgs e)
+		{
+			try
+			{
+				int value;
+				if (int.TryParse(txtTransAbortTimeout.Text, out value) && value >= 0 && value <= 99)
+				{
+					_options.TransAbortTimeout = value;
+					UpdateSamCmdLine();
+				}
+			}
+			catch (Exception ex)
+			{
+				this.ShowError(ex);
+			}
+		}
+
+		private void txtMinChannels_TextChanged(object sender, EventArgs e)
+		{
+			try
+			{
+				int value;
+				if (int.TryParse(txtMinChannels.Text, out value) && value >= 1 && value <= 2)
+				{
+					_options.MinChannels = value;
+					UpdateSamCmdLine();
+				}
+			}
+			catch (Exception ex)
+			{
+				this.ShowError(ex);
+			}
+		}
+
+		private void txtMaxChannels_TextChanged(object sender, EventArgs e)
+		{
+			try
+			{
+				int value;
+				if (int.TryParse(txtMaxChannels.Text, out value) && value >= 1 && value <= 48)
+				{
+					_options.MaxChannels = value;
+					UpdateSamCmdLine();
+				}
+			}
+			catch (Exception ex)
+			{
+				this.ShowError(ex);
+			}
+		}
+
+		private void c_samExtraArgs_TextChanged(object sender, EventArgs e)
+		{
+			try
+			{
+				_options.SamArgs = c_samExtraArgs.Text;
+				UpdateSamCmdLine();
+			}
+			catch (Exception ex)
+			{
+				this.ShowError(ex);
+			}
+		}
+
+		private void chkCamDevMode_CheckedChanged(object sender, EventArgs e)
+		{
+			try
+			{
+				_options.CamDevMode = chkCamDevMode.Checked;
+				UpdateCamCmdLine();
+			}
+			catch (Exception ex)
+			{
+				this.ShowError(ex);
+			}
+		}
+
+		private void c_camExtraArgs_TextChanged(object sender, EventArgs e)
+		{
+			try
+			{
+				_options.CamArgs = c_camExtraArgs.Text;
+				UpdateCamCmdLine();
+			}
+			catch (Exception ex)
+			{
+				this.ShowError(ex);
+			}
+		}
+
+		private void chkDiags_CheckedChanged(object sender, EventArgs e)
+		{
+			try
+			{
+				_options.Diags = chkDiags.Checked;
+				UpdateSamCmdLine();
+				UpdateCamCmdLine();
+			}
+			catch (Exception ex)
+			{
+				this.ShowError(ex);
+			}
+		}
 	}
 }
