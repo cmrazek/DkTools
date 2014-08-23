@@ -522,7 +522,8 @@ namespace DkTools
 			if (activeDoc != null)
 			{
 				var source = File.ReadAllText(activeDoc.FullName);
-				var model = new CodeModel.CodeModel(source, null, activeDoc.FullName);
+				var store = new CodeModel.FileStore();
+				var model = new CodeModel.CodeModel(store, source, null, activeDoc.FullName);
 
 				return model;
 			}

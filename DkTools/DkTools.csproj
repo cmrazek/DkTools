@@ -249,7 +249,6 @@
     <Compile Include="Classifier\ProbeClassifierState.cs" />
     <Compile Include="Classifier\ProbeClassifierType.cs" />
     <Compile Include="Classifier\TextBufferStateTracker.cs" />
-    <Compile Include="CodeModelStore.cs" />
     <Compile Include="CodeModel\CodeSource.cs" />
     <Compile Include="CodeModel\ConstantToken.cs" />
     <Compile Include="CodeModel\DataType.cs" />
@@ -273,6 +272,7 @@
     <Compile Include="CodeModel\FunctionCallToken.cs" />
     <Compile Include="CodeModel\FunctionToken.cs" />
     <Compile Include="CodeModel\IfStatementToken.cs" />
+    <Compile Include="CodeModel\FileStore.cs" />
     <Compile Include="CodeModel\IncludeToken.cs" />
     <Compile Include="CodeModel\InsertToken.cs" />
     <Compile Include="CodeModel\KeywordToken.cs" />

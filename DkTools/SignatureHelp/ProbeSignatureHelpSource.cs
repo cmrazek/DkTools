@@ -48,7 +48,7 @@ namespace DkTools.SignatureHelp
 						ITrackingSpan applicableToSpan = _textBuffer.CurrentSnapshot.CreateTrackingSpan(
 							new Microsoft.VisualStudio.Text.Span(origPos, 0), SpanTrackingMode.EdgeInclusive, 0);
 
-						var model = CodeModelStore.GetModelForBuffer(_textBuffer, null, true);
+						var model = CodeModel.FileStore.GetOrCreateForTextBuffer(_textBuffer).GetOrCreateModelForSnapshot(snapshot);
 						foreach (var sig in GetSignatures(model, word, applicableToSpan))
 						{
 							signatures.Add(sig);
@@ -58,7 +58,7 @@ namespace DkTools.SignatureHelp
 			}
 			else if (ProbeSignatureHelpCommandHandler.s_typedChar == ',')
 			{
-				var model = CodeModelStore.GetModelForBuffer(_textBuffer, _textBuffer.CurrentSnapshot, true);
+				var model = CodeModel.FileStore.GetOrCreateForTextBuffer(_textBuffer).GetOrCreateModelForSnapshot(snapshot);
 
 				var tokens = model.FindTokens(model.GetPosition(origPos));
 				var funcCallToken = tokens.LastOrDefault(t => t.GetType() == typeof(FunctionCallToken));

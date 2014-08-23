@@ -2,7 +2,9 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudio.Text;
+using Microsoft.VisualStudio.TextManager.Interop;
 
 namespace DkTools
 {
@@ -84,6 +86,23 @@ namespace DkTools
 		{
 			if (thisSpan.HasValue) return thisSpan.Value.EncompassingSpan(spans, spanTrackingMode);
 			return spans.EncompassingSpan();
+		}
+
+		public static string TryGetFileName(this ITextBuffer buffer)
+		{
+			// http://social.msdn.microsoft.com/Forums/vstudio/en-US/ef5cd137-56e4-4077-8e31-6d282668e8ad/filename-from-itextbuffer-or-itextbuffer-from-projectitem
+
+			IVsTextBuffer bufferAdapter;
+			if (!buffer.Properties.TryGetProperty(typeof(IVsTextBuffer), out bufferAdapter) || bufferAdapter == null) return null;
+
+			var persistFileFormat = bufferAdapter as IPersistFileFormat;
+			if (persistFileFormat == null) return null;
+
+			string fileName = null;
+			uint formatIndex = 0;
+			persistFileFormat.GetCurFile(out fileName, out formatIndex);
+
+			return fileName;
 		}
 	}
 }

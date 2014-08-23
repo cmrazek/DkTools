@@ -115,7 +115,7 @@ namespace DkTools.Tagging
 					var buf = Shell.ActiveBuffer;
 					if (buf != null)
 					{
-						var model = CodeModelStore.GetModelForBuffer(buf, null, true);
+						var model = CodeModel.FileStore.GetOrCreateForTextBuffer(buf).GetOrCreateModelForSnapshot(buf.CurrentSnapshot);
 						if (model != null)
 						{
 							var modelPos = model.GetPosition(Shell.ActiveView.Caret.Position.BufferPosition.Position, model.Snapshot);

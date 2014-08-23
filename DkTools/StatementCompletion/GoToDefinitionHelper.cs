@@ -81,7 +81,6 @@ namespace DkTools.StatementCompletion
 
 		private static void BrowseToDefinition(CodeModel.Definition def)
 		{
-			// TODO: remove
 			//if (def is CodeModel.TableDefinition)
 			//{
 			//	var table = ProbeEnvironment.GetTable((def as CodeModel.TableDefinition).Name);

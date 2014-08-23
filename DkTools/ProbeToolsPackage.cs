@@ -160,7 +160,6 @@ namespace DkTools
 			_functionScanner.Start();
 
 			ProcessBackgroundWorkItems();
-			CodeModelStore.OnIdle();
 
 			return 0;
 		}

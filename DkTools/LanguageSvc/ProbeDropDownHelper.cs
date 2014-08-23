@@ -25,7 +25,8 @@ namespace DkTools.LanguageSvc
 			if (textView == null) return false;
 			var wpfTextView = Shell.VsTextViewToWpfTextView(textView);
 			if (wpfTextView == null) return false;
-			var model = CodeModelStore.GetModelForBuffer(wpfTextView.TextBuffer, null, true);
+			var buf = wpfTextView.TextBuffer;
+			var model = CodeModel.FileStore.GetOrCreateForTextBuffer(buf).GetOrCreateModelForSnapshot(buf.CurrentSnapshot);
 			if (model == null) return false;
 
 			var caretPos = model.GetPosition(line, col);

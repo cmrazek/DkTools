@@ -13,9 +13,13 @@ namespace DkTools.CodeModel
 		private CodeFile _file;
 		private string _fileName;
 		private Microsoft.VisualStudio.Text.ITextSnapshot _snapshot;
+		private FileStore _store;
 
-		public CodeModel(string source, VsText.ITextSnapshot snapshot, string fileName)
+		public CodeModel(FileStore store, string source, VsText.ITextSnapshot snapshot, string fileName)
 		{
+			if (store == null) throw new ArgumentNullException("store");
+			_store = store;
+
 			var codeSource = new CodeSource();
 			codeSource.Append(fileName, Position.Start, source);
 
@@ -25,7 +29,8 @@ namespace DkTools.CodeModel
 		public CodeModel(VsText.ITextSnapshot snapshot)
 		{
 			var source = snapshot.GetText();
-			var fileName = CodeModelStore.GetFileNameForBuffer(snapshot.TextBuffer);
+			var fileName = snapshot.TextBuffer.TryGetFileName();
+			_store = FileStore.GetOrCreateForTextBuffer(snapshot.TextBuffer);
 
 			var codeSource = new CodeSource();
 			codeSource.Append(fileName, Position.Start, source);
@@ -34,8 +39,11 @@ namespace DkTools.CodeModel
 			Init(codeSource, fileName, true);
 		}
 
-		public CodeModel(CodeSource source, string fileName, bool visible)
+		public CodeModel(FileStore store, CodeSource source, string fileName, bool visible)
 		{
+			if (store == null) throw new ArgumentNullException("store");
+			_store = store;
+
 			Init(source, fileName, visible);
 		}
 
@@ -222,7 +230,6 @@ namespace DkTools.CodeModel
 		}
 
 		#region Include Files
-		private static Dictionary<string, CodeFile> _cachedIncludeFiles = new Dictionary<string, CodeFile>();
 		private List<CodeFile> _implicitIncludes = new List<CodeFile>();
 
 		public CodeFile GetIncludeFile(string sourceFileName, string fileName, bool searchCurrentDir, IEnumerable<string> parentFiles)
@@ -230,17 +237,12 @@ namespace DkTools.CodeModel
 			if (string.IsNullOrEmpty(fileName)) return null;
 
 			CodeFile file = null;
-			string key;
 
 			if (searchCurrentDir)
 			{
 				if (!string.IsNullOrEmpty(sourceFileName))
 				{
-					key = string.Concat(sourceFileName, ">", fileName).ToLower();
-					lock (_cachedIncludeFiles)
-					{
-						_cachedIncludeFiles.TryGetValue(key, out file);
-					}
+					file = _store.TryGetIncludeFile(sourceFileName, true);
 					if (file != null) return file;
 
 					var pathName = Path.Combine(Path.GetDirectoryName(sourceFileName), fileName);
@@ -249,20 +251,13 @@ namespace DkTools.CodeModel
 
 					if (file != null)
 					{
-						lock (_cachedIncludeFiles)
-						{
-							_cachedIncludeFiles[key] = file;
-						}
+						_store.SaveIncludeFile(sourceFileName, true, file);
 						return file;
 					}
 				}
 			}
 
-			key = fileName.ToLower();
-			lock (_cachedIncludeFiles)
-			{
-				_cachedIncludeFiles.TryGetValue(key, out file);
-			}
+			file = _store.TryGetIncludeFile(sourceFileName, false);
 			if (file != null) return file;
 
 			foreach (var includeDir in ProbeEnvironment.IncludeDirs)
@@ -276,10 +271,7 @@ namespace DkTools.CodeModel
 
 			if (file != null)
 			{
-				lock (_cachedIncludeFiles)
-				{
-					_cachedIncludeFiles[key] = file;
-				}
+				_store.SaveIncludeFile(sourceFileName, false, file);
 			}
 
 			return file;
@@ -312,35 +304,6 @@ namespace DkTools.CodeModel
 			{
 				Trace.WriteLine(string.Format("Exception when merging file '{0}': {1}", fullPathName, ex));
 				return null;
-			}
-		}
-
-		public static void OnFileSaved(string fileName)
-		{
-			// Purge all include files that have this file name, so they get reloaded when the next code model is built.
-
-			var fileTitle = Path.GetFileNameWithoutExtension(fileName);
-			var fileExt = Path.GetExtension(fileName);
-			if (fileExt.EndsWith("&")) fileExt = fileExt.Substring(0, fileExt.Length - 1);
-
-			var removeList = new List<string>();
-
-			lock (_cachedIncludeFiles)
-			{
-				foreach (var key in _cachedIncludeFiles.Keys)
-				{
-					var index = key.IndexOf('>');
-					var cachedFileName = index >= 0 ? key.Substring(index + 1) : key;
-					if (cachedFileName.EndsWith("&")) cachedFileName = cachedFileName.Substring(0, cachedFileName.Length - 1);
-
-					if (string.Equals(Path.GetFileNameWithoutExtension(cachedFileName), fileTitle, StringComparison.OrdinalIgnoreCase) &&
-						string.Equals(Path.GetExtension(cachedFileName), fileExt, StringComparison.OrdinalIgnoreCase))
-					{
-						removeList.Add(key);
-					}
-				}
-
-				foreach (var rem in removeList) _cachedIncludeFiles.Remove(rem);
 			}
 		}
 

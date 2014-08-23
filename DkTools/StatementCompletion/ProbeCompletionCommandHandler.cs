@@ -222,10 +222,11 @@ namespace DkTools.StatementCompletion
 			else
 			{
 				var modelSnapshot = _textView.TextSnapshot;
+				var fileStore = CodeModel.FileStore.GetOrCreateForTextBuffer(caretPt.Snapshot.TextBuffer);
 
 				ProbeToolsPackage.Instance.StartBackgroundWorkItem(() =>
 					{
-						CodeModelStore.GetModelForBuffer(caretPt.Snapshot.TextBuffer, caretPt.Snapshot, true);
+						fileStore.GetOrCreateModelForSnapshot(caretPt.Snapshot);
 					}, ex =>
 					{
 						if (ex != null) return;

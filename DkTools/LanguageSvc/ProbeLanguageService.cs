@@ -44,8 +44,6 @@ namespace DkTools.LanguageSvc
 				{
 					src.LastParseTime = 0;
 				}
-
-				CodeModelStore.OnIdle();
 			}
 			catch (Exception ex)
 			{
