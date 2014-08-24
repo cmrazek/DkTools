@@ -783,6 +783,11 @@ namespace DkTools.ProbeExplorer
 				menuItem.Click += new RoutedEventHandler(ShowDefinitions_Click);
 				menu.Items.Add(menuItem);
 
+				menuItem = new MenuItem();
+				menuItem.Header = "Show Preprocessor";
+				menuItem.Click += ShowPreprocessor_Click;
+				menu.Items.Add(menuItem);
+
 				menu.PlacementTarget = c_appLabel;
 				menu.IsOpen = true;
 			}
@@ -791,6 +796,8 @@ namespace DkTools.ProbeExplorer
 				this.ShowError(ex);
 			}
 		}
+
+		
 
 		private void ShowCodeModelDump_Click(object sender, RoutedEventArgs e)
 		{
@@ -809,6 +816,18 @@ namespace DkTools.ProbeExplorer
 			try
 			{
 				Commands.ShowDefinitions();
+			}
+			catch (Exception ex)
+			{
+				this.ShowError(ex);
+			}
+		}
+
+		void ShowPreprocessor_Click(object sender, RoutedEventArgs e)
+		{
+			try
+			{
+				Commands.ShowPreprocessor();
 			}
 			catch (Exception ex)
 			{

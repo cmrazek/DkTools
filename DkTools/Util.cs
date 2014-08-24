@@ -193,5 +193,22 @@ namespace DkTools
 			return string.Concat(sb, str);
 		}
 		#endregion
+
+		public static bool GetLastNonWhiteChar(this StringBuilder sb, out char lastCh, out int index)
+		{
+			for (int i = sb.Length - 1; i >= 0; i--)
+			{
+				var ch = sb[i];
+				if (!Char.IsWhiteSpace(ch))
+				{
+					index = i;
+					lastCh = ch;
+					return true;
+				}
+			}
+			index = -1;
+			lastCh = '\0';
+			return false;
+		}
 	}
 }

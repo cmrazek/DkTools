@@ -250,6 +250,11 @@
     <Compile Include="Classifier\ProbeClassifierType.cs" />
     <Compile Include="Classifier\TextBufferStateTracker.cs" />
     <Compile Include="CodeModel\CodeSource.cs" />
+    <Compile Include="CodeModel\Preprocessor.cs" />
+    <Compile Include="CodeModel\IPreprocessorReader.cs" />
+    <Compile Include="CodeModel\IPreprocessorWriter.cs" />
+    <Compile Include="CodeModel\StringPreprocessorReader.cs" />
+    <Compile Include="CodeModel\StringPreprocessorWriter.cs" />
     <Compile Include="CodeModel\Tokens\ConstantToken.cs" />
     <Compile Include="CodeModel\DataType.cs" />
     <Compile Include="CodeModel\Tokens\DataTypeKeywordToken.cs" />

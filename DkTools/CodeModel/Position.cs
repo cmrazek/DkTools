@@ -150,5 +150,11 @@ namespace DkTools.CodeModel
 		{
 			return Advance(text, 0, text.Length);
 		}
+
+		public Position Advance(char ch)
+		{
+			if (ch == '\n') return new Position(_offset + 1, _lineNum + 1, 0);
+			return new Position(_offset + 1, _lineNum, _linePos + 1);
+		}
 	}
 }

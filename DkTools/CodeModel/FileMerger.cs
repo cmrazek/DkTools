@@ -71,7 +71,7 @@ namespace DkTools.CodeModel
 
 			// Generate the final source.
 			_mergedContent = new CodeSource();
-			foreach (var line in _lines) _mergedContent.Append(line.fileName, line.pos, string.Concat(line.text, "\r\n"));
+			foreach (var line in _lines) _mergedContent.Append(string.Concat(line.text, "\r\n"), new CodeAttributes(line.fileName, line.pos, true));
 		}
 
 		private string UnrootFileName(string fileName)

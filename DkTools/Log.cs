@@ -81,6 +81,11 @@ namespace DkTools
 #endif
 		}
 
+		public static void WriteEx(Exception ex, string format, params object[] args)
+		{
+			WriteEx(ex, string.Format(format, args));
+		}
+
 		public static void WriteEx(Exception ex)
 		{
 			try

@@ -560,6 +560,33 @@ namespace DkTools
 				Shell.OpenDocument(fileName);
 			}
 		}
+
+		public static void ShowPreprocessor()
+		{
+			var view = Shell.ActiveView;
+			if (view != null)
+			{
+				var fileName = VsTextUtil.TryGetFileName(view.TextBuffer);
+
+				var codeSource = new CodeModel.CodeSource();
+				codeSource.Append(view.TextBuffer.CurrentSnapshot.GetText(), new CodeModel.CodeAttributes(fileName, CodeModel.Position.Start, true));
+
+				var store = new CodeModel.FileStore();
+				var reader = new CodeModel.CodeSource.CodeSourcePreprocessorReader(codeSource);
+				var dest = new CodeModel.CodeSource();
+
+				var prep = new CodeModel.Preprocessor(store);
+				prep.Preprocess(reader, dest, fileName, null, true);
+
+				if (string.IsNullOrEmpty(fileName)) fileName = "Untitled.txt";
+				using (var tempFile = new TempFileOutput(Path.GetFileNameWithoutExtension(fileName), Path.GetExtension(fileName)))
+				{
+					tempFile.WriteLine(dest.Text);
+					fileName = tempFile.FileName;
+				}
+				Shell.OpenDocument(fileName);
+			}
+		}
 #endif
 	}
 }

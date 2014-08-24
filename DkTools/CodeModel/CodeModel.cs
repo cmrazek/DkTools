@@ -21,7 +21,7 @@ namespace DkTools.CodeModel
 			_store = store;
 
 			var codeSource = new CodeSource();
-			codeSource.Append(fileName, Position.Start, source);
+			codeSource.Append(source, new CodeAttributes(fileName, Position.Start, true));
 
 			Init(codeSource, fileName, true);
 		}
@@ -33,7 +33,7 @@ namespace DkTools.CodeModel
 			_store = FileStore.GetOrCreateForTextBuffer(snapshot.TextBuffer);
 
 			var codeSource = new CodeSource();
-			codeSource.Append(fileName, Position.Start, source);
+			codeSource.Append(source, new CodeAttributes(fileName, Position.Start, true));
 			codeSource.Snapshot = snapshot;
 
 			Init(codeSource, fileName, true);
@@ -234,77 +234,10 @@ namespace DkTools.CodeModel
 
 		public CodeFile GetIncludeFile(string sourceFileName, string fileName, bool searchCurrentDir, IEnumerable<string> parentFiles)
 		{
-			if (string.IsNullOrEmpty(fileName)) return null;
+			var includeFile = _store.GetIncludeFile(sourceFileName, fileName, searchCurrentDir, parentFiles);
+			if (includeFile == null) return null;
 
-			CodeFile file = null;
-
-			if (searchCurrentDir)
-			{
-				if (!string.IsNullOrEmpty(sourceFileName))
-				{
-					file = _store.TryGetIncludeFile(sourceFileName, true);
-					if (file != null) return file;
-
-					var pathName = Path.Combine(Path.GetDirectoryName(sourceFileName), fileName);
-					if (System.IO.File.Exists(pathName)) file = ProcessIncludeFile(pathName, parentFiles);
-					else if (System.IO.File.Exists(pathName + "&")) file = ProcessIncludeFile(pathName + "&", parentFiles);
-
-					if (file != null)
-					{
-						_store.SaveIncludeFile(sourceFileName, true, file);
-						return file;
-					}
-				}
-			}
-
-			file = _store.TryGetIncludeFile(sourceFileName, false);
-			if (file != null) return file;
-
-			foreach (var includeDir in ProbeEnvironment.IncludeDirs)
-			{
-				var pathName = Path.Combine(includeDir, fileName);
-				if (System.IO.File.Exists(pathName)) file = ProcessIncludeFile(pathName, parentFiles);
-				else if (System.IO.File.Exists(pathName + "&")) file = ProcessIncludeFile(pathName + "&", parentFiles);
-
-				if (file != null) break;
-			}
-
-			if (file != null)
-			{
-				_store.SaveIncludeFile(sourceFileName, false, file);
-			}
-
-			return file;
-		}
-
-		private CodeFile ProcessIncludeFile(string fullPathName, IEnumerable<string> parentFiles)
-		{
-			try
-			{
-				Trace.WriteLine(string.Concat("Processing include file: ", fullPathName));
-
-				if (parentFiles.Any(x => x.Equals(fullPathName, StringComparison.OrdinalIgnoreCase)))
-				{
-					Log.Write(EventLogEntryType.Warning, string.Format("Cyclical include found for file '{0}'", fullPathName));
-					return null;
-				}
-
-				var merger = new FileMerger();
-				merger.MergeFile(fullPathName, true);
-
-				var content = merger.MergedContent;
-				if (content == null) return null;
-
-				var file = new CodeFile(this);
-				file.IsMixed = merger.IsMixed;
-				file.Parse(content, fullPathName, parentFiles, false);
-				return file;
-			}
-			catch (Exception ex)
-			{
-				Trace.WriteLine(string.Format("Exception when merging file '{0}': {1}", fullPathName, ex));
-				return null;
-			}
+			return includeFile.GetCodeFile(this, parentFiles);
 		}
 
 		public IEnumerable<CodeFile> ImplicitIncludes

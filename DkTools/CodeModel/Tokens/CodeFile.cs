@@ -14,7 +14,6 @@ namespace DkTools.CodeModel
 	{
 		#region Variables
 		private CodeModel _model;
-		private bool _isMixed = false;
 		private string[] _parentFiles;
 		private Dictionary<string, DataType> _definedDataTypes = new Dictionary<string, DataType>();
 		#endregion
@@ -30,12 +29,6 @@ namespace DkTools.CodeModel
 		public string FileName
 		{
 			get { return _fileName; }
-		}
-
-		public bool IsMixed
-		{
-			get { return _isMixed; }
-			set { _isMixed = value; }
 		}
 
 		public CodeSource CodeSource

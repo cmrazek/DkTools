@@ -40,7 +40,7 @@ namespace DkTools.QuickInfo
 			var snapshotPoint = subjectTriggerPoint.Value;
 			var currentSnapshot = snapshotPoint.Snapshot;
 
-			var model = CodeModel.FileStore.GetOrCreateForTextBuffer(_subjectBuffer).TryGetModel();
+			var model = CodeModel.FileStore.GetOrCreateForTextBuffer(_subjectBuffer).Model;
 			if (model != null && model.Snapshot != null)
 			{
 				var modelPos = model.GetPosition(snapshotPoint.Position, snapshotPoint.Snapshot);
