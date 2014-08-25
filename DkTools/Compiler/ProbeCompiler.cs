@@ -244,7 +244,10 @@ namespace DkTools.Compiler
 						else if (_numWarnings > 1) str += string.Concat(_numWarnings, " warnings");
 
 						WriteLine(str);
-						Shell.ShowErrorList();
+						if (ProbeToolsPackage.Instance.ProbeExplorerOptions.ShowErrorListAfterCompile)
+						{
+							Shell.ShowErrorList();
+						}
 					}
 
 					if (_numErrors > 0 || _buildFailed)

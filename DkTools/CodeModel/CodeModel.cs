@@ -81,6 +81,7 @@ namespace DkTools.CodeModel
 			_file.AddDefinition(new FunctionDefinition("qcolsend", null, DataType.Void, "void qcolsend(TableName.ColumnName ...)"));
 			_file.AddDefinition(new FunctionDefinition("SetMessage", null, DataType.Int, "int SetMessage(MessageControlString, expressions ...)"));
 			_file.AddDefinition(new FunctionDefinition("STRINGIZE", null, DataType.FromString("char(255)"), "STRINGIZE(x)"));
+			_file.AddDefinition(new FunctionDefinition("UNREFERENCED_PARAMETER", null, DataType.Void, "UNREFERENCED_PARAMETER(parameter)"));
 
 			foreach (var def in ProbeEnvironment.DictDefinitions) _file.AddDefinition(def);
 

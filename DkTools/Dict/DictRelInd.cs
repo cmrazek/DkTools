@@ -9,19 +9,18 @@ namespace DkTools.Dict
 	{
 		private string _name;
 		private CodeModel.RelIndDefinition _def;
-
-		public DictRelInd(string name, string baseTableName, string infoText)
-		{
-#if DEBUG
-			if (string.IsNullOrWhiteSpace(name)) throw new ArgumentNullException();
-#endif
-			_name = name;
-			_def = new CodeModel.RelIndDefinition(name, baseTableName, infoText);
-		}
+		private string _repoDesc;
 
 		public DictRelInd(DictTable table, DICTSRVRLib.IPIndex repoIndex)
 		{
 			_name = repoIndex.Name;
+
+			var dev = repoIndex as DICTSRVRLib.IPDictObj;
+			if (dev != null)
+			{
+				var devInfo = dev.DevInfo;
+				if (!string.IsNullOrWhiteSpace(devInfo)) _repoDesc = devInfo;
+			}
 
 			// Info text will be the list of columns in the index.
 			var sb = new StringBuilder();
@@ -29,6 +28,11 @@ namespace DkTools.Dict
 			{
 				if (sb.Length > 0) sb.Append(", ");
 				sb.Append(repoIndex.Columns[c].Name);
+			}
+			if (!string.IsNullOrWhiteSpace(_repoDesc))
+			{
+				sb.AppendLine();
+				sb.AppendFormat("Description: {0}", _repoDesc);
 			}
 
 			_def = new CodeModel.RelIndDefinition(_name, table.Name, sb.ToString());

@@ -77,7 +77,7 @@ namespace DkTools
 	[ProvideLanguageExtension(typeof(ProbeLanguageService), ".ie")]
 	[ProvideToolWindow(typeof(ProbeExplorer.ProbeExplorerToolWindow))]
 	[ProvideMenuResource("Menus.ctmenu", 1)]
-	[ProvideOptionPage(typeof(ProbeExplorer.ProbeExplorerOptions), "DK", "DK Explorer", 101, 106, true)]
+	[ProvideOptionPage(typeof(ProbeExplorer.ProbeExplorerOptions), "DK", "DkTools Options", 101, 106, true)]
 	[ProvideOptionPage(typeof(Tagging.TaggingOptions), "DK", "Tagging", 101, 107, true)]
 	public sealed partial class ProbeToolsPackage : Package, IOleComponent
 	{

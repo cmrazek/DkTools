@@ -1,5 +1,14 @@
 DkTools2012 ChangeLog
 ____________________________________________________________________________________________________
+Version 1.2.4 - (pending):
+
+Features:
+- Description text for tables, columns and relationships/indexes are now displayed in the quick-info
+- Added the keywords public, private and protected.
+- Added option to disable switching to error list after a compile with errors or warnings.
+- Added signature definition for UNREFERENCED_PARAMETER.
+
+____________________________________________________________________________________________________
 Version 1.2.3 - Aug 8, 2014:
 
 Features:

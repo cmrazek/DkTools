@@ -28,8 +28,16 @@ namespace DkTools.Dict
 			var data = repoCol as DICTSRVRLib.IPDataDef;
 			DataType = data.TypeText[0];
 
+			var dictObj = repoCol as DICTSRVRLib.IPDictObj;
+			string description = null;
+			if (dictObj != null)
+			{
+				description = dictObj.DevInfo;
+				if (description != null && description.Length == 0) description = null;
+			}
+
 			_completionOptions = CodeModel.DataType.ParseCompletionOptionsFromArgText(this.DataType, null).ToArray();
-			_definition = new CodeModel.TableFieldDefinition(table.Name, Name, Prompt, Comment, DataType);
+			_definition = new CodeModel.TableFieldDefinition(table.Name, Name, Prompt, Comment, DataType, description);
 		}
 
 		public IEnumerable<string> CompletionOptions

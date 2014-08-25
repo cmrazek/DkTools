@@ -341,12 +341,14 @@ namespace DkTools.CodeModel
 		private string _desc;
 		private string _prompt;
 		private string _comment;
+		private string _description;
 
 		public TableDefinition(string name, Dict.DictTable table)
 			: base(name, null, true)
 		{
 			_prompt = table.Prompt;
 			_comment = table.Comment;
+			_description = table.Description;
 		}
 
 		public override StatementCompletion.CompletionType CompletionType
@@ -378,6 +380,12 @@ namespace DkTools.CodeModel
 						sb.AppendLine();
 						sb.Append("Comment: ");
 						sb.Append(_comment);
+					}
+					if (!string.IsNullOrWhiteSpace(_description))
+					{
+						sb.AppendLine();
+						sb.Append("Description: ");
+						sb.Append(_description);
 					}
 					_desc = sb.ToString();
 				}
@@ -411,8 +419,9 @@ namespace DkTools.CodeModel
 		private string _comment;
 		private string _dataType;
 		private string _desc;
+		private string _repoDesc;
 
-		public TableFieldDefinition(string tableName, string fieldName, string prompt, string comment, string dataType)
+		public TableFieldDefinition(string tableName, string fieldName, string prompt, string comment, string dataType, string description)
 			: base(fieldName, null, true)
 		{
 			_tableName = tableName;
@@ -420,6 +429,7 @@ namespace DkTools.CodeModel
 			_prompt = prompt;
 			_comment = comment;
 			_dataType = dataType;
+			_repoDesc = description;
 		}
 
 		public override bool CompletionVisible
@@ -459,6 +469,12 @@ namespace DkTools.CodeModel
 						sb.AppendLine();
 						sb.Append("Comment: ");
 						sb.Append(_comment);
+					}
+					if (!string.IsNullOrWhiteSpace(_repoDesc))
+					{
+						sb.AppendLine();
+						sb.Append("Description: ");
+						sb.Append(_repoDesc);
 					}
 					_desc = sb.ToString();
 				}

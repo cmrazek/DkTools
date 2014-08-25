@@ -12,6 +12,7 @@ namespace DkTools.Dict
 		private string _name;
 		private string _prompt;
 		private string _comment;
+		private string _description;
 		private Dictionary<string, DictField> _fields;
 		private List<DictRelInd> _relInds;
 		private CodeModel.TableDefinition _definition;
@@ -27,6 +28,13 @@ namespace DkTools.Dict
 			var desc = repoTable as DICTSRVRLib.IPDObjDesc;
 			_prompt = desc.Prompt[0];
 			_comment = desc.Comment[0];
+
+			var dev = repoTable as DICTSRVRLib.IPDictObj;
+			if (dev != null)
+			{
+				var devInfo = dev.DevInfo;
+				if (!string.IsNullOrEmpty(devInfo)) _description = devInfo;
+			}
 
 			_baseTable = _name;	// TODO: Do we need to retrieve this from somewhere?
 
@@ -53,6 +61,11 @@ namespace DkTools.Dict
 		public string Comment
 		{
 			get { return _comment; }
+		}
+
+		public string Description
+		{
+			get { return _description; }
 		}
 
 		public string BaseTable
