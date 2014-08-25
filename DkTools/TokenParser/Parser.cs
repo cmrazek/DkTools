@@ -220,7 +220,7 @@ namespace DkTools.TokenParser
 					return true;
 				}
 
-				if (ch == '+' || ch == '-' || ch == '*' || ch == '%' || ch == '=')
+				if (ch == '+' || ch == '-' || ch == '*' || ch == '%' || ch == '=' || ch == '!' || ch == '<' || ch == '>')
 				{
 					_tokenText.Append(ch);
 					MoveNext();
@@ -235,11 +235,26 @@ namespace DkTools.TokenParser
 					return true;
 				}
 
-				if (ch == '?' || ch == ':' || ch == ',' || ch == '.' || ch == '(' || ch == ')' || ch == '{' || ch == '}' || ch == '[' || ch == ']' || ch == '&')
+				if (ch == '?' || ch == ':' || ch == ',' || ch == '.' || ch == '(' || ch == ')' || ch == '{' || ch == '}' || ch == '[' || ch == ']' || ch == '^')
 				{
 					_tokenText.Append(ch);
 					MoveNext();
 					_tokenType = TokenParser.TokenType.Operator;
+					return true;
+				}
+
+				if (ch == '&' || ch == '|')
+				{
+					_tokenText.Append(ch);
+					MoveNext();
+					_tokenType = TokenParser.TokenType.Operator;
+
+					if (_pos < _length && _source[_pos] == ch)
+					{
+						_tokenText.Append(ch);
+						MoveNext();
+					}
+
 					return true;
 				}
 

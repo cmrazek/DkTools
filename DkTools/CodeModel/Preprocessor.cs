@@ -474,10 +474,10 @@ namespace DkTools.CodeModel
 			var name = p.reader.ReadIdentifier();
 			if (string.IsNullOrEmpty(name)) return;
 
-			bool result = _defines.ContainsKey(name);
-			if (!activeIfDefined) result = !result;
-			p.conditions.Push(new ConditionScope { result = result });
-			_active = result;
+			bool defined = _defines.ContainsKey(name);
+			if (!activeIfDefined) defined = !defined;
+			p.ifStack.Push(new ConditionScope { result = defined ? ConditionResult.Positive : ConditionResult.Negative });
+			_active = defined;
 
 			IgnoreWhiteSpaceAndComments(p, true);
 		}
@@ -486,8 +486,8 @@ namespace DkTools.CodeModel
 		{
 			IgnoreWhiteSpaceAndComments(p, true);
 
-			if (p.conditions.Count > 0) p.conditions.Pop();
-			_active = p.conditions.Count > 0 ? p.conditions.Peek().result : true;
+			if (p.ifStack.Count > 0) p.ifStack.Pop();
+			_active = p.ifStack.Count > 0 ? p.ifStack.Peek().result != ConditionResult.Negative : true;
 
 			IgnoreWhiteSpaceAndComments(p, true);
 		}
@@ -496,14 +496,26 @@ namespace DkTools.CodeModel
 		{
 			IgnoreWhiteSpaceAndComments(p, true);
 
-			if (p.conditions.Count == 0) return;
+			if (p.ifStack.Count == 0) return;
 
-			var scope = p.conditions.Peek();
+			var scope = p.ifStack.Peek();
 
 			if (scope.gotElse) return;
 			scope.gotElse = true;
 
-			_active = !scope.result;
+			switch (scope.result)
+			{
+				case ConditionResult.Negative:
+					_active = true;
+					break;
+				case ConditionResult.Positive:
+					_active = false;
+					break;
+				default:
+					// Don't hide either side for indeterminate.
+					_active = true;
+					break;
+			}
 
 			IgnoreWhiteSpaceAndComments(p, true);
 		}
@@ -529,16 +541,16 @@ namespace DkTools.CodeModel
 
 			if (!elif)
 			{
-				p.conditions.Push(new ConditionScope { result = result });
+				p.ifStack.Push(new ConditionScope { result = result });
 			}
 			else
 			{
-				if (p.conditions.Count == 0) return;
-				var cond = p.conditions.Peek();
-				if (cond.gotElse) return;
-				cond.result = result;
+				if (p.ifStack.Count == 0) return;
+				var ifLevel = p.ifStack.Peek();
+				if (ifLevel.gotElse) return;
+				ifLevel.result = result;
 			}
-			_active = result;
+			_active = result != ConditionResult.Negative;
 		}
 
 		private void Append(PreprocessorParams p, string text, CodeAttributes attribs)
@@ -564,9 +576,16 @@ namespace DkTools.CodeModel
 			public CodeAttributes attribs;
 		}
 
+		public enum ConditionResult
+		{
+			Negative,
+			Positive,
+			Indeterminate
+		}
+
 		private class ConditionScope
 		{
-			public bool result;
+			public ConditionResult result;
 			public bool gotElse;
 		}
 
@@ -576,7 +595,7 @@ namespace DkTools.CodeModel
 			public IPreprocessorWriter writer;
 			public string fileName;
 			public string[] parentFiles;
-			public Stack<ConditionScope> conditions = new Stack<ConditionScope>();
+			public Stack<ConditionScope> ifStack = new Stack<ConditionScope>();
 			public bool allowDirectives = true;
 
 			public PreprocessorParams(IPreprocessorReader reader, IPreprocessorWriter writer, string fileName, IEnumerable<string> parentFiles)
@@ -588,7 +607,7 @@ namespace DkTools.CodeModel
 			}
 		}
 
-		private bool EvaluateCondition(string conditionStr)
+		private ConditionResult EvaluateCondition(string conditionStr)
 		{
 			// Run preprocessor on the condition string
 			var reader = new StringPreprocessorReader(conditionStr);
@@ -597,14 +616,26 @@ namespace DkTools.CodeModel
 			parms.allowDirectives = false;
 			Preprocess(parms, false);
 
-			//var parser = new DkTools.TokenParser.Parser(writer.Text);
-			//var tokens = parser.ToList();
-			//var topNode = new TokenNode();
-			//topNode.Parse(tokens);
+			// Evaluate the condition string
+			long? finalValue;
+			try
+			{
+				var parser = new TokenParser.Parser(writer.Text);
+				var tokenGroup = PreprocessorTokens.GroupToken.Parse(null, parser, null);
+				finalValue = tokenGroup.Value;
+			}
+			catch (PreprocessorTokens.PreprocessorConditionException ex)
+			{
+				Log.WriteDebug("Exception when processing #if condition: {0}", ex);
+				finalValue = null;
+			}
 
-			// TODO: break the string down into tokens and evaluate
-
-			return true;
+			if (finalValue.HasValue)
+			{
+				if (finalValue.Value != 0) return ConditionResult.Positive;
+				else return ConditionResult.Negative;
+			}
+			else return ConditionResult.Indeterminate;
 		}
 	}
 }

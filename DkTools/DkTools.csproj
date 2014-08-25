@@ -253,6 +253,12 @@
     <Compile Include="CodeModel\Preprocessor.cs" />
     <Compile Include="CodeModel\IPreprocessorReader.cs" />
     <Compile Include="CodeModel\IPreprocessorWriter.cs" />
+    <Compile Include="CodeModel\PreprocessorTokens\PreprocessorConditionException.cs" />
+    <Compile Include="CodeModel\PreprocessorTokens\ErrorToken.cs" />
+    <Compile Include="CodeModel\PreprocessorTokens\GroupToken.cs" />
+    <Compile Include="CodeModel\PreprocessorTokens\NumberToken.cs" />
+    <Compile Include="CodeModel\PreprocessorTokens\OperatorToken.cs" />
+    <Compile Include="CodeModel\PreprocessorTokens\Token.cs" />
     <Compile Include="CodeModel\StringPreprocessorReader.cs" />
     <Compile Include="CodeModel\StringPreprocessorWriter.cs" />
     <Compile Include="CodeModel\Tokens\ConstantToken.cs" />
