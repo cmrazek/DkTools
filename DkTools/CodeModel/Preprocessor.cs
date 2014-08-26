@@ -274,9 +274,7 @@ namespace DkTools.CodeModel
 			content = ResolveMacros(content);
 			Log.WriteDebug("STRINGIZE resolved arguments: {0}", content);
 
-			// TODO: change content into a string
-
-			p.reader.Insert(content);
+			p.reader.Insert(EscapeString(content));
 		}
 
 		private string ReadAndIgnoreNestableContent(PreprocessorParams p, char endChar)
@@ -326,10 +324,25 @@ namespace DkTools.CodeModel
 					break;
 				}
 
+				if (ch == ')' || ch == '}' || ch == ']')
+				{
+					sb.Append(ch);
+					rdr.Ignore(1);
+					continue;
+				}
+
 				text = rdr.PeekUntil(c =>
 					{
-						if (c == '(' || c == '{' || c == '[' || c == '/') return false;
-						return true;
+						switch (c)
+						{
+							case '(': case ')':
+							case '{': case '}':
+							case '[': case ']':
+							case '/':
+								return false;
+							default:
+								return true;
+						}
 					});
 				sb.Append(text);
 				rdr.Ignore(text.Length);
@@ -577,6 +590,41 @@ namespace DkTools.CodeModel
 			}
 
 			p.reader.Suppress = p.suppress = suppress;
+		}
+
+		private string EscapeString(string str)
+		{
+			var sb = new StringBuilder();
+			sb.Append("\"");
+
+			foreach (var ch in str)
+			{
+				switch (ch)
+				{
+					case '\\':
+						sb.Append("\\\\");
+						break;
+					case '\n':
+						sb.Append("\\n");
+						break;
+					case '\r':
+						sb.Append("\\r");
+						break;
+					case '\t':
+						sb.Append("\\t");
+						break;
+					case '"':
+						sb.Append("\\\"");
+						break;
+					default:
+						if (ch < 0x20 || ch > 0x7f) sb.AppendFormat("\\x{0:X4}", (int)ch);
+						else sb.Append(ch);
+						break;
+				}
+			}
+
+			sb.Append("\"");
+			return sb.ToString();
 		}
 
 		private struct Define
