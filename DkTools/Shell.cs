@@ -67,6 +67,17 @@ namespace DkTools
 			}
 		}
 
+		public static void OpenTempContent(string content, string fileTitle, string ext)
+		{
+			string fileName;
+			using (var tempFile = new TempFileOutput(fileTitle, ext))
+			{
+				tempFile.WriteLine(content);
+				fileName = tempFile.FileName;
+			}
+			OpenDocument(fileName);
+		}
+
 		internal static EnvDTE.DTE DTE
 		{
 			get

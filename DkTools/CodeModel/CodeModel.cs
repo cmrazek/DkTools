@@ -21,7 +21,7 @@ namespace DkTools.CodeModel
 			_store = store;
 
 			var codeSource = new CodeSource();
-			codeSource.Append(source, new CodeAttributes(fileName, Position.Start, true));
+			codeSource.Append(source, new CodeAttributes(fileName, Position.Start, Position.Start.Advance(source), true));
 
 			Init(codeSource, fileName, true);
 		}
@@ -33,7 +33,7 @@ namespace DkTools.CodeModel
 			_store = FileStore.GetOrCreateForTextBuffer(snapshot.TextBuffer);
 
 			var codeSource = new CodeSource();
-			codeSource.Append(source, new CodeAttributes(fileName, Position.Start, true));
+			codeSource.Append(source, new CodeAttributes(fileName, Position.Start, Position.Start.Advance(source), true));
 			codeSource.Snapshot = snapshot;
 
 			Init(codeSource, fileName, true);

@@ -567,9 +567,10 @@ namespace DkTools
 			if (view != null)
 			{
 				var fileName = VsTextUtil.TryGetFileName(view.TextBuffer);
+				var content = view.TextBuffer.CurrentSnapshot.GetText();
 
 				var codeSource = new CodeModel.CodeSource();
-				codeSource.Append(view.TextBuffer.CurrentSnapshot.GetText(), new CodeModel.CodeAttributes(fileName, CodeModel.Position.Start, true));
+				codeSource.Append(content, new CodeModel.CodeAttributes(fileName, CodeModel.Position.Start, CodeModel.Position.Start.Advance(content), true));
 
 				var store = new CodeModel.FileStore();
 				var reader = new CodeModel.CodeSource.CodeSourcePreprocessorReader(codeSource);
@@ -582,6 +583,12 @@ namespace DkTools
 				using (var tempFile = new TempFileOutput(Path.GetFileNameWithoutExtension(fileName), Path.GetExtension(fileName)))
 				{
 					tempFile.WriteLine(dest.Text);
+
+					tempFile.WriteLine("");
+					tempFile.WriteLine("CONTINUOUS SEGMENTS:");
+					tempFile.WriteLine(dest.DumpContinuousSegments());
+
+
 					fileName = tempFile.FileName;
 				}
 				Shell.OpenDocument(fileName);

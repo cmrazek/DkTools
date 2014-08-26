@@ -12,7 +12,6 @@ namespace DkTools.CodeModel
 	{
 		private FileStore _store;
 		private Dictionary<string, Define> _defines = new Dictionary<string, Define>();
-		private bool _active;
 
 		public Preprocessor(FileStore store)
 		{
@@ -37,28 +36,31 @@ namespace DkTools.CodeModel
 			}
 
 			char ch;
-			CodeAttributes att;
 			string text;
 			var sb = new StringBuilder();
 			var rdr = p.reader;
+			p.reader.SetWriter(p.writer);
 
 			while (!rdr.EOF)
 			{
-				ch = rdr.PeekChar(out att);
+				ch = rdr.Peek();
 
 				if (Char.IsWhiteSpace(ch))
 				{
-					text = rdr.ReadSegmentUntil(c => Char.IsWhiteSpace(c), out att);
-					Append(p, text, att);
+					rdr.UseUntil(c => Char.IsWhiteSpace(c));
 					continue;
 				}
 
-				if (IgnoreComments(p)) continue;
+				if (ch == '/')
+				{
+					if (!IgnoreComments(p)) rdr.Use(1);
+					continue;
+				}
 
 				if (ch == '#' && p.allowDirectives)
 				{
-					rdr.MoveNext();
-					ProcessDirective(p, att);
+					rdr.Ignore(1);
+					ProcessDirective(p);
 					continue;
 				}
 
@@ -66,69 +68,54 @@ namespace DkTools.CodeModel
 				{
 					// This could be an identifer
 
-					var first = true;
-					text = rdr.ReadSegmentUntil(c =>
-						{
-							if (first)
-							{
-								first = false;
-								return c.IsWordChar(true);
-							}
-							else return c.IsWordChar(false);
-						}, out att);
+					text = rdr.PeekIdentifier();
 
-					ch = rdr.PeekChar();
-					if (ch.IsWordChar(false))
+					if (_defines.ContainsKey(text))
 					{
-						// This identifier name is split out over multiple segments.
-						// Read the parts of the word until the end is found.
-
-						var parts = new List<TextPart>();
-						parts.Add(new TextPart { text = text, att = att });
-
-						sb.Clear();
-						sb.Append(text);
-
-						while ((text = rdr.ReadSegmentUntil(c => c.IsWordChar(false), out att)).Length > 0)
-						{
-							parts.Add(new TextPart { text = text, att = att });
-							sb.Append(text);
-						}
-
-						text = sb.ToString();
-						if (_defines.ContainsKey(text)) ProcessDefineUse(p, text);
-						else if (text == "STRINGIZE") ProcessStringize(p, parts[0].att);
-						else
-						{
-							foreach (var part in parts) Append(p, part.text, part.att);
-						}
+						rdr.Ignore(text.Length);
+						ProcessDefineUse(p, text);
+					}
+					else if (text == "STRINGIZE")
+					{
+						rdr.Ignore(text.Length);
+						ProcessStringize(p);
 					}
 					else
 					{
-						if (_defines.ContainsKey(text)) ProcessDefineUse(p, text);
-						else if (text == "STRINGIZE") ProcessStringize(p, att);
-						else Append(p, text, att);
+						rdr.Use(text.Length);
 					}
 					continue;
 				}
 
+				if (Char.IsNumber(ch))
+				{
+					rdr.UseUntil(c => Char.IsNumber(c));
+					continue;
+				}
+
 				// All other char types will be added to the destination as-is.
-				Append(p, ch.ToString(), att);
-				rdr.MoveNext();
+				rdr.UseUntil(c =>
+					{
+						// Ignore everything that doesn't matter to the other processing, above.
+						if (Char.IsWhiteSpace(c)) return true;
+						if (c == '#' || c == '/') return false;
+						if (c.IsWordChar(false)) return false;
+						return true;
+					});
 			}
 		}
 
-		private void ProcessDirective(PreprocessorParams p, CodeAttributes hashAtt)
+		private void ProcessDirective(PreprocessorParams p)
 		{
 			// This function is called after the '#' has been read from the file.
 
-			var attribs = new CodeAttributes(hashAtt.FileName, hashAtt.FilePosition, false);
-			var inst = p.reader.ReadSegmentUntil(c => c.IsWordChar(false));
+			var directiveName = p.reader.PeekIdentifier();
+			p.reader.Ignore(directiveName.Length);
 
-			switch (inst)
+			switch (directiveName)
 			{
 				case "define":
-					ProcessDefine(p, attribs);
+					ProcessDefine(p);
 					break;
 				case "undef":
 					ProcessUndef(p);
@@ -154,46 +141,44 @@ namespace DkTools.CodeModel
 				case "endif":
 					ProcessEndIf(p);
 					break;
-				default:
-					Append(p, string.Concat("#", inst), hashAtt);
-					break;
 			}
 
 			// TODO: warnadd, warndel
 		}
 
-		private void ProcessDefine(PreprocessorParams p, CodeAttributes attribs)
+		private void ProcessDefine(PreprocessorParams p)
 		{
 			var rdr = p.reader;
 
 			// Get the define name
 			IgnoreWhiteSpaceAndComments(p, true);
-			var name = rdr.ReadIdentifier();
+			var name = rdr.PeekIdentifier();
 			if (string.IsNullOrEmpty(name)) return;
+			rdr.Ignore(name.Length);
 
 			// Read the define value
 			IgnoreWhiteSpaceAndComments(p, true);
 			var insideBlock = false;
 			var braceLevel = 0;
-			var ch = rdr.PeekChar();
+			var ch = rdr.Peek();
 			if (ch == '{')
 			{
 				insideBlock = true;
 				braceLevel = 1;
-				rdr.MoveNext();
+				rdr.Ignore(1);
 			}
 
 			var sb = new StringBuilder();
 
 			while (!rdr.EOF)
 			{
-				ch = rdr.PeekChar();
+				ch = rdr.Peek();
 
 				if (IgnoreComments(p)) continue;
 
 				if (ch == '\r')
 				{
-					rdr.MoveNext();
+					rdr.Ignore(1);
 					continue;
 				}
 
@@ -208,18 +193,18 @@ namespace DkTools.CodeModel
 							// define continues down to the next line, but don't include the slash in the resulting text.
 							sb.Remove(index, 1);
 							sb.Append("\r\n");
-							rdr.MoveNext();
+							rdr.Ignore(1);
 							continue;
 						}
 						else if (!insideBlock)
 						{
-							rdr.MoveNext();
+							rdr.Ignore(1);
 							break;
 						}
 					}
 					else
 					{
-						rdr.MoveNext();
+						rdr.Ignore(1);
 						break;
 					}
 				}
@@ -227,14 +212,14 @@ namespace DkTools.CodeModel
 				if (ch == '{' && insideBlock)
 				{
 					braceLevel++;
-					rdr.MoveNext();
+					rdr.Ignore(1);
 					sb.Append('{');
 					continue;
 				}
 
 				if (ch == '}' && insideBlock)
 				{
-					rdr.MoveNext();
+					rdr.Ignore(1);
 					if (--braceLevel <= 0)
 					{
 						break;
@@ -247,66 +232,72 @@ namespace DkTools.CodeModel
 				}
 
 				sb.Append(ch);
-				rdr.MoveNext();
+				rdr.Ignore(1);
 			}
 
-			_defines[name] = new Define { name = name, content = sb.ToString(), attribs = attribs };
+			_defines[name] = new Define { name = name, content = sb.ToString() };
 		}
 
 		private void ProcessUndef(PreprocessorParams p)
 		{
 			IgnoreWhiteSpaceAndComments(p, true);
-			var name = p.reader.ReadIdentifier();
+			var name = p.reader.PeekIdentifier();
 			if (string.IsNullOrEmpty(name)) return;
+			p.reader.Ignore(name.Length);
 
 			_defines.Remove(name);
 		}
 
 		private void ProcessDefineUse(PreprocessorParams p, string name)
 		{
+			if (p.suppress) return;
+
 			Define define;
 			if (_defines.TryGetValue(name, out define))
 			{
 				var textToAdd = ResolveMacros(define.content);
-				Append(p, textToAdd, define.attribs);
+				p.reader.Insert(textToAdd);
 			}
 		}
 
-		private void ProcessStringize(PreprocessorParams p, CodeAttributes cmdAtt)
+		private void ProcessStringize(PreprocessorParams p)
 		{
 			IgnoreWhiteSpaceAndComments(p, false);
 			if (p.reader.EOF) return;
 
-			if (p.reader.PeekChar() != '(') return;
-			p.reader.MoveNext();
+			if (p.reader.Peek() != '(') return;
+			p.reader.Ignore(1);
 			IgnoreWhiteSpaceAndComments(p, true);
 
-			var content = ReadNestableContent(p, ')');
+			var content = ReadAndIgnoreNestableContent(p, ')');
 			Log.WriteDebug("STRINGIZE arguments: {0}", content);
 			content = ResolveMacros(content);
 			Log.WriteDebug("STRINGIZE resolved arguments: {0}", content);
 
-			Append(p, content, new CodeAttributes(cmdAtt.FileName, cmdAtt.FilePosition, false));
+			// TODO: change content into a string
+
+			p.reader.Insert(content);
 		}
 
-		private string ReadNestableContent(PreprocessorParams p, char endChar)
+		private string ReadAndIgnoreNestableContent(PreprocessorParams p, char endChar)
 		{
 			var sb = new StringBuilder();
 			IgnoreWhiteSpaceAndComments(p, false);
 
 			var rdr = p.reader;
+			string text;
 
 			while (!rdr.EOF)
 			{
-				var ch = rdr.PeekChar();
+				var ch = rdr.Peek();
 
 				if (IgnoreComments(p)) continue;
 
 				if (ch == '(')
 				{
 					sb.Append(ch);
-					rdr.MoveNext();
-					sb.Append(ReadNestableContent(p, ')'));
+					rdr.Ignore(1);
+					sb.Append(ReadAndIgnoreNestableContent(p, ')'));
 					sb.Append(')');
 					continue;
 				}
@@ -314,8 +305,8 @@ namespace DkTools.CodeModel
 				if (ch == '{')
 				{
 					sb.Append(ch);
-					rdr.MoveNext();
-					sb.Append(ReadNestableContent(p, '}'));
+					rdr.Ignore(1);
+					sb.Append(ReadAndIgnoreNestableContent(p, '}'));
 					sb.Append('}');
 					continue;
 				}
@@ -323,20 +314,25 @@ namespace DkTools.CodeModel
 				if (ch == '[')
 				{
 					sb.Append(ch);
-					rdr.MoveNext();
-					sb.Append(ReadNestableContent(p, ']'));
+					rdr.Ignore(1);
+					sb.Append(ReadAndIgnoreNestableContent(p, ']'));
 					sb.Append(']');
 					continue;
 				}
 
 				if (ch == endChar)
 				{
-					rdr.MoveNext();
+					rdr.Ignore(1);
 					break;
 				}
 
-				sb.Append(ch);
-				rdr.MoveNext();
+				text = rdr.PeekUntil(c =>
+					{
+						if (c == '(' || c == '{' || c == '[' || c == '/') return false;
+						return true;
+					});
+				sb.Append(text);
+				rdr.Ignore(text.Length);
 			}
 
 			return sb.ToString();
@@ -354,15 +350,17 @@ namespace DkTools.CodeModel
 
 		private void IgnoreWhiteSpaceAndComments(PreprocessorParams p, bool stayOnSameLine)
 		{
+			char ch;
+
 			while (true)
 			{
-				var ch = p.reader.PeekChar();
+				ch = p.reader.Peek();
 
 				if (stayOnSameLine && (ch == '\r' || ch == '\n')) break;
 
 				if (Char.IsWhiteSpace(ch))
 				{
-					p.reader.MoveNext();
+					p.reader.IgnoreUntil(c => Char.IsWhiteSpace(c));
 					continue;
 				}
 
@@ -373,43 +371,34 @@ namespace DkTools.CodeModel
 		private bool IgnoreComments(PreprocessorParams p, bool multiLineOnly = false)
 		{
 			var rdr = p.reader;
+			var writer = p.writer;
 
-			if (rdr.PeekChar() == '/')
+			if (rdr.Peek() == '/')
 			{
 				var str = rdr.Peek(2);
 				if (str == "/*")
 				{
-					rdr.MoveNext(2);
+					rdr.Ignore(2);
+					rdr.IgnoreUntil(c => c != '/' && c != '*');
 					while (!rdr.EOF)
 					{
-						if (rdr.PeekChar() == '*' && rdr.Peek(2) == "*/")
+						if (rdr.Peek() == '*' && rdr.Peek(2) == "*/")
 						{
-							rdr.MoveNext(2);
+							rdr.Ignore(2);
 							return true;
 						}
 						else if (!IgnoreComments(p, true))
 						{
-							rdr.MoveNext();
+							rdr.Ignore(1);
 						}
+						rdr.IgnoreUntil(c => c != '/' && c != '*');
 					}
 					return true;
 				}
 				else if (str == "//" && multiLineOnly == false)
 				{
-					char ch;
-					rdr.MoveNext(2);
-					while (!rdr.EOF)
-					{
-						ch = rdr.PeekChar();
-						if (ch == '\r' || ch == '\n')
-						{
-							return true;
-						}
-						else if (!IgnoreComments(p, true))
-						{
-							rdr.MoveNext();
-						}
-					}
+					rdr.IgnoreUntil(c => c != '\r' && c != '\n');
+					return true;
 				}
 			}
 			return false;
@@ -423,25 +412,27 @@ namespace DkTools.CodeModel
 			var rdr = p.reader;
 
 			IgnoreWhiteSpaceAndComments(p, true);
-			var ch = rdr.PeekChar();
+			var ch = rdr.Peek();
 			if (ch == '\"')
 			{
-				rdr.MoveNext();
-				includeName = rdr.ReadAllUntil(c => c != '\"');
+				rdr.Ignore(1);
+				includeName = rdr.PeekUntil(c => c != '\"' && c != '\r' && c != '\n');
+				rdr.Ignore(includeName.Length);
+				if (rdr.Peek() == '\"') rdr.Ignore(1);
 				searchSameDir = true;
-				rdr.MoveNext();
 			}
 			else if (ch == '<')
 			{
-				rdr.MoveNext();
-				includeName = rdr.ReadAllUntil(c => c != '>');
+				rdr.Ignore(1);
+				includeName = rdr.PeekUntil(c => c != '>' && c != '\r' && c != '\n');
+				rdr.Ignore(includeName.Length);
+				if (rdr.Peek() == '>') rdr.Ignore(1);
 				searchSameDir = false;
-				rdr.MoveNext();
 			}
 			else return;
 			if (string.IsNullOrEmpty(includeName)) return;
 
-			if (_active) AppendIncludeFile(p, includeName, searchSameDir);
+			if (!p.suppress) AppendIncludeFile(p, includeName, searchSameDir);
 		}
 
 		private void AppendIncludeFile(PreprocessorParams p, string fileName, bool searchSameDir)
@@ -459,26 +450,35 @@ namespace DkTools.CodeModel
 			if (rawSource == null) return;
 			var reader = new CodeSource.CodeSourcePreprocessorReader(rawSource);
 
+			//Shell.OpenTempContent(rawSource.Dump(), System.IO.Path.GetFileName(fileName), ".txt");	// TODO: remove
+
 			// Run the preprocessor on the include file.
 			var includeSource = new CodeSource();
 			var parms = new PreprocessorParams(reader, includeSource, fileName, parentFiles);
 			Preprocess(parms, false);
 
-			Append(p, includeSource);
+			p.writer.Append(includeSource);
 		}
 
 		private void ProcessIfDef(PreprocessorParams p, bool activeIfDefined)
 		{
 			IgnoreWhiteSpaceAndComments(p, true);
 
-			var name = p.reader.ReadIdentifier();
+			var name = p.reader.PeekIdentifier();
 			if (string.IsNullOrEmpty(name)) return;
+			p.reader.Ignore(name.Length);
 
-			bool defined = _defines.ContainsKey(name);
-			if (!activeIfDefined) defined = !defined;
-			p.ifStack.Push(new ConditionScope { result = defined ? ConditionResult.Positive : ConditionResult.Negative });
-			_active = defined;
-
+			if (p.suppress)
+			{
+				p.ifStack.Push(new ConditionScope { result = ConditionResult.Indeterminate });
+			}
+			else
+			{
+				bool defined = _defines.ContainsKey(name);
+				if (!activeIfDefined) defined = !defined;
+				p.ifStack.Push(new ConditionScope { result = defined ? ConditionResult.Positive : ConditionResult.Negative });
+				UpdateSuppress(p);
+			}
 			IgnoreWhiteSpaceAndComments(p, true);
 		}
 
@@ -487,7 +487,7 @@ namespace DkTools.CodeModel
 			IgnoreWhiteSpaceAndComments(p, true);
 
 			if (p.ifStack.Count > 0) p.ifStack.Pop();
-			_active = p.ifStack.Count > 0 ? p.ifStack.Peek().result != ConditionResult.Negative : true;
+			UpdateSuppress(p);
 
 			IgnoreWhiteSpaceAndComments(p, true);
 		}
@@ -502,20 +502,7 @@ namespace DkTools.CodeModel
 
 			if (scope.gotElse) return;
 			scope.gotElse = true;
-
-			switch (scope.result)
-			{
-				case ConditionResult.Negative:
-					_active = true;
-					break;
-				case ConditionResult.Positive:
-					_active = false;
-					break;
-				default:
-					// Don't hide either side for indeterminate.
-					_active = true;
-					break;
-			}
+			UpdateSuppress(p);
 
 			IgnoreWhiteSpaceAndComments(p, true);
 		}
@@ -525,19 +512,31 @@ namespace DkTools.CodeModel
 			var sb = new StringBuilder();
 			char ch;
 			var rdr = p.reader;
+			string text;
 
 			IgnoreWhiteSpaceAndComments(p, true);
 
 			while (!rdr.EOF)
 			{
-				ch = rdr.PeekChar();
+				ch = rdr.Peek();
 				if (ch == '\r' || ch == '\n') break;
-				if (IgnoreComments(p)) continue;
-				sb.Append(ch);
-				rdr.MoveNext();
+
+				if (ch == '/')
+				{
+					if (IgnoreComments(p)) continue;
+					sb.Append(ch);
+					rdr.Ignore(1);
+					continue;
+				}
+
+				text = rdr.PeekUntil(c => c != '\r' && c != '\n' && c != '/');
+				rdr.Ignore(text.Length);
+				sb.Append(text);
 			}
 
-			var result = EvaluateCondition(sb.ToString());
+			ConditionResult result;
+			if (p.suppress) result = ConditionResult.Indeterminate;
+			else result = EvaluateCondition(sb.ToString());
 
 			if (!elif)
 			{
@@ -550,30 +549,40 @@ namespace DkTools.CodeModel
 				if (ifLevel.gotElse) return;
 				ifLevel.result = result;
 			}
-			_active = result != ConditionResult.Negative;
+			UpdateSuppress(p);
 		}
 
-		private void Append(PreprocessorParams p, string text, CodeAttributes attribs)
+		private void UpdateSuppress(PreprocessorParams p)
 		{
-			if (_active) p.writer.Append(text, attribs);
-		}
+			var suppress = false;
 
-		private void Append(PreprocessorParams p, CodeSource source)
-		{
-			if (_active) p.writer.Append(source);
-		}
+			foreach (var scope in p.ifStack)
+			{
+				if (!scope.gotElse)
+				{
+					if (scope.result == ConditionResult.Negative)
+					{
+						suppress = true;
+						break;
+					}
+				}
+				else
+				{
+					if (scope.result == ConditionResult.Positive)
+					{
+						suppress = true;
+						break;
+					}
+				}
+			}
 
-		private struct TextPart
-		{
-			public string text;
-			public CodeAttributes att;
+			p.reader.Suppress = p.suppress = suppress;
 		}
 
 		private struct Define
 		{
 			public string name;
 			public string content;
-			public CodeAttributes attribs;
 		}
 
 		public enum ConditionResult
@@ -595,8 +604,9 @@ namespace DkTools.CodeModel
 			public IPreprocessorWriter writer;
 			public string fileName;
 			public string[] parentFiles;
-			public Stack<ConditionScope> ifStack = new Stack<ConditionScope>();
 			public bool allowDirectives = true;
+			public Stack<ConditionScope> ifStack = new Stack<ConditionScope>();
+			public bool suppress;
 
 			public PreprocessorParams(IPreprocessorReader reader, IPreprocessorWriter writer, string fileName, IEnumerable<string> parentFiles)
 			{

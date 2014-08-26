@@ -12,6 +12,8 @@ namespace DkTools.CodeModel
 		private int _pos;
 		private int _len;
 		private StringBuilder _sb = new StringBuilder();
+		private IPreprocessorWriter _writer;
+		private bool _suppress;
 
 		public StringPreprocessorReader(string str)
 		{
@@ -20,33 +22,18 @@ namespace DkTools.CodeModel
 			_len = _str.Length;
 		}
 
+		public void SetWriter(IPreprocessorWriter writer)
+		{
+			_writer = writer;
+		}
+
 		public bool EOF
 		{
 			get { return _pos >= _len; }
 		}
 
-		public char ReadChar()
+		public char Peek()
 		{
-			if (_pos >= _len) return '\0';
-			return _str[_pos++];
-		}
-
-		public char ReadChar(out CodeAttributes att)
-		{
-			att = CodeAttributes.Empty;
-			if (_pos >= _len) return '\0';
-			return _str[_pos++];
-		}
-
-		public char PeekChar()
-		{
-			if (_pos >= _len) return '\0';
-			return _str[_pos];
-		}
-
-		public char PeekChar(out CodeAttributes att)
-		{
-			att = CodeAttributes.Empty;
 			if (_pos >= _len) return '\0';
 			return _str[_pos];
 		}
@@ -57,32 +44,18 @@ namespace DkTools.CodeModel
 			return _str.Substring(_pos, numChars);
 		}
 
-		public bool MoveNext()
+		public string PeekUntil(Func<char, bool> callback)
 		{
-			if (_pos < _len) _pos++;
-			return _pos < _len;
-		}
-
-		public bool MoveNext(int length)
-		{
-			_pos += length;
-			if (_pos > _len) _pos = _len;
-			return _pos < _len;
-		}
-
-		public string ReadSegmentUntil(Func<char, bool> callback)
-		{
+			var pos = _pos;
 			char ch;
-
 			_sb.Clear();
 
-			while (_pos < _len)
+			while (pos < _len)
 			{
-				ch = _str[_pos];
-				if (callback(ch))
+				if (callback(ch = _str[pos]))
 				{
 					_sb.Append(ch);
-					_pos++;
+					pos++;
 				}
 				else break;
 			}
@@ -90,34 +63,74 @@ namespace DkTools.CodeModel
 			return _sb.ToString();
 		}
 
-		public string ReadSegmentUntil(Func<char, bool> callback, out CodeAttributes att)
+		public string PeekIdentifier()
 		{
-			att = CodeAttributes.Empty;
-			return ReadSegmentUntil(callback);
+			var first = true;
+			return PeekUntil(ch =>
+			{
+				if (first)
+				{
+					first = false;
+					return ch.IsWordChar(true);
+				}
+				else return ch.IsWordChar(false);
+			});
 		}
 
-		public string ReadAllUntil(Func<char, bool> callback)
+		public void Use(int numChars)
 		{
-			return ReadSegmentUntil(callback);
+			if (_pos + numChars > _len) numChars = _len - (_pos + numChars);
+			if (!_suppress) _writer.Append(_str.Substring(_pos, numChars), CodeAttributes.Empty);
+			_pos += numChars;
 		}
 
-		public string ReadIdentifier()
+		public void UseUntil(Func<char, bool> callback)
 		{
+			char ch;
 			_sb.Clear();
 
-			var first = true;
+			while (_pos < _len)
+			{
+				if (callback(ch = _str[_pos]))
+				{
+					_sb.Append(ch);
+					_pos++;
+				}
+				else break;
+			}
+
+			if (_sb.Length > 0 && !_suppress)
+			{
+				_writer.Append(_sb.ToString(), CodeAttributes.Empty);
+			}
+		}
+
+		public void Ignore(int numChars)
+		{
+			_pos += numChars;
+			if (_pos > _len) _pos = _len;
+		}
+
+		public void IgnoreUntil(Func<char, bool> callback)
+		{
 			char ch;
 
 			while (_pos < _len)
 			{
-				ch = _str[_pos];
-				if (!ch.IsWordChar(first)) break;
-				_sb.Append(ch);
-				_pos++;
-				first = false;
+				if (callback(ch = _str[_pos])) _pos++;
+				else break;
 			}
+		}
 
-			return _sb.ToString();
+		public void Insert(string text)
+		{
+			_writer.Append(text, CodeAttributes.Empty);
+		}
+
+		public bool Suppress
+		{
+			get { return _suppress; }
+			set { _suppress = value; }
 		}
 	}
 }

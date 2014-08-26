@@ -71,7 +71,18 @@ namespace DkTools.CodeModel
 
 			// Generate the final source.
 			_mergedContent = new CodeSource();
-			foreach (var line in _lines) _mergedContent.Append(string.Concat(line.text, "\r\n"), new CodeAttributes(line.fileName, line.pos, true));
+			int lineIndex = 0;
+			foreach (var line in _lines)
+			{
+				var endPos = line.pos.Advance(line.text);
+				_mergedContent.Append(line.text, new CodeAttributes(line.fileName, line.pos, endPos, true));
+				if (!line.text.EndsWith("\n") && lineIndex + 1 < _lines.Count)
+				{
+					// Does not end with crlf. Need to insert between the lines.
+					_mergedContent.Append("\r\n", new CodeAttributes(line.fileName, endPos, endPos, false));
+				}
+				lineIndex++;
+			}
 		}
 
 		private string UnrootFileName(string fileName)
@@ -159,13 +170,13 @@ namespace DkTools.CodeModel
 				sb.Append(ch);
 				if (ch == '\n')
 				{
-					_lines.Add(new Line(_origFileName, linePos, sb.ToString().TrimEnd()));
+					_lines.Add(new Line(_origFileName, linePos, sb.ToString()));
 					sb.Clear();
 				}
 				pos = pos.CalcNext(ch);
 				if (ch == '\n') linePos = pos;
 			}
-			_lines.Add(new Line(_origFileName, pos, sb.ToString().TrimEnd()));
+			_lines.Add(new Line(_origFileName, pos, sb.ToString()));
 		}
 
 		private void MergeFile(string localFileName)

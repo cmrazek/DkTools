@@ -8,17 +8,22 @@ namespace DkTools.CodeModel
 {
 	internal interface IPreprocessorReader
 	{
+		void SetWriter(IPreprocessorWriter writer);
 		bool EOF { get; }
-		char ReadChar();
-		char ReadChar(out CodeAttributes att);
-		char PeekChar();
-		char PeekChar(out CodeAttributes att);
+
+		char Peek();
 		string Peek(int numChars);
-		bool MoveNext();
-		bool MoveNext(int length);
-		string ReadSegmentUntil(Func<char, bool> callback);
-		string ReadSegmentUntil(Func<char, bool> callback, out CodeAttributes att);
-		string ReadAllUntil(Func<char, bool> callback);
-		string ReadIdentifier();
+		string PeekUntil(Func<char, bool> callback);
+		string PeekIdentifier();
+
+		void Use(int numChars);
+		void UseUntil(Func<char, bool> callback);
+
+		void Ignore(int numChars);
+		void IgnoreUntil(Func<char, bool> callback);
+
+		void Insert(string text);
+
+		bool Suppress { get; set; }
 	}
 }

@@ -19,14 +19,18 @@ namespace DkTools.CodeModel
 		{
 			public string fileName;
 			public int start;
-			public Position pos;
+			public int length;
+			public Position startPos;
+			public Position endPos;
 			public bool actualContent;
 
-			public CodeSegment(string fileName, int start, Position pos, bool actualContent)
+			public CodeSegment(string fileName, int start, int length, Position startPos, Position endPos, bool actualContent)
 			{
 				this.fileName = fileName;
 				this.start = start;
-				this.pos = pos;
+				this.length = length;
+				this.startPos = startPos;
+				this.endPos = endPos;
 				this.actualContent = actualContent;
 			}
 
@@ -39,78 +43,49 @@ namespace DkTools.CodeModel
 			}
 		}
 
-		public void Append(string fileName, Position filePos, string text, bool actualContent)
+		public void Append(string text, string fileName, Position fileStartPos, Position fileEndPos, bool actualContent)
 		{
-			Append(text, new CodeAttributes(fileName, filePos, actualContent));
-		}
-
-		public void Append(string text, CodeAttributes att)
-		{
-			var start = _buf.Length;
-
 			var lastSeg = _segments.LastOrDefault();
-			var lastSegLength = lastSeg != null ? _buf.Length - lastSeg.start : 0;
 
-			_buf.Append(text);
-
-			if (lastSeg == null ||
-				!lastSeg.fileName.Equals(att.FileName, StringComparison.OrdinalIgnoreCase) ||
-				lastSeg.pos.Offset + lastSegLength != att.FilePosition.Offset ||
-				lastSeg.actualContent != att.ActualContent)
+			if (lastSeg != null)
 			{
-				_segments.Add(new CodeSegment(att.FileName, start, att.FilePosition, att.ActualContent));
+				if (fileName == lastSeg.fileName && fileStartPos == lastSeg.endPos && actualContent == lastSeg.actualContent)
+				{
+					// Safe to append onto the end of this segment.
+					lastSeg.endPos = fileEndPos;
+					lastSeg.length += text.Length;
+				}
+				else
+				{
+					_segments.Add(new CodeSegment(fileName, _buf.Length, text.Length, fileStartPos, fileEndPos, actualContent));
+				}
+			}
+			else
+			{
+				_segments.Add(new CodeSegment(fileName, _buf.Length, text.Length, fileStartPos, fileEndPos, actualContent));
 			}
 
+			_buf.Append(text);
 			_text = null;
 			_version++;
 		}
 
+		public void Append(string text, CodeAttributes att)
+		{
+			Append(text, att.FileName, att.FileStartPosition, att.FileEndPosition, att.ActualContent);
+		}
+
 		public void Append(CodeSource source)
 		{
+			_buf.EnsureCapacity(_buf.Length + source._buf.Length);
+
 			for (int segIndex = 0, numSegs = source._segments.Count; segIndex < numSegs; segIndex++)
 			{
 				var seg = source._segments[segIndex];
 				var length = (segIndex + 1 < numSegs ? source._segments[segIndex + 1].start : source._buf.Length) - seg.start;
 
-				Append(seg.fileName, seg.pos, source._buf.ToString(seg.start, length), seg.actualContent);
+				Append(source._buf.ToString(seg.start, length), seg.fileName, seg.startPos, seg.endPos, seg.actualContent);
 			}
-		}
-
-		public void Insert(int insertOffset, string fileName, Position filePos, string text, bool actualContent)
-		{
-			Insert(insertOffset, text, new CodeAttributes(fileName, filePos, actualContent));
-		}
-
-		public void Insert(int insertOffset, string text, CodeAttributes att)
-		{
-			// Split the segment that comes before this one.
-			CodeSegment lastSegBefore = null;	// = (from s in _segments where s.start < insertOffset select s).LastOrDefault();
-			foreach (var seg in _segments)
-			{
-				lastSegBefore = seg;
-				if (seg.start >= insertOffset) break;
-			}
-			if (lastSegBefore != null)
-			{
-				var segSplitPos = lastSegBefore.pos.Advance(_buf.ToString(lastSegBefore.start, insertOffset - lastSegBefore.start));
-				_segments.Add(new CodeSegment(lastSegBefore.fileName, insertOffset, segSplitPos, att.ActualContent));
-			}
-
-			// Bump all the segments that appear after this one.
-			foreach (var seg in _segments)
-			{
-				if (seg.start >= insertOffset) seg.start += text.Length;
-			}
-
-			// Insert this new one.
-			_segments.Add(new CodeSegment(att.FileName, insertOffset, att.FilePosition, att.ActualContent));
-			_text.Insert(insertOffset, text);
-
-			// Restore the sorting.
-			_segments.Sort(_codeSegmentComparer);
-
-			_text = null;
-			_version++;
 		}
 
 		public string Text
@@ -172,7 +147,7 @@ namespace DkTools.CodeModel
 			var seg = _segments[segIndex];
 			//var seg = (from s in _segments where s.start <= sourceOffset select s).Last();
 
-			var pos = seg.pos;
+			var pos = seg.startPos;
 
 			if (seg.actualContent)
 			{
@@ -211,12 +186,51 @@ namespace DkTools.CodeModel
 			for (var segIndex = 0; segIndex < _segments.Count; segIndex++)
 			{
 				var seg = _segments[segIndex];
-				sb.AppendFormat("SEGMENT {0} FileName: {1} Pos: {2} [", segIndex, seg.fileName, seg.pos);
+				sb.AppendFormat("SEGMENT {0} FileName: {1} Pos: {2} [", segIndex, seg.fileName, seg.startPos);
 
 				var end = segIndex + 1 < _segments.Count ? _segments[segIndex + 1].start : _buf.Length;
 				sb.Append(_buf.ToString(seg.start, end - seg.start));
 
 				sb.Append("]");
+			}
+
+			return sb.ToString();
+		}
+
+		public string DumpContinuousSegments()
+		{
+			var sb = new StringBuilder();
+
+			var fileName = "?";
+			var pos = Position.Start;
+			var segIndex = 0;
+			var sample = "";
+
+			foreach (var seg in _segments)
+			{
+				if (seg.fileName != fileName || seg.startPos != pos)
+				{
+					if (segIndex > 0)
+					{
+						sb.AppendFormat(" EndPos [{0}] {1}", pos, sample.Trim());
+						sb.AppendLine();
+					}
+					sb.AppendFormat("SEGMENT [{0}] Offset [{3}] FileName [{1}] Actual [{4}] StartPos [{2}]", segIndex, seg.fileName, seg.startPos, seg.start, seg.actualContent);
+
+					var length = 30;
+					if (length > seg.length) length = seg.length;
+					sample = _buf.ToString(seg.start, length).Replace('\r', ' ').Replace('\n', ' ').Trim();
+				}
+
+				fileName = seg.fileName;
+				pos = seg.endPos;
+				segIndex++;
+			}
+
+			if (segIndex > 0)
+			{
+				sb.AppendFormat(" EndPos [{0}] {1}", pos, sample.Trim());
+				sb.AppendLine();
 			}
 
 			return sb.ToString();
@@ -229,36 +243,18 @@ namespace DkTools.CodeModel
 			set { _snapshot = value; }
 		}
 
-		private int GetSegmentLength(int segIndex)
-		{
-			if (segIndex + 1 < _segments.Count)
-			{
-				return _segments[segIndex + 1].start - _segments[segIndex].start;
-			}
-			else
-			{
-				return _buf.Length - _segments[segIndex].start;
-			}
-		}
-
-		public static CodeSource Read(string fileName)
-		{
-			var content = System.IO.File.ReadAllText(fileName);
-			var source = new CodeSource();
-			source.Append(content, new CodeAttributes(fileName, Position.Start, true));
-			return source;
-		}
-
 		public class CodeSourcePreprocessorReader : IPreprocessorReader
 		{
 			private CodeSource _src;
-			private int _srcVersion;
+			//private int _srcVersion;
 			private int _segIndex;
 			private CodeSegment _seg;
 			private int _segOffset;
-			private int _segLength;
 			private Position _pos;
 			private StringBuilder _sb = new StringBuilder();
+			private IPreprocessorWriter _writer;
+			private Stack<State> _stack = new Stack<State>();
+			private bool _suppress;
 
 			public CodeSourcePreprocessorReader(CodeSource src)
 			{
@@ -266,22 +262,63 @@ namespace DkTools.CodeModel
 				if (src == null) throw new ArgumentNullException("src");
 #endif
 				_src = src;
-				_srcVersion = src._version;
 
 				_segIndex = 0;
 				_segOffset = 0;
 				if (_src._segments.Count > 0)
 				{
 					_seg = _src._segments[_segIndex];
-					_pos = _seg.pos;
-					_segLength = _src.GetSegmentLength(_segIndex);
+					_pos = _seg.startPos;
 				}
 				else
 				{
 					_seg = null;
 					_pos = Position.Start;
-					_segLength = 0;
 				}
+			}
+
+			private class State
+			{
+				public int segIndex;
+				public CodeSegment seg;
+				public int segOffset;
+				public Position pos;
+
+				public State Clone()
+				{
+					return new State
+					{
+						segIndex = segIndex,
+						seg = seg,
+						segOffset = segOffset,
+						pos = pos
+					};
+				}
+			}
+
+			private void PushState()
+			{
+				_stack.Push(new State
+				{
+					segIndex = _segIndex,
+					seg = _seg,
+					segOffset = _segOffset,
+					pos = _pos
+				});
+			}
+
+			private void PopState()
+			{
+				var state = _stack.Pop();
+				_segIndex = state.segIndex;
+				_seg = state.seg;
+				_segOffset = state.segOffset;
+				_pos = state.pos;
+			}
+
+			public void SetWriter(IPreprocessorWriter writer)
+			{
+				_writer = writer;
 			}
 
 			public bool EOF
@@ -292,250 +329,241 @@ namespace DkTools.CodeModel
 				}
 			}
 
-			public char ReadChar()
+			public char Peek()
 			{
-				var ch = PeekChar();
-				MoveNext();
-				return ch;
-			}
-
-			public char ReadChar(out CodeAttributes att)
-			{
-				var ch = PeekChar();
-				att = new CodeAttributes(_seg.fileName, _pos, _seg.actualContent);
-				MoveNext();
-				return ch;
-			}
-
-			public char PeekChar()
-			{
-#if DEBUG
-				if (_src._version != _srcVersion) throw new InvalidOperationException("The source content has changed.");
-#endif
 				if (_seg == null) return '\0';
-				return _src._buf.ToString(_seg.start + _segOffset, 1)[0];
-			}
-
-			public char PeekChar(out CodeAttributes att)
-			{
-#if DEBUG
-				if (_src._version != _srcVersion) throw new InvalidOperationException("The source content has changed.");
-#endif
-				if (_seg == null)
-				{
-					att = new CodeAttributes(null, Position.Start, false);
-					return '\0';
-				}
-				att = new CodeAttributes(_seg.fileName, _pos, _seg.actualContent);
 				return _src._buf.ToString(_seg.start + _segOffset, 1)[0];
 			}
 
 			public string Peek(int numChars)
 			{
-#if DEBUG
-				if (_src._version != _srcVersion) throw new InvalidOperationException("The source content has changed.");
-#endif
-				if (_seg == null) return string.Empty;
-				var startOffset = _seg.start + _segOffset;
-				if (_segOffset + numChars > _segLength) numChars = _segLength - _segOffset;
-				return _src._buf.ToString(startOffset, numChars);
+				_sb.Clear();
+				PushState();
+
+				while (numChars-- > 0 && _seg != null)
+				{
+					_sb.Append(Peek());
+					MoveNext();
+				}
+
+				PopState();
+				return _sb.ToString();
 			}
 
-			public bool MoveNext()
+			public string PeekUntil(Func<char, bool> callback)
 			{
-#if DEBUG
-				if (_src._version != _srcVersion) throw new InvalidOperationException("The source content has changed.");
-#endif
+				_sb.Clear();
+				PushState();
+
+				char ch;
+
+				while (_seg != null)
+				{
+					ch = Peek();
+					if (callback(ch))
+					{
+						_sb.Append(ch);
+						MoveNext();
+					}
+					else break;
+				}
+
+				PopState();
+				return _sb.ToString();
+			}
+
+			public string PeekIdentifier()
+			{
+				var first = true;
+				return PeekUntil(ch =>
+					{
+						if (first)
+						{
+							first = false;
+							return ch.IsWordChar(true);
+						}
+						else return ch.IsWordChar(false);
+					});
+			}
+
+			private void Parse(int numChars, bool use)
+			{
+				while (numChars > 0 && _seg != null)
+				{
+					if (_segOffset + numChars >= _seg.length)
+					{
+						var length = _seg.length - (_segOffset + numChars);
+						_writer.Append(use ? _src._buf.ToString(_seg.start + _segOffset, length) : string.Empty,
+							new CodeAttributes(_seg.fileName, _pos, _seg.endPos, _seg.actualContent));
+						MoveNextSegment();
+						numChars -= length;
+					}
+					else
+					{
+						var text = _src._buf.ToString(_seg.start + _segOffset, numChars);
+						var newPos = _pos.Advance(text);
+						_writer.Append(use ? text : string.Empty, new CodeAttributes(_seg.fileName, _pos, _seg.actualContent ? newPos : _pos, _seg.actualContent));
+						_segOffset += numChars;
+						_pos = newPos;
+						numChars = 0;
+					}
+				}
+			}
+
+			private void ParseUntil(Func<char, bool> callback, bool use)
+			{
+				char ch;
+				var startPos = _pos;
+				var gotContent = false;
+
+				_sb.Clear();
+
+				while (_seg != null)
+				{
+					ch = Peek();
+					if (callback(ch))
+					{
+						if (_segOffset + 1 == _seg.length)
+						{
+							// Hits the end of the segment
+							if (use)
+							{
+								_sb.Append(ch);
+								var text = _sb.ToString();
+								_writer.Append(text, new CodeAttributes(_seg.fileName, startPos, _seg.endPos, _seg.actualContent));
+								MoveNextSegment();
+								startPos = _pos;
+								_sb.Clear();
+								gotContent = false;
+							}
+							else
+							{
+								_writer.Append(string.Empty, new CodeAttributes(_seg.fileName, startPos, _seg.endPos, _seg.actualContent));
+								MoveNextSegment();
+								startPos = _pos;
+								gotContent = false;
+							}
+						}
+						else
+						{
+							// Within the current segment
+							if (use) _sb.Append(ch);
+							MoveNext();
+							gotContent = true;
+						}
+					}
+					else break;
+				}
+
+				if (gotContent)
+				{
+					if (use)
+					{
+						_writer.Append(_sb.ToString(), new CodeAttributes(_seg.fileName, startPos, _pos, _seg.actualContent));
+					}
+					else
+					{
+						_writer.Append(string.Empty, new CodeAttributes(_seg.fileName, startPos, _pos, _seg.actualContent));
+					}
+				}
+			}
+
+			public void Use(int numChars)
+			{
+				Parse(numChars, _suppress ? false : true);
+			}
+
+			public void UseUntil(Func<char, bool> callback)
+			{
+				ParseUntil(callback, _suppress ? false : true);
+			}
+
+			public void Ignore(int numChars)
+			{
+				Parse(numChars, false);
+			}
+
+			public void IgnoreUntil(Func<char, bool> callback)
+			{
+				ParseUntil(callback, false);
+			}
+
+			public void Insert(string text)
+			{
+				if (_seg != null)
+				{
+					_writer.Append(text, new CodeAttributes(_seg.fileName, _pos, _pos, false));
+				}
+				else
+				{
+					if (_src._segments.Count > 0)
+					{
+						var lastSeg = _src._segments[_src._segments.Count - 1];
+						_writer.Append(text, new CodeAttributes(lastSeg.fileName, lastSeg.endPos, lastSeg.endPos, false));
+					}
+					else
+					{
+						_writer.Append(text, CodeAttributes.Empty);
+					}
+				}
+			}
+
+			private bool MoveNext()
+			{
 				if (_seg == null) return false;
 
 				var ch = _src._buf.ToString(_seg.start + _segOffset, 1)[0];
 
-				_pos = _pos.Advance(ch);
+				if (_seg.actualContent) _pos = _pos.Advance(ch);
 				_segOffset++;
 
-				if (_segOffset >= _segLength)
-				{
-					_segIndex++;
-					if (_segIndex >= _src._segments.Count)
-					{
-						_seg = null;
-						return false;
-					}
-					else
-					{
-						_seg = _src._segments[_segIndex];
-						_segOffset = 0;
-						_pos = _seg.pos;
-						_segLength = _src.GetSegmentLength(_segIndex);
-						return true;
-					}
-				}
-				else
-				{
-					return true;
-				}
+				if (_segOffset >= _seg.length) return MoveNextSegment();
+				return true;
 			}
 
-			public bool MoveNext(int length)
+			private bool MoveNextSegment()
 			{
-				while (length-- > 0) ReadChar();
-				return !EOF;
+				_segIndex++;
+				if (_segIndex >= _src._segments.Count)
+				{
+					_seg = null;
+					return false;
+				}
+
+				_seg = _src._segments[_segIndex];
+				_segOffset = 0;
+				_pos = _seg.startPos;
+				return true;
 			}
 
-			public string ReadSegmentUntil(Func<char, bool> callback)
+			public bool Suppress
 			{
-				if (_seg == null) return string.Empty;
-
-				var startSeg = _seg;
-				char ch;
-
-				_sb.Clear();
-
-				while (_seg == startSeg)
-				{
-					ch = PeekChar();
-					if (!callback(ch)) break;
-					_sb.Append(ch);
-					MoveNext();
-				}
-
-				return _sb.ToString();
-			}
-
-			public string ReadSegmentUntil(Func<char, bool> callback, out CodeAttributes att)
-			{
-				if (_seg == null)
-				{
-					att = new CodeAttributes(null, Position.Start, false);
-					return string.Empty;
-				}
-
-				var startSeg = _seg;
-				char ch;
-
-				_sb.Clear();
-				att = new CodeAttributes(_seg.fileName, _pos, _seg.actualContent);
-
-				while (_seg == startSeg)
-				{
-					ch = PeekChar();
-					if (!callback(ch)) break;
-					_sb.Append(ch);
-					MoveNext();
-				}
-
-				return _sb.ToString();
-			}
-
-			public string ReadAllUntil(Func<char, bool> callback)
-			{
-				if (_seg == null) return string.Empty;
-
-				char ch;
-
-				_sb.Clear();
-
-				while (true)
-				{
-					ch = PeekChar();
-					if (!callback(ch)) break;
-					_sb.Append(ch);
-					if (!MoveNext()) break;
-				}
-
-				return _sb.ToString();
-			}
-
-			public string ReadIdentifier()
-			{
-				if (_seg == null) return string.Empty;
-
-				var ch = PeekChar();
-				if (!Char.IsLetter(ch) && ch != '_') return string.Empty;
-
-				_sb.Clear();
-
-				while (_seg != null && (Char.IsLetterOrDigit(ch) || ch == '_'))
-				{
-					_sb.Append(ch);
-					MoveNext();
-					ch = PeekChar();
-				}
-
-				return _sb.ToString();
+				get { return _suppress; }
+				set { _suppress = value; }
 			}
 		}
 	}
 
 	internal struct CodeAttributes
 	{
-		private string _fileName;
-		private Position _pos;
-		private bool _actualContent;
+		public string FileName;
+		public Position FileStartPosition;
+		public Position FileEndPosition;
+		public bool ActualContent;
 
-		public static readonly CodeAttributes Empty = new CodeAttributes(null, Position.Start, false);
+		public static readonly CodeAttributes Empty = new CodeAttributes(null, Position.Start, Position.Start, false);
 
-		public CodeAttributes(string fileName, Position pos, bool actualContent)
+		public CodeAttributes(string fileName, Position fileStartPos, Position fileEndPos, bool actualContent)
 		{
-			_fileName = fileName;
-			_pos = pos;
-			_actualContent = actualContent;
-		}
-
-		public string FileName
-		{
-			get { return _fileName; }
-		}
-
-		public Position FilePosition
-		{
-			get { return _pos; }
-		}
-
-		public bool ActualContent
-		{
-			get { return _actualContent; }
+			FileName = fileName;
+			FileStartPosition = fileStartPos;
+			FileEndPosition = fileEndPos;
+			ActualContent = actualContent;
 		}
 
 		public override string ToString()
 		{
-			return string.Format("FileName: {0} FilePosition: {1} ActualContent: {2}", _fileName, _pos, _actualContent);
+			return string.Format("FileName: {0} StartPos: {1} EndPos: {2} ActualContent: {3}", FileName, FileStartPosition, FileEndPosition, ActualContent);
 		}
 	}
-
-	//internal struct CodePart
-	//{
-	//	private string _fileName;
-	//	private Position _pos;
-	//	private string _text;
-	//	private bool _actualContent;
-
-	//	public CodePart(string fileName, Position pos, string text, bool actualContent)
-	//	{
-	//		_fileName = fileName;
-	//		_pos = pos;
-	//		_text = text;
-	//		_actualContent = actualContent;
-	//	}
-
-	//	public string FileName
-	//	{
-	//		get { return _fileName; }
-	//	}
-
-	//	public Position StartPosition
-	//	{
-	//		get { return _pos; }
-	//	}
-
-	//	public string Text
-	//	{
-	//		get { return _text; }
-	//	}
-
-	//	public bool ActualContent
-	//	{
-	//		get { return _actualContent; }
-	//	}
-	//}
 }
