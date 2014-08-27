@@ -63,20 +63,6 @@ namespace DkTools.CodeModel
 			return _sb.ToString();
 		}
 
-		public string PeekIdentifier()
-		{
-			var first = true;
-			return PeekUntil(ch =>
-			{
-				if (first)
-				{
-					first = false;
-					return ch.IsWordChar(true);
-				}
-				else return ch.IsWordChar(false);
-			});
-		}
-
 		public void Use(int numChars)
 		{
 			if (_pos + numChars > _len) numChars = _len - (_pos + numChars);

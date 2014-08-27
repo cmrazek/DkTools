@@ -580,7 +580,7 @@ namespace DkTools
 				prep.Preprocess(reader, dest, fileName, null, true);
 
 				if (string.IsNullOrEmpty(fileName)) fileName = "Untitled.txt";
-				using (var tempFile = new TempFileOutput(Path.GetFileNameWithoutExtension(fileName), Path.GetExtension(fileName)))
+				using (var tempFile = new TempFileOutput(Path.GetFileName(fileName), ".txt"))
 				{
 					tempFile.WriteLine(dest.Text);
 

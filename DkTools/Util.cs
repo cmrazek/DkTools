@@ -210,5 +210,15 @@ namespace DkTools
 			lastCh = '\0';
 			return false;
 		}
+
+		public static bool IsWhiteSpace(this string str)
+		{
+			if (string.IsNullOrEmpty(str)) return false;
+			foreach (var ch in str)
+			{
+				if (!char.IsWhiteSpace(ch)) return false;
+			}
+			return true;
+		}
 	}
 }
