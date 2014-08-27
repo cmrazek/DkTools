@@ -53,7 +53,7 @@ namespace DkTools.CodeModel
 
 				if (ch == '/')
 				{
-					if (!IgnoreComments(p)) rdr.Use(1);
+					if (!IgnoreComments(p, false)) rdr.Use(1);
 					continue;
 				}
 
@@ -70,7 +70,12 @@ namespace DkTools.CodeModel
 
 					text = rdr.PeekIdentifier();
 
-					if (_defines.ContainsKey(text))
+					if (p.args != null && p.args.Any(x => x.name == text))
+					{
+						rdr.Ignore(text.Length);
+						ProcessDefineUse(p, text);
+					}
+					else if (_defines.ContainsKey(text))
 					{
 						rdr.Ignore(text.Length);
 						ProcessDefineUse(p, text);
@@ -149,6 +154,7 @@ namespace DkTools.CodeModel
 		private void ProcessDefine(PreprocessorParams p)
 		{
 			var rdr = p.reader;
+			char ch;
 
 			// Get the define name
 			IgnoreWhiteSpaceAndComments(p, true);
@@ -156,11 +162,45 @@ namespace DkTools.CodeModel
 			if (string.IsNullOrEmpty(name)) return;
 			rdr.Ignore(name.Length);
 
+			// Check if this is parameterized
+			List<string> paramNames = null;
+			if (rdr.Peek() == '(')
+			{
+				rdr.Ignore(1);
+
+				while (!rdr.EOF)
+				{
+					IgnoreWhiteSpaceAndComments(p, true);
+
+					ch = rdr.Peek();
+					if (ch == ',')
+					{
+						rdr.Ignore(1);
+					}
+					else if (ch.IsWordChar(true))
+					{
+						var paramName = rdr.PeekIdentifier();
+						if (!p.suppress)
+						{
+							if (paramNames == null) paramNames = new List<string>();
+							paramNames.Add(paramName);
+						}
+						rdr.Ignore(paramName.Length);
+					}
+					else if (ch == ')')
+					{
+						rdr.Ignore(1);
+						break;
+					}
+					else return;
+				}
+			}
+
 			// Read the define value
 			IgnoreWhiteSpaceAndComments(p, true);
 			var insideBlock = false;
 			var braceLevel = 0;
-			var ch = rdr.Peek();
+			ch = rdr.Peek();
 			if (ch == '{')
 			{
 				insideBlock = true;
@@ -174,7 +214,7 @@ namespace DkTools.CodeModel
 			{
 				ch = rdr.Peek();
 
-				if (IgnoreComments(p)) continue;
+				if (IgnoreComments(p, false)) continue;
 
 				if (ch == '\r')
 				{
@@ -235,7 +275,15 @@ namespace DkTools.CodeModel
 				rdr.Ignore(1);
 			}
 
-			_defines[name] = new Define { name = name, content = sb.ToString() };
+			if (!p.suppress)
+			{
+				_defines[name] = new Define
+				{
+					name = name,
+					content = sb.ToString(),
+					paramNames = paramNames
+				};
+			}
 		}
 
 		private void ProcessUndef(PreprocessorParams p)
@@ -251,13 +299,98 @@ namespace DkTools.CodeModel
 		private void ProcessDefineUse(PreprocessorParams p, string name)
 		{
 			if (p.suppress) return;
+			if (p.restrictedDefines != null && p.restrictedDefines.Contains(name)) return;
 
-			Define define;
-			if (_defines.TryGetValue(name, out define))
+			var rdr = p.reader;
+
+			Define define = null;
+			if (p.args != null) define = p.args.FirstOrDefault(x => x.name == name);
+			if (define == null) _defines.TryGetValue(name, out define);
+			if (define == null) return;
+
+			List<string> paramList = null;
+			if (define.paramNames != null)
 			{
-				var textToAdd = ResolveMacros(define.content);
-				p.reader.Insert(textToAdd);
+				// This is a parameterized macro
+				IgnoreWhiteSpaceAndComments(p, false);
+				if (rdr.Peek() != '(') return;
+				rdr.Ignore(1);
+
+				char ch;
+				var sb = new StringBuilder();
+				paramList = new List<string>();
+
+				IgnoreWhiteSpaceAndComments(p, false);
+				while (!rdr.EOF)
+				{
+					if (IgnoreComments(p, false)) continue;
+
+					ch = rdr.Peek();
+					if (ch == ',')
+					{
+						rdr.Ignore(1);
+						paramList.Add(sb.ToString().Trim());
+						sb.Clear();
+					}
+					else if (ch == ')')
+					{
+						rdr.Ignore(1);
+						break;
+					}
+					else if (ch == '(')
+					{
+						rdr.Ignore(1);
+						sb.Append('(');
+						sb.Append(ReadAndIgnoreNestableContent(p, ')'));
+						sb.Append(')');
+					}
+					else if (ch == '{')
+					{
+						rdr.Ignore(1);
+						sb.Append('{');
+						sb.Append(ReadAndIgnoreNestableContent(p, '}'));
+						sb.Append('}');
+					}
+					else if (ch == '[')
+					{
+						rdr.Ignore(1);
+						sb.Append('[');
+						sb.Append(ReadAndIgnoreNestableContent(p, ']'));
+						sb.Append(']');
+					}
+					else
+					{
+						rdr.Ignore(1);
+						sb.Append(ch);
+					}
+				}
+				if (sb.Length > 0) paramList.Add(sb.ToString().Trim());
+
+				if (define.paramNames.Count != paramList.Count) return;
 			}
+			
+			List<Define> args = null;
+			if (p.args != null)
+			{
+				args = new List<Define>();
+				args.AddRange(p.args);
+			}
+			if (paramList != null)
+			{
+				if (define.paramNames == null || define.paramNames.Count != paramList.Count) return;
+				if (args == null) args = new List<Define>();
+				for (int i = 0, ii = paramList.Count; i < ii; i++)
+				{
+					args.Add(new Define { name = define.paramNames[i], content = paramList[i] });
+				}
+			}
+
+			string[] restrictedDefines = null;
+			if (p.restrictedDefines != null) restrictedDefines = p.restrictedDefines.Concat(new string[] { name }).ToArray();
+			else restrictedDefines = new string[] { name };
+
+			var textToAdd = ResolveMacros(define.content, restrictedDefines, args);
+			rdr.Insert(textToAdd);
 		}
 
 		private void ProcessStringize(PreprocessorParams p)
@@ -270,9 +403,7 @@ namespace DkTools.CodeModel
 			IgnoreWhiteSpaceAndComments(p, true);
 
 			var content = ReadAndIgnoreNestableContent(p, ')');
-			Log.WriteDebug("STRINGIZE arguments: {0}", content);
-			content = ResolveMacros(content);
-			Log.WriteDebug("STRINGIZE resolved arguments: {0}", content);
+			content = ResolveMacros(content, p.restrictedDefines, p.args);
 
 			p.reader.Insert(EscapeString(content));
 		}
@@ -289,7 +420,7 @@ namespace DkTools.CodeModel
 			{
 				var ch = rdr.Peek();
 
-				if (IgnoreComments(p)) continue;
+				if (IgnoreComments(p, false)) continue;
 
 				if (ch == '(')
 				{
@@ -351,11 +482,14 @@ namespace DkTools.CodeModel
 			return sb.ToString();
 		}
 
-		private string ResolveMacros(string source)
+		private string ResolveMacros(string source, IEnumerable<string> restrictedDefines, IEnumerable<Define> args)
 		{
 			var reader = new StringPreprocessorReader(source);
 			var writer = new StringPreprocessorWriter();
+
 			var parms = new PreprocessorParams(reader, writer, string.Empty, null);
+			parms.restrictedDefines = restrictedDefines;
+			parms.args = args;
 
 			Preprocess(parms, false);
 			return writer.Text;
@@ -377,11 +511,11 @@ namespace DkTools.CodeModel
 					continue;
 				}
 
-				if (!IgnoreComments(p)) break;
+				if (!IgnoreComments(p, false)) break;
 			}
 		}
 
-		private bool IgnoreComments(PreprocessorParams p, bool multiLineOnly = false)
+		private bool IgnoreComments(PreprocessorParams p, bool multiLineOnly)
 		{
 			var rdr = p.reader;
 			var writer = p.writer;
@@ -463,8 +597,6 @@ namespace DkTools.CodeModel
 			if (rawSource == null) return;
 			var reader = new CodeSource.CodeSourcePreprocessorReader(rawSource);
 
-			//Shell.OpenTempContent(rawSource.Dump(), System.IO.Path.GetFileName(fileName), ".txt");	// TODO: remove
-
 			// Run the preprocessor on the include file.
 			var includeSource = new CodeSource();
 			var parms = new PreprocessorParams(reader, includeSource, fileName, parentFiles);
@@ -536,7 +668,7 @@ namespace DkTools.CodeModel
 
 				if (ch == '/')
 				{
-					if (IgnoreComments(p)) continue;
+					if (IgnoreComments(p, false)) continue;
 					sb.Append(ch);
 					rdr.Ignore(1);
 					continue;
@@ -627,10 +759,11 @@ namespace DkTools.CodeModel
 			return sb.ToString();
 		}
 
-		private struct Define
+		private class Define
 		{
 			public string name;
 			public string content;
+			public List<string> paramNames;
 		}
 
 		public enum ConditionResult
@@ -655,6 +788,8 @@ namespace DkTools.CodeModel
 			public bool allowDirectives = true;
 			public Stack<ConditionScope> ifStack = new Stack<ConditionScope>();
 			public bool suppress;
+			public IEnumerable<Define> args;
+			public IEnumerable<string> restrictedDefines;
 
 			public PreprocessorParams(IPreprocessorReader reader, IPreprocessorWriter writer, string fileName, IEnumerable<string> parentFiles)
 			{
