@@ -113,9 +113,11 @@ namespace DkTools.CodeModel
 				case "#endif":
 					ProcessEndIf(p);
 					break;
+				case "#warndel":
+				case "#warnadd":
+					ProcessWarnAddDel(p);
+					break;
 			}
-
-			// TODO: warnadd, warndel
 		}
 
 		private void ProcessDefine(PreprocessorParams p)
@@ -590,6 +592,15 @@ namespace DkTools.CodeModel
 
 			sb.Append("\"");
 			return sb.ToString();
+		}
+
+		private void ProcessWarnAddDel(PreprocessorParams p)
+		{
+			var rdr = p.reader;
+			rdr.IgnoreWhiteSpaceAndComments(true);
+
+			var number = rdr.PeekToken(true);
+			if (!string.IsNullOrEmpty(number) && char.IsNumber(number[0])) rdr.Ignore(number.Length);
 		}
 
 		private class Define
