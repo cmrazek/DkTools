@@ -537,7 +537,7 @@ namespace DkTools
 			if (view == null) return;
 
 			var fileStore = CodeModel.FileStore.GetOrCreateForTextBuffer(view.TextBuffer);
-			var model = fileStore.GetModelForSnapshotOrNewer(view.TextSnapshot);
+			var model = fileStore.GetModelForSnapshotOrNewer(view.TextSnapshot, "Debug:ShowCodeModelDump");
 
 			Shell.OpenTempContent(model.DumpTree(), Path.GetFileName(model.FileName), ".model.xml");
 

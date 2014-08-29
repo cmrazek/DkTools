@@ -226,7 +226,7 @@ namespace DkTools.StatementCompletion
 
 				ProbeToolsPackage.Instance.StartBackgroundWorkItem(() =>
 					{
-						fileStore.GetModelForSnapshotOrNewer(caretPt.Snapshot);
+						fileStore.GetModelForSnapshotOrNewer(caretPt.Snapshot, "Auto-completion deferred model build");
 					}, ex =>
 					{
 						if (ex != null) return;

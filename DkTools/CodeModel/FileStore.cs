@@ -120,31 +120,47 @@ namespace DkTools.CodeModel
 			return false;
 		}
 
-		public CodeModel GetModelForSnapshotOrNewer(VsText.ITextSnapshot snapshot)
+		public CodeModel GetModelForSnapshotOrNewer(VsText.ITextSnapshot snapshot, string reason)
 		{
+#if DEBUG
 			if (snapshot == null) throw new ArgumentNullException("snapshot");
+#endif
 
 			if (_model != null)
 			{
 				if (snapshot != null && _model.Snapshot.Version.VersionNumber < snapshot.Version.VersionNumber)
 				{
-					//_model = new CodeModel(snapshot);
-					_model = CreatePreprocessedModel(snapshot);
+					_model = CreatePreprocessedModel(snapshot, reason);
 					_model.Snapshot = snapshot;
 				}
 			}
 			else
 			{
-				//_model = new CodeModel(snapshot);
-				_model = CreatePreprocessedModel(snapshot);
+				_model = CreatePreprocessedModel(snapshot, reason);
 				_model.Snapshot = snapshot;
 			}
 
 			return _model;
 		}
 
-		private CodeModel CreatePreprocessedModel(VsText.ITextSnapshot snapshot)
+		public CodeModel GetMostRecentModelOrCreate(VsText.ITextSnapshot snapshot, string reason)
 		{
+#if DEBUG
+			if (snapshot == null) throw new ArgumentNullException("snapshot");
+#endif
+			if (_model == null)
+			{
+				_model = CreatePreprocessedModel(snapshot, reason);
+				_model.Snapshot = snapshot;
+			}
+
+			return _model;
+		}
+
+		private CodeModel CreatePreprocessedModel(VsText.ITextSnapshot snapshot, string reason)
+		{
+			Log.WriteDebug("Creating preprocessed model. Reason: {0}", reason);
+
 			var content = snapshot.GetText();
 			var fileName = snapshot.TextBuffer.TryGetFileName();
 

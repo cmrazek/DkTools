@@ -63,7 +63,7 @@ namespace DkTools.CodeModel
 		{
 #if DEBUG
 			if (defProvider == null) throw new ArgumentNullException("defProvider");
-			Log.WriteDebug("Building code model for file [{0}]", fileName);
+			//Log.WriteDebug("Building code model for file [{0}]", fileName);
 #endif
 			this.RefreshTime = DateTime.Now;
 

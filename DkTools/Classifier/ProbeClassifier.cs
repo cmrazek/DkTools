@@ -58,7 +58,7 @@ namespace DkTools.Classifier
 			var state = tracker.GetStateForPosition(span.Start.Position, span.Snapshot);
 			var tokenInfo = new ProbeClassifierScanner.TokenInfo();
 
-			var model = CodeModel.FileStore.GetOrCreateForTextBuffer(span.Snapshot.TextBuffer).GetModelForSnapshotOrNewer(span.Snapshot);
+			var model = CodeModel.FileStore.GetOrCreateForTextBuffer(span.Snapshot.TextBuffer).GetMostRecentModelOrCreate(span.Snapshot, "GetClassificationSpans");
 			_scanner.SetSource(span.GetText(), span.Start.Position, span.Snapshot, model);
 
 			while (_scanner.ScanTokenAndProvideInfoAboutIt(tokenInfo, ref state))

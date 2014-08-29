@@ -17,7 +17,7 @@ namespace DkTools.StatementCompletion
 			var caretPt = caretPtTest.Value;
 
 			var fileStore = CodeModel.FileStore.GetOrCreateForTextBuffer(textView.TextBuffer);
-			var model = fileStore.GetModelForSnapshotOrNewer(caretPt.Snapshot);
+			var model = fileStore.GetModelForSnapshotOrNewer(caretPt.Snapshot, "Go to definition");
 			var modelPos = model.GetPosition(caretPt.Position, caretPt.Snapshot);
 			var selTokens = model.File.FindDownwardTouching(modelPos).ToArray();
 			if (selTokens.Length == 0)
