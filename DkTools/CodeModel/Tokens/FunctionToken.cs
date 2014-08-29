@@ -18,6 +18,8 @@ namespace DkTools.CodeModel
 #if DEBUG
 			if (nameToken == null || argsToken == null) throw new ArgumentNullException();
 #endif
+			IsLocalScope = true;
+
 			if (dataTypeToken != null) AddToken(_dataTypeToken = dataTypeToken);
 			AddToken(_nameToken = nameToken);
 			AddToken(_argsToken = argsToken);
@@ -28,6 +30,18 @@ namespace DkTools.CodeModel
 				_nameToken.SourceDefinition = def;
 				AddDefinition(def);
 			}
+			else
+			{
+				var def = GetDefinitions<FunctionDefinition>(_nameToken.Text).FirstOrDefault();
+				if (def != null) _nameToken.SourceDefinition = def;
+			}
+		}
+
+		private void AddBodyToken(BracesToken bodyToken)
+		{
+			// Copying the definitions before, then adding after will allow the global definitions (the function) to be copied upwards.
+			CopyDefinitionsToToken(bodyToken, true);
+			AddToken(bodyToken);
 		}
 
 		public override IEnumerable<FunctionToken> LocalFunctions
@@ -114,9 +128,9 @@ namespace DkTools.CodeModel
 			// Body
 			var bodyScope = scope;
 			scope.Hint |= ScopeHint.SuppressFunctionDefinition | ScopeHint.NotOnRoot;
-			ret._bodyToken = BracesToken.TryParse(ret, bodyScope);
-			if (ret._bodyToken == null) { file.Position = resetPos; return null; }
-			else ret.AddToken(ret._bodyToken);
+			var bodyToken = BracesToken.TryParse(ret, bodyScope);
+			if (bodyToken == null) { file.Position = resetPos; return null; }
+			else ret.AddBodyToken(bodyToken);
 
 			return ret;
 		}

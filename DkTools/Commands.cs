@@ -533,17 +533,16 @@ namespace DkTools
 
 		public static void ShowCodeModelDump()
 		{
-			var model = GetModelForActiveDoc();
-			if (model != null)
-			{
-				var fileName = "";
-				using (var tempFile = new TempFileOutput(Path.GetFileName(model.FileName), ".xml"))
-				{
-					tempFile.WriteLine(model.DumpTree());
-					fileName = tempFile.FileName;
-				}
-				Shell.OpenDocument(fileName);
-			}
+			var view = Shell.ActiveView;
+			if (view == null) return;
+
+			var fileStore = CodeModel.FileStore.GetOrCreateForTextBuffer(view.TextBuffer);
+			var model = fileStore.GetModelForSnapshotOrNewer(view.TextSnapshot);
+
+			Shell.OpenTempContent(model.DumpTree(), Path.GetFileName(model.FileName), ".model.xml");
+
+			var prepModel = model.PreprocessorModel;
+			if (prepModel != null) Shell.OpenTempContent(prepModel.DumpTree(), Path.GetFileName(model.FileName), ".preproc.xml");
 		}
 
 		public static void ShowDefinitions()
@@ -592,7 +591,7 @@ namespace DkTools
 			var prep = new CodeModel.Preprocessor(store);
 			prep.Preprocess(reader, dest, fileName, null, true);
 
-			Shell.OpenTempContent(string.Concat(dest.Text, "\r\nCONTINUOUS SEGMENTS:\r\n", dest.DumpContinuousSegments()), Path.GetFileName(fileName), " preprocessor.txt");
+			Shell.OpenTempContent(string.Concat(dest.Text, "\r\nCONTINUOUS SEGMENTS:\r\n", dest.DumpContinuousSegments()), Path.GetFileName(fileName), ".preprocessor.txt");
 		}
 
 		public static void ShowPreprocessorModel()

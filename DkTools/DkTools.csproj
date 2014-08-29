@@ -250,6 +250,7 @@
     <Compile Include="Classifier\ProbeClassifierType.cs" />
     <Compile Include="Classifier\TextBufferStateTracker.cs" />
     <Compile Include="CodeModel\CodeSource.cs" />
+    <Compile Include="CodeModel\DefinitionLocation.cs" />
     <Compile Include="CodeModel\DefinitionProvider.cs" />
     <Compile Include="CodeModel\Preprocessor.cs" />
     <Compile Include="CodeModel\IPreprocessorReader.cs" />

@@ -54,7 +54,7 @@ namespace DkTools
 			int index = 0;
 			while (File.Exists(pathName))
 			{
-				pathName = Path.Combine(_tempDir, string.Format("{0} ({1}){2}", fileTitle, ++index, extension));
+				pathName = Path.Combine(_tempDir, string.Format("{0}_{1}{2}", fileTitle, ++index, extension));
 			}
 
 			return pathName;

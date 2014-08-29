@@ -15,6 +15,7 @@ namespace DkTools.CodeModel
 		private Microsoft.VisualStudio.Text.ITextSnapshot _snapshot;
 		private FileStore _store;
 		private DefinitionProvider _defProvider;
+		private CodeModel _prepModel;
 
 		public CodeModel(FileStore store, string source, VsText.ITextSnapshot snapshot, string fileName)
 		{
@@ -68,24 +69,6 @@ namespace DkTools.CodeModel
 			_defProvider = defProvider;
 			_file = new CodeFile(this);
 
-			// TODO: Disabled while working on new preprocessor code
-			//if (!string.IsNullOrEmpty(_fileName))
-			//{
-			//	switch (Path.GetFileName(_fileName).ToLower())
-			//	{
-			//		case "stdlib.i":
-			//		case "stdlib.i&":
-			//			// Don't include this file if the user happens to have stdlib.i open right now.
-			//			break;
-			//		default:
-			//			{
-			//				var inclFile = GetIncludeFile(string.Empty, "stdlib.i", false, new string[0]);
-			//				if (inclFile != null) _implicitIncludes.Add(inclFile);
-			//			}
-			//			break;
-			//	}
-			//}
-
 			if (_defProvider.CreateDefinitions)
 			{
 				var defs = new List<Definition>();
@@ -104,13 +87,11 @@ namespace DkTools.CodeModel
 
 				_file.AddDefinitions(defs);
 			}
-
-			//foreach (var incl in _implicitIncludes) _file.AddImplicitInclude(incl);		TODO: Disabled while working on new preprocessor code
+			else CopyDefinitionsFromProvider();
 
 			_file.Parse(source, _fileName, new string[0], visible);
 
 			if (_defProvider.CreateDefinitions) CopyDefinitionsToProvider();
-			else CopyDefinitionsFromProvider();
 
 			this.RefreshTime = DateTime.Now;
 		}
@@ -308,16 +289,16 @@ namespace DkTools.CodeModel
 			}
 
 			var source = _file.CodeSource;
-			foreach (var def in _file.GetDescendentDefinitions())
+			foreach (var defLoc in _file.GetDescendentDefinitionLocations())
 			{
 				string fileName;
 				Position pos;
 				bool primaryFile;
-				source.GetFilePosition(def.SourceSpan.Start.Offset, out fileName, out pos, out primaryFile);
+				source.GetFilePosition(defLoc.Definition.SourceSpan.Start.Offset, out fileName, out pos, out primaryFile);
 				if (primaryFile)
 				{
-					def.SourceSpan = def.SourceSpan.MoveOffset(pos.Offset - def.SourceSpan.Start.Offset);
-					_defProvider.AddLocalDefinition(pos.Offset, def);
+					var offsetDiff = pos.Offset - defLoc.Definition.SourceSpan.Start.Offset;
+					_defProvider.AddLocalDefinition(defLoc.LocalFileOffset + offsetDiff, defLoc.Definition);
 				}
 			}
 		}
@@ -326,12 +307,18 @@ namespace DkTools.CodeModel
 		{
 			_file.AddDefinitions(_defProvider.GlobalDefinitions);
 
-			// Local definitions are handled in the code.
+			// Local definitions are handled in the token constructor.
 		}
 
 		public DefinitionProvider DefinitionProvider
 		{
 			get { return _defProvider; }
+		}
+
+		public CodeModel PreprocessorModel
+		{
+			get { return _prepModel; }
+			set { _prepModel = value; }
 		}
 	}
 }

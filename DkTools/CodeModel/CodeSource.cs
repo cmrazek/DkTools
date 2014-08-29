@@ -215,7 +215,7 @@ namespace DkTools.CodeModel
 				var end = segIndex + 1 < _segments.Count ? _segments[segIndex + 1].start : _buf.Length;
 				sb.Append(_buf.ToString(seg.start, end - seg.start));
 
-				sb.Append("]");
+				sb.AppendLine("]");
 			}
 
 			return sb.ToString();

@@ -53,6 +53,7 @@ namespace DkTools.CodeModel
 		{
 			List<Definition> list;
 			if (!_localDefs.TryGetValue(offset, out list)) return new Definition[0];
+			
 			return list;
 		}
 

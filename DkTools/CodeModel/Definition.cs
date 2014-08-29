@@ -10,11 +10,14 @@ namespace DkTools.CodeModel
 	{
 		private string _name;
 		private bool _global;
-
 		private Token _sourceToken;
 		private CodeFile _sourceFile;
 		private string _sourceFileName;
 		private Span _sourceSpan;
+
+		private bool _gotLocalFileInfo;
+		private string _localFileName;
+		private Span _localFileSpan;
 
 		public abstract bool CompletionVisible { get; }
 		public abstract StatementCompletion.CompletionType CompletionType { get; }
@@ -94,7 +97,41 @@ namespace DkTools.CodeModel
 		{
 			xml.WriteStartElement(GetType().Name);
 			xml.WriteAttributeString("name", _name);
+			xml.WriteAttributeString("global", _global.ToString());
+
+			string fileName;
+			Span span;
+			GetLocalFileSpan(out fileName, out span);
+			if (!string.IsNullOrWhiteSpace(fileName))
+			{
+				xml.WriteAttributeString("localFileName", fileName);
+				xml.WriteAttributeString("localOffset", span.Start.Offset.ToString());
+			}
+
 			xml.WriteEndElement();
+		}
+
+		/// <summary>
+		/// Gets the location of the definition, in the file where it originated (not the preprocessed content).
+		/// </summary>
+		/// <param name="fileName">(out) file that contains the definition.</param>
+		/// <param name="span">(out) Span of the definition, transformed to be in the originating file.</param>
+		public void GetLocalFileSpan(out string fileName, out Span span)
+		{
+			if (_sourceFile == null)
+			{
+				fileName = null;
+				span = Span.Empty;
+				return;
+			}
+
+			if (!_gotLocalFileInfo)
+			{
+				_sourceFile.CodeSource.GetFileSpan(_sourceSpan, out _localFileName, out _localFileSpan);
+				_gotLocalFileInfo = true;
+			}
+			fileName = _localFileName;
+			span = _localFileSpan;
 		}
 
 #if DEBUG

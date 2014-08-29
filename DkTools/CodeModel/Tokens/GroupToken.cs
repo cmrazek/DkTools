@@ -106,21 +106,21 @@ namespace DkTools.CodeModel
 			return (from t in _tokens where t.Span.Start.Offset >= endOffset select t).FirstOrDefault();
 		}
 
-		public IEnumerable<Definition> GetDescendentDefinitions()
+		public IEnumerable<DefinitionLocation> GetDescendentDefinitionLocations()
 		{
 			foreach (var token in _tokens)
 			{
 				foreach (var def in token.GetDefinitionsAtThisLevel())
 				{
-					yield return def;
+					yield return new DefinitionLocation(def, token.Span.Start.Offset);
 				}
 
 				var groupToken = token as GroupToken;
 				if (groupToken != null)
 				{
-					foreach (var def in groupToken.GetDescendentDefinitions())
+					foreach (var defLoc in groupToken.GetDescendentDefinitionLocations())
 					{
-						yield return def;
+						yield return defLoc;
 					}
 				}
 			}

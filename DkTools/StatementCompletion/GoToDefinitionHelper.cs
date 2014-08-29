@@ -16,8 +16,9 @@ namespace DkTools.StatementCompletion
 			if (!caretPtTest.HasValue) return;
 			var caretPt = caretPtTest.Value;
 
-			var model = new CodeModel.CodeModel(caretPt.Snapshot);	// TODO: this should use a preprocessed model instead of creating a new one every time.
-			var modelPos = model.GetPosition(caretPt.Position);
+			var fileStore = CodeModel.FileStore.GetOrCreateForTextBuffer(textView.TextBuffer);
+			var model = fileStore.GetModelForSnapshotOrNewer(caretPt.Snapshot);
+			var modelPos = model.GetPosition(caretPt.Position, caretPt.Snapshot);
 			var selTokens = model.File.FindDownwardTouching(modelPos).ToArray();
 			if (selTokens.Length == 0)
 			{
@@ -103,9 +104,17 @@ namespace DkTools.StatementCompletion
 			//	else Shell.SetStatusText("Table not found.");
 			//}
 			//else
-			if (!string.IsNullOrWhiteSpace(def.SourceFileName))
+			//if (!string.IsNullOrWhiteSpace(def.SourceFileName))
+			//{
+			//	Shell.OpenDocument(def.SourceFileName, def.SourceSpan);
+			//}
+
+			string fileName;
+			CodeModel.Span span;
+			def.GetLocalFileSpan(out fileName, out span);
+			if (!string.IsNullOrWhiteSpace(fileName))
 			{
-				Shell.OpenDocument(def.SourceFileName, def.SourceSpan);
+				Shell.OpenDocument(fileName, span);
 			}
 		}
 	}

@@ -27,7 +27,24 @@ namespace DkTools.CodeModel
 
 		public virtual void DumpTreeInner(System.Xml.XmlWriter xml)
 		{
-			if (_sourceDefinition != null) _sourceDefinition.DumpTree(xml);
+			xml.WriteAttributeString("offset", _span.Start.Offset.ToString());
+
+			if (_sourceDefinition != null)
+			{
+				xml.WriteStartElement("SourceDefinition");
+				_sourceDefinition.DumpTree(xml);
+				xml.WriteEndElement();	// SourceDefinition
+			}
+
+			if (_defs != null && _defs.Any())
+			{
+				xml.WriteStartElement("Definitions");
+				foreach (var defList in _defs.Values)
+				{
+					foreach (var def in defList) def.DumpTree(xml);
+				}
+				xml.WriteEndElement();	// Definitions
+			}
 		}
 
 		public string DumpTreeText()
@@ -81,7 +98,8 @@ namespace DkTools.CodeModel
 
 			if (_parent != null)
 			{
-				if (_defs != null)
+				if (_defs != null &&
+					Scope.CreateDefinitions)	// Only move definitions around when we're in the 'create' model.
 				{
 					Dictionary<string, LinkedList<Definition>> keepDefs = null;
 

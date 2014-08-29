@@ -92,7 +92,7 @@ namespace DkTools.CodeModel
 			{
 				if ((token = FunctionToken.TryParse(parent, scope)) != null) return token;
 			}
-			if (!scope.Hint.HasFlag(ScopeHint.SuppressVarDecl))
+			if (!scope.Hint.HasFlag(ScopeHint.SuppressVarDecl) && scope.CreateDefinitions)
 			{
 				if ((token = VariableDeclarationToken.TryParse(parent, scope)) != null) return token;
 			}

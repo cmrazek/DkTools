@@ -13,7 +13,8 @@ namespace DkTools.CodeModel
 	{
 		private Dictionary<string, IncludeFile> _sameDirIncludeFiles = new Dictionary<string, IncludeFile>();
 		private Dictionary<string, IncludeFile> _globalIncludeFiles = new Dictionary<string, IncludeFile>();
-		private CodeModel _model;	// Model based on the most recent snapshot.
+
+		private CodeModel _model;
 
 		public FileStore()
 		{
@@ -155,15 +156,27 @@ namespace DkTools.CodeModel
 			var defProvider = new DefinitionProvider();
 			defProvider.CreateDefinitions = true;
 
+			var includeStdLib = true;
+			if (!string.IsNullOrWhiteSpace(fileName))
+			{
+				var titleExt = Path.GetFileName(fileName);
+				if (titleExt.Equals("stdlib.i", StringComparison.OrdinalIgnoreCase) ||
+					titleExt.Equals("stdlib.i&", StringComparison.OrdinalIgnoreCase) ||
+					titleExt.Equals("stdlib.i+", StringComparison.OrdinalIgnoreCase))
+				{
+					includeStdLib = false;
+				}
+			}
+
 			var prep = new Preprocessor(this);
-			prep.Preprocess(reader, prepSource, fileName, new string[0], true);
+			prep.Preprocess(reader, prepSource, fileName, new string[0], includeStdLib);
 			var prepModel = new CodeModel(this, prepSource, fileName, false, defProvider);
 
 			defProvider.CreateDefinitions = false;
-			//Debug.WriteLine(defProvider.DumpDefinitions());	// TODO: remove
 
 			var visibleModel = new CodeModel(this, visibleSource, fileName, true, defProvider);
 			visibleModel.Snapshot = snapshot;
+			visibleModel.PreprocessorModel = prepModel;
 
 			return visibleModel;
 		}
