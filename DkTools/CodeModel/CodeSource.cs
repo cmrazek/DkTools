@@ -8,13 +8,14 @@ namespace DkTools.CodeModel
 {
 	internal class CodeSource : IPreprocessorWriter
 	{
-		private StringBuilder _buf = new StringBuilder();
+		private StringBuilder _writeBuf = new StringBuilder();
 		private string _text = null;
 		private List<CodeSegment> _segments = new List<CodeSegment>();
 		private CodeSegment.CodeSegmentComparer _codeSegmentComparer = new CodeSegment.CodeSegmentComparer();
 		private VsText.ITextSnapshot _snapshot;
 		private int _version;
 		private int _lastFindSegment = -1;
+		private int _length;
 
 		private class CodeSegment
 		{
@@ -25,16 +26,18 @@ namespace DkTools.CodeModel
 			public Position endPos;
 			public bool actualContent;
 			public bool primaryFile;
+			public string text;
 
-			public CodeSegment(string fileName, int start, int length, Position startPos, Position endPos, bool actualContent, bool primaryFile)
+			public CodeSegment(string fileName, int start, Position startPos, Position endPos, bool actualContent, bool primaryFile)
 			{
 				this.fileName = fileName;
 				this.start = start;
-				this.length = length;
+				this.length = 0;
 				this.startPos = startPos;
 				this.endPos = endPos;
 				this.actualContent = actualContent;
 				this.primaryFile = primaryFile;
+				this.text = string.Empty;
 			}
 
 			public class CodeSegmentComparer : IComparer<CodeSegment>
@@ -46,29 +49,45 @@ namespace DkTools.CodeModel
 			}
 		}
 
+		public void Flush()
+		{
+			if (_segments.Count == 0) return;
+
+			if (_writeBuf.Length > 0)
+			{
+				var lastSeg = _segments[_segments.Count - 1];
+				if (!string.IsNullOrEmpty(lastSeg.text)) lastSeg.text = string.Concat(lastSeg.text, _writeBuf);
+				else lastSeg.text = _writeBuf.ToString();
+#if DEBUG
+				if (lastSeg.length != lastSeg.text.Length) throw new InvalidOperationException("Segment length is incorrect during flush.");
+#endif
+				_writeBuf.Clear();
+			}
+		}
+
 		public void Append(string text, string fileName, Position fileStartPos, Position fileEndPos, bool actualContent, bool primaryFile)
 		{
 			var lastSeg = _segments.LastOrDefault();
 
-			if (lastSeg != null)
+			if (lastSeg == null ||
+				fileName != lastSeg.fileName ||
+				fileStartPos != lastSeg.endPos ||
+				actualContent != lastSeg.actualContent)
 			{
-				if (fileName == lastSeg.fileName && fileStartPos == lastSeg.endPos && actualContent == lastSeg.actualContent)
-				{
-					// Safe to append onto the end of this segment.
-					lastSeg.endPos = fileEndPos;
-					lastSeg.length += text.Length;
-				}
-				else
-				{
-					_segments.Add(new CodeSegment(fileName, _buf.Length, text.Length, fileStartPos, fileEndPos, actualContent, primaryFile));
-				}
-			}
-			else
-			{
-				_segments.Add(new CodeSegment(fileName, _buf.Length, text.Length, fileStartPos, fileEndPos, actualContent, primaryFile));
+				Flush();
+				lastSeg = new CodeSegment(fileName, _length, fileStartPos, fileEndPos, actualContent, primaryFile);
+				_segments.Add(lastSeg);
 			}
 
-			_buf.Append(text);
+			_writeBuf.Append(text);
+			_length += text.Length;
+			lastSeg.length += text.Length;
+			lastSeg.endPos = fileEndPos;
+
+#if DEBUG
+			if (lastSeg.length != _writeBuf.Length + lastSeg.text.Length) throw new InvalidOperationException("Segment length is incorrect during append.");
+#endif
+
 			_text = null;
 			_version++;
 		}
@@ -80,14 +99,9 @@ namespace DkTools.CodeModel
 
 		public void Append(CodeSource source)
 		{
-			_buf.EnsureCapacity(_buf.Length + source._buf.Length);
-
-			for (int segIndex = 0, numSegs = source._segments.Count; segIndex < numSegs; segIndex++)
+			foreach (var seg in source._segments)
 			{
-				var seg = source._segments[segIndex];
-				var length = (segIndex + 1 < numSegs ? source._segments[segIndex + 1].start : source._buf.Length) - seg.start;
-
-				Append(source._buf.ToString(seg.start, length), seg.fileName, seg.startPos, seg.endPos, seg.actualContent, seg.primaryFile);
+				Append(seg.text, seg.fileName, seg.startPos, seg.endPos, seg.actualContent, seg.primaryFile);
 			}
 		}
 
@@ -95,7 +109,12 @@ namespace DkTools.CodeModel
 		{
 			get
 			{
-				if (_text == null) _text = _buf.ToString();
+				if (_text == null)
+				{
+					var sb = new StringBuilder(_length);
+					foreach (var seg in _segments) sb.Append(seg.text);
+					_text = sb.ToString();
+				}
 				return _text;
 			}
 		}
@@ -210,11 +229,9 @@ namespace DkTools.CodeModel
 			for (var segIndex = 0; segIndex < _segments.Count; segIndex++)
 			{
 				var seg = _segments[segIndex];
-				sb.AppendFormat("SEGMENT {0} FileName: {1} StartOffset: {4} Length: {5} StartPos: {2} EndPos: {3} [", segIndex, seg.fileName, seg.startPos, seg.endPos, seg.start, seg.length);
-
-				var end = segIndex + 1 < _segments.Count ? _segments[segIndex + 1].start : _buf.Length;
-				sb.Append(_buf.ToString(seg.start, end - seg.start));
-
+				sb.AppendFormat("SEGMENT {0} FileName: {1} StartOffset: {4} Length: {5} StartPos: {2} EndPos: {3} [",
+					segIndex, System.IO.Path.GetFileName(seg.fileName), seg.startPos, seg.endPos, seg.start, seg.length);
+				sb.Append(seg.text);
 				sb.AppendLine("]");
 			}
 
@@ -243,7 +260,7 @@ namespace DkTools.CodeModel
 
 					var length = 30;
 					if (length > seg.length) length = seg.length;
-					sample = _buf.ToString(seg.start, length).Replace('\r', ' ').Replace('\n', ' ').Trim();
+					sample = seg.text.Substring(0, length).Replace('\r', ' ').Replace('\n', ' ').Trim();
 				}
 
 				fileName = seg.fileName;
@@ -355,22 +372,29 @@ namespace DkTools.CodeModel
 			public char Peek()
 			{
 				if (_seg == null) return '\0';
-				return _src._buf.ToString(_seg.start + _segOffset, 1)[0];
+				return _seg.text[_segOffset];
 			}
 
 			public string Peek(int numChars)
 			{
-				_sb.Clear();
-				PushState();
-
-				while (numChars-- > 0 && _seg != null)
+				if (_segOffset + numChars <= _seg.length)
 				{
-					_sb.Append(Peek());
-					MoveNext();
+					return _seg.text.Substring(_segOffset, numChars);
 				}
+				else
+				{
+					_sb.Clear();
+					PushState();
 
-				PopState();
-				return _sb.ToString();
+					while (numChars-- > 0 && _seg != null)
+					{
+						_sb.Append(Peek());
+						MoveNext();
+					}
+
+					PopState();
+					return _sb.ToString();
+				}
 			}
 
 			public string PeekUntil(Func<char, bool> callback)
@@ -402,14 +426,14 @@ namespace DkTools.CodeModel
 					if (_segOffset + numChars >= _seg.length)
 					{
 						var length = _seg.length - (_segOffset + numChars);
-						_writer.Append(use ? _src._buf.ToString(_seg.start + _segOffset, length) : string.Empty,
+						_writer.Append(use ? _seg.text.Substring(_segOffset, length) : string.Empty,
 							new CodeAttributes(_seg.fileName, _pos, _seg.endPos, use ? _seg.actualContent : false, _seg.primaryFile));
 						MoveNextSegment();
 						numChars -= length;
 					}
 					else
 					{
-						var text = _src._buf.ToString(_seg.start + _segOffset, numChars);
+						var text = _seg.text.Substring(_segOffset, numChars);
 						var newPos = _pos.Advance(text);
 						_writer.Append(use ? text : string.Empty, new CodeAttributes(_seg.fileName, _pos, _seg.actualContent ? newPos : _pos, use ? _seg.actualContent : false, _seg.primaryFile));
 						_segOffset += numChars;
@@ -521,7 +545,7 @@ namespace DkTools.CodeModel
 			{
 				if (_seg == null) return false;
 
-				var ch = _src._buf.ToString(_seg.start + _segOffset, 1)[0];
+				var ch = _seg.text[_segOffset];
 
 				if (_seg.actualContent) _pos = _pos.Advance(ch);
 				_segOffset++;

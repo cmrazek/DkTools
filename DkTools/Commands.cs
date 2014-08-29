@@ -570,6 +570,7 @@ namespace DkTools
 
 				var codeSource = new CodeModel.CodeSource();
 				codeSource.Append(content, new CodeModel.CodeAttributes(fileName, CodeModel.Position.Start, CodeModel.Position.Start.Advance(content), true, true));
+				codeSource.Flush();
 
 				return codeSource;
 			}

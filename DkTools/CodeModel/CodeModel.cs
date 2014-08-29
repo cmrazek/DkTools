@@ -24,6 +24,7 @@ namespace DkTools.CodeModel
 
 			var codeSource = new CodeSource();
 			codeSource.Append(source, new CodeAttributes(fileName, Position.Start, Position.Start.Advance(source), true, true));
+			codeSource.Flush();
 
 			// This is a visible model, so don't create definitions.
 			var defProvider = new DefinitionProvider();
@@ -40,6 +41,7 @@ namespace DkTools.CodeModel
 
 			var codeSource = new CodeSource();
 			codeSource.Append(source, new CodeAttributes(fileName, Position.Start, Position.Start.Advance(source), true, true));
+			codeSource.Flush();
 			codeSource.Snapshot = snapshot;
 
 			// This is a visible model, so don't create definitions.

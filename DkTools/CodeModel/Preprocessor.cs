@@ -78,6 +78,8 @@ namespace DkTools.CodeModel
 
 				rdr.Use(str.Length);
 			}
+
+			p.writer.Flush();
 		}
 
 		private void ProcessDirective(PreprocessorParams p, string directiveName)

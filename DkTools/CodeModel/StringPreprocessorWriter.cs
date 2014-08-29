@@ -24,5 +24,9 @@ namespace DkTools.CodeModel
 		{
 			get { return _sb.ToString(); }
 		}
+
+		public void Flush()
+		{
+		}
 	}
 }

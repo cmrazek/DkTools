@@ -150,6 +150,7 @@ namespace DkTools.CodeModel
 
 			var visibleSource = new CodeSource();
 			visibleSource.Append(content, fileName, Position.Start, Position.Start.Advance(content), true, true);
+			visibleSource.Flush();
 			var reader = new CodeSource.CodeSourcePreprocessorReader(visibleSource);
 			var prepSource = new CodeSource();
 

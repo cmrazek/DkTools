@@ -70,6 +70,9 @@
     <Report>
       <Path>devenv140829.vsp</Path>
     </Report>
+    <Report>
+      <Path>devenv140829(1).vsp</Path>
+    </Report>
   </Reports>
   <Launches>
     <ProjBinary>

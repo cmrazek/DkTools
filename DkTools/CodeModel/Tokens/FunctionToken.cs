@@ -42,6 +42,7 @@ namespace DkTools.CodeModel
 			// Copying the definitions before, then adding after will allow the global definitions (the function) to be copied upwards.
 			CopyDefinitionsToToken(bodyToken, true);
 			AddToken(bodyToken);
+			_bodyToken = bodyToken;
 		}
 
 		public override IEnumerable<FunctionToken> LocalFunctions

@@ -10,5 +10,6 @@ namespace DkTools.CodeModel
 	{
 		void Append(string text, CodeAttributes attribs);
 		void Append(CodeSource source);
+		void Flush();
 	}
 }

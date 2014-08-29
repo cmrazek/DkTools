@@ -86,6 +86,7 @@ namespace DkTools.CodeModel
 				}
 				lineIndex++;
 			}
+			_mergedContent.Flush();
 		}
 
 		private string UnrootFileName(string fileName)
