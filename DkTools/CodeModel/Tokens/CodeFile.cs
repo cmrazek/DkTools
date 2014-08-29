@@ -20,7 +20,7 @@ namespace DkTools.CodeModel
 
 		#region Construction
 		public CodeFile(CodeModel model)
-			: base(null, new Scope(), Position.Start)
+			: base(null, new Scope(model), Position.Start)
 		{
 			if (model == null) throw new ArgumentNullException("model");
 			_model = model;
@@ -74,7 +74,7 @@ namespace DkTools.CodeModel
 			_lineNum = 0;
 			_linePos = 0;
 
-			var scope = new Scope(this, 0, ScopeHint.None, visible);
+			var scope = new Scope(this, 0, ScopeHint.None, visible, _model.DefinitionProvider);
 			Scope = scope;
 
 			ParseScope(scope, t => ParseScopeResult.Continue);

@@ -22,9 +22,12 @@ namespace DkTools.CodeModel
 			AddToken(_nameToken = nameToken);
 			AddToken(_argsToken = argsToken);
 
-			var def = new FunctionDefinition(_nameToken.Text, _nameToken, _dataTypeToken != null ? DataType.FromToken(_dataTypeToken) : DataType.Int, GetSignature());
-			_nameToken.SourceDefinition = def;
-			AddDefinition(def);
+			if (scope.CreateDefinitions)
+			{
+				var def = new FunctionDefinition(_nameToken.Text, _nameToken, _dataTypeToken != null ? DataType.FromToken(_dataTypeToken) : DataType.Int, GetSignature());
+				_nameToken.SourceDefinition = def;
+				AddDefinition(def);
+			}
 		}
 
 		public override IEnumerable<FunctionToken> LocalFunctions

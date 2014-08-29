@@ -71,7 +71,7 @@ namespace DkTools.Outlining
 		private void Reparse()
 		{
 			_snapshot = _buffer.CurrentSnapshot;
-			var model = CodeModel.FileStore.GetOrCreateForTextBuffer(_buffer).GetOrCreateModelForSnapshot(_snapshot);
+			var model = CodeModel.FileStore.GetOrCreateForTextBuffer(_buffer).GetModelForSnapshotOrNewer(_snapshot);
 
 			_modelRegions.Clear();
 			foreach (var region in model.OutliningRegions.OrderBy(r => r.Span.Start.Offset))

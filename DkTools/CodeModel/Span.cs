@@ -96,5 +96,10 @@ namespace DkTools.CodeModel
 			uint end = (uint)_end.Offset;
 			return _start.Offset ^ ((int)((end << 16) & 0xffff0000) | (int)((end >> 16) & 0x0000ffff));
 		}
+
+		public Span MoveOffset(int offset)
+		{
+			return new Span(_start.MoveOffset(offset), _end.MoveOffset(offset));
+		}
 	}
 }

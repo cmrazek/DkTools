@@ -18,9 +18,12 @@ namespace DkTools.CodeModel
 			_nameToken = nameToken;
 			_argsToken = argsToken;
 
-			var def = new FunctionDefinition(_nameToken.Text, _nameToken, DataType.FromToken(_dataTypeToken), GetFunctionSignature());
-			AddDefinition(def);
-			_nameToken.SourceDefinition = def;
+			if (scope.CreateDefinitions)
+			{
+				var def = new FunctionDefinition(_nameToken.Text, _nameToken, DataType.FromToken(_dataTypeToken), GetFunctionSignature());
+				AddDefinition(def);
+				_nameToken.SourceDefinition = def;
+			}
 		}
 
 		private string GetFunctionSignature()

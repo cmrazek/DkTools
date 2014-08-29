@@ -79,6 +79,7 @@ namespace DkTools.CodeModel
 		public Span SourceSpan
 		{
 			get { return _sourceSpan; }
+			set { _sourceSpan = value; }
 		}
 
 		public string LocationText
@@ -95,6 +96,19 @@ namespace DkTools.CodeModel
 			xml.WriteAttributeString("name", _name);
 			xml.WriteEndElement();
 		}
+
+#if DEBUG
+		public string Dump()
+		{
+			var sb = new StringBuilder();
+			sb.AppendFormat("Type [{0}]", GetType());
+			sb.AppendFormat(" File [{0}]", SourceFile != null ? SourceFile.FileName : "(null)");
+			sb.AppendFormat(" Offset [{0}]", SourceSpan.Start.Offset);
+			sb.AppendFormat(" CompletionType [{0}]", CompletionType);
+			sb.AppendFormat(" CompletionDescription [{0}]", CompletionDescription);
+			return sb.ToString();
+		}
+#endif
 	}
 
 	internal class VariableDefinition : Definition

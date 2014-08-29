@@ -12,7 +12,7 @@ namespace DkTools.CodeModel
 		private string _fileName;
 		private bool _processed = false;
 		private bool _searchFileDir = false;
-		private CodeFile _includeFile;
+		//private CodeFile _includeFile;	TODO: remove
 
 		public class IncludeDef
 		{
@@ -28,10 +28,11 @@ namespace DkTools.CodeModel
 			_fileName = fileName;
 			_searchFileDir = searchFileDir;
 
-			var parentFiles = (!string.IsNullOrEmpty(scope.File.FileName) ? scope.File.ParentFiles.Concat(new string[] { scope.File.FileName }) : scope.File.ParentFiles).ToArray();
+			// TODO: Disabled while working on new preprocessor code
+			//var parentFiles = (!string.IsNullOrEmpty(scope.File.FileName) ? scope.File.ParentFiles.Concat(new string[] { scope.File.FileName }) : scope.File.ParentFiles).ToArray();
 
-			_includeFile = scope.File.Model.GetIncludeFile(scope.File.FileName, _fileName, _searchFileDir, parentFiles);
-			if (_includeFile != null) _includeFile.CopyDefinitionsToToken(this, false);
+			//_includeFile = scope.File.Model.GetIncludeFile(scope.File.FileName, _fileName, _searchFileDir, parentFiles);
+			//if (_includeFile != null) _includeFile.CopyDefinitionsToToken(this, false);
 		}
 
 		private static Regex _rxAngleBrackets = new Regex(@"^\<([^>]+)\>");
@@ -106,9 +107,10 @@ namespace DkTools.CodeModel
 			}
 		}
 
-		public CodeFile IncludeFile
-		{
-			get { return _includeFile; }
-		}
+		// TODO: remove
+		//public CodeFile IncludeFile
+		//{
+		//	get { return _includeFile; }
+		//}
 	}
 }

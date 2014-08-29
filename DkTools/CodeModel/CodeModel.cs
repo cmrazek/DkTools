@@ -14,6 +14,7 @@ namespace DkTools.CodeModel
 		private string _fileName;
 		private Microsoft.VisualStudio.Text.ITextSnapshot _snapshot;
 		private FileStore _store;
+		private DefinitionProvider _defProvider;
 
 		public CodeModel(FileStore store, string source, VsText.ITextSnapshot snapshot, string fileName)
 		{
@@ -21,9 +22,13 @@ namespace DkTools.CodeModel
 			_store = store;
 
 			var codeSource = new CodeSource();
-			codeSource.Append(source, new CodeAttributes(fileName, Position.Start, Position.Start.Advance(source), true));
+			codeSource.Append(source, new CodeAttributes(fileName, Position.Start, Position.Start.Advance(source), true, true));
 
-			Init(codeSource, fileName, true);
+			// This is a visible model, so don't create definitions.
+			var defProvider = new DefinitionProvider();
+			defProvider.CreateDefinitions = false;
+
+			Init(codeSource, fileName, true, defProvider);
 		}
 
 		public CodeModel(VsText.ITextSnapshot snapshot)
@@ -33,63 +38,80 @@ namespace DkTools.CodeModel
 			_store = FileStore.GetOrCreateForTextBuffer(snapshot.TextBuffer);
 
 			var codeSource = new CodeSource();
-			codeSource.Append(source, new CodeAttributes(fileName, Position.Start, Position.Start.Advance(source), true));
+			codeSource.Append(source, new CodeAttributes(fileName, Position.Start, Position.Start.Advance(source), true, true));
 			codeSource.Snapshot = snapshot;
 
-			Init(codeSource, fileName, true);
+			// This is a visible model, so don't create definitions.
+			var defProvider = new DefinitionProvider();
+			defProvider.CreateDefinitions = false;
+
+			Init(codeSource, fileName, true, defProvider);
 		}
 
-		public CodeModel(FileStore store, CodeSource source, string fileName, bool visible)
+		public CodeModel(FileStore store, CodeSource source, string fileName, bool visible, DefinitionProvider defProvider)
 		{
 			if (store == null) throw new ArgumentNullException("store");
 			_store = store;
 
-			Init(source, fileName, visible);
+			Init(source, fileName, visible, defProvider);
 		}
 
-		private void Init(CodeSource source, string fileName, bool visible)
+		private void Init(CodeSource source, string fileName, bool visible, DefinitionProvider defProvider)
 		{
 #if DEBUG
+			if (defProvider == null) throw new ArgumentNullException("defProvider");
 			Log.WriteDebug("Building code model for file [{0}]", fileName);
 #endif
 			this.RefreshTime = DateTime.Now;
 
 			_fileName = fileName;
+			_defProvider = defProvider;
 			_file = new CodeFile(this);
 
-			if (!string.IsNullOrEmpty(_fileName))
+			// TODO: Disabled while working on new preprocessor code
+			//if (!string.IsNullOrEmpty(_fileName))
+			//{
+			//	switch (Path.GetFileName(_fileName).ToLower())
+			//	{
+			//		case "stdlib.i":
+			//		case "stdlib.i&":
+			//			// Don't include this file if the user happens to have stdlib.i open right now.
+			//			break;
+			//		default:
+			//			{
+			//				var inclFile = GetIncludeFile(string.Empty, "stdlib.i", false, new string[0]);
+			//				if (inclFile != null) _implicitIncludes.Add(inclFile);
+			//			}
+			//			break;
+			//	}
+			//}
+
+			if (_defProvider.CreateDefinitions)
 			{
-				switch (Path.GetFileName(_fileName).ToLower())
-				{
-					case "stdlib.i":
-					case "stdlib.i&":
-						// Don't include this file if the user happens to have stdlib.i open right now.
-						break;
-					default:
-						{
-							var inclFile = GetIncludeFile(string.Empty, "stdlib.i", false, new string[0]);
-							if (inclFile != null) _implicitIncludes.Add(inclFile);
-						}
-						break;
-				}
+				var defs = new List<Definition>();
+				defs.Add(new FunctionDefinition("diag", null, DataType.Void, "void diag(expressions ...)"));
+				defs.Add(new FunctionDefinition("gofield", null, DataType.Void, "void gofield(TableName.ColumnName)"));
+				defs.Add(new FunctionDefinition("makestring", null, DataType.FromString("char(255)"), "char(255) makestring(expressions ...)"));
+				defs.Add(new FunctionDefinition("oldvalue", null, DataType.Void, "oldvalue(TableName.ColumnName)"));
+				defs.Add(new FunctionDefinition("qcolsend", null, DataType.Void, "void qcolsend(TableName.ColumnName ...)"));
+				defs.Add(new FunctionDefinition("SetMessage", null, DataType.Int, "int SetMessage(MessageControlString, expressions ...)"));
+				defs.Add(new FunctionDefinition("STRINGIZE", null, DataType.FromString("char(255)"), "STRINGIZE(x)"));
+				defs.Add(new FunctionDefinition("UNREFERENCED_PARAMETER", null, DataType.Void, "UNREFERENCED_PARAMETER(parameter)"));
+
+				foreach (var def in ProbeEnvironment.DictDefinitions) defs.Add(def);
+
+				foreach (var def in ProbeToolsPackage.Instance.FunctionFileScanner.AllDefinitions) defs.Add(def);
+
+				_file.AddDefinitions(defs);
 			}
 
-			_file.AddDefinition(new FunctionDefinition("diag", null, DataType.Void, "void diag(expressions ...)"));
-			_file.AddDefinition(new FunctionDefinition("gofield", null, DataType.Void, "void gofield(TableName.ColumnName)"));
-			_file.AddDefinition(new FunctionDefinition("makestring", null, DataType.FromString("char(255)"), "char(255) makestring(expressions ...)"));
-			_file.AddDefinition(new FunctionDefinition("oldvalue", null, DataType.Void, "oldvalue(TableName.ColumnName)"));
-			_file.AddDefinition(new FunctionDefinition("qcolsend", null, DataType.Void, "void qcolsend(TableName.ColumnName ...)"));
-			_file.AddDefinition(new FunctionDefinition("SetMessage", null, DataType.Int, "int SetMessage(MessageControlString, expressions ...)"));
-			_file.AddDefinition(new FunctionDefinition("STRINGIZE", null, DataType.FromString("char(255)"), "STRINGIZE(x)"));
-			_file.AddDefinition(new FunctionDefinition("UNREFERENCED_PARAMETER", null, DataType.Void, "UNREFERENCED_PARAMETER(parameter)"));
-
-			foreach (var def in ProbeEnvironment.DictDefinitions) _file.AddDefinition(def);
-
-			foreach (var incl in _implicitIncludes) _file.AddImplicitInclude(incl);
-
-			foreach (var def in ProbeToolsPackage.Instance.FunctionFileScanner.AllDefinitions) _file.AddDefinition(def);
+			//foreach (var incl in _implicitIncludes) _file.AddImplicitInclude(incl);		TODO: Disabled while working on new preprocessor code
 
 			_file.Parse(source, _fileName, new string[0], visible);
+
+			if (_defProvider.CreateDefinitions) CopyDefinitionsToProvider();
+			else CopyDefinitionsFromProvider();
+
 			this.RefreshTime = DateTime.Now;
 		}
 
@@ -276,6 +298,40 @@ namespace DkTools.CodeModel
 		public IEnumerable<T> GetDefinitions<T>() where T : Definition
 		{
 			return _file.GetDefinitions<T>();
+		}
+
+		private void CopyDefinitionsToProvider()
+		{
+			foreach (var def in _file.GetDefinitions())
+			{
+				_defProvider.AddGlobalDefinition(def);
+			}
+
+			var source = _file.CodeSource;
+			foreach (var def in _file.GetDescendentDefinitions())
+			{
+				string fileName;
+				Position pos;
+				bool primaryFile;
+				source.GetFilePosition(def.SourceSpan.Start.Offset, out fileName, out pos, out primaryFile);
+				if (primaryFile)
+				{
+					def.SourceSpan = def.SourceSpan.MoveOffset(pos.Offset - def.SourceSpan.Start.Offset);
+					_defProvider.AddLocalDefinition(pos.Offset, def);
+				}
+			}
+		}
+
+		private void CopyDefinitionsFromProvider()
+		{
+			_file.AddDefinitions(_defProvider.GlobalDefinitions);
+
+			// Local definitions are handled in the code.
+		}
+
+		public DefinitionProvider DefinitionProvider
+		{
+			get { return _defProvider; }
 		}
 	}
 }

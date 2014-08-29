@@ -119,7 +119,7 @@ namespace DkTools.CodeModel
 			return false;
 		}
 
-		public CodeModel GetOrCreateModelForSnapshot(VsText.ITextSnapshot snapshot)
+		public CodeModel GetModelForSnapshotOrNewer(VsText.ITextSnapshot snapshot)
 		{
 			if (snapshot == null) throw new ArgumentNullException("snapshot");
 
@@ -127,17 +127,45 @@ namespace DkTools.CodeModel
 			{
 				if (snapshot != null && _model.Snapshot.Version.VersionNumber < snapshot.Version.VersionNumber)
 				{
-					_model = new CodeModel(snapshot);
+					//_model = new CodeModel(snapshot);
+					_model = CreatePreprocessedModel(snapshot);
 					_model.Snapshot = snapshot;
 				}
 			}
 			else
 			{
-				_model = new CodeModel(snapshot);
+				//_model = new CodeModel(snapshot);
+				_model = CreatePreprocessedModel(snapshot);
 				_model.Snapshot = snapshot;
 			}
 
 			return _model;
+		}
+
+		private CodeModel CreatePreprocessedModel(VsText.ITextSnapshot snapshot)
+		{
+			var content = snapshot.GetText();
+			var fileName = snapshot.TextBuffer.TryGetFileName();
+
+			var visibleSource = new CodeSource();
+			visibleSource.Append(content, fileName, Position.Start, Position.Start.Advance(content), true, true);
+			var reader = new CodeSource.CodeSourcePreprocessorReader(visibleSource);
+			var prepSource = new CodeSource();
+
+			var defProvider = new DefinitionProvider();
+			defProvider.CreateDefinitions = true;
+
+			var prep = new Preprocessor(this);
+			prep.Preprocess(reader, prepSource, fileName, new string[0], true);
+			var prepModel = new CodeModel(this, prepSource, fileName, false, defProvider);
+
+			defProvider.CreateDefinitions = false;
+			//Debug.WriteLine(defProvider.DumpDefinitions());	// TODO: remove
+
+			var visibleModel = new CodeModel(this, visibleSource, fileName, true, defProvider);
+			visibleModel.Snapshot = snapshot;
+
+			return visibleModel;
 		}
 
 		public CodeModel Model

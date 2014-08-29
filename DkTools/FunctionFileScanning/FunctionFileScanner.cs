@@ -187,7 +187,8 @@ namespace DkTools.FunctionFileScanning
 
 					var fileTitle = Path.GetFileNameWithoutExtension(fileName);
 
-					var model = new CodeModel.CodeModel(new CodeModel.FileStore(), merger.MergedContent, fileName, false);
+					var defProvider = new CodeModel.DefinitionProvider();
+					var model = new CodeModel.CodeModel(new CodeModel.FileStore(), merger.MergedContent, fileName, false, defProvider);
 					var funcs = (from f in model.GetDefinitions<CodeModel.FunctionDefinition>()
 								 where string.Equals(f.Name, fileTitle, StringComparison.OrdinalIgnoreCase)
 								 select f).ToArray();

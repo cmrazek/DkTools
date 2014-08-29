@@ -561,38 +561,57 @@ namespace DkTools
 			}
 		}
 
-		public static void ShowPreprocessor()
+		private static CodeModel.CodeSource GetCodeSourceForActiveView(out string fileName)
 		{
 			var view = Shell.ActiveView;
 			if (view != null)
 			{
-				var fileName = VsTextUtil.TryGetFileName(view.TextBuffer);
+				fileName = VsTextUtil.TryGetFileName(view.TextBuffer);
 				var content = view.TextBuffer.CurrentSnapshot.GetText();
 
 				var codeSource = new CodeModel.CodeSource();
-				codeSource.Append(content, new CodeModel.CodeAttributes(fileName, CodeModel.Position.Start, CodeModel.Position.Start.Advance(content), true));
+				codeSource.Append(content, new CodeModel.CodeAttributes(fileName, CodeModel.Position.Start, CodeModel.Position.Start.Advance(content), true, true));
 
-				var store = new CodeModel.FileStore();
-				var reader = new CodeModel.CodeSource.CodeSourcePreprocessorReader(codeSource);
-				var dest = new CodeModel.CodeSource();
-
-				var prep = new CodeModel.Preprocessor(store);
-				prep.Preprocess(reader, dest, fileName, null, true);
-
-				if (string.IsNullOrEmpty(fileName)) fileName = "Untitled.txt";
-				using (var tempFile = new TempFileOutput(Path.GetFileName(fileName), ".txt"))
-				{
-					tempFile.WriteLine(dest.Text);
-
-					tempFile.WriteLine("");
-					tempFile.WriteLine("CONTINUOUS SEGMENTS:");
-					tempFile.WriteLine(dest.DumpContinuousSegments());
-
-
-					fileName = tempFile.FileName;
-				}
-				Shell.OpenDocument(fileName);
+				return codeSource;
 			}
+
+			fileName = null;
+			return null;
+		}
+
+		public static void ShowPreprocessor()
+		{
+			string fileName;
+			var codeSource = GetCodeSourceForActiveView(out fileName);
+			if (codeSource == null) return;
+
+			var store = new CodeModel.FileStore();
+			var reader = new CodeModel.CodeSource.CodeSourcePreprocessorReader(codeSource);
+			var dest = new CodeModel.CodeSource();
+
+			var prep = new CodeModel.Preprocessor(store);
+			prep.Preprocess(reader, dest, fileName, null, true);
+
+			Shell.OpenTempContent(string.Concat(dest.Text, "\r\nCONTINUOUS SEGMENTS:\r\n", dest.DumpContinuousSegments()), Path.GetFileName(fileName), " preprocessor.txt");
+		}
+
+		public static void ShowPreprocessorModel()
+		{
+			string fileName;
+			var codeSource = GetCodeSourceForActiveView(out fileName);
+			if (codeSource == null) return;
+
+			var store = new CodeModel.FileStore();
+			var reader = new CodeModel.CodeSource.CodeSourcePreprocessorReader(codeSource);
+			var prepCodeSource = new CodeModel.CodeSource();
+
+			var prep = new CodeModel.Preprocessor(store);
+			prep.Preprocess(reader, prepCodeSource, fileName, null, true);
+
+			var defProvider = new CodeModel.DefinitionProvider();
+			var model = new CodeModel.CodeModel(store, prepCodeSource, fileName, true, defProvider);
+
+			Shell.OpenTempContent(model.DumpTree(), Path.GetFileName(fileName), " model.txt");
 		}
 #endif
 	}

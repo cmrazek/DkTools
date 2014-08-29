@@ -67,6 +67,9 @@ namespace DkTools.CodeModel
 			_parent = parent;
 			_scope = scope;
 			_span = span;
+
+			var defProv = _scope.DefinitionProvider;
+			if (defProv != null) AddDefinitions(defProv.GetLocalDefinitionsForOffset(span.Start.Offset));
 		}
 
 		/// <summary>
@@ -534,6 +537,11 @@ namespace DkTools.CodeModel
 			}
 		}
 
+		public void AddDefinitions(IEnumerable<Definition> defs)
+		{
+			foreach (var def in defs) AddDefinition(def);
+		}
+
 		public void CopyDefinitionsToToken(Token token, bool move)
 		{
 			if (_defs != null)
@@ -621,10 +629,34 @@ namespace DkTools.CodeModel
 			}
 		}
 
+		public IEnumerable<Definition> GetDefinitionsAtThisLevel()
+		{
+			if (_defs != null)
+			{
+				foreach (var defList in _defs)
+				{
+					foreach (var def in defList.Value)
+					{
+						yield return def;
+					}
+				}
+			}
+		}
+
 		public Definition SourceDefinition
 		{
 			get { return _sourceDefinition; }
 			set { _sourceDefinition = value; }
+		}
+
+		protected DefinitionProvider DefinitionProvider
+		{
+			get { return _scope.File.Model.DefinitionProvider; }
+		}
+
+		protected bool CreateDefinitions
+		{
+			get { return _scope.File.Model.DefinitionProvider.CreateDefinitions; }
 		}
 		#endregion
 

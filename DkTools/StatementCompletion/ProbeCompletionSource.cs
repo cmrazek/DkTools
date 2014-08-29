@@ -142,7 +142,7 @@ namespace DkTools.StatementCompletion
 			}
 			else if ((match = _rxAfterAssignOrCompare.Match(prefix)).Success)
 			{
-				var model = CodeModel.FileStore.GetOrCreateForTextBuffer(_textBuffer).GetOrCreateModelForSnapshot(snapshot);
+				var model = CodeModel.FileStore.GetOrCreateForTextBuffer(_textBuffer).GetModelForSnapshotOrNewer(snapshot);
 				var modelPos = model.GetPosition(curPos, snapshot);
 				var parentToken = (from t in model.FindTokens(modelPos)
 								   where t is GroupToken && t.Span.Start.Offset < curPos
@@ -185,7 +185,7 @@ namespace DkTools.StatementCompletion
 			}
 			else if ((match = _rxReturn.Match(prefix)).Success)
 			{
-				var model = CodeModel.FileStore.GetOrCreateForTextBuffer(_textBuffer).GetOrCreateModelForSnapshot(_textBuffer.CurrentSnapshot);
+				var model = CodeModel.FileStore.GetOrCreateForTextBuffer(_textBuffer).GetModelForSnapshotOrNewer(_textBuffer.CurrentSnapshot);
 				var modelPos = model.GetPosition(curPos, snapshot);
 
 				var funcToken = model.FindTokens(modelPos).LastOrDefault(x => x is CodeModel.FunctionToken) as CodeModel.FunctionToken;
@@ -200,7 +200,7 @@ namespace DkTools.StatementCompletion
 			}
 			else if ((match = _rxCase.Match(prefix)).Success)
 			{
-				var model = CodeModel.FileStore.GetOrCreateForTextBuffer(_textBuffer).GetOrCreateModelForSnapshot(_textBuffer.CurrentSnapshot);
+				var model = CodeModel.FileStore.GetOrCreateForTextBuffer(_textBuffer).GetModelForSnapshotOrNewer(_textBuffer.CurrentSnapshot);
 				var modelPos = model.GetPosition(curPos, snapshot);
 
 				var switchToken = (from t in model.FindTokens(modelPos) where t is SwitchToken select t as SwitchToken).LastOrDefault();
@@ -234,7 +234,7 @@ namespace DkTools.StatementCompletion
 
 		private IEnumerable<Completion> GetOptionsForFunctionArg(string funcName, int argIndex)
 		{
-			var model = CodeModel.FileStore.GetOrCreateForTextBuffer(_textBuffer).GetOrCreateModelForSnapshot(_textBuffer.CurrentSnapshot);
+			var model = CodeModel.FileStore.GetOrCreateForTextBuffer(_textBuffer).GetModelForSnapshotOrNewer(_textBuffer.CurrentSnapshot);
 
 			var sig = SignatureHelp.ProbeSignatureHelpSource.GetAllSignaturesForFunction(model, funcName).FirstOrDefault();
 			if (string.IsNullOrEmpty(sig)) yield break;
@@ -293,7 +293,7 @@ namespace DkTools.StatementCompletion
 
 		private IEnumerable<Completion> GetWordCompletions(int curPos, ITextSnapshot snapshot)
 		{
-			var model = CodeModel.FileStore.GetOrCreateForTextBuffer(_textBuffer).GetOrCreateModelForSnapshot(snapshot);
+			var model = CodeModel.FileStore.GetOrCreateForTextBuffer(_textBuffer).GetModelForSnapshotOrNewer(snapshot);
 			var modelPos = model.GetPosition(curPos, snapshot);
 
 			var tokens = model.FindTokens(modelPos).ToArray();

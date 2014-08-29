@@ -102,15 +102,18 @@ namespace DkTools.CodeModel
 								// Rebrand this data type with the new name.
 								ret._dataType = new DataType(ret._nameToken.Text, dataType.CompletionOptions, dataType.InfoText);
 
-								var def = new DataTypeDefinition(ret._nameToken.Text, ret._nameToken, ret._dataType);
-								ret.AddDefinition(def);
-								ret._nameToken.SourceDefinition = def;
+								if (scope.CreateDefinitions)
+								{
+									var def = new DataTypeDefinition(ret._nameToken.Text, ret._nameToken, ret._dataType);
+									ret.AddDefinition(def);
+									ret._nameToken.SourceDefinition = def;
+								}
 								isDataType = true;
 							}
 						}
 					}
 
-					if (!isDataType)
+					if (!isDataType && scope.CreateDefinitions)
 					{
 						var def = new ConstantDefinition(ret._nameToken.Text, ret._nameToken, Token.GetNormalizedText(ret._bodyTokens));
 						ret.AddDefinition(def);
@@ -120,9 +123,12 @@ namespace DkTools.CodeModel
 				else // args is not null
 				{
 					var bodyText = Token.GetNormalizedText(ret._bodyTokens);
-					var def = new MacroDefinition(ret._nameToken.Text, ret._nameToken, ret.GetFunctionSignature(), bodyText);
-					ret.AddDefinition(def);
-					ret._nameToken.SourceDefinition = def;
+					if (scope.CreateDefinitions)
+					{
+						var def = new MacroDefinition(ret._nameToken.Text, ret._nameToken, ret.GetFunctionSignature(), bodyText);
+						ret.AddDefinition(def);
+						ret._nameToken.SourceDefinition = def;
+					}
 				}
 			}
 

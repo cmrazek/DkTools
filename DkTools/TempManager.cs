@@ -47,6 +47,8 @@ namespace DkTools
 				}
 			}
 
+			if (string.IsNullOrWhiteSpace(fileTitle)) fileTitle = "Untitled";
+
 			if (!extension.StartsWith(".")) extension = "." + extension;
 			string pathName = Path.Combine(_tempDir, fileTitle + extension);
 			int index = 0;

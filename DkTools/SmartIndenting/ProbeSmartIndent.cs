@@ -62,7 +62,7 @@ namespace DkTools.SmartIndenting
 				// User is typing a 'case' inside a switch.
 
 				// Try to find the braces that contain the 'case'.
-				var model = CodeModel.FileStore.GetOrCreateForTextBuffer(_view.TextBuffer).GetOrCreateModelForSnapshot(_view.TextBuffer.CurrentSnapshot);
+				var model = CodeModel.FileStore.GetOrCreateForTextBuffer(_view.TextBuffer).GetModelForSnapshotOrNewer(_view.TextBuffer.CurrentSnapshot);
 				var offset = line.Snapshot.TranslateOffsetToSnapshot(line.Start.Position, model.Snapshot);
 				var bracesToken = model.File.FindDownward(offset, t => t is CodeModel.BracesToken).LastOrDefault() as CodeModel.BracesToken;
 				if (bracesToken != null)

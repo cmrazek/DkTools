@@ -16,11 +16,14 @@ namespace DkTools.CodeModel
 			_dataTypeToken = dataTypeToken;
 			_nameTokens = nameTokens.ToArray();
 
-			foreach (var tok in _nameTokens)
+			if (scope.CreateDefinitions)
 			{
-				var def = new VariableDefinition(tok.Text, tok, DataType.FromToken(_dataTypeToken));
-				tok.SourceDefinition = def;
-				AddDefinition(def);
+				foreach (var tok in _nameTokens)
+				{
+					var def = new VariableDefinition(tok.Text, tok, DataType.FromToken(_dataTypeToken));
+					tok.SourceDefinition = def;
+					AddDefinition(def);
+				}
 			}
 		}
 

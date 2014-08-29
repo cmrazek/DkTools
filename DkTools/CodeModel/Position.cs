@@ -156,5 +156,10 @@ namespace DkTools.CodeModel
 			if (ch == '\n') return new Position(_offset + 1, _lineNum + 1, 0);
 			return new Position(_offset + 1, _lineNum, _linePos + 1);
 		}
+
+		public Position MoveOffset(int diff)
+		{
+			return new Position(_offset + diff, _lineNum, _linePos);
+		}
 	}
 }

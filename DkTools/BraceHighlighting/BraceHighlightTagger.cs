@@ -149,7 +149,7 @@ namespace DkTools.BraceHighlighting
 
 			var snapshot = snapPt.Snapshot;
 
-			var model = CodeModel.FileStore.GetOrCreateForTextBuffer(_sourceBuffer).GetOrCreateModelForSnapshot(_sourceBuffer.CurrentSnapshot);
+			var model = CodeModel.FileStore.GetOrCreateForTextBuffer(_sourceBuffer).GetModelForSnapshotOrNewer(_sourceBuffer.CurrentSnapshot);
 			var modelPos = model.GetPosition(snapPt);
 			var caretToken = model.File.FindDownwardTouching(modelPos).LastOrDefault(t => t.SourceDefinition != null);
 			if (caretToken == null)

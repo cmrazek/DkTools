@@ -14,6 +14,7 @@ namespace DkTools.CodeModel
 		private CodeSegment.CodeSegmentComparer _codeSegmentComparer = new CodeSegment.CodeSegmentComparer();
 		private VsText.ITextSnapshot _snapshot;
 		private int _version;
+		private int _lastFindSegment = -1;
 
 		private class CodeSegment
 		{
@@ -23,8 +24,9 @@ namespace DkTools.CodeModel
 			public Position startPos;
 			public Position endPos;
 			public bool actualContent;
+			public bool primaryFile;
 
-			public CodeSegment(string fileName, int start, int length, Position startPos, Position endPos, bool actualContent)
+			public CodeSegment(string fileName, int start, int length, Position startPos, Position endPos, bool actualContent, bool primaryFile)
 			{
 				this.fileName = fileName;
 				this.start = start;
@@ -32,6 +34,7 @@ namespace DkTools.CodeModel
 				this.startPos = startPos;
 				this.endPos = endPos;
 				this.actualContent = actualContent;
+				this.primaryFile = primaryFile;
 			}
 
 			public class CodeSegmentComparer : IComparer<CodeSegment>
@@ -43,7 +46,7 @@ namespace DkTools.CodeModel
 			}
 		}
 
-		public void Append(string text, string fileName, Position fileStartPos, Position fileEndPos, bool actualContent)
+		public void Append(string text, string fileName, Position fileStartPos, Position fileEndPos, bool actualContent, bool primaryFile)
 		{
 			var lastSeg = _segments.LastOrDefault();
 
@@ -57,12 +60,12 @@ namespace DkTools.CodeModel
 				}
 				else
 				{
-					_segments.Add(new CodeSegment(fileName, _buf.Length, text.Length, fileStartPos, fileEndPos, actualContent));
+					_segments.Add(new CodeSegment(fileName, _buf.Length, text.Length, fileStartPos, fileEndPos, actualContent, primaryFile));
 				}
 			}
 			else
 			{
-				_segments.Add(new CodeSegment(fileName, _buf.Length, text.Length, fileStartPos, fileEndPos, actualContent));
+				_segments.Add(new CodeSegment(fileName, _buf.Length, text.Length, fileStartPos, fileEndPos, actualContent, primaryFile));
 			}
 
 			_buf.Append(text);
@@ -72,7 +75,7 @@ namespace DkTools.CodeModel
 
 		public void Append(string text, CodeAttributes att)
 		{
-			Append(text, att.FileName, att.FileStartPosition, att.FileEndPosition, att.ActualContent);
+			Append(text, att.FileName, att.FileStartPosition, att.FileEndPosition, att.ActualContent, att.PrimaryFile);
 		}
 
 		public void Append(CodeSource source)
@@ -84,7 +87,7 @@ namespace DkTools.CodeModel
 				var seg = source._segments[segIndex];
 				var length = (segIndex + 1 < numSegs ? source._segments[segIndex + 1].start : source._buf.Length) - seg.start;
 
-				Append(source._buf.ToString(seg.start, length), seg.fileName, seg.startPos, seg.endPos, seg.actualContent);
+				Append(source._buf.ToString(seg.start, length), seg.fileName, seg.startPos, seg.endPos, seg.actualContent, seg.primaryFile);
 			}
 		}
 
@@ -104,6 +107,12 @@ namespace DkTools.CodeModel
 #endif
 			if (_segments.Count == 0) return -1;
 
+			if (_lastFindSegment >= 0)
+			{
+				var seg = _segments[_lastFindSegment];
+				if (seg.start <= offset && seg.start + seg.length > offset) return _lastFindSegment;
+			}
+
 			// Do a binary search for the segment index
 			var min = 0;
 			var max = _segments.Count - 1;
@@ -111,29 +120,43 @@ namespace DkTools.CodeModel
 			while (min < max)
 			{
 				var mid = min + (max - min) / 2;
-				if (mid == lastSeg) return mid;
+				if (mid == lastSeg)
+				{
+					_lastFindSegment = mid;
+					return mid;
+				}
 
 				var seg = _segments[mid];
 				if (seg.start > offset)
-				{
-					min = mid + 1;
-					continue;
-				}
-
-				var length = _segments[mid + 1].start - seg.start;
-				if (seg.start + length < offset)
 				{
 					max = mid - 1;
 					continue;
 				}
 
+				var length = _segments[mid + 1].start - seg.start;
+				if (seg.start + length <= offset)
+				{
+					min = mid + 1;
+					continue;
+				}
+
+				_lastFindSegment = mid;
 				return mid;
 			}
 
+			_lastFindSegment = min;
 			return min;
 		}
 
-		public void GetFilePosition(int sourceOffset, out string foundFileName, out Position foundPos)
+		public bool OffsetIsInPrimaryFile(int offset)
+		{
+			var segIndex = FindSegmentIndexForOffset(offset);
+			if (segIndex < 0) return false;
+
+			return _segments[segIndex].primaryFile;
+		}
+
+		public void GetFilePosition(int sourceOffset, out string foundFileName, out Position foundPos, out bool primaryFile)
 		{
 			if (sourceOffset < 0 || sourceOffset > _text.Length) throw new ArgumentOutOfRangeException("offset");
 
@@ -142,11 +165,10 @@ namespace DkTools.CodeModel
 			{
 				foundFileName = null;
 				foundPos = Position.Start;
+				primaryFile = false;
 				return;
 			}
 			var seg = _segments[segIndex];
-			//var seg = (from s in _segments where s.start <= sourceOffset select s).Last();
-
 			var pos = seg.startPos;
 
 			if (seg.actualContent)
@@ -157,14 +179,16 @@ namespace DkTools.CodeModel
 
 			foundFileName = seg.fileName;
 			foundPos = pos;
+			primaryFile = seg.primaryFile;
 		}
 
 		public void GetFileSpan(Span sourceSpan, out string foundFileName, out Span foundSpan)
 		{
 			string startFileName, endFileName;
 			Position startPos, endPos;
-			GetFilePosition(sourceSpan.Start.Offset, out startFileName, out startPos);
-			GetFilePosition(sourceSpan.End.Offset, out endFileName, out endPos);
+			bool primaryFile;
+			GetFilePosition(sourceSpan.Start.Offset, out startFileName, out startPos, out primaryFile);
+			GetFilePosition(sourceSpan.End.Offset, out endFileName, out endPos, out primaryFile);
 
 			if (startFileName.Equals(endFileName, StringComparison.OrdinalIgnoreCase) && endPos.Offset >= startPos.Offset)
 			{
@@ -186,7 +210,7 @@ namespace DkTools.CodeModel
 			for (var segIndex = 0; segIndex < _segments.Count; segIndex++)
 			{
 				var seg = _segments[segIndex];
-				sb.AppendFormat("SEGMENT {0} FileName: {1} Pos: {2} [", segIndex, seg.fileName, seg.startPos);
+				sb.AppendFormat("SEGMENT {0} FileName: {1} StartOffset: {4} Length: {5} StartPos: {2} EndPos: {3} [", segIndex, seg.fileName, seg.startPos, seg.endPos, seg.start, seg.length);
 
 				var end = segIndex + 1 < _segments.Count ? _segments[segIndex + 1].start : _buf.Length;
 				sb.Append(_buf.ToString(seg.start, end - seg.start));
@@ -246,7 +270,6 @@ namespace DkTools.CodeModel
 		public class CodeSourcePreprocessorReader : IPreprocessorReader
 		{
 			private CodeSource _src;
-			//private int _srcVersion;
 			private int _segIndex;
 			private CodeSegment _seg;
 			private int _segOffset;
@@ -380,7 +403,7 @@ namespace DkTools.CodeModel
 					{
 						var length = _seg.length - (_segOffset + numChars);
 						_writer.Append(use ? _src._buf.ToString(_seg.start + _segOffset, length) : string.Empty,
-							new CodeAttributes(_seg.fileName, _pos, _seg.endPos, _seg.actualContent));
+							new CodeAttributes(_seg.fileName, _pos, _seg.endPos, use ? _seg.actualContent : false, _seg.primaryFile));
 						MoveNextSegment();
 						numChars -= length;
 					}
@@ -388,7 +411,7 @@ namespace DkTools.CodeModel
 					{
 						var text = _src._buf.ToString(_seg.start + _segOffset, numChars);
 						var newPos = _pos.Advance(text);
-						_writer.Append(use ? text : string.Empty, new CodeAttributes(_seg.fileName, _pos, _seg.actualContent ? newPos : _pos, _seg.actualContent));
+						_writer.Append(use ? text : string.Empty, new CodeAttributes(_seg.fileName, _pos, _seg.actualContent ? newPos : _pos, use ? _seg.actualContent : false, _seg.primaryFile));
 						_segOffset += numChars;
 						_pos = newPos;
 						numChars = 0;
@@ -416,7 +439,7 @@ namespace DkTools.CodeModel
 							{
 								_sb.Append(ch);
 								var text = _sb.ToString();
-								_writer.Append(text, new CodeAttributes(_seg.fileName, startPos, _seg.endPos, _seg.actualContent));
+								_writer.Append(text, new CodeAttributes(_seg.fileName, startPos, _seg.endPos, use ? _seg.actualContent : false, _seg.primaryFile));
 								MoveNextSegment();
 								startPos = _pos;
 								_sb.Clear();
@@ -424,7 +447,7 @@ namespace DkTools.CodeModel
 							}
 							else
 							{
-								_writer.Append(string.Empty, new CodeAttributes(_seg.fileName, startPos, _seg.endPos, _seg.actualContent));
+								_writer.Append(string.Empty, new CodeAttributes(_seg.fileName, startPos, _seg.endPos, use ? _seg.actualContent : false, _seg.primaryFile));
 								MoveNextSegment();
 								startPos = _pos;
 								gotContent = false;
@@ -445,11 +468,11 @@ namespace DkTools.CodeModel
 				{
 					if (use)
 					{
-						_writer.Append(_sb.ToString(), new CodeAttributes(_seg.fileName, startPos, _pos, _seg.actualContent));
+						_writer.Append(_sb.ToString(), new CodeAttributes(_seg.fileName, startPos, _pos, use ? _seg.actualContent : false, _seg.primaryFile));
 					}
 					else
 					{
-						_writer.Append(string.Empty, new CodeAttributes(_seg.fileName, startPos, _pos, _seg.actualContent));
+						_writer.Append(string.Empty, new CodeAttributes(_seg.fileName, startPos, _pos, use ? _seg.actualContent : false, _seg.primaryFile));
 					}
 				}
 			}
@@ -478,14 +501,14 @@ namespace DkTools.CodeModel
 			{
 				if (_seg != null)
 				{
-					_writer.Append(text, new CodeAttributes(_seg.fileName, _pos, _pos, false));
+					_writer.Append(text, new CodeAttributes(_seg.fileName, _pos, _pos, false, _seg.primaryFile));
 				}
 				else
 				{
 					if (_src._segments.Count > 0)
 					{
 						var lastSeg = _src._segments[_src._segments.Count - 1];
-						_writer.Append(text, new CodeAttributes(lastSeg.fileName, lastSeg.endPos, lastSeg.endPos, false));
+						_writer.Append(text, new CodeAttributes(lastSeg.fileName, lastSeg.endPos, lastSeg.endPos, false, lastSeg.primaryFile));
 					}
 					else
 					{
@@ -536,15 +559,17 @@ namespace DkTools.CodeModel
 		public Position FileStartPosition;
 		public Position FileEndPosition;
 		public bool ActualContent;
+		public bool PrimaryFile;
 
-		public static readonly CodeAttributes Empty = new CodeAttributes(null, Position.Start, Position.Start, false);
+		public static readonly CodeAttributes Empty = new CodeAttributes(null, Position.Start, Position.Start, false, false);
 
-		public CodeAttributes(string fileName, Position fileStartPos, Position fileEndPos, bool actualContent)
+		public CodeAttributes(string fileName, Position fileStartPos, Position fileEndPos, bool actualContent, bool primaryFile)
 		{
 			FileName = fileName;
 			FileStartPosition = fileStartPos;
 			FileEndPosition = fileEndPos;
 			ActualContent = actualContent;
+			PrimaryFile = primaryFile;
 		}
 
 		public override string ToString()

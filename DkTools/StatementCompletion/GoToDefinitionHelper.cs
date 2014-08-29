@@ -16,7 +16,7 @@ namespace DkTools.StatementCompletion
 			if (!caretPtTest.HasValue) return;
 			var caretPt = caretPtTest.Value;
 
-			var model = new CodeModel.CodeModel(caretPt.Snapshot);
+			var model = new CodeModel.CodeModel(caretPt.Snapshot);	// TODO: this should use a preprocessed model instead of creating a new one every time.
 			var modelPos = model.GetPosition(caretPt.Position);
 			var selTokens = model.File.FindDownwardTouching(modelPos).ToArray();
 			if (selTokens.Length == 0)
@@ -64,15 +64,16 @@ namespace DkTools.StatementCompletion
 			if (includeToken != null)
 			{
 				Log.WriteDebug("Found include token.");
-				if (includeToken.IncludeFile != null && !string.IsNullOrEmpty(includeToken.IncludeFile.FileName))
-				{
-					Shell.OpenDocument(includeToken.IncludeFile.FileName);
-					return;
-				}
-				else
-				{
-					Log.WriteDebug("Include token has no filename.");
-				}
+				// TODO: this code needs to be rewritten to not rely on a CodeFile being returned
+				//if (includeToken.IncludeFile != null && !string.IsNullOrEmpty(includeToken.IncludeFile.FileName))
+				//{
+				//	Shell.OpenDocument(includeToken.IncludeFile.FileName);
+				//	return;
+				//}
+				//else
+				//{
+				//	Log.WriteDebug("Include token has no filename.");
+				//}
 			}
 
 			Log.WriteDebug("Found no definitions.");

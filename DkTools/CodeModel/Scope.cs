@@ -11,23 +11,37 @@ namespace DkTools.CodeModel
 		private ScopeHint _hint;
 		private int _depth;
 		private bool _visible;	// Is this file directly visible to the user?
+		private DefinitionProvider _defProvider;
 
-		public Scope(CodeFile file, int depth, ScopeHint hint, bool visible)
+		public Scope(CodeModel model)
 		{
+			_file = null;
+			_hint = default(ScopeHint);
+			_depth = 0;
+			_visible = false;
+			_defProvider = model.DefinitionProvider;
+		}
+
+		public Scope(CodeFile file, int depth, ScopeHint hint, bool visible, DefinitionProvider defProvider)
+		{
+#if DEBUG
+			if (defProvider == null) throw new InvalidOperationException("Model has no definition provider.");
+#endif
 			_file = file;
 			_depth = depth;
 			_hint = hint;
 			_visible = visible;
+			_defProvider = defProvider;
 		}
 
 		public Scope Clone()
 		{
-			return new Scope(_file, _depth, _hint, _visible);
+			return new Scope(_file, _depth, _hint, _visible, _defProvider);
 		}
 
 		public Scope CloneIndent()
 		{
-			return new Scope(_file, _depth + 1, _hint, _visible);
+			return new Scope(_file, _depth + 1, _hint, _visible, _defProvider);
 		}
 
 		public Scope CloneIndentNonRoot()
@@ -73,6 +87,16 @@ namespace DkTools.CodeModel
 		public bool Visible
 		{
 			get { return _visible; }
+		}
+
+		public bool CreateDefinitions
+		{
+			get { return _defProvider.CreateDefinitions; }
+		}
+
+		public DefinitionProvider DefinitionProvider
+		{
+			get { return _defProvider; }
 		}
 	}
 

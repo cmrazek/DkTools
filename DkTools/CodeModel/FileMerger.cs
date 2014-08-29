@@ -23,6 +23,7 @@ namespace DkTools.CodeModel
 		private int _insertLine;
 		private CodeSource _mergedContent;
 		private bool _showMergeComments;
+		private string _primaryFileName;
 
 		private enum MergeMode
 		{
@@ -53,6 +54,7 @@ namespace DkTools.CodeModel
 		public void MergeFile(string fileName, bool showMergeComments)
 		{
 			// Locate all needed copies of files
+			_primaryFileName = fileName;
 			_origFileName = "";
 			_localFileNames.Clear();
 			_showMergeComments = showMergeComments;
@@ -74,12 +76,13 @@ namespace DkTools.CodeModel
 			int lineIndex = 0;
 			foreach (var line in _lines)
 			{
+				var primary = _primaryFileName.Equals(line.fileName, StringComparison.OrdinalIgnoreCase);
 				var endPos = line.pos.Advance(line.text);
-				_mergedContent.Append(line.text, new CodeAttributes(line.fileName, line.pos, endPos, true));
+				_mergedContent.Append(line.text, new CodeAttributes(line.fileName, line.pos, endPos, true, primary));
 				if (!line.text.EndsWith("\n") && lineIndex + 1 < _lines.Count)
 				{
 					// Does not end with crlf. Need to insert between the lines.
-					_mergedContent.Append("\r\n", new CodeAttributes(line.fileName, endPos, endPos, false));
+					_mergedContent.Append("\r\n", new CodeAttributes(line.fileName, endPos, endPos, false, primary));
 				}
 				lineIndex++;
 			}

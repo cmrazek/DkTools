@@ -18,20 +18,17 @@ namespace DkTools.CodeModel
 
 		protected override void OnChildTokenAdded(Token child)
 		{
-			if (child is IdentifierToken)
+			if (child is IdentifierToken && CreateDefinitions)
 			{
 				var def = new VariableDefinition(child.Text, child, DataType.FromToken(_dataTypeToken));
-				this.AddDefinition(def);
+				AddDefinition(def);
 				child.SourceDefinition = def;
 			}
 		}
 
 		public override bool BreaksStatement
 		{
-			get
-			{
-				return true;
-			}
+			get { return true; }
 		}
 
 		public static VariableDeclarationToken TryParse(GroupToken parent, Scope scope)
