@@ -69,7 +69,7 @@ namespace DkTools.SignatureHelp
 					}
 					else if (typedChar == ',' && (_session == null || _session.IsDismissed))
 					{
-						var model = CodeModel.FileStore.GetOrCreateForTextBuffer(_textView.TextBuffer).GetModelForSnapshotOrNewer(_textView.TextSnapshot, "Signature help command handler - after ','");
+						var model = CodeModel.FileStore.GetOrCreateForTextBuffer(_textView.TextBuffer).GetCurrentModel(_textView.TextSnapshot, "Signature help command handler - after ','");
 						var caretPos = _textView.Caret.Position.BufferPosition.TranslateTo(model.Snapshot, PointTrackingMode.Positive).Position;
 
 						var tokens = model.FindTokens(model.GetPosition(caretPos));

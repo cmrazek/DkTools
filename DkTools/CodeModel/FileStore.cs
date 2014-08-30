@@ -120,7 +120,7 @@ namespace DkTools.CodeModel
 			return false;
 		}
 
-		public CodeModel GetModelForSnapshotOrNewer(VsText.ITextSnapshot snapshot, string reason)
+		public CodeModel GetCurrentModel(VsText.ITextSnapshot snapshot, string reason)
 		{
 #if DEBUG
 			if (snapshot == null) throw new ArgumentNullException("snapshot");
@@ -143,7 +143,7 @@ namespace DkTools.CodeModel
 			return _model;
 		}
 
-		public CodeModel GetMostRecentModelOrCreate(VsText.ITextSnapshot snapshot, string reason)
+		public CodeModel GetMostRecentModel(VsText.ITextSnapshot snapshot, string reason)
 		{
 #if DEBUG
 			if (snapshot == null) throw new ArgumentNullException("snapshot");
