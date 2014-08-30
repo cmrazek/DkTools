@@ -45,10 +45,22 @@ namespace DkTools.CodeModel
 				str = rdr.PeekToken(false);
 				if (string.IsNullOrEmpty(str)) continue;
 
+				if (string.IsNullOrWhiteSpace(str) && str.Contains('\n') && p.writer.IsEmptyLine)
+				{
+					rdr.Ignore(str.Length);
+					continue;
+				}
+
 				if (str[0] == '#')
 				{
 					rdr.Ignore(str.Length);
 					ProcessDirective(p, str);
+					continue;
+				}
+
+				if (p.suppress)
+				{
+					rdr.Ignore(str.Length);
 					continue;
 				}
 
@@ -67,7 +79,12 @@ namespace DkTools.CodeModel
 					else if (str == "STRINGIZE")
 					{
 						rdr.Ignore(str.Length);
-						ProcessStringize(p);
+						ProcessStringizeKeyword(p);
+					}
+					else if (str == "defined" && p.contentType == ContentType.Condition)
+					{
+						rdr.Ignore(str.Length);
+						ProcessDefinedKeyword(p);
 					}
 					else
 					{
@@ -199,7 +216,7 @@ namespace DkTools.CodeModel
 						{
 							// define continues down to the next line, but don't include the slash in the resulting text.
 							sb.Remove(index, 1);
-							sb.Append("\r\n");
+							if (insideBlock) sb.Append("\r\n");
 							rdr.IgnoreUntil(c => c == '\r' || c == '\n');
 							continue;
 						}
@@ -367,7 +384,7 @@ namespace DkTools.CodeModel
 			rdr.Insert(textToAdd);
 		}
 
-		private void ProcessStringize(PreprocessorParams p)
+		private void ProcessStringizeKeyword(PreprocessorParams p)
 		{
 			var rdr = p.reader;
 			rdr.IgnoreWhiteSpaceAndComments(false);
@@ -381,6 +398,26 @@ namespace DkTools.CodeModel
 			content = ResolveMacros(content, p.restrictedDefines, p.args);
 
 			p.reader.Insert(EscapeString(content));
+		}
+
+		private void ProcessDefinedKeyword(PreprocessorParams p)
+		{
+			var rdr = p.reader;
+			rdr.IgnoreWhiteSpaceAndComments(true);
+			if (rdr.EOF) return;
+
+			if (rdr.Peek() != '(') return;
+			rdr.Ignore(1);
+			rdr.IgnoreWhiteSpaceAndComments(true);
+
+			var ident = rdr.PeekIdentifier();
+			if (string.IsNullOrEmpty(ident)) return;
+			rdr.Ignore(ident.Length);
+
+			p.writer.Append(IsDefined(p, ident) ? "1" : "0", CodeAttributes.Empty);
+
+			rdr.IgnoreWhiteSpaceAndComments(true);
+			if (rdr.Peek() == ')') rdr.Ignore(1);
 		}
 
 		private string ResolveMacros(string source, IEnumerable<string> restrictedDefines, IEnumerable<Define> args)
@@ -444,7 +481,7 @@ namespace DkTools.CodeModel
 
 			// Run the preprocessor on the include file.
 			var includeSource = new CodeSource();
-			var parms = new PreprocessorParams(reader, includeSource, fileName, parentFiles);
+			var parms = new PreprocessorParams(reader, includeSource, includeNode.FullPathName, parentFiles);
 			Preprocess(parms, false);
 
 			p.writer.Append(includeSource);
@@ -461,13 +498,14 @@ namespace DkTools.CodeModel
 
 			if (p.suppress)
 			{
-				p.ifStack.Push(new ConditionScope { result = ConditionResult.Indeterminate });
+				p.ifStack.Push(new ConditionScope(ConditionResult.Negative, ConditionResult.Positive, true));
 			}
 			else
 			{
-				bool defined = _defines.ContainsKey(name);
+				bool defined = IsDefined(p, name);
 				if (!activeIfDefined) defined = !defined;
-				p.ifStack.Push(new ConditionScope { result = defined ? ConditionResult.Positive : ConditionResult.Negative });
+				var result = defined ? ConditionResult.Positive : ConditionResult.Negative;
+				p.ifStack.Push(new ConditionScope(result, result, false));
 				UpdateSuppress(p);
 			}
 			rdr.IgnoreWhiteSpaceAndComments(true);
@@ -491,8 +529,19 @@ namespace DkTools.CodeModel
 
 			var scope = p.ifStack.Peek();
 
-			if (scope.gotElse) return;
-			scope.gotElse = true;
+			switch (scope.prevResult)
+			{
+				case ConditionResult.Positive:
+					scope.result = ConditionResult.Negative;
+					break;
+				case ConditionResult.Negative:
+					scope.result = ConditionResult.Positive;
+					break;
+				case ConditionResult.Indeterminate:
+					scope.result = ConditionResult.Indeterminate;
+					break;
+			}
+
 			UpdateSuppress(p);
 
 			p.reader.IgnoreWhiteSpaceAndComments(true);
@@ -515,50 +564,61 @@ namespace DkTools.CodeModel
 				rdr.Ignore(str.Length);
 				sb.Append(str);
 			}
+			var conditionStr = sb.ToString();
 
-			ConditionResult result;
-			if (p.suppress) result = ConditionResult.Indeterminate;
-			else result = EvaluateCondition(sb.ToString());
-
-			if (!elif)
+			if (elif)
 			{
-				p.ifStack.Push(new ConditionScope { result = result });
+				if (p.ifStack.Count > 0)
+				{
+					var scope = p.ifStack.Peek();
+					if (scope.outerSuppressed)
+					{
+						scope.result = ConditionResult.Negative;
+					}
+					else
+					{
+						switch (scope.prevResult)
+						{
+							case ConditionResult.Positive:
+								scope.result = ConditionResult.Negative;
+								break;
+
+							case ConditionResult.Negative:
+								scope.result = EvaluateCondition(sb.ToString());
+								if (scope.result == ConditionResult.Positive) scope.prevResult = ConditionResult.Positive;
+								break;
+
+							case ConditionResult.Indeterminate:
+								scope.result = EvaluateCondition(sb.ToString());
+								scope.prevResult = scope.result;
+								break;
+						}
+					}
+				}
+				else
+				{
+					var result = EvaluateCondition(sb.ToString());
+					p.ifStack.Push(new ConditionScope(result, result, p.suppress));
+				}
 			}
 			else
 			{
-				if (p.ifStack.Count == 0) return;
-				var ifLevel = p.ifStack.Peek();
-				if (ifLevel.gotElse) return;
-				ifLevel.result = result;
+				if (p.suppress)
+				{
+					p.ifStack.Push(new ConditionScope(ConditionResult.Negative, ConditionResult.Positive, p.suppress));
+				}
+				else
+				{
+					var result = EvaluateCondition(sb.ToString());
+					p.ifStack.Push(new ConditionScope(result, result, p.suppress));
+				}
 			}
 			UpdateSuppress(p);
 		}
 
 		private void UpdateSuppress(PreprocessorParams p)
 		{
-			var suppress = false;
-
-			foreach (var scope in p.ifStack)
-			{
-				if (!scope.gotElse)
-				{
-					if (scope.result == ConditionResult.Negative)
-					{
-						suppress = true;
-						break;
-					}
-				}
-				else
-				{
-					if (scope.result == ConditionResult.Positive)
-					{
-						suppress = true;
-						break;
-					}
-				}
-			}
-
-			p.reader.Suppress = p.suppress = suppress;
+			p.reader.Suppress = p.suppress = p.ifStack.Any(x => x.result == ConditionResult.Negative);
 		}
 
 		private string EscapeString(string str)
@@ -605,6 +665,13 @@ namespace DkTools.CodeModel
 			if (!string.IsNullOrEmpty(number) && char.IsNumber(number[0])) rdr.Ignore(number.Length);
 		}
 
+		private bool IsDefined(PreprocessorParams p, string name)
+		{
+			if (p.args != null && p.args.Any(x => x.name == name)) return true;
+			if (_defines.ContainsKey(name)) return true;
+			return false;
+		}
+
 		private class Define
 		{
 			public string name;
@@ -622,7 +689,24 @@ namespace DkTools.CodeModel
 		private class ConditionScope
 		{
 			public ConditionResult result;
-			public bool gotElse;
+			public ConditionResult prevResult;
+			public bool outerSuppressed;
+
+			private ConditionScope()
+			{ }
+
+			public ConditionScope(ConditionResult result, ConditionResult prevResult, bool outerSuppressed)
+			{
+				this.result = result;
+				this.prevResult = prevResult;
+				this.outerSuppressed = outerSuppressed;
+			}
+		}
+
+		private enum ContentType
+		{
+			File,
+			Condition
 		}
 
 		private class PreprocessorParams
@@ -636,6 +720,7 @@ namespace DkTools.CodeModel
 			public bool suppress;
 			public IEnumerable<Define> args;
 			public IEnumerable<string> restrictedDefines;
+			public ContentType contentType;
 
 			public PreprocessorParams(IPreprocessorReader reader, IPreprocessorWriter writer, string fileName, IEnumerable<string> parentFiles)
 			{
@@ -653,21 +738,13 @@ namespace DkTools.CodeModel
 			var writer = new StringPreprocessorWriter();
 			var parms = new PreprocessorParams(reader, writer, string.Empty, null);
 			parms.allowDirectives = false;
+			parms.contentType = ContentType.Condition;
 			Preprocess(parms, false);
 
 			// Evaluate the condition string
-			long? finalValue;
-			try
-			{
-				var parser = new TokenParser.Parser(writer.Text);
-				var tokenGroup = PreprocessorTokens.GroupToken.Parse(null, parser, null);
-				finalValue = tokenGroup.Value;
-			}
-			catch (PreprocessorTokens.PreprocessorConditionException ex)
-			{
-				Log.WriteDebug("Exception when processing #if condition: {0}", ex);
-				finalValue = null;
-			}
+			var parser = new TokenParser.Parser(writer.Text);
+			var tokenGroup = PreprocessorTokens.GroupToken.Parse(null, parser, null);
+			var finalValue = tokenGroup.Value;
 
 			if (finalValue.HasValue)
 			{

@@ -220,5 +220,16 @@ namespace DkTools
 			}
 			return true;
 		}
+
+		public static string ToSingleLine(this string str)
+		{
+			var sb = new StringBuilder(str.Length);
+			foreach (var ch in str)
+			{
+				if (ch == '\n') sb.Append(' ');
+				else if (ch != '\r') sb.Append(ch);
+			}
+			return sb.ToString();
+		}
 	}
 }

@@ -86,12 +86,25 @@ namespace DkTools.CodeModel
 			if (ch == '\"' || ch == '\'')
 			{
 				var sb = new StringBuilder();
-				sb.Append(ch);
 
 				var lastCh = '\0';
+				var first = true;
+				var gotEnd = false;
 				sb.Append(rdr.PeekUntil(c =>
 				{
-					if (c == ch && lastCh != '\\') return false;
+					if (gotEnd) return false;
+
+					if (first)
+					{
+						first = false;
+						return true;
+					}
+
+					if (c == ch && lastCh != '\\')
+					{
+						gotEnd = true;
+						return true;
+					}
 
 					if (c == '\\' && lastCh == '\\') lastCh = '\0';
 					else lastCh = c;

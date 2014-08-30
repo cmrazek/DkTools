@@ -37,46 +37,49 @@ namespace DkTools.CodeModel
 		{
 			if (string.IsNullOrEmpty(fileName)) return null;
 
+			// Check if the include file is cached.
 			IncludeFile file = null;
 			var fileNameLower = fileName.ToLower();
 
-			if (searchSameDir)
+			if (searchSameDir && !string.IsNullOrEmpty(sourceFileName))
 			{
-				if (!string.IsNullOrEmpty(sourceFileName))
-				{
-					if (_sameDirIncludeFiles.TryGetValue(fileNameLower, out file)) return file;
-
-					var pathName = Path.Combine(Path.GetDirectoryName(sourceFileName), fileName);
-					if (System.IO.File.Exists(pathName))
-					{
-						if (CheckForCyclicalInclude(pathName, parentFiles)) return null;
-						file = new IncludeFile(this, pathName);
-						_sameDirIncludeFiles[fileNameLower] = file;
-						return file;
-					}
-
-					var ampersandFileName = pathName + "&";
-					if (System.IO.File.Exists(ampersandFileName))
-					{
-						if (CheckForCyclicalInclude(ampersandFileName, parentFiles)) return null;
-						file = new IncludeFile(this, ampersandFileName);
-						_sameDirIncludeFiles[fileNameLower] = file;
-						return file;
-					}
-
-					var plusFileName = pathName = "+";
-					if (File.Exists(plusFileName))
-					{
-						if (CheckForCyclicalInclude(plusFileName, parentFiles)) return null;
-						file = new IncludeFile(this, plusFileName);
-						_sameDirIncludeFiles[fileNameLower] = file;
-						return file;
-					}
-				}
+				if (_sameDirIncludeFiles.TryGetValue(fileNameLower, out file)) return file;
 			}
 
 			if (_globalIncludeFiles.TryGetValue(fileNameLower, out file)) return file;
 
+			// Search the disk in same directory.
+			if (searchSameDir && !string.IsNullOrEmpty(sourceFileName))
+			{
+				var pathName = Path.Combine(Path.GetDirectoryName(sourceFileName), fileName);
+				if (System.IO.File.Exists(pathName))
+				{
+					if (CheckForCyclicalInclude(pathName, parentFiles)) return null;
+					file = new IncludeFile(this, pathName);
+					_sameDirIncludeFiles[fileNameLower] = file;
+					return file;
+				}
+
+				var ampersandFileName = pathName + "&";
+				if (System.IO.File.Exists(ampersandFileName))
+				{
+					if (CheckForCyclicalInclude(ampersandFileName, parentFiles)) return null;
+					file = new IncludeFile(this, ampersandFileName);
+					_sameDirIncludeFiles[fileNameLower] = file;
+					return file;
+				}
+
+				var plusFileName = pathName = "+";
+				if (File.Exists(plusFileName))
+				{
+					if (CheckForCyclicalInclude(plusFileName, parentFiles)) return null;
+					file = new IncludeFile(this, plusFileName);
+					_sameDirIncludeFiles[fileNameLower] = file;
+					return file;
+				}
+			}
+
+			// Search the disk in global include directories.
 			foreach (var includeDir in ProbeEnvironment.IncludeDirs)
 			{
 				var pathName = Path.Combine(includeDir, fileName);

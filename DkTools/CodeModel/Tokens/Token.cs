@@ -85,8 +85,11 @@ namespace DkTools.CodeModel
 			_scope = scope;
 			_span = span;
 
-			var defProv = _scope.DefinitionProvider;
-			if (defProv != null) AddDefinitions(defProv.GetLocalDefinitionsForOffset(span.Start.Offset));
+			if (!scope.CreateDefinitions)
+			{
+				var defProv = _scope.DefinitionProvider;
+				if (defProv != null) AddDefinitions(defProv.GetLocalDefinitionsForOffset(span.Start.Offset));
+			}
 		}
 
 		/// <summary>

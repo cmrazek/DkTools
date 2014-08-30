@@ -13,9 +13,9 @@ namespace DkTools.CodeModel
 		private List<CodeSegment> _segments = new List<CodeSegment>();
 		private CodeSegment.CodeSegmentComparer _codeSegmentComparer = new CodeSegment.CodeSegmentComparer();
 		private VsText.ITextSnapshot _snapshot;
-		private int _version;
 		private int _lastFindSegment = -1;
 		private int _length;
+		private bool _isEmptyLine = true;
 
 		private class CodeSegment
 		{
@@ -89,7 +89,12 @@ namespace DkTools.CodeModel
 #endif
 
 			_text = null;
-			_version++;
+
+			foreach (var ch in text)
+			{
+				if (ch == '\n') _isEmptyLine = true;
+				else if (!char.IsWhiteSpace(ch)) _isEmptyLine = false;
+			}
 		}
 
 		public void Append(string text, CodeAttributes att)
@@ -284,6 +289,11 @@ namespace DkTools.CodeModel
 			set { _snapshot = value; }
 		}
 
+		public bool IsEmptyLine
+		{
+			get { return _isEmptyLine; }
+		}
+
 		public class CodeSourcePreprocessorReader : IPreprocessorReader
 		{
 			private CodeSource _src;
@@ -419,15 +429,14 @@ namespace DkTools.CodeModel
 				return _sb.ToString();
 			}
 
-			private void Parse(int numChars, bool use)
+			public void Use(int numChars)
 			{
 				while (numChars > 0 && _seg != null)
 				{
 					if (_segOffset + numChars >= _seg.length)
 					{
 						var length = _seg.length - (_segOffset + numChars);
-						_writer.Append(use ? _seg.text.Substring(_segOffset, length) : string.Empty,
-							new CodeAttributes(_seg.fileName, _pos, _seg.endPos, use ? _seg.actualContent : false, _seg.primaryFile));
+						_writer.Append(_seg.text.Substring(_segOffset, length), new CodeAttributes(_seg.fileName, _pos, _seg.endPos, _seg.actualContent, _seg.primaryFile));
 						MoveNextSegment();
 						numChars -= length;
 					}
@@ -435,7 +444,7 @@ namespace DkTools.CodeModel
 					{
 						var text = _seg.text.Substring(_segOffset, numChars);
 						var newPos = _pos.Advance(text);
-						_writer.Append(use ? text : string.Empty, new CodeAttributes(_seg.fileName, _pos, _seg.actualContent ? newPos : _pos, use ? _seg.actualContent : false, _seg.primaryFile));
+						_writer.Append(text, new CodeAttributes(_seg.fileName, _pos, _seg.actualContent ? newPos : _pos, _seg.actualContent, _seg.primaryFile));
 						_segOffset += numChars;
 						_pos = newPos;
 						numChars = 0;
@@ -443,7 +452,7 @@ namespace DkTools.CodeModel
 				}
 			}
 
-			private void ParseUntil(Func<char, bool> callback, bool use)
+			public void UseUntil(Func<char, bool> callback)
 			{
 				char ch;
 				var startPos = _pos;
@@ -459,28 +468,18 @@ namespace DkTools.CodeModel
 						if (_segOffset + 1 == _seg.length)
 						{
 							// Hits the end of the segment
-							if (use)
-							{
-								_sb.Append(ch);
-								var text = _sb.ToString();
-								_writer.Append(text, new CodeAttributes(_seg.fileName, startPos, _seg.endPos, use ? _seg.actualContent : false, _seg.primaryFile));
-								MoveNextSegment();
-								startPos = _pos;
-								_sb.Clear();
-								gotContent = false;
-							}
-							else
-							{
-								_writer.Append(string.Empty, new CodeAttributes(_seg.fileName, startPos, _seg.endPos, use ? _seg.actualContent : false, _seg.primaryFile));
-								MoveNextSegment();
-								startPos = _pos;
-								gotContent = false;
-							}
+							_sb.Append(ch);
+							var text = _sb.ToString();
+							_writer.Append(text, new CodeAttributes(_seg.fileName, startPos, _seg.endPos, _seg.actualContent, _seg.primaryFile));
+							MoveNextSegment();
+							startPos = _pos;
+							_sb.Clear();
+							gotContent = false;
 						}
 						else
 						{
 							// Within the current segment
-							if (use) _sb.Append(ch);
+							_sb.Append(ch);
 							MoveNext();
 							gotContent = true;
 						}
@@ -490,35 +489,68 @@ namespace DkTools.CodeModel
 
 				if (gotContent)
 				{
-					if (use)
-					{
-						_writer.Append(_sb.ToString(), new CodeAttributes(_seg.fileName, startPos, _pos, use ? _seg.actualContent : false, _seg.primaryFile));
-					}
-					else
-					{
-						_writer.Append(string.Empty, new CodeAttributes(_seg.fileName, startPos, _pos, use ? _seg.actualContent : false, _seg.primaryFile));
-					}
+					_writer.Append(_sb.ToString(), new CodeAttributes(_seg.fileName, startPos, _pos, _seg.actualContent, _seg.primaryFile));
 				}
-			}
-
-			public void Use(int numChars)
-			{
-				Parse(numChars, _suppress ? false : true);
-			}
-
-			public void UseUntil(Func<char, bool> callback)
-			{
-				ParseUntil(callback, _suppress ? false : true);
 			}
 
 			public void Ignore(int numChars)
 			{
-				Parse(numChars, false);
+				while (numChars > 0 && _seg != null)
+				{
+					if (_segOffset + numChars >= _seg.length)
+					{
+						var length = _seg.length - (_segOffset + numChars);
+						_writer.Append(string.Empty,new CodeAttributes(_seg.fileName, _pos, _seg.endPos, false, _seg.primaryFile));
+						MoveNextSegment();
+						numChars -= length;
+					}
+					else
+					{
+						var text = _seg.text.Substring(_segOffset, numChars);
+						var newPos = _pos.Advance(text);
+						_writer.Append(string.Empty, new CodeAttributes(_seg.fileName, _pos, _seg.actualContent ? newPos : _pos, false, _seg.primaryFile));
+						_segOffset += numChars;
+						_pos = newPos;
+						numChars = 0;
+					}
+				}
 			}
 
 			public void IgnoreUntil(Func<char, bool> callback)
 			{
-				ParseUntil(callback, false);
+				char ch;
+				var startPos = _pos;
+				var gotContent = false;
+
+				_sb.Clear();
+
+				while (_seg != null)
+				{
+					ch = Peek();
+					if (callback(ch))
+					{
+						if (_segOffset + 1 == _seg.length)
+						{
+							// Hits the end of the segment
+							_writer.Append(string.Empty, new CodeAttributes(_seg.fileName, startPos, _seg.endPos, false, _seg.primaryFile));
+							MoveNextSegment();
+							startPos = _pos;
+							gotContent = false;
+						}
+						else
+						{
+							// Within the current segment
+							MoveNext();
+							gotContent = true;
+						}
+					}
+					else break;
+				}
+
+				if (gotContent)
+				{
+					_writer.Append(string.Empty, new CodeAttributes(_seg.fileName, startPos, _pos, false, _seg.primaryFile));
+				}
 			}
 
 			public void Insert(string text)

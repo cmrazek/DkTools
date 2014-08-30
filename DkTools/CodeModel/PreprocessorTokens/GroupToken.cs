@@ -43,7 +43,7 @@ namespace DkTools.CodeModel.PreprocessorTokens
 				}
 				else
 				{
-					throw new PreprocessorConditionException(string.Format("Invalid token '{0}'.", parser.TokenText));
+					token.Add(new NumberToken(token, (long?)null));
 				}
 			}
 
@@ -151,7 +151,11 @@ namespace DkTools.CodeModel.PreprocessorTokens
 			}
 
 			// If syntax is correct, there should only be a single token remaining at the end.
-			if (_tokens.Count != 1) throw new PreprocessorConditionException("Syntax error.");
+			if (_tokens.Count != 1)
+			{
+				Log.WriteDebug("Syntax error.");
+				return null;
+			}
 			return _tokens[0].Value;
 		}
 	}

@@ -8,17 +8,21 @@ namespace DkTools.CodeModel.PreprocessorTokens
 {
 	internal class NumberToken : Token
 	{
-		private long _value;
+		private long? _value;
 
 		public NumberToken(GroupToken parent, string text)
 			: base(parent)
 		{
 			long value;
-			if (!long.TryParse(text, out value)) throw new PreprocessorConditionException(string.Format("'{0}' is not a valid number.", text));
-			_value = value;
+			if (!long.TryParse(text, out value))
+			{
+				Log.WriteDebug("'{0}' is not a valid number.", text);
+				_value = null;
+			}
+			else _value = value;
 		}
 
-		public NumberToken(GroupToken parent, long value)
+		public NumberToken(GroupToken parent, long? value)
 			: base(parent)
 		{
 			_value = value;

@@ -539,10 +539,10 @@ namespace DkTools
 			var fileStore = CodeModel.FileStore.GetOrCreateForTextBuffer(view.TextBuffer);
 			var model = fileStore.GetCurrentModel(view.TextSnapshot, "Debug:ShowCodeModelDump");
 
-			Shell.OpenTempContent(model.DumpTree(), Path.GetFileName(model.FileName), ".model.xml");
-
 			var prepModel = model.PreprocessorModel;
 			if (prepModel != null) Shell.OpenTempContent(prepModel.DumpTree(), Path.GetFileName(model.FileName), ".preproc.xml");
+
+			Shell.OpenTempContent(model.DumpTree(), Path.GetFileName(model.FileName), ".model.xml");
 		}
 
 		public static void ShowDefinitions()

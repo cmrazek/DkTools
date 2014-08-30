@@ -61,21 +61,40 @@ namespace DkTools.CodeModel.PreprocessorTokens
 					_precedence = 30;
 					break;
 				default:
-					throw new PreprocessorConditionException(string.Format("'{0}' is not a valid operator.", text));
+					_precedence = 0;
+					break;
 			}
 		}
 
 		public void Execute()
 		{
+			_precedence = 0;
+
 			var leftToken = _parent.GetTokenOnLeft(this);
-			if (leftToken == null) throw new PreprocessorConditionException("Operator expects token on left.");
+			if (leftToken == null)
+			{
+				Log.WriteDebug("Operator '{0}' expects token on left.", _text);
+				return;
+			}
 			var left = leftToken.Value;
-			if (!left.HasValue) throw new PreprocessorConditionException("Operator expects value on left.");
+			if (!left.HasValue)
+			{
+				Log.WriteDebug("Operator '{0}' expects value on left.", _text);
+				return;
+			}
 
 			var rightToken = _parent.GetTokenOnRight(this);
-			if (rightToken == null) throw new PreprocessorConditionException("Operator expects token on right.");
+			if (rightToken == null)
+			{
+				Log.WriteDebug("Operator '{0}' expects token on right.", _text);
+				return;
+			}
 			var right = rightToken.Value;
-			if (!left.HasValue) throw new PreprocessorConditionException("Operator expects value on right.");
+			if (!right.HasValue)
+			{
+				Log.WriteDebug("Operator '{0}' expects value on right.", _text);
+				return;
+			}
 
 			switch (_text)
 			{
@@ -83,12 +102,20 @@ namespace DkTools.CodeModel.PreprocessorTokens
 					_parent.ReplaceTokens(new NumberToken(_parent, left.Value * right.Value), leftToken, this, rightToken);
 					break;
 				case "/":
-					if (right.Value == 0) throw new PreprocessorConditionException("Division by zero.");
-					_parent.ReplaceTokens(new NumberToken(_parent, left.Value / right.Value), leftToken, this, rightToken);
+					if (right.Value == 0)
+					{
+						Log.WriteDebug("Division by zero.");
+						_parent.ReplaceTokens(new NumberToken(_parent, (long?)null), leftToken, this, rightToken);
+					}
+					else _parent.ReplaceTokens(new NumberToken(_parent, left.Value / right.Value), leftToken, this, rightToken);
 					break;
 				case "%":
-					if (right.Value == 0) throw new PreprocessorConditionException("Modulus division by zero.");
-					_parent.ReplaceTokens(new NumberToken(_parent, left.Value % right.Value), leftToken, this, rightToken);
+					if (right.Value == 0)
+					{
+						Log.WriteDebug("Modulus division by zero.");
+						_parent.ReplaceTokens(new NumberToken(_parent, (long?)null), leftToken, this, rightToken);
+					}
+					else _parent.ReplaceTokens(new NumberToken(_parent, left.Value % right.Value), leftToken, this, rightToken);
 					break;
 				case "+":
 					_parent.ReplaceTokens(new NumberToken(_parent, left.Value + right.Value), leftToken, this, rightToken);
@@ -123,7 +150,8 @@ namespace DkTools.CodeModel.PreprocessorTokens
 					_parent.ReplaceTokens(new NumberToken(_parent, (left.Value != 0 || right.Value != 0) ? 1 : 0), leftToken, this, rightToken);
 					break;
 				default:
-					throw new PreprocessorConditionException(string.Format("Unexpected operator '{0}'.", _text));
+					Log.WriteDebug("Unexpected operator '{0}'.", _text);
+					break;
 			}
 		}
 
