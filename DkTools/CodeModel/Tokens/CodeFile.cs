@@ -263,8 +263,9 @@ namespace DkTools.CodeModel
 						return new ReplaceEndToken(parent, scope, wordSpan);
 					case "#include":
 						return IncludeToken.Parse(parent, scope, new PreprocessorToken(parent, scope, wordSpan, word));
+					default:
+						return new PreprocessorToken(parent, scope, wordSpan, word);
 				}
-				return new PreprocessorToken(parent, scope, wordSpan, word);
 			}
 			#endregion
 

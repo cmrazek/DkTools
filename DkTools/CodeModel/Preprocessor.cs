@@ -281,7 +281,11 @@ namespace DkTools.CodeModel
 			if (string.IsNullOrEmpty(name)) return;
 			p.reader.Ignore(name.Length);
 
-			_defines.Remove(name);
+			Define define;
+			if (_defines.TryGetValue(name, out define))
+			{
+				define.Disabled = true;
+			}
 		}
 
 		private void ProcessDefineUse(PreprocessorParams p, string name)
@@ -666,7 +670,10 @@ namespace DkTools.CodeModel
 		private bool IsDefined(PreprocessorParams p, string name)
 		{
 			if (p.args != null && p.args.Any(x => x.Name == name)) return true;
-			if (_defines.ContainsKey(name)) return true;
+
+			Define define;
+			if (_defines.TryGetValue(name, out define) && !define.Disabled) return true;
+
 			return false;
 		}
 
@@ -713,6 +720,7 @@ namespace DkTools.CodeModel
 			private List<string> _paramNames;
 			private string _fileName;
 			private Position _pos;
+			private bool _disabled;
 
 			public Define(string name, string content, List<string> paramNames, string fileName, Position pos)
 			{
@@ -746,6 +754,12 @@ namespace DkTools.CodeModel
 			public Position Position
 			{
 				get { return _pos; }
+			}
+
+			public bool Disabled
+			{
+				get { return _disabled; }
+				set { _disabled = value; }
 			}
 		}
 

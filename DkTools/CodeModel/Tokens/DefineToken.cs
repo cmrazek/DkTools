@@ -49,6 +49,16 @@ namespace DkTools.CodeModel
 			if (!file.SkipWhiteSpaceAndComments(defineScope) || file.Position.LineNum != startPos.LineNum) return ret;
 			var nameToken = IdentifierToken.TryParse(parent, defineScope);
 			if (nameToken == null) return ret;
+
+			foreach (var def in parent.GetDefinitions(nameToken.Text))
+			{
+				if (def is MacroDefinition || def is ConstantDefinition)
+				{
+					nameToken.SourceDefinition = def;
+					break;
+				}
+			}
+
 			ret.AddToken(ret._nameToken = nameToken);
 
 			var bodyTokens = new List<Token>();
