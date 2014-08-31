@@ -192,10 +192,11 @@ namespace DkTools.CodeModel
 
 			var prep = new Preprocessor(this);
 			prep.Preprocess(reader, prepSource, fileName, new string[0], includeStdLib);
+			prep.AddDefinitionsToProvider(defProvider);
+
 			var prepModel = CodeModel.CreatePreprocessorModel(this, prepSource, fileName, defProvider);
 
 			defProvider.Preprocessor = false;
-
 			var visibleModel = prepModel.CreateVisibleModelForPreprocessed(visibleSource);
 			visibleModel.PreprocessorModel = prepModel;
 

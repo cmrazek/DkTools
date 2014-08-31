@@ -66,7 +66,7 @@ namespace DkTools.CodeModel
 
 				if (str[0].IsWordChar(true))
 				{
-					if (p.args != null && p.args.Any(x => x.name == str))
+					if (p.args != null && p.args.Any(x => x.Name == str))
 					{
 						rdr.Ignore(str.Length);
 						ProcessDefineUse(p, str);
@@ -147,6 +147,8 @@ namespace DkTools.CodeModel
 
 			// Get the define name
 			rdr.IgnoreWhiteSpaceAndComments(true);
+			var linkFileName = rdr.FileName;
+			var linkPos = rdr.Position;
 			var name = rdr.PeekIdentifier();
 			if (string.IsNullOrEmpty(name)) return;
 			rdr.Ignore(name.Length);
@@ -268,12 +270,7 @@ namespace DkTools.CodeModel
 
 			if (!p.suppress)
 			{
-				_defines[name] = new Define
-				{
-					name = name,
-					content = sb.ToString(),
-					paramNames = paramNames
-				};
+				_defines[name] = new Define(name, sb.ToString(), paramNames, linkFileName, linkPos);
 			}
 		}
 
@@ -295,12 +292,12 @@ namespace DkTools.CodeModel
 			var rdr = p.reader;
 
 			Define define = null;
-			if (p.args != null) define = p.args.FirstOrDefault(x => x.name == name);
+			if (p.args != null) define = p.args.FirstOrDefault(x => x.Name == name);
 			if (define == null) _defines.TryGetValue(name, out define);
 			if (define == null) return;
 
 			List<string> paramList = null;
-			if (define.paramNames != null)
+			if (define.ParamNames != null)
 			{
 				// This is a parameterized macro
 				rdr.IgnoreWhiteSpaceAndComments(false);
@@ -357,7 +354,7 @@ namespace DkTools.CodeModel
 				}
 				if (sb.Length > 0) paramList.Add(sb.ToString().Trim());
 
-				if (define.paramNames.Count != paramList.Count) return;
+				if (define.ParamNames.Count != paramList.Count) return;
 			}
 			
 			List<Define> args = null;
@@ -368,11 +365,12 @@ namespace DkTools.CodeModel
 			}
 			if (paramList != null)
 			{
-				if (define.paramNames == null || define.paramNames.Count != paramList.Count) return;
+				if (define.ParamNames == null || define.ParamNames.Count != paramList.Count) return;
 				if (args == null) args = new List<Define>();
 				for (int i = 0, ii = paramList.Count; i < ii; i++)
 				{
-					args.Add(new Define { name = define.paramNames[i], content = paramList[i] });
+					//args.Add(new Define { Name = define.ParamNames[i], Content = paramList[i] });		TODO: remove
+					args.Add(new Define(define.ParamNames[i], paramList[i], null, string.Empty, Position.Start));
 				}
 			}
 
@@ -380,7 +378,7 @@ namespace DkTools.CodeModel
 			if (p.restrictedDefines != null) restrictedDefines = p.restrictedDefines.Concat(new string[] { name }).ToArray();
 			else restrictedDefines = new string[] { name };
 
-			var textToAdd = ResolveMacros(define.content, restrictedDefines, args);
+			var textToAdd = ResolveMacros(define.Content, restrictedDefines, args);
 			rdr.Insert(textToAdd);
 		}
 
@@ -667,16 +665,88 @@ namespace DkTools.CodeModel
 
 		private bool IsDefined(PreprocessorParams p, string name)
 		{
-			if (p.args != null && p.args.Any(x => x.name == name)) return true;
+			if (p.args != null && p.args.Any(x => x.Name == name)) return true;
 			if (_defines.ContainsKey(name)) return true;
 			return false;
 		}
 
+		public void AddDefinitionsToProvider(DefinitionProvider defProv)
+		{
+			var scope = new Scope();
+
+			foreach (var define in _defines.Values)
+			{
+				if (define.ParamNames == null)
+				{
+					Token sourceToken = null;
+					if (!string.IsNullOrEmpty(define.FileName)) sourceToken = new ExternalToken(define.FileName, define.Position.ToSpan());
+					var def = new Definitions.ConstantDefinition(scope, define.Name, sourceToken, Token.NormalizePlainText(define.Content));
+					defProv.AddGlobalDefinition(def);
+				}
+				else
+				{
+					Token sourceToken = null;
+					if (!string.IsNullOrEmpty(define.FileName)) sourceToken = new ExternalToken(define.FileName, define.Position.ToSpan());
+
+					var sig = new StringBuilder();
+					sig.Append(define.Name);
+					sig.Append('(');
+					var firstParam = true;
+					foreach (var paramName in define.ParamNames)
+					{
+						if (firstParam) firstParam = false;
+						else sig.Append(", ");
+						sig.Append(paramName);
+					}
+					sig.Append(')');
+
+					var def = new Definitions.MacroDefinition(scope, define.Name, sourceToken, sig.ToString(), Token.NormalizePlainText(define.Content));
+					defProv.AddGlobalDefinition(def);
+				}
+			}
+		}
+
 		private class Define
 		{
-			public string name;
-			public string content;
-			public List<string> paramNames;
+			private string _name;
+			private string _content;
+			private List<string> _paramNames;
+			private string _fileName;
+			private Position _pos;
+
+			public Define(string name, string content, List<string> paramNames, string fileName, Position pos)
+			{
+				_name = name;
+				_content = content;
+				_paramNames = paramNames;
+				_fileName = fileName;
+				_pos = pos;
+			}
+
+			public string Name
+			{
+				get { return _name; }
+			}
+
+			public string Content
+			{
+				get { return _content; }
+			}
+
+			public List<string> ParamNames
+			{
+				get { return _paramNames; }
+			}
+
+			public string FileName
+			{
+				get { return _fileName; }
+			}
+
+			public Position Position
+			{
+				get { return _pos; }
+			}
 		}
 
 		public enum ConditionResult

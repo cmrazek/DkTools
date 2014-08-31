@@ -599,6 +599,24 @@ namespace DkTools.CodeModel
 				get { return _suppress; }
 				set { _suppress = value; }
 			}
+
+			public string FileName
+			{
+				get
+				{
+					if (_seg == null) return string.Empty;
+					return _seg.fileName;
+				}
+			}
+
+			public Position Position
+			{
+				get
+				{
+					if (_seg == null) return Position.Start;
+					return _pos;
+				}
+			}
 		}
 	}
 

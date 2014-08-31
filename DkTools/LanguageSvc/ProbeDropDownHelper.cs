@@ -43,22 +43,6 @@ namespace DkTools.LanguageSvc
 				index++;
 			}
 
-			// TODO: remove
-			//var model = CodeModel.FileStore.GetOrCreateForTextBuffer(buf).GetMostRecentModel(buf.CurrentSnapshot, "Function dropdown list");
-			//if (model == null) return false;
-
-			//var caretPos = model.GetPosition(line, col);
-
-			//dropDownMembers.Clear();
-
-			//var index = 0;
-			//foreach (var func in model.LocalFunctions.OrderBy(f => f.Name.ToLower()))
-			//{
-			//	dropDownMembers.Add(new DropDownMember(func.Name, func.Span.ToVsTextInteropSpan(), k_methodImageIndex, DROPDOWNFONTATTR.FONTATTR_PLAIN));
-			//	if (func.Span.Contains(caretPos)) selectedMember = index;
-			//	index++;
-			//}
-
 			return true;
 		}
 	}

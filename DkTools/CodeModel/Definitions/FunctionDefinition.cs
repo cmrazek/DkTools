@@ -72,7 +72,7 @@ namespace DkTools.CodeModel.Definitions
 			get { return _bodyStartPos; }
 		}
 
-		public override void MoveFromPreprocessorToVisibleModel(CodeFile visibleFile, CodeSource visibleSource)
+		public override bool MoveFromPreprocessorToVisibleModel(CodeFile visibleFile, CodeSource visibleSource)
 		{
 			if (SourceFile != null)
 			{
@@ -81,7 +81,7 @@ namespace DkTools.CodeModel.Definitions
 				else _bodyStartPos = Position.Start;
 			}
 
-			base.MoveFromPreprocessorToVisibleModel(visibleFile, visibleSource);
+			return base.MoveFromPreprocessorToVisibleModel(visibleFile, visibleSource);
 		}
 
 		public override void DumpTreeAttribs(System.Xml.XmlWriter xml)

@@ -161,5 +161,10 @@ namespace DkTools.CodeModel
 		{
 			return new Position(_offset + diff, _lineNum, _linePos);
 		}
+
+		public Span ToSpan()
+		{
+			return new Span(this, this);
+		}
 	}
 }

@@ -14,6 +14,7 @@ namespace DkTools.CodeModel.Definitions
 		private CodeFile _sourceFile;
 		private string _sourceFileName;
 		private Span _sourceSpan;
+		private bool _sourcePrimary;
 		private bool _preprocessor;
 
 		// TODO: remove
@@ -41,6 +42,7 @@ namespace DkTools.CodeModel.Definitions
 				_sourceToken = sourceToken;
 				_sourceFile = sourceToken.File;
 				_sourceSpan = sourceToken.Span;
+				_sourcePrimary = true;
 
 				if (_sourceFile != null)
 				{
@@ -90,6 +92,11 @@ namespace DkTools.CodeModel.Definitions
 			set { _sourceSpan = value; }
 		}
 
+		public bool SourcePrimary
+		{
+			get { return _sourcePrimary; }
+		}
+
 		public string LocationText
 		{
 			get
@@ -123,9 +130,10 @@ namespace DkTools.CodeModel.Definitions
 		/// </summary>
 		/// <param name="visibleFile">The new CodeFile. At the time of calling, this object is not yet populated, and will not contain a code tree.</param>
 		/// <param name="visibleSource">The new CodeSource. This object is populated with the actual text visible on screen.</param>
+		/// <returns>True if the definition resides in the visible model; otherwise false.</returns>
 		/// <remarks>If a subclass overrides this method, it should call the base method AFTER performing it's own transformation, so that _sourceFile still points to the original.
 		/// Also, SourceFile could be null for external or built-in definitions.</remarks>
-		public virtual void MoveFromPreprocessorToVisibleModel(CodeFile visibleFile, CodeSource visibleSource)
+		public virtual bool MoveFromPreprocessorToVisibleModel(CodeFile visibleFile, CodeSource visibleSource)
 		{
 			if (_sourceFile != null)
 			{
@@ -133,11 +141,14 @@ namespace DkTools.CodeModel.Definitions
 				Span span;
 				bool primary;
 				_sourceFile.CodeSource.GetFileSpan(_sourceSpan, out fileName, out span, out primary);
+				_sourceFileName = fileName;
 				_sourceSpan = span;
+				_sourcePrimary = primary;
 				_sourceFile = visibleFile;
 			}
 
 			_preprocessor = false;
+			return _sourcePrimary;
 		}
 
 #if DEBUG
