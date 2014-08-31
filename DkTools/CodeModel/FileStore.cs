@@ -307,17 +307,22 @@ namespace DkTools.CodeModel
 					{
 						try
 						{
-							var merger = new FileMerger();
-							merger.MergeFile(_fullPathName, true);
+							var content = File.ReadAllText(_fullPathName);
+							_source = new CodeSource();
+							_source.Append(content, _fullPathName, Position.Start, Position.Start.Advance(content), true, false);
+							_source.Flush();
 
-							var content = merger.MergedContent;
-							if (content == null)
-							{
-								Log.WriteDebug("Unable to get merged content for include file '{0}'.", _fullPathName);
-								return null;
-							}
+							//var merger = new FileMerger();
+							//merger.MergeFile(_fullPathName, true);
 
-							_source = content;
+							//var content = merger.MergedContent;
+							//if (content == null)
+							//{
+							//	Log.WriteDebug("Unable to get merged content for include file '{0}'.", _fullPathName);
+							//	return null;
+							//}
+
+							//_source = content;
 						}
 						catch (Exception ex)
 						{
