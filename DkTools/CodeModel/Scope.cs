@@ -105,6 +105,15 @@ namespace DkTools.CodeModel
 		{
 			get { return _defProvider; }
 		}
+
+		public FileStore FileStore
+		{
+			get
+			{
+				if (_file == null) return null;
+				return _file.Model.FileStore;
+			}
+		}
 	}
 
 	[Flags]

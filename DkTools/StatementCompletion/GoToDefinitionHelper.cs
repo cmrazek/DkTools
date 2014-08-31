@@ -66,16 +66,18 @@ namespace DkTools.StatementCompletion
 			if (includeToken != null)
 			{
 				Log.WriteDebug("Found include token.");
-				// TODO: this code needs to be rewritten to not rely on a CodeFile being returned
-				//if (includeToken.IncludeFile != null && !string.IsNullOrEmpty(includeToken.IncludeFile.FileName))
-				//{
-				//	Shell.OpenDocument(includeToken.IncludeFile.FileName);
-				//	return;
-				//}
-				//else
-				//{
-				//	Log.WriteDebug("Include token has no filename.");
-				//}
+
+				var pathName = includeToken.FullPathName;
+				if (!string.IsNullOrEmpty(pathName))
+				{
+					Shell.OpenDocument(pathName);
+					return;
+				}
+				else
+				{
+					Shell.SetStatusText("Include file not found.");
+					return;
+				}
 			}
 
 			Log.WriteDebug("Found no definitions.");

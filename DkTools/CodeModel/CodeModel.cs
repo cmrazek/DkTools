@@ -24,48 +24,6 @@ namespace DkTools.CodeModel
 			_store = store;
 		}
 
-		//public CodeModel(FileStore store, string source, VsText.ITextSnapshot snapshot, string fileName)
-		//{
-		//	if (store == null) throw new ArgumentNullException("store");
-		//	_store = store;
-
-		//	var codeSource = new CodeSource();
-		//	codeSource.Append(source, new CodeAttributes(fileName, Position.Start, Position.Start.Advance(source), true, true));
-		//	codeSource.Flush();
-
-		//	// This is a visible model, so don't create definitions.
-		//	var defProvider = new DefinitionProvider();
-		//	defProvider.Preprocessor = false;
-
-		//	Init(codeSource, fileName, true, defProvider);
-		//}
-
-		//public CodeModel(VsText.ITextSnapshot snapshot)
-		//{
-		//	var source = snapshot.GetText();
-		//	var fileName = snapshot.TextBuffer.TryGetFileName();
-		//	_store = FileStore.GetOrCreateForTextBuffer(snapshot.TextBuffer);
-
-		//	var codeSource = new CodeSource();
-		//	codeSource.Append(source, new CodeAttributes(fileName, Position.Start, Position.Start.Advance(source), true, true));
-		//	codeSource.Flush();
-		//	codeSource.Snapshot = snapshot;
-
-		//	// This is a visible model, so don't create definitions.
-		//	var defProvider = new DefinitionProvider();
-		//	defProvider.Preprocessor = false;
-
-		//	Init(codeSource, fileName, true, defProvider);
-		//}
-
-		//public CodeModel(FileStore store, CodeSource source, string fileName, bool visible, DefinitionProvider defProvider)
-		//{
-		//	if (store == null) throw new ArgumentNullException("store");
-		//	_store = store;
-
-		//	Init(source, fileName, visible, defProvider);
-		//}
-
 		public static CodeModel CreatePreprocessorModel(FileStore store, CodeSource preprocessedSource, string fileName, DefinitionProvider defProvider)
 		{
 			var model = new CodeModel(store);
@@ -257,6 +215,11 @@ namespace DkTools.CodeModel
 		public CodeFile File
 		{
 			get { return _file; }
+		}
+
+		public FileStore FileStore
+		{
+			get { return _store; }
 		}
 
 		#region Include Files

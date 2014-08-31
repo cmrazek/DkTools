@@ -12,7 +12,7 @@ namespace DkTools.CodeModel
 		private string _fileName;
 		private bool _processed = false;
 		private bool _searchFileDir = false;
-		//private CodeFile _includeFile;	TODO: remove
+		private string _fullPathName;
 
 		public class IncludeDef
 		{
@@ -27,12 +27,6 @@ namespace DkTools.CodeModel
 			_prepToken = prepToken;
 			_fileName = fileName;
 			_searchFileDir = searchFileDir;
-
-			// TODO: Disabled while working on new preprocessor code
-			//var parentFiles = (!string.IsNullOrEmpty(scope.File.FileName) ? scope.File.ParentFiles.Concat(new string[] { scope.File.FileName }) : scope.File.ParentFiles).ToArray();
-
-			//_includeFile = scope.File.Model.GetIncludeFile(scope.File.FileName, _fileName, _searchFileDir, parentFiles);
-			//if (_includeFile != null) _includeFile.CopyDefinitionsToToken(this, false);
 		}
 
 		private static Regex _rxAngleBrackets = new Regex(@"^\<([^>]+)\>");
@@ -107,10 +101,18 @@ namespace DkTools.CodeModel
 			}
 		}
 
-		// TODO: remove
-		//public CodeFile IncludeFile
-		//{
-		//	get { return _includeFile; }
-		//}
+		public string FullPathName
+		{
+			get
+			{
+				if (_fullPathName == null)
+				{
+					var fileStore = Scope.FileStore;
+					if (fileStore != null) _fullPathName = fileStore.LocateIncludeFile(File.FileName, _fileName, _searchFileDir);
+					if (string.IsNullOrEmpty(_fullPathName)) _fullPathName = string.Empty;
+				}
+				return _fullPathName;
+			}
+		}
 	}
 }

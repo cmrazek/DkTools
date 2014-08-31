@@ -113,6 +113,68 @@ namespace DkTools.CodeModel
 			return null;
 		}
 
+		public string LocateIncludeFile(string sourceFileName, string fileName, bool searchSameDir)
+		{
+			if (string.IsNullOrEmpty(fileName)) return null;
+
+			// Check if the include file is cached.
+			IncludeFile file = null;
+			var fileNameLower = fileName.ToLower();
+
+			if (searchSameDir && !string.IsNullOrEmpty(sourceFileName))
+			{
+				if (_sameDirIncludeFiles.TryGetValue(fileNameLower, out file)) return file.FullPathName;
+			}
+
+			if (_globalIncludeFiles.TryGetValue(fileNameLower, out file)) return file.FullPathName;
+
+			// Search the disk in same directory.
+			if (searchSameDir && !string.IsNullOrEmpty(sourceFileName))
+			{
+				var pathName = Path.Combine(Path.GetDirectoryName(sourceFileName), fileName);
+				if (File.Exists(pathName))
+				{
+					return Path.GetFullPath(pathName);
+				}
+
+				var ampersandFileName = pathName + "&";
+				if (File.Exists(ampersandFileName))
+				{
+					return Path.GetFullPath(ampersandFileName);
+				}
+
+				var plusFileName = pathName = "+";
+				if (File.Exists(plusFileName))
+				{
+					return Path.GetFullPath(plusFileName);
+				}
+			}
+
+			// Search the disk in global include directories.
+			foreach (var includeDir in ProbeEnvironment.IncludeDirs)
+			{
+				var pathName = Path.Combine(includeDir, fileName);
+				if (System.IO.File.Exists(pathName))
+				{
+					return Path.GetFullPath(pathName);
+				}
+
+				var ampersandFileName = pathName + "&";
+				if (System.IO.File.Exists(ampersandFileName))
+				{
+					return Path.GetFullPath(ampersandFileName);
+				}
+
+				var plusFileName = pathName = "+";
+				if (System.IO.File.Exists(plusFileName))
+				{
+					return Path.GetFullPath(plusFileName);
+				}
+			}
+
+			return null;
+		}
+
 		private bool CheckForCyclicalInclude(string fullPathName, IEnumerable<string> parentFiles)
 		{
 			if (parentFiles.Any(x => x.Equals(fullPathName, StringComparison.OrdinalIgnoreCase)))
