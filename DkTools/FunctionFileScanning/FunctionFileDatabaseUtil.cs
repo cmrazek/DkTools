@@ -45,7 +45,8 @@ namespace DkTools.FunctionFileScanning
 				func.name,
 				new CodeModel.ExternalToken(func.fileName, func.span.ToCodeModelSpan()),
 				func.dataType != null ? func.dataType.ToCodeModelDataType() : CodeModel.DataType.Int,
-				func.signature);
+				func.signature,
+				CodeModel.Position.Start);
 		}
 
 		public static CodeModel.DataType ToCodeModelDataType(this DataType_t dt)

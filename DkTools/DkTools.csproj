@@ -278,7 +278,7 @@
     <Compile Include="CodeModel\Tokens\DataTypeKeywordToken.cs" />
     <Compile Include="CodeModel\Definitions\Definition.cs" />
     <Compile Include="CodeModel\Tokens\ExternalToken.cs" />
-    <Compile Include="CodeModel\Tokens\FunctionNameToken.cs" />
+    <Compile Include="CodeModel\Tokens\FunctionPlaceholderToken.cs" />
     <Compile Include="CodeModel\Tokens\GroupToken.cs" />
     <Compile Include="CodeModel\IContextSource.cs" />
     <Compile Include="CodeModel\Tokens\IDataTypeToken.cs" />

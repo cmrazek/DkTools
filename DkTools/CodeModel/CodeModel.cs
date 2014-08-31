@@ -88,7 +88,6 @@ namespace DkTools.CodeModel
 		{
 #if DEBUG
 			if (defProvider == null) throw new ArgumentNullException("defProvider");
-			//Log.WriteDebug("Building code model for file [{0}]", fileName);
 #endif
 			this.RefreshTime = DateTime.Now;
 
@@ -101,14 +100,14 @@ namespace DkTools.CodeModel
 				var scope = new Scope();
 
 				var defs = new List<Definition>();
-				defs.Add(new FunctionDefinition(scope, "diag", null, DataType.Void, "void diag(expressions ...)"));
-				defs.Add(new FunctionDefinition(scope, "gofield", null, DataType.Void, "void gofield(TableName.ColumnName)"));
-				defs.Add(new FunctionDefinition(scope, "makestring", null, DataType.FromString("char(255)"), "char(255) makestring(expressions ...)"));
-				defs.Add(new FunctionDefinition(scope, "oldvalue", null, DataType.Void, "oldvalue(TableName.ColumnName)"));
-				defs.Add(new FunctionDefinition(scope, "qcolsend", null, DataType.Void, "void qcolsend(TableName.ColumnName ...)"));
-				defs.Add(new FunctionDefinition(scope, "SetMessage", null, DataType.Int, "int SetMessage(MessageControlString, expressions ...)"));
-				defs.Add(new FunctionDefinition(scope, "STRINGIZE", null, DataType.FromString("char(255)"), "STRINGIZE(x)"));
-				defs.Add(new FunctionDefinition(scope, "UNREFERENCED_PARAMETER", null, DataType.Void, "UNREFERENCED_PARAMETER(parameter)"));
+				defs.Add(new FunctionDefinition(scope, "diag", null, DataType.Void, "void diag(expressions ...)", Position.Start));
+				defs.Add(new FunctionDefinition(scope, "gofield", null, DataType.Void, "void gofield(TableName.ColumnName)", Position.Start));
+				defs.Add(new FunctionDefinition(scope, "makestring", null, DataType.FromString("char(255)"), "char(255) makestring(expressions ...)", Position.Start));
+				defs.Add(new FunctionDefinition(scope, "oldvalue", null, DataType.Void, "oldvalue(TableName.ColumnName)", Position.Start));
+				defs.Add(new FunctionDefinition(scope, "qcolsend", null, DataType.Void, "void qcolsend(TableName.ColumnName ...)", Position.Start));
+				defs.Add(new FunctionDefinition(scope, "SetMessage", null, DataType.Int, "int SetMessage(MessageControlString, expressions ...)", Position.Start));
+				defs.Add(new FunctionDefinition(scope, "STRINGIZE", null, DataType.FromString("char(255)"), "STRINGIZE(x)", Position.Start));
+				defs.Add(new FunctionDefinition(scope, "UNREFERENCED_PARAMETER", null, DataType.Void, "UNREFERENCED_PARAMETER(parameter)", Position.Start));
 
 				foreach (var def in ProbeEnvironment.DictDefinitions) defs.Add(def);
 
@@ -119,8 +118,6 @@ namespace DkTools.CodeModel
 			else CopyDefinitionsFromProvider();
 
 			_file.Parse(source, _fileName, new string[0], visible);
-
-			//if (_defProvider.Preprocessor) CopyDefinitionsToProvider();
 
 			this.RefreshTime = DateTime.Now;
 		}
@@ -315,7 +312,7 @@ namespace DkTools.CodeModel
 		{
 			foreach (var def in _file.GetDefinitions())
 			{
-				def.MoveFromPreprocessorToVisibleModel(visibleFile, visibleSource);
+				if (def.Preprocessor) def.MoveFromPreprocessorToVisibleModel(visibleFile, visibleSource);
 				_defProvider.AddGlobalDefinition(def);
 			}
 
@@ -326,7 +323,7 @@ namespace DkTools.CodeModel
 				if (localFilePos.PrimaryFile)
 				{
 					var def = defLoc.Definition;
-					def.MoveFromPreprocessorToVisibleModel(visibleFile, visibleSource);
+					if (def.Preprocessor) def.MoveFromPreprocessorToVisibleModel(visibleFile, visibleSource);
 					_defProvider.AddLocalDefinition(localFilePos.Position.Offset, defLoc.Definition);
 				}
 			}

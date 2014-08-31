@@ -26,20 +26,38 @@ namespace DkTools.LanguageSvc
 			var wpfTextView = Shell.VsTextViewToWpfTextView(textView);
 			if (wpfTextView == null) return false;
 			var buf = wpfTextView.TextBuffer;
-			var model = CodeModel.FileStore.GetOrCreateForTextBuffer(buf).GetMostRecentModel(buf.CurrentSnapshot, "Function dropdown list");
-			if (model == null) return false;
-
-			var caretPos = model.GetPosition(line, col);
 
 			dropDownMembers.Clear();
+			selectedMember = -1;
 
+			var fileStore = CodeModel.FileStore.GetOrCreateForTextBuffer(buf);
+			var model = fileStore.GetMostRecentModel(buf.CurrentSnapshot, "Function dropdown list");
+			var caretPos = model.GetPosition(line, col);
 			var index = 0;
-			foreach (var func in model.LocalFunctions.OrderBy(f => f.Name.ToLower()))
+
+			foreach (var func in fileStore.GetFunctionDropDownList(buf.CurrentSnapshot))
 			{
-				dropDownMembers.Add(new DropDownMember(func.Name, func.Span.ToVsTextInteropSpan(), k_methodImageIndex, DROPDOWNFONTATTR.FONTATTR_PLAIN));
-				if (func.Span.Contains(caretPos)) selectedMember = index;
+				var span = func.EntireFunctionSpan;
+				dropDownMembers.Add(new DropDownMember(func.Name, span.ToVsTextInteropSpan(), k_methodImageIndex, DROPDOWNFONTATTR.FONTATTR_PLAIN));
+				if (span.Contains(caretPos)) selectedMember = index;
 				index++;
 			}
+
+			// TODO: remove
+			//var model = CodeModel.FileStore.GetOrCreateForTextBuffer(buf).GetMostRecentModel(buf.CurrentSnapshot, "Function dropdown list");
+			//if (model == null) return false;
+
+			//var caretPos = model.GetPosition(line, col);
+
+			//dropDownMembers.Clear();
+
+			//var index = 0;
+			//foreach (var func in model.LocalFunctions.OrderBy(f => f.Name.ToLower()))
+			//{
+			//	dropDownMembers.Add(new DropDownMember(func.Name, func.Span.ToVsTextInteropSpan(), k_methodImageIndex, DROPDOWNFONTATTR.FONTATTR_PLAIN));
+			//	if (func.Span.Contains(caretPos)) selectedMember = index;
+			//	index++;
+			//}
 
 			return true;
 		}

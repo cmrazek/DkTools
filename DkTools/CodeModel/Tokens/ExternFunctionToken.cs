@@ -21,7 +21,7 @@ namespace DkTools.CodeModel
 
 			if (scope.Preprocessor)
 			{
-				var def = new FunctionDefinition(scope, _nameToken.Text, _nameToken, DataType.FromToken(_dataTypeToken), GetFunctionSignature());
+				var def = new FunctionDefinition(scope, _nameToken.Text, _nameToken, DataType.FromToken(_dataTypeToken), GetFunctionSignature(), Position.Start);
 				AddDefinition(def);
 				_nameToken.SourceDefinition = def;
 			}

@@ -182,7 +182,7 @@ namespace DkTools.CodeModel
 
 		public LocalFilePosition GetFilePosition(int sourceOffset)
 		{
-			if (sourceOffset < 0 || sourceOffset > _text.Length) throw new ArgumentOutOfRangeException("offset");
+			if (sourceOffset < 0 || sourceOffset > _length) throw new ArgumentOutOfRangeException("offset");
 
 			var segIndex = FindSegmentIndexForOffset(sourceOffset);
 			if (segIndex < 0)
@@ -194,8 +194,7 @@ namespace DkTools.CodeModel
 
 			if (seg.actualContent)
 			{
-				var offset = seg.start;
-				while (offset < sourceOffset) pos = pos.CalcNext(_text[offset++]);
+				pos = pos.Advance(seg.text, 0, sourceOffset - seg.start);
 			}
 
 			return new LocalFilePosition(seg.fileName, pos, seg.primaryFile);

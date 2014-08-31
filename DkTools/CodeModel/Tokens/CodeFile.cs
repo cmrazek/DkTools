@@ -449,7 +449,7 @@ namespace DkTools.CodeModel
 					{
 						if (!scope.Preprocessor && def.SourceSpan.Start == wordSpan.Start)
 						{
-							return new FunctionNameToken(parent, scope, wordSpan, word, def as FunctionDefinition);
+							return new FunctionPlaceholderToken(parent, scope, wordSpan, word, def as FunctionDefinition);
 						}
 						else
 						{

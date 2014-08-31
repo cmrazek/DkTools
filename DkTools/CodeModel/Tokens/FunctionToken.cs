@@ -24,26 +24,22 @@ namespace DkTools.CodeModel
 			if (dataTypeToken != null) AddToken(_dataTypeToken = dataTypeToken);
 			AddToken(_nameToken = nameToken);
 			AddToken(_argsToken = argsToken);
-
-			if (scope.Preprocessor)
-			{
-				var def = new FunctionDefinition(scope, _nameToken.Text, _nameToken, _dataTypeToken != null ? DataType.FromToken(_dataTypeToken) : DataType.Int, GetSignature());
-				_nameToken.SourceDefinition = def;
-				AddDefinition(def);
-			}
-			else
-			{
-				var def = GetDefinitions<FunctionDefinition>(_nameToken.Text).FirstOrDefault();
-				if (def != null) _nameToken.SourceDefinition = def;
-			}
 		}
 
-		private void AddBodyToken(BracesToken bodyToken)
+		private void AddBodyToken(Scope scope, BracesToken bodyToken)
 		{
 			// Copying the definitions before, then adding after will allow the global definitions (the function) to be copied upwards.
 			//CopyDefinitionsToToken(bodyToken, true);
 			AddToken(bodyToken);
 			_bodyToken = bodyToken;
+
+			if (scope.Preprocessor)
+			{
+				var def = new FunctionDefinition(scope, _nameToken.Text, _nameToken, _dataTypeToken != null ? DataType.FromToken(_dataTypeToken) : DataType.Int, GetSignature(), _bodyToken.Span.Start);
+				_nameToken.SourceDefinition = def;
+				AddDefinition(def);
+			}
+			else throw new InvalidOperationException("FunctionToken should never be created when not in preprocessor mode.");
 		}
 
 		public override IEnumerable<FunctionToken> LocalFunctions
@@ -132,7 +128,7 @@ namespace DkTools.CodeModel
 			scope.Hint |= ScopeHint.SuppressFunctionDefinition | ScopeHint.NotOnRoot;
 			var bodyToken = BracesToken.TryParse(ret, bodyScope);
 			if (bodyToken == null) { file.Position = resetPos; return null; }
-			else ret.AddBodyToken(bodyToken);
+			else ret.AddBodyToken(scope, bodyToken);
 
 			return ret;
 		}

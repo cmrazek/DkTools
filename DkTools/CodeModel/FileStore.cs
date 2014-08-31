@@ -207,6 +207,19 @@ namespace DkTools.CodeModel
 			get { return _model; }
 		}
 
+		public IEnumerable<FunctionDropDownItem> GetFunctionDropDownList(VsText.ITextSnapshot snapshot)
+		{
+			var model = GetMostRecentModel(snapshot, "Function drop-down list.");
+
+			var prepModel = model.PreprocessorModel;
+			if (prepModel == null) yield break;
+
+			foreach (Tokens.FunctionPlaceholderToken func in model.File.FindDownward(x => x is Tokens.FunctionPlaceholderToken))
+			{
+				yield return new FunctionDropDownItem { Name = func.Text, Span = func.Span, EntireFunctionSpan = func.EntireFunctionSpan };
+			}
+		}
+
 		public class IncludeFile
 		{
 			private FileStore _store;
@@ -281,6 +294,13 @@ namespace DkTools.CodeModel
 			{
 				get { return _fullPathName; }
 			}
+		}
+
+		public class FunctionDropDownItem
+		{
+			public string Name { get; set; }
+			public Span Span { get; set; }
+			public Span EntireFunctionSpan { get; set; }
 		}
 	}
 }
