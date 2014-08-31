@@ -10,8 +10,8 @@ namespace DkTools.CodeModel.Definitions
 	{
 		private string _text;
 
-		public ConstantDefinition(string name, Token sourceToken, string text)
-			: base(name, sourceToken, true)
+		public ConstantDefinition(Scope scope, string name, Token sourceToken, string text)
+			: base(scope, name, sourceToken, true)
 		{
 			_text = text;
 		}

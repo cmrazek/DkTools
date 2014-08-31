@@ -10,8 +10,8 @@ namespace DkTools.CodeModel.Definitions
 	{
 		private DataType _dataType;
 
-		public DataTypeDefinition(string name, Token sourceToken, DataType dataType)
-			: base(name, sourceToken, true)
+		public DataTypeDefinition(Scope scope, string name, Token sourceToken, DataType dataType)
+			: base(scope, name, sourceToken, true)
 		{
 #if DEBUG
 			if (dataType == null) throw new ArgumentNullException("dataType");
@@ -19,8 +19,8 @@ namespace DkTools.CodeModel.Definitions
 			_dataType = dataType;
 		}
 
-		public DataTypeDefinition(string name, DataType dataType)
-			: base(name, null, true)
+		public DataTypeDefinition(Scope scope, string name, DataType dataType)
+			: base(scope, name, null, true)
 		{
 			_dataType = dataType;
 		}

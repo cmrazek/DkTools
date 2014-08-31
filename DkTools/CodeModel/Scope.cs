@@ -12,6 +12,7 @@ namespace DkTools.CodeModel
 		private int _depth;
 		private bool _visible;	// Is this file directly visible to the user?
 		private DefinitionProvider _defProvider;
+		private bool _preprocessor;
 
 		public Scope(CodeModel model)
 		{
@@ -20,6 +21,7 @@ namespace DkTools.CodeModel
 			_depth = 0;
 			_visible = false;
 			_defProvider = model.DefinitionProvider;
+			_preprocessor = _defProvider != null ? _defProvider.Preprocessor : false;
 		}
 
 		public Scope(CodeFile file, int depth, ScopeHint hint, bool visible, DefinitionProvider defProvider)
@@ -32,6 +34,7 @@ namespace DkTools.CodeModel
 			_hint = hint;
 			_visible = visible;
 			_defProvider = defProvider;
+			_preprocessor = _defProvider.Preprocessor;
 		}
 
 		public Scope Clone()
@@ -89,12 +92,12 @@ namespace DkTools.CodeModel
 			get { return _visible; }
 		}
 
-		public bool CreateDefinitions
+		public bool Preprocessor
 		{
 			get
 			{
 				if (_defProvider == null) return true;
-				return _defProvider.CreateDefinitions;
+				return _defProvider.Preprocessor;
 			}
 		}
 

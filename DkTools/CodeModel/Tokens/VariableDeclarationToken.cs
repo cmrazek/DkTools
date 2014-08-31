@@ -23,7 +23,7 @@ namespace DkTools.CodeModel
 		{
 			if (child is IdentifierToken && CreateDefinitions)
 			{
-				var def = new VariableDefinition(child.Text, child, DataType.FromToken(_dataTypeToken), _args);
+				var def = new VariableDefinition(Scope, child.Text, child, DataType.FromToken(_dataTypeToken), _args);
 				AddDefinition(def);
 				child.SourceDefinition = def;
 			}

@@ -14,11 +14,13 @@ namespace DkTools.CodeModel.Definitions
 		private CodeFile _sourceFile;
 		private string _sourceFileName;
 		private Span _sourceSpan;
+		private bool _preprocessor;
 
-		private bool _gotLocalFileInfo;
-		private string _localFileName;
-		private Span _localFileSpan;
-		private bool _localPrimaryFile;
+		// TODO: remove
+		//private bool _gotLocalFileInfo;
+		//private string _localFileName;
+		//private Span _localFileSpan;
+		//private bool _localPrimaryFile;
 
 		public abstract bool CompletionVisible { get; }
 		public abstract StatementCompletion.CompletionType CompletionType { get; }
@@ -26,7 +28,7 @@ namespace DkTools.CodeModel.Definitions
 		public abstract Classifier.ProbeClassifierType ClassifierType { get; }
 		public abstract string QuickInfoText { get; }
 
-		public Definition(string name, Token sourceToken, bool global)
+		public Definition(Scope scope, string name, Token sourceToken, bool global)
 		{
 #if DEBUG
 			if (string.IsNullOrWhiteSpace(name)) throw new ArgumentNullException("name");
@@ -53,6 +55,8 @@ namespace DkTools.CodeModel.Definitions
 					throw new InvalidOperationException("Source token has no file object.");
 				}
 			}
+
+			_preprocessor = scope.Preprocessor;
 		}
 
 		public string Name
@@ -99,44 +103,70 @@ namespace DkTools.CodeModel.Definitions
 			xml.WriteStartElement(GetType().Name);
 			xml.WriteAttributeString("name", _name);
 			xml.WriteAttributeString("global", _global.ToString());
+			xml.WriteAttributeString("sourceSpan", _sourceSpan.ToString());
+			xml.WriteAttributeString("preprocessor", _preprocessor.ToString());
 
-			string fileName;
-			Span span;
-			bool primaryFile;
-			GetLocalFileSpan(out fileName, out span, out primaryFile);
-			if (!string.IsNullOrWhiteSpace(fileName))
-			{
-				xml.WriteAttributeString("localFileName", fileName);
-				xml.WriteAttributeString("localOffset", span.Start.Offset.ToString());
-			}
-			xml.WriteAttributeString("primaryFile", primaryFile.ToString());
+			// TODO: remove
+			//string fileName;
+			//Span span;
+			//bool primaryFile;
+			//GetLocalFileSpan(out fileName, out span, out primaryFile);
+			//if (!string.IsNullOrWhiteSpace(fileName))
+			//{
+			//	xml.WriteAttributeString("localFileName", fileName);
+			//	xml.WriteAttributeString("localOffset", span.Start.Offset.ToString());
+			//}
+			//xml.WriteAttributeString("primaryFile", primaryFile.ToString());
 
 			xml.WriteEndElement();
 		}
 
-		/// <summary>
-		/// Gets the location of the definition, in the file where it originated (not the preprocessed content).
-		/// </summary>
-		/// <param name="fileName">(out) file that contains the definition.</param>
-		/// <param name="span">(out) Span of the definition, transformed to be in the originating file.</param>
-		public void GetLocalFileSpan(out string fileName, out Span span, out bool primaryFile)
+		// TODO: remove
+		///// <summary>
+		///// Gets the location of the definition, in the file where it originated (not the preprocessed content).
+		///// </summary>
+		///// <param name="fileName">(out) file that contains the definition.</param>
+		///// <param name="span">(out) Span of the definition, transformed to be in the originating file.</param>
+		//public void GetLocalFileSpan(out string fileName, out Span span, out bool primaryFile)
+		//{
+		//	if (_sourceFile == null)
+		//	{
+		//		fileName = null;
+		//		span = Span.Empty;
+		//		primaryFile = false;
+		//		return;
+		//	}
+
+		//	if (!_gotLocalFileInfo)
+		//	{
+		//		_sourceFile.CodeSource.GetFileSpan(_sourceSpan, out _localFileName, out _localFileSpan, out _localPrimaryFile);
+		//		_gotLocalFileInfo = true;
+		//	}
+		//	fileName = _localFileName;
+		//	span = _localFileSpan;
+		//	primaryFile = _localPrimaryFile;
+		//}
+
+		public bool Preprocessor
 		{
-			if (_sourceFile == null)
+			get { return _preprocessor; }
+		}
+
+		public void MoveFromPreprocessorToVisibleModel(CodeFile visibleFile, CodeSource visibleSource)
+		{
+			if (!_preprocessor) return;
+
+			if (_sourceFile != null)
 			{
-				fileName = null;
-				span = Span.Empty;
-				primaryFile = false;
-				return;
+				string fileName;
+				Span span;
+				bool primary;
+				_sourceFile.CodeSource.GetFileSpan(_sourceSpan, out fileName, out span, out primary);
+				_sourceSpan = span;
+				_sourceFile = visibleFile;
 			}
 
-			if (!_gotLocalFileInfo)
-			{
-				_sourceFile.CodeSource.GetFileSpan(_sourceSpan, out _localFileName, out _localFileSpan, out _localPrimaryFile);
-				_gotLocalFileInfo = true;
-			}
-			fileName = _localFileName;
-			span = _localFileSpan;
-			primaryFile = _localPrimaryFile;
+			_preprocessor = false;
 		}
 
 #if DEBUG

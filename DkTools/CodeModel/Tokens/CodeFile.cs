@@ -8,6 +8,7 @@ using System.Text.RegularExpressions;
 using System.Xml;
 using VsText = Microsoft.VisualStudio.Text;
 using DkTools.CodeModel.Definitions;
+using DkTools.CodeModel.Tokens;
 
 namespace DkTools.CodeModel
 {
@@ -89,14 +90,19 @@ namespace DkTools.CodeModel
 		    var ch = _src[_pos];
 
 			Token token;
-			if (!scope.Hint.HasFlag(ScopeHint.SuppressFunctionDefinition))
+
+			if (scope.Preprocessor)
 			{
-				if ((token = FunctionToken.TryParse(parent, scope)) != null) return token;
+				if (!scope.Hint.HasFlag(ScopeHint.SuppressFunctionDefinition))
+				{
+					if ((token = FunctionToken.TryParse(parent, scope)) != null) return token;
+				}
+				if (!scope.Hint.HasFlag(ScopeHint.SuppressVarDecl) && scope.Preprocessor)
+				{
+					if ((token = VariableDeclarationToken.TryParse(parent, scope)) != null) return token;
+				}
 			}
-			if (!scope.Hint.HasFlag(ScopeHint.SuppressVarDecl) && scope.CreateDefinitions)
-			{
-				if ((token = VariableDeclarationToken.TryParse(parent, scope)) != null) return token;
-			}
+
 			if ((token = DataTypeToken.TryParse(parent, scope)) != null) return token;
 			if ((token = DefineToken.TryParse(parent, scope)) != null) return token;
 
@@ -421,7 +427,7 @@ namespace DkTools.CodeModel
 			{
 				// Could be function call/def or macro call
 
-				if (!scope.Hint.HasFlag(ScopeHint.SuppressFunctionDefinition))
+				if (!scope.Hint.HasFlag(ScopeHint.SuppressFunctionDefinition) && scope.Preprocessor)
 				{
 					Position = wordSpan.Start;
 					var funcToken = FunctionToken.TryParse(parent, scope);
@@ -441,11 +447,18 @@ namespace DkTools.CodeModel
 
 					if (def is FunctionDefinition)
 					{
-						if (!scope.Hint.HasFlag(ScopeHint.SuppressFunctionCall))
+						if (!scope.Preprocessor && def.SourceSpan.Start == wordSpan.Start)
 						{
-							var nameToken = new IdentifierToken(parent, scope, wordSpan, word);
-							var brackets = BracketsToken.Parse(parent, scope);
-							return new FunctionCallToken(parent, scope, nameToken, brackets, def as FunctionDefinition);
+							return new FunctionNameToken(parent, scope, wordSpan, word, def as FunctionDefinition);
+						}
+						else
+						{
+							if (!scope.Hint.HasFlag(ScopeHint.SuppressFunctionCall))
+							{
+								var nameToken = new IdentifierToken(parent, scope, wordSpan, word);
+								var brackets = BracketsToken.Parse(parent, scope);
+								return new FunctionCallToken(parent, scope, nameToken, brackets, def as FunctionDefinition);
+							}
 						}
 					}
 				}

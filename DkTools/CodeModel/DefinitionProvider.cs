@@ -16,16 +16,16 @@ namespace DkTools.CodeModel
 		/// </summary>
 		private Dictionary<int, List<Definition>> _localDefs = new Dictionary<int, List<Definition>>();
 
-		private bool _createDefs;
+		private bool _preprocessor;
 
 		/// <summary>
 		/// Get or sets a flag that the model can use to determine if it should be creating or consuming definitions.
 		/// The preprocessor model creates definitions, and the visible model consumes them.
 		/// </summary>
-		public bool CreateDefinitions
+		public bool Preprocessor
 		{
-			get { return _createDefs; }
-			set { _createDefs = value; }
+			get { return _preprocessor; }
+			set { _preprocessor = value; }
 		}
 
 		public void AddGlobalDefinition(Definition def)

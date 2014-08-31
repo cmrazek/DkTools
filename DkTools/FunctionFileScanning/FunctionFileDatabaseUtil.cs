@@ -41,6 +41,7 @@ namespace DkTools.FunctionFileScanning
 		public static CodeModel.Definitions.FunctionDefinition ToDefinition(this Function_t func)
 		{
 			return new CodeModel.Definitions.FunctionDefinition(
+				new CodeModel.Scope(),
 				func.name,
 				new CodeModel.ExternalToken(func.fileName, func.span.ToCodeModelSpan()),
 				func.dataType != null ? func.dataType.ToCodeModelDataType() : CodeModel.DataType.Int,

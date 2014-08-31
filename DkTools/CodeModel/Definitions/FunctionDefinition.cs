@@ -11,8 +11,8 @@ namespace DkTools.CodeModel.Definitions
 		private DataType _dataType;
 		private string _signature;
 
-		public FunctionDefinition(string name, Token sourceToken, DataType dataType, string signature)
-			: base(name, sourceToken, true)
+		public FunctionDefinition(Scope scope, string name, Token sourceToken, DataType dataType, string signature)
+			: base(scope, name, sourceToken, true)
 		{
 #if DEBUG
 			if (string.IsNullOrWhiteSpace(signature)) throw new ArgumentNullException("signature");

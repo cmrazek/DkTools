@@ -105,19 +105,20 @@ namespace DkTools.StatementCompletion
 			//	else Shell.SetStatusText("Table not found.");
 			//}
 			//else
-			//if (!string.IsNullOrWhiteSpace(def.SourceFileName))
-			//{
-			//	Shell.OpenDocument(def.SourceFileName, def.SourceSpan);
-			//}
-
-			string fileName;
-			CodeModel.Span span;
-			bool primaryFile;
-			def.GetLocalFileSpan(out fileName, out span, out primaryFile);
-			if (!string.IsNullOrWhiteSpace(fileName))
+			if (!string.IsNullOrWhiteSpace(def.SourceFileName))
 			{
-				Shell.OpenDocument(fileName, span);
+				Shell.OpenDocument(def.SourceFileName, def.SourceSpan);
 			}
+
+			// TODO: remove
+			//string fileName;
+			//CodeModel.Span span;
+			//bool primaryFile;
+			//def.GetLocalFileSpan(out fileName, out span, out primaryFile);
+			//if (!string.IsNullOrWhiteSpace(fileName))
+			//{
+			//	Shell.OpenDocument(fileName, span);
+			//}
 		}
 	}
 }

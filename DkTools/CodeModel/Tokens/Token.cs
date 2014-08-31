@@ -87,7 +87,7 @@ namespace DkTools.CodeModel
 			_scope = scope;
 			_span = span;
 
-			if (!scope.CreateDefinitions)
+			if (!scope.Preprocessor)
 			{
 				var defProv = _scope.DefinitionProvider;
 				if (defProv != null) AddDefinitions(defProv.GetLocalDefinitionsForOffset(span.Start.Offset));
@@ -104,7 +104,7 @@ namespace DkTools.CodeModel
 			if (_parent != null)
 			{
 				if (_defs != null &&
-					Scope.CreateDefinitions)	// Only move definitions around when we're in the 'create' model.
+					Scope.Preprocessor)	// Only move definitions around when we're in the 'create' model.
 				{
 					Dictionary<string, LinkedList<Definition>> keepDefs = null;
 
@@ -694,7 +694,7 @@ namespace DkTools.CodeModel
 
 		protected bool CreateDefinitions
 		{
-			get { return _scope.CreateDefinitions; }
+			get { return _scope.Preprocessor; }
 		}
 		#endregion
 

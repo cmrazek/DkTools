@@ -36,7 +36,7 @@ namespace DkTools.Dict
 				sb.AppendFormat("Description: {0}", _repoDesc);
 			}
 
-			_def = new CodeModel.Definitions.RelIndDefinition(_name, table.Name, sb.ToString());
+			_def = new CodeModel.Definitions.RelIndDefinition(new CodeModel.Scope(), _name, table.Name, sb.ToString());
 		}
 
 		public string Name

@@ -16,8 +16,8 @@ namespace DkTools.CodeModel.Definitions
 		private string _desc;
 		private string _repoDesc;
 
-		public TableFieldDefinition(string tableName, string fieldName, string prompt, string comment, string dataType, string description)
-			: base(fieldName, null, true)
+		public TableFieldDefinition(Scope scope, string tableName, string fieldName, string prompt, string comment, string dataType, string description)
+			: base(scope, fieldName, null, true)
 		{
 			_tableName = tableName;
 			_fieldName = fieldName;

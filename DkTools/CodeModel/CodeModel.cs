@@ -18,49 +18,73 @@ namespace DkTools.CodeModel
 		private DefinitionProvider _defProvider;
 		private CodeModel _prepModel;
 
-		public CodeModel(FileStore store, string source, VsText.ITextSnapshot snapshot, string fileName)
+		private CodeModel(FileStore store)
 		{
 			if (store == null) throw new ArgumentNullException("store");
 			_store = store;
-
-			var codeSource = new CodeSource();
-			codeSource.Append(source, new CodeAttributes(fileName, Position.Start, Position.Start.Advance(source), true, true));
-			codeSource.Flush();
-
-			// This is a visible model, so don't create definitions.
-			var defProvider = new DefinitionProvider();
-			defProvider.CreateDefinitions = false;
-
-			Init(codeSource, fileName, true, defProvider);
 		}
 
-		public CodeModel(VsText.ITextSnapshot snapshot)
+		//public CodeModel(FileStore store, string source, VsText.ITextSnapshot snapshot, string fileName)
+		//{
+		//	if (store == null) throw new ArgumentNullException("store");
+		//	_store = store;
+
+		//	var codeSource = new CodeSource();
+		//	codeSource.Append(source, new CodeAttributes(fileName, Position.Start, Position.Start.Advance(source), true, true));
+		//	codeSource.Flush();
+
+		//	// This is a visible model, so don't create definitions.
+		//	var defProvider = new DefinitionProvider();
+		//	defProvider.Preprocessor = false;
+
+		//	Init(codeSource, fileName, true, defProvider);
+		//}
+
+		//public CodeModel(VsText.ITextSnapshot snapshot)
+		//{
+		//	var source = snapshot.GetText();
+		//	var fileName = snapshot.TextBuffer.TryGetFileName();
+		//	_store = FileStore.GetOrCreateForTextBuffer(snapshot.TextBuffer);
+
+		//	var codeSource = new CodeSource();
+		//	codeSource.Append(source, new CodeAttributes(fileName, Position.Start, Position.Start.Advance(source), true, true));
+		//	codeSource.Flush();
+		//	codeSource.Snapshot = snapshot;
+
+		//	// This is a visible model, so don't create definitions.
+		//	var defProvider = new DefinitionProvider();
+		//	defProvider.Preprocessor = false;
+
+		//	Init(codeSource, fileName, true, defProvider);
+		//}
+
+		//public CodeModel(FileStore store, CodeSource source, string fileName, bool visible, DefinitionProvider defProvider)
+		//{
+		//	if (store == null) throw new ArgumentNullException("store");
+		//	_store = store;
+
+		//	Init(source, fileName, visible, defProvider);
+		//}
+
+		public static CodeModel CreatePreprocessorModel(FileStore store, CodeSource preprocessedSource, string fileName, DefinitionProvider defProvider)
 		{
-			var source = snapshot.GetText();
-			var fileName = snapshot.TextBuffer.TryGetFileName();
-			_store = FileStore.GetOrCreateForTextBuffer(snapshot.TextBuffer);
-
-			var codeSource = new CodeSource();
-			codeSource.Append(source, new CodeAttributes(fileName, Position.Start, Position.Start.Advance(source), true, true));
-			codeSource.Flush();
-			codeSource.Snapshot = snapshot;
-
-			// This is a visible model, so don't create definitions.
-			var defProvider = new DefinitionProvider();
-			defProvider.CreateDefinitions = false;
-
-			Init(codeSource, fileName, true, defProvider);
+			var model = new CodeModel(store);
+			model.Init(preprocessedSource, new CodeFile(model), fileName, false, defProvider);
+			return model;
 		}
 
-		public CodeModel(FileStore store, CodeSource source, string fileName, bool visible, DefinitionProvider defProvider)
+		public CodeModel CreateVisibleModelForPreprocessed(CodeSource visibleSource)
 		{
-			if (store == null) throw new ArgumentNullException("store");
-			_store = store;
+			var model = new CodeModel(_store);
+			var codeFile = new CodeFile(model);
 
-			Init(source, fileName, visible, defProvider);
+			CopyDefinitionsToProvider(codeFile, visibleSource);
+
+			model.Init(visibleSource, codeFile, _fileName, true, _defProvider);
+			return model;
 		}
 
-		private void Init(CodeSource source, string fileName, bool visible, DefinitionProvider defProvider)
+		private void Init(CodeSource source, CodeFile file, string fileName, bool visible, DefinitionProvider defProvider)
 		{
 #if DEBUG
 			if (defProvider == null) throw new ArgumentNullException("defProvider");
@@ -72,17 +96,19 @@ namespace DkTools.CodeModel
 			_defProvider = defProvider;
 			_file = new CodeFile(this);
 
-			if (_defProvider.CreateDefinitions)
+			if (_defProvider.Preprocessor)
 			{
+				var scope = new Scope();
+
 				var defs = new List<Definition>();
-				defs.Add(new FunctionDefinition("diag", null, DataType.Void, "void diag(expressions ...)"));
-				defs.Add(new FunctionDefinition("gofield", null, DataType.Void, "void gofield(TableName.ColumnName)"));
-				defs.Add(new FunctionDefinition("makestring", null, DataType.FromString("char(255)"), "char(255) makestring(expressions ...)"));
-				defs.Add(new FunctionDefinition("oldvalue", null, DataType.Void, "oldvalue(TableName.ColumnName)"));
-				defs.Add(new FunctionDefinition("qcolsend", null, DataType.Void, "void qcolsend(TableName.ColumnName ...)"));
-				defs.Add(new FunctionDefinition("SetMessage", null, DataType.Int, "int SetMessage(MessageControlString, expressions ...)"));
-				defs.Add(new FunctionDefinition("STRINGIZE", null, DataType.FromString("char(255)"), "STRINGIZE(x)"));
-				defs.Add(new FunctionDefinition("UNREFERENCED_PARAMETER", null, DataType.Void, "UNREFERENCED_PARAMETER(parameter)"));
+				defs.Add(new FunctionDefinition(scope, "diag", null, DataType.Void, "void diag(expressions ...)"));
+				defs.Add(new FunctionDefinition(scope, "gofield", null, DataType.Void, "void gofield(TableName.ColumnName)"));
+				defs.Add(new FunctionDefinition(scope, "makestring", null, DataType.FromString("char(255)"), "char(255) makestring(expressions ...)"));
+				defs.Add(new FunctionDefinition(scope, "oldvalue", null, DataType.Void, "oldvalue(TableName.ColumnName)"));
+				defs.Add(new FunctionDefinition(scope, "qcolsend", null, DataType.Void, "void qcolsend(TableName.ColumnName ...)"));
+				defs.Add(new FunctionDefinition(scope, "SetMessage", null, DataType.Int, "int SetMessage(MessageControlString, expressions ...)"));
+				defs.Add(new FunctionDefinition(scope, "STRINGIZE", null, DataType.FromString("char(255)"), "STRINGIZE(x)"));
+				defs.Add(new FunctionDefinition(scope, "UNREFERENCED_PARAMETER", null, DataType.Void, "UNREFERENCED_PARAMETER(parameter)"));
 
 				foreach (var def in ProbeEnvironment.DictDefinitions) defs.Add(def);
 
@@ -94,7 +120,7 @@ namespace DkTools.CodeModel
 
 			_file.Parse(source, _fileName, new string[0], visible);
 
-			if (_defProvider.CreateDefinitions) CopyDefinitionsToProvider();
+			//if (_defProvider.Preprocessor) CopyDefinitionsToProvider();
 
 			this.RefreshTime = DateTime.Now;
 		}
@@ -253,6 +279,7 @@ namespace DkTools.CodeModel
 		}
 		#endregion
 
+		#region Definitions
 		/// <summary>
 		/// Gets a list of definitions that match this name.
 		/// </summary>
@@ -284,10 +311,11 @@ namespace DkTools.CodeModel
 			return _file.GetDefinitions<T>();
 		}
 
-		private void CopyDefinitionsToProvider()
+		public void CopyDefinitionsToProvider(CodeFile visibleFile, CodeSource visibleSource)
 		{
 			foreach (var def in _file.GetDefinitions())
 			{
+				def.MoveFromPreprocessorToVisibleModel(visibleFile, visibleSource);
 				_defProvider.AddGlobalDefinition(def);
 			}
 
@@ -297,6 +325,8 @@ namespace DkTools.CodeModel
 				var localFilePos = source.GetFilePosition(defLoc.LocalContainerOffset);
 				if (localFilePos.PrimaryFile)
 				{
+					var def = defLoc.Definition;
+					def.MoveFromPreprocessorToVisibleModel(visibleFile, visibleSource);
 					_defProvider.AddLocalDefinition(localFilePos.Position.Offset, defLoc.Definition);
 				}
 			}
@@ -313,6 +343,7 @@ namespace DkTools.CodeModel
 		{
 			get { return _defProvider; }
 		}
+		#endregion
 
 		public CodeModel PreprocessorModel
 		{

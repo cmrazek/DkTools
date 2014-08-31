@@ -10,8 +10,8 @@ namespace DkTools.CodeModel.Definitions
 	{
 		private Dict.DictStringDef _stringDef;
 
-		public StringDefDefinition(Dict.DictStringDef stringDef)
-			: base(stringDef.Name, null, true)
+		public StringDefDefinition(Scope scope, Dict.DictStringDef stringDef)
+			: base(scope, stringDef.Name, null, true)
 		{
 			_stringDef = stringDef;
 		}

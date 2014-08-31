@@ -19,9 +19,9 @@ namespace DkTools.CodeModel
 			_nameToken = nameToken;
 			_argsToken = argsToken;
 
-			if (scope.CreateDefinitions)
+			if (scope.Preprocessor)
 			{
-				var def = new FunctionDefinition(_nameToken.Text, _nameToken, DataType.FromToken(_dataTypeToken), GetFunctionSignature());
+				var def = new FunctionDefinition(scope, _nameToken.Text, _nameToken, DataType.FromToken(_dataTypeToken), GetFunctionSignature());
 				AddDefinition(def);
 				_nameToken.SourceDefinition = def;
 			}

@@ -38,7 +38,7 @@ namespace DkTools.Dict
 			}
 
 			_completionOptions = CodeModel.DataType.ParseCompletionOptionsFromArgText(this.DataType, null).ToArray();
-			_definition = new CodeModel.Definitions.TableFieldDefinition(table.Name, Name, Prompt, Comment, DataType, description);
+			_definition = new CodeModel.Definitions.TableFieldDefinition(new CodeModel.Scope(), table.Name, Name, Prompt, Comment, DataType, description);
 		}
 
 		public IEnumerable<string> CompletionOptions

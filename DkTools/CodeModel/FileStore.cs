@@ -176,7 +176,7 @@ namespace DkTools.CodeModel
 			var prepSource = new CodeSource();
 
 			var defProvider = new DefinitionProvider();
-			defProvider.CreateDefinitions = true;
+			defProvider.Preprocessor = true;
 
 			var includeStdLib = true;
 			if (!string.IsNullOrWhiteSpace(fileName))
@@ -192,11 +192,11 @@ namespace DkTools.CodeModel
 
 			var prep = new Preprocessor(this);
 			prep.Preprocess(reader, prepSource, fileName, new string[0], includeStdLib);
-			var prepModel = new CodeModel(this, prepSource, fileName, false, defProvider);
+			var prepModel = CodeModel.CreatePreprocessorModel(this, prepSource, fileName, defProvider);
 
-			defProvider.CreateDefinitions = false;
+			defProvider.Preprocessor = false;
 
-			var visibleModel = new CodeModel(this, visibleSource, fileName, true, defProvider);
+			var visibleModel = prepModel.CreateVisibleModelForPreprocessed(visibleSource);
 			visibleModel.PreprocessorModel = prepModel;
 
 			return visibleModel;
