@@ -242,6 +242,7 @@
     <Compile Include="BraceHighlighting\BraceHighlightTag.cs" />
     <Compile Include="BraceHighlighting\BraceHighlightTagger.cs" />
     <Compile Include="BraceHighlighting\BraceHighlightTaggerProvider.cs" />
+    <Compile Include="Classifier\DisabledSectionTracker.cs" />
     <Compile Include="Classifier\ProbeClassifierScanner.cs" />
     <Compile Include="Classifier\ProbeClassifier.cs" />
     <Compile Include="Classifier\ProbeClassifierDefinition.cs" />

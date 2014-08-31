@@ -78,11 +78,11 @@ namespace DkTools.CodeModel
 			{
 				var primary = _primaryFileName.Equals(line.fileName, StringComparison.OrdinalIgnoreCase);
 				var endPos = line.pos.Advance(line.text);
-				_mergedContent.Append(line.text, new CodeAttributes(line.fileName, line.pos, endPos, true, primary));
+				_mergedContent.Append(line.text, new CodeAttributes(line.fileName, line.pos, endPos, true, primary, false));
 				if (!line.text.EndsWith("\n") && lineIndex + 1 < _lines.Count)
 				{
 					// Does not end with crlf. Need to insert between the lines.
-					_mergedContent.Append("\r\n", new CodeAttributes(line.fileName, endPos, endPos, false, primary));
+					_mergedContent.Append("\r\n", new CodeAttributes(line.fileName, endPos, endPos, false, primary, false));
 				}
 				lineIndex++;
 			}

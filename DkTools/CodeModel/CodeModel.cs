@@ -17,6 +17,7 @@ namespace DkTools.CodeModel
 		private FileStore _store;
 		private DefinitionProvider _defProvider;
 		private CodeModel _prepModel;
+		private Span[] _disabledSections;
 
 		private CodeModel(FileStore store)
 		{
@@ -220,6 +221,12 @@ namespace DkTools.CodeModel
 		public FileStore FileStore
 		{
 			get { return _store; }
+		}
+
+		public Span[] DisabledSections
+		{
+			get { return _disabledSections; }
+			set { _disabledSections = value; }
 		}
 
 		#region Include Files

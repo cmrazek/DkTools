@@ -61,6 +61,10 @@ namespace DkTools.Classifier
 			var model = CodeModel.FileStore.GetOrCreateForTextBuffer(span.Snapshot.TextBuffer).GetMostRecentModel(span.Snapshot, "GetClassificationSpans");
 			_scanner.SetSource(span.GetText(), span.Start.Position, span.Snapshot, model);
 
+			var disabledSectionTracker = new DisabledSectionTracker(model.DisabledSections);
+			if (disabledSectionTracker.SetOffset(_scanner.PositionOffset)) state |= ProbeClassifierScanner.k_state_disabled;
+			else state &= ~ProbeClassifierScanner.k_state_disabled;
+
 			while (_scanner.ScanTokenAndProvideInfoAboutIt(tokenInfo, ref state))
 			{
 				IClassificationType classificationType;
@@ -68,6 +72,9 @@ namespace DkTools.Classifier
 				{
 					spans.Add(new ClassificationSpan(new SnapshotSpan(_snapshot, new Span(span.Start.Position + tokenInfo.StartIndex, tokenInfo.Length)), classificationType));
 				}
+
+				if (disabledSectionTracker.Advance(_scanner.PositionOffset + _scanner.Position)) state |= ProbeClassifierScanner.k_state_disabled;
+				else state &= ~ProbeClassifierScanner.k_state_disabled;
 			}
 
 			return spans;

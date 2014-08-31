@@ -53,7 +53,6 @@ namespace DkTools.CodeModel
 
 				if (str[0] == '#')
 				{
-					rdr.Ignore(str.Length);
 					ProcessDirective(p, str);
 					continue;
 				}
@@ -106,35 +105,44 @@ namespace DkTools.CodeModel
 			switch (directiveName)
 			{
 				case "#define":
+					p.reader.Ignore(directiveName.Length);
 					ProcessDefine(p);
 					break;
 				case "#undef":
+					p.reader.Ignore(directiveName.Length);
 					ProcessUndef(p);
 					break;
 				case "#include":
+					p.reader.Ignore(directiveName.Length);
 					ProcessInclude(p);
 					break;
 				case "#if":
-					ProcessIf(p, false);
+					ProcessIf(p, directiveName, false);
 					break;
 				case "#elif":
-					ProcessIf(p, true);
+					ProcessIf(p, directiveName, true);
 					break;
 				case "#ifdef":
+					p.reader.Ignore(directiveName.Length);
 					ProcessIfDef(p, true);
 					break;
 				case "#ifndef":
+					p.reader.Ignore(directiveName.Length);
 					ProcessIfDef(p, false);
 					break;
 				case "#else":
-					ProcessElse(p);
+					ProcessElse(p, directiveName);
 					break;
 				case "#endif":
-					ProcessEndIf(p);
+					ProcessEndIf(p, directiveName);
 					break;
 				case "#warndel":
 				case "#warnadd":
+					p.reader.Ignore(directiveName.Length);
 					ProcessWarnAddDel(p);
+					break;
+				default:
+					p.reader.Ignore(directiveName.Length);
 					break;
 			}
 		}
@@ -513,20 +521,17 @@ namespace DkTools.CodeModel
 			rdr.IgnoreWhiteSpaceAndComments(true);
 		}
 
-		private void ProcessEndIf(PreprocessorParams p)
+		private void ProcessEndIf(PreprocessorParams p, string directiveName)
 		{
-			p.reader.IgnoreWhiteSpaceAndComments(true);
-
 			if (p.ifStack.Count > 0) p.ifStack.Pop();
 			UpdateSuppress(p);
 
+			p.reader.Ignore(directiveName.Length);
 			p.reader.IgnoreWhiteSpaceAndComments(true);
 		}
 
-		private void ProcessElse(PreprocessorParams p)
+		private void ProcessElse(PreprocessorParams p, string directiveName)
 		{
-			p.reader.IgnoreWhiteSpaceAndComments(true);
-
 			if (p.ifStack.Count == 0) return;
 
 			var scope = p.ifStack.Peek();
@@ -544,62 +549,91 @@ namespace DkTools.CodeModel
 					break;
 			}
 
-			UpdateSuppress(p);
-
-			p.reader.IgnoreWhiteSpaceAndComments(true);
+			if (p.suppress)
+			{
+				UpdateSuppress(p);
+				p.reader.Ignore(directiveName.Length);
+				p.reader.IgnoreWhiteSpaceAndComments(true);
+			}
+			else
+			{
+				p.reader.Ignore(directiveName.Length);
+				p.reader.IgnoreWhiteSpaceAndComments(true);
+				UpdateSuppress(p);
+			}
 		}
 
-		private void ProcessIf(PreprocessorParams p, bool elif)
+		private void ProcessIf(PreprocessorParams p, string directiveName, bool elif)
 		{
-			var sb = new StringBuilder();
 			var rdr = p.reader;
-			string str;
 
-			rdr.IgnoreWhiteSpaceAndComments(true);
+			//string str;
 
-			// Read the rest of the line
-			while (!rdr.EOF)
+			// TODO: remove
+			//if (!elif)
+			//{
+			//	rdr.Ignore(directiveName.Length);
+			//	rdr.IgnoreWhiteSpaceAndComments(true);
+			//}
+
+			var conditionStr = rdr.PeekUntil(c => c != '\r' && c != '\n');
+			conditionStr = conditionStr.Substring(directiveName.Length);
+
+			// Ignore up to the last comment on the line (just in case it's a multi-line comment)
+			var parser = new TokenParser.Parser(conditionStr);
+			parser.ReturnComments = true;
+			var tokens = parser.ToArray();
+			if (tokens.Length > 0 && tokens[tokens.Length - 1].Type == TokenType.Comment)
 			{
-				str = rdr.PeekToken(true);
-				if (str == null) break;
-
-				rdr.Ignore(str.Length);
-				sb.Append(str);
+				conditionStr = conditionStr.Substring(0, tokens[tokens.Length - 1].StartPosition.Offset);
 			}
-			var conditionStr = sb.ToString();
+
+
+
+			// TODO: remove
+			//// Read the rest of the line
+			//while (!rdr.EOF)
+			//{
+			//	str = rdr.PeekToken(true);
+			//	if (str == null) break;
+
+			//	rdr.Ignore(str.Length);
+			//	sb.Append(str);
+			//}
+			//var conditionStr = sb.ToString();
 
 			if (elif)
 			{
 				if (p.ifStack.Count > 0)
 				{
-					var scope = p.ifStack.Peek();
-					if (scope.outerSuppressed)
+					var ifLevel = p.ifStack.Peek();
+					if (ifLevel.outerSuppressed)
 					{
-						scope.result = ConditionResult.Negative;
+						ifLevel.result = ConditionResult.Negative;
 					}
 					else
 					{
-						switch (scope.prevResult)
+						switch (ifLevel.prevResult)
 						{
 							case ConditionResult.Positive:
-								scope.result = ConditionResult.Negative;
+								ifLevel.result = ConditionResult.Negative;
 								break;
 
 							case ConditionResult.Negative:
-								scope.result = EvaluateCondition(sb.ToString());
-								if (scope.result == ConditionResult.Positive) scope.prevResult = ConditionResult.Positive;
+								ifLevel.result = EvaluateCondition(conditionStr);
+								if (ifLevel.result == ConditionResult.Positive) ifLevel.prevResult = ConditionResult.Positive;
 								break;
 
 							case ConditionResult.Indeterminate:
-								scope.result = EvaluateCondition(sb.ToString());
-								scope.prevResult = scope.result;
+								ifLevel.result = EvaluateCondition(conditionStr);
+								ifLevel.prevResult = ifLevel.result;
 								break;
 						}
 					}
 				}
 				else
 				{
-					var result = EvaluateCondition(sb.ToString());
+					var result = EvaluateCondition(conditionStr);
 					p.ifStack.Push(new ConditionScope(result, result, p.suppress));
 				}
 			}
@@ -611,16 +645,32 @@ namespace DkTools.CodeModel
 				}
 				else
 				{
-					var result = EvaluateCondition(sb.ToString());
+					var result = EvaluateCondition(conditionStr);
 					p.ifStack.Push(new ConditionScope(result, result, p.suppress));
 				}
 			}
+
+			if (!elif)
+			{
+				rdr.Ignore(directiveName.Length + conditionStr.Length);
+			}
+
 			UpdateSuppress(p);
+
+			if (elif)
+			{
+				rdr.Ignore(directiveName.Length + conditionStr.Length);
+			}
 		}
 
 		private void UpdateSuppress(PreprocessorParams p)
 		{
 			p.reader.Suppress = p.suppress = p.ifStack.Any(x => x.result == ConditionResult.Negative);
+		}
+
+		private bool PeekSuppress(PreprocessorParams p)
+		{
+			return p.ifStack.Any(x => x.result == ConditionResult.Negative);
 		}
 
 		private string EscapeString(string str)
@@ -830,12 +880,14 @@ namespace DkTools.CodeModel
 			var tokenGroup = PreprocessorTokens.GroupToken.Parse(null, parser, null);
 			var finalValue = tokenGroup.Value;
 
+			ConditionResult ret;
 			if (finalValue.HasValue)
 			{
-				if (finalValue.Value != 0) return ConditionResult.Positive;
-				else return ConditionResult.Negative;
+				if (finalValue.Value != 0) ret = ConditionResult.Positive;
+				else ret = ConditionResult.Negative;
 			}
-			else return ConditionResult.Indeterminate;
+			else ret = ConditionResult.Indeterminate;
+			return ret;
 		}
 	}
 }

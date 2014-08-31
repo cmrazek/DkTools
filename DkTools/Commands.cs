@@ -565,7 +565,7 @@ namespace DkTools
 					var content = view.TextBuffer.CurrentSnapshot.GetText();
 
 					var codeSource = new CodeModel.CodeSource();
-					codeSource.Append(content, new CodeModel.CodeAttributes(fileName, CodeModel.Position.Start, CodeModel.Position.Start.Advance(content), true, true));
+					codeSource.Append(content, new CodeModel.CodeAttributes(fileName, CodeModel.Position.Start, CodeModel.Position.Start.Advance(content), true, true, false));
 					codeSource.Flush();
 
 					return codeSource;
@@ -590,26 +590,6 @@ namespace DkTools
 
 				Shell.OpenTempContent(string.Concat(dest.Text, "\r\nCONTINUOUS SEGMENTS:\r\n", dest.DumpContinuousSegments()), Path.GetFileName(fileName), ".preprocessor.txt");
 			}
-
-			// TODO: remove
-			//public static void ShowPreprocessorModel()
-			//{
-			//	string fileName;
-			//	var codeSource = GetCodeSourceForActiveView(out fileName);
-			//	if (codeSource == null) return;
-
-			//	var store = new CodeModel.FileStore();
-			//	var reader = new CodeModel.CodeSource.CodeSourcePreprocessorReader(codeSource);
-			//	var prepCodeSource = new CodeModel.CodeSource();
-
-			//	var prep = new CodeModel.Preprocessor(store);
-			//	prep.Preprocess(reader, prepCodeSource, fileName, null, true);
-
-			//	var defProvider = new CodeModel.DefinitionProvider();
-			//	var model = new CodeModel.CodeModel(store, prepCodeSource, fileName, true, defProvider);
-
-			//	Shell.OpenTempContent(model.DumpTree(), Path.GetFileName(fileName), " model.txt");
-			//}
 
 			public static void ShowPreprocessorSegments()
 			{

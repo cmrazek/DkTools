@@ -61,6 +61,7 @@ namespace DkTools.Classifier
 
 		private const int k_state_comment = 0x01;
 		private const int k_state_replace = 0x02;
+		public const int k_state_disabled = 0x40;
 		private const int k_state_afterInclude = 0x10;
 
 		public bool ScanTokenAndProvideInfoAboutIt(TokenInfo tokenInfo, ref int state)
@@ -100,7 +101,8 @@ namespace DkTools.Classifier
 			{
 				// Inside a multi-line comment.
 
-				tokenInfo.Type = ProbeClassifierType.Comment;
+				if ((state & k_state_disabled) != 0) tokenInfo.Type = ProbeClassifierType.Inactive;
+				else tokenInfo.Type = ProbeClassifierType.Comment;
 
 				var index = _source.IndexOf("*/", _pos);
 				if (index >= 0)
@@ -117,20 +119,23 @@ namespace DkTools.Classifier
 			}
 			else if (Char.IsWhiteSpace(ch))
 			{
-				tokenInfo.Type = ProbeClassifierType.Normal;
+				if ((state & k_state_disabled) != 0) tokenInfo.Type = ProbeClassifierType.Inactive;
+				else tokenInfo.Type = ProbeClassifierType.Normal;
 
 				_pos++;
 				while (_pos < _length && Char.IsWhiteSpace(_source[_pos])) _pos++;
 			}
 			else if ((state & k_state_afterInclude) != 0 && (match = _rxIncludeString.Match(_source, _pos)).Success)
 			{
-				tokenInfo.Type = ProbeClassifierType.StringLiteral;
+				if ((state & k_state_disabled) != 0) tokenInfo.Type = ProbeClassifierType.Inactive;
+				else tokenInfo.Type = ProbeClassifierType.StringLiteral;
 				_pos = match.Index + match.Length;
 				state &= ~k_state_afterInclude;
 			}
 			else if (ch == '/' && _pos + 1 < _length && _source[_pos + 1] == '/')
 			{
-				tokenInfo.Type = ProbeClassifierType.Comment;
+				if ((state & k_state_disabled) != 0) tokenInfo.Type = ProbeClassifierType.Inactive;
+				else tokenInfo.Type = ProbeClassifierType.Comment;
 
 				var index = _source.IndexOf('\n', _pos);
 				if (index >= 0) _pos = index + 1;
@@ -138,7 +143,8 @@ namespace DkTools.Classifier
 			}
 			else if (ch == '/' && _pos + 1 < _length && _source[_pos + 1] == '*')
 			{
-				tokenInfo.Type = ProbeClassifierType.Comment;
+				if ((state & k_state_disabled) != 0) tokenInfo.Type = ProbeClassifierType.Inactive;
+				else tokenInfo.Type = ProbeClassifierType.Comment;
 
 				var index = _source.IndexOf("*/", _pos);
 				if (index >= 0)
@@ -157,42 +163,58 @@ namespace DkTools.Classifier
 			else if ((match = _rxWord.Match(_source, _pos)).Success)
 			{
 				var word = match.Value;
-				
-				CodeModel.Token token;
-				if (_tokenMap.TryGetValue(_pos + _posOffset, out token) && token.Text == word)
+
+				if ((state & k_state_disabled) != 0)
 				{
-					var def = token.SourceDefinition;
-					if (def != null) tokenInfo.Type = def.ClassifierType;
-					else tokenInfo.Type = token.ClassifierType;
+					tokenInfo.Type = ProbeClassifierType.Inactive;
 				}
-				else if (Constants.Keywords.Contains(word)) tokenInfo.Type = ProbeClassifierType.Keyword;
-				else if (Constants.DataTypeKeywords.Contains(word)) tokenInfo.Type = ProbeClassifierType.DataType;
-				else tokenInfo.Type = ProbeClassifierType.Normal;
+				else
+				{
+					CodeModel.Token token;
+					if (_tokenMap.TryGetValue(_pos + _posOffset, out token) && token.Text == word)
+					{
+						var def = token.SourceDefinition;
+						if (def != null) tokenInfo.Type = def.ClassifierType;
+						else tokenInfo.Type = token.ClassifierType;
+					}
+					else if (Constants.Keywords.Contains(word)) tokenInfo.Type = ProbeClassifierType.Keyword;
+					else if (Constants.DataTypeKeywords.Contains(word)) tokenInfo.Type = ProbeClassifierType.DataType;
+					else tokenInfo.Type = ProbeClassifierType.Normal;
+				}
 
 				_pos = match.Index + match.Length;
 			}
 			else if ((match = _rxNumber.Match(_source, _pos)).Success)
 			{
-				tokenInfo.Type = ProbeClassifierType.Number;
+				if ((state & k_state_disabled) != 0) tokenInfo.Type = ProbeClassifierType.Inactive;
+				else tokenInfo.Type = ProbeClassifierType.Number;
 				_pos = match.Index + match.Length;
 			}
 			else if ((ch == '\"' || ch == '\'') && MatchStringLiteral())
 			{
-				tokenInfo.Type = ProbeClassifierType.StringLiteral;
+				if ((state & k_state_disabled) != 0) tokenInfo.Type = ProbeClassifierType.Inactive;
+				else tokenInfo.Type = ProbeClassifierType.StringLiteral;
 				//_pos = match.Index + match.Length;
 			}
 			else if ((match = _rxReplaceStart.Match(_source, _pos)).Success)
 			{
-				tokenInfo.Type = ProbeClassifierType.Preprocessor;
+				if ((state & k_state_disabled) != 0) tokenInfo.Type = ProbeClassifierType.Inactive;
+				else tokenInfo.Type = ProbeClassifierType.Preprocessor;
 				_pos = match.Index + match.Length;
 				state |= k_state_replace;
 			}
 			else if ((match = _rxPreprocessor.Match(_source, _pos)).Success)
 			{
-				tokenInfo.Type = ProbeClassifierType.Preprocessor;
+				if ((state & k_state_disabled) != 0) tokenInfo.Type = ProbeClassifierType.Inactive;
+				else tokenInfo.Type = ProbeClassifierType.Preprocessor;
 				_pos = match.Index + match.Length;
 
 				if (match.Value == "#include") state |= k_state_afterInclude;
+			}
+			else if ((state & k_state_disabled) != 0)	// Everything after this point is assumed to be single character
+			{
+				tokenInfo.Type = ProbeClassifierType.Inactive;
+				_pos++;
 			}
 			else if (ch == '.' || ch == ',')
 			{
@@ -264,6 +286,11 @@ namespace DkTools.Classifier
 				if (value < 0 || value > _source.Length) throw new ArgumentOutOfRangeException();
 				_length = value;
 			}
+		}
+
+		public int PositionOffset
+		{
+			get { return _posOffset; }
 		}
 
 		public IEnumerable<CodeModel.Token> TokensAtPos()

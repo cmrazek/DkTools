@@ -73,26 +73,26 @@ namespace DkTools.CodeModel.PreprocessorTokens
 			var leftToken = _parent.GetTokenOnLeft(this);
 			if (leftToken == null)
 			{
-				Log.WriteDebug("Operator '{0}' expects token on left.", _text);
+				//Log.WriteDebug("Operator '{0}' expects token on left.", _text);
 				return;
 			}
 			var left = leftToken.Value;
 			if (!left.HasValue)
 			{
-				Log.WriteDebug("Operator '{0}' expects value on left.", _text);
+				//Log.WriteDebug("Operator '{0}' expects value on left.", _text);
 				return;
 			}
 
 			var rightToken = _parent.GetTokenOnRight(this);
 			if (rightToken == null)
 			{
-				Log.WriteDebug("Operator '{0}' expects token on right.", _text);
+				//Log.WriteDebug("Operator '{0}' expects token on right.", _text);
 				return;
 			}
 			var right = rightToken.Value;
 			if (!right.HasValue)
 			{
-				Log.WriteDebug("Operator '{0}' expects value on right.", _text);
+				//Log.WriteDebug("Operator '{0}' expects value on right.", _text);
 				return;
 			}
 
@@ -104,7 +104,7 @@ namespace DkTools.CodeModel.PreprocessorTokens
 				case "/":
 					if (right.Value == 0)
 					{
-						Log.WriteDebug("Division by zero.");
+						//Log.WriteDebug("Division by zero.");
 						_parent.ReplaceTokens(new NumberToken(_parent, (long?)null), leftToken, this, rightToken);
 					}
 					else _parent.ReplaceTokens(new NumberToken(_parent, left.Value / right.Value), leftToken, this, rightToken);
@@ -112,7 +112,7 @@ namespace DkTools.CodeModel.PreprocessorTokens
 				case "%":
 					if (right.Value == 0)
 					{
-						Log.WriteDebug("Modulus division by zero.");
+						//Log.WriteDebug("Modulus division by zero.");
 						_parent.ReplaceTokens(new NumberToken(_parent, (long?)null), leftToken, this, rightToken);
 					}
 					else _parent.ReplaceTokens(new NumberToken(_parent, left.Value % right.Value), leftToken, this, rightToken);
@@ -150,7 +150,7 @@ namespace DkTools.CodeModel.PreprocessorTokens
 					_parent.ReplaceTokens(new NumberToken(_parent, (left.Value != 0 || right.Value != 0) ? 1 : 0), leftToken, this, rightToken);
 					break;
 				default:
-					Log.WriteDebug("Unexpected operator '{0}'.", _text);
+					//Log.WriteDebug("Unexpected operator '{0}'.", _text);
 					break;
 			}
 		}
