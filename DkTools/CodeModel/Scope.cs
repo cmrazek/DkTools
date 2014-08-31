@@ -91,7 +91,11 @@ namespace DkTools.CodeModel
 
 		public bool CreateDefinitions
 		{
-			get { return _defProvider.CreateDefinitions; }
+			get
+			{
+				if (_defProvider == null) return true;
+				return _defProvider.CreateDefinitions;
+			}
 		}
 
 		public DefinitionProvider DefinitionProvider

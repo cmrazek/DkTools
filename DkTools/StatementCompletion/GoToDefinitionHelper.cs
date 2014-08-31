@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Editor;
+using DkTools.CodeModel.Definitions;
 
 namespace DkTools.StatementCompletion
 {
@@ -81,7 +82,7 @@ namespace DkTools.StatementCompletion
 			Shell.SetStatusText("Definition not found.");
 		}
 
-		private static void BrowseToDefinition(CodeModel.Definition def)
+		private static void BrowseToDefinition(CodeModel.Definitions.Definition def)
 		{
 			//if (def is CodeModel.TableDefinition)
 			//{
@@ -111,7 +112,8 @@ namespace DkTools.StatementCompletion
 
 			string fileName;
 			CodeModel.Span span;
-			def.GetLocalFileSpan(out fileName, out span);
+			bool primaryFile;
+			def.GetLocalFileSpan(out fileName, out span, out primaryFile);
 			if (!string.IsNullOrWhiteSpace(fileName))
 			{
 				Shell.OpenDocument(fileName, span);

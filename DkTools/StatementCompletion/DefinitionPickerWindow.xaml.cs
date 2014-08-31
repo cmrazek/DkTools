@@ -10,6 +10,7 @@ using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
+using DkTools.CodeModel.Definitions;
 
 namespace DkTools.StatementCompletion
 {
@@ -18,8 +19,8 @@ namespace DkTools.StatementCompletion
 	/// </summary>
 	public partial class DefinitionPickerWindow : Window
 	{
-		private List<CodeModel.Definition> _defs = new List<CodeModel.Definition>();
-		internal CodeModel.Definition SelectedItem { get; private set; }
+		private List<CodeModel.Definitions.Definition> _defs = new List<CodeModel.Definitions.Definition>();
+		internal CodeModel.Definitions.Definition SelectedItem { get; private set; }
 
 		public DefinitionPickerWindow()
 		{
@@ -34,7 +35,7 @@ namespace DkTools.StatementCompletion
 			c_defList.Focus();
 		}
 
-		internal IEnumerable<CodeModel.Definition> Definitions
+		internal IEnumerable<CodeModel.Definitions.Definition> Definitions
 		{
 			get { return _defs; }
 			set
@@ -46,7 +47,7 @@ namespace DkTools.StatementCompletion
 
 		private bool CheckItemActivated()
 		{
-			var selItem = c_defList.SelectedItem as CodeModel.Definition;
+			var selItem = c_defList.SelectedItem as CodeModel.Definitions.Definition;
 			SelectedItem = selItem;
 			return selItem != null;
 		}

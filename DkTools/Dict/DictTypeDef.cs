@@ -10,7 +10,7 @@ namespace DkTools.Dict
 	{
 		private string _name;
 		private CodeModel.DataType _dataType;
-		private CodeModel.DataTypeDefinition _def;
+		private CodeModel.Definitions.DataTypeDefinition _def;
 
 		public DictTypeDef(DICTSRVRLib.IPTypeDefine repoTypeDef)
 		{
@@ -33,7 +33,7 @@ namespace DkTools.Dict
 				_dataType = new CodeModel.DataType(_name, data.TypeText[0]);
 			}
 
-			_def = new CodeModel.DataTypeDefinition(_name, _dataType);
+			_def = new CodeModel.Definitions.DataTypeDefinition(_name, _dataType);
 		}
 
 		public string Name
@@ -46,7 +46,7 @@ namespace DkTools.Dict
 			get { return _dataType; }
 		}
 
-		public CodeModel.DataTypeDefinition Definition
+		public CodeModel.Definitions.DataTypeDefinition Definition
 		{
 			get { return _def; }
 		}

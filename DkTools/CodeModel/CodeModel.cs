@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using VsText = Microsoft.VisualStudio.Text;
+using DkTools.CodeModel.Definitions;
 
 namespace DkTools.CodeModel
 {
@@ -293,14 +294,10 @@ namespace DkTools.CodeModel
 			var source = _file.CodeSource;
 			foreach (var defLoc in _file.GetDescendentDefinitionLocations())
 			{
-				string fileName;
-				Position pos;
-				bool primaryFile;
-				source.GetFilePosition(defLoc.Definition.SourceSpan.Start.Offset, out fileName, out pos, out primaryFile);
-				if (primaryFile)
+				var localFilePos = source.GetFilePosition(defLoc.LocalContainerOffset);
+				if (localFilePos.PrimaryFile)
 				{
-					var offsetDiff = pos.Offset - defLoc.Definition.SourceSpan.Start.Offset;
-					_defProvider.AddLocalDefinition(defLoc.LocalFileOffset + offsetDiff, defLoc.Definition);
+					_defProvider.AddLocalDefinition(localFilePos.Position.Offset, defLoc.Definition);
 				}
 			}
 		}

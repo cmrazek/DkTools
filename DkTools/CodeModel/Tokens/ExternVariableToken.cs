@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using DkTools.CodeModel.Definitions;
 
 namespace DkTools.CodeModel
 {
@@ -20,7 +21,7 @@ namespace DkTools.CodeModel
 			{
 				foreach (var tok in _nameTokens)
 				{
-					var def = new VariableDefinition(tok.Text, tok, DataType.FromToken(_dataTypeToken));
+					var def = new VariableDefinition(tok.Text, tok, DataType.FromToken(_dataTypeToken), false);
 					tok.SourceDefinition = def;
 					AddDefinition(def);
 				}

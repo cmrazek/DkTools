@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using DkTools.CodeModel.Definitions;
 using DkTools.FunctionFileScanning.FunctionFileDatabase;
 
 namespace DkTools.FunctionFileScanning
@@ -37,9 +38,9 @@ namespace DkTools.FunctionFileScanning
 			};
 		}
 
-		public static CodeModel.FunctionDefinition ToDefinition(this Function_t func)
+		public static CodeModel.Definitions.FunctionDefinition ToDefinition(this Function_t func)
 		{
-			return new CodeModel.FunctionDefinition(
+			return new CodeModel.Definitions.FunctionDefinition(
 				func.name,
 				new CodeModel.ExternalToken(func.fileName, func.span.ToCodeModelSpan()),
 				func.dataType != null ? func.dataType.ToCodeModelDataType() : CodeModel.DataType.Int,

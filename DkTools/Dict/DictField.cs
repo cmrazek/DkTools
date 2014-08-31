@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using DkTools.CodeModel.Definitions;
 
 namespace DkTools.Dict
 {
@@ -14,7 +15,7 @@ namespace DkTools.Dict
 		public string DataType { get; private set; }
 
 		private string[] _completionOptions;
-		private CodeModel.TableFieldDefinition _definition;
+		private CodeModel.Definitions.TableFieldDefinition _definition;
 
 		public DictField(DictTable table, DICTSRVRLib.IPColumn repoCol)
 		{
@@ -37,7 +38,7 @@ namespace DkTools.Dict
 			}
 
 			_completionOptions = CodeModel.DataType.ParseCompletionOptionsFromArgText(this.DataType, null).ToArray();
-			_definition = new CodeModel.TableFieldDefinition(table.Name, Name, Prompt, Comment, DataType, description);
+			_definition = new CodeModel.Definitions.TableFieldDefinition(table.Name, Name, Prompt, Comment, DataType, description);
 		}
 
 		public IEnumerable<string> CompletionOptions
@@ -45,7 +46,7 @@ namespace DkTools.Dict
 			get { return _completionOptions; }
 		}
 
-		public CodeModel.TableFieldDefinition Definition
+		public CodeModel.Definitions.TableFieldDefinition Definition
 		{
 			get { return _definition; }
 		}

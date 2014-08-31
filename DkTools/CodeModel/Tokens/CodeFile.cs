@@ -7,6 +7,7 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Xml;
 using VsText = Microsoft.VisualStudio.Text;
+using DkTools.CodeModel.Definitions;
 
 namespace DkTools.CodeModel
 {

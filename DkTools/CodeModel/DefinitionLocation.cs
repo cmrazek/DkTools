@@ -3,18 +3,19 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using DkTools.CodeModel.Definitions;
 
 namespace DkTools.CodeModel
 {
 	internal struct DefinitionLocation
 	{
 		private Definition _def;
-		private int _localFileOffset;
+		private int _localContainerOffset;
 
-		public DefinitionLocation(Definition def, int localFileOffset)
+		public DefinitionLocation(Definition def, int localContainerOffset)
 		{
 			_def = def;
-			_localFileOffset = localFileOffset;
+			_localContainerOffset = localContainerOffset;
 		}
 
 		public Definition Definition
@@ -23,10 +24,10 @@ namespace DkTools.CodeModel
 			set { _def = value; }
 		}
 
-		public int LocalFileOffset
+		public int LocalContainerOffset
 		{
-			get { return _localFileOffset; }
-			set { _localFileOffset = value; }
+			get { return _localContainerOffset; }
+			set { _localContainerOffset = value; }
 		}
 	}
 }

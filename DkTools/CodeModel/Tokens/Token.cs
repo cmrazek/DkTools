@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Xml;
+using DkTools.CodeModel.Definitions;
 
 namespace DkTools.CodeModel
 {
@@ -17,6 +18,7 @@ namespace DkTools.CodeModel
 		private Dictionary<string, LinkedList<Definition>> _defs;	// Use a dictionary to make it faster to search by name
 		private Definition _sourceDefinition;
 		private Classifier.ProbeClassifierType _classifierType;
+		private LocalFilePosition? _localFilePos;
 
 		public void DumpTree(System.Xml.XmlWriter xml)
 		{
@@ -544,7 +546,10 @@ namespace DkTools.CodeModel
 			if (_defs == null)
 			{
 				_defs = new Dictionary<string, LinkedList<Definition>>();
-				_defs[def.Name] = new LinkedList<Definition>(new Definition[] { def });
+
+				var list = new LinkedList<Definition>();
+				_defs[def.Name] = list;
+				list.AddFirst(def);
 			}
 			else
 			{
@@ -553,8 +558,12 @@ namespace DkTools.CodeModel
 				{
 					list = new LinkedList<Definition>();
 					_defs[def.Name] = list;
+					list.AddFirst(def);
 				}
-				list.AddFirst(def);
+				else if (!list.Contains(def))
+				{
+					list.AddFirst(def);
+				}
 			}
 		}
 
@@ -664,6 +673,14 @@ namespace DkTools.CodeModel
 			}
 		}
 
+		public virtual IEnumerable<DefinitionLocation> GetDefinitionLocationsAtThisLevel()
+		{
+			foreach (var def in GetDefinitionsAtThisLevel())
+			{
+				yield return new DefinitionLocation(def, Span.Start.Offset);
+			}
+		}
+
 		public Definition SourceDefinition
 		{
 			get { return _sourceDefinition; }
@@ -677,7 +694,7 @@ namespace DkTools.CodeModel
 
 		protected bool CreateDefinitions
 		{
-			get { return _scope.File.Model.DefinitionProvider.CreateDefinitions; }
+			get { return _scope.CreateDefinitions; }
 		}
 		#endregion
 
@@ -717,6 +734,18 @@ namespace DkTools.CodeModel
 		{
 			get { return _classifierType; }
 			set { _classifierType = value; }
+		}
+
+		public LocalFilePosition LocalFilePosition
+		{
+			get
+			{
+				if (!_localFilePos.HasValue)
+				{
+					_localFilePos = _scope.File.CodeSource.GetFilePosition(Span.Start.Offset);
+				}
+				return _localFilePos.Value;
+			}
 		}
 	}
 }

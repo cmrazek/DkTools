@@ -180,17 +180,14 @@ namespace DkTools.CodeModel
 			return _segments[segIndex].primaryFile;
 		}
 
-		public void GetFilePosition(int sourceOffset, out string foundFileName, out Position foundPos, out bool primaryFile)
+		public LocalFilePosition GetFilePosition(int sourceOffset)
 		{
 			if (sourceOffset < 0 || sourceOffset > _text.Length) throw new ArgumentOutOfRangeException("offset");
 
 			var segIndex = FindSegmentIndexForOffset(sourceOffset);
 			if (segIndex < 0)
 			{
-				foundFileName = null;
-				foundPos = Position.Start;
-				primaryFile = false;
-				return;
+				return LocalFilePosition.Empty;
 			}
 			var seg = _segments[segIndex];
 			var pos = seg.startPos;
@@ -201,28 +198,25 @@ namespace DkTools.CodeModel
 				while (offset < sourceOffset) pos = pos.CalcNext(_text[offset++]);
 			}
 
-			foundFileName = seg.fileName;
-			foundPos = pos;
-			primaryFile = seg.primaryFile;
+			return new LocalFilePosition(seg.fileName, pos, seg.primaryFile);
 		}
 
-		public void GetFileSpan(Span sourceSpan, out string foundFileName, out Span foundSpan)
+		public void GetFileSpan(Span sourceSpan, out string foundFileName, out Span foundSpan, out bool foundPrimaryFile)
 		{
-			string startFileName, endFileName;
-			Position startPos, endPos;
-			bool primaryFile;
-			GetFilePosition(sourceSpan.Start.Offset, out startFileName, out startPos, out primaryFile);
-			GetFilePosition(sourceSpan.End.Offset, out endFileName, out endPos, out primaryFile);
+			var startLocalPos = GetFilePosition(sourceSpan.Start.Offset);
+			var endLocalPos = GetFilePosition(sourceSpan.End.Offset);
 
-			if (startFileName.Equals(endFileName, StringComparison.OrdinalIgnoreCase) && endPos.Offset >= startPos.Offset)
+			if (startLocalPos.FileName.Equals(endLocalPos.FileName, StringComparison.OrdinalIgnoreCase) && endLocalPos.Position >= startLocalPos.Position)
 			{
-				foundFileName = startFileName;
-				foundSpan = new Span(startPos, endPos);
+				foundFileName = startLocalPos.FileName;
+				foundSpan = new Span(startLocalPos.Position, endLocalPos.Position);
+				foundPrimaryFile = startLocalPos.PrimaryFile;
 			}
 			else
 			{
-				foundFileName = startFileName;
-				foundSpan = new Span(startPos, startPos);
+				foundFileName = startLocalPos.FileName;
+				foundSpan = new Span(startLocalPos.Position, startLocalPos.Position);
+				foundPrimaryFile = startLocalPos.PrimaryFile;
 			}
 		}
 
@@ -234,8 +228,8 @@ namespace DkTools.CodeModel
 			for (var segIndex = 0; segIndex < _segments.Count; segIndex++)
 			{
 				var seg = _segments[segIndex];
-				sb.AppendFormat("SEGMENT {0} FileName: {1} StartOffset: {4} Length: {5} StartPos: {2} EndPos: {3} [",
-					segIndex, System.IO.Path.GetFileName(seg.fileName), seg.startPos, seg.endPos, seg.start, seg.length);
+				sb.AppendFormat("SEGMENT {0} FileName [{1}] StartOffset [{4}] Length [{5}] Start [{2}] End [{3}] Primary [{6}] Content [",
+					segIndex, System.IO.Path.GetFileName(seg.fileName), seg.startPos, seg.endPos, seg.start, seg.length, seg.primaryFile);
 				sb.Append(seg.text);
 				sb.AppendLine("]");
 			}

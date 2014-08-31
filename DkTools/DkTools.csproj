@@ -252,6 +252,16 @@
     <Compile Include="CodeModel\CodeSource.cs" />
     <Compile Include="CodeModel\DefinitionLocation.cs" />
     <Compile Include="CodeModel\DefinitionProvider.cs" />
+    <Compile Include="CodeModel\Definitions\ConstantDefinition.cs" />
+    <Compile Include="CodeModel\Definitions\DataTypeDefinition.cs" />
+    <Compile Include="CodeModel\Definitions\FunctionDefinition.cs" />
+    <Compile Include="CodeModel\Definitions\MacroDefinition.cs" />
+    <Compile Include="CodeModel\Definitions\RelIndDefinition.cs" />
+    <Compile Include="CodeModel\Definitions\StringDefDefinition.cs" />
+    <Compile Include="CodeModel\Definitions\TableDefinition.cs" />
+    <Compile Include="CodeModel\Definitions\TableFieldDefinition.cs" />
+    <Compile Include="CodeModel\Definitions\VariableDefinition.cs" />
+    <Compile Include="CodeModel\LocalFilePosition.cs" />
     <Compile Include="CodeModel\Preprocessor.cs" />
     <Compile Include="CodeModel\IPreprocessorReader.cs" />
     <Compile Include="CodeModel\IPreprocessorWriter.cs" />
@@ -266,7 +276,7 @@
     <Compile Include="CodeModel\Tokens\ConstantToken.cs" />
     <Compile Include="CodeModel\DataType.cs" />
     <Compile Include="CodeModel\Tokens\DataTypeKeywordToken.cs" />
-    <Compile Include="CodeModel\Definition.cs" />
+    <Compile Include="CodeModel\Definitions\Definition.cs" />
     <Compile Include="CodeModel\Tokens\ExternalToken.cs" />
     <Compile Include="CodeModel\Tokens\GroupToken.cs" />
     <Compile Include="CodeModel\IContextSource.cs" />

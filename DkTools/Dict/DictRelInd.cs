@@ -2,13 +2,14 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using DkTools.CodeModel.Definitions;
 
 namespace DkTools.Dict
 {
 	internal class DictRelInd
 	{
 		private string _name;
-		private CodeModel.RelIndDefinition _def;
+		private CodeModel.Definitions.RelIndDefinition _def;
 		private string _repoDesc;
 
 		public DictRelInd(DictTable table, DICTSRVRLib.IPIndex repoIndex)
@@ -35,7 +36,7 @@ namespace DkTools.Dict
 				sb.AppendFormat("Description: {0}", _repoDesc);
 			}
 
-			_def = new CodeModel.RelIndDefinition(_name, table.Name, sb.ToString());
+			_def = new CodeModel.Definitions.RelIndDefinition(_name, table.Name, sb.ToString());
 		}
 
 		public string Name
@@ -43,7 +44,7 @@ namespace DkTools.Dict
 			get { return _name; }
 		}
 
-		public CodeModel.RelIndDefinition Definition
+		public CodeModel.Definitions.RelIndDefinition Definition
 		{
 			get { return _def; }
 		}

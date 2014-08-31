@@ -11,6 +11,7 @@ using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Operations;
 using Microsoft.VisualStudio.Utilities;
 using DkTools.CodeModel;
+using DkTools.CodeModel.Definitions;
 
 namespace DkTools.StatementCompletion
 {

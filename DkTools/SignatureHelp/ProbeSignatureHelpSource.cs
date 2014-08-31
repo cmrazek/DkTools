@@ -172,8 +172,8 @@ namespace DkTools.SignatureHelp
 		{
 			foreach (var def in model.GetDefinitions(name))
 			{
-				if (def is FunctionDefinition) yield return (def as FunctionDefinition).Signature;
-				else if (def is MacroDefinition) yield return (def as MacroDefinition).Signature;
+				if (def is CodeModel.Definitions.FunctionDefinition) yield return (def as CodeModel.Definitions.FunctionDefinition).Signature;
+				else if (def is CodeModel.Definitions.MacroDefinition) yield return (def as CodeModel.Definitions.MacroDefinition).Signature;
 			}
 		}
 	}

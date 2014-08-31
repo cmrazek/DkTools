@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
+using DkTools.CodeModel.Definitions;
 
 namespace DkTools.Dict
 {
@@ -15,7 +16,7 @@ namespace DkTools.Dict
 		private string _description;
 		private Dictionary<string, DictField> _fields;
 		private List<DictRelInd> _relInds;
-		private CodeModel.TableDefinition _definition;
+		private CodeModel.Definitions.TableDefinition _definition;
 		private string _baseTable;
 
 		public DictTable(DICTSRVRLib.IPTable repoTable)
@@ -38,7 +39,7 @@ namespace DkTools.Dict
 
 			_baseTable = _name;	// TODO: Do we need to retrieve this from somewhere?
 
-			_definition = new CodeModel.TableDefinition(_name, this);
+			_definition = new CodeModel.Definitions.TableDefinition(_name, this);
 
 			LoadFields(repoTable);
 		}
@@ -112,12 +113,12 @@ namespace DkTools.Dict
 			get { return _relInds; }
 		}
 
-		public CodeModel.TableDefinition Definition
+		public CodeModel.Definitions.TableDefinition Definition
 		{
 			get { return _definition; }
 		}
 
-		public IEnumerable<CodeModel.TableFieldDefinition> FieldDefinitions
+		public IEnumerable<CodeModel.Definitions.TableFieldDefinition> FieldDefinitions
 		{
 			get
 			{

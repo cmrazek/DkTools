@@ -374,7 +374,7 @@ namespace DkTools
 			return (from t in _tables where t.Value.Number == tableNum select t.Value).FirstOrDefault();
 		}
 
-		public static IEnumerable<CodeModel.Definition> DictDefinitions
+		public static IEnumerable<CodeModel.Definitions.Definition> DictDefinitions
 		{
 			get
 			{

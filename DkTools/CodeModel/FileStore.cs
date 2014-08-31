@@ -134,13 +134,11 @@ namespace DkTools.CodeModel
 				if (snapshot != null && _model.Snapshot.Version.VersionNumber < snapshot.Version.VersionNumber)
 				{
 					_model = CreatePreprocessedModel(snapshot, reason);
-					_model.Snapshot = snapshot;
 				}
 			}
 			else
 			{
 				_model = CreatePreprocessedModel(snapshot, reason);
-				_model.Snapshot = snapshot;
 			}
 
 			return _model;
@@ -160,12 +158,16 @@ namespace DkTools.CodeModel
 			return _model;
 		}
 
-		private CodeModel CreatePreprocessedModel(VsText.ITextSnapshot snapshot, string reason)
+		public CodeModel CreatePreprocessedModel(VsText.ITextSnapshot snapshot, string reason)
+		{
+			var model = CreatePreprocessedModel(snapshot.GetText(), snapshot.TextBuffer.TryGetFileName(), reason);
+			model.Snapshot = snapshot;
+			return model;
+		}
+
+		public CodeModel CreatePreprocessedModel(string content, string fileName, string reason)
 		{
 			Log.WriteDebug("Creating preprocessed model. Reason: {0}", reason);
-
-			var content = snapshot.GetText();
-			var fileName = snapshot.TextBuffer.TryGetFileName();
 
 			var visibleSource = new CodeSource();
 			visibleSource.Append(content, fileName, Position.Start, Position.Start.Advance(content), true, true);
@@ -195,7 +197,6 @@ namespace DkTools.CodeModel
 			defProvider.CreateDefinitions = false;
 
 			var visibleModel = new CodeModel(this, visibleSource, fileName, true, defProvider);
-			visibleModel.Snapshot = snapshot;
 			visibleModel.PreprocessorModel = prepModel;
 
 			return visibleModel;

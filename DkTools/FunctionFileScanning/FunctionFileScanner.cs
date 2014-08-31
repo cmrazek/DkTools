@@ -188,8 +188,11 @@ namespace DkTools.FunctionFileScanning
 					var fileTitle = Path.GetFileNameWithoutExtension(fileName);
 
 					var defProvider = new CodeModel.DefinitionProvider();
-					var model = new CodeModel.CodeModel(new CodeModel.FileStore(), merger.MergedContent, fileName, false, defProvider);
-					var funcs = (from f in model.GetDefinitions<CodeModel.FunctionDefinition>()
+
+					var fileStore = new CodeModel.FileStore();
+					var model = fileStore.CreatePreprocessedModel(merger.MergedContent.Text, fileName, string.Concat("Function file processing: ", fileName));
+
+					var funcs = (from f in model.GetDefinitions<CodeModel.Definitions.FunctionDefinition>()
 								 where string.Equals(f.Name, fileTitle, StringComparison.OrdinalIgnoreCase)
 								 select f).ToArray();
 					if (funcs.Length > 0)
@@ -198,9 +201,10 @@ namespace DkTools.FunctionFileScanning
 						{
 							string funcFileName = func.SourceFileName;
 							CodeModel.Span funcSpan = func.SourceSpan;
+							bool primaryFile;
 
 							// Resolve to the actual filename/span, rather than the location within the merged content.
-							if (func.SourceFile != null) func.SourceFile.CodeSource.GetFileSpan(func.SourceSpan, out funcFileName, out funcSpan);
+							if (func.SourceFile != null) func.SourceFile.CodeSource.GetFileSpan(func.SourceSpan, out funcFileName, out funcSpan, out primaryFile);
 
 							app.AddFunction(new FunctionFileDatabase.Function_t
 							{
@@ -267,7 +271,7 @@ namespace DkTools.FunctionFileScanning
 			return GetCurrentApp().GetFunction(funcName);
 		}
 
-		public IEnumerable<CodeModel.Definition> AllDefinitions
+		public IEnumerable<CodeModel.Definitions.Definition> AllDefinitions
 		{
 			get { return GetCurrentApp().AllDefinitions; }
 		}

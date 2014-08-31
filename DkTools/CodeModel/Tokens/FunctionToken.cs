@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using DkTools.CodeModel.Definitions;
 
 namespace DkTools.CodeModel
 {
@@ -40,7 +41,7 @@ namespace DkTools.CodeModel
 		private void AddBodyToken(BracesToken bodyToken)
 		{
 			// Copying the definitions before, then adding after will allow the global definitions (the function) to be copied upwards.
-			CopyDefinitionsToToken(bodyToken, true);
+			//CopyDefinitionsToToken(bodyToken, true);
 			AddToken(bodyToken);
 			_bodyToken = bodyToken;
 		}
@@ -169,6 +170,22 @@ namespace DkTools.CodeModel
 						Text = Constants.DefaultOutliningText,
 						TooltipText = File.GetRegionText(Span)
 					};
+				}
+			}
+		}
+
+		public override IEnumerable<DefinitionLocation> GetDefinitionLocationsAtThisLevel()
+		{
+			foreach (var def in GetDefinitionsAtThisLevel())
+			{
+				if (_bodyToken != null)
+				{
+					yield return new DefinitionLocation(def, _bodyToken.Span.Start.Offset);
+				}
+
+				if (def is VariableDefinition && (def as VariableDefinition).Argument)
+				{
+					yield return new DefinitionLocation(def, _argsToken.Span.Start.Offset);
 				}
 			}
 		}

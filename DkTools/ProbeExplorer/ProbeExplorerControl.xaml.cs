@@ -775,12 +775,12 @@ namespace DkTools.ProbeExplorer
 
 				var menuItem = new MenuItem();
 				menuItem.Header = "Show Code Model";
-				menuItem.Click += new RoutedEventHandler(ShowCodeModelDump_Click);
+				menuItem.Click += ShowCodeModelDump_Click;
 				menu.Items.Add(menuItem);
 
 				menuItem = new MenuItem();
 				menuItem.Header = "Show Definitions";
-				menuItem.Click += new RoutedEventHandler(ShowDefinitions_Click);
+				menuItem.Click += ShowDefinitions_Click;
 				menu.Items.Add(menuItem);
 
 				menuItem = new MenuItem();
@@ -791,6 +791,11 @@ namespace DkTools.ProbeExplorer
 				menuItem = new MenuItem();
 				menuItem.Header = "Show Preprocessor Model";
 				menuItem.Click += ShowPreprocessorModel_Click;
+				menu.Items.Add(menuItem);
+
+				menuItem = new MenuItem();
+				menuItem.Header = "Show Preprocessor Segments";
+				menuItem.Click += ShowPreprocessorSegments_Click;
 				menu.Items.Add(menuItem);
 
 				menu.PlacementTarget = c_appLabel;
@@ -806,7 +811,7 @@ namespace DkTools.ProbeExplorer
 		{
 			try
 			{
-				Commands.ShowCodeModelDump();
+				Commands.DebugCommands.ShowCodeModelDump();
 			}
 			catch (Exception ex)
 			{
@@ -818,7 +823,7 @@ namespace DkTools.ProbeExplorer
 		{
 			try
 			{
-				Commands.ShowDefinitions();
+				Commands.DebugCommands.ShowDefinitions();
 			}
 			catch (Exception ex)
 			{
@@ -830,7 +835,7 @@ namespace DkTools.ProbeExplorer
 		{
 			try
 			{
-				Commands.ShowPreprocessor();
+				Commands.DebugCommands.ShowPreprocessor();
 			}
 			catch (Exception ex)
 			{
@@ -842,7 +847,19 @@ namespace DkTools.ProbeExplorer
 		{
 			try
 			{
-				Commands.ShowPreprocessorModel();
+				Commands.DebugCommands.ShowPreprocessorModel();
+			}
+			catch (Exception ex)
+			{
+				this.ShowError(ex);
+			}
+		}
+
+		private void ShowPreprocessorSegments_Click(object sender, RoutedEventArgs e)
+		{
+			try
+			{
+				Commands.DebugCommands.ShowPreprocessorSegments();
 			}
 			catch (Exception ex)
 			{

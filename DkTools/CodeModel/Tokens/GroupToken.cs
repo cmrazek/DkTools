@@ -110,9 +110,9 @@ namespace DkTools.CodeModel
 		{
 			foreach (var token in _tokens)
 			{
-				foreach (var def in token.GetDefinitionsAtThisLevel())
+				foreach (var defLoc in token.GetDefinitionLocationsAtThisLevel())
 				{
-					yield return new DefinitionLocation(def, token.Span.Start.Offset);
+					yield return defLoc;
 				}
 
 				var groupToken = token as GroupToken;

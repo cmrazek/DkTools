@@ -516,102 +516,118 @@ namespace DkTools
 		}
 
 #if DEBUG
-		private static CodeModel.CodeModel GetModelForActiveDoc()
+		internal static class DebugCommands
 		{
-			var activeDoc = Shell.DTE.ActiveDocument;
-			if (activeDoc != null)
+			private static CodeModel.CodeModel GetModelForActiveDoc()
 			{
-				var source = File.ReadAllText(activeDoc.FullName);
-				var store = new CodeModel.FileStore();
-				var model = new CodeModel.CodeModel(store, source, null, activeDoc.FullName);
+				var view = Shell.ActiveView;
+				if (view == null) return null;
 
-				return model;
+				var store = CodeModel.FileStore.GetOrCreateForTextBuffer(view.TextBuffer);
+				return store.GetMostRecentModel(view.TextSnapshot, "Debug Commands");
 			}
 
-			return null;
-		}
-
-		public static void ShowCodeModelDump()
-		{
-			var view = Shell.ActiveView;
-			if (view == null) return;
-
-			var fileStore = CodeModel.FileStore.GetOrCreateForTextBuffer(view.TextBuffer);
-			var model = fileStore.GetCurrentModel(view.TextSnapshot, "Debug:ShowCodeModelDump");
-
-			var prepModel = model.PreprocessorModel;
-			if (prepModel != null) Shell.OpenTempContent(prepModel.DumpTree(), Path.GetFileName(model.FileName), ".preproc.xml");
-
-			Shell.OpenTempContent(model.DumpTree(), Path.GetFileName(model.FileName), ".model.xml");
-		}
-
-		public static void ShowDefinitions()
-		{
-			var model = GetModelForActiveDoc();
-			if (model != null)
+			public static void ShowCodeModelDump()
 			{
-				var fileName = "";
-				using (var tempFile = new TempFileOutput(Path.GetFileName(model.FileName), ".txt"))
+				var view = Shell.ActiveView;
+				if (view == null) return;
+
+				var fileStore = CodeModel.FileStore.GetOrCreateForTextBuffer(view.TextBuffer);
+				var model = fileStore.GetCurrentModel(view.TextSnapshot, "Debug:ShowCodeModelDump");
+
+				var prepModel = model.PreprocessorModel;
+				if (prepModel != null) Shell.OpenTempContent(prepModel.DumpTree(), Path.GetFileName(model.FileName), ".preproc.xml");
+
+				Shell.OpenTempContent(model.DumpTree(), Path.GetFileName(model.FileName), ".model.xml");
+			}
+
+			public static void ShowDefinitions()
+			{
+				var model = GetModelForActiveDoc();
+				if (model != null)
 				{
-					tempFile.WriteLine(model.File.DumpDefinitionsText());
-					fileName = tempFile.FileName;
+					var fileName = "";
+					using (var tempFile = new TempFileOutput(Path.GetFileName(model.FileName), ".txt"))
+					{
+						tempFile.WriteLine(model.File.DumpDefinitionsText());
+						fileName = tempFile.FileName;
+					}
+					Shell.OpenDocument(fileName);
 				}
-				Shell.OpenDocument(fileName);
 			}
-		}
 
-		private static CodeModel.CodeSource GetCodeSourceForActiveView(out string fileName)
-		{
-			var view = Shell.ActiveView;
-			if (view != null)
+			private static CodeModel.CodeSource GetCodeSourceForActiveView(out string fileName)
 			{
-				fileName = VsTextUtil.TryGetFileName(view.TextBuffer);
-				var content = view.TextBuffer.CurrentSnapshot.GetText();
+				var view = Shell.ActiveView;
+				if (view != null)
+				{
+					fileName = VsTextUtil.TryGetFileName(view.TextBuffer);
+					var content = view.TextBuffer.CurrentSnapshot.GetText();
 
-				var codeSource = new CodeModel.CodeSource();
-				codeSource.Append(content, new CodeModel.CodeAttributes(fileName, CodeModel.Position.Start, CodeModel.Position.Start.Advance(content), true, true));
-				codeSource.Flush();
+					var codeSource = new CodeModel.CodeSource();
+					codeSource.Append(content, new CodeModel.CodeAttributes(fileName, CodeModel.Position.Start, CodeModel.Position.Start.Advance(content), true, true));
+					codeSource.Flush();
 
-				return codeSource;
+					return codeSource;
+				}
+
+				fileName = null;
+				return null;
 			}
 
-			fileName = null;
-			return null;
-		}
+			public static void ShowPreprocessor()
+			{
+				string fileName;
+				var codeSource = GetCodeSourceForActiveView(out fileName);
+				if (codeSource == null) return;
 
-		public static void ShowPreprocessor()
-		{
-			string fileName;
-			var codeSource = GetCodeSourceForActiveView(out fileName);
-			if (codeSource == null) return;
+				var store = new CodeModel.FileStore();
+				var reader = new CodeModel.CodeSource.CodeSourcePreprocessorReader(codeSource);
+				var dest = new CodeModel.CodeSource();
 
-			var store = new CodeModel.FileStore();
-			var reader = new CodeModel.CodeSource.CodeSourcePreprocessorReader(codeSource);
-			var dest = new CodeModel.CodeSource();
+				var prep = new CodeModel.Preprocessor(store);
+				prep.Preprocess(reader, dest, fileName, null, true);
 
-			var prep = new CodeModel.Preprocessor(store);
-			prep.Preprocess(reader, dest, fileName, null, true);
+				Shell.OpenTempContent(string.Concat(dest.Text, "\r\nCONTINUOUS SEGMENTS:\r\n", dest.DumpContinuousSegments()), Path.GetFileName(fileName), ".preprocessor.txt");
+			}
 
-			Shell.OpenTempContent(string.Concat(dest.Text, "\r\nCONTINUOUS SEGMENTS:\r\n", dest.DumpContinuousSegments()), Path.GetFileName(fileName), ".preprocessor.txt");
-		}
+			public static void ShowPreprocessorModel()
+			{
+				string fileName;
+				var codeSource = GetCodeSourceForActiveView(out fileName);
+				if (codeSource == null) return;
 
-		public static void ShowPreprocessorModel()
-		{
-			string fileName;
-			var codeSource = GetCodeSourceForActiveView(out fileName);
-			if (codeSource == null) return;
+				var store = new CodeModel.FileStore();
+				var reader = new CodeModel.CodeSource.CodeSourcePreprocessorReader(codeSource);
+				var prepCodeSource = new CodeModel.CodeSource();
 
-			var store = new CodeModel.FileStore();
-			var reader = new CodeModel.CodeSource.CodeSourcePreprocessorReader(codeSource);
-			var prepCodeSource = new CodeModel.CodeSource();
+				var prep = new CodeModel.Preprocessor(store);
+				prep.Preprocess(reader, prepCodeSource, fileName, null, true);
 
-			var prep = new CodeModel.Preprocessor(store);
-			prep.Preprocess(reader, prepCodeSource, fileName, null, true);
+				var defProvider = new CodeModel.DefinitionProvider();
+				var model = new CodeModel.CodeModel(store, prepCodeSource, fileName, true, defProvider);
 
-			var defProvider = new CodeModel.DefinitionProvider();
-			var model = new CodeModel.CodeModel(store, prepCodeSource, fileName, true, defProvider);
+				Shell.OpenTempContent(model.DumpTree(), Path.GetFileName(fileName), " model.txt");
+			}
 
-			Shell.OpenTempContent(model.DumpTree(), Path.GetFileName(fileName), " model.txt");
+			public static void ShowPreprocessorSegments()
+			{
+				var model = GetModelForActiveDoc();
+				if (model == null)
+				{
+					Shell.ShowError("No model found.");
+					return;
+				}
+
+				var prepModel = model.PreprocessorModel;
+				if (prepModel == null)
+				{
+					Shell.ShowError("No preprocessor model found.");
+					return;
+				}
+
+				Shell.OpenTempContent(prepModel.File.CodeSource.Dump(), Path.GetFileName(model.FileName), ".ppsegs.txt");
+			}
 		}
 #endif
 	}

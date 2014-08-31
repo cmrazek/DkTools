@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
+using DkTools.CodeModel.Definitions;
 using DkTools.FunctionFileScanning.FunctionFileDatabase;
 
 namespace DkTools.FunctionFileScanning
@@ -14,7 +15,7 @@ namespace DkTools.FunctionFileScanning
 		private Dictionary<string, FunctionFileDatabase.Function_t> _functions = new Dictionary<string, FunctionFileDatabase.Function_t>();
 		private Dictionary<string, DateTime> _fileDates = new Dictionary<string, DateTime>();
 		private FileSystemWatcherCollection _watchers = new FileSystemWatcherCollection();
-		private CodeModel.Definition[] _definitions = null;
+		private CodeModel.Definitions.Definition[] _definitions = null;
 
 		public FunctionFileApp(FunctionFileScanner scanner, string name)
 		{
@@ -213,7 +214,7 @@ namespace DkTools.FunctionFileScanning
 			}
 		}
 
-		public IEnumerable<CodeModel.Definition> AllDefinitions
+		public IEnumerable<CodeModel.Definitions.Definition> AllDefinitions
 		{
 			get
 			{
