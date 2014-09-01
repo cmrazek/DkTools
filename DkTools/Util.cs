@@ -126,7 +126,7 @@ namespace DkTools
 
 		public static void ShowError(this System.Windows.Forms.IWin32Window window, string message)
 		{
-			Log.Write(System.Diagnostics.EventLogEntryType.Error, message);
+			Log.Write(LogLevel.Error, message);
 			System.Windows.Forms.MessageBox.Show(window, message, Constants.ErrorCaption, System.Windows.Forms.MessageBoxButtons.OK, System.Windows.Forms.MessageBoxIcon.Error);
 		}
 

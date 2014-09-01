@@ -9,6 +9,7 @@ Features:
 - Added signature definition for UNREFERENCED_PARAMETER.
 - Changed file header back to the traditional style.
 - Editor will now show dead code in gray color (can be disabled via button/menu/options)
+- Logging is now written to a file under app-data directory.
 
 ____________________________________________________________________________________________________
 Version 1.2.3 - Aug 8, 2014:

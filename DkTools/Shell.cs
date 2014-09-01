@@ -25,7 +25,7 @@ namespace DkTools
 
 		internal static void ShowError(string text)
 		{
-			Log.Write(EventLogEntryType.Error, text);
+			Log.Write(LogLevel.Error, text);
 			System.Windows.Forms.MessageBox.Show(text, "Error", System.Windows.Forms.MessageBoxButtons.OK, System.Windows.Forms.MessageBoxIcon.Error);
 		}
 

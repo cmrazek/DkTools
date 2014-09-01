@@ -15,6 +15,21 @@ namespace DkTools
 		public const string ErrorCaption = "Error";
 		public const string FunctionFileDatabaseFileName = "FunctionFiles.xml";
 
+		/// <summary>
+		/// Directory name where log files will be stored (under AppDataDir)
+		/// </summary>
+		public const string LogDir = "Logs";
+
+		/// <summary>
+		/// Log file naming format. {0} is the date the log file is created.
+		/// </summary>
+		public const string LogFileNameFormat = "DkTools2012_{0:yyyyMMdd_HHmmss}.log";
+
+		/// <summary>
+		/// Number of days log files will be kept before they are purged.
+		/// </summary>
+		public const int LogFilePurgeDays = 7;
+
 		public const int FileListMaxItems = 50;
 		public const string FileListMaxItemsExceeded = "(more than {0} matches found)";
 

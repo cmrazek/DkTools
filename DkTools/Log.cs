@@ -1,84 +1,157 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Text;
 
 namespace DkTools
 {
-	static class Log
+	internal enum LogLevel
 	{
-		private static bool _sourceExists;
+		Debug,
+		Info,
+		Warning,
+		Error
+	}
 
-		private static void CheckSource()
-		{
-			if (!_sourceExists)
-			{
-				try
-				{
-					if (!EventLog.SourceExists(Constants.EventLogSource))
-					{
-						EventLog.CreateEventSource(Constants.EventLogSource, "Application");
-					}
-					_sourceExists = true;
-				}
-#if DEBUG
-				catch (Exception ex)
-				{
-					_sourceExists = true;	// Likely permission error.  Set to true with the anticipation that the source was already created manually.
-					Debug.WriteLine(string.Concat("Exception when checking event log source: ", ex));
-				}
-#else
-				catch (Exception)
-				{
-					_sourceExists = true;	// Likely permission error.  Set to true with the anticipation that the source was already created manually.
-				}
-#endif
-			}
-			
-		}
+	internal static class Log
+	{
+		private static bool _initialized;
+		private static StreamWriter _writer;
+		private static StringBuilder _sb = new StringBuilder();
+		private static object _lock = new object();
+		private static LogLevel _level;
 
-		public static void Write(EventLogEntryType type, string message)
+		public static void Initialize()
 		{
 			try
 			{
 #if DEBUG
-				Debug.WriteLine(message);
+				_level = LogLevel.Debug;
+#else
+				_level = LogLevel.Info;
 #endif
-				CheckSource();
-				EventLog.WriteEntry(Constants.EventLogSource, message, type);
+
+				lock (_lock)
+				{
+					var logFileName = Path.Combine(ProbeToolsPackage.LogDir, string.Format(Constants.LogFileNameFormat, DateTime.Now));
+					_writer = new StreamWriter(logFileName);
+					_initialized = true;
+
+					Write(LogLevel.Info, "Created log file: {0}", logFileName);
+				}
+
+				PurgeOldLogFiles();
 			}
+			catch (Exception ex)
+			{
+				Debug.WriteLine(ex.ToString());
+				_initialized = false;
+			}
+		}
+
+		public static void Close()
+		{
+			try
+			{
+				lock (_lock)
+				{
+					if (_writer != null)
+					{
+						Write(LogLevel.Info, "Closing log file.");
+						_writer.Close();
+						_writer = null;
+					}
+				}
+			}
+			catch (Exception ex)
+			{
+				Debug.WriteLine(ex);
+			}
+		}
+
+		private static void PurgeOldLogFiles()
+		{
+			try
+			{
+				var purgeDate = DateTime.Now.Subtract(TimeSpan.FromDays(Constants.LogFilePurgeDays));
+				var removeList = new List<string>();
+
+				foreach (var logFileName in Directory.GetFiles(ProbeToolsPackage.LogDir))
+				{
+					try
+					{
+						var fileInfo = new FileInfo(logFileName);
+						if (fileInfo.LastWriteTime < purgeDate) removeList.Add(logFileName);
+					}
+					catch (Exception ex)
+					{
+						WriteEx(ex, "Error when examining log file for purge: {0}", logFileName);
+					}
+				}
+
+				foreach (var logFileName in removeList)
+				{
+					try
+					{
+						var attribs = File.GetAttributes(logFileName);
+						if ((attribs & FileAttributes.ReadOnly) != 0) File.SetAttributes(logFileName, attribs & ~FileAttributes.ReadOnly);
+
+						File.Delete(logFileName);
+					}
+					catch (Exception ex)
+					{
+						WriteEx(ex, "Error when deleting old log file: {0}", logFileName);
+					}
+				}
+			}
+			catch (Exception ex)
+			{
+				WriteEx(ex, "Error when purging old log files.");
+			}
+		}
+
+		public static void Write(LogLevel level, string message)
+		{
+			try
+			{
+				if (level < _level) return;
+
+				lock (_lock)
+				{
+					if (!_initialized) Initialize();
+
+					_sb.Clear();
+					_sb.Append("[");
+					_sb.Append(DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.fff"));
+					_sb.Append("] (");
+					_sb.Append(level.ToString());
+					_sb.Append(") ");
+					_sb.Append(message);
+					var msg = _sb.ToString();
 #if DEBUG
+					Debug.WriteLine(msg);
+#endif
+					if (_writer != null) _writer.WriteLine(msg);
+				}
+			}
 			catch (Exception ex)
 			{
 				Debug.WriteLine(ex.ToString());
 			}
-#else
-			catch (Exception)
-			{ }
-#endif
+		}
+
+		public static void Write(LogLevel level, string format, params object[] args)
+		{
+			if (level < _level) return;
+
+			Write(level, string.Format(format, args));
 		}
 
 		public static void WriteEx(Exception ex, string message)
 		{
-			try
-			{
-				var text = string.Concat(message, "\r\n", ex);
-#if DEBUG
-				Debug.WriteLine(text);
-#endif
-				CheckSource();
-				EventLog.WriteEntry(Constants.EventLogSource, text, EventLogEntryType.Error);
-			}
-#if DEBUG
-			catch (Exception ex2)
-			{
-				Debug.WriteLine(ex2.ToString());
-			}
-#else
-			catch (Exception)
-			{ }
-#endif
+			Write(LogLevel.Error, string.Concat(message, "\r\n", ex));
 		}
 
 		public static void WriteEx(Exception ex, string format, params object[] args)
@@ -88,37 +161,21 @@ namespace DkTools
 
 		public static void WriteEx(Exception ex)
 		{
-			try
-			{
-#if DEBUG
-				Debug.WriteLine(ex.ToString());
-#endif
-				CheckSource();
-				EventLog.WriteEntry(Constants.EventLogSource, ex.ToString(), EventLogEntryType.Error);
-			}
-#if DEBUG
-			catch (Exception ex2)
-			{
-				Debug.WriteLine(ex2.ToString());
-			}
-#else
-			catch (Exception)
-			{ }
-#endif
+			Write(LogLevel.Error, ex.ToString());
 		}
 
 		public static void WriteDebug(string message)
 		{
-#if DEBUG
-			Debug.WriteLine(message);
-#endif
+			if (_level > LogLevel.Debug) return;
+
+			Write(LogLevel.Debug, message);
 		}
 
 		public static void WriteDebug(string format, params object[] args)
 		{
-#if DEBUG
-			Debug.WriteLine(string.Format(format, args));
-#endif
+			if (_level > LogLevel.Debug) return;
+
+			Write(LogLevel.Debug, string.Format(format, args));
 		}
 	}
 }

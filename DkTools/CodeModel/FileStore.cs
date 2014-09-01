@@ -179,7 +179,7 @@ namespace DkTools.CodeModel
 		{
 			if (parentFiles.Any(x => x.Equals(fullPathName, StringComparison.OrdinalIgnoreCase)))
 			{
-				Log.Write(EventLogEntryType.Warning, string.Format("Cyclical include found for file '{0}'", fullPathName));
+				Log.Write(LogLevel.Warning, string.Format("Cyclical include found for file '{0}'", fullPathName));
 				return true;
 			}
 			return false;

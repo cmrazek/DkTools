@@ -105,6 +105,7 @@ namespace DkTools
 		{
 			base.Initialize();
 
+			Log.Initialize();
 			ProbeEnvironment.Initialize();
 			TempManager.Init(TempDir);
 
@@ -141,6 +142,8 @@ namespace DkTools
 				if (mgr != null) mgr.FRevokeComponent(_componentId);
 				_componentId = 0;
 			}
+
+			Log.Close();
 
 			base.Dispose(disposing);
 		}
@@ -231,6 +234,19 @@ namespace DkTools
 			get
 			{
 				var dir = Path.Combine(AppDataDir, Constants.TempDir);
+				if (!Directory.Exists(dir)) Directory.CreateDirectory(dir);
+				return dir;
+			}
+		}
+
+		/// <summary>
+		/// Returns the directory where log files are to be written.
+		/// </summary>
+		internal static string LogDir
+		{
+			get
+			{
+				var dir = Path.Combine(AppDataDir, Constants.LogDir);
 				if (!Directory.Exists(dir)) Directory.CreateDirectory(dir);
 				return dir;
 			}
