@@ -29,7 +29,7 @@ namespace DkTools
 	[System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1001:TypesThatOwnDisposableFieldsShouldBeDisposable", Justification = "This class is part of MPF.")]
 	[PackageRegistration(UseManagedResourcesOnly = true)]
 	[InstalledProductRegistration("#110", "#112", "1.0", IconResourceID = 400)]
-	[Guid(GuidList.guidProbeToolsPkgString)]
+	[Guid(GuidList.strProbeToolsPkg)]
 	[ProvideService(typeof(ProbeLanguageService), ServiceName = "DK")]
 	[ProvideLanguageService(typeof(ProbeLanguageService), "DK", /*50433*/ 0,
 		RequestStockColors = true,
@@ -79,6 +79,7 @@ namespace DkTools
 	[ProvideMenuResource("Menus.ctmenu", 1)]
 	[ProvideOptionPage(typeof(ProbeExplorer.ProbeExplorerOptions), "DK", "DkTools Options", 101, 106, true)]
 	[ProvideOptionPage(typeof(Tagging.TaggingOptions), "DK", "Tagging", 101, 107, true)]
+	[ProvideOptionPage(typeof(EditorOptions), "DK", "Editor", 101, 108, true)]
 	public sealed partial class ProbeToolsPackage : Package, IOleComponent
 	{
 		private uint _componentId;
@@ -268,6 +269,11 @@ namespace DkTools
 		internal Tagging.TaggingOptions TaggingOptions
 		{
 			get { return this.GetDialogPage(typeof(Tagging.TaggingOptions)) as Tagging.TaggingOptions; }
+		}
+
+		internal EditorOptions EditorOptions
+		{
+			get { return GetDialogPage(typeof(EditorOptions)) as EditorOptions; }
 		}
 		#endregion
 

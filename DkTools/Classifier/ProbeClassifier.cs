@@ -38,15 +38,7 @@ namespace DkTools.Classifier
 			_scanner = new ProbeClassifierScanner();
 
 			ProbeEnvironment.AppChanged += new EventHandler(ProbeEnvironment_AppChanged);
-		}
-
-		private void ProbeEnvironment_AppChanged(object sender, EventArgs e)
-		{
-			if (_snapshot != null)
-			{
-				var ev = ClassificationChanged;
-				if (ev != null) ev(this, new ClassificationChangedEventArgs(new SnapshotSpan(_snapshot, new Span(0, _snapshot.Length))));
-			}
+			ProbeToolsPackage.Instance.EditorOptions.ClassifierRefreshRequired += EditorOptions_ClassifierRefreshRequired;
 		}
 
 		public IList<ClassificationSpan> GetClassificationSpans(SnapshotSpan span)
@@ -61,9 +53,19 @@ namespace DkTools.Classifier
 			var model = CodeModel.FileStore.GetOrCreateForTextBuffer(span.Snapshot.TextBuffer).GetMostRecentModel(span.Snapshot, "GetClassificationSpans");
 			_scanner.SetSource(span.GetText(), span.Start.Position, span.Snapshot, model);
 
-			var disabledSectionTracker = new DisabledSectionTracker(model.DisabledSections);
-			if (disabledSectionTracker.SetOffset(_scanner.PositionOffset)) state |= ProbeClassifierScanner.k_state_disabled;
-			else state &= ~ProbeClassifierScanner.k_state_disabled;
+			var disableDeadCode = ProbeToolsPackage.Instance.EditorOptions.DisableDeadCode;
+
+			DisabledSectionTracker disabledSectionTracker = null;
+			if (disableDeadCode)
+			{
+				disabledSectionTracker = new DisabledSectionTracker(model.DisabledSections);
+				if (disabledSectionTracker.SetOffset(_scanner.PositionOffset)) state |= ProbeClassifierScanner.k_state_disabled;
+				else state &= ~ProbeClassifierScanner.k_state_disabled;
+			}
+			else
+			{
+				state &= ~ProbeClassifierScanner.k_state_disabled;
+			}
 
 			while (_scanner.ScanTokenAndProvideInfoAboutIt(tokenInfo, ref state))
 			{
@@ -73,11 +75,37 @@ namespace DkTools.Classifier
 					spans.Add(new ClassificationSpan(new SnapshotSpan(_snapshot, new Span(span.Start.Position + tokenInfo.StartIndex, tokenInfo.Length)), classificationType));
 				}
 
-				if (disabledSectionTracker.Advance(_scanner.PositionOffset + _scanner.Position)) state |= ProbeClassifierScanner.k_state_disabled;
-				else state &= ~ProbeClassifierScanner.k_state_disabled;
+				if (disableDeadCode)
+				{
+					if (disabledSectionTracker.Advance(_scanner.PositionOffset + _scanner.Position)) state |= ProbeClassifierScanner.k_state_disabled;
+					else state &= ~ProbeClassifierScanner.k_state_disabled;
+				}
+				else
+				{
+					state &= ~ProbeClassifierScanner.k_state_disabled;
+				}
 			}
 
 			return spans;
+		}
+
+		private void UpdateClassification()
+		{
+			if (_snapshot != null)
+			{
+				var ev = ClassificationChanged;
+				if (ev != null) ev(this, new ClassificationChangedEventArgs(new SnapshotSpan(_snapshot, new Span(0, _snapshot.Length))));
+			}
+		}
+
+		private void ProbeEnvironment_AppChanged(object sender, EventArgs e)
+		{
+			UpdateClassification();
+		}
+
+		void EditorOptions_ClassifierRefreshRequired(object sender, EventArgs e)
+		{
+			UpdateClassification();
 		}
 	}
 }

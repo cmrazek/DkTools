@@ -14,7 +14,7 @@ using DkTools.Compiler;
 
 namespace DkTools
 {
-	internal enum CommandIds
+	internal enum CommandId
 	{
 		ShowProbeExplorer = 0x0100,
 		probeMenuId = 0x0101,
@@ -38,65 +38,129 @@ namespace DkTools
 		Dccmp = 0x011c,
 		Credelix = 0x011d,
 		ShowHelp = 0x011e,
-		ShowDrv = 0x011f
+		ShowDrv = 0x011f,
+		DisableDeadCode = 0x0120
 	}
 
 	internal static class Commands
 	{
-		private static OleMenuCommand _toolWindowCmd;
-		private static OleMenuCommand _compileCmd;
-		private static OleMenuCommand _killCompileCmd;
-		private static OleMenuCommand _fecFileCmd;
-		private static OleMenuCommand _fecFileToVisualCCmd;
-		private static OleMenuCommand _mergeFileCmd;
-		private static OleMenuCommand _tableListingCmd;
-		private static OleMenuCommand _findInProbeFilesCmd;
-		private static OleMenuCommand _settingsCmd;
-		private static OleMenuCommand _runCmd;
-		private static OleMenuCommand _insertFileHeaderCmd;
-		private static OleMenuCommand _insertTag;
-		private static OleMenuCommand _insertDiag;
-		private static OleMenuCommand _insertDate;
-		private static OleMenuCommand _taggingOptions;
-		private static OleMenuCommand _pSelect;
-		private static OleMenuCommand _dccmp;
-		private static OleMenuCommand _credelix;
-		private static OleMenuCommand _showHelp;
-		private static OleMenuCommand _showDrv;
+		private static List<CommandInstance> _cmds = new List<CommandInstance>();
 
 		public static void InitCommands(OleMenuCommandService mcs)
 		{
-			_toolWindowCmd = AddCommand(mcs, ShowProbeExplorer, CommandIds.ShowProbeExplorer);
-			_compileCmd = AddCommand(mcs, Compile, CommandIds.Compile);
-			_killCompileCmd = AddCommand(mcs, KillCompile, CommandIds.KillCompile);
-			_fecFileCmd = AddCommand(mcs, FecFile, CommandIds.FecFile);
-			_fecFileToVisualCCmd = AddCommand(mcs, FecFileToVisualC, CommandIds.FecFileToVisualC);
-			_mergeFileCmd = AddCommand(mcs, MergeFile, CommandIds.MergeFile);
-			_tableListingCmd = AddCommand(mcs, TableListing, CommandIds.TableListing);
-			_findInProbeFilesCmd = AddCommand(mcs, FindInProbeFiles, CommandIds.FindInProbeFiles);
-			_settingsCmd = AddCommand(mcs, ProbeSettings, CommandIds.Settings);
-			_runCmd = AddCommand(mcs, RunSamCam, CommandIds.Run);
-			_insertFileHeaderCmd = AddCommand(mcs, InsertFileHeader, CommandIds.InsertFileHeader);
-			_insertTag = AddCommand(mcs, InsertTag, CommandIds.InsertTag);
-			_insertDiag = AddCommand(mcs, InsertDiag, CommandIds.InsertDiag);
-			_insertDate = AddCommand(mcs, InsertDate, CommandIds.InsertDate);
-			_taggingOptions = AddCommand(mcs, ShowTaggingOptions, CommandIds.TaggingOptions);
-			_pSelect = AddCommand(mcs, LaunchPSelect, CommandIds.PSelect);
-			_dccmp = AddCommand(mcs, Compile_Dccmp, CommandIds.Dccmp);
-			_credelix = AddCommand(mcs, Compile_Credelix, CommandIds.Credelix);
-			_showHelp = AddCommand(mcs, ShowHelp, CommandIds.ShowHelp);
-			_showDrv = AddCommand(mcs, ShowDrv, CommandIds.ShowDrv);
+			AddCommand(mcs, CommandId.ShowProbeExplorer, ShowProbeExplorer);
+			AddCommand(mcs, CommandId.Compile, Compile);
+			AddCommand(mcs, CommandId.KillCompile, KillCompile);
+			AddCommand(mcs, CommandId.FecFile, FecFile);
+			AddCommand(mcs, CommandId.FecFileToVisualC, FecFileToVisualC);
+			AddCommand(mcs, CommandId.MergeFile, MergeFile);
+			AddCommand(mcs, CommandId.TableListing, TableListing);
+			AddCommand(mcs, CommandId.FindInProbeFiles, FindInProbeFiles);
+			AddCommand(mcs, CommandId.Settings, ProbeSettings);
+			AddCommand(mcs, CommandId.Run, RunSamCam);
+			AddCommand(mcs, CommandId.InsertFileHeader, InsertFileHeader);
+			AddCommand(mcs, CommandId.InsertTag, InsertTag);
+			AddCommand(mcs, CommandId.InsertDiag, InsertDiag);
+			AddCommand(mcs, CommandId.InsertDate, InsertDate);
+			AddCommand(mcs, CommandId.TaggingOptions, ShowTaggingOptions);
+			AddCommand(mcs, CommandId.PSelect, LaunchPSelect);
+			AddCommand(mcs, CommandId.Dccmp, Compile_Dccmp);
+			AddCommand(mcs, CommandId.Credelix, Compile_Credelix);
+			AddCommand(mcs, CommandId.ShowHelp, ShowHelp);
+			AddCommand(mcs, CommandId.ShowDrv, ShowDrv);
+			AddCommand(mcs, CommandId.DisableDeadCode, DisableDeadCode, checkedCallback: DisableDeadCode_Checked);
 		}
 
-		private static OleMenuCommand AddCommand(OleMenuCommandService mcs, EventHandler handler, CommandIds id)
+		private class CommandInstance
+		{
+			public CommandId id;
+			public OleMenuCommand cmdObject;
+			public EventHandler handler;
+			public QueryStatusDelegate visibleCallback;
+			public QueryStatusDelegate enabledCallback;
+			public QueryStatusDelegate checkedCallback;
+		}
+
+		public delegate bool QueryStatusDelegate(CommandId id);
+
+		private static void AddCommand(OleMenuCommandService mcs, CommandId id, EventHandler handler, QueryStatusDelegate visibleCallback = null, QueryStatusDelegate enabledCallback = null, QueryStatusDelegate checkedCallback = null)
 		{
 			var cmdId = new CommandID(GuidList.guidProbeToolsCmdSet, (int)id);
 			var cmd = new OleMenuCommand(handler, cmdId);
 			mcs.AddCommand(cmd);
-			cmd.Visible = true;
-			cmd.Enabled = true;
 
-			return cmd;
+			if (visibleCallback != null || enabledCallback != null || checkedCallback != null)
+			{
+				cmd.BeforeQueryStatus += (sender, e) => { UpdateCommandStatus(id); };
+			}
+
+			_cmds.Add(new CommandInstance
+			{
+				id = id,
+				cmdObject = cmd,
+				handler = handler,
+				visibleCallback = visibleCallback,
+				enabledCallback = enabledCallback,
+				checkedCallback = checkedCallback
+			});
+
+			if (visibleCallback == null) cmd.Visible = true;
+			if (enabledCallback == null) cmd.Enabled = true;
+			if (checkedCallback == null) cmd.Checked = false;
+
+			if (visibleCallback != null || enabledCallback != null | checkedCallback != null)
+			{
+				UpdateCommandStatus(id);
+			}
+		}
+
+		public static void UpdateCommandStatus(CommandId id)
+		{
+			var cmd = _cmds.FirstOrDefault(x => x.id == id);
+			if (cmd != null)
+			{
+				var visible = true;
+				if (cmd.visibleCallback != null)
+				{
+					try
+					{
+						visible = cmd.visibleCallback(id);
+					}
+					catch (Exception ex)
+					{
+						Log.WriteEx(ex, "Error when querying visible status for command ID {0}", id);
+					}
+				}
+				cmd.cmdObject.Visible = visible;
+
+				var enabled = true;
+				if (cmd.enabledCallback != null)
+				{
+					try
+					{
+						enabled = cmd.enabledCallback(id);
+					}
+					catch (Exception ex)
+					{
+						Log.WriteEx(ex, "Error when querying enabled status for command ID {0}", id);
+					}
+				}
+				cmd.cmdObject.Enabled = enabled;
+
+				var chkd = true;
+				if (cmd.checkedCallback != null)
+				{
+					try
+					{
+						chkd = cmd.checkedCallback(id);
+					}
+					catch (Exception ex)
+					{
+						Log.WriteEx(ex, "Error when querying checked status for command ID {0}", id);
+					}
+				}
+				cmd.cmdObject.Checked = chkd;
+			}
 		}
 
 		private static void ShowProbeExplorer(object sender, EventArgs e)
@@ -513,6 +577,25 @@ namespace DkTools
 			{
 				Shell.ShowError(ex);
 			}
+		}
+
+		private static void DisableDeadCode(object sender, EventArgs e)
+		{
+			try
+			{
+				var options = ProbeToolsPackage.Instance.EditorOptions;
+				options.DisableDeadCode = !options.DisableDeadCode;
+				options.SaveSettingsToStorage();
+			}
+			catch (Exception ex)
+			{
+				Shell.ShowError(ex);
+			}
+		}
+
+		private static bool DisableDeadCode_Checked(CommandId id)
+		{
+			return ProbeToolsPackage.Instance.EditorOptions.DisableDeadCode;
 		}
 
 #if DEBUG

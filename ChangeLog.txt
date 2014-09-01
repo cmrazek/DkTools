@@ -8,6 +8,7 @@ Features:
 - Added option to disable switching to error list after a compile with errors or warnings.
 - Added signature definition for UNREFERENCED_PARAMETER.
 - Changed file header back to the traditional style.
+- Editor will now show dead code in gray color (can be disabled via button/menu/options)
 
 ____________________________________________________________________________________________________
 Version 1.2.3 - Aug 8, 2014:

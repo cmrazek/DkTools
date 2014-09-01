@@ -341,6 +341,9 @@
     <Compile Include="DkEnv\DkEnvVarMerger.cs" />
     <Compile Include="DkEnv\EnvVarList.cs" />
     <Compile Include="DkEnv\RegUtil.cs" />
+    <Compile Include="EditorOptions.cs">
+      <SubType>Component</SubType>
+    </Compile>
     <Compile Include="FileMergeException.cs" />
     <Compile Include="CodeModel\FileMerger.cs" />
     <Compile Include="FileUtil.cs" />
@@ -546,6 +549,9 @@
     <VSCTCompile Include="ProbeToolsPackage.vsct">
       <ResourceName>Menus.ctmenu</ResourceName>
     </VSCTCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Commands\" />
   </ItemGroup>
   <PropertyGroup>
     <UseCodebase>true</UseCodebase>
