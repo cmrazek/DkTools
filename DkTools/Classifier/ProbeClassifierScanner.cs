@@ -55,12 +55,10 @@ namespace DkTools.Classifier
 		private static Regex _rxNumber = new Regex(@"\G\d+(?:\.\d+)?");
 		private static Regex _rxCharLiteral = new Regex(@"\G'(?:\\'|[^'])*'");
 		private static Regex _rxPreprocessor = new Regex(@"\G\#\w+");
-		private static Regex _rxReplaceStart = new Regex(@"\G\#replace");
-		private static Regex _rxReplaceWith = new Regex(@"\#with");
 		private static Regex _rxIncludeString = new Regex(@"\G(?:<[^>]+>|""[^""]+"")");
 
 		private const int k_state_comment = 0x01;
-		private const int k_state_replace = 0x02;
+		//private const int k_state_replace = 0x02;
 		public const int k_state_disabled = 0x40;
 		private const int k_state_afterInclude = 0x10;
 
@@ -73,31 +71,7 @@ namespace DkTools.Classifier
 			Match match;
 			char ch = _source[_pos];
 
-			if ((state & k_state_replace) != 0)
-			{
-				// Inside a #replace section.
-
-				if ((match = _rxReplaceWith.Match(_source, _pos)).Success)
-				{
-					if (match.Index > _pos)
-					{
-						tokenInfo.Type = ProbeClassifierType.Inactive;
-						_pos = match.Index;
-					}
-					else
-					{
-						tokenInfo.Type = ProbeClassifierType.Preprocessor;
-						_pos = match.Index + match.Length;
-						state &= ~k_state_replace;
-					}
-				}
-				else
-				{
-					tokenInfo.Type = ProbeClassifierType.Inactive;
-					_pos = _length;
-				}
-			}
-			else if ((state & k_state_comment) != 0)
+			if ((state & k_state_comment) != 0)
 			{
 				// Inside a multi-line comment.
 
@@ -195,13 +169,6 @@ namespace DkTools.Classifier
 				if ((state & k_state_disabled) != 0) tokenInfo.Type = ProbeClassifierType.Inactive;
 				else tokenInfo.Type = ProbeClassifierType.StringLiteral;
 				//_pos = match.Index + match.Length;
-			}
-			else if ((match = _rxReplaceStart.Match(_source, _pos)).Success)
-			{
-				if ((state & k_state_disabled) != 0) tokenInfo.Type = ProbeClassifierType.Inactive;
-				else tokenInfo.Type = ProbeClassifierType.Preprocessor;
-				_pos = match.Index + match.Length;
-				state |= k_state_replace;
 			}
 			else if ((match = _rxPreprocessor.Match(_source, _pos)).Success)
 			{

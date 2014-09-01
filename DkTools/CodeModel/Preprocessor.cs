@@ -141,6 +141,15 @@ namespace DkTools.CodeModel
 					p.reader.Ignore(directiveName.Length);
 					ProcessWarnAddDel(p);
 					break;
+				case "#replace":
+					ProcessReplace(p, directiveName);
+					break;
+				case "#with":
+					ProcessWith(p, directiveName);
+					break;
+				case "#endreplace":
+					ProcessEndReplace(p, directiveName);
+					break;
 				default:
 					p.reader.Ignore(directiveName.Length);
 					break;
@@ -665,12 +674,17 @@ namespace DkTools.CodeModel
 
 		private void UpdateSuppress(PreprocessorParams p)
 		{
-			p.reader.Suppress = p.suppress = p.ifStack.Any(x => x.result == ConditionResult.Negative);
+			p.reader.Suppress = p.suppress = PeekSuppress(p);
 		}
 
 		private bool PeekSuppress(PreprocessorParams p)
 		{
-			return p.ifStack.Any(x => x.result == ConditionResult.Negative);
+			if (p.replaceInEffect) return true;
+			foreach (var scope in p.ifStack)
+			{
+				if (scope.result == ConditionResult.Negative) return true;
+			}
+			return false;
 		}
 
 		private string EscapeString(string str)
@@ -761,6 +775,27 @@ namespace DkTools.CodeModel
 					defProv.AddGlobalDefinition(def);
 				}
 			}
+		}
+
+		private void ProcessReplace(PreprocessorParams p, string directiveName)
+		{
+			p.reader.Ignore(directiveName.Length);
+
+			p.replaceInEffect = true;
+			UpdateSuppress(p);
+		}
+
+		private void ProcessWith(PreprocessorParams p, string directiveName)
+		{
+			p.replaceInEffect = false;
+			UpdateSuppress(p);
+
+			p.reader.Ignore(directiveName.Length);
+		}
+
+		private void ProcessEndReplace(PreprocessorParams p, string directiveName)
+		{
+			p.reader.Ignore(directiveName.Length);
 		}
 
 		private class Define
@@ -855,6 +890,7 @@ namespace DkTools.CodeModel
 			public IEnumerable<Define> args;
 			public IEnumerable<string> restrictedDefines;
 			public ContentType contentType;
+			public bool replaceInEffect;
 
 			public PreprocessorParams(IPreprocessorReader reader, IPreprocessorWriter writer, string fileName, IEnumerable<string> parentFiles)
 			{
