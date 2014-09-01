@@ -11,6 +11,7 @@ namespace DkTools.CodeModel.Definitions
 		private DataType _dataType;
 		private string _signature;
 		private Position _bodyStartPos;
+		private Position _argsEndPos;
 
 		/// <summary>
 		/// Creates a function definition object.
@@ -20,8 +21,9 @@ namespace DkTools.CodeModel.Definitions
 		/// <param name="sourceToken">Function name token</param>
 		/// <param name="dataType">Function's return type</param>
 		/// <param name="signature">Signature text</param>
-		/// <param name="bodyStart">Position of the function's body braces (if does not match, then will be ignored)</param>
-		public FunctionDefinition(Scope scope, string name, Token sourceToken, DataType dataType, string signature, Position bodyStart)
+		/// <param name="argsEndPos">Ending position of the argument brackets</param>
+		/// <param name="bodyStartPos">Position of the function's body braces (if does not match, then will be ignored)</param>
+		public FunctionDefinition(Scope scope, string name, Token sourceToken, DataType dataType, string signature, Position argsEndPos, Position bodyStartPos)
 			: base(scope, name, sourceToken, true)
 		{
 #if DEBUG
@@ -29,7 +31,8 @@ namespace DkTools.CodeModel.Definitions
 #endif
 			_dataType = dataType != null ? dataType : DataType.Int;
 			_signature = signature;
-			_bodyStartPos = bodyStart;
+			_argsEndPos = argsEndPos;
+			_bodyStartPos = bodyStartPos;
 		}
 
 		public DataType DataType
@@ -72,6 +75,11 @@ namespace DkTools.CodeModel.Definitions
 			get { return _bodyStartPos; }
 		}
 
+		public Position ArgsEndPosition
+		{
+			get { return _argsEndPos; }
+		}
+
 		public override bool MoveFromPreprocessorToVisibleModel(CodeFile visibleFile, CodeSource visibleSource)
 		{
 			if (SourceFile != null)
@@ -79,6 +87,10 @@ namespace DkTools.CodeModel.Definitions
 				var localPos = SourceFile.CodeSource.GetFilePosition(_bodyStartPos.Offset);
 				if (localPos.PrimaryFile) _bodyStartPos = localPos.Position;
 				else _bodyStartPos = Position.Start;
+
+				localPos = SourceFile.CodeSource.GetFilePosition(_argsEndPos.Offset);
+				if (localPos.PrimaryFile) _argsEndPos = localPos.Position;
+				else _argsEndPos = Position.Start;
 			}
 
 			return base.MoveFromPreprocessorToVisibleModel(visibleFile, visibleSource);
