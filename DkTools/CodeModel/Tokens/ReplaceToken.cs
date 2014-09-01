@@ -55,34 +55,6 @@ namespace DkTools.CodeModel
 			return ret;
 		}
 
-		public override IEnumerable<OutliningRegion> OutliningRegions
-		{
-			get
-			{
-				if (_startToken != null && _withToken != null && _startToken.Span.End.LineNum + 1 < _withToken.Span.Start.LineNum)
-				{
-					var span = new Span(_startToken.Span.End, Scope.File.FindEndOfPreviousLine(_withToken.Span.Start));
-					yield return new OutliningRegion
-					{
-						Span = span,
-						TooltipText = File.GetText(span),
-						CollapseToDefinition = true
-					};
-				}
-				if (_withToken != null && _endToken != null && _withToken.Span.End.LineNum + 1 < _endToken.Span.Start.LineNum)
-				{
-					var span = new Span(_withToken.Span.End, Scope.File.FindEndOfPreviousLine(_endToken.Span.Start));
-					yield return new OutliningRegion
-					{
-						Span = span,
-						TooltipText = File.GetText(span)
-					};
-				}
-
-				foreach (var reg in base.OutliningRegions) yield return reg;
-			}
-		}
-
 		public override bool BreaksStatement
 		{
 			get { return true; }

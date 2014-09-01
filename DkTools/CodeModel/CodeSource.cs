@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using VsText = Microsoft.VisualStudio.Text;
 
 namespace DkTools.CodeModel
@@ -647,6 +648,14 @@ namespace DkTools.CodeModel
 					if (_seg == null) return Position.Start;
 					return _pos;
 				}
+			}
+
+			public Match Match(Regex rx)
+			{
+				var curIndex = _seg.start + _segOffset;
+				var match = rx.Match(_src.Text, curIndex);
+				if (match.Success && match.Index == curIndex) return match;
+				return System.Text.RegularExpressions.Match.Empty;
 			}
 		}
 	}

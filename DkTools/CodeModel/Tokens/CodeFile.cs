@@ -1084,6 +1084,22 @@ namespace DkTools.CodeModel
 							break;
 					}
 				}
+
+				var disabledSections = _model.DisabledSections;
+				if (disabledSections != null)
+				{
+					foreach (var section in disabledSections)
+					{
+						var span = new Span(section.Start, section.End);
+						yield return new OutliningRegion
+						{
+							Span = span,
+							CollapseToDefinition = true,
+							Text = Constants.DefaultOutliningText,
+							TooltipText = GetRegionText(span)
+						};
+					}
+				}
 			}
 		}
 		#endregion

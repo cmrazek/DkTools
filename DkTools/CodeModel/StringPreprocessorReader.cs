@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
 namespace DkTools.CodeModel
@@ -65,7 +66,7 @@ namespace DkTools.CodeModel
 
 		public void Use(int numChars)
 		{
-			if (_pos + numChars > _len) numChars = _len - (_pos + numChars);
+			if (_pos + numChars > _len) numChars = _len - _pos;
 			if (!_suppress) _writer.Append(_str.Substring(_pos, numChars), CodeAttributes.Empty);
 			_pos += numChars;
 		}
@@ -127,6 +128,13 @@ namespace DkTools.CodeModel
 		public Position Position
 		{
 			get { return Position.Start; }
+		}
+
+		public Match Match(Regex rx)
+		{
+			var match = rx.Match(_str, _pos);
+			if (match.Success && match.Index == _pos) return match;
+			return System.Text.RegularExpressions.Match.Empty;
 		}
 	}
 }

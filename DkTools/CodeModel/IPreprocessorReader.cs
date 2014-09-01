@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
 namespace DkTools.CodeModel
@@ -14,6 +15,7 @@ namespace DkTools.CodeModel
 		char Peek();
 		string Peek(int numChars);
 		string PeekUntil(Func<char, bool> callback);
+		Match Match(Regex rx);
 
 		void Use(int numChars);
 		void UseUntil(Func<char, bool> callback);
@@ -197,20 +199,48 @@ namespace DkTools.CodeModel
 		public static void IgnoreWhiteSpaceAndComments(this IPreprocessorReader rdr, bool stayOnSameLine)
 		{
 			char ch;
+			bool lineChangeFound;
 
-			while (true)
+			while (!rdr.EOF)
 			{
 				ch = rdr.Peek();
 
 				if (stayOnSameLine && (ch == '\r' || ch == '\n')) break;
 
-				if (Char.IsWhiteSpace(ch))
+				if (char.IsWhiteSpace(ch))
 				{
-					rdr.IgnoreUntil(c => Char.IsWhiteSpace(c));
+					rdr.IgnoreUntil(c => char.IsWhiteSpace(c));
 					continue;
 				}
 
-				if (!rdr.IgnoreComments()) break;
+				if (!rdr.IgnoreComments(out lineChangeFound)) break;
+				if (lineChangeFound && stayOnSameLine) break;
+			}
+		}
+
+		public static void IgnoreWhiteSpaceAndCommentsToNextLine(this IPreprocessorReader rdr)
+		{
+			char ch;
+			bool lineChangeFound;
+
+			while (!rdr.EOF)
+			{
+				ch = rdr.Peek();
+
+				if (ch == '\n')
+				{
+					rdr.Ignore(1);
+					break;
+				}
+
+				if (char.IsWhiteSpace(ch))
+				{
+					rdr.Ignore(1);
+					continue;
+				}
+
+				if (!rdr.IgnoreComments(out lineChangeFound)) break;
+				if (lineChangeFound) break;
 			}
 		}
 
