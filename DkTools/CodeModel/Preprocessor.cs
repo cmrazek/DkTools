@@ -541,7 +541,11 @@ namespace DkTools.CodeModel
 
 		private void ProcessElse(PreprocessorParams p, string directiveName)
 		{
-			if (p.ifStack.Count == 0) return;
+			if (p.ifStack.Count == 0)
+			{
+				p.reader.Ignore(directiveName.Length);
+				return;
+			}
 
 			var scope = p.ifStack.Peek();
 
@@ -576,15 +580,6 @@ namespace DkTools.CodeModel
 		{
 			var rdr = p.reader;
 
-			//string str;
-
-			// TODO: remove
-			//if (!elif)
-			//{
-			//	rdr.Ignore(directiveName.Length);
-			//	rdr.IgnoreWhiteSpaceAndComments(true);
-			//}
-
 			var conditionStr = rdr.PeekUntil(c => c != '\r' && c != '\n');
 			conditionStr = conditionStr.Substring(directiveName.Length);
 
@@ -596,20 +591,6 @@ namespace DkTools.CodeModel
 			{
 				conditionStr = conditionStr.Substring(0, tokens[tokens.Length - 1].StartPosition.Offset);
 			}
-
-
-
-			// TODO: remove
-			//// Read the rest of the line
-			//while (!rdr.EOF)
-			//{
-			//	str = rdr.PeekToken(true);
-			//	if (str == null) break;
-
-			//	rdr.Ignore(str.Length);
-			//	sb.Append(str);
-			//}
-			//var conditionStr = sb.ToString();
 
 			if (elif)
 			{
