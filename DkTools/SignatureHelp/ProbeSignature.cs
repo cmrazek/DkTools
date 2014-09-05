@@ -62,8 +62,13 @@ namespace DkTools.SignatureHelp
             }
 
             var source = _applicableToSpan.GetText(_subjectBuffer.CurrentSnapshot);
-            var parser = new SimpleTokenParser(source);
-            var commaCount = (from t in parser.Tokens where t == "," select t).Count();
+
+			var parser = new TokenParser.Parser(source);
+			var commaCount = 0;
+			while (parser.ReadNestable())
+			{
+				if (parser.TokenText == ",") commaCount++;
+			}
 
             CurrentParameter = _params[commaCount < _params.Count ? commaCount : _params.Count - 1];
         }

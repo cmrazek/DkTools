@@ -5,7 +5,7 @@ using System.ComponentModel.Composition;
 using System.Linq;
 using System.Runtime.InteropServices;
 using Microsoft.VisualStudio.Language.Intellisense;
-using Microsoft.VisualStudio.Text;
+using VsText = Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Editor;
 using Microsoft.VisualStudio.Utilities;
 using Microsoft.VisualStudio.Editor;
@@ -19,9 +19,9 @@ namespace DkTools.SignatureHelp
 {
 	internal class ProbeSignatureHelpSource : ISignatureHelpSource
 	{
-		private ITextBuffer _textBuffer;
+		private VsText.ITextBuffer _textBuffer;
 
-		public ProbeSignatureHelpSource(ITextBuffer textBuffer)
+		public ProbeSignatureHelpSource(VsText.ITextBuffer textBuffer)
 		{
 			_textBuffer = textBuffer;
 		}
@@ -45,8 +45,8 @@ namespace DkTools.SignatureHelp
 					{
 						var word = source.Substring(startPos, length);
 
-						ITrackingSpan applicableToSpan = _textBuffer.CurrentSnapshot.CreateTrackingSpan(
-							new Microsoft.VisualStudio.Text.Span(origPos, 0), SpanTrackingMode.EdgeInclusive, 0);
+						VsText.ITrackingSpan applicableToSpan = _textBuffer.CurrentSnapshot.CreateTrackingSpan(
+							new Microsoft.VisualStudio.Text.Span(origPos, 0), VsText.SpanTrackingMode.EdgeInclusive, 0);
 
 						var model = CodeModel.FileStore.GetOrCreateForTextBuffer(_textBuffer).GetCurrentModel(snapshot, "Signature help after '('");
 						foreach (var sig in GetSignatures(model, word, applicableToSpan))
@@ -70,8 +70,8 @@ namespace DkTools.SignatureHelp
 					var bracketPos = nameToken.Span.End.Offset;
 					if (origPos >= bracketPos)
 					{
-						ITrackingSpan applicableToSpan = _textBuffer.CurrentSnapshot.CreateTrackingSpan(
-							new Microsoft.VisualStudio.Text.Span(bracketPos, origPos - bracketPos), SpanTrackingMode.EdgeInclusive, 0);
+						VsText.ITrackingSpan applicableToSpan = _textBuffer.CurrentSnapshot.CreateTrackingSpan(
+							new Microsoft.VisualStudio.Text.Span(bracketPos, origPos - bracketPos), VsText.SpanTrackingMode.EdgeInclusive, 0);
 
 						foreach (var sig in GetSignatures(model, word, applicableToSpan))
 						{
@@ -82,55 +82,70 @@ namespace DkTools.SignatureHelp
 			}
 		}
 
-		private ProbeSignature CreateSignature(ITextBuffer textBuffer, string methodSig, ITrackingSpan span)
+		private ProbeSignature CreateSignature(VsText.ITextBuffer textBuffer, string methodSig, VsText.ITrackingSpan span)
 		{
 			var sig = new ProbeSignature(textBuffer, methodSig, string.Empty, null);
 			textBuffer.Changed += sig.SubjectBufferChanged;
 
 			var paramList = new List<IParameter>();
+			var parser = new TokenParser.Parser(methodSig);
+			var insideArgs = false;
+			var argStartPos = -1;
+			var argName = string.Empty;
+			var argEmpty = true;
+			var done = false;
 
-			var parser = new SimpleTokenParser(methodSig);
-			var insideBrackets = false;
-			int startPos = -1;
-			while (!parser.EndOfFile)
+			while (!parser.EndOfFile && !done)
 			{
-				var token = parser.ParseToken();
-				if (token == "(")
+				if (!insideArgs)
 				{
-					if (!insideBrackets)
+					if (!parser.Read()) break;
+					if (parser.TokenText == "(")
 					{
-						insideBrackets = true;
-					}
-					else
-					{
-						while (!parser.EndOfFile && parser.ParseToken() != ")") ;
+						insideArgs = true;
+						argStartPos = parser.Position.Offset;
+						argEmpty = true;
+						argName = string.Empty;
 					}
 				}
-				else if (token == ")" || token == ",")
+				else
 				{
-					if (startPos != -1)
+					if (!parser.ReadNestable()) break;
+					switch (parser.TokenType)
 					{
-						var length = parser.TokenStart - startPos;
-						var locus = new Microsoft.VisualStudio.Text.Span(startPos, length);
-						var text = parser.GetText(startPos, length);
-						paramList.Add(new ProbeParameter("", locus, text, sig));
-					}
+						case TokenParser.TokenType.Operator:
+							if (parser.TokenText == ",")
+							{
+								paramList.Add(new ProbeParameter(string.Empty, new VsText.Span(argStartPos, parser.TokenStartPostion.Offset - argStartPos), argName, sig));
+								argStartPos = parser.Position.Offset;
+								argEmpty = true;
+								argName = string.Empty;
+							}
+							else if (parser.TokenText == ")")
+							{
+								if (!argEmpty || paramList.Count > 0)
+								{
+									paramList.Add(new ProbeParameter(string.Empty, new VsText.Span(argStartPos, parser.TokenStartPostion.Offset - argStartPos), argName, sig));
+								}
+								done = true;
+							}
+							break;
 
-					startPos = -1;
-					if (token == ")") break;
-				}
-				else if (insideBrackets)
-				{
-					if (startPos == -1) startPos = parser.TokenStart;
+						case TokenParser.TokenType.Word:
+							argName = parser.TokenText;
+							argEmpty = false;
+							break;
+
+						default:
+							argEmpty = false;
+							break;
+					}
 				}
 			}
 
-			if (startPos != -1)
+			if (!argEmpty)
 			{
-				var length = parser.Length - startPos;
-				var locus = new Microsoft.VisualStudio.Text.Span(startPos, length);
-				var text = parser.GetText(startPos, length);
-				paramList.Add(new ProbeParameter("", locus, text, sig));
+				paramList.Add(new ProbeParameter(string.Empty, new VsText.Span(argStartPos, parser.TokenStartPostion.Offset - argStartPos), argName, sig));
 			}
 
 			sig.Parameters = new ReadOnlyCollection<IParameter>(paramList);
@@ -160,7 +175,7 @@ namespace DkTools.SignatureHelp
 		{
 		}
 
-		private IEnumerable<ProbeSignature> GetSignatures(CodeModel.CodeModel model, string name, ITrackingSpan applicableToSpan)
+		private IEnumerable<ProbeSignature> GetSignatures(CodeModel.CodeModel model, string name, VsText.ITrackingSpan applicableToSpan)
 		{
 			foreach (var sig in GetAllSignaturesForFunction(model, name))
 			{

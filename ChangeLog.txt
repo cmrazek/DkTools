@@ -10,6 +10,7 @@ Features:
 - Changed file header back to the traditional style.
 - Editor will now show dead code in gray color (can be disabled via button/menu/options)
 - Logging is now written to a file under app-data directory.
+- Signature help now properly ignores commas that aren't parameter delimiters (e.g. enum options)
 
 ____________________________________________________________________________________________________
 Version 1.2.3 - Aug 8, 2014:

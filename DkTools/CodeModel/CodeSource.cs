@@ -406,7 +406,7 @@ namespace DkTools.CodeModel
 
 			public char Peek()
 			{
-				if (_seg == null) return '\0';
+				if (_seg == null || _segOffset >= _seg.length) return '\0';
 				return _seg.text[_segOffset];
 			}
 
@@ -460,7 +460,7 @@ namespace DkTools.CodeModel
 				{
 					if (_segOffset + numChars >= _seg.length)
 					{
-						var length = _seg.length - (_segOffset + numChars);
+						var length = _seg.length - _segOffset;
 						_writer.Append(_seg.text.Substring(_segOffset, length), new CodeAttributes(_seg.fileName, _pos, _seg.endPos, _seg.actualContent, _seg.primaryFile, _suppress));
 						MoveNextSegment();
 						numChars -= length;
@@ -524,7 +524,7 @@ namespace DkTools.CodeModel
 				{
 					if (_segOffset + numChars >= _seg.length)
 					{
-						var length = _seg.length - (_segOffset + numChars);
+						var length = _seg.length - _segOffset;
 						_writer.Append(string.Empty, new CodeAttributes(_seg.fileName, _pos, _seg.endPos, false, _seg.primaryFile, _suppress));
 						MoveNextSegment();
 						numChars -= length;
