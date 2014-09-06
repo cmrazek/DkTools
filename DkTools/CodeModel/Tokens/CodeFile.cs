@@ -18,6 +18,7 @@ namespace DkTools.CodeModel
 		private CodeModel _model;
 		private string[] _parentFiles;
 		private Dictionary<string, DataType> _definedDataTypes = new Dictionary<string, DataType>();
+		private string _className;
 		#endregion
 
 		#region Construction
@@ -52,6 +53,11 @@ namespace DkTools.CodeModel
 		{
 			file.CopyDefinitionsToToken(this, false);
 		}
+
+		public string ClassName
+		{
+			get { return _className; }
+		}
 		#endregion
 
 		#region Parsing
@@ -75,6 +81,8 @@ namespace DkTools.CodeModel
 			_length = _src.Length;
 			_lineNum = 0;
 			_linePos = 0;
+
+			FunctionFileScanning.FFUtil.FileNameIsClass(_fileName, out _className);
 
 			var scope = new Scope(this, 0, ScopeHint.None, visible, _model.DefinitionProvider);
 			Scope = scope;
@@ -424,7 +432,8 @@ namespace DkTools.CodeModel
 
 			Definition[] defs = null;
 
-			if (PeekChar() == '(')
+			var ch = PeekChar();
+			if (ch == '(')
 			{
 				// Could be function call/def or macro call
 
@@ -480,7 +489,7 @@ namespace DkTools.CodeModel
 						{
 							var nameToken = new IdentifierToken(parent, scope, wordSpan, word);
 							var brackets = BracketsToken.Parse(parent, scope);
-							return new FunctionCallToken(parent, scope, nameToken, brackets, def as FunctionDefinition);
+							return new FunctionCallToken(parent, scope, null, null, nameToken, brackets, def as FunctionDefinition);
 						}
 					}
 				}
@@ -490,11 +499,19 @@ namespace DkTools.CodeModel
 				{
 					var nameToken = new IdentifierToken(parent, scope, wordSpan, word);
 					var brackets = BracketsToken.Parse(parent, scope);
-					return new FunctionCallToken(parent, scope, nameToken, brackets, null);
+					return new FunctionCallToken(parent, scope, null, null, nameToken, brackets, null);
 				}
 
 				Position = wordSpan.End;
 				SkipWhiteSpaceAndComments(scope);
+			}
+			else if (ch == '.')
+			{
+				var beforeDotPos = Position;
+				var dotSpan = MoveNextSpan();
+				var tok = TryParsePossibleTableOrClassReference(parent, scope, word, wordSpan, dotSpan);
+				if (tok != null) return tok;
+				else Position = beforeDotPos;
 			}
 
 			// If we got here, then the word is not followed by a '('.
@@ -534,9 +551,53 @@ namespace DkTools.CodeModel
 				{
 					return new RelIndToken(parent, scope, wordSpan, word, def);
 				}
+
+				if (def is ClassDefinition)
+				{
+					return new ClassToken(parent, scope, wordSpan, word, def as ClassDefinition);
+				}
 			}
 
 			return new IdentifierToken(parent, scope, wordSpan, word);
+		}
+
+		private Token TryParsePossibleTableOrClassReference(GroupToken parent, Scope scope, string word1, Span word1Span, Span dotSpan)
+		{
+			// This function is called when a word has been parsed, and the next character is a '.'.
+			// This could be a table.field combo or a class.method() combo.
+
+			// Check that another word follows the dot.
+			SkipWhiteSpaceAndComments(scope);
+			var word2 = PeekWord();
+			if (string.IsNullOrEmpty(word2)) return null;
+
+			var tableDict = ProbeEnvironment.GetTable(word1);
+			if (tableDict != null && tableDict.IsField(word2))
+			{
+				var word2Span = MoveNextSpan(word2.Length);
+				var tableToken = new TableToken(parent, scope, word1Span, word1, tableDict.Definition);
+				var dotToken = new DotToken(parent, scope, dotSpan);
+				var fieldToken = new TableFieldToken(parent, scope, word2Span, word2, tableToken);
+				return new TableAndFieldToken(parent, scope, tableToken, dotToken, fieldToken, tableDict.GetField(word2));
+			}
+
+			var classFF = ProbeToolsPackage.Instance.FunctionFileScanner.GetClass(word1);
+			if (classFF != null && classFF.IsFunction(word2))
+			{
+				var word2Span = MoveNextSpan(word2.Length);
+
+				SkipWhiteSpaceAndComments(scope);
+				if (PeekChar() == '(')
+				{
+					var classToken = new ClassToken(parent, scope, word1Span, word1, classFF);
+					var dotToken = new DotToken(parent, scope, dotSpan);
+					var nameToken = new IdentifierToken(parent, scope, word2Span, word2);
+					var argsToken = BracketsToken.Parse(parent, scope);
+					return new FunctionCallToken(parent, scope, classToken, dotToken, nameToken, argsToken, classFF.GetFunctionDefinition(word2));
+				}
+			}
+
+			return null;
 		}
 
 		private Regex _rxRegionStart = new Regex(@"\G//\s*#region\b\s*(.*)\s*$", RegexOptions.Multiline);

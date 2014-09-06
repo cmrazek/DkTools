@@ -8,18 +8,18 @@ using System.Threading;
 
 namespace DkTools.FunctionFileScanning
 {
-	internal class FunctionFileScanner : IDisposable
+	internal class FFScanner : IDisposable
 	{
 		private Thread _thread;
 		private EventWaitHandle _kill = new EventWaitHandle(false, EventResetMode.ManualReset);
 		private LockedValue<bool> _running = new LockedValue<bool>(false);
 		private LockedValue<int> _threadWait = new LockedValue<int>(k_threadWaitIdle);
 
-		private FunctionFileApp _currentApp;
+		private FFApp _currentApp;
 		private object _currentAppLock = new object();
 		private Queue<ProcessDir> _dirsToProcess = new Queue<ProcessDir>();
 		private Queue<string> _filesToProcess = new Queue<string>();
-		private FunctionFileAppCollection _apps = new FunctionFileAppCollection();
+		private Dictionary<string, FFApp> _apps = new Dictionary<string, FFApp>();
 		private LockedValue<bool> _changesMade = new LockedValue<bool>();
 
 		private const int k_threadWaitActive = 0;
@@ -28,7 +28,7 @@ namespace DkTools.FunctionFileScanning
 
 		private const string k_noProbeApp = "(none)";
 
-		public static readonly Regex FunctionFilePattern = new Regex(@"\\\w+\.[fF]\&?$");
+		public static readonly Regex FunctionFilePattern = new Regex(@"\\\w+\.(?:f|cc|nc|sc)(?:\&|\+)?$", RegexOptions.IgnoreCase);
 
 		private class ProcessDir
 		{
@@ -36,7 +36,7 @@ namespace DkTools.FunctionFileScanning
 			public bool root;
 		}
 
-		public FunctionFileScanner()
+		public FFScanner()
 		{
 			LoadSettings();
 
@@ -58,7 +58,6 @@ namespace DkTools.FunctionFileScanning
 		{
 			Kill();
 
-			if (_apps != null) { _apps.Dispose(); _apps = null; }
 			if (_kill != null) { _kill.Dispose(); _kill = null; }
 		}
 
@@ -131,6 +130,8 @@ namespace DkTools.FunctionFileScanning
 									_changesMade.Value = false;
 									SaveSettings();
 								}
+
+								Shell.SetStatusText("DkTools Background parsing complete.");
 							}
 						}
 					}
@@ -146,11 +147,11 @@ namespace DkTools.FunctionFileScanning
 			}
 		}
 
-		private void ProcessSourceDir(FunctionFileApp app, string dir, bool root)
+		private void ProcessSourceDir(FFApp app, string dir, bool root)
 		{
 			try
 			{
-				foreach (var fileName in Directory.GetFiles(dir, "*.f*"))
+				foreach (var fileName in Directory.GetFiles(dir))
 				{
 					if (FunctionFilePattern.IsMatch(fileName)) _filesToProcess.Enqueue(fileName);
 				}
@@ -159,8 +160,6 @@ namespace DkTools.FunctionFileScanning
 				{
 					_dirsToProcess.Enqueue(new ProcessDir { dir = subDir, root = false });
 				}
-
-				if (root) app.WatchDir(dir);
 			}
 			catch (Exception ex)
 			{
@@ -168,7 +167,7 @@ namespace DkTools.FunctionFileScanning
 			}
 		}
 
-		private void ProcessFunctionFile(FunctionFileApp app, string fileName)
+		private void ProcessFunctionFile(FFApp app, string fileName)
 		{
 			try
 			{
@@ -180,55 +179,52 @@ namespace DkTools.FunctionFileScanning
 				if (modified == DateTime.MinValue || Math.Abs(File.GetLastWriteTime(fileName).Subtract(modified).TotalSeconds) >= 1.0)
 				{
 					Log.WriteDebug("Processing function file: {0}", fileName);
-					_changesMade.Value = true;
+					Shell.SetStatusText(string.Format("DkTools background parsing file: {0}", fileName));
 
-					var merger = new CodeModel.FileMerger();
-					merger.MergeFile(fileName, false);
+					_changesMade.Value = true;
 
 					var fileTitle = Path.GetFileNameWithoutExtension(fileName);
 
 					var defProvider = new CodeModel.DefinitionProvider();
 
+					app.RemoveAllFunctionsForFile(fileName);
+
+					var fileContent = File.ReadAllText(fileName);
 					var fileStore = new CodeModel.FileStore();
-					var model = fileStore.CreatePreprocessedModel(merger.MergedContent.Text, fileName, string.Concat("Function file processing: ", fileName));
+					var model = fileStore.CreatePreprocessedModel(fileContent, fileName, string.Concat("Function file processing: ", fileName));
 
-					var funcs = (from f in model.GetDefinitions<CodeModel.Definitions.FunctionDefinition>()
-								 where string.Equals(f.Name, fileTitle, StringComparison.OrdinalIgnoreCase)
-								 select f).ToArray();
-					if (funcs.Length > 0)
+					var ext = Path.GetExtension(fileName).ToLower();
+					string className;
+					FFUtil.FileNameIsClass(fileName, out className);
+
+					foreach (var funcDef in model.GetDefinitions<CodeModel.Definitions.FunctionDefinition>())
 					{
-						foreach (var func in funcs)
+						if (funcDef.Extern) continue;
+						if (!string.IsNullOrEmpty(className))
 						{
-							string funcFileName = func.SourceFileName;
-							CodeModel.Span funcSpan = func.SourceSpan;
-							bool primaryFile;
-
-							// Resolve to the actual filename/span, rather than the location within the merged content.
-							if (func.SourceFile != null) func.SourceFile.CodeSource.GetFileSpan(func.SourceSpan, out funcFileName, out funcSpan, out primaryFile);
-
-							app.AddFunction(new FunctionFileDatabase.Function_t
-							{
-								name = func.Name,
-								signature = func.Signature,
-								fileName = funcFileName,
-								span = funcSpan.ToFunctionFileDatabase(),
-								dataType = func.DataType != null ? func.DataType.ToFuncDbDataType() : new FunctionFileDatabase.DataType_t { name = "int" }
-							});
+							if (funcDef.Privacy != CodeModel.FunctionPrivacy.Public) continue;
 						}
-					}
-					else
-					{
-						app.RemoveFunctionIgnoreCase(fileTitle);
+						else
+						{
+							if (!funcDef.Name.Equals(fileTitle, StringComparison.OrdinalIgnoreCase)) continue;
+						}
+
+						string funcFileName = funcDef.SourceFileName;
+						CodeModel.Span funcSpan = funcDef.SourceSpan;
+						bool primaryFile;
+
+						// Resolve to the actual filename/span, rather than the location within the merged content.
+						if (funcDef.SourceFile != null && funcDef.SourceFile.CodeSource != null) funcDef.SourceFile.CodeSource.GetFileSpan(funcDef.SourceSpan, out funcFileName, out funcSpan, out primaryFile);
+
+						app.AddFunction(className, FFFunction.FromCodeModelDefinition(funcDef.CloneAsExtern()));
 					}
 
-					foreach (var fn in merger.FileNames)
-					{
-						app.UpdateFile(fn, File.GetLastWriteTime(fn));
-					}
+					app.UpdateFile(fileName, File.GetLastWriteTime(fileName));
 				}
 			}
-			catch (Exception)
+			catch (Exception ex)
 			{
+				Log.WriteEx(ex, "Exception when background processing function name: {0}", fileName);
 				try
 				{
 					// Don't show the error because this is just a non-critical background thread.
@@ -239,12 +235,12 @@ namespace DkTools.FunctionFileScanning
 			}
 		}
 
-		private FunctionFileApp GetCurrentApp()
+		private FFApp GetCurrentApp()
 		{
 			var currentApp = ProbeEnvironment.CurrentApp;
 			if (string.IsNullOrEmpty(currentApp)) currentApp = k_noProbeApp;
 
-			FunctionFileApp app = null;
+			FFApp app = null;
 
 			lock (_currentAppLock)
 			{
@@ -252,9 +248,9 @@ namespace DkTools.FunctionFileScanning
 				{
 					if (_currentApp != null) _currentApp.OnDeactivate();
 
-					if ((app = _apps.TryGet(currentApp)) == null)
+					if (!_apps.TryGetValue(currentApp, out app))
 					{
-						app = new FunctionFileApp(this, currentApp);
+						app = new FFApp(this, currentApp);
 						_apps[currentApp] = app;
 					}
 
@@ -266,17 +262,17 @@ namespace DkTools.FunctionFileScanning
 			return app;
 		}
 
-		public FunctionFileDatabase.Function_t GetFunction(string funcName)
+		public FFFunction GetFunction(string funcName)
 		{
 			return GetCurrentApp().GetFunction(funcName);
 		}
 
-		public IEnumerable<CodeModel.Definitions.Definition> AllDefinitions
+		public IEnumerable<CodeModel.Definitions.Definition> GlobalDefinitions
 		{
-			get { return GetCurrentApp().AllDefinitions; }
+			get { return GetCurrentApp().GlobalDefinitions; }
 		}
 
-		private void RestartScanning()
+		public void RestartScanning()
 		{
 			lock (_dirsToProcess)
 			{
@@ -288,8 +284,7 @@ namespace DkTools.FunctionFileScanning
 				_filesToProcess.Clear();
 			}
 
-			_threadWait.Value = k_threadWaitActive;
-			_running.Value = true;
+			Start();
 		}
 
 		public void SaveSettings()
@@ -327,7 +322,7 @@ namespace DkTools.FunctionFileScanning
 						{
 							foreach (var dbApp in db.application)
 							{
-								_apps.Add(this, dbApp);
+								_apps[dbApp.name] = new FFApp(this, dbApp);
 							}
 						}
 					}
@@ -356,6 +351,11 @@ namespace DkTools.FunctionFileScanning
 					_filesToProcess.Enqueue(fullPath);
 				}
 			}
+		}
+
+		public FFClass GetClass(string className)
+		{
+			return GetCurrentApp().GetClass(className);
 		}
 	}
 }

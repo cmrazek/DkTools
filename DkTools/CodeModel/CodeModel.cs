@@ -59,18 +59,18 @@ namespace DkTools.CodeModel
 				var scope = new Scope();
 
 				var defs = new List<Definition>();
-				defs.Add(new FunctionDefinition(scope, "diag", null, DataType.Void, "void diag(expressions ...)", Position.Start, Position.Start));
-				defs.Add(new FunctionDefinition(scope, "gofield", null, DataType.Void, "void gofield(TableName.ColumnName)", Position.Start, Position.Start));
-				defs.Add(new FunctionDefinition(scope, "makestring", null, DataType.FromString("char(255)"), "char(255) makestring(expressions ...)", Position.Start, Position.Start));
-				defs.Add(new FunctionDefinition(scope, "oldvalue", null, DataType.Void, "oldvalue(TableName.ColumnName)", Position.Start, Position.Start));
-				defs.Add(new FunctionDefinition(scope, "qcolsend", null, DataType.Void, "void qcolsend(TableName.ColumnName ...)", Position.Start, Position.Start));
-				defs.Add(new FunctionDefinition(scope, "SetMessage", null, DataType.Int, "int SetMessage(MessageControlString, expressions ...)", Position.Start, Position.Start));
-				defs.Add(new FunctionDefinition(scope, "STRINGIZE", null, DataType.FromString("char(255)"), "STRINGIZE(x)", Position.Start, Position.Start));
-				defs.Add(new FunctionDefinition(scope, "UNREFERENCED_PARAMETER", null, DataType.Void, "UNREFERENCED_PARAMETER(parameter)", Position.Start, Position.Start));
+				defs.Add(new FunctionDefinition(scope, "diag", null, DataType.Void, "void diag(expressions ...)", Position.Start, Position.Start, FunctionPrivacy.Public, true));
+				defs.Add(new FunctionDefinition(scope, "gofield", null, DataType.Void, "void gofield(TableName.ColumnName)", Position.Start, Position.Start, FunctionPrivacy.Public, true));
+				defs.Add(new FunctionDefinition(scope, "makestring", null, DataType.FromString("char(255)"), "char(255) makestring(expressions ...)", Position.Start, Position.Start, FunctionPrivacy.Public, true));
+				defs.Add(new FunctionDefinition(scope, "oldvalue", null, DataType.Void, "oldvalue(TableName.ColumnName)", Position.Start, Position.Start, FunctionPrivacy.Public, true));
+				defs.Add(new FunctionDefinition(scope, "qcolsend", null, DataType.Void, "void qcolsend(TableName.ColumnName ...)", Position.Start, Position.Start, FunctionPrivacy.Public, true));
+				defs.Add(new FunctionDefinition(scope, "SetMessage", null, DataType.Int, "int SetMessage(MessageControlString, expressions ...)", Position.Start, Position.Start, FunctionPrivacy.Public, true));
+				defs.Add(new FunctionDefinition(scope, "STRINGIZE", null, DataType.FromString("char(255)"), "STRINGIZE(x)", Position.Start, Position.Start, FunctionPrivacy.Public, true));
+				defs.Add(new FunctionDefinition(scope, "UNREFERENCED_PARAMETER", null, DataType.Void, "UNREFERENCED_PARAMETER(parameter)", Position.Start, Position.Start, FunctionPrivacy.Public, true));
 
 				foreach (var def in ProbeEnvironment.DictDefinitions) defs.Add(def);
 
-				foreach (var def in ProbeToolsPackage.Instance.FunctionFileScanner.AllDefinitions) defs.Add(def);
+				foreach (var def in ProbeToolsPackage.Instance.FunctionFileScanner.GlobalDefinitions) defs.Add(def);
 
 				_file.AddDefinitions(defs);
 			}

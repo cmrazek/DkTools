@@ -166,6 +166,7 @@ namespace DkTools.ProbeExplorer
 			ProbeEnvironment.Reload(true);
 			RefreshAppCombo();
 			RefreshFileTree();
+			ProbeToolsPackage.Instance.FunctionFileScanner.RestartScanning();
 		}
 		#endregion
 
@@ -788,12 +789,6 @@ namespace DkTools.ProbeExplorer
 				menuItem.Click += ShowPreprocessor_Click;
 				menu.Items.Add(menuItem);
 
-				// TODO: remove
-				//menuItem = new MenuItem();
-				//menuItem.Header = "Show Preprocessor Model";
-				//menuItem.Click += ShowPreprocessorModel_Click;
-				//menu.Items.Add(menuItem);
-
 				menuItem = new MenuItem();
 				menuItem.Header = "Show Preprocessor Segments";
 				menuItem.Click += ShowPreprocessorSegments_Click;
@@ -843,19 +838,6 @@ namespace DkTools.ProbeExplorer
 				this.ShowError(ex);
 			}
 		}
-
-		// TODO: remove
-		//private void ShowPreprocessorModel_Click(object sender, RoutedEventArgs e)
-		//{
-		//	try
-		//	{
-		//		Commands.DebugCommands.ShowPreprocessorModel();
-		//	}
-		//	catch (Exception ex)
-		//	{
-		//		this.ShowError(ex);
-		//	}
-		//}
 
 		private void ShowPreprocessorSegments_Click(object sender, RoutedEventArgs e)
 		{

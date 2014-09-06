@@ -7,7 +7,7 @@ using DkTools.FunctionFileScanning.FunctionFileDatabase;
 
 namespace DkTools.FunctionFileScanning
 {
-	internal static class FunctionFileDatabaseUtil
+	internal static class FFUtil
 	{
 		public static CodeModel.Span ToCodeModelSpan(this Span_t span)
 		{
@@ -47,7 +47,17 @@ namespace DkTools.FunctionFileScanning
 				func.dataType != null ? func.dataType.ToCodeModelDataType() : CodeModel.DataType.Int,
 				func.signature,
 				CodeModel.Position.Start,
-				CodeModel.Position.Start);
+				CodeModel.Position.Start,
+				func.privacySpecified ? func.privacy.ToCodeModelFunctionPrivacy() : CodeModel.FunctionPrivacy.Public,
+				false);
+		}
+
+		public static CodeModel.Definitions.ClassDefinition ClassFileNameToDefinition(string fileName)
+		{
+			return new CodeModel.Definitions.ClassDefinition(
+				new CodeModel.Scope(),
+				System.IO.Path.GetFileNameWithoutExtension(fileName).ToLower(),
+				fileName);
 		}
 
 		public static CodeModel.DataType ToCodeModelDataType(this DataType_t dt)
@@ -75,6 +85,62 @@ namespace DkTools.FunctionFileScanning
 				name = dt.Name,
 				completionOption = dt.HasCompletionOptions ? dt.CompletionOptions.ToArray() : null
 			};
+		}
+
+		public static CodeModel.FunctionPrivacy ToCodeModelFunctionPrivacy(this FunctionPrivacy_t priv)
+		{
+			switch (priv)
+			{
+				case FunctionPrivacy_t.Public:
+					return CodeModel.FunctionPrivacy.Public;
+				case FunctionPrivacy_t.Private:
+					return CodeModel.FunctionPrivacy.Private;
+				case FunctionPrivacy_t.Protected:
+					return CodeModel.FunctionPrivacy.Protected;
+#if DEBUG
+				default:
+					throw new ArgumentOutOfRangeException("priv", string.Format("Unknown function privacy value '{0}'.", priv));
+#endif
+			}
+		}
+
+		public static FunctionPrivacy_t ToFuncDbFunctionPrivacy(this CodeModel.FunctionPrivacy priv)
+		{
+			switch (priv)
+			{
+				case CodeModel.FunctionPrivacy.Public:
+					return FunctionPrivacy_t.Public;
+				case CodeModel.FunctionPrivacy.Private:
+					return FunctionPrivacy_t.Private;
+				case CodeModel.FunctionPrivacy.Protected:
+					return FunctionPrivacy_t.Protected;
+#if DEBUG
+				default:
+					throw new ArgumentOutOfRangeException("priv", string.Format("Unknown function privacy value '{0}'.", priv));
+#endif
+			}
+		}
+
+		public static bool FileNameIsClass(string fileName, out string className)
+		{
+			var ext = System.IO.Path.GetExtension(fileName).ToLower();
+			switch (ext)
+			{
+				case ".cc":
+				case ".cc&":
+				case ".cc+":
+				case ".nc":
+				case ".nc&":
+				case ".nc+":
+				case ".sc":
+				case ".sc&":
+				case ".sc+":
+					className = System.IO.Path.GetFileNameWithoutExtension(fileName).ToLower();
+					return true;
+				default:
+					className = null;
+					return false;
+			}
 		}
 	}
 }

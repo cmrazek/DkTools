@@ -390,7 +390,6 @@ namespace DkTools.CodeModel
 				if (args == null) args = new List<Define>();
 				for (int i = 0, ii = paramList.Count; i < ii; i++)
 				{
-					//args.Add(new Define { Name = define.ParamNames[i], Content = paramList[i] });		TODO: remove
 					args.Add(new Define(define.ParamNames[i], paramList[i], null, string.Empty, Position.Start));
 				}
 			}

@@ -18,6 +18,7 @@
 			<xs:element name="name" type="xs:string"/>
 			<xs:element name="file" type="FunctionFile_t" minOccurs="0" maxOccurs="unbounded"/>
 			<xs:element name="function" type="Function_t" minOccurs="0" maxOccurs="unbounded"/>
+      <xs:element name="class" type="Class_t" minOccurs="0" maxOccurs="unbounded"/>
 		</xs:sequence>
 	</xs:complexType>
 
@@ -32,11 +33,20 @@
 		<xs:sequence>
 			<xs:element name="name" type="xs:string"/>
 			<xs:element name="signature" type="xs:string"/>
-			<xs:element name="fileName" type="xs:string" minOccurs="0" maxOccurs="1"/>
+			<xs:element name="fileName" type="xs:string" minOccurs="1" maxOccurs="1"/>
 			<xs:element name="span" type="Span_t" minOccurs="0" maxOccurs="1"/>
 			<xs:element name="dataType" type="DataType_t" minOccurs="0" maxOccurs="1"/>
+      <xs:element name="privacy" type="FunctionPrivacy_t" minOccurs="0" maxOccurs="1"/>
 		</xs:sequence>
 	</xs:complexType>
+
+  <xs:complexType name="Class_t">
+    <xs:sequence>
+      <xs:element name="name" type="xs:string" minOccurs="1" maxOccurs="1"/>
+      <xs:element name="fileName" type="xs:string" minOccurs="1" maxOccurs="1"/>
+      <xs:element name="function" type="Function_t" minOccurs="0" maxOccurs="unbounded"/>
+    </xs:sequence>
+  </xs:complexType>
 
 	<xs:complexType name="Span_t">
 		<xs:sequence>
@@ -59,4 +69,13 @@
 			<xs:element name="completionOption" type="xs:string" minOccurs="0" maxOccurs="unbounded"/>
 		</xs:sequence>
 	</xs:complexType>
+
+  <xs:simpleType name="FunctionPrivacy_t">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="Public"/>
+      <xs:enumeration value="Private"/>
+      <xs:enumeration value="Protected"/>
+    </xs:restriction>
+  </xs:simpleType>
+  
 </xs:schema>

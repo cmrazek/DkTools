@@ -1,5 +1,5 @@
 @echo off
-xsd FunctionFileDatabase.xsd /c /n:ProbeTools.FunctionFileScanning.FunctionFileDatabase
+xsd FunctionFileDatabase.xsd /c /n:DkTools.FunctionFileScanning.FunctionFileDatabase
 if errorlevel 1 (
 	echo Error: XSD failed
 	goto :eof

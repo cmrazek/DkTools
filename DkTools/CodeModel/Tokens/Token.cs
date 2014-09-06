@@ -747,5 +747,13 @@ namespace DkTools.CodeModel
 				return _localFilePos.Value;
 			}
 		}
+
+		public static IEnumerable<Token> SafeTokenList(params Token[] tokens)
+		{
+			foreach (var token in tokens)
+			{
+				if (token != null) yield return token;
+			}
+		}
 	}
 }

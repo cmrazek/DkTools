@@ -4,6 +4,7 @@ using System.Collections.ObjectModel;
 using System.ComponentModel.Composition;
 using System.Linq;
 using System.Runtime.InteropServices;
+using System.Text.RegularExpressions;
 using Microsoft.VisualStudio.Language.Intellisense;
 using VsText = Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Editor;
@@ -21,6 +22,8 @@ namespace DkTools.SignatureHelp
 	{
 		private VsText.ITextBuffer _textBuffer;
 
+		private Regex _rxFuncBeforeBracket = new Regex(@"((\w+)\s*\.\s*)?(\w+)\s*$");
+
 		public ProbeSignatureHelpSource(VsText.ITextBuffer textBuffer)
 		{
 			_textBuffer = textBuffer;
@@ -30,31 +33,62 @@ namespace DkTools.SignatureHelp
 		{
 			var snapshot = _textBuffer.CurrentSnapshot;
 			var origPos = session.GetTriggerPoint(_textBuffer).GetPosition(snapshot);
-			var source = snapshot.GetText();
+			//var source = snapshot.GetText();
 			var pos = origPos;
 
 			if (ProbeSignatureHelpCommandHandler.s_typedChar == '(')
 			{
-				// Back up to before any whitespace before the '('
-				while (pos > 0 && (pos >= source.Length || char.IsWhiteSpace(source[pos]) || source[pos] == '(')) pos--;
+				var lineText = snapshot.GetLineFromPosition(session.GetTriggerPoint(_textBuffer).GetPosition(snapshot)).GetText();
 
-				if (pos >= 0 && pos < source.Length && source[pos].IsWordChar(false))
+				var match = _rxFuncBeforeBracket.Match(lineText);
+				if (match.Success)
 				{
-					int startPos, length;
-					if (source.GetWordExtent(pos, out startPos, out length))
+					var tableName = match.Groups[2].Value;
+					var funcName = match.Groups[3].Value;
+					if (!string.IsNullOrEmpty(funcName))
 					{
-						var word = source.Substring(startPos, length);
-
-						VsText.ITrackingSpan applicableToSpan = _textBuffer.CurrentSnapshot.CreateTrackingSpan(
-							new Microsoft.VisualStudio.Text.Span(origPos, 0), VsText.SpanTrackingMode.EdgeInclusive, 0);
-
-						var model = CodeModel.FileStore.GetOrCreateForTextBuffer(_textBuffer).GetCurrentModel(snapshot, "Signature help after '('");
-						foreach (var sig in GetSignatures(model, word, applicableToSpan))
+						if (string.IsNullOrEmpty(tableName))
 						{
-							signatures.Add(sig);
+							var applicableToSpan = snapshot.CreateTrackingSpan(new VsText.Span(origPos, 0), VsText.SpanTrackingMode.EdgeInclusive);
+							var model = CodeModel.FileStore.GetOrCreateForTextBuffer(_textBuffer).GetCurrentModel(snapshot, "Signature help after '('");
+							foreach (var sig in GetSignatures(model, funcName, applicableToSpan)) signatures.Add(sig);
+						}
+						else
+						{
+							var cls = ProbeToolsPackage.Instance.FunctionFileScanner.GetClass(tableName);
+							if (cls != null)
+							{
+								var applicableToSpan = snapshot.CreateTrackingSpan(new VsText.Span(origPos, 0), VsText.SpanTrackingMode.EdgeInclusive);
+								var def = cls.GetFunctionDefinition(funcName);
+								if (def != null)
+								{
+									signatures.Add(CreateSignature(_textBuffer, def.Signature, applicableToSpan));
+								}
+							}
 						}
 					}
 				}
+
+				//// Back up to before any whitespace before the '('
+				//while (pos > 0 && (pos >= source.Length || char.IsWhiteSpace(source[pos]) || source[pos] == '(')) pos--;
+
+				//if (pos >= 0 && pos < source.Length && source[pos].IsWordChar(false))
+				//{
+				//	int startPos, length;
+				//	if (source.GetWordExtent(pos, out startPos, out length))
+				//	{
+				//		var word = source.Substring(startPos, length);
+
+				//		VsText.ITrackingSpan applicableToSpan = _textBuffer.CurrentSnapshot.CreateTrackingSpan(
+				//			new Microsoft.VisualStudio.Text.Span(origPos, 0), VsText.SpanTrackingMode.EdgeInclusive, 0);
+
+				//		var model = CodeModel.FileStore.GetOrCreateForTextBuffer(_textBuffer).GetCurrentModel(snapshot, "Signature help after '('");
+				//		foreach (var sig in GetSignatures(model, word, applicableToSpan))
+				//		{
+				//			signatures.Add(sig);
+				//		}
+				//	}
+				//}
 			}
 			else if (ProbeSignatureHelpCommandHandler.s_typedChar == ',')
 			{

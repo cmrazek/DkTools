@@ -38,6 +38,7 @@ namespace DkTools.CodeModel.Definitions
 				if (_desc == null)
 				{
 					var sb = new StringBuilder();
+					sb.Append("Table: ");
 					sb.Append(Name);
 					if (!string.IsNullOrWhiteSpace(_prompt))
 					{

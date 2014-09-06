@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using DkTools.CodeModel.Definitions;
+using DkTools.CodeModel.Tokens;
 
 namespace DkTools.CodeModel
 {
@@ -20,21 +21,25 @@ namespace DkTools.CodeModel
 		/// </summary>
 		/// <param name="parent">(required) Parent token</param>
 		/// <param name="scope">(required) Current scope</param>
+		/// <param name="classToken">(optional) Class name token</param>
+		/// <param name="dotToken">(optional) Dot delimiter between class and function name</param>
 		/// <param name="nameToken">(required) Function name</param>
 		/// <param name="argsToken">(required) Function args</param>
 		/// <param name="def">(optional) Existing function definition</param>
-		public FunctionCallToken(GroupToken parent, Scope scope, IdentifierToken nameToken, BracketsToken argsToken, FunctionDefinition def)
-			: base(parent, scope, new Token[] { nameToken, argsToken })
+		public FunctionCallToken(GroupToken parent, Scope scope, ClassToken classToken, DotToken dotToken, IdentifierToken nameToken, BracketsToken argsToken, FunctionDefinition def)
+			: base(parent, scope, Token.SafeTokenList(classToken, dotToken, nameToken, argsToken))
 		{
 #if DEBUG
 			if (nameToken == null) throw new ArgumentNullException("nameToken");
 			if (argsToken == null) throw new ArgumentNullException("argsToken");
 #endif
+			if (classToken != null) AddToken(classToken);
+			if (dotToken != null) AddToken(dotToken);
 
-			_nameToken = nameToken;
+			AddToken(_nameToken = nameToken);
 			_nameToken.SourceDefinition = def;
 
-			_argsToken = argsToken;
+			AddToken(_argsToken = argsToken);
 
 			// If this function is already defined, then save the data type.
 			var funcDecl = this.GetDefinitions<FunctionDefinition>(_nameToken.Text).FirstOrDefault();

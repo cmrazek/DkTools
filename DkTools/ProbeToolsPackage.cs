@@ -129,7 +129,7 @@ namespace DkTools
 			var mcs = GetService(typeof(IMenuCommandService)) as OleMenuCommandService;
 			if (mcs != null) Commands.InitCommands(mcs);
 
-			_functionScanner = new FunctionFileScanning.FunctionFileScanner();
+			_functionScanner = new FunctionFileScanning.FFScanner();
 		}
 
 		protected override void Dispose(bool disposing)
@@ -252,7 +252,7 @@ namespace DkTools
 			}
 		}
 
-		internal FunctionFileScanning.FunctionFileScanner FunctionFileScanner
+		internal FunctionFileScanning.FFScanner FunctionFileScanner
 		{
 			get { return _functionScanner; }
 		}
@@ -442,7 +442,7 @@ namespace DkTools
 		#endregion
 
 		#region Singleton Classes
-		private FunctionFileScanning.FunctionFileScanner _functionScanner;
+		private FunctionFileScanning.FFScanner _functionScanner;
 		#endregion
 	}
 }

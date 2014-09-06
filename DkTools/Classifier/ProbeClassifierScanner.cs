@@ -16,7 +16,7 @@ namespace DkTools.Classifier
 		private int _pos;
 		private int _posOffset;
 		private int _length;
-		private FunctionFileScanning.FunctionFileScanner _functionScanner;
+		private FunctionFileScanning.FFScanner _functionScanner;
 		private Dictionary<int, CodeModel.Token> _tokenMap;
 
 		public ProbeClassifierScanner()

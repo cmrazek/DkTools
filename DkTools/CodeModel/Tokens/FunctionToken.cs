@@ -12,15 +12,20 @@ namespace DkTools.CodeModel
 		private IdentifierToken _nameToken;
 		private BracketsToken _argsToken;
 		private BracesToken _bodyToken;
+		private FunctionPrivacy _privacy;
+		private bool _extern;
 
-		private FunctionToken(GroupToken parent, Scope scope, DataTypeToken dataTypeToken, IdentifierToken nameToken, BracketsToken argsToken)
+		private FunctionToken(GroupToken parent, Scope scope, KeywordToken privacyToken, FunctionPrivacy privacy, DataTypeToken dataTypeToken, IdentifierToken nameToken, BracketsToken argsToken, bool isExtern)
 			: base(parent, scope, dataTypeToken != null ? dataTypeToken.Span.Start : nameToken.Span.Start)
 		{
 #if DEBUG
 			if (nameToken == null || argsToken == null) throw new ArgumentNullException();
 #endif
 			IsLocalScope = true;
+			_privacy = privacy;
+			_extern = isExtern;
 
+			if (privacyToken != null) AddToken(privacyToken);
 			if (dataTypeToken != null) AddToken(_dataTypeToken = dataTypeToken);
 			AddToken(_nameToken = nameToken);
 			AddToken(_argsToken = argsToken);
@@ -29,13 +34,13 @@ namespace DkTools.CodeModel
 		private void AddBodyToken(Scope scope, BracesToken bodyToken)
 		{
 			// Copying the definitions before, then adding after will allow the global definitions (the function) to be copied upwards.
-			//CopyDefinitionsToToken(bodyToken, true);
 			AddToken(bodyToken);
 			_bodyToken = bodyToken;
 
 			if (scope.Preprocessor)
 			{
-				var def = new FunctionDefinition(scope, _nameToken.Text, _nameToken, _dataTypeToken != null ? DataType.FromToken(_dataTypeToken) : DataType.Int, GetSignature(), _argsToken.Span.End, _bodyToken.Span.Start);
+				var def = new FunctionDefinition(scope, _nameToken.Text, _nameToken, _dataTypeToken != null ? DataType.FromToken(_dataTypeToken) : DataType.Int, GetSignature(),
+					_argsToken.Span.End, _bodyToken.Span.Start, _privacy, _extern);
 				_nameToken.SourceDefinition = def;
 				AddDefinition(def);
 			}
@@ -71,6 +76,22 @@ namespace DkTools.CodeModel
 			file.SkipWhiteSpaceAndComments(scope);
 			var resetPos = file.Position;
 
+			// Optional privacy token
+			FunctionPrivacy privacy;
+			var privacyToken = KeywordToken.TryParseMatching(parent, scope, "public");
+			if (privacyToken != null) privacy = FunctionPrivacy.Public;
+			else
+			{
+				privacyToken = KeywordToken.TryParseMatching(parent, scope, "private");
+				if (privacyToken != null) privacy = FunctionPrivacy.Private;
+				else
+				{
+					privacyToken = KeywordToken.TryParseMatching(parent, scope, "protected");
+					if (privacyToken != null) privacy = FunctionPrivacy.Protected;
+					else privacy = FunctionPrivacy.Public;
+				}
+			}
+
 			// Optional data type
 			var dataTypeToken = DkTools.CodeModel.DataTypeToken.TryParse(parent, scope);
 
@@ -95,7 +116,7 @@ namespace DkTools.CodeModel
 			argsScope.Hint |= ScopeHint.FunctionArgs | ScopeHint.SuppressVars;
 			var argsToken = BracketsToken.Parse(parent, argsScope);
 
-			var ret = new FunctionToken(parent, scope, dataTypeToken, nameToken, argsToken);
+			var ret = new FunctionToken(parent, scope, privacyToken, privacy, dataTypeToken, nameToken, argsToken, false);
 
 			file.SkipWhiteSpaceAndComments(scope);
 			if (file.PeekChar() != '{')
@@ -141,6 +162,14 @@ namespace DkTools.CodeModel
 				sb.Append(_dataTypeToken.NormalizedText);
 				sb.Append(" ");
 			}
+
+			var className = File.ClassName;
+			if (!string.IsNullOrEmpty(className))
+			{
+				sb.Append(className);
+				sb.Append('.');
+			}
+
 			sb.Append(_nameToken.Text);
 			sb.Append(_argsToken.NormalizedText);
 			return sb.ToString();

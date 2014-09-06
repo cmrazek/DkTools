@@ -111,16 +111,6 @@ namespace DkTools.StatementCompletion
 			{
 				Shell.OpenDocument(def.SourceFileName, def.SourceSpan);
 			}
-
-			// TODO: remove
-			//string fileName;
-			//CodeModel.Span span;
-			//bool primaryFile;
-			//def.GetLocalFileSpan(out fileName, out span, out primaryFile);
-			//if (!string.IsNullOrWhiteSpace(fileName))
-			//{
-			//	Shell.OpenDocument(fileName, span);
-			//}
 		}
 	}
 }

@@ -23,7 +23,8 @@ namespace DkTools.StatementCompletion
 		DataType,
 		Table,
 		TableField,
-		Keyword
+		Keyword,
+		Class
 	}
 
 	internal class ProbeCompletionSource : ICompletionSource
@@ -39,6 +40,7 @@ namespace DkTools.StatementCompletion
 		private static ImageSource _constantImg = null;
 		private static ImageSource _dataTypeImg = null;
 		private static ImageSource _keywordImg = null;
+		private static ImageSource _classImg = null;
 
 		public ProbeCompletionSource(ProbeCompletionSourceProvider sourceProvider, ITextBuffer textBuffer)
 		{
@@ -52,6 +54,7 @@ namespace DkTools.StatementCompletion
 			if (_constantImg == null) _constantImg = BitmapToBitmapSource(Res.ConstantImg);
 			if (_dataTypeImg == null) _dataTypeImg = BitmapToBitmapSource(Res.DataTypeImg);
 			if (_keywordImg == null) _keywordImg = BitmapToBitmapSource(Res.KeywordImg);
+			if (_classImg == null) _classImg = BitmapToBitmapSource(Res.ClassImg);
 		}
 
 		private Completion CreateCompletion(string text, string description, CompletionType type)
@@ -76,6 +79,9 @@ namespace DkTools.StatementCompletion
 					break;
 				case CompletionType.Keyword:
 					img = _keywordImg;
+					break;
+				case CompletionType.Class:
+					img = _classImg;
 					break;
 				default:
 					img = _variableImg;
@@ -107,6 +113,7 @@ namespace DkTools.StatementCompletion
 		private Regex _rxTypingTable = new Regex(@"(\w{1,8})\.(\w*)$");
 		private Regex _rxTypingWord = new Regex(@"\w+$");
 		private Regex _rxAfterAssignOrCompare = new Regex(@"(==|=|!=)\s$");
+		//private Regex _rxClassFunctionStartBracket = new Regex(@"(\w+)\s*\.\s*(\w+)\s*\($");
 		private Regex _rxFunctionStartBracket = new Regex(@"(\w+)\s*\($");
 		private Regex _rxReturn = new Regex(@"\breturn\s$");
 		private Regex _rxCase = new Regex(@"\bcase\s$");
@@ -133,6 +140,17 @@ namespace DkTools.StatementCompletion
 				{
 					completionSpan = new Microsoft.VisualStudio.Text.Span(linePos + match.Groups[2].Index, match.Groups[2].Length);
 					foreach (var def in table.FieldDefinitions) completionList[def.Name] = CreateCompletion(def);
+				}
+
+				var ffScanner = ProbeToolsPackage.Instance.FunctionFileScanner;
+				var cls = ffScanner.GetClass(tableName);
+				if (cls != null)
+				{
+					completionSpan = new Microsoft.VisualStudio.Text.Span(linePos + match.Groups[2].Index, match.Groups[2].Length);
+					foreach (var def in cls.FunctionDefinitions)
+					{
+						if (!completionList.ContainsKey(def.Name)) completionList[def.Name] = CreateCompletion(def);
+					}
 				}
 			}
 			else if ((match = _rxTypingWord.Match(prefix)).Success)
@@ -166,6 +184,21 @@ namespace DkTools.StatementCompletion
 					}
 				}
 			}
+			// TODO: finish this
+			//else if ((match = _rxClassFunctionStartBracket.Match(prefix)).Success)
+			//{
+			//	// Starting a new function that belongs to a class
+
+			//	var cls = ProbeToolsPackage.Instance.FunctionFileScanner.GetClass(match.Groups[1].Value);
+			//	if (cls != null)
+			//	{
+			//		var func = cls.GetFunction(match.Groups[1].Value);
+			//		if (func != null)
+			//		{
+			//			foreach (var opt in GetOptionsForFunctionArg(
+			//		}
+			//	}
+			//}
 			else if ((match = _rxFunctionStartBracket.Match(prefix)).Success)
 			{
 				// Starting a new function.
@@ -339,7 +372,7 @@ namespace DkTools.StatementCompletion
 			// Don't show functions when on the root.
 			if (tokens.Any(t => !t.IsOnRoot))
 			{
-				foreach (var f in ProbeToolsPackage.Instance.FunctionFileScanner.AllDefinitions) yield return CreateCompletion(f);
+				foreach (var f in ProbeToolsPackage.Instance.FunctionFileScanner.GlobalDefinitions) yield return CreateCompletion(f);
 			}
 
 			// Global keywords

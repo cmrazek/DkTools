@@ -15,13 +15,8 @@ namespace DkTools.CodeModel.Definitions
 		private string _sourceFileName;
 		private Span _sourceSpan;
 		private bool _sourcePrimary;
+		private Scope _scope;
 		private bool _preprocessor;
-
-		// TODO: remove
-		//private bool _gotLocalFileInfo;
-		//private string _localFileName;
-		//private Span _localFileSpan;
-		//private bool _localPrimaryFile;
 
 		public abstract bool CompletionVisible { get; }
 		public abstract StatementCompletion.CompletionType CompletionType { get; }
@@ -58,6 +53,7 @@ namespace DkTools.CodeModel.Definitions
 				}
 			}
 
+			_scope = scope;
 			_preprocessor = scope.Preprocessor;
 		}
 
@@ -123,6 +119,11 @@ namespace DkTools.CodeModel.Definitions
 		public bool Preprocessor
 		{
 			get { return _preprocessor; }
+		}
+
+		public Scope Scope
+		{
+			get { return _scope; }
 		}
 
 		/// <summary>

@@ -12,6 +12,8 @@ namespace DkTools.CodeModel.Definitions
 		private string _signature;
 		private Position _bodyStartPos;
 		private Position _argsEndPos;
+		private FunctionPrivacy _privacy;
+		private bool _extern;
 
 		/// <summary>
 		/// Creates a function definition object.
@@ -23,7 +25,7 @@ namespace DkTools.CodeModel.Definitions
 		/// <param name="signature">Signature text</param>
 		/// <param name="argsEndPos">Ending position of the argument brackets</param>
 		/// <param name="bodyStartPos">Position of the function's body braces (if does not match, then will be ignored)</param>
-		public FunctionDefinition(Scope scope, string name, Token sourceToken, DataType dataType, string signature, Position argsEndPos, Position bodyStartPos)
+		public FunctionDefinition(Scope scope, string name, Token sourceToken, DataType dataType, string signature, Position argsEndPos, Position bodyStartPos, FunctionPrivacy privacy, bool isExtern)
 			: base(scope, name, sourceToken, true)
 		{
 #if DEBUG
@@ -33,6 +35,13 @@ namespace DkTools.CodeModel.Definitions
 			_signature = signature;
 			_argsEndPos = argsEndPos;
 			_bodyStartPos = bodyStartPos;
+			_privacy = privacy;
+			_extern = isExtern;
+		}
+
+		public FunctionDefinition CloneAsExtern()
+		{
+			return new FunctionDefinition(Scope, Name, SourceToken, _dataType, _signature, _argsEndPos, _bodyStartPos, _privacy, true);
 		}
 
 		public DataType DataType
@@ -78,6 +87,16 @@ namespace DkTools.CodeModel.Definitions
 		public Position ArgsEndPosition
 		{
 			get { return _argsEndPos; }
+		}
+
+		public FunctionPrivacy Privacy
+		{
+			get { return _privacy; }
+		}
+
+		public bool Extern
+		{
+			get { return _extern; }
 		}
 
 		public override bool MoveFromPreprocessorToVisibleModel(CodeFile visibleFile, CodeSource visibleSource)

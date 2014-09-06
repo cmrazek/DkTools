@@ -3,6 +3,7 @@ ________________________________________________________________________________
 Version 1.2.4 - (pending):
 
 Features:
+- Added support for WBDK classes.
 - Description text for tables, columns and relationships/indexes are now displayed in the quick-info
 - Added the keywords public, private and protected.
 - Added option to disable switching to error list after a compile with errors or warnings.
@@ -10,6 +11,8 @@ Features:
 - Changed file header back to the traditional style.
 - Editor will now show dead code in gray color (can be disabled via button/menu/options)
 - Logging is now written to a file under app-data directory.
+
+Bug Fixes:
 - Signature help now properly ignores commas that aren't parameter delimiters (e.g. enum options)
 
 ____________________________________________________________________________________________________

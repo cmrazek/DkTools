@@ -252,6 +252,7 @@
     <Compile Include="CodeModel\CodeSource.cs" />
     <Compile Include="CodeModel\DefinitionLocation.cs" />
     <Compile Include="CodeModel\DefinitionProvider.cs" />
+    <Compile Include="CodeModel\Definitions\ClassDefinition.cs" />
     <Compile Include="CodeModel\Definitions\ConstantDefinition.cs" />
     <Compile Include="CodeModel\Definitions\DataTypeDefinition.cs" />
     <Compile Include="CodeModel\Definitions\FunctionDefinition.cs" />
@@ -261,11 +262,11 @@
     <Compile Include="CodeModel\Definitions\TableDefinition.cs" />
     <Compile Include="CodeModel\Definitions\TableFieldDefinition.cs" />
     <Compile Include="CodeModel\Definitions\VariableDefinition.cs" />
+    <Compile Include="CodeModel\FunctionPrivacy.cs" />
     <Compile Include="CodeModel\LocalFilePosition.cs" />
     <Compile Include="CodeModel\Preprocessor.cs" />
     <Compile Include="CodeModel\IPreprocessorReader.cs" />
     <Compile Include="CodeModel\IPreprocessorWriter.cs" />
-    <Compile Include="CodeModel\PreprocessorTokens\PreprocessorConditionException.cs" />
     <Compile Include="CodeModel\PreprocessorTokens\ErrorToken.cs" />
     <Compile Include="CodeModel\PreprocessorTokens\GroupToken.cs" />
     <Compile Include="CodeModel\PreprocessorTokens\NumberToken.cs" />
@@ -273,6 +274,7 @@
     <Compile Include="CodeModel\PreprocessorTokens\Token.cs" />
     <Compile Include="CodeModel\StringPreprocessorReader.cs" />
     <Compile Include="CodeModel\StringPreprocessorWriter.cs" />
+    <Compile Include="CodeModel\Tokens\ClassToken.cs" />
     <Compile Include="CodeModel\Tokens\ConstantToken.cs" />
     <Compile Include="CodeModel\DataType.cs" />
     <Compile Include="CodeModel\Tokens\DataTypeKeywordToken.cs" />
@@ -346,14 +348,14 @@
     <Compile Include="FileMergeException.cs" />
     <Compile Include="CodeModel\FileMerger.cs" />
     <Compile Include="FileUtil.cs" />
-    <Compile Include="FunctionFileScanning\FileSystemWatcherCollection.cs" />
-    <Compile Include="FunctionFileScanning\FunctionFileApp.cs" />
-    <Compile Include="FunctionFileScanning\FunctionFileAppCollection.cs" />
+    <Compile Include="FunctionFileScanning\FFFunction.cs" />
+    <Compile Include="FunctionFileScanning\FFApp.cs" />
+    <Compile Include="FunctionFileScanning\FFClass.cs" />
     <Compile Include="FunctionFileScanning\FunctionFileDatabase.cs">
       <DependentUpon>FunctionFileDatabase.xsd</DependentUpon>
     </Compile>
-    <Compile Include="FunctionFileScanning\FunctionFileDatabaseUtil.cs" />
-    <Compile Include="FunctionFileScanning\FunctionFileScanner.cs" />
+    <Compile Include="FunctionFileScanning\FFUtil.cs" />
+    <Compile Include="FunctionFileScanning\FFScanner.cs" />
     <Compile Include="Guids.cs" />
     <Compile Include="IniFile.cs" />
     <Compile Include="LockedValue.cs" />
@@ -499,6 +501,7 @@
     <Resource Include="Images\Clear.png" />
     <None Include="Resources\Folder.png" />
     <None Include="Resources\File.png" />
+    <None Include="Resources\class.png" />
     <Content Include="Resources\Package.ico" />
   </ItemGroup>
   <ItemGroup>
