@@ -4,6 +4,7 @@ Version 1.2.4 - (pending):
 
 Features:
 - Added support for WBDK classes.
+- Added dictionary browser in DK Explorer tool window.
 - Description text for tables, columns and relationships/indexes are now displayed in the quick-info
 - Added the keywords public, private and protected.
 - Added option to disable switching to error list after a compile with errors or warnings.

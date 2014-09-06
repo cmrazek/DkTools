@@ -12,6 +12,7 @@ using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
 using IO = System.IO;
+using DkTools.Dict;
 
 namespace DkTools.ProbeExplorer
 {
@@ -24,12 +25,18 @@ namespace DkTools.ProbeExplorer
 		private BitmapImage _folderImg;
 		private BitmapImage _fileImg;
 		private List<string> _fileList;
+
+		private BitmapImage _tableImg;
+		private BitmapImage _fieldImg;
 		#endregion
 
 		#region Constants
 		private const int k_iconWidth = 16;
 		private const int k_iconHeight = 16;
 		private const int k_iconSpacer = 2;
+		private const int k_minFieldWidth = 150;
+		private const int k_fieldInfoLabelWidth = 100;
+		private const int k_textSpacer = 4;
 		#endregion
 
 		#region Events
@@ -52,6 +59,8 @@ namespace DkTools.ProbeExplorer
 
 			_folderImg = BitmapToBitmapImage(Res.FolderImg);
 			_fileImg = BitmapToBitmapImage(Res.FileImg);
+			_tableImg = BitmapToBitmapImage(Res.TableImg);
+			_fieldImg = BitmapToBitmapImage(Res.FieldImg);
 
 			ProbeEnvironment.AppChanged += new EventHandler(Probe_AppChanged);
 		}
@@ -62,9 +71,9 @@ namespace DkTools.ProbeExplorer
 			{
 				RefreshAppCombo();
 				RefreshFileTree();
+				RefreshDictTree();
 
 				UpdateForFilter();
-
 #if DEBUG
 				c_appLabel.MouseRightButtonUp += new MouseButtonEventHandler(AppLabel_MouseRightButtonUp);
 #endif
@@ -166,6 +175,7 @@ namespace DkTools.ProbeExplorer
 			ProbeEnvironment.Reload(true);
 			RefreshAppCombo();
 			RefreshFileTree();
+			RefreshDictTree();
 			ProbeToolsPackage.Instance.FunctionFileScanner.RestartScanning();
 		}
 		#endregion
@@ -223,7 +233,7 @@ namespace DkTools.ProbeExplorer
 			var tag = new FileTreeNode { path = dirPath, dir = true };
 
 			var node = new TreeViewItem();
-			node.Header = CreateTreeViewHeader(root ? dirPath : IO.Path.GetFileName(dirPath), _folderImg);
+			node.Header = CreateFileTreeViewHeader(root ? dirPath : IO.Path.GetFileName(dirPath), _folderImg);
 			node.Tag = tag;
 			node.IsExpanded = false;
 			node.ContextMenu = new ContextMenu();
@@ -258,7 +268,7 @@ namespace DkTools.ProbeExplorer
 			var tag = new FileTreeNode { path = fileName, dir = false };
 
 			var node = new TreeViewItem();
-			node.Header = CreateTreeViewHeader(IO.Path.GetFileName(fileName), _fileImg);
+			node.Header = CreateFileTreeViewHeader(IO.Path.GetFileName(fileName), _fileImg);
 			node.Tag = tag;
 			node.MouseDoubleClick += FileNode_MouseDoubleClick;
 			node.KeyDown += FileNode_KeyDown;
@@ -273,7 +283,7 @@ namespace DkTools.ProbeExplorer
 			return node;
 		}
 
-		private object CreateTreeViewHeader(string text, BitmapImage img)
+		private object CreateFileTreeViewHeader(string text, BitmapImage img)
 		{
 			var panel = new StackPanel
 			{
@@ -745,6 +755,8 @@ namespace DkTools.ProbeExplorer
 
 		public void FocusFileFilter()
 		{
+			c_filesTab.IsSelected = true;
+			this.UpdateLayout();
 			c_fileFilterTextBox.Focus();
 			c_fileFilterTextBox.SelectAll();
 		}
@@ -870,5 +882,230 @@ namespace DkTools.ProbeExplorer
 			RefreshFileTree();
 			SelectFileInTree(fileName);
 		}
+
+		#region Dictionary
+		private void RefreshDictTree()
+		{
+			c_dictTree.Items.Clear();
+
+			var tables = ProbeEnvironment.Tables.ToList();
+			tables.Sort((a, b) => a.Name.CompareTo(b.Name));
+
+			foreach (var table in tables)
+			{
+				c_dictTree.Items.Add(CreateTableTreeViewItem(table));
+			}
+		}
+
+		private void TableTreeViewItem_Expanded(object sender, RoutedEventArgs e)
+		{
+			try
+			{
+				var tableNode = (sender as TreeViewItem);
+				if (tableNode != null)
+				{
+					tableNode.Items.Clear();
+
+					var table = tableNode.Tag as DictTable;
+					foreach (var field in table.Fields)
+					{
+						tableNode.Items.Add(CreateFieldTreeViewItem(field));
+					}
+
+					e.Handled = true;
+				}
+			}
+			catch (Exception ex)
+			{
+				this.ShowError(ex);
+			}
+		}
+
+		private TreeViewItem CreateTableTreeViewItem(DictTable table)
+		{
+			var panel = new StackPanel
+			{
+				Orientation = Orientation.Horizontal,
+				ToolTip = new ToolTip
+				{
+					Content = table.Definition.QuickInfoText
+				}
+			};
+			panel.Children.Add(new Image
+			{
+				Source = _tableImg,
+				Width = k_iconWidth,
+				Height = k_iconHeight,
+				Margin = new Thickness(0, 0, k_iconSpacer, 0)
+			});
+			panel.Children.Add(new TextBlock
+			{
+				Text = table.Name
+			});
+			if (!string.IsNullOrWhiteSpace(table.Prompt))
+			{
+				panel.Children.Add(new TextBlock
+				{
+					Text = string.Concat("(", table.Prompt.Trim(), ")"),
+					Foreground = SystemColors.GrayTextBrush,
+					Margin = new Thickness(k_textSpacer, 0, 0, 0)
+				});
+			}
+
+			var tvi = new TreeViewItem();
+			tvi.Header = panel;
+			tvi.IsExpanded = false;
+			tvi.Expanded += TableTreeViewItem_Expanded;
+			tvi.Tag = table;
+
+			tvi.Items.Add(new TreeViewItem());	// Add an empty node so the '+' sign is displayed.
+
+			return tvi;
+		}
+
+		private TreeViewItem CreateFieldTreeViewItem(DictField field)
+		{
+			var panel = new StackPanel
+			{
+				Orientation = Orientation.Horizontal,
+				ToolTip = new ToolTip
+				{
+					Content = field.Definition.QuickInfoText
+				}
+			};
+			panel.Children.Add(new Image
+			{
+				Source = _fieldImg,
+				Width = k_iconWidth,
+				Height = k_iconHeight,
+				Margin = new Thickness(0, 0, k_iconSpacer, 0)
+			});
+			panel.Children.Add(new TextBlock
+			{
+				Text = field.Name,
+				Margin = new Thickness(0, 0, k_textSpacer, 0)
+			});
+			if (!string.IsNullOrWhiteSpace(field.Prompt))
+			{
+				panel.Children.Add(new TextBlock
+				{
+					Text = string.Concat("(", field.Prompt.Trim(), ")"),
+					Foreground = SystemColors.GrayTextBrush,
+				});
+			}
+
+			var tvi = new TreeViewItem();
+			tvi.Header = panel;
+			tvi.Tag = field;
+			tvi.IsExpanded = false;
+			tvi.Expanded += FieldTreeViewItem_Expanded;
+
+			tvi.Items.Add(new TreeViewItem());	// Add an empty node so the '+' sign is displayed.
+
+			return tvi;
+		}
+
+		private void FieldTreeViewItem_Expanded(object sender, RoutedEventArgs e)
+		{
+			try
+			{
+				var fieldItem = (sender as TreeViewItem);
+				if (fieldItem != null)
+				{
+					fieldItem.Items.Clear();
+					CreateFieldInfoItems(fieldItem, fieldItem.Tag as DictField);
+					e.Handled = true;
+				}
+			}
+			catch (Exception ex)
+			{
+				this.ShowError(ex);
+			}
+		}
+
+		private void CreateFieldInfoItems(TreeViewItem fieldItem, DictField field)
+		{
+			CrateFieldInfoItem(fieldItem, "Name:", field.Name);
+			if (!string.IsNullOrEmpty(field.Prompt)) CrateFieldInfoItem(fieldItem, "Prompt:", field.Prompt);
+			if (!string.IsNullOrEmpty(field.Comment)) CrateFieldInfoItem(fieldItem, "Comment:", field.Comment);
+			CrateFieldInfoItem(fieldItem, "Data Type:", field.DataType);
+		}
+
+		private void CrateFieldInfoItem(TreeViewItem parentItem, string label, string text)
+		{
+			var panel = new StackPanel
+			{
+				Orientation = Orientation.Horizontal
+			};
+			panel.Children.Add(new TextBlock
+			{
+				Text = label,
+				MinWidth = k_fieldInfoLabelWidth,
+				FontWeight = FontWeights.Bold,
+				Margin = new Thickness(0, 0, k_textSpacer, 0)
+			});
+			panel.Children.Add(new TextBlock
+			{
+				Text = text,
+				ToolTip = new ToolTip
+				{
+					Content = text,
+					Visibility = System.Windows.Visibility.Visible
+				}
+			});
+
+			var tvi = new TreeViewItem();
+			tvi.Header = panel;
+
+			parentItem.Items.Add(tvi);
+		}
+
+		public void FocusTable(string tableName)
+		{
+			c_dictTab.Focus();
+
+			foreach (TreeViewItem tableNode in c_dictTree.Items)
+			{
+				var table = tableNode.Tag as DictTable;
+				if (table.Name == tableName)
+				{
+					tableNode.IsSelected = true;
+					tableNode.Focus();
+					return;
+				}
+			}
+
+			// If we got here, then the table wasn't found.
+			c_dictTree.Focus();
+		}
+
+		public void FocusTableField(string tableName, string fieldName)
+		{
+			c_dictTab.Focus();
+			this.UpdateLayout();
+
+			foreach (TreeViewItem tableNode in c_dictTree.Items)
+			{
+				var table = tableNode.Tag as DictTable;
+				if (table.Name == tableName)
+				{
+					tableNode.IsExpanded = true;
+					foreach (TreeViewItem fieldNode in tableNode.Items)
+					{
+						var field = fieldNode.Tag as DictField;
+						if (field.Name == fieldName)
+						{
+							fieldNode.IsSelected = true;
+							fieldNode.Focus();
+							return;
+						}
+					}
+				}
+			}
+
+			// If we got here, then the table/field wasn't found.
+			c_dictTree.Focus();
+		}
+		#endregion
 	}
 }

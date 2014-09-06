@@ -49,5 +49,15 @@ namespace DkTools.ProbeExplorer
 				windowFrame.SetProperty((int)__VSFPROPID4.VSFPROPID_TabImage, Res.ProbeExplorerImg.GetHbitmap());
 			}
 		}
+
+		public void FocusTable(string tableName)
+		{
+			_exp.FocusTable(tableName);
+		}
+
+		public void FocusTableField(string tableName, string fieldName)
+		{
+			_exp.FocusTableField(tableName, fieldName);
+		}
 	}
 }

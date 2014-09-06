@@ -165,13 +165,7 @@ namespace DkTools
 
 		private static void ShowProbeExplorer(object sender, EventArgs e)
 		{
-			var window = ProbeToolsPackage.Instance.FindToolWindow(typeof(ProbeExplorer.ProbeExplorerToolWindow), 0, true) as ProbeExplorer.ProbeExplorerToolWindow;
-			if (window == null || window.Frame == null)
-			{
-				throw new NotSupportedException("Unable to create Probe Explorer tool window.");
-			}
-
-			ErrorHandler.ThrowOnFailure((window.Frame as IVsWindowFrame).Show());
+			var window = Shell.ShowProbeExplorerToolWindow();
 			window.FocusFileFilter();
 		}
 

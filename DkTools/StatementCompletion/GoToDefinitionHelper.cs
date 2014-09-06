@@ -86,19 +86,33 @@ namespace DkTools.StatementCompletion
 
 		private static void BrowseToDefinition(CodeModel.Definitions.Definition def)
 		{
-			//if (def is CodeModel.TableDefinition)
-			//{
-			//	var table = ProbeEnvironment.GetTable((def as CodeModel.TableDefinition).Name);
-			//	if (table != null) Commands.OpenPst(table.BaseTable, table.Name, null, null);
-			//	else Shell.SetStatusText("Table not found.");
-			//}
-			//else if (def is CodeModel.TableFieldDefinition)
-			//{
-			//	var tfdef = def as CodeModel.TableFieldDefinition;
-			//	var table = ProbeEnvironment.GetTable(tfdef.TableName);
-			//	if (table != null) Commands.OpenPst(table.BaseTable, table.Name, tfdef.FieldName, null);
-			//	else Shell.SetStatusText("Table not found.");
-			//}
+			if (def is TableDefinition)
+			{
+				var table = ProbeEnvironment.GetTable((def as TableDefinition).Name);
+				if (table != null)
+				{
+					var window = Shell.ShowProbeExplorerToolWindow();
+					window.FocusTable(table.Name);
+				}
+				else Shell.SetStatusText("Table not found.");
+			}
+			else if (def is TableFieldDefinition)
+			{
+				var tfdef = def as TableFieldDefinition;
+
+				var table = ProbeEnvironment.GetTable(tfdef.TableName);
+				if (table != null)
+				{
+					var field = table.GetField(tfdef.FieldName);
+					if (field != null)
+					{
+						var window = Shell.ShowProbeExplorerToolWindow();
+						window.FocusTableField(table.Name, field.Name);
+					}
+					else Shell.SetStatusText("Field not found.");
+				}
+				else Shell.SetStatusText("Table not found.");
+			}
 			//else if (def is CodeModel.RelIndDefinition)
 			//{
 			//	var relIndDef = def as CodeModel.RelIndDefinition;

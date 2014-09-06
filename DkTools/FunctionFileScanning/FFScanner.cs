@@ -131,7 +131,7 @@ namespace DkTools.FunctionFileScanning
 									SaveSettings();
 								}
 
-								Shell.SetStatusText("DkTools Background parsing complete.");
+								Shell.SetStatusText("DkTools background scanning complete.");
 							}
 						}
 					}
@@ -179,7 +179,7 @@ namespace DkTools.FunctionFileScanning
 				if (modified == DateTime.MinValue || Math.Abs(File.GetLastWriteTime(fileName).Subtract(modified).TotalSeconds) >= 1.0)
 				{
 					Log.WriteDebug("Processing function file: {0}", fileName);
-					Shell.SetStatusText(string.Format("DkTools background parsing file: {0}", fileName));
+					Shell.SetStatusText(string.Format("DkTools background scanning file: {0}", fileName));
 
 					_changesMade.Value = true;
 

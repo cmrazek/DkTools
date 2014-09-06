@@ -30,6 +30,12 @@
 					<Image Height="16" HorizontalAlignment="Right" Margin="0,4,4,0" Name="c_clearFileFilterImg" Stretch="Fill" VerticalAlignment="Top" Width="16" Source="/DkTools2012;component/Images/Clear.png" Opacity="0.5" MouseUp="ClearFileFilterImg_MouseUp" MouseEnter="ClearFileFilterImg_MouseEnter" MouseLeave="ClearFileFilterImg_MouseLeave" />
 				</Grid>
             </TabItem>
+            <TabItem Header="Dictionary" Name="c_dictTab">
+                <Grid>
+                    <TreeView Name="c_dictTree">
+                    </TreeView>
+                </Grid>
+            </TabItem>
         </TabControl>
     </Grid>
 </UserControl>
