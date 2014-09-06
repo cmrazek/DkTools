@@ -4,7 +4,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using DkTools.TokenParser;
+using DkTools.CodeModel.Tokens;
 
 namespace DkTools.CodeModel
 {
@@ -586,7 +586,7 @@ namespace DkTools.CodeModel
 			var parser = new TokenParser.Parser(conditionStr);
 			parser.ReturnComments = true;
 			var tokens = parser.ToArray();
-			if (tokens.Length > 0 && tokens[tokens.Length - 1].Type == TokenType.Comment)
+			if (tokens.Length > 0 && tokens[tokens.Length - 1].Type == TokenParser.TokenType.Comment)
 			{
 				conditionStr = conditionStr.Substring(0, tokens[tokens.Length - 1].StartPosition.Offset);
 			}

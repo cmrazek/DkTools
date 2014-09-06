@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using VsText = Microsoft.VisualStudio.Text;
-using DkTools.CodeModel;
+using DkTools.CodeModel.Tokens;
 
 namespace DkTools.Classifier
 {
@@ -17,7 +17,7 @@ namespace DkTools.Classifier
 		private int _posOffset;
 		private int _length;
 		private FunctionFileScanning.FFScanner _functionScanner;
-		private Dictionary<int, CodeModel.Token> _tokenMap;
+		private Dictionary<int, Token> _tokenMap;
 
 		public ProbeClassifierScanner()
 		{
@@ -36,7 +36,7 @@ namespace DkTools.Classifier
 			var transStart = snapshot.TranslateOffsetToSnapshot(offset, _model.Snapshot);
 			var transEnd = snapshot.TranslateOffsetToSnapshot(offset + source.Length, _model.Snapshot);
 
-			_tokenMap = new Dictionary<int, CodeModel.Token>();
+			_tokenMap = new Dictionary<int, Token>();
 			foreach (var token in _model.File.FindDownward(transStart, transEnd - transStart))
 			{
 				var snapStart = _model.Snapshot.TranslateOffsetToSnapshot(token.Span.Start.Offset, snapshot);
@@ -144,7 +144,7 @@ namespace DkTools.Classifier
 				}
 				else
 				{
-					CodeModel.Token token;
+					CodeModel.Tokens.Token token;
 					if (_tokenMap.TryGetValue(_pos + _posOffset, out token) && token.Text == word)
 					{
 						var def = token.SourceDefinition;
@@ -260,7 +260,7 @@ namespace DkTools.Classifier
 			get { return _posOffset; }
 		}
 
-		public IEnumerable<CodeModel.Token> TokensAtPos()
+		public IEnumerable<CodeModel.Tokens.Token> TokensAtPos()
 		{
 			var modelPos = _pos + _posOffset;
 			if (_snapshot != null && _model.Snapshot != null) modelPos = _snapshot.TranslateOffsetToSnapshot(modelPos, _model.Snapshot);

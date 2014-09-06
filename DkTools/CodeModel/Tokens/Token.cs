@@ -5,7 +5,7 @@ using System.Text;
 using System.Xml;
 using DkTools.CodeModel.Definitions;
 
-namespace DkTools.CodeModel
+namespace DkTools.CodeModel.Tokens
 {
 	/// <summary>
 	/// Base class for all token objects.

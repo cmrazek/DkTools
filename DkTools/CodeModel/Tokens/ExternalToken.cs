@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
-namespace DkTools.CodeModel
+namespace DkTools.CodeModel.Tokens
 {
 	/// <summary>
 	/// A token that exists outside the model, and is only referenced by filename/span.

@@ -12,6 +12,7 @@ using Microsoft.VisualStudio.Text.Operations;
 using Microsoft.VisualStudio.Utilities;
 using DkTools.CodeModel;
 using DkTools.CodeModel.Definitions;
+using DkTools.CodeModel.Tokens;
 
 namespace DkTools.StatementCompletion
 {
@@ -222,13 +223,13 @@ namespace DkTools.StatementCompletion
 				var model = CodeModel.FileStore.GetOrCreateForTextBuffer(_textBuffer).GetCurrentModel(_textBuffer.CurrentSnapshot, "Auto-completion after return");
 				var modelPos = model.GetPosition(curPos, snapshot);
 
-				var funcToken = model.FindTokens(modelPos).LastOrDefault(x => x is CodeModel.FunctionToken) as CodeModel.FunctionToken;
+				var funcToken = model.FindTokens(modelPos).LastOrDefault(x => x is CodeModel.Tokens.FunctionToken) as CodeModel.Tokens.FunctionToken;
 				if (funcToken != null)
 				{
 					var dataType = funcToken.DataTypeToken;
-					if (dataType != null && dataType is CodeModel.IDataTypeToken)
+					if (dataType != null && dataType is CodeModel.Tokens.IDataTypeToken)
 					{
-						foreach (var opt in (dataType as CodeModel.IDataTypeToken).DataType.CompletionOptions) completionList[opt] = CreateCompletion(opt, opt, CompletionType.Constant);
+						foreach (var opt in (dataType as CodeModel.Tokens.IDataTypeToken).DataType.CompletionOptions) completionList[opt] = CreateCompletion(opt, opt, CompletionType.Constant);
 					}
 				}
 			}

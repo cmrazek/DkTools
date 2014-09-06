@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using VsText = Microsoft.VisualStudio.Text;
+using DkTools.CodeModel.Tokens;
 
 namespace DkTools.CodeModel.Definitions
 {

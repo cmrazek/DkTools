@@ -6,6 +6,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using VsText = Microsoft.VisualStudio.Text;
+using DkTools.CodeModel.Tokens;
 
 namespace DkTools.CodeModel
 {

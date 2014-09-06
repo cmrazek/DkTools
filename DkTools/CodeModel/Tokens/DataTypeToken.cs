@@ -5,7 +5,7 @@ using System.Text;
 using System.Text.RegularExpressions;
 using DkTools.CodeModel.Definitions;
 
-namespace DkTools.CodeModel
+namespace DkTools.CodeModel.Tokens
 {
 	internal class DataTypeToken : GroupToken, IDataTypeToken
 	{

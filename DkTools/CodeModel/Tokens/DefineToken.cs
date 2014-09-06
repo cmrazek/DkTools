@@ -4,8 +4,9 @@ using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using DkTools.CodeModel.Definitions;
+using DkTools.CodeModel.Tokens;
 
-namespace DkTools.CodeModel
+namespace DkTools.CodeModel.Tokens
 {
 	internal class DefineToken : GroupToken
 	{

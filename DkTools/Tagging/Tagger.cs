@@ -119,7 +119,7 @@ namespace DkTools.Tagging
 						if (model != null)
 						{
 							var modelPos = model.GetPosition(Shell.ActiveView.Caret.Position.BufferPosition.Position, model.Snapshot);
-							var funcToken = model.FindTokens(modelPos).LastOrDefault(t => t is CodeModel.FunctionToken) as CodeModel.FunctionToken;
+							var funcToken = model.FindTokens(modelPos).LastOrDefault(t => t is CodeModel.Tokens.FunctionToken) as CodeModel.Tokens.FunctionToken;
 							if (funcToken != null) funcName = funcToken.Name;
 						}
 					}

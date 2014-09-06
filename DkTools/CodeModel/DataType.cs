@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using DkTools.CodeModel.Definitions;
+using DkTools.CodeModel.Tokens;
 
 namespace DkTools.CodeModel
 {

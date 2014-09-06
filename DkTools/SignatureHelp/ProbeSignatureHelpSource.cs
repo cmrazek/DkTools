@@ -15,6 +15,7 @@ using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.TextManager.Interop;
 using Microsoft.VisualStudio.OLE.Interop;
 using DkTools.CodeModel;
+using DkTools.CodeModel.Tokens;
 
 namespace DkTools.SignatureHelp
 {
@@ -68,27 +69,6 @@ namespace DkTools.SignatureHelp
 						}
 					}
 				}
-
-				//// Back up to before any whitespace before the '('
-				//while (pos > 0 && (pos >= source.Length || char.IsWhiteSpace(source[pos]) || source[pos] == '(')) pos--;
-
-				//if (pos >= 0 && pos < source.Length && source[pos].IsWordChar(false))
-				//{
-				//	int startPos, length;
-				//	if (source.GetWordExtent(pos, out startPos, out length))
-				//	{
-				//		var word = source.Substring(startPos, length);
-
-				//		VsText.ITrackingSpan applicableToSpan = _textBuffer.CurrentSnapshot.CreateTrackingSpan(
-				//			new Microsoft.VisualStudio.Text.Span(origPos, 0), VsText.SpanTrackingMode.EdgeInclusive, 0);
-
-				//		var model = CodeModel.FileStore.GetOrCreateForTextBuffer(_textBuffer).GetCurrentModel(snapshot, "Signature help after '('");
-				//		foreach (var sig in GetSignatures(model, word, applicableToSpan))
-				//		{
-				//			signatures.Add(sig);
-				//		}
-				//	}
-				//}
 			}
 			else if (ProbeSignatureHelpCommandHandler.s_typedChar == ',')
 			{

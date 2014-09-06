@@ -3,8 +3,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using DkTools.CodeModel.Definitions;
+using DkTools.CodeModel.Tokens;
 
-namespace DkTools.CodeModel
+namespace DkTools.CodeModel.Tokens
 {
 	internal class FunctionToken : GroupToken
 	{
@@ -93,7 +94,7 @@ namespace DkTools.CodeModel
 			}
 
 			// Optional data type
-			var dataTypeToken = DkTools.CodeModel.DataTypeToken.TryParse(parent, scope);
+			var dataTypeToken = DkTools.CodeModel.Tokens.DataTypeToken.TryParse(parent, scope);
 
 			// Function name
 			var nameToken = IdentifierToken.TryParse(parent, scope);

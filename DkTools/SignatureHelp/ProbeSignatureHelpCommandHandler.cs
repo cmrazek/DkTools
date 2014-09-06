@@ -14,6 +14,7 @@ using Microsoft.VisualStudio.Text.Operations;
 using Microsoft.VisualStudio.TextManager.Interop;
 using Microsoft.VisualStudio.Utilities;
 using DkTools.CodeModel;
+using DkTools.CodeModel.Tokens;
 
 namespace DkTools.SignatureHelp
 {

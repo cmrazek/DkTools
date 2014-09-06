@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using DkTools.CodeModel.Definitions;
 
-namespace DkTools.CodeModel
+namespace DkTools.CodeModel.Tokens
 {
 	internal class ConstantToken : WordToken
 	{

@@ -20,7 +20,7 @@ namespace DkTools.QuickInfo
 		private struct TokenInfo
 		{
 			public string infoText;
-			public CodeModel.Token token;
+			public CodeModel.Tokens.Token token;
 		}
 
 		public QuickInfoSource(QuickInfoSourceProvider provider, ITextBuffer subjectBuffer)
@@ -67,7 +67,7 @@ namespace DkTools.QuickInfo
 			}
 		}
 
-		private TokenInfo? GetQuickInfoForTokens(CodeModel.Token[] tokens)
+		private TokenInfo? GetQuickInfoForTokens(CodeModel.Tokens.Token[] tokens)
 		{
 			if (tokens.Length == 0) return null;
 

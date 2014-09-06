@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
-namespace DkTools.CodeModel
+namespace DkTools.CodeModel.Tokens
 {
 	/// <summary>
 	/// This class will be the base for all tokens that consist of a single word.

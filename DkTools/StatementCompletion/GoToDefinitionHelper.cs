@@ -35,7 +35,7 @@ namespace DkTools.StatementCompletion
 				return;
 			}
 
-			var identToken = selTokens.LastOrDefault(t => t is CodeModel.IdentifierToken) as CodeModel.IdentifierToken;
+			var identToken = selTokens.LastOrDefault(t => t is CodeModel.Tokens.IdentifierToken) as CodeModel.Tokens.IdentifierToken;
 			if (identToken != null)
 			{
 				var defs = (from d in model.File.GetDefinitions(identToken.Text) where !string.IsNullOrEmpty(d.SourceFileName) select d).ToArray();
@@ -62,7 +62,7 @@ namespace DkTools.StatementCompletion
 				}
 			}
 
-			var includeToken = selTokens.LastOrDefault(t => t is CodeModel.IncludeToken) as CodeModel.IncludeToken;
+			var includeToken = selTokens.LastOrDefault(t => t is CodeModel.Tokens.IncludeToken) as CodeModel.Tokens.IncludeToken;
 			if (includeToken != null)
 			{
 				Log.WriteDebug("Found include token.");

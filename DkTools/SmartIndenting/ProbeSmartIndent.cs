@@ -64,7 +64,7 @@ namespace DkTools.SmartIndenting
 				// Try to find the braces that contain the 'case'.
 				var model = CodeModel.FileStore.GetOrCreateForTextBuffer(_view.TextBuffer).GetCurrentModel(_view.TextBuffer.CurrentSnapshot, "Smart indenting - case inside switch");
 				var offset = line.Snapshot.TranslateOffsetToSnapshot(line.Start.Position, model.Snapshot);
-				var bracesToken = model.File.FindDownward(offset, t => t is CodeModel.BracesToken).LastOrDefault() as CodeModel.BracesToken;
+				var bracesToken = model.File.FindDownward(offset, t => t is CodeModel.Tokens.BracesToken).LastOrDefault() as CodeModel.Tokens.BracesToken;
 				if (bracesToken != null)
 				{
 					// Get the indent of the line where the opening brace resides.

@@ -39,7 +39,7 @@ namespace DkTools.FunctionFileScanning
 				_span = span,
 				_dataType = dataType,
 				_privacy = privacy,
-				_def = new CodeModel.Definitions.FunctionDefinition(new CodeModel.Scope(), func.name, new CodeModel.ExternalToken(func.fileName, span), dataType, func.signature,
+				_def = new CodeModel.Definitions.FunctionDefinition(new CodeModel.Scope(), func.name, new CodeModel.Tokens.ExternalToken(func.fileName, span), dataType, func.signature,
 					CodeModel.Position.Start, CodeModel.Position.Start, privacy, true)
 			};
 		}
