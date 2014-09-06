@@ -437,6 +437,34 @@ namespace DkTools.CodeModel
 				}
 
 				defs = parent.GetDefinitions(word).ToArray();
+				Definition bestDef = null;
+
+				if (!scope.Preprocessor)
+				{
+					// Check if the preprocessor already found the macro or function definition at this position for us.
+
+					foreach (var def in defs)
+					{
+						if (def.SourceSpan.Start == wordSpan.Start)
+						{
+							if (def is MacroDefinition)
+							{
+								var nameToken = new IdentifierToken(parent, scope, wordSpan, word);
+								var brackets = BracketsToken.Parse(parent, scope);
+								return new MacroCallToken(parent, scope, nameToken, brackets, def as MacroDefinition);
+							}
+
+							if (def is FunctionDefinition)
+							{
+								return new FunctionPlaceholderToken(parent, scope, wordSpan, word, def as FunctionDefinition);
+							}
+
+							bestDef = def;
+							break;
+						}
+					}
+				}
+
 				foreach (var def in defs)
 				{
 					if (def is MacroDefinition)
@@ -448,18 +476,11 @@ namespace DkTools.CodeModel
 
 					if (def is FunctionDefinition)
 					{
-						if (!scope.Preprocessor && def.SourceSpan.Start == wordSpan.Start)
+						if (!scope.Hint.HasFlag(ScopeHint.SuppressFunctionCall))
 						{
-							return new FunctionPlaceholderToken(parent, scope, wordSpan, word, def as FunctionDefinition);
-						}
-						else
-						{
-							if (!scope.Hint.HasFlag(ScopeHint.SuppressFunctionCall))
-							{
-								var nameToken = new IdentifierToken(parent, scope, wordSpan, word);
-								var brackets = BracketsToken.Parse(parent, scope);
-								return new FunctionCallToken(parent, scope, nameToken, brackets, def as FunctionDefinition);
-							}
+							var nameToken = new IdentifierToken(parent, scope, wordSpan, word);
+							var brackets = BracketsToken.Parse(parent, scope);
+							return new FunctionCallToken(parent, scope, nameToken, brackets, def as FunctionDefinition);
 						}
 					}
 				}

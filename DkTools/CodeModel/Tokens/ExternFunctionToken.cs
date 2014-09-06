@@ -25,6 +25,13 @@ namespace DkTools.CodeModel
 				AddDefinition(def);
 				_nameToken.SourceDefinition = def;
 			}
+			else
+			{
+				foreach (var def in parent.GetDefinitions<FunctionDefinition>(_nameToken.Text))
+				{
+					_nameToken.SourceDefinition = def;
+				}
+			}
 		}
 
 		private string GetFunctionSignature()
