@@ -101,5 +101,21 @@ namespace DkTools.CodeModel
 		{
 			return new Span(_start.MoveOffset(offset), _end.MoveOffset(offset));
 		}
+
+		public string SaveString
+		{
+			get
+			{
+				return string.Concat(_start.Offset, ", ", _start.LineNum, ", ", _start.LinePos, ", ", _end.Offset, ", ", _end.LineNum, ", ", _end.LinePos);
+			}
+		}
+
+		public static Span FromSaveString(string str)
+		{
+			var coords = str.Split(',');
+			if (coords.Length != 6) return Span.Empty;
+			return new Span(new Position(int.Parse(coords[0].Trim()), int.Parse(coords[1].Trim()), int.Parse(coords[2].Trim())),
+				new Position(int.Parse(coords[3].Trim()), int.Parse(coords[4].Trim()), int.Parse(coords[5].Trim())));
+		}
 	}
 }

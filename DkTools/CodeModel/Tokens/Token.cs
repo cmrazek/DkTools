@@ -543,6 +543,9 @@ namespace DkTools.CodeModel.Tokens
 		#region Definitions
 		public void AddDefinition(Definition def)
 		{
+#if DEBUG
+			if (def == null) throw new ArgumentNullException("def");
+#endif
 			if (_defs == null)
 			{
 				_defs = new Dictionary<string, LinkedList<Definition>>();

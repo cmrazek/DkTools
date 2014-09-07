@@ -16,9 +16,11 @@ namespace DkTools.CodeModel
 		private Dictionary<string, IncludeFile> _globalIncludeFiles = new Dictionary<string, IncludeFile>();
 
 		private CodeModel _model;
+		private Guid _guid;
 
 		public FileStore()
 		{
+			_guid = Guid.NewGuid();
 		}
 
 		public static FileStore GetOrCreateForTextBuffer(VsText.ITextBuffer buf)
@@ -265,10 +267,12 @@ namespace DkTools.CodeModel
 			prep.Preprocess(reader, prepSource, fileName, new string[0], includeStdLib);
 			prep.AddDefinitionsToProvider(defProvider);
 
-			var prepModel = CodeModel.CreatePreprocessorModel(this, prepSource, fileName, defProvider);
+			var modelType = CodeModel.DetectFileTypeFromFileName(fileName);
+
+			var prepModel = CodeModel.CreatePreprocessorModel(modelType, this, prepSource, fileName, defProvider);
 
 			defProvider.Preprocessor = false;
-			var visibleModel = prepModel.CreateVisibleModelForPreprocessed(visibleSource);
+			var visibleModel = prepModel.CreateVisibleModelForPreprocessed(modelType, visibleSource);
 			visibleModel.PreprocessorModel = prepModel;
 			visibleModel.DisabledSections = prepSource.GenerateDisabledSections().ToArray();
 
@@ -291,6 +295,11 @@ namespace DkTools.CodeModel
 			{
 				yield return new FunctionDropDownItem { Name = func.Text, Span = func.Span, EntireFunctionSpan = func.EntireFunctionSpan };
 			}
+		}
+
+		public Guid Guid
+		{
+			get { return _guid; }
 		}
 
 		public sealed class IncludeFile

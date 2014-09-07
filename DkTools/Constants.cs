@@ -13,7 +13,8 @@ namespace DkTools
 		public const string SettingsRegKey = "Software\\DkTools2012";
 		public const string CompileOutputPaneTitle = "DK Compile";
 		public const string ErrorCaption = "Error";
-		public const string FunctionFileDatabaseFileName = "FunctionFiles.xml";
+		public const string FunctionFileDatabaseFileName_XML = "FunctionFiles.xml";
+		public const string FunctionFileDatabaseFileName_SDF = "DkScan.sdf";
 
 		/// <summary>
 		/// Directory name where log files will be stored (under AppDataDir)

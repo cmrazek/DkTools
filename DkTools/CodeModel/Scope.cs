@@ -115,6 +115,11 @@ namespace DkTools.CodeModel
 				return _file.Model.FileStore;
 			}
 		}
+
+		public CodeModel Model
+		{
+			get { return _file != null ? _file.Model : null; }
+		}
 	}
 
 	[Flags]

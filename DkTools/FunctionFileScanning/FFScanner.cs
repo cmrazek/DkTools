@@ -12,19 +12,13 @@ namespace DkTools.FunctionFileScanning
 	{
 		private Thread _thread;
 		private EventWaitHandle _kill = new EventWaitHandle(false, EventResetMode.ManualReset);
-		private LockedValue<bool> _running = new LockedValue<bool>(false);
-		private LockedValue<int> _threadWait = new LockedValue<int>(k_threadWaitIdle);
 
 		private FFApp _currentApp;
 		private object _currentAppLock = new object();
 		private Queue<ProcessDir> _dirsToProcess = new Queue<ProcessDir>();
 		private Queue<string> _filesToProcess = new Queue<string>();
-		private Dictionary<string, FFApp> _apps = new Dictionary<string, FFApp>();
-		private LockedValue<bool> _changesMade = new LockedValue<bool>();
 
-		private const int k_threadWaitActive = 0;
-		private const int k_threadWaitIdle = 100;
-		private const int k_threadSleep = 100;
+		private const int k_threadWaitIdle = 1000;
 
 		private const string k_noProbeApp = "(none)";
 
@@ -38,7 +32,7 @@ namespace DkTools.FunctionFileScanning
 
 		public FFScanner()
 		{
-			LoadSettings();
+			LoadCurrentApp(ProbeEnvironment.CurrentApp);
 
 			_thread = new Thread(new ThreadStart(ThreadProc));
 			_thread.Name = "Function File Scanner";
@@ -51,7 +45,6 @@ namespace DkTools.FunctionFileScanning
 
 		public void OnShutdown()
 		{
-			SaveSettings();
 			Kill();
 		}
 
@@ -64,19 +57,8 @@ namespace DkTools.FunctionFileScanning
 
 		private void ProbeEnvironment_AppChanged(object sender, EventArgs e)
 		{
+			LoadCurrentApp(ProbeEnvironment.CurrentApp);
 			RestartScanning();
-		}
-
-		public void Start()
-		{
-			_threadWait.Value = k_threadWaitActive;
-			_running.Value = true;
-		}
-
-		public void Stop()
-		{
-			_threadWait.Value = k_threadWaitIdle;
-			_running.Value = false;
 		}
 
 		private void Kill()
@@ -94,57 +76,69 @@ namespace DkTools.FunctionFileScanning
 			{
 				RestartScanning();
 
-				string path;
-				ProcessDir processDir;
-
-				while (!_kill.WaitOne(_threadWait.Value))
+				while (!_kill.WaitOne(k_threadWaitIdle))
 				{
-					if (_running.Value)
+					var gotActivity = false;
+					lock (_filesToProcess)
 					{
-						path = null;
-						lock (_filesToProcess)
+						if (_filesToProcess.Count > 0) gotActivity = true;
+					}
+					if (!gotActivity)
+					{
+						lock (_dirsToProcess)
 						{
-							if (_filesToProcess.Count > 0) path = _filesToProcess.Dequeue();
-						}
-						if (path != null)
-						{
-							ProcessFunctionFile(GetCurrentApp(), path);
-						}
-						else
-						{
-							processDir = null;
-							lock (_dirsToProcess)
-							{
-								if (_dirsToProcess.Count > 0) processDir = _dirsToProcess.Dequeue();
-							}
-							if (processDir != null)
-							{
-								ProcessSourceDir(GetCurrentApp(), processDir.dir, processDir.root);
-							}
-							else
-							{
-								_threadWait.Value = k_threadWaitIdle;
-								_running.Value = false;
-
-								if (_changesMade.Value)
-								{
-									_changesMade.Value = false;
-									SaveSettings();
-								}
-
-								Shell.SetStatusText("DkTools background scanning complete.");
-							}
+							if (_dirsToProcess.Count > 0) gotActivity = true;
 						}
 					}
-					else
+
+					if (gotActivity)
 					{
-						Thread.Sleep(k_threadSleep);
+						ProcessQueue();
 					}
 				}
 			}
 			catch (Exception ex)
 			{
 				Log.WriteEx(ex, "Exception in function file scanner.");
+			}
+		}
+
+		private void ProcessQueue()
+		{
+			if (_currentApp == null) return;
+
+			using (var db = new FFDatabase())
+			{
+				while (!_kill.WaitOne(0))
+				{
+					string path = null;
+					lock (_filesToProcess)
+					{
+						if (_filesToProcess.Count > 0) path = _filesToProcess.Dequeue();
+					}
+					if (path != null)
+					{
+						ProcessFunctionFile(db, CurrentApp, path);
+					}
+					else
+					{
+						ProcessDir processDir = null;
+						lock (_dirsToProcess)
+						{
+							if (_dirsToProcess.Count > 0) processDir = _dirsToProcess.Dequeue();
+						}
+						if (processDir != null)
+						{
+							ProcessSourceDir(CurrentApp, processDir.dir, processDir.root);
+						}
+						else
+						{
+							Shell.SetStatusText("DkTools background scanning complete.");
+							_currentApp.PurgeUnused(db);
+							return;
+						}
+					}
+				}
 			}
 		}
 
@@ -177,175 +171,151 @@ namespace DkTools.FunctionFileScanning
 			}
 		}
 
-		private void ProcessFunctionFile(FFApp app, string fileName)
+		private void ProcessFunctionFile(FFDatabase db, FFApp app, string fileName)
 		{
 			try
 			{
 				if (!File.Exists(fileName)) return;
 
+				var ffFile = app.GetOrCreateFile(db, fileName);
+
 				DateTime modified;
 				if (!app.TryGetFileDate(fileName, out modified)) modified = DateTime.MinValue;
 
-				if (modified == DateTime.MinValue || Math.Abs(File.GetLastWriteTime(fileName).Subtract(modified).TotalSeconds) >= 1.0)
+				if (modified != DateTime.MinValue && Math.Abs(File.GetLastWriteTime(fileName).Subtract(modified).TotalSeconds) < 1.0) return;
+
+				Log.WriteDebug("Processing function file: {0}", fileName);
+				Shell.SetStatusText(string.Format("DkTools background scanning file: {0}", fileName));
+
+				var fileTitle = Path.GetFileNameWithoutExtension(fileName);
+
+				var defProvider = new CodeModel.DefinitionProvider();
+
+				app.MarkAllFunctionsForFileUnused(fileName);
+
+				var fileContent = File.ReadAllText(fileName);
+				var fileStore = new CodeModel.FileStore();
+				var model = fileStore.CreatePreprocessedModel(fileContent, fileName, string.Concat("Function file processing: ", fileName));
+
+				var ext = Path.GetExtension(fileName).ToLower();
+				string className;
+				FFUtil.FileNameIsClass(fileName, out className);
+				var classList = new List<FFClass>();
+				var funcList = new List<FFFunction>();
+
+				foreach (var funcDef in model.GetDefinitions<CodeModel.Definitions.FunctionDefinition>())
 				{
-					Log.WriteDebug("Processing function file: {0}", fileName);
-					Shell.SetStatusText(string.Format("DkTools background scanning file: {0}", fileName));
-
-					_changesMade.Value = true;
-
-					var fileTitle = Path.GetFileNameWithoutExtension(fileName);
-
-					var defProvider = new CodeModel.DefinitionProvider();
-
-					app.RemoveAllFunctionsForFile(fileName);
-
-					var fileContent = File.ReadAllText(fileName);
-					var fileStore = new CodeModel.FileStore();
-					var model = fileStore.CreatePreprocessedModel(fileContent, fileName, string.Concat("Function file processing: ", fileName));
-
-					var ext = Path.GetExtension(fileName).ToLower();
-					string className;
-					FFUtil.FileNameIsClass(fileName, out className);
-
-					foreach (var funcDef in model.GetDefinitions<CodeModel.Definitions.FunctionDefinition>())
+					if (funcDef.Extern) continue;
+					if (!string.IsNullOrEmpty(className))
 					{
-						if (funcDef.Extern) continue;
-						if (!string.IsNullOrEmpty(className))
-						{
-							if (funcDef.Privacy != CodeModel.FunctionPrivacy.Public) continue;
-						}
-						else
-						{
-							if (!funcDef.Name.Equals(fileTitle, StringComparison.OrdinalIgnoreCase)) continue;
-						}
-
-						string funcFileName = funcDef.SourceFileName;
-						CodeModel.Span funcSpan = funcDef.SourceSpan;
-						bool primaryFile;
-
-						// Resolve to the actual filename/span, rather than the location within the merged content.
-						if (funcDef.SourceFile != null && funcDef.SourceFile.CodeSource != null) funcDef.SourceFile.CodeSource.GetFileSpan(funcDef.SourceSpan, out funcFileName, out funcSpan, out primaryFile);
-
-						app.AddFunction(className, FFFunction.FromCodeModelDefinition(funcDef.CloneAsExtern()));
+						// This is a class file
+						if (funcDef.Privacy != CodeModel.FunctionPrivacy.Public) continue;
+					}
+					else
+					{
+						// This is a function file
+						if (!funcDef.Name.Equals(fileTitle, StringComparison.OrdinalIgnoreCase)) continue;
 					}
 
-					app.UpdateFile(fileName, File.GetLastWriteTime(fileName));
+					if (funcDef.Scope.FileStore.Guid != fileStore.Guid) continue;	// Belongs to a different set a models.
+
+					string funcFileName = funcDef.SourceFileName;
+					CodeModel.Span funcSpan = funcDef.SourceSpan;
+					bool primaryFile;
+
+					// Resolve to the actual filename/span, rather than the location within the merged content.
+					if (funcDef.SourceFile != null && funcDef.SourceFile.CodeSource != null) funcDef.SourceFile.CodeSource.GetFileSpan(funcDef.SourceSpan, out funcFileName, out funcSpan, out primaryFile);
+
+					FFClass ffClass;
+					FFFunction ffFunc;
+					app.UpdateFunction(ffFile, className, funcDef, out ffClass, out ffFunc);
+					if (ffClass != null && !classList.Contains(ffClass))
+					{
+						classList.Add(ffClass);
+						ffClass.MarkUsed();
+					}
+					funcList.Add(ffFunc);
+					ffFunc.MarkUsed();
 				}
+
+				ffFile.Modified = File.GetLastWriteTime(fileName);
+
+				// Save the new info to the database
+				ffFile.InsertOrUpdate(db);
+				ffFile.MarkUsed();
+				foreach (var ffClass in classList) ffClass.InsertOrUpdate(db);
+				foreach (var ffFunc in funcList) ffFunc.InsertOrUpdate(db);
 			}
 			catch (Exception ex)
 			{
 				Log.WriteEx(ex, "Exception when background processing function name: {0}", fileName);
-				try
-				{
-					// Don't show the error because this is just a non-critical background thread.
-					if (File.Exists(fileName)) app.UpdateFile(fileName, File.GetLastWriteTime(fileName));
-				}
-				catch (Exception)
-				{ }
 			}
 		}
 
-		private FFApp GetCurrentApp()
+		public FFApp CurrentApp
 		{
-			var currentApp = ProbeEnvironment.CurrentApp;
-			if (string.IsNullOrEmpty(currentApp)) currentApp = k_noProbeApp;
-
-			FFApp app = null;
-
-			lock (_currentAppLock)
+			get
 			{
-				if (_currentApp == null || _currentApp.Name != currentApp)
+				lock (_currentAppLock)
 				{
-					if (_currentApp != null) _currentApp.OnDeactivate();
-
-					if (!_apps.TryGetValue(currentApp, out app))
-					{
-						app = new FFApp(this, currentApp);
-						_apps[currentApp] = app;
-					}
-
-					_currentApp = app;
+					return _currentApp;
 				}
-				else app = _currentApp;
-
 			}
-			return app;
 		}
 
 		public FFFunction GetFunction(string funcName)
 		{
-			return GetCurrentApp().GetFunction(funcName);
+			if (_currentApp != null) return CurrentApp.GetFunction(funcName);
+			return null;
 		}
 
 		public FFFunction GetFunction(string className, string funcName)
 		{
-			return GetCurrentApp().GetFunction(className, funcName);
+			if (_currentApp != null) return CurrentApp.GetFunction(className, funcName);
+			return null;
 		}
 
+		/// <summary>
+		/// Gets a list of definitions that are available at the global scope.
+		/// Only public definitions are returned.
+		/// </summary>
 		public IEnumerable<CodeModel.Definitions.Definition> GlobalDefinitions
 		{
-			get { return GetCurrentApp().GlobalDefinitions; }
+			get
+			{
+				if (_currentApp != null) return CurrentApp.GlobalDefinitions;
+				return new CodeModel.Definitions.Definition[0];
+			}
 		}
 
 		public void RestartScanning()
 		{
+			lock (_filesToProcess)
+			{
+				_filesToProcess.Clear();
+			}
 			lock (_dirsToProcess)
 			{
 				_dirsToProcess.Clear();
 				foreach (var dir in ProbeEnvironment.SourceDirs) _dirsToProcess.Enqueue(new ProcessDir { dir = dir, root = true });
 			}
-			lock (_filesToProcess)
-			{
-				_filesToProcess.Clear();
-			}
-
-			Start();
 		}
 
-		public void SaveSettings()
-		{
-			try
-			{
-				Log.WriteDebug("Saving function file database.");
-
-				var db = new FunctionFileDatabase.Database_t();
-				db.application = (from a in _apps.Values select a.Save()).ToArray();
-
-				XmlUtil.SerializeToFile(db, FunctionFileDatabaseFileName, true);
-			}
-			catch (Exception ex)
-			{
-				Log.WriteEx(ex, "Error when saving function file database.");
-			}
-		}
-
-		public void LoadSettings()
+		private void LoadCurrentApp(string appName)
 		{
 			try
 			{
 				Log.WriteDebug("Loading function file database.");
 
-				lock (_apps)
+				using (var db = new FFDatabase())
 				{
-					_apps.Clear();
-
-					var fileName = FunctionFileDatabaseFileName;
-					if (File.Exists(fileName))
-					{
-						var db = XmlUtil.DeserializeFromFile<FunctionFileDatabase.Database_t>(fileName);
-						if (db != null)
-						{
-							foreach (var dbApp in db.application)
-							{
-								_apps[dbApp.name] = new FFApp(this, dbApp);
-							}
-						}
-					}
+					_currentApp = new FFApp(this, db, appName);
 				}
 			}
 			catch (Exception ex)
 			{
 				Log.WriteEx(ex, "Error when loading function file database.");
+				_currentApp = null;
 			}
 		}
 
@@ -353,7 +323,7 @@ namespace DkTools.FunctionFileScanning
 		{
 			get
 			{
-				return Path.Combine(ProbeToolsPackage.AppDataDir, Constants.FunctionFileDatabaseFileName);
+				return Path.Combine(ProbeToolsPackage.AppDataDir, Constants.FunctionFileDatabaseFileName_XML);
 			}
 		}
 
@@ -370,7 +340,8 @@ namespace DkTools.FunctionFileScanning
 
 		public FFClass GetClass(string className)
 		{
-			return GetCurrentApp().GetClass(className);
+			if (_currentApp != null) return CurrentApp.TryGetClass(className);
+			return null;
 		}
 
 		private void Shell_FileSaved(object sender, Shell.FileSavedEventArgs e)
@@ -379,17 +350,13 @@ namespace DkTools.FunctionFileScanning
 			{
 				Log.WriteDebug("Function file scanner detected a saved file: {0}", e.FileName);
 
-				var added = false;
 				lock (_filesToProcess)
 				{
 					if (!_filesToProcess.Contains(e.FileName))
 					{
 						_filesToProcess.Enqueue(e.FileName);
-						added = true;
 					}
 				}
-
-				if (added) Start();
 			}
 		}
 	}

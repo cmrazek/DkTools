@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Data.SqlServerCe;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -8,53 +9,53 @@ namespace DkTools.FunctionFileScanning
 {
 	internal class FFClass
 	{
+		private FFApp _app;
+		private FFFile _file;
+		private int _id;
 		private string _name;
-		private string _fileName;
 		private Dictionary<string, FFFunction> _funcs = new Dictionary<string, FFFunction>();
 		private CodeModel.Definitions.ClassDefinition _def;
+		private bool _used = true;
 
 		private FFClass()
 		{ }
 
-		public FFClass(string name, string fileName)
+		public FFClass(FFApp app, FFFile file, string name)
 		{
+			if (app == null) throw new ArgumentNullException("app");
+			if (file == null) throw new ArgumentNullException("file");
 			if (string.IsNullOrWhiteSpace(name)) throw new ArgumentNullException("name");
-			if (string.IsNullOrWhiteSpace(fileName)) throw new ArgumentNullException("fileName");
+
+			_app = app;
+			_file = file;
 			_name = name;
-			_fileName = fileName;
-			_def = new CodeModel.Definitions.ClassDefinition(new CodeModel.Scope(), _name, _fileName);
+			_def = new CodeModel.Definitions.ClassDefinition(new CodeModel.Scope(), _name, _file.FileName);
 		}
 
-		public static FFClass FromDatabase(FunctionFileDatabase.Class_t cls)
+		public FFClass(FFApp app, FFFile file, FFDatabase db, SqlCeDataReader classRdr)
 		{
-			if (string.IsNullOrEmpty(cls.name) || string.IsNullOrEmpty(cls.fileName))
+			if (app == null) throw new ArgumentNullException("app");
+			if (file == null) throw new ArgumentNullException("file");
+
+			_app = app;
+			_file = file;
+
+			_id = classRdr.GetInt32(classRdr.GetOrdinal("id"));
+			_name = classRdr.GetString(classRdr.GetOrdinal("name"));
+			_def = new CodeModel.Definitions.ClassDefinition(new CodeModel.Scope(), _name, _file.FileName);
+
+			using (var cmd = db.CreateCommand("select * from func where class_id = @class_id"))
 			{
-				return null;
+				cmd.Parameters.AddWithValue("@class_id", _id);
+				using (var funcRdr = cmd.ExecuteReader())
+				{
+					while (funcRdr.Read())
+					{
+						var func = new FFFunction(_app, file, this, funcRdr);
+						_funcs[func.Name] = func;
+					}
+				}
 			}
-
-			var ret = new FFClass
-			{
-				_name = cls.name,
-				_fileName = cls.fileName,
-				_def = new CodeModel.Definitions.ClassDefinition(new CodeModel.Scope(), cls.name, cls.fileName)
-			};
-
-			if (cls.function != null)
-			{
-				foreach (var func in cls.function) ret.AddFunction(func);
-			}
-
-			return ret;
-		}
-
-		public FunctionFileDatabase.Class_t ToDatabase()
-		{
-			return new FunctionFileDatabase.Class_t
-			{
-				name = _name,
-				fileName = _fileName,
-				function = (from f in _funcs.Values select f.ToDatabase()).ToArray()
-			};
 		}
 
 		public string Name
@@ -62,15 +63,9 @@ namespace DkTools.FunctionFileScanning
 			get { return _name; }
 		}
 
-		public string FileName
+		public int Id
 		{
-			get { return _fileName; }
-		}
-
-		public void AddFunction(FunctionFileDatabase.Function_t func)
-		{
-			var ffFunc = FFFunction.FromDatabase(func);
-			if (ffFunc != null) _funcs[ffFunc.Name] = ffFunc;
+			get { return _id; }
 		}
 
 		public void AddFunction(FFFunction func)
@@ -91,7 +86,7 @@ namespace DkTools.FunctionFileScanning
 			}
 		}
 
-		public FFFunction GetFunction(string name)
+		public FFFunction TryGetFunction(string name)
 		{
 			FFFunction func;
 			if (_funcs.TryGetValue(name, out func)) return func;
@@ -108,6 +103,102 @@ namespace DkTools.FunctionFileScanning
 		public bool IsFunction(string funcName)
 		{
 			return _funcs.ContainsKey(funcName);
+		}
+
+		public void UpdateFunction(CodeModel.Definitions.FunctionDefinition funcDef, FFFile file, out FFFunction funcOut)
+		{
+			FFFunction func;
+			if (_funcs.TryGetValue(funcDef.Name, out func))
+			{
+				func.UpdateFromDefinition(funcDef);
+			}
+			else
+			{
+				func = new FFFunction(_app, file, this, funcDef);
+				_funcs[funcDef.Name] = func;
+			}
+			funcOut = func;
+		}
+
+		public void InsertOrUpdate(FFDatabase db)
+		{
+			if (_id != 0)
+			{
+				using (var cmd = db.CreateCommand("update class_ set file_id = @file_id where id = @id"))
+				{
+					cmd.Parameters.AddWithValue("@file_id", _file.Id);
+					cmd.Parameters.AddWithValue("@id", _id);
+					cmd.ExecuteNonQuery();
+				}
+			}
+			else
+			{
+				using (var cmd = db.CreateCommand("insert into class_ (name, app_id, file_id) values (@name, @app_id, @file_id)"))
+				{
+					cmd.Parameters.AddWithValue("@name", _name);
+					cmd.Parameters.AddWithValue("@app_id", _app.Id);
+					cmd.Parameters.AddWithValue("@file_id", _file.Id);
+					cmd.ExecuteNonQuery();
+					_id = db.QueryIdentityInt();
+				}
+			}
+		}
+
+		public bool Used
+		{
+			get { return _used; }
+			set { _used = value; }
+		}
+
+		public void MarkAllUnused()
+		{
+			_used = false;
+
+			foreach (var func in _funcs.Values)
+			{
+				func.Used = false;
+			}
+		}
+
+		public void MarkUsed()
+		{
+			_used = true;
+			_file.Used = true;
+		}
+
+		public IEnumerable<FFFunction> UnusedFunctions
+		{
+			get
+			{
+				foreach (var func in _funcs.Values)
+				{
+					if (!func.Used) yield return func;
+				}
+			}
+		}
+
+		public void Remove(FFDatabase db)
+		{
+			if (_id != 0)
+			{
+				using (var cmd = db.CreateCommand("delete from func where class_id = @id"))
+				{
+					cmd.Parameters.AddWithValue("@id", _id);
+					cmd.ExecuteNonQuery();
+				}
+
+				using (var cmd = db.CreateCommand("delete from class_ where id = @id"))
+				{
+					cmd.Parameters.AddWithValue("@id", _id);
+					cmd.ExecuteNonQuery();
+				}
+			}
+		}
+
+		public void RemoveFunction(FFDatabase db, FFFunction func)
+		{
+			func.Remove(db);
+			_funcs.Remove(func.Name);
 		}
 	}
 }

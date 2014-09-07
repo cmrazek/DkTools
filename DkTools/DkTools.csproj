@@ -172,6 +172,7 @@
     <Reference Include="System.Configuration" />
     <Reference Include="System.Core" />
     <Reference Include="System.Data" />
+    <Reference Include="System.Data.SqlServerCe, Version=4.0.0.0, Culture=neutral, PublicKeyToken=89845dcd8080cc91, processorArchitecture=MSIL" />
     <Reference Include="System.Design" />
     <Reference Include="System.Drawing" />
     <Reference Include="System.Windows.Forms" />
@@ -294,7 +295,6 @@
     <Compile Include="CodeModel\Tokens\DataTypeToken.cs" />
     <Compile Include="CodeModel\Tokens\DefineToken.cs" />
     <Compile Include="CodeModel\Tokens\ExternFunctionToken.cs" />
-    <Compile Include="CodeModel\Tokens\ExternVariableToken.cs" />
     <Compile Include="CodeModel\Tokens\FunctionCallToken.cs" />
     <Compile Include="CodeModel\Tokens\FunctionToken.cs" />
     <Compile Include="CodeModel\Tokens\IfStatementToken.cs" />
@@ -348,6 +348,8 @@
     <Compile Include="FileMergeException.cs" />
     <Compile Include="CodeModel\FileMerger.cs" />
     <Compile Include="FileUtil.cs" />
+    <Compile Include="FunctionFileScanning\FFDatabase.cs" />
+    <Compile Include="FunctionFileScanning\FFFile.cs" />
     <Compile Include="FunctionFileScanning\FFFunction.cs" />
     <Compile Include="FunctionFileScanning\FFApp.cs" />
     <Compile Include="FunctionFileScanning\FFClass.cs" />

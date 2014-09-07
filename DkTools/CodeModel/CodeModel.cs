@@ -14,28 +14,31 @@ namespace DkTools.CodeModel
 	{
 		private CodeFile _file;
 		private string _fileName;
+		private string _fileTitle;
 		private Microsoft.VisualStudio.Text.ITextSnapshot _snapshot;
 		private FileStore _store;
 		private DefinitionProvider _defProvider;
 		private CodeModel _prepModel;
 		private Span[] _disabledSections;
+		private ModelType _modelType;
 
-		private CodeModel(FileStore store)
+		private CodeModel(ModelType modelType, FileStore store)
 		{
 			if (store == null) throw new ArgumentNullException("store");
 			_store = store;
+			_modelType = modelType;
 		}
 
-		public static CodeModel CreatePreprocessorModel(FileStore store, CodeSource preprocessedSource, string fileName, DefinitionProvider defProvider)
+		public static CodeModel CreatePreprocessorModel(ModelType modelType, FileStore store, CodeSource preprocessedSource, string fileName, DefinitionProvider defProvider)
 		{
-			var model = new CodeModel(store);
+			var model = new CodeModel(modelType, store);
 			model.Init(preprocessedSource, new CodeFile(model), fileName, false, defProvider);
 			return model;
 		}
 
-		public CodeModel CreateVisibleModelForPreprocessed(CodeSource visibleSource)
+		public CodeModel CreateVisibleModelForPreprocessed(ModelType modelType, CodeSource visibleSource)
 		{
-			var model = new CodeModel(_store);
+			var model = new CodeModel(modelType, _store);
 			var codeFile = new CodeFile(model);
 
 			CopyDefinitionsToProvider(codeFile, visibleSource);
@@ -52,6 +55,7 @@ namespace DkTools.CodeModel
 			this.RefreshTime = DateTime.Now;
 
 			_fileName = fileName;
+			if (!string.IsNullOrEmpty(_fileName)) _fileTitle = Path.GetFileNameWithoutExtension(_fileName);
 			_defProvider = defProvider;
 			_file = new CodeFile(this);
 
@@ -69,9 +73,21 @@ namespace DkTools.CodeModel
 				defs.Add(new FunctionDefinition(scope, "STRINGIZE", null, DataType.FromString("char(255)"), "STRINGIZE(x)", Position.Start, Position.Start, FunctionPrivacy.Public, true));
 				defs.Add(new FunctionDefinition(scope, "UNREFERENCED_PARAMETER", null, DataType.Void, "UNREFERENCED_PARAMETER(parameter)", Position.Start, Position.Start, FunctionPrivacy.Public, true));
 
-				foreach (var def in ProbeEnvironment.DictDefinitions) defs.Add(def);
+				foreach (var def in ProbeEnvironment.DictDefinitions)
+				{
+#if DEBUG
+					if (def == null) throw new InvalidOperationException("Null definition in dictionary.");
+#endif
+					defs.Add(def);
+				}
 
-				foreach (var def in ProbeToolsPackage.Instance.FunctionFileScanner.GlobalDefinitions) defs.Add(def);
+				foreach (var def in ProbeToolsPackage.Instance.FunctionFileScanner.GlobalDefinitions)
+				{
+#if DEBUG
+					if (def == null) throw new InvalidOperationException("Null definition returned by scanner.");
+#endif
+					defs.Add(def);
+				}
 
 				_file.AddDefinitions(defs);
 			}
@@ -214,6 +230,11 @@ namespace DkTools.CodeModel
 			get { return _file.FileName; }
 		}
 
+		public string FileTitle
+		{
+			get { return _fileTitle; }
+		}
+
 		public CodeFile File
 		{
 			get { return _file; }
@@ -318,5 +339,27 @@ namespace DkTools.CodeModel
 			get { return _prepModel; }
 			set { _prepModel = value; }
 		}
+
+		public static ModelType DetectFileTypeFromFileName(string fileName)
+		{
+			if (FunctionFileScanning.FFUtil.FileNameIsFunction(fileName)) return ModelType.Function;
+
+			string className;
+			if (FunctionFileScanning.FFUtil.FileNameIsClass(fileName, out className)) return ModelType.Class;
+
+			return ModelType.Other;
+		}
+
+		public ModelType ModelType
+		{
+			get { return _modelType; }
+		}
+	}
+
+	internal enum ModelType
+	{
+		Other,
+		Function,
+		Class
 	}
 }

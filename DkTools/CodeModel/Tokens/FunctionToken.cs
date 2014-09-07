@@ -112,6 +112,13 @@ namespace DkTools.CodeModel.Tokens
 				else { file.Position = resetPos; return null; }
 			}
 
+			// If this is in a function file, then only the function with the same name as the file is public.
+			if (scope.Model.ModelType == ModelType.Function)
+			{
+				if (nameToken.Text.Equals(scope.Model.FileTitle, StringComparison.OrdinalIgnoreCase)) privacy = FunctionPrivacy.Public;
+				else privacy = FunctionPrivacy.Private;
+			}
+
 			// Arguments
 			var argsScope = scope.Clone();
 			argsScope.Hint |= ScopeHint.FunctionArgs | ScopeHint.SuppressVars;

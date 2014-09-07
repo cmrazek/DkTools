@@ -141,8 +141,6 @@ namespace DkTools
 
 		protected override void Dispose(bool disposing)
 		{
-			_functionScanner.SaveSettings();
-
 			if (_componentId != 0)
 			{
 				var mgr = GetService(typeof(SOleComponentManager)) as IOleComponentManager;
@@ -166,9 +164,6 @@ namespace DkTools
 			// Use typeof(TestLanguageService) because we need to reference the GUID for our language service.
 			var service = GetService(typeof(ProbeLanguageService)) as ProbeLanguageService;
 			if (service != null) service.OnIdle(bPeriodic);
-
-			// Check for files to process when idling.
-			_functionScanner.Start();
 
 			ProcessBackgroundWorkItems();
 
