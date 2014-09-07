@@ -29,6 +29,7 @@ namespace DkTools.StatementCompletion
 		private Regex _rxAfterAssignOrCompare = new Regex(@"(?:==|=|!=)\s$");
 		private Regex _rxFunctionStartBracket = new Regex(@"\w+\s*\($");
 		private Regex _rxAutoCompleteKeyword = new Regex(@"\b(return|case)\s$");
+		private Regex _rxAfterIfDef = new Regex(@"\#ifn?def\s$");
 
 		public ProbeCompletionCommandHandler(IVsTextView textViewAdapter, ITextView textView, ProbeCompletionCommandHandlerProvider provider)
 		{
@@ -126,7 +127,7 @@ namespace DkTools.StatementCompletion
 						var caretPos = _textView.Caret.Position.BufferPosition.Position;
 						var prefix = _textView.TextBuffer.CurrentSnapshot.GetLineTextUpToPosition(caretPos);
 
-						if (prefix.EndsWith(", ") || _rxAutoCompleteKeyword.IsMatch(prefix))
+						if (prefix.EndsWith(", ") || _rxAutoCompleteKeyword.IsMatch(prefix) || _rxAfterIfDef.IsMatch(prefix))
 						{
 							TriggerCompletionIfAllowed(false);
 						}

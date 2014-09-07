@@ -310,37 +310,6 @@ namespace DkTools.CodeModel.Tokens
 
 						return new ExternFunctionToken(parent, scope, tokens, token1, token2 as IdentifierToken, token3 as BracketsToken);
 					}
-
-					if ((token3 = StatementEndToken.TryParse(parent, scope)) != null)
-					{
-						// extern dataType name;
-
-						tokens.Add(token3);
-						return new ExternVariableToken(parent, scope, new Token[] { externToken, token1, token2, token3 },
-							token1, new WordToken[] { token2 as WordToken });
-					}
-
-					if ((token3 = DelimiterToken.TryParse(parent, scope)) != null)
-					{
-						// extern dataType name, ...
-
-						tokens.Add(token3);
-						var nameTokens = new List<WordToken>();
-						nameTokens.Add(token2 as WordToken);
-
-						while (true)
-						{
-							if ((token = DelimiterToken.TryParse(parent, scope)) != null) tokens.Add(token);
-							else if ((token = IdentifierToken.TryParse(parent, scope)) != null) { tokens.Add(token); nameTokens.Add(token as WordToken); }
-							else if ((token = StatementEndToken.TryParse(parent, scope)) != null) { tokens.Add(token); break; }
-							else break;
-						}
-
-						return new ExternVariableToken(parent, scope, tokens, token1, nameTokens);
-					}
-
-					// No statement end or delimiter.  Assume this is an unfinished variable definition.
-					return new ExternVariableToken(parent, scope, tokens, token1, new WordToken[] { token2 as WordToken });
 				}
 			}
 			else if ((token1 = IdentifierToken.TryParse(parent, scope)) != null)
@@ -359,35 +328,6 @@ namespace DkTools.CodeModel.Tokens
 
 					return new ExternFunctionToken(parent, scope, tokens, null, token1 as IdentifierToken, token2 as BracketsToken);
 				}
-				if ((token2 = StatementEndToken.TryParse(parent, scope)) != null)
-				{
-					// extern name;
-
-					tokens.Add(token2);
-
-					return new ExternVariableToken(parent, scope, tokens, null, new WordToken[] { token1 as WordToken });
-				}
-				if ((token2 = DelimiterToken.TryParse(parent, scope)) != null)
-				{
-					// extern name,
-
-					tokens.Add(token2);
-					var nameTokens = new List<WordToken>();
-					nameTokens.Add(token1 as WordToken);
-
-					while (true)
-					{
-						if ((token = DelimiterToken.TryParse(parent, scope)) != null) tokens.Add(token);
-						else if ((token = IdentifierToken.TryParse(parent, scope)) != null) { tokens.Add(token); nameTokens.Add(token as WordToken); }
-						else if ((token = StatementEndToken.TryParse(parent, scope)) != null) { tokens.Add(token); break; }
-						else break;
-					}
-
-					return new ExternVariableToken(parent, scope, tokens, null, nameTokens);
-				}
-
-				// No statement end or delimiter.  Assume this is an unfinished variable definition.
-				return new ExternVariableToken(parent, scope, tokens, null, new WordToken[] { token1 as WordToken });
 			}
 
 			// If we got here, then there's an invalid token after 'extern'.  Return just the extern token by itself.

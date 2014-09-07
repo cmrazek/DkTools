@@ -1,36 +1,38 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using DkTools.CodeModel.Definitions;
+﻿// TODO: remove
 
-namespace DkTools.CodeModel.Tokens
-{
-	internal class ExternVariableToken : GroupToken
-	{
-		private Token _dataTypeToken;   // Optional
-		private WordToken[] _nameTokens;
+//using System;
+//using System.Collections.Generic;
+//using System.Linq;
+//using System.Text;
+//using DkTools.CodeModel.Definitions;
 
-		public ExternVariableToken(GroupToken parent, Scope scope, IEnumerable<Token> tokens, Token dataTypeToken, IEnumerable<WordToken> nameTokens)
-			: base(parent, scope, tokens)
-		{
-			_dataTypeToken = dataTypeToken;
-			_nameTokens = nameTokens.ToArray();
+//namespace DkTools.CodeModel.Tokens
+//{
+//	internal class ExternVariableToken : GroupToken
+//	{
+//		private Token _dataTypeToken;   // Optional
+//		private WordToken[] _nameTokens;
 
-			if (scope.Preprocessor)
-			{
-				foreach (var tok in _nameTokens)
-				{
-					var def = new VariableDefinition(scope, tok.Text, tok, DataType.FromToken(_dataTypeToken), false);
-					tok.SourceDefinition = def;
-					AddDefinition(def);
-				}
-			}
-		}
+//		public ExternVariableToken(GroupToken parent, Scope scope, IEnumerable<Token> tokens, Token dataTypeToken, IEnumerable<WordToken> nameTokens)
+//			: base(parent, scope, tokens)
+//		{
+//			_dataTypeToken = dataTypeToken;
+//			_nameTokens = nameTokens.ToArray();
 
-		public IEnumerable<Token> NameTokens
-		{
-			get { return _nameTokens; }
-		}
-	}
-}
+//			if (scope.Preprocessor)
+//			{
+//				foreach (var tok in _nameTokens)
+//				{
+//					var def = new VariableDefinition(scope, tok.Text, tok, DataType.FromToken(_dataTypeToken), false);
+//					tok.SourceDefinition = def;
+//					AddDefinition(def);
+//				}
+//			}
+//		}
+
+//		public IEnumerable<Token> NameTokens
+//		{
+//			get { return _nameTokens; }
+//		}
+//	}
+//}

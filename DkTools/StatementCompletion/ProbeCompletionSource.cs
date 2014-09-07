@@ -118,6 +118,7 @@ namespace DkTools.StatementCompletion
 		private Regex _rxFunctionStartBracket = new Regex(@"(\w+)\s*\($");
 		private Regex _rxReturn = new Regex(@"\breturn\s$");
 		private Regex _rxCase = new Regex(@"\bcase\s$");
+		private Regex _rxAfterIfDef = new Regex(@"\#ifn?def\s$");
 
 		void ICompletionSource.AugmentCompletionSession(ICompletionSession session, IList<CompletionSet> completionSets)
 		{
@@ -183,6 +184,16 @@ namespace DkTools.StatementCompletion
 							}
 						}
 					}
+				}
+			}
+			else if ((match = _rxAfterIfDef.Match(prefix)).Success)
+			{
+				var fileStore = CodeModel.FileStore.GetOrCreateForTextBuffer(_textBuffer);
+				var model = fileStore.GetCurrentModel(_textBuffer.CurrentSnapshot, "Auto-completion after #ifdef");
+
+				foreach (var def in model.GetDefinitions<ConstantDefinition>())
+				{
+					completionList[def.Name] = CreateCompletion(def);
 				}
 			}
 			// TODO: finish this
