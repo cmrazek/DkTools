@@ -4,6 +4,7 @@ using System.Collections.ObjectModel;
 using System.ComponentModel.Composition;
 using System.Linq;
 using System.Runtime.InteropServices;
+using System.Text;
 using System.Text.RegularExpressions;
 using Microsoft.VisualStudio.Language.Intellisense;
 using VsText = Microsoft.VisualStudio.Text;
@@ -204,6 +205,48 @@ namespace DkTools.SignatureHelp
 				if (def is CodeModel.Definitions.FunctionDefinition) yield return (def as CodeModel.Definitions.FunctionDefinition).Signature;
 				else if (def is CodeModel.Definitions.MacroDefinition) yield return (def as CodeModel.Definitions.MacroDefinition).Signature;
 			}
+		}
+
+		public static IEnumerable<string> GetSignatureArguments(string sig)
+		{
+			var parser = new TokenParser.Parser(sig);
+			parser.ReturnWhiteSpace = true;
+
+			var insideArgs = false;
+			var sb = new StringBuilder();
+			string str;
+			var gotComma = false;
+
+			while (!parser.EndOfFile)
+			{
+				if (!insideArgs)
+				{
+					if (!parser.Read()) yield break;
+					if (parser.TokenType == TokenParser.TokenType.Operator && parser.TokenText == "(") insideArgs = true;
+				}
+				else
+				{
+					if (!parser.ReadNestable()) yield break;
+					str = parser.TokenText;
+					switch (str)
+					{
+						case ",":
+							yield return sb.ToString().Trim();
+							sb.Clear();
+							gotComma = true;
+							break;
+						case ")":
+							str = sb.ToString().Trim();
+							if (gotComma || !string.IsNullOrEmpty(str)) yield return str;
+							yield break;
+						default:
+							sb.Append(str);
+							break;
+					}
+				}
+			}
+
+			if (gotComma) yield return sb.ToString().Trim();
 		}
 	}
 }

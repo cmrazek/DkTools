@@ -114,7 +114,7 @@ namespace DkTools.StatementCompletion
 		private Regex _rxTypingTable = new Regex(@"(\w{1,8})\.(\w*)$");
 		private Regex _rxTypingWord = new Regex(@"\w+$");
 		private Regex _rxAfterAssignOrCompare = new Regex(@"(==|=|!=)\s$");
-		//private Regex _rxClassFunctionStartBracket = new Regex(@"(\w+)\s*\.\s*(\w+)\s*\($");
+		private Regex _rxClassFunctionStartBracket = new Regex(@"(\w+)\s*\.\s*(\w+)\s*\($");
 		private Regex _rxFunctionStartBracket = new Regex(@"(\w+)\s*\($");
 		private Regex _rxReturn = new Regex(@"\breturn\s$");
 		private Regex _rxCase = new Regex(@"\bcase\s$");
@@ -196,27 +196,24 @@ namespace DkTools.StatementCompletion
 					completionList[def.Name] = CreateCompletion(def);
 				}
 			}
-			// TODO: finish this
-			//else if ((match = _rxClassFunctionStartBracket.Match(prefix)).Success)
-			//{
-			//	// Starting a new function that belongs to a class
+			else if ((match = _rxClassFunctionStartBracket.Match(prefix)).Success)
+			{
+				// Starting a new function that belongs to a class
 
-			//	var cls = ProbeToolsPackage.Instance.FunctionFileScanner.GetClass(match.Groups[1].Value);
-			//	if (cls != null)
-			//	{
-			//		var func = cls.GetFunction(match.Groups[1].Value);
-			//		if (func != null)
-			//		{
-			//			foreach (var opt in GetOptionsForFunctionArg(
-			//		}
-			//	}
-			//}
+				var cls = ProbeToolsPackage.Instance.FunctionFileScanner.GetClass(match.Groups[1].Value);
+				if (cls != null)
+				{
+					var className = match.Groups[1].Value;
+					var funcName = match.Groups[2].Value;
+					foreach (var opt in GetOptionsForFunctionArg(className, funcName, 0)) completionList[opt.DisplayText] = opt;
+				}
+			}
 			else if ((match = _rxFunctionStartBracket.Match(prefix)).Success)
 			{
 				// Starting a new function.
 
 				var funcName = match.Groups[1].Value;
-				foreach (var opt in GetOptionsForFunctionArg(funcName, 0)) completionList[opt.DisplayText] = opt;
+				foreach (var opt in GetOptionsForFunctionArg(null, funcName, 0)) completionList[opt.DisplayText] = opt;
 			}
 			else if (prefix.EndsWith(", "))
 			{
@@ -226,7 +223,7 @@ namespace DkTools.StatementCompletion
 				int argIndex;
 				if (GetInsideFunction(snapshot, curPos, out funcName, out argIndex))
 				{
-					foreach (var opt in GetOptionsForFunctionArg(funcName, argIndex)) completionList[opt.DisplayText] = opt;
+					foreach (var opt in GetOptionsForFunctionArg(null, funcName, argIndex)) completionList[opt.DisplayText] = opt;
 				}
 			}
 			else if ((match = _rxReturn.Match(prefix)).Success)
@@ -278,12 +275,23 @@ namespace DkTools.StatementCompletion
 			}
 		}
 
-		private IEnumerable<Completion> GetOptionsForFunctionArg(string funcName, int argIndex)
+		private IEnumerable<Completion> GetOptionsForFunctionArg(string className, string funcName, int argIndex)
 		{
 			var model = CodeModel.FileStore.GetOrCreateForTextBuffer(_textBuffer).GetCurrentModel(_textBuffer.CurrentSnapshot, "Signature help get options for arg");
 
-			var sig = SignatureHelp.ProbeSignatureHelpSource.GetAllSignaturesForFunction(model, funcName).FirstOrDefault();
-			if (string.IsNullOrEmpty(sig)) yield break;
+			string sig;
+			if (!string.IsNullOrEmpty(className))
+			{
+				var func = ProbeToolsPackage.Instance.FunctionFileScanner.GetFunction(className, funcName);
+				if (func == null) yield break;
+				sig = func.Signature;
+				if (string.IsNullOrWhiteSpace(sig)) yield break;
+			}
+			else
+			{
+				sig = SignatureHelp.ProbeSignatureHelpSource.GetAllSignaturesForFunction(model, funcName).FirstOrDefault();
+				if (string.IsNullOrEmpty(sig)) yield break;
+			}
 
 			var argText = GetArgumentText(sig, argIndex);
 			if (string.IsNullOrWhiteSpace(argText)) yield break;
@@ -406,16 +414,10 @@ namespace DkTools.StatementCompletion
 
 		public string GetArgumentText(string sig, int argIndex)
 		{
-			var argStartIndex = sig.IndexOf('(');
-			if (argStartIndex <= 0) return null;
-			argStartIndex++;
+			var args = SignatureHelp.ProbeSignatureHelpSource.GetSignatureArguments(sig).ToArray();
+			if (argIndex < 0 || argIndex >= args.Length) return null;
 
-			var argEndIndex = sig.LastIndexOf(')');
-			if (argEndIndex <= 0) argEndIndex = sig.Length;
-
-			var args = sig.Substring(argStartIndex, argEndIndex - argStartIndex).Split(',');
-			if (argIndex >= args.Length) return null;
-			return args[argIndex].Trim();
+			return args[argIndex];
 		}
 	}
 }

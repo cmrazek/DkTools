@@ -160,6 +160,14 @@ namespace DkTools.FunctionFileScanning
 			}
 		}
 
+		public FFFunction GetFunction(string className, string funcName)
+		{
+			var cls = GetClass(className);
+			if (cls == null) return null;
+
+			return cls.GetFunction(funcName);
+		}
+
 		public IEnumerable<CodeModel.Definitions.Definition> GlobalDefinitions
 		{
 			get

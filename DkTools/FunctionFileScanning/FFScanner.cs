@@ -267,6 +267,11 @@ namespace DkTools.FunctionFileScanning
 			return GetCurrentApp().GetFunction(funcName);
 		}
 
+		public FFFunction GetFunction(string className, string funcName)
+		{
+			return GetCurrentApp().GetFunction(className, funcName);
+		}
+
 		public IEnumerable<CodeModel.Definitions.Definition> GlobalDefinitions
 		{
 			get { return GetCurrentApp().GlobalDefinitions; }

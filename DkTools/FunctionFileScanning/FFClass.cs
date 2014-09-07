@@ -91,6 +91,13 @@ namespace DkTools.FunctionFileScanning
 			}
 		}
 
+		public FFFunction GetFunction(string name)
+		{
+			FFFunction func;
+			if (_funcs.TryGetValue(name, out func)) return func;
+			return null;
+		}
+
 		public CodeModel.Definitions.FunctionDefinition GetFunctionDefinition(string name)
 		{
 			FFFunction func;
