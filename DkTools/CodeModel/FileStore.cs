@@ -10,7 +10,7 @@ using DkTools.CodeModel.Tokens;
 
 namespace DkTools.CodeModel
 {
-	internal class FileStore
+	internal sealed class FileStore
 	{
 		private Dictionary<string, IncludeFile> _sameDirIncludeFiles = new Dictionary<string, IncludeFile>();
 		private Dictionary<string, IncludeFile> _globalIncludeFiles = new Dictionary<string, IncludeFile>();
@@ -44,10 +44,18 @@ namespace DkTools.CodeModel
 
 			if (searchSameDir && !string.IsNullOrEmpty(sourceFileName))
 			{
-				if (_sameDirIncludeFiles.TryGetValue(fileNameLower, out file)) return file;
+				if (_sameDirIncludeFiles.TryGetValue(fileNameLower, out file))
+				{
+					file.CheckForRefreshRequired();
+					return file;
+				}
 			}
 
-			if (_globalIncludeFiles.TryGetValue(fileNameLower, out file)) return file;
+			if (_globalIncludeFiles.TryGetValue(fileNameLower, out file))
+			{
+				file.CheckForRefreshRequired();
+				return file;
+			}
 
 			// Search the disk in same directory.
 			if (searchSameDir && !string.IsNullOrEmpty(sourceFileName))
@@ -285,12 +293,14 @@ namespace DkTools.CodeModel
 			}
 		}
 
-		public class IncludeFile
+		public sealed class IncludeFile
 		{
 			private FileStore _store;
 			private string _fullPathName;
 			private CodeSource _source;
 			private CodeFile _codeFile;
+			private DateTime _lastCheck;
+			private DateTime _lastModifiedDate;
 
 			public IncludeFile(FileStore store, string fileName)
 			{
@@ -299,6 +309,13 @@ namespace DkTools.CodeModel
 
 				_store = store;
 				_fullPathName = fileName;
+
+				Shell.FileSaved += Shell_FileSaving;
+			}
+
+			~IncludeFile()
+			{
+				Shell.FileSaved -= Shell_FileSaving;
 			}
 
 			public CodeSource Source
@@ -314,17 +331,9 @@ namespace DkTools.CodeModel
 							_source.Append(content, _fullPathName, Position.Start, Position.Start.Advance(content), true, false, false);
 							_source.Flush();
 
-							//var merger = new FileMerger();
-							//merger.MergeFile(_fullPathName, true);
-
-							//var content = merger.MergedContent;
-							//if (content == null)
-							//{
-							//	Log.WriteDebug("Unable to get merged content for include file '{0}'.", _fullPathName);
-							//	return null;
-							//}
-
-							//_source = content;
+							var fileInfo = new FileInfo(_fullPathName);
+							_lastModifiedDate = fileInfo.LastWriteTime;
+							_lastCheck = DateTime.Now;
 						}
 						catch (Exception ex)
 						{
@@ -356,6 +365,8 @@ namespace DkTools.CodeModel
 						Log.WriteEx(ex, "Exception when processing include file '{0}'.", _fullPathName);
 						_codeFile = null;
 					}
+
+					_lastCheck = DateTime.Now;
 				}
 				return _codeFile;
 			}
@@ -363,6 +374,37 @@ namespace DkTools.CodeModel
 			public string FullPathName
 			{
 				get { return _fullPathName; }
+			}
+
+			public void CheckForRefreshRequired()
+			{
+				if (_lastCheck.AddSeconds(Constants.IncludeFileCheckFrequency) <= DateTime.Now)
+				{
+					var fileInfo = new FileInfo(_fullPathName);
+					var modDate = fileInfo.LastWriteTime;
+					if (Math.Abs(modDate.Subtract(_lastModifiedDate).TotalSeconds) > 1.0)
+					{
+						Log.WriteDebug("Detected change in include file: {0}", _fullPathName);
+						OnFileChangeSuspected();
+						_lastModifiedDate = modDate;
+					}
+					_lastCheck = DateTime.Now;
+				}
+			}
+
+			private void Shell_FileSaving(object sender, Shell.FileSavedEventArgs e)
+			{
+				if (e.FileName.Equals(_fullPathName, StringComparison.OrdinalIgnoreCase))
+				{
+					Log.WriteDebug("Detected change in include file (saving): {0}", _fullPathName);
+					OnFileChangeSuspected();
+				}
+			}
+
+			private void OnFileChangeSuspected()
+			{
+				_source = null;
+				_codeFile = null;
 			}
 		}
 

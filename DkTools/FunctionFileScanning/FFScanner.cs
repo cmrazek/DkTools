@@ -46,6 +46,7 @@ namespace DkTools.FunctionFileScanning
 			_thread.Start();
 
 			ProbeEnvironment.AppChanged += new EventHandler(ProbeEnvironment_AppChanged);
+			Shell.FileSaved += Shell_FileSaved;
 		}
 
 		public void OnShutdown()
@@ -153,12 +154,21 @@ namespace DkTools.FunctionFileScanning
 			{
 				foreach (var fileName in Directory.GetFiles(dir))
 				{
-					if (FunctionFilePattern.IsMatch(fileName)) _filesToProcess.Enqueue(fileName);
+					if (FunctionFilePattern.IsMatch(fileName))
+					{
+						lock (_filesToProcess)
+						{
+							_filesToProcess.Enqueue(fileName);
+						}
+					}
 				}
 
 				foreach (var subDir in Directory.GetDirectories(dir))
 				{
-					_dirsToProcess.Enqueue(new ProcessDir { dir = subDir, root = false });
+					lock (_dirsToProcess)
+					{
+						_dirsToProcess.Enqueue(new ProcessDir { dir = subDir, root = false });
+					}
 				}
 			}
 			catch (Exception ex)
@@ -361,6 +371,26 @@ namespace DkTools.FunctionFileScanning
 		public FFClass GetClass(string className)
 		{
 			return GetCurrentApp().GetClass(className);
+		}
+
+		private void Shell_FileSaved(object sender, Shell.FileSavedEventArgs e)
+		{
+			if (FunctionFilePattern.IsMatch(e.FileName) && ProbeEnvironment.FileExistsInApp(e.FileName))
+			{
+				Log.WriteDebug("Function file scanner detected a saved file: {0}", e.FileName);
+
+				var added = false;
+				lock (_filesToProcess)
+				{
+					if (!_filesToProcess.Contains(e.FileName))
+					{
+						_filesToProcess.Enqueue(e.FileName);
+						added = true;
+					}
+				}
+
+				if (added) Start();
+			}
 		}
 	}
 }

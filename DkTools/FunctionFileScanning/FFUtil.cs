@@ -142,5 +142,19 @@ namespace DkTools.FunctionFileScanning
 					return false;
 			}
 		}
+
+		public static bool FileNameIsFunction(string fileName)
+		{
+			var ext = System.IO.Path.GetExtension(fileName).ToLower();
+			switch (ext)
+			{
+				case ".f":
+				case ".f&":
+				case ".f+":
+					return true;
+				default:
+					return false;
+			}
+		}
 	}
 }

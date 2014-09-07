@@ -187,5 +187,20 @@ namespace DkTools
 			ErrorHandler.ThrowOnFailure((window.Frame as IVsWindowFrame).Show());
 			return window;
 		}
+
+		public static void OnFileSaved(string fileName)
+		{
+			if (!string.IsNullOrEmpty(fileName))
+			{
+				var ev = FileSaved;
+				if (ev != null) ev(null, new FileSavedEventArgs { FileName = fileName });
+			}
+		}
+
+		public static event EventHandler<FileSavedEventArgs> FileSaved;
+		public class FileSavedEventArgs : EventArgs
+		{
+			public string FileName { get; set; }
+		}
 	}
 }

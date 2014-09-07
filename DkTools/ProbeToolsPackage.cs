@@ -84,6 +84,8 @@ namespace DkTools
 	{
 		private uint _componentId;
 		private static ProbeToolsPackage _instance;
+		private EnvDTE.Events _dteEvents;
+		private EnvDTE.DocumentEvents _dteDocumentEvents;
 
 		/// <summary>
 		/// Default constructor of the package.
@@ -130,6 +132,11 @@ namespace DkTools
 			if (mcs != null) Commands.InitCommands(mcs);
 
 			_functionScanner = new FunctionFileScanning.FFScanner();
+
+			// Need to keep a reference to Events and DocumentEvents in order for DocumentSaved to be triggered.
+			_dteEvents = Shell.DTE.Events;
+			_dteDocumentEvents = _dteEvents.DocumentEvents;
+			_dteDocumentEvents.DocumentSaved += DocumentEvents_DocumentSaved;
 		}
 
 		protected override void Dispose(bool disposing)
@@ -255,6 +262,18 @@ namespace DkTools
 		internal FunctionFileScanning.FFScanner FunctionFileScanner
 		{
 			get { return _functionScanner; }
+		}
+
+		private void DocumentEvents_DocumentSaved(EnvDTE.Document Document)
+		{
+			try
+			{
+				Shell.OnFileSaved(Document.FullName);
+			}
+			catch (Exception ex)
+			{
+				Shell.ShowError(ex);
+			}
 		}
 
 		#region Settings

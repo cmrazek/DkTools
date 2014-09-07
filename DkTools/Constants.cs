@@ -53,5 +53,6 @@ namespace DkTools
 		public const int OutliningMaxContextChars = 500;
 
 		public const int WordSelectDelay = 500;	// milliseconds
+		public const int IncludeFileCheckFrequency = 30;	// seconds
 	}
 }
