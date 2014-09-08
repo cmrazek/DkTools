@@ -371,8 +371,9 @@ namespace DkTools.FunctionFileScanning
 			// Scan the database to find entries not in memory.
 
 			var removeList = new List<int>();
-			using (var cmd = db.CreateCommand("select id, name from class_"))
+			using (var cmd = db.CreateCommand("select id, name from class_ where app_id = @app_id"))
 			{
+				cmd.Parameters.AddWithValue("@app_id", _id);
 				using (var rdr = cmd.ExecuteReader())
 				{
 					var ordId = rdr.GetOrdinal("id");
@@ -395,8 +396,9 @@ namespace DkTools.FunctionFileScanning
 			removeList.Clear();
 
 
-			using (var cmd = db.CreateCommand("select id, name from func where class_id is null"))
+			using (var cmd = db.CreateCommand("select id, name from func where app_id = @app_id and class_id is null"))
 			{
+				cmd.Parameters.AddWithValue("@app_id", _id);
 				using (var rdr = cmd.ExecuteReader())
 				{
 					var ordId = rdr.GetOrdinal("id");
@@ -411,8 +413,9 @@ namespace DkTools.FunctionFileScanning
 					}
 				}
 			}
-			using (var cmd = db.CreateCommand("select func.id, func.name, class_.name as class_name from func inner join class_ on class_.id = func.class_id where class_id is not null"))
+			using (var cmd = db.CreateCommand("select func.id, func.name, class_.name as class_name from func inner join class_ on class_.id = func.class_id where func.app_id = @app_id and func.class_id is not null"))
 			{
+				cmd.Parameters.AddWithValue("@app_id", _id);
 				using (var rdr = cmd.ExecuteReader())
 				{
 					var ordId = rdr.GetOrdinal("id");
@@ -442,8 +445,9 @@ namespace DkTools.FunctionFileScanning
 			removeList.Clear();
 
 
-			using (var cmd = db.CreateCommand("select id, file_name from file_"))
+			using (var cmd = db.CreateCommand("select id, file_name from file_ where app_id = @app_id"))
 			{
+				cmd.Parameters.AddWithValue("@app_id", _id);
 				using (var rdr = cmd.ExecuteReader())
 				{
 					var ordId = rdr.GetOrdinal("id");

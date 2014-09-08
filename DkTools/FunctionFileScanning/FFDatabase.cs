@@ -45,10 +45,10 @@ namespace DkTools.FunctionFileScanning
 	name				nvarchar(100)	not null,
 	app_id				int				not null,
 	file_id				int				not null,
-	sig					nvarchar(1000)	not null,
+	sig					nvarchar(4000)	not null,
 	span				nvarchar(100)	not null,
-	data_type			nvarchar(1000)	not null,
-	completion_options	nvarchar(1000),
+	data_type			nvarchar(4000)	not null,
+	completion_options	nvarchar(4000),
 	privacy				nvarchar(10)	not null
 );",
 "create index func_ix_classfunc on func (class_id, name);" };

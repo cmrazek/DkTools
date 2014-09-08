@@ -19,6 +19,7 @@ namespace DkTools.FunctionFileScanning
 		private Queue<string> _filesToProcess = new Queue<string>();
 
 		private const int k_threadWaitIdle = 1000;
+		private const int k_threadWaitActive = 0;
 
 		private const string k_noProbeApp = "(none)";
 
@@ -109,7 +110,7 @@ namespace DkTools.FunctionFileScanning
 
 			using (var db = new FFDatabase())
 			{
-				while (!_kill.WaitOne(0))
+				while (!_kill.WaitOne(k_threadWaitActive))
 				{
 					string path = null;
 					lock (_filesToProcess)
@@ -182,9 +183,10 @@ namespace DkTools.FunctionFileScanning
 				DateTime modified;
 				if (!app.TryGetFileDate(fileName, out modified)) modified = DateTime.MinValue;
 
-				if (modified != DateTime.MinValue && Math.Abs(File.GetLastWriteTime(fileName).Subtract(modified).TotalSeconds) < 1.0) return;
+				var fileModified = File.GetLastWriteTime(fileName);
+				if (modified != DateTime.MinValue && Math.Abs(fileModified.Subtract(modified).TotalSeconds) < 1.0) return;
 
-				Log.WriteDebug("Processing function file: {0}", fileName);
+				Log.WriteDebug("Processing function file: {0} (modified={1}, last modified={2})", fileName, fileModified, modified);
 				Shell.SetStatusText(string.Format("DkTools background scanning file: {0}", fileName));
 
 				var fileTitle = Path.GetFileNameWithoutExtension(fileName);
@@ -238,7 +240,7 @@ namespace DkTools.FunctionFileScanning
 					ffFunc.MarkUsed();
 				}
 
-				ffFile.Modified = File.GetLastWriteTime(fileName);
+				ffFile.Modified = fileModified;
 
 				// Save the new info to the database
 				ffFile.InsertOrUpdate(db);

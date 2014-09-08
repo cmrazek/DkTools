@@ -86,6 +86,7 @@ namespace DkTools
 		private static ProbeToolsPackage _instance;
 		private EnvDTE.Events _dteEvents;
 		private EnvDTE.DocumentEvents _dteDocumentEvents;
+		private FunctionFileScanning.FFScanner _functionScanner;
 
 		/// <summary>
 		/// Default constructor of the package.
@@ -146,6 +147,12 @@ namespace DkTools
 				var mgr = GetService(typeof(SOleComponentManager)) as IOleComponentManager;
 				if (mgr != null) mgr.FRevokeComponent(_componentId);
 				_componentId = 0;
+			}
+
+			if (_functionScanner != null)
+			{
+				_functionScanner.Dispose();
+				_functionScanner = null;
 			}
 
 			Log.Close();
@@ -453,10 +460,6 @@ namespace DkTools
 				return _statusBarService;
 			}
 		}
-		#endregion
-
-		#region Singleton Classes
-		private FunctionFileScanning.FFScanner _functionScanner;
 		#endregion
 	}
 }
