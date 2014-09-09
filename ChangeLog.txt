@@ -18,6 +18,7 @@ Features:
 
 Bug Fixes:
 - Signature help now properly ignores commas that aren't parameter delimiters (e.g. enum options)
+- Fixed smart indenting after lines with #include, #replace/#with/#endreplace.
 
 ____________________________________________________________________________________________________
 Version 1.2.3 - Aug 8, 2014:

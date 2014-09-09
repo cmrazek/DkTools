@@ -15,7 +15,7 @@ namespace DkTools.SmartIndenting
 		private int _tabSize = 4;
 		private bool _keepTabs = true;
 
-		private Regex _rxPreprocessorLine = new Regex(@"^\s*#");
+		private Regex _rxPreprocessorLine = new Regex(@"^\s*#(?:if|ifdef|ifndef|elif|else|endif|define|undef)");
 		private Regex _rxCaseLine = new Regex(@"^\s*(case\s+.*\:|default\:|before\s+group.*\:|after\s+group.*\:|for\s+each\s*\:)");
 
 		public ProbeSmartIndent(ITextView view)
