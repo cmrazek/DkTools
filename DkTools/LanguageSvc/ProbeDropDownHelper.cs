@@ -35,7 +35,9 @@ namespace DkTools.LanguageSvc
 			var caretPos = model.GetPosition(line, col);
 			var index = 0;
 
-			foreach (var func in fileStore.GetFunctionDropDownList(buf.CurrentSnapshot))
+			var funcs = fileStore.GetFunctionDropDownList(buf.CurrentSnapshot).ToList();
+			funcs.Sort((a,b) => a.Name.CompareTo(b.Name));
+			foreach (var func in funcs)
 			{
 				var span = func.EntireFunctionSpan;
 				dropDownMembers.Add(new DropDownMember(func.Name, span.ToVsTextInteropSpan(), k_methodImageIndex, DROPDOWNFONTATTR.FONTATTR_PLAIN));
