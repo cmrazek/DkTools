@@ -38,6 +38,9 @@ namespace DkTools.CodeModel
 
 		public IncludeFile GetIncludeFile(string sourceFileName, string fileName, bool searchSameDir, IEnumerable<string> parentFiles)
 		{
+#if DEBUG
+			if (parentFiles == null) throw new ArgumentNullException("parentFiles");
+#endif
 			if (string.IsNullOrEmpty(fileName)) return null;
 
 			// Check if the include file is cached.
@@ -188,6 +191,9 @@ namespace DkTools.CodeModel
 
 		private bool CheckForCyclicalInclude(string fullPathName, IEnumerable<string> parentFiles)
 		{
+#if DEBUG
+			if (parentFiles == null) throw new ArgumentNullException("parentFiles");
+#endif
 			if (parentFiles.Any(x => x.Equals(fullPathName, StringComparison.OrdinalIgnoreCase)))
 			{
 				Log.Write(LogLevel.Warning, string.Format("Cyclical include found for file '{0}'", fullPathName));

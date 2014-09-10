@@ -114,7 +114,7 @@ namespace DkTools.CodeModel
 					break;
 				case "#include":
 					p.reader.Ignore(directiveName.Length);
-					ProcessInclude(p);
+					if (!p.resolvingMacros) ProcessInclude(p);
 					break;
 				case "#if":
 					ProcessIf(p, directiveName, false);
@@ -446,6 +446,7 @@ namespace DkTools.CodeModel
 			var parms = new PreprocessorParams(reader, writer, string.Empty, null);
 			parms.restrictedDefines = restrictedDefines;
 			parms.args = args;
+			parms.resolvingMacros = true;
 
 			Preprocess(parms, false);
 			return writer.Text;
@@ -486,9 +487,16 @@ namespace DkTools.CodeModel
 		{
 			// Load the include file
 			string[] parentFiles;
-			if (string.IsNullOrEmpty(p.fileName)) parentFiles = p.parentFiles;
-			else if (p.parentFiles == null) parentFiles = new string[0];
-			else parentFiles = p.parentFiles.Concat(new string[] { p.fileName }).ToArray();
+			if (string.IsNullOrEmpty(p.fileName))
+			{
+				parentFiles = p.parentFiles;
+				if (parentFiles == null) parentFiles = new string[0];
+			}
+			else
+			{
+				if (p.parentFiles != null) parentFiles = p.parentFiles.Concat(new string[] { p.fileName }).ToArray();
+				else parentFiles = new string[0];
+			}
 
 			var includeNode = _store.GetIncludeFile(p.fileName, fileName, searchSameDir, parentFiles);
 			if (includeNode == null) return;
@@ -871,6 +879,7 @@ namespace DkTools.CodeModel
 			public IEnumerable<string> restrictedDefines;
 			public ContentType contentType;
 			public bool replaceInEffect;
+			public bool resolvingMacros;
 
 			public PreprocessorParams(IPreprocessorReader reader, IPreprocessorWriter writer, string fileName, IEnumerable<string> parentFiles)
 			{
