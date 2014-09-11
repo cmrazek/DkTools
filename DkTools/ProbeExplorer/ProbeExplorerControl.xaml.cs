@@ -22,10 +22,12 @@ namespace DkTools.ProbeExplorer
 	public partial class ProbeExplorerControl : UserControl
 	{
 		#region Variables
+		private List<string> _fileList;
+		private BackgroundDeferrer _dictTreeDeferrer = new BackgroundDeferrer();
+		private TextFilter _dictFilter = new TextFilter();
+
 		private BitmapImage _folderImg;
 		private BitmapImage _fileImg;
-		private List<string> _fileList;
-
 		private BitmapImage _tableImg;
 		private BitmapImage _fieldImg;
 		#endregion
@@ -48,11 +50,6 @@ namespace DkTools.ProbeExplorer
 		#endregion
 
 		#region Construction
-		private void UserControl_Loaded(object sender, RoutedEventArgs e)
-		{
-			
-		}
-
 		public ProbeExplorerControl()
 		{
 			InitializeComponent();
@@ -63,7 +60,21 @@ namespace DkTools.ProbeExplorer
 			_fieldImg = BitmapToBitmapImage(Res.FieldImg);
 
 			ProbeEnvironment.AppChanged += new EventHandler(Probe_AppChanged);
+			_dictTreeDeferrer.Idle += DictTreeDeferrer_Idle;
 		}
+
+		~ProbeExplorerControl()
+		{
+			if (_dictTreeDeferrer != null)
+			{
+				_dictTreeDeferrer.Idle -= DictTreeDeferrer_Idle;
+				_dictTreeDeferrer.Dispose();
+				_dictTreeDeferrer = null;
+			}
+		}
+
+		private void UserControl_Loaded(object sender, RoutedEventArgs e)
+		{ }
 
 		private void Grid_Loaded(object sender, RoutedEventArgs e)
 		{
@@ -73,7 +84,7 @@ namespace DkTools.ProbeExplorer
 				RefreshFileTree();
 				RefreshDictTree();
 
-				UpdateForFilter();
+				UpdateForFileFilter();
 #if DEBUG
 				c_appLabel.MouseRightButtonUp += new MouseButtonEventHandler(AppLabel_MouseRightButtonUp);
 #endif
@@ -506,7 +517,7 @@ namespace DkTools.ProbeExplorer
 			}
 		}
 
-		private void UpdateForFilter()
+		private void UpdateForFileFilter()
 		{
 			var filterText = c_fileFilterTextBox.Text;
 			if (string.IsNullOrWhiteSpace(filterText))
@@ -700,7 +711,7 @@ namespace DkTools.ProbeExplorer
 		{
 			try
 			{
-				UpdateForFilter();
+				UpdateForFileFilter();
 			}
 			catch (Exception ex)
 			{
@@ -909,7 +920,10 @@ namespace DkTools.ProbeExplorer
 					var table = tableNode.Tag as DictTable;
 					foreach (var field in table.Fields)
 					{
-						tableNode.Items.Add(CreateFieldTreeViewItem(field));
+						if (_dictFilter.Match(field.Name) || _dictFilter.Match(field.Prompt))
+						{
+							tableNode.Items.Add(CreateFieldTreeViewItem(field));
+						}
 					}
 
 					e.Handled = true;
@@ -1062,7 +1076,7 @@ namespace DkTools.ProbeExplorer
 
 		public void FocusTable(string tableName)
 		{
-			c_dictTab.Focus();
+			c_dictTab.IsSelected = true;
 
 			foreach (TreeViewItem tableNode in c_dictTree.Items)
 			{
@@ -1070,6 +1084,7 @@ namespace DkTools.ProbeExplorer
 				if (table.Name == tableName)
 				{
 					tableNode.IsSelected = true;
+					tableNode.BringIntoView();
 					tableNode.Focus();
 					return;
 				}
@@ -1081,7 +1096,7 @@ namespace DkTools.ProbeExplorer
 
 		public void FocusTableField(string tableName, string fieldName)
 		{
-			c_dictTab.Focus();
+			c_dictTab.IsSelected = true;
 			this.UpdateLayout();
 
 			foreach (TreeViewItem tableNode in c_dictTree.Items)
@@ -1096,6 +1111,7 @@ namespace DkTools.ProbeExplorer
 						if (field.Name == fieldName)
 						{
 							fieldNode.IsSelected = true;
+							fieldNode.BringIntoView();
 							fieldNode.Focus();
 							return;
 						}
@@ -1105,6 +1121,201 @@ namespace DkTools.ProbeExplorer
 
 			// If we got here, then the table/field wasn't found.
 			c_dictTree.Focus();
+		}
+
+		private void ApplyDictTreeFilter()
+		{
+			if (!c_dictTree.Dispatcher.CheckAccess())
+			{
+				c_dictTree.Dispatcher.BeginInvoke(new Action(() => { ApplyDictTreeFilter(); }));
+				return;
+			}
+
+			_dictFilter.Filter = c_dictTreeFilter.Text;
+			var empty = _dictFilter.IsEmpty;
+
+			foreach (TreeViewItem tableNode in c_dictTree.Items)
+			{
+				var table = tableNode.Tag as DictTable;
+				if (table == null) continue;
+
+				if (empty)
+				{
+					tableNode.Visibility = System.Windows.Visibility.Visible;
+					tableNode.IsExpanded = false;
+				}
+				else
+				{
+					var showTable = false;
+					var expandTable = false;
+					if (_dictFilter.Match(table.Name) || _dictFilter.Match(table.Prompt))
+					{
+						showTable = true;
+					}
+
+					foreach (var field in table.Fields)
+					{
+						if (_dictFilter.Match(field.Name) || _dictFilter.Match(field.Prompt))
+						{
+							showTable = true;
+							expandTable = true;
+						}
+					}
+
+					tableNode.Visibility = showTable ? System.Windows.Visibility.Visible : System.Windows.Visibility.Collapsed;
+
+					if (expandTable)
+					{
+						if (tableNode.IsExpanded) tableNode.IsExpanded = false;
+						tableNode.IsExpanded = true;
+					}
+				}
+			}
+
+			// TODO: remove
+			//var text = c_dictTreeFilter.Text;
+			//if (string.IsNullOrWhiteSpace(text))
+			//{
+			//	var selItem = c_dictTree.SelectedItem as TreeViewItem;
+
+			//	foreach (TreeViewItem tableNode in c_dictTree.Items)
+			//	{
+			//		var table = tableNode.Tag as DictTable;
+			//		if (table == null) continue;
+
+			//		var containsSelItem = (from f in tableNode.Items.Cast<TreeViewItem>() where f == selItem select f).Any();
+
+			//		if (!containsSelItem)
+			//		{
+			//			tableNode.IsExpanded = false;
+			//		}
+
+			//		foreach (TreeViewItem fieldNode in tableNode.Items) fieldNode.Visibility = System.Windows.Visibility.Visible;
+			//		tableNode.Visibility = System.Windows.Visibility.Visible;
+			//	}
+
+			//	if (selItem != null) selItem.BringIntoView();
+			//}
+			//else
+			//{
+			//	var filter = new TextFilter(c_dictTreeFilter.Text);
+
+			//	foreach (TreeViewItem tableNode in c_dictTree.Items)
+			//	{
+			//		var table = tableNode.Tag as DictTable;
+			//		if (table == null) continue;
+
+			//		var showTable = false;
+			//		var expandTable = false;
+			//		if (filter.Match(table.Name) || filter.Match(table.Prompt))
+			//		{
+			//			showTable = true;
+			//		}
+
+			//		foreach (TreeViewItem fieldNode in tableNode.Items)
+			//		{
+			//			var field = fieldNode.Tag as DictField;
+			//			if (field == null) continue;
+
+			//			if (filter.Match(field.Name) || filter.Match(field.Prompt))
+			//			{
+			//				showTable = true;
+			//				expandTable = true;
+			//				fieldNode.Visibility = System.Windows.Visibility.Visible;
+			//			}
+			//			else
+			//			{
+			//				fieldNode.Visibility = System.Windows.Visibility.Collapsed;
+			//			}
+			//		}
+
+			//		tableNode.Visibility = showTable ? System.Windows.Visibility.Visible : System.Windows.Visibility.Collapsed;
+			//		if (expandTable && !tableNode.IsExpanded) tableNode.IsExpanded = true;
+			//	}
+			//}
+		}
+
+		private void DictTreeFilter_TextChanged(object sender, TextChangedEventArgs e)
+		{
+			try
+			{
+				_dictTreeDeferrer.OnActivity();
+			}
+			catch (Exception ex)
+			{
+				this.ShowError(ex);
+			}
+		}
+
+		void DictTreeDeferrer_Idle(object sender, BackgroundDeferrer.IdleEventArgs e)
+		{
+			try
+			{
+				ApplyDictTreeFilter();
+			}
+			catch (Exception ex)
+			{
+				this.ShowError(ex);
+			}
+		}
+
+		private void DictTreeFilterClear_MouseUp_1(object sender, MouseButtonEventArgs e)
+		{
+			try
+			{
+				c_dictTreeFilter.Text = string.Empty;
+				c_dictTreeFilter.Focus();
+				_dictTreeDeferrer.ExecuteNowIfPending();
+			}
+			catch (Exception ex)
+			{
+				this.ShowError(ex);
+			}
+		}
+
+		private void DictTreeFilterClear_MouseEnter_1(object sender, MouseEventArgs e)
+		{
+			try
+			{
+				c_dictTreeFilterClear.Opacity = 1.0;
+			}
+			catch (Exception ex)
+			{
+				this.ShowError(ex);
+			}
+		}
+
+		private void DictTreeFilterClear_MouseLeave_1(object sender, MouseEventArgs e)
+		{
+			try
+			{
+				c_dictTreeFilterClear.Opacity = .5;
+			}
+			catch (Exception ex)
+			{
+				this.ShowError(ex);
+			}
+		}
+
+		private void DictTreeFilter_KeyDown_1(object sender, KeyEventArgs e)
+		{
+			try
+			{
+				if (e.Key == Key.Enter)
+				{
+					_dictTreeDeferrer.ExecuteNowIfPending();
+					e.Handled = true;
+				}
+				else if (e.Key == Key.Escape)
+				{
+					c_dictTreeFilter.Text = string.Empty;
+					_dictTreeDeferrer.ExecuteNowIfPending();
+				}
+			}
+			catch (Exception ex)
+			{
+				this.ShowError(ex);
+			}
 		}
 		#endregion
 	}

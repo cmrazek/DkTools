@@ -31,8 +31,7 @@ namespace DkTools
 		{
 			try
 			{
-				var ev = Idle;
-				if (ev != null) ev(this, new IdleEventArgs { Value = _value });
+				Execute();
 			}
 			catch (Exception ex)
 			{
@@ -54,6 +53,21 @@ namespace DkTools
 				_timer.Dispose();
 				_timer = null;
 			}
+		}
+
+		public void ExecuteNowIfPending()
+		{
+			if (_timer.Enabled)
+			{
+				_timer.Stop();
+				Execute();
+			}
+		}
+
+		private void Execute()
+		{
+			var ev = Idle;
+			if (ev != null) ev(this, new IdleEventArgs { Value = _value });
 		}
 	}
 }

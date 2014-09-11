@@ -15,6 +15,9 @@ Features:
 - Logging is now written to a file under app-data directory.
 - Removed extern variables, because they're no longer supported in WBDK.
 - Typing #ifdef or #ifndef will now display an auto-completion list of constants.
+- In filter text boxes (file, dictionary explorers) you can now use '|' as an 'or' operator.
+  For example, "dmd|loan|term .st" will find anything with the text "dmd", "loan" or "term" and must
+  also contain ".st". (dmd.st, loan.st, term.st, but not cust.st)
 
 Bug Fixes:
 - Signature help now properly ignores commas that aren't parameter delimiters (e.g. enum options)

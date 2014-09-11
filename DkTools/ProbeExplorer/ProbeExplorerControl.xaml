@@ -27,12 +27,17 @@
 					</TreeView>
                     <ListBox HorizontalAlignment="Stretch" Margin="0,25,0,0" Name="c_fileList" VerticalAlignment="Stretch" KeyDown="FileList_KeyDown">
 					</ListBox>
-					<Image Height="16" HorizontalAlignment="Right" Margin="0,4,4,0" Name="c_clearFileFilterImg" Stretch="Fill" VerticalAlignment="Top" Width="16" Source="/DkTools2012;component/Images/Clear.png" Opacity="0.5" MouseUp="ClearFileFilterImg_MouseUp" MouseEnter="ClearFileFilterImg_MouseEnter" MouseLeave="ClearFileFilterImg_MouseLeave" />
+					<Image Name="c_clearFileFilterImg" Height="16" HorizontalAlignment="Right" Margin="0,4,4,0" Stretch="Fill" VerticalAlignment="Top" Width="16" Source="/DkTools2012;component/Images/Clear.png" Opacity="0.5" MouseUp="ClearFileFilterImg_MouseUp" MouseEnter="ClearFileFilterImg_MouseEnter" MouseLeave="ClearFileFilterImg_MouseLeave" />
 				</Grid>
             </TabItem>
             <TabItem Header="Dictionary" Name="c_dictTab">
                 <Grid>
-                    <TreeView Name="c_dictTree">
+                    <TextBox Name="c_dictTreeFilter" Height="23" HorizontalAlignment="Stretch" VerticalAlignment="Top" TextChanged="DictTreeFilter_TextChanged"
+                             KeyDown="DictTreeFilter_KeyDown_1"/>
+                    <Image Name="c_dictTreeFilterClear" Width="16" Height="16" VerticalAlignment="Top" HorizontalAlignment="Right"
+                           Source="/DkTools2012;component/Images/Clear.png" Opacity="0.5" Margin="0,4,4,0"
+                           MouseUp="DictTreeFilterClear_MouseUp_1" MouseEnter="DictTreeFilterClear_MouseEnter_1" MouseLeave="DictTreeFilterClear_MouseLeave_1"/>
+                    <TreeView Name="c_dictTree" Margin="0,25,0,0">
                     </TreeView>
                 </Grid>
             </TabItem>

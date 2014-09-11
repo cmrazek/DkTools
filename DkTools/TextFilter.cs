@@ -7,25 +7,24 @@ namespace DkTools
 	internal class TextFilter
 	{
 		private string _filter;
-		private List<string> _words = new List<string>();
+		private List<SearchTerm> _searchTerms = new List<SearchTerm>();
+
+		public TextFilter()
+		{ }
 
 		public TextFilter(string filter)
 		{
-			_filter = filter;
-			foreach (string word in filter.Split(' '))
-			{
-				string w = word.Trim();
-				if (!string.IsNullOrEmpty(w)) _words.Add(w);
-			}
+			this.Filter = filter;
 		}
 
 		public bool Match(string text)
 		{
-			if (_words.Count == 0) return true;
+			if (_searchTerms.Count == 0) return true;
+			if (string.IsNullOrWhiteSpace(text)) return false;
 
-			foreach (string word in _words)
+			foreach (var term in _searchTerms)
 			{
-				if (text.IndexOf(word, StringComparison.InvariantCultureIgnoreCase) < 0) return false;
+				if (!term.Match(text)) return false;
 			}
 			return true;
 		}
@@ -33,6 +32,43 @@ namespace DkTools
 		public string Filter
 		{
 			get { return _filter; }
+			set
+			{
+				_searchTerms.Clear();
+				_filter = value == null ? string.Empty : value;
+				foreach (string termText in _filter.Split(' ', '\t', '\r', '\n'))
+				{
+					if (string.IsNullOrWhiteSpace(termText)) continue;
+
+					var term = new SearchTerm();
+					foreach (string word in termText.Split('|'))
+					{
+						if (string.IsNullOrWhiteSpace(word)) continue;
+						term.words.Add(word);
+					}
+
+					if (term.words.Count > 0) _searchTerms.Add(term);
+				}
+			}
+		}
+
+		public bool IsEmpty
+		{
+			get { return _searchTerms.Count == 0; }
+		}
+
+		private class SearchTerm
+		{
+			public List<string> words = new List<string>();
+
+			public bool Match(string text)
+			{
+				foreach (var word in words)
+				{
+					if (text.IndexOf(word, StringComparison.InvariantCultureIgnoreCase) >= 0) return true;
+				}
+				return false;
+			}
 		}
 	}
 }
