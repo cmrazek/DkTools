@@ -18,6 +18,7 @@ Features:
 - In filter text boxes (file, dictionary explorers) you can now use '|' as an 'or' operator.
   For example, "dmd|loan|term .st" will find anything with the text "dmd", "loan" or "term" and must
   also contain ".st". (dmd.st, loan.st, term.st, but not cust.st)
+- Added option to not run DCCMP after the compile. (if you need to run without /z switch)
 
 Bug Fixes:
 - Signature help now properly ignores commas that aren't parameter delimiters (e.g. enum options)

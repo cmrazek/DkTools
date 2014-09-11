@@ -21,10 +21,16 @@ namespace DkTools.ProbeExplorer
 		[Description("When a compile is complete, if there are errors or warnings, then display Error List tool window.")]
 		public bool ShowErrorListAfterCompile { get; set; }
 
+		[Category("Compile")]
+		[DisplayName("Run DCCMP after a successful compile.")]
+		[Description("When a compile completes successfully, the DCCMP process will be automatically run with /z. You may want to disable this if need to run dccmp in manual mode.")]
+		public bool RunDccmpAfterCompile { get; set; }
+
 		public ProbeExplorerOptions()
 		{
 			ShowFilesInTree = false;
 			ShowErrorListAfterCompile = false;
+			RunDccmpAfterCompile = true;
 		}
 	}
 }
