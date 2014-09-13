@@ -12,9 +12,8 @@ namespace DkTools.Dict
 		public string Name { get; private set; }
 		public string Prompt { get; private set; }
 		public string Comment { get; private set; }
-		public string DataType { get; private set; }
+		public CodeModel.DataType DataType { get; private set; }
 
-		private string[] _completionOptions;
 		private CodeModel.Definitions.TableFieldDefinition _definition;
 
 		public DictField(DictTable table, DICTSRVRLib.IPColumn repoCol)
@@ -27,7 +26,20 @@ namespace DkTools.Dict
 			Comment = desc.Comment[0];
 
 			var data = repoCol as DICTSRVRLib.IPDataDef;
-			DataType = data.TypeText[0];
+
+			var dataTypeText = data.TypeText[0];
+			var parser = new TokenParser.Parser(dataTypeText);
+			DataType = CodeModel.DataType.Parse(parser, null, null, null);
+			if (DataType == null)
+			{
+				DataType = new CodeModel.DataType(dataTypeText);
+				Log.WriteDebug("DataType.Parse was unable to parse [{0}]", dataTypeText);
+			}
+			else if (parser.Read())
+			{
+				DataType = new CodeModel.DataType(dataTypeText);
+				Log.WriteDebug("DataType.Parse stopped before end of text [{0}] got [{1}]", dataTypeText, DataType.Name);
+			}
 
 			var dictObj = repoCol as DICTSRVRLib.IPDictObj;
 			string description = null;
@@ -37,13 +49,12 @@ namespace DkTools.Dict
 				if (description != null && description.Length == 0) description = null;
 			}
 
-			_completionOptions = CodeModel.DataType.ParseCompletionOptionsFromArgText(this.DataType, null, null).ToArray();
 			_definition = new CodeModel.Definitions.TableFieldDefinition(new CodeModel.Scope(), table.Name, Name, Prompt, Comment, DataType, description);
 		}
 
 		public IEnumerable<string> CompletionOptions
 		{
-			get { return _completionOptions; }
+			get { return DataType.CompletionOptions; }
 		}
 
 		public CodeModel.Definitions.TableFieldDefinition Definition

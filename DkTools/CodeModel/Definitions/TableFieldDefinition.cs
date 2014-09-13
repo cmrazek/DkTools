@@ -12,11 +12,11 @@ namespace DkTools.CodeModel.Definitions
 		private string _fieldName;
 		private string _prompt;
 		private string _comment;
-		private string _dataType;
+		private DataType _dataType;
 		private string _desc;
 		private string _repoDesc;
 
-		public TableFieldDefinition(Scope scope, string tableName, string fieldName, string prompt, string comment, string dataType, string description)
+		public TableFieldDefinition(Scope scope, string tableName, string fieldName, string prompt, string comment, DataType dataType, string description)
 			: base(scope, fieldName, null, true)
 		{
 			_tableName = tableName;
@@ -44,13 +44,8 @@ namespace DkTools.CodeModel.Definitions
 				if (_desc == null)
 				{
 					var sb = new StringBuilder();
-					if (!string.IsNullOrWhiteSpace(_dataType))
-					{
-						sb.Append(_dataType);
-						sb.Append(" ");
-					}
 					sb.Append(_tableName);
-					sb.Append(".");
+					sb.Append('.');
 					sb.Append(_fieldName);
 
 					if (!string.IsNullOrWhiteSpace(_prompt))
@@ -70,6 +65,17 @@ namespace DkTools.CodeModel.Definitions
 						sb.AppendLine();
 						sb.Append("Description: ");
 						sb.Append(_repoDesc);
+					}
+					if (_dataType != null)
+					{
+						sb.AppendLine();
+						sb.Append("Data Type: ");
+						sb.Append(_dataType.Name);
+						if (_dataType.InfoText != _dataType.Name)
+						{
+							sb.AppendLine();
+							sb.Append(_dataType.InfoText);
+						}
 					}
 					_desc = sb.ToString();
 				}

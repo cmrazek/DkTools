@@ -14,6 +14,7 @@ namespace DkTools.TokenParser
 		private string _source;
 		private int _length;
 		private StringBuilder _tokenText = new StringBuilder();
+		private string _tokenTextStr;
 		private TokenType _tokenType = TokenType.Unknown;
 		private bool _returnWhiteSpace = false;
 		private bool _returnComments = false;
@@ -48,6 +49,7 @@ namespace DkTools.TokenParser
 			{
 				_tokenStartPos = Position;
 				_tokenText.Clear();
+				_tokenTextStr = null;
 				_tokenTerminated = true;
 
 				var ch = _source[_pos];
@@ -103,7 +105,7 @@ namespace DkTools.TokenParser
 						}
 						else if (ch == '.' && !gotDot)
 						{
-							_tokenText.Append(".");
+							_tokenText.Append('.');
 							MoveNext();
 							gotDot = true;
 						}
@@ -164,42 +166,54 @@ namespace DkTools.TokenParser
 							_tokenTerminated = true;
 						}
 
-						while (_pos < index)
-						{
-							_tokenText.Append(_source[_pos]);
-							MoveNext();
-						}
-
 						if (_returnComments)
 						{
+							while (_pos < index)
+							{
+								_tokenText.Append(_source[_pos]);
+								MoveNext();
+							}
+
 							_tokenType = TokenType.Comment;
 							return true;
 						}
-						else continue;
+						else
+						{
+							MoveNext(index - _pos);
+							continue;
+						}
 					}
 
 					if (_pos + 1 < _length && _source[_pos + 1] == '*')
 					{
-						var index = _source.IndexOf("*/", _pos);
-						if (index < 0)
+						if (_returnComments) _tokenText.Append("/*");
+						MoveNext(2);
+						var level = 1;
+						while (_pos < _length)
 						{
-							index = _length;
-							_tokenTerminated = false;
-						}
-						else
-						{
-							index += "*/".Length;
-							_tokenTerminated = true;
-						}
-
-						while (_pos < index)
-						{
-							_tokenText.Append(_source[_pos]);
-							MoveNext();
+							ch = _source[_pos];
+							if (ch == '/' && _pos + 1 < _length && _source[_pos + 1] == '*')
+							{
+								if (_returnComments) _tokenText.Append("/*");
+								MoveNext(2);
+								level++;
+							}
+							else if (ch == '*' && _pos + 1 < _length && _source[_pos + 1] == '/')
+							{
+								if (_returnComments) _tokenText.Append("*/");
+								MoveNext(2);
+								if (--level == 0) break;
+							}
+							else
+							{
+								if (_returnComments) _tokenText.Append(ch);
+								MoveNext();
+							}
 						}
 
 						if (_returnComments)
 						{
+							_tokenTerminated = level == 0;
 							_tokenType = TokenType.Comment;
 							return true;
 						}
@@ -362,7 +376,11 @@ namespace DkTools.TokenParser
 
 		public string TokenText
 		{
-			get { return _tokenText.ToString(); }
+			get
+			{
+				if (_tokenTextStr == null) _tokenTextStr = _tokenText.ToString();
+				return _tokenTextStr;
+			}
 		}
 
 		public bool TokenTerminated
@@ -542,6 +560,41 @@ namespace DkTools.TokenParser
 			return sb.ToString();
 		}
 
+		public static string StringToStringLiteral(string str)
+		{
+			var sb = new StringBuilder();
+			sb.Append('\"');
+
+			foreach (var ch in str)
+			{
+				switch (ch)
+				{
+					case '\t':
+						sb.Append("\\t");
+						break;
+					case '\r':
+						sb.Append("\\r");
+						break;
+					case '\n':
+						sb.Append("\\n");
+						break;
+					default:
+						if (ch >= ' ' && ch <= 0x7f)
+						{
+							sb.Append(ch);
+						}
+						else
+						{
+							sb.AppendFormat("\\x{0:X4}", (int)ch);
+						}
+						break;
+				}
+			}
+
+			sb.Append('\"');
+			return sb.ToString();
+		}
+
 		public string Source
 		{
 			get { return _source; }
@@ -556,6 +609,209 @@ namespace DkTools.TokenParser
 		IEnumerator IEnumerable.GetEnumerator()
 		{
 			return new ParserEnumerator(this, _enumNestable);
+		}
+
+		public bool ReadWord()
+		{
+			if (!SkipWhiteSpaceAndCommentsIfAllowed()) return false;
+
+			if (_pos >= _length || !_source[_pos].IsWordChar(true)) return false;
+
+			_tokenText.Clear();
+			_tokenTextStr = null;
+			_tokenType = TokenParser.TokenType.Word;
+			_tokenStartPos = Position;
+			_tokenTerminated = true;
+
+			char ch;
+			while (_pos < _length)
+			{
+				ch = _source[_pos];
+				if (!ch.IsWordChar(false)) return true;
+				_tokenText.Append(ch);
+				MoveNext();
+			}
+
+			return true;
+		}
+
+		public bool ReadExact(string expecting)
+		{
+			if (!SkipWhiteSpaceAndCommentsIfAllowed()) return false;
+
+			var expLength = expecting.Length;
+			if (_pos + expLength > _length) return false;
+
+			for (int i = 0; i < expLength; i++)
+			{
+				if (_source[_pos + i] != expecting[i]) return false;
+			}
+
+			_tokenStartPos = Position;
+			MoveNext(expLength);
+
+			_tokenText.Clear();
+			_tokenText.Append(expecting);
+			_tokenTextStr = null;
+			_tokenType = TokenParser.TokenType.Unknown;
+			return true;
+		}
+
+		public bool ReadExact(char expecting)
+		{
+			if (!SkipWhiteSpaceAndCommentsIfAllowed()) return false;
+
+			if (_pos >= _length || _source[_pos] != expecting) return false;
+
+			_tokenStartPos = Position;
+			MoveNext();
+
+			_tokenText.Clear();
+			_tokenText.Append(expecting);
+			_tokenTextStr = null;
+			_tokenType = TokenParser.TokenType.Unknown;
+			return true;
+		}
+
+		public bool SkipWhiteSpaceAndCommentsIfAllowed()
+		{
+			char ch;
+			while (_pos < _length)
+			{
+				ch = _source[_pos];
+				if (char.IsWhiteSpace(ch))
+				{
+					if (_returnWhiteSpace) return true;
+					MoveNext();
+				}
+				else if (ch == '/' && !_returnComments && _pos + 1 < _length)
+				{
+					ch = _source[_pos + 1];
+					if (ch == '/')
+					{
+						// single line comment
+						var index = _source.IndexOf('\n', _pos);
+						if (index < 0) MoveNext(_length - _pos);
+						else MoveNext(index - _pos);
+					}
+					else if (ch == '*')
+					{
+						// multi line comment
+						MoveNext(2);
+						var level = 1;
+						while (_pos < _length)
+						{
+							ch = _source[_pos];
+							if (ch == '/' && _pos + 1 < _length && _source[_pos + 1] == '*')
+							{
+								MoveNext(2);
+								level++;
+							}
+							else if (ch == '*' && _pos + 1 < _length && _source[_pos + 1] == '/')
+							{
+								MoveNext(2);
+								if (--level == 0) break;
+							}
+							else MoveNext();
+						}
+					}
+					else return true;	// '/' not part of comment
+				}
+				else return true;	// other char
+			}
+
+			return false;
+		}
+
+		public bool ReadNumber()
+		{
+			if (!SkipWhiteSpaceAndCommentsIfAllowed()) return false;
+
+			if (_pos >= _length) return false;
+
+			var ch = _source[_pos];
+			if (ch == '-')
+			{
+				if (_pos + 1 >= _length || (!char.IsDigit(_source[_pos + 1]) && ch != '.')) return false;
+			}
+			else if (ch == '.')
+			{
+				if (_pos + 1 >= _length || !char.IsDigit(_source[_pos + 1])) return false;
+			}
+			else if (char.IsDigit(ch))
+			{
+				_tokenText.Append(ch);
+			}
+			else return false;
+
+			_tokenText.Clear();
+			_tokenTextStr = null;
+			_tokenStartPos = Position;
+			_tokenType = TokenParser.TokenType.Number;
+
+			var gotDot = false;
+			while (_pos < _length)
+			{
+				ch = _source[_pos];
+				if (char.IsDigit(ch))
+				{
+					_tokenText.Append(ch);
+					MoveNext();
+				}
+				else if (ch == '.' && !gotDot)
+				{
+					_tokenText.Append('.');
+					MoveNext();
+					gotDot = true;
+				}
+				else break;
+			}
+
+			return true;
+		}
+
+		public bool ReadStringLiteral()
+		{
+			if (!SkipWhiteSpaceAndCommentsIfAllowed()) return false;
+
+			if (_pos >= _length) return false;
+
+			var ch = _source[_pos];
+			if (ch != '\"' && ch != '\'') return false;
+
+			var startCh = ch;
+			_tokenStartPos = Position;
+			_tokenText.Clear();
+			_tokenText.Append(ch);
+			_tokenTextStr = null;
+			_tokenTerminated = false;
+			MoveNext();
+
+			while (_pos < _length)
+			{
+				ch = _source[_pos];
+				if (ch == '\\' && _pos + 1 < _length)
+				{
+					_tokenText.Append(ch);
+					_tokenText.Append(_source[_pos + 1]);
+					MoveNext(2);
+				}
+				else if (ch == startCh)
+				{
+					_tokenText.Append(ch);
+					_tokenTerminated = true;
+					MoveNext();
+					break;
+				}
+				else
+				{
+					_tokenText.Append(ch);
+					MoveNext();
+				}
+			}
+
+			_tokenType = TokenType.StringLiteral;
+			return true;
 		}
 	}
 }

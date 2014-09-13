@@ -19,7 +19,7 @@ namespace DkTools.CodeModel.Tokens
 #endif
 			_tableToken = tableToken;
 			_fieldToken = fieldToken;
-			_dataType = new DataType(field.DataType, field.CompletionOptions, field.DataType);
+			_dataType = field.DataType;
 		}
 
 		public static TableAndFieldToken TryParse(GroupToken parent, Scope scope)

@@ -62,12 +62,10 @@ namespace DkTools.CodeModel
 				{
 					if (p.args != null && p.args.Any(x => x.Name == str))
 					{
-						rdr.Ignore(str.Length);
 						ProcessDefineUse(p, str);
 					}
 					else if (_defines.ContainsKey(str))
 					{
-						rdr.Ignore(str.Length);
 						ProcessDefineUse(p, str);
 					}
 					else if (str == "STRINGIZE")
@@ -311,6 +309,17 @@ namespace DkTools.CodeModel
 			if (p.args != null) define = p.args.FirstOrDefault(x => x.Name == name);
 			if (define == null) _defines.TryGetValue(name, out define);
 			if (define == null) return;
+
+			if (define.IsDataType)
+			{
+				// Keep data types as-is.
+				rdr.Use(name.Length);
+				return;
+			}
+			else
+			{
+				rdr.Ignore(name.Length);
+			}
 
 			List<string> paramList = null;
 			if (define.ParamNames != null)
@@ -730,37 +739,9 @@ namespace DkTools.CodeModel
 
 		public void AddDefinitionsToProvider(DefinitionProvider defProv)
 		{
-			var scope = new Scope();
-
 			foreach (var define in _defines.Values)
 			{
-				if (define.ParamNames == null)
-				{
-					Token sourceToken = null;
-					if (!string.IsNullOrEmpty(define.FileName)) sourceToken = new ExternalToken(define.FileName, define.Position.ToSpan());
-					var def = new Definitions.ConstantDefinition(scope, define.Name, sourceToken, Token.NormalizePlainText(define.Content));
-					defProv.AddGlobalDefinition(def);
-				}
-				else
-				{
-					Token sourceToken = null;
-					if (!string.IsNullOrEmpty(define.FileName)) sourceToken = new ExternalToken(define.FileName, define.Position.ToSpan());
-
-					var sig = new StringBuilder();
-					sig.Append(define.Name);
-					sig.Append('(');
-					var firstParam = true;
-					foreach (var paramName in define.ParamNames)
-					{
-						if (firstParam) firstParam = false;
-						else sig.Append(", ");
-						sig.Append(paramName);
-					}
-					sig.Append(')');
-
-					var def = new Definitions.MacroDefinition(scope, define.Name, sourceToken, sig.ToString(), Token.NormalizePlainText(define.Content));
-					defProv.AddGlobalDefinition(def);
-				}
+				defProv.AddGlobalDefinition(define.CreateDefinition());
 			}
 		}
 
@@ -793,6 +774,7 @@ namespace DkTools.CodeModel
 			private string _fileName;
 			private Position _pos;
 			private bool _disabled;
+			private DataType _dataType;
 
 			public Define(string name, string content, List<string> paramNames, string fileName, Position pos)
 			{
@@ -801,6 +783,19 @@ namespace DkTools.CodeModel
 				_paramNames = paramNames;
 				_fileName = fileName;
 				_pos = pos;
+
+				if (_paramNames == null)
+				{
+					var parser = new TokenParser.Parser(_content);
+					var dataType = DataType.Parse(parser, _name, null, null);
+					if (dataType != null)
+					{
+						// If the data type does not consume the entire string, then this is not a data type definition.
+						if (parser.Read()) dataType = null;
+					}
+
+					_dataType = dataType;
+				}
 			}
 
 			public string Name
@@ -832,6 +827,47 @@ namespace DkTools.CodeModel
 			{
 				get { return _disabled; }
 				set { _disabled = value; }
+			}
+
+			public Definitions.Definition CreateDefinition()
+			{
+				if (_paramNames == null)
+				{
+					if (_dataType != null)
+					{
+						return new Definitions.DataTypeDefinition(new Scope(), _name, _dataType);
+					}
+					else
+					{
+						Token sourceToken = null;
+						if (!string.IsNullOrEmpty(_fileName)) sourceToken = new ExternalToken(_fileName, _pos.ToSpan());
+						return new Definitions.ConstantDefinition(new Scope(), _name, sourceToken, Token.NormalizePlainText(_content));
+					}
+				}
+				else
+				{
+					Token sourceToken = null;
+					if (!string.IsNullOrEmpty(_fileName)) sourceToken = new ExternalToken(_fileName, _pos.ToSpan());
+
+					var sig = new StringBuilder();
+					sig.Append(_name);
+					sig.Append('(');
+					var firstParam = true;
+					foreach (var paramName in _paramNames)
+					{
+						if (firstParam) firstParam = false;
+						else sig.Append(", ");
+						sig.Append(paramName);
+					}
+					sig.Append(')');
+
+					return new Definitions.MacroDefinition(new Scope(), _name, sourceToken, sig.ToString(), Token.NormalizePlainText(_content));
+				}
+			}
+
+			public bool IsDataType
+			{
+				get { return _dataType != null; }
 			}
 		}
 

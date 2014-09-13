@@ -618,6 +618,16 @@ namespace DkTools
 				Shell.OpenTempContent(model.DumpTree(), Path.GetFileName(model.FileName), ".model.xml");
 			}
 
+			public static void ShowStdLibCodeModelDump()
+			{
+				var model = CodeModel.FileStore.StdLibModel;
+
+				var prepModel = model.PreprocessorModel;
+				if (prepModel != null) Shell.OpenTempContent(prepModel.DumpTree(), "stdlib", ".preproc.xml");
+
+				Shell.OpenTempContent(model.DumpTree(), "stdlib", ".model.xml");
+			}
+
 			public static void ShowDefinitions()
 			{
 				var model = GetModelForActiveDoc();

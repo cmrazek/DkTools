@@ -259,19 +259,6 @@ namespace DkTools.CodeModel
 			var defProvider = new DefinitionProvider();
 			defProvider.Preprocessor = true;
 
-			// TODO: remove
-			//var includeStdLib = true;
-			//if (!string.IsNullOrWhiteSpace(fileName))
-			//{
-			//	var titleExt = Path.GetFileName(fileName);
-			//	if (titleExt.Equals("stdlib.i", StringComparison.OrdinalIgnoreCase) ||
-			//		titleExt.Equals("stdlib.i&", StringComparison.OrdinalIgnoreCase) ||
-			//		titleExt.Equals("stdlib.i+", StringComparison.OrdinalIgnoreCase))
-			//	{
-			//		includeStdLib = false;
-			//	}
-			//}
-
 			var ext = Path.GetExtension(fileName);
 			var serverContext = GetServerContextFromFileExtension(ext);
 			var prep = new Preprocessor(this);

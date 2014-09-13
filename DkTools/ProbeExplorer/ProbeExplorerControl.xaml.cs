@@ -803,6 +803,11 @@ namespace DkTools.ProbeExplorer
 				menu.Items.Add(menuItem);
 
 				menuItem = new MenuItem();
+				menuItem.Header = "Show StdLib.i Code Model";
+				menuItem.Click += ShowStdLibCodeModelDump_Click;
+				menu.Items.Add(menuItem);
+
+				menuItem = new MenuItem();
 				menuItem.Header = "Show Definitions";
 				menuItem.Click += ShowDefinitions_Click;
 				menu.Items.Add(menuItem);
@@ -831,6 +836,18 @@ namespace DkTools.ProbeExplorer
 			try
 			{
 				Commands.DebugCommands.ShowCodeModelDump();
+			}
+			catch (Exception ex)
+			{
+				this.ShowError(ex);
+			}
+		}
+
+		private void ShowStdLibCodeModelDump_Click(object sender, RoutedEventArgs e)
+		{
+			try
+			{
+				Commands.DebugCommands.ShowStdLibCodeModelDump();
 			}
 			catch (Exception ex)
 			{
@@ -1042,7 +1059,7 @@ namespace DkTools.ProbeExplorer
 			CrateFieldInfoItem(fieldItem, "Name:", field.Name);
 			if (!string.IsNullOrEmpty(field.Prompt)) CrateFieldInfoItem(fieldItem, "Prompt:", field.Prompt);
 			if (!string.IsNullOrEmpty(field.Comment)) CrateFieldInfoItem(fieldItem, "Comment:", field.Comment);
-			CrateFieldInfoItem(fieldItem, "Data Type:", field.DataType);
+			CrateFieldInfoItem(fieldItem, "Data Type:", field.DataType.Name);
 		}
 
 		private void CrateFieldInfoItem(TreeViewItem parentItem, string label, string text)
