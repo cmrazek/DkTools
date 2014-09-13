@@ -59,5 +59,17 @@ namespace DkTools.CodeModel.Tokens
 		{
 			get { return _dataType; }
 		}
+
+		public override void DumpTreeInner(System.Xml.XmlWriter xml)
+		{
+			base.DumpTreeInner(xml);
+
+			if (_dataType != null)
+			{
+				xml.WriteStartElement("FunctionCallDataType");
+				_dataType.DumpTree(xml);
+				xml.WriteEndElement();
+			}
+		}
 	}
 }

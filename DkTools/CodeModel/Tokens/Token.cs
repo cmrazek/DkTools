@@ -23,14 +23,18 @@ namespace DkTools.CodeModel.Tokens
 		public void DumpTree(System.Xml.XmlWriter xml)
 		{
 			xml.WriteStartElement(GetType().Name);
+			DumpTreeAttribs(xml);
 			DumpTreeInner(xml);
 			xml.WriteEndElement();
 		}
 
-		public virtual void DumpTreeInner(System.Xml.XmlWriter xml)
+		public virtual void DumpTreeAttribs(System.Xml.XmlWriter xml)
 		{
 			xml.WriteAttributeString("offset", _span.Start.Offset.ToString());
+		}
 
+		public virtual void DumpTreeInner(System.Xml.XmlWriter xml)
+		{
 			if (_sourceDefinition != null)
 			{
 				xml.WriteStartElement("SourceDefinition");

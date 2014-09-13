@@ -124,7 +124,8 @@ namespace DkTools.StatementCompletion
 		{
 			var completionList = new Dictionary<string, Completion>();
 
-			var curPos = session.TextView.Caret.Position.BufferPosition.Position;
+			var snapPt = session.TextView.Caret.Position.BufferPosition;
+			var curPos = snapPt.Position;
 			var snapshot = session.TextView.TextBuffer.CurrentSnapshot;
 			var prefix = snapshot.GetLineTextUpToPosition(curPos);
 			var linePos = snapshot.GetLineFromPosition(curPos).Start.Position;
@@ -205,7 +206,7 @@ namespace DkTools.StatementCompletion
 				{
 					var className = match.Groups[1].Value;
 					var funcName = match.Groups[2].Value;
-					foreach (var opt in GetOptionsForFunctionArg(className, funcName, 0)) completionList[opt.DisplayText] = opt;
+					foreach (var opt in GetOptionsForFunctionArg(className, funcName, 0, snapPt)) completionList[opt.DisplayText] = opt;
 				}
 			}
 			else if ((match = _rxFunctionStartBracket.Match(prefix)).Success)
@@ -213,7 +214,7 @@ namespace DkTools.StatementCompletion
 				// Starting a new function.
 
 				var funcName = match.Groups[1].Value;
-				foreach (var opt in GetOptionsForFunctionArg(null, funcName, 0)) completionList[opt.DisplayText] = opt;
+				foreach (var opt in GetOptionsForFunctionArg(null, funcName, 0, snapPt)) completionList[opt.DisplayText] = opt;
 			}
 			else if (prefix.EndsWith(", "))
 			{
@@ -223,7 +224,7 @@ namespace DkTools.StatementCompletion
 				int argIndex;
 				if (GetInsideFunction(snapshot, curPos, out funcName, out argIndex))
 				{
-					foreach (var opt in GetOptionsForFunctionArg(null, funcName, argIndex)) completionList[opt.DisplayText] = opt;
+					foreach (var opt in GetOptionsForFunctionArg(null, funcName, argIndex, snapPt)) completionList[opt.DisplayText] = opt;
 				}
 			}
 			else if ((match = _rxReturn.Match(prefix)).Success)
@@ -275,7 +276,7 @@ namespace DkTools.StatementCompletion
 			}
 		}
 
-		private IEnumerable<Completion> GetOptionsForFunctionArg(string className, string funcName, int argIndex)
+		private IEnumerable<Completion> GetOptionsForFunctionArg(string className, string funcName, int argIndex, SnapshotPoint snapPt)
 		{
 			var model = CodeModel.FileStore.GetOrCreateForTextBuffer(_textBuffer).GetCurrentModel(_textBuffer.CurrentSnapshot, "Signature help get options for arg");
 
@@ -296,7 +297,10 @@ namespace DkTools.StatementCompletion
 			var argText = GetArgumentText(sig, argIndex);
 			if (string.IsNullOrWhiteSpace(argText)) yield break;
 
-			foreach (var opt in CodeModel.DataType.ParseCompletionOptionsFromArgText(argText, model))
+			var editPos = model.GetPosition(snapPt);
+			var parentToken = model.FindTokens(editPos, t => t is GroupToken).LastOrDefault() as GroupToken;
+
+			foreach (var opt in CodeModel.DataType.ParseCompletionOptionsFromArgText(argText, model, parentToken))
 			{
 				yield return CreateCompletion(opt, opt, CompletionType.Constant);
 			}

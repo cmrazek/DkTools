@@ -262,28 +262,45 @@ namespace DkTools.CodeModel.Tokens
 					var dt = tf.ValueDataType;
 					if (dt != null) completionOptions = dt.CompletionOptions.ToArray();
 				}
-
-				var tt = TableToken.TryParse(parent, scope);
-				if (tt != null)
+				else
 				{
-					ret.AddToken(tt);
-					var probeTable = ProbeEnvironment.GetTable(tt.Text);
-
-					var dot = DotToken.TryParse(parent, scope);
-					if (dot != null)
+					var tt = TableToken.TryParse(parent, scope);
+					if (tt != null)
 					{
-						ret.AddToken(dot);
+						ret.AddToken(tt);
+						var probeTable = ProbeEnvironment.GetTable(tt.Text);
 
-						var field = IdentifierToken.TryParse(parent, scope);
-						var probeField = probeTable.GetField(field.Text);
-						if (probeField != null)
+						var dot = DotToken.TryParse(parent, scope);
+						if (dot != null)
 						{
-							ret.AddToken(new TableFieldToken(ret, scope, field.Span, field.Text, tt));
-							completionOptions = probeField.CompletionOptions.ToArray();
+							ret.AddToken(dot);
+
+							var field = IdentifierToken.TryParse(parent, scope);
+							var probeField = probeTable.GetField(field.Text);
+							if (probeField != null)
+							{
+								ret.AddToken(new TableFieldToken(ret, scope, field.Span, field.Text, tt));
+								completionOptions = probeField.CompletionOptions.ToArray();
+							}
+							else
+							{
+								ret.AddToken(field);
+							}
 						}
-						else
+					}
+					else
+					{
+						var ident = IdentifierToken.TryParse(parent, scope);
+						if (ident != null)
 						{
-							ret.AddToken(field);
+							var def = parent.GetDefinitions<VariableDefinition>(ident.Text).FirstOrDefault();
+							if (def != null)
+							{
+								ret.AddToken(new VariableToken(ret, scope, ident.Span, ident.Text, def));
+								var dt = def.DataType;
+								if (dt != null) completionOptions = dt.CompletionOptions.ToArray();
+							}
+							else ret.AddToken(ident);
 						}
 					}
 				}
@@ -314,6 +331,12 @@ namespace DkTools.CodeModel.Tokens
 		{
 			_text = null;
 			base.OnChildTokenAdded(child);
+		}
+
+		public override void DumpTreeInner(System.Xml.XmlWriter xml)
+		{
+			base.DumpTreeInner(xml);
+			_dataType.DumpTree(xml);
 		}
 	}
 }

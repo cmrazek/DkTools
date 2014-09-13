@@ -106,6 +106,7 @@ namespace DkTools.CodeModel.Definitions
 		{
 			xml.WriteStartElement(GetType().Name);
 			DumpTreeAttribs(xml);
+			DumpTreeInner(xml);
 			xml.WriteEndElement();
 		}
 
@@ -115,6 +116,10 @@ namespace DkTools.CodeModel.Definitions
 			xml.WriteAttributeString("global", _global.ToString());
 			xml.WriteAttributeString("sourceSpan", _sourceSpan.ToString());
 			xml.WriteAttributeString("preprocessor", _preprocessor.ToString());
+		}
+
+		public virtual void DumpTreeInner(System.Xml.XmlWriter xml)
+		{
 		}
 
 		public bool Preprocessor

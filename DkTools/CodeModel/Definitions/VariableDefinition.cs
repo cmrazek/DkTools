@@ -60,5 +60,11 @@ namespace DkTools.CodeModel.Definitions
 		{
 			get { return this.CompletionDescription; }
 		}
+
+		public override void DumpTreeInner(System.Xml.XmlWriter xml)
+		{
+			base.DumpTreeInner(xml);
+			_dataType.DumpTree(xml);
+		}
 	}
 }

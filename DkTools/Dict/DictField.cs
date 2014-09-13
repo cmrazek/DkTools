@@ -37,7 +37,7 @@ namespace DkTools.Dict
 				if (description != null && description.Length == 0) description = null;
 			}
 
-			_completionOptions = CodeModel.DataType.ParseCompletionOptionsFromArgText(this.DataType, null).ToArray();
+			_completionOptions = CodeModel.DataType.ParseCompletionOptionsFromArgText(this.DataType, null, null).ToArray();
 			_definition = new CodeModel.Definitions.TableFieldDefinition(new CodeModel.Scope(), table.Name, Name, Prompt, Comment, DataType, description);
 		}
 

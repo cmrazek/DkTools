@@ -120,9 +120,17 @@ namespace DkTools.CodeModel.Definitions
 		{
 			base.DumpTreeAttribs(xml);
 
-			xml.WriteAttributeString("dataType", _dataType.ToString());
 			xml.WriteAttributeString("signature", _signature);
 			xml.WriteAttributeString("bodyStartPos", _bodyStartPos.ToString());
+		}
+
+		public override void DumpTreeInner(System.Xml.XmlWriter xml)
+		{
+			xml.WriteStartElement("FunctionDataType");
+			_dataType.DumpTree(xml);
+			xml.WriteEndElement();
+
+			base.DumpTreeInner(xml);
 		}
 	}
 }

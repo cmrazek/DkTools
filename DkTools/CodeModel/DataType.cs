@@ -117,7 +117,14 @@ namespace DkTools.CodeModel
 			//set { _completionOptions = value.ToArray(); }
 		}
 
-		public static IEnumerable<string> ParseCompletionOptionsFromArgText(string source, CodeModel model)
+		/// <summary>
+		/// Determines if there's completion arguments for a function argument.
+		/// </summary>
+		/// <param name="source">The argument text.</param>
+		/// <param name="model">The code model that the argument text resides in.</param>
+		/// <param name="parentToken">Optional parent token which can be used to search for definitions.</param>
+		/// <returns>A list of relevant completion options.</returns>
+		public static IEnumerable<string> ParseCompletionOptionsFromArgText(string source, CodeModel model, GroupToken parentToken)
 		{
 			var parser = new TokenParser.Parser(source);
 			if (!parser.Read()) yield break;
@@ -148,16 +155,34 @@ namespace DkTools.CodeModel
 				case "like":
 					if (!parser.Read() || parser.TokenType != TokenParser.TokenType.Word) yield break;
 					{
-						var table = ProbeEnvironment.GetTable(parser.TokenText);
+						var word = parser.TokenText;
+						var isTableAndField = false;
+						var table = ProbeEnvironment.GetTable(word);
 						if (table != null)
 						{
-							if (!parser.Read() || parser.TokenText != ".") yield break;
-
-							if (!parser.Read() || parser.TokenType != TokenParser.TokenType.Word) yield break;
-							var field = table.GetField(parser.TokenText);
-							if (field != null)
+							if (!parser.Read() || parser.TokenText == ".")
 							{
-								foreach (var opt in field.CompletionOptions) yield return opt;
+								isTableAndField = true;
+
+								if (!parser.Read() || parser.TokenType != TokenParser.TokenType.Word) yield break;
+								var field = table.GetField(parser.TokenText);
+								if (field != null)
+								{
+									foreach (var opt in field.CompletionOptions) yield return opt;
+								}
+							}
+						}
+
+						if (!isTableAndField && parentToken != null)
+						{
+							var def = model.GetDefinitions<VariableDefinition>(word).FirstOrDefault();
+							if (def != null)
+							{
+								var dataType = def.DataType;
+								if (dataType != null && dataType._completionOptions != null)
+								{
+									foreach (var opt in dataType._completionOptions) yield return opt;
+								}
 							}
 						}
 					}

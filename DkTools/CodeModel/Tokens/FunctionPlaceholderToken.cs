@@ -18,6 +18,9 @@ namespace DkTools.CodeModel.Tokens
 		public FunctionPlaceholderToken(GroupToken parent, Scope scope, Span span, string text, FunctionDefinition sourceDef)
 			: base(parent, scope, span, text)
 		{
+#if DEBUG
+			if (sourceDef == null) throw new ArgumentNullException("sourceDef");
+#endif
 			SourceDefinition = sourceDef;
 			_bodyStart = sourceDef.BodyStartPosition;
 			_argsEnd = sourceDef.ArgsEndPosition;
