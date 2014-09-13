@@ -273,6 +273,7 @@
     <Compile Include="CodeModel\PreprocessorTokens\NumberToken.cs" />
     <Compile Include="CodeModel\PreprocessorTokens\OperatorToken.cs" />
     <Compile Include="CodeModel\PreprocessorTokens\Token.cs" />
+    <Compile Include="CodeModel\ServerContext.cs" />
     <Compile Include="CodeModel\StringPreprocessorReader.cs" />
     <Compile Include="CodeModel\StringPreprocessorWriter.cs" />
     <Compile Include="CodeModel\Tokens\ClassToken.cs" />
