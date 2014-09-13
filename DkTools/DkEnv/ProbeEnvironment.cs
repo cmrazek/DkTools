@@ -333,6 +333,23 @@ namespace DkTools
 							var typeDef = new Dict.DictTypeDef(dict.TypeDefines[t]);
 							_typeDefs[typeDef.Name] = typeDef;
 						}
+
+						for (int r = 1, rr = dict.RelationshipCount; r <= rr; r++)
+						{
+							var repoRel = dict.Relationships[r];
+							var parent = repoRel.Parent;
+
+							Dict.DictTable table;
+							if (_tables.TryGetValue(repoRel.Parent.Name, out table))
+							{
+								var relind = new Dict.DictRelInd(table, repoRel);
+								table.AddRelInd(relind);
+							}
+							else
+							{
+								Log.WriteDebug("Could not find parent table for relationship '{0}'.", repoRel.Name);
+							}
+						}
 					}
 				}
 

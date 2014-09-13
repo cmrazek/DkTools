@@ -52,7 +52,7 @@ namespace DkTools.Dict
 			_definition = new CodeModel.Definitions.TableFieldDefinition(new CodeModel.Scope(), table.Name, Name, Prompt, Comment, DataType, description);
 		}
 
-		public IEnumerable<string> CompletionOptions
+		public IEnumerable<Definition> CompletionOptions
 		{
 			get { return DataType.CompletionOptions; }
 		}

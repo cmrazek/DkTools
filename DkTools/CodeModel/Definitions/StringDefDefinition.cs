@@ -26,11 +26,6 @@ namespace DkTools.CodeModel.Definitions
 			get { return StatementCompletion.CompletionType.Constant; }
 		}
 
-		public override string CompletionDescription
-		{
-			get { return _stringDef.Value; }
-		}
-
 		public override Classifier.ProbeClassifierType ClassifierType
 		{
 			get { return Classifier.ProbeClassifierType.Constant; }

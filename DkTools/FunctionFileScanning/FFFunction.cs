@@ -65,7 +65,7 @@ namespace DkTools.FunctionFileScanning
 			var optionsValue = rdr["completion_options"];
 			if (!Convert.IsDBNull(optionsValue))
 			{
-				var options = rdr.GetString(rdr.GetOrdinal("completion_options")).Split('|');
+				var options = (from o in rdr.GetString(rdr.GetOrdinal("completion_options")).Split('|') select new CodeModel.Definitions.EnumOptionDefinition(o)).ToArray();
 				_dataType = new CodeModel.DataType(dataTypeText, options, dataTypeText);
 			}
 

@@ -24,11 +24,6 @@ namespace DkTools.CodeModel.Definitions
 			get { return StatementCompletion.CompletionType.Class; }
 		}
 
-		public override string CompletionDescription
-		{
-			get { return string.Concat("Class: ", Name); }
-		}
-
 		public override Classifier.ProbeClassifierType ClassifierType
 		{
 			get { return Classifier.ProbeClassifierType.TableName; }
@@ -36,7 +31,7 @@ namespace DkTools.CodeModel.Definitions
 
 		public override string QuickInfoText
 		{
-			get { return CompletionDescription; }
+			get { return string.Concat("Class: ", Name); }
 		}
 	}
 }

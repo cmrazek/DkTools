@@ -23,11 +23,6 @@ namespace DkTools.CodeModel.Definitions
 			get { return true; }
 		}
 
-		public override string CompletionDescription
-		{
-			get { return _infoText; }
-		}
-
 		public override StatementCompletion.CompletionType CompletionType
 		{
 			get { return StatementCompletion.CompletionType.Table; }

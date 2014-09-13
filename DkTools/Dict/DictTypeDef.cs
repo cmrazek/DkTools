@@ -20,10 +20,13 @@ namespace DkTools.Dict
 
 			if (data.Enumcount > 0)
 			{
-				var completionList = new List<string>();
+				var completionList = new List<CodeModel.Definitions.Definition>();
 				for (int e = 1, ee = data.Enumcount; e <= ee; e++)
 				{
-					completionList.Add(data.Enumitem[0, e]);
+					var opt = data.Enumitem[0, e];
+					if (opt == null) opt = "\" \"";
+					else if (opt.IsWhiteSpace()) opt = string.Concat("\"", opt, "\"");
+					completionList.Add(new CodeModel.Definitions.EnumOptionDefinition(opt));
 				}
 
 				_dataType = new CodeModel.DataType(_name, completionList.ToArray(), data.TypeText[0]);

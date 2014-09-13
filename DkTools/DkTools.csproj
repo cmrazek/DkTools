@@ -256,6 +256,7 @@
     <Compile Include="CodeModel\Definitions\ClassDefinition.cs" />
     <Compile Include="CodeModel\Definitions\ConstantDefinition.cs" />
     <Compile Include="CodeModel\Definitions\DataTypeDefinition.cs" />
+    <Compile Include="CodeModel\Definitions\EnumOptionDefinition.cs" />
     <Compile Include="CodeModel\Definitions\FunctionDefinition.cs" />
     <Compile Include="CodeModel\Definitions\MacroDefinition.cs" />
     <Compile Include="CodeModel\Definitions\RelIndDefinition.cs" />
@@ -490,11 +491,12 @@
     <None Include="Key.snk" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="Resources\Relationship.png" />
+    <None Include="Resources\Table.png" />
     <None Include="Resources\ProbeExplorerIcon.png" />
     <None Include="Resources\Table.gif" />
     <None Include="Resources\Variable.png" />
     <None Include="Resources\Function.png" />
-    <None Include="Resources\Field.png" />
     <None Include="Resources\Constant.png" />
     <None Include="Resources\DataType.gif" />
     <None Include="Resources\Keyword.png" />
@@ -505,6 +507,8 @@
     <None Include="Resources\Folder.png" />
     <None Include="Resources\File.png" />
     <None Include="Resources\class.png" />
+    <None Include="Resources\Index.png" />
+    <None Include="Resources\Field.png" />
     <Content Include="Resources\Package.ico" />
   </ItemGroup>
   <ItemGroup>

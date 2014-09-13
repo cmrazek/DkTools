@@ -11,7 +11,7 @@ namespace DkTools.CodeModel
 	{
 		private string _name;
 		private string _infoText;
-		private string[] _completionOptions;
+		private Definition[] _completionOptions;
 		private CompletionOptionsType _completionOptionsType;
 
 		private enum CompletionOptionsType
@@ -75,7 +75,7 @@ namespace DkTools.CodeModel
 		/// <param name="completionOptions">(optional) A list of hardcoded options for this data type.</param>
 		/// <param name="infoText">(required) Help text to be displayed to the user.</param>
 		/// <param name="sourceToken">(optional) The token that created the data type.</param>
-		public DataType(string name, IEnumerable<string> completionOptions, string infoText)
+		public DataType(string name, IEnumerable<Definition> completionOptions, string infoText)
 		{
 			_name = name;
 			_infoText = infoText;
@@ -136,20 +136,20 @@ namespace DkTools.CodeModel
 			get { return _completionOptionsType != CompletionOptionsType.None; }
 		}
 
-		public IEnumerable<string> CompletionOptions
+		public IEnumerable<Definition> CompletionOptions
 		{
 			get
 			{
 				switch (_completionOptionsType)
 				{
 					case CompletionOptionsType.List:
-						return _completionOptions != null ? _completionOptions : new string[0];
+						return _completionOptions != null ? _completionOptions : new Definition[0];
 					case CompletionOptionsType.Tables:
-						return (from t in ProbeEnvironment.Tables select t.Name);
+						return (from t in ProbeEnvironment.Tables select t.Definition);
 					case CompletionOptionsType.RelInds:
-						return (from r in ProbeEnvironment.RelInds select r.Name);
+						return (from r in ProbeEnvironment.RelInds select r.Definition);
 					default:
-						return new string[0];
+						return new Definition[0];
 				}
 			}
 		}
@@ -406,7 +406,7 @@ namespace DkTools.CodeModel
 				#region enum
 				case "enum":
 					{
-						var options = new List<string>();
+						var options = new List<Definition>();
 						var sb = new StringBuilder();
 						sb.Append("enum");
 
@@ -431,18 +431,18 @@ namespace DkTools.CodeModel
 						{
 							if (code.ReadExact('}'))
 							{
-								if (optionSB.Length > 0) options.Add(optionSB.ToString());
+								if (optionSB.Length > 0) options.Add(new EnumOptionDefinition(optionSB.ToString()));
 								optionSB.Clear();
 								break;
 							}
 							else if (code.ReadExact(','))
 							{
-								if (optionSB.Length > 0) options.Add(optionSB.ToString());
+								if (optionSB.Length > 0) options.Add(new EnumOptionDefinition(optionSB.ToString()));
 								optionSB.Clear();
 							}
 							else if (code.ReadStringLiteral())
 							{
-								options.Add(code.TokenText);
+								options.Add(new EnumOptionDefinition(code.TokenText));
 								optionSB.Clear();
 							}
 							else if (code.Read())
@@ -452,7 +452,7 @@ namespace DkTools.CodeModel
 							else break;
 						}
 
-						if (optionSB.Length > 0) options.Add(optionSB.ToString());
+						if (optionSB.Length > 0) options.Add(new EnumOptionDefinition(optionSB.ToString()));
 
 						sb.Append(" {");
 						var first = true;
@@ -461,7 +461,7 @@ namespace DkTools.CodeModel
 							if (first) first = false;
 							else sb.Append(',');
 							sb.Append(' ');
-							sb.Append(opt);
+							sb.Append(opt.Name);
 						}
 						sb.Append(" }");
 
@@ -596,105 +596,6 @@ namespace DkTools.CodeModel
 			}
 
 			return false;
-		}
-
-		/// <summary>
-		/// Determines if there's completion arguments for a function argument.
-		/// </summary>
-		/// <param name="source">The argument text.</param>
-		/// <param name="model">The code model that the argument text resides in.</param>
-		/// <param name="parentToken">Optional parent token which can be used to search for definitions.</param>
-		/// <returns>A list of relevant completion options.</returns>
-		public static IEnumerable<string> ParseCompletionOptionsFromArgText(string source, CodeModel model, GroupToken parentToken)
-		{
-			var parser = new TokenParser.Parser(source);
-			if (!parser.Read()) yield break;
-
-			switch (parser.TokenText)
-			{
-				case "numeric":
-				case "char":
-				case "date":
-				case "unsigned":
-					yield break;
-
-				case "enum":
-					if (!parser.Read()) yield break;
-					if (parser.TokenText == "proto" || parser.TokenText == "nowarn")
-					{
-						if (!parser.Read()) yield break;
-					}
-					if (parser.TokenText != "{") yield break;
-
-					while (parser.Read())
-					{
-						if (parser.TokenText == "}") break;
-						if (parser.TokenType == TokenParser.TokenType.Word || parser.TokenType == TokenParser.TokenType.StringLiteral) yield return parser.TokenText;
-					}
-					break;
-
-				case "like":
-					if (!parser.Read() || parser.TokenType != TokenParser.TokenType.Word) yield break;
-					{
-						var word = parser.TokenText;
-						var isTableAndField = false;
-						var table = ProbeEnvironment.GetTable(word);
-						if (table != null)
-						{
-							if (!parser.Read() || parser.TokenText == ".")
-							{
-								isTableAndField = true;
-
-								if (!parser.Read() || parser.TokenType != TokenParser.TokenType.Word) yield break;
-								var field = table.GetField(parser.TokenText);
-								if (field != null)
-								{
-									foreach (var opt in field.CompletionOptions) yield return opt;
-								}
-							}
-						}
-
-						if (!isTableAndField && parentToken != null)
-						{
-							var def = model.GetDefinitions<VariableDefinition>(word).FirstOrDefault();
-							if (def != null)
-							{
-								var dataType = def.DataType;
-								if (dataType != null && dataType._completionOptions != null)
-								{
-									foreach (var opt in dataType._completionOptions) yield return opt;
-								}
-							}
-						}
-					}
-					break;
-
-				case "table":
-					foreach (var table in ProbeEnvironment.Tables)
-					{
-						yield return table.Name;
-					}
-					break;
-
-				case "indrel":
-					foreach (var indrel in ProbeEnvironment.RelInds)
-					{
-						yield return indrel.Name;
-					}
-					break;
-
-				default:
-					if (model != null)
-					{
-						// This could be a name of a pre-defined data type.
-						var def = model.GetDefinitions<DataTypeDefinition>(parser.TokenText).FirstOrDefault();
-						if (def != null)
-						{
-							foreach (var opt in def.DataType.CompletionOptions) yield return opt;
-						}
-					}
-					break;
-			}
 		}
 
 		public void DumpTree(System.Xml.XmlWriter xml)

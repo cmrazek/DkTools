@@ -33,7 +33,7 @@ namespace DkTools.CodeModel.Tokens
 		/// <param name="tokens">(required) The tokens that make up the data type text.</param>
 		/// <param name="completionOptions">(optional) Hard-coded completion options.</param>
 		/// <param name="infoText">(required) Help text for the data type.</param>
-		private DataTypeToken(GroupToken parent, Scope scope, IEnumerable<Token> tokens, string[] completionOptions, string infoText)
+		private DataTypeToken(GroupToken parent, Scope scope, IEnumerable<Token> tokens, Definition[] completionOptions, string infoText)
 			: base(parent, scope, tokens)
 		{
 			_text = Token.GetNormalizedText(tokens);
@@ -128,13 +128,13 @@ namespace DkTools.CodeModel.Tokens
 				var nowarn = KeywordToken.TryParseMatching(ret, scope, "nowarn");
 				if (nowarn != null) ret.AddToken(nowarn);
 
-				string[] completionOptions = null;
+				Definition[] completionOptions = null;
 
 				var braces = BracesToken.TryParse(ret, scope);
 				if (braces != null)
 				{
 					ret.AddToken(braces);
-					completionOptions = (from t in braces.FindDownward(x => _rxValidEnumOption.IsMatch(x.Text)) select t.Text).ToArray();
+					completionOptions = (from t in braces.FindDownward(x => _rxValidEnumOption.IsMatch(x.Text)) select new EnumOptionDefinition(t.Text)).ToArray();
 				}
 
 				var text = ret.NormalizedText;
@@ -253,7 +253,7 @@ namespace DkTools.CodeModel.Tokens
 				var ret = new DataTypeToken(parent, scope, startPos);
 				ret.AddToken(firstToken);
 
-				string[] completionOptions = null;
+				Definition[] completionOptions = null;
 
 				var tf = TableAndFieldToken.TryParse(ret, scope);
 				if (tf != null)

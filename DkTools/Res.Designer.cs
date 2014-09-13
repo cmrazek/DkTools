@@ -142,6 +142,16 @@ namespace DkTools {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
+        internal static System.Drawing.Bitmap IndexImg {
+            get {
+                object obj = ResourceManager.GetObject("IndexImg", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
         internal static System.Drawing.Bitmap KeywordImg {
             get {
                 object obj = ResourceManager.GetObject("KeywordImg", resourceCulture);
@@ -155,6 +165,16 @@ namespace DkTools {
         internal static System.Drawing.Bitmap ProbeExplorerImg {
             get {
                 object obj = ResourceManager.GetObject("ProbeExplorerImg", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        internal static System.Drawing.Bitmap RelationshipImg {
+            get {
+                object obj = ResourceManager.GetObject("RelationshipImg", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }

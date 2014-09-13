@@ -3,24 +3,14 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using DkTools.CodeModel.Tokens;
 
 namespace DkTools.CodeModel.Definitions
 {
-	internal class ConstantDefinition : Definition
+	internal class EnumOptionDefinition : Definition
 	{
-		private string _text;
-
-		public ConstantDefinition(Scope scope, string name, Token sourceToken, string text)
-			: base(scope, name, sourceToken, true)
-		{
-			_text = text;
-		}
-
-		public string Text
-		{
-			get { return _text; }
-		}
+		public EnumOptionDefinition(string text)
+			: base(new Scope(), text, null, false)
+		{ }
 
 		public override bool CompletionVisible
 		{
@@ -39,7 +29,7 @@ namespace DkTools.CodeModel.Definitions
 
 		public override string QuickInfoText
 		{
-			get { return _text; }
+			get { return Name; }
 		}
 	}
 }

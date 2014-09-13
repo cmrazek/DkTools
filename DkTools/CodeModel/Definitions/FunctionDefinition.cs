@@ -65,11 +65,6 @@ namespace DkTools.CodeModel.Definitions
 			get { return StatementCompletion.CompletionType.Function; }
 		}
 
-		public override string CompletionDescription
-		{
-			get { return _signature; }
-		}
-
 		public override Classifier.ProbeClassifierType ClassifierType
 		{
 			get { return Classifier.ProbeClassifierType.Function; }

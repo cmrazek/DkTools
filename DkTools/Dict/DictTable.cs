@@ -27,8 +27,11 @@ namespace DkTools.Dict
 			_name = repoTable.Name;
 
 			var desc = repoTable as DICTSRVRLib.IPDObjDesc;
-			_prompt = desc.Prompt[0];
-			_comment = desc.Comment[0];
+			if (desc != null)
+			{
+				_prompt = desc.Prompt[0];
+				_comment = desc.Comment[0];
+			}
 
 			var dev = repoTable as DICTSRVRLib.IPDictObj;
 			if (dev != null)
@@ -106,6 +109,11 @@ namespace DkTools.Dict
 				var relind = new DictRelInd(this, repoTable.Indexes[i]);
 				_relInds.Add(relind);
 			}
+		}
+
+		public void AddRelInd(DictRelInd relInd)
+		{
+			_relInds.Add(relInd);
 		}
 
 		public IEnumerable<DictRelInd> RelInds

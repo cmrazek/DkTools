@@ -30,6 +30,8 @@ namespace DkTools.ProbeExplorer
 		private BitmapImage _fileImg;
 		private BitmapImage _tableImg;
 		private BitmapImage _fieldImg;
+		private BitmapImage _indexImg;
+		private BitmapImage _relationshipImg;
 		#endregion
 
 		#region Constants
@@ -37,7 +39,7 @@ namespace DkTools.ProbeExplorer
 		private const int k_iconHeight = 16;
 		private const int k_iconSpacer = 2;
 		private const int k_minFieldWidth = 150;
-		private const int k_fieldInfoLabelWidth = 100;
+		private const int k_fieldInfoLabelWidth = 150;
 		private const int k_textSpacer = 4;
 		#endregion
 
@@ -58,6 +60,8 @@ namespace DkTools.ProbeExplorer
 			_fileImg = BitmapToBitmapImage(Res.FileImg);
 			_tableImg = BitmapToBitmapImage(Res.TableImg);
 			_fieldImg = BitmapToBitmapImage(Res.FieldImg);
+			_indexImg = BitmapToBitmapImage(Res.IndexImg);
+			_relationshipImg = BitmapToBitmapImage(Res.RelationshipImg);
 
 			ProbeEnvironment.AppChanged += new EventHandler(Probe_AppChanged);
 			_dictTreeDeferrer.Idle += DictTreeDeferrer_Idle;
@@ -921,38 +925,11 @@ namespace DkTools.ProbeExplorer
 
 			foreach (var table in tables)
 			{
-				c_dictTree.Items.Add(CreateTableTreeViewItem(table));
+				c_dictTree.Items.Add(CreateTableTvi(table));
 			}
 		}
 
-		private void TableTreeViewItem_Expanded(object sender, RoutedEventArgs e)
-		{
-			try
-			{
-				var tableNode = (sender as TreeViewItem);
-				if (tableNode != null)
-				{
-					tableNode.Items.Clear();
-
-					var table = tableNode.Tag as DictTable;
-					foreach (var field in table.Fields)
-					{
-						if (_dictFilter.Match(field.Name) || _dictFilter.Match(field.Prompt))
-						{
-							tableNode.Items.Add(CreateFieldTreeViewItem(field));
-						}
-					}
-
-					e.Handled = true;
-				}
-			}
-			catch (Exception ex)
-			{
-				this.ShowError(ex);
-			}
-		}
-
-		private TreeViewItem CreateTableTreeViewItem(DictTable table)
+		private TreeViewItem CreateTableTvi(DictTable table)
 		{
 			var panel = new StackPanel
 			{
@@ -986,7 +963,7 @@ namespace DkTools.ProbeExplorer
 			var tvi = new TreeViewItem();
 			tvi.Header = panel;
 			tvi.IsExpanded = false;
-			tvi.Expanded += TableTreeViewItem_Expanded;
+			tvi.Expanded += TableTvi_Expanded;
 			tvi.Tag = table;
 
 			tvi.Items.Add(new TreeViewItem());	// Add an empty node so the '+' sign is displayed.
@@ -994,7 +971,42 @@ namespace DkTools.ProbeExplorer
 			return tvi;
 		}
 
-		private TreeViewItem CreateFieldTreeViewItem(DictField field)
+		private void TableTvi_Expanded(object sender, RoutedEventArgs e)
+		{
+			try
+			{
+				var tableNode = (sender as TreeViewItem);
+				if (tableNode != null)
+				{
+					tableNode.Items.Clear();
+
+					var table = tableNode.Tag as DictTable;
+					foreach (var field in table.Fields)
+					{
+						if (_dictFilter.Match(field.Name) || _dictFilter.Match(field.Prompt))
+						{
+							tableNode.Items.Add(CreateFieldTvi(field));
+						}
+					}
+
+					foreach (var relind in table.RelInds)
+					{
+						if (_dictFilter.Match(relind.Name))
+						{
+							tableNode.Items.Add(CreateRelIndTreeViewItem(relind));
+						}
+					}
+
+					e.Handled = true;
+				}
+			}
+			catch (Exception ex)
+			{
+				this.ShowError(ex);
+			}
+		}
+
+		private TreeViewItem CreateFieldTvi(DictField field)
 		{
 			var panel = new StackPanel
 			{
@@ -1029,14 +1041,14 @@ namespace DkTools.ProbeExplorer
 			tvi.Header = panel;
 			tvi.Tag = field;
 			tvi.IsExpanded = false;
-			tvi.Expanded += FieldTreeViewItem_Expanded;
+			tvi.Expanded += FieldTvi_Expanded;
 
 			tvi.Items.Add(new TreeViewItem());	// Add an empty node so the '+' sign is displayed.
 
 			return tvi;
 		}
 
-		private void FieldTreeViewItem_Expanded(object sender, RoutedEventArgs e)
+		private void FieldTvi_Expanded(object sender, RoutedEventArgs e)
 		{
 			try
 			{
@@ -1056,13 +1068,92 @@ namespace DkTools.ProbeExplorer
 
 		private void CreateFieldInfoItems(TreeViewItem fieldItem, DictField field)
 		{
-			CrateFieldInfoItem(fieldItem, "Name:", field.Name);
-			if (!string.IsNullOrEmpty(field.Prompt)) CrateFieldInfoItem(fieldItem, "Prompt:", field.Prompt);
-			if (!string.IsNullOrEmpty(field.Comment)) CrateFieldInfoItem(fieldItem, "Comment:", field.Comment);
-			CrateFieldInfoItem(fieldItem, "Data Type:", field.DataType.Name);
+			CreateInfoTvi(fieldItem, "Name:", field.Name);
+			if (!string.IsNullOrEmpty(field.Prompt)) CreateInfoTvi(fieldItem, "Prompt:", field.Prompt);
+			if (!string.IsNullOrEmpty(field.Comment)) CreateInfoTvi(fieldItem, "Comment:", field.Comment);
+			CreateInfoTvi(fieldItem, "Data Type:", field.DataType.Name);
 		}
 
-		private void CrateFieldInfoItem(TreeViewItem parentItem, string label, string text)
+		private TreeViewItem CreateRelIndTreeViewItem(DictRelInd relind)
+		{
+			var panel = new StackPanel
+			{
+				Orientation = Orientation.Horizontal,
+				ToolTip = new ToolTip
+				{
+					Content = relind.Definition.QuickInfoText
+				}
+			};
+			panel.Children.Add(new Image
+			{
+				Source = relind.Type == DictRelIndType.Index ? _indexImg : _relationshipImg,
+				Width = k_iconWidth,
+				Height = k_iconHeight,
+				Margin = new Thickness(0, 0, k_iconSpacer, 0)
+			});
+			panel.Children.Add(new TextBlock
+			{
+				Text = relind.Name,
+				Margin = new Thickness(0, 0, k_textSpacer, 0)
+			});
+			if (!string.IsNullOrWhiteSpace(relind.Prompt))
+			{
+				panel.Children.Add(new TextBlock
+				{
+					Text = string.Concat("(", relind.Prompt.Trim(), ")"),
+					Foreground = SystemColors.GrayTextBrush,
+				});
+			}
+
+			var tvi = new TreeViewItem();
+			tvi.Header = panel;
+			tvi.Tag = relind;
+			tvi.IsExpanded = false;
+			tvi.Expanded += RelIndTvi_Expanded;
+
+			tvi.Items.Add(new TreeViewItem());	// Add an empty node so the '+' sign is displayed.
+
+			return tvi;
+		}
+
+		private void RelIndTvi_Expanded(object sender, RoutedEventArgs e)
+		{
+			try
+			{
+				var relindItem = (sender as TreeViewItem);
+				if (relindItem != null)
+				{
+					relindItem.Items.Clear();
+					CreateRelIndInfoItems(relindItem, relindItem.Tag as DictRelInd);
+					e.Handled = true;
+				}
+			}
+			catch (Exception ex)
+			{
+				this.ShowError(ex);
+			}
+		}
+
+		private void CreateRelIndInfoItems(TreeViewItem item, DictRelInd relind)
+		{
+			CreateInfoTvi(item, "Name:", relind.Name);
+			if (!string.IsNullOrWhiteSpace(relind.Prompt)) CreateInfoTvi(item, "Prompt:", relind.Prompt);
+			if (!string.IsNullOrWhiteSpace(relind.Comment)) CreateInfoTvi(item, "Comment:", relind.Comment);
+			if (!string.IsNullOrWhiteSpace(relind.Description)) CreateInfoTvi(item, "Description:", relind.Description);
+			if (!string.IsNullOrWhiteSpace(relind.Columns)) CreateInfoTvi(item, "Columns:", relind.Columns);
+
+			if (relind.AutoSequence.HasValue) CreateInfoTvi(item, "Auto Sequence:", relind.AutoSequence.Value.ToString());
+			if (relind.AutoSequenceBase.HasValue) CreateInfoTvi(item, "Auto Sequence Base:", relind.AutoSequenceBase.Value.ToString());
+			if (relind.AutoSequenceIncrement.HasValue) CreateInfoTvi(item, "Auto Sequence Increment:", relind.AutoSequenceIncrement.Value.ToString());
+			if (relind.Clustered.HasValue) CreateInfoTvi(item, "Clustered:", relind.Clustered.Value.ToString());
+			if (relind.Descending.HasValue) CreateInfoTvi(item, "Descending:", relind.Descending.Value.ToString());
+			if (relind.NoPick.HasValue) CreateInfoTvi(item, "No Pick:", relind.NoPick.Value.ToString());
+			if (relind.Number.HasValue) CreateInfoTvi(item, "Number:", relind.Number.Value.ToString());
+			if (relind.Primary.HasValue) CreateInfoTvi(item, "Primary:", relind.Primary.Value.ToString());
+			if (relind.Unique.HasValue) CreateInfoTvi(item, "Unique:", relind.Unique.Value.ToString());
+		}
+
+		private void CreateInfoTvi(TreeViewItem parentItem, string label, string text)
 		{
 			var panel = new StackPanel
 			{

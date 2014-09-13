@@ -37,7 +37,12 @@ namespace DkTools.CodeModel.Definitions
 			get { return StatementCompletion.CompletionType.TableField; }
 		}
 
-		public override string CompletionDescription
+		public override Classifier.ProbeClassifierType ClassifierType
+		{
+			get { return Classifier.ProbeClassifierType.TableField; }
+		}
+
+		public override string QuickInfoText
 		{
 			get
 			{
@@ -81,16 +86,6 @@ namespace DkTools.CodeModel.Definitions
 				}
 				return _desc;
 			}
-		}
-
-		public override Classifier.ProbeClassifierType ClassifierType
-		{
-			get { return Classifier.ProbeClassifierType.TableField; }
-		}
-
-		public override string QuickInfoText
-		{
-			get { return this.CompletionDescription; }
 		}
 
 		public string TableName

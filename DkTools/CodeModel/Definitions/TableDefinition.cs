@@ -31,7 +31,12 @@ namespace DkTools.CodeModel.Definitions
 			get { return true; }
 		}
 
-		public override string CompletionDescription
+		public override Classifier.ProbeClassifierType ClassifierType
+		{
+			get { return Classifier.ProbeClassifierType.TableName; }
+		}
+
+		public override string QuickInfoText
 		{
 			get
 			{
@@ -62,16 +67,6 @@ namespace DkTools.CodeModel.Definitions
 				}
 				return _desc;
 			}
-		}
-
-		public override Classifier.ProbeClassifierType ClassifierType
-		{
-			get { return Classifier.ProbeClassifierType.TableName; }
-		}
-
-		public override string QuickInfoText
-		{
-			get { return CompletionDescription; }
 		}
 
 		public void SetPromptComment(string prompt, string comment)

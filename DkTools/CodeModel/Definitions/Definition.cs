@@ -21,7 +21,6 @@ namespace DkTools.CodeModel.Definitions
 
 		public abstract bool CompletionVisible { get; }
 		public abstract StatementCompletion.CompletionType CompletionType { get; }
-		public abstract string CompletionDescription { get; }
 		public abstract Classifier.ProbeClassifierType ClassifierType { get; }
 		public abstract string QuickInfoText { get; }
 
@@ -166,7 +165,7 @@ namespace DkTools.CodeModel.Definitions
 			sb.AppendFormat(" File [{0}]", SourceFile != null ? SourceFile.FileName : "(null)");
 			sb.AppendFormat(" Offset [{0}]", SourceSpan.Start.Offset);
 			sb.AppendFormat(" CompletionType [{0}]", CompletionType);
-			sb.AppendFormat(" CompletionDescription [{0}]", CompletionDescription);
+			sb.AppendFormat(" QuickInfoText [{0}]", QuickInfoText);
 			return sb.ToString();
 		}
 #endif

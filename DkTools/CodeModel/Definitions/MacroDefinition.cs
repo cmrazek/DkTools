@@ -37,11 +37,6 @@ namespace DkTools.CodeModel.Definitions
 			get { return StatementCompletion.CompletionType.Function; }
 		}
 
-		public override string CompletionDescription
-		{
-			get { return _signature; }
-		}
-
 		public override Classifier.ProbeClassifierType ClassifierType
 		{
 			get { return Classifier.ProbeClassifierType.Function; }
@@ -51,7 +46,7 @@ namespace DkTools.CodeModel.Definitions
 		{
 			get
 			{
-				return string.Concat(_signature, " ", _body).Trim();
+				return string.Concat(_signature, "\r\n", _body).Trim();
 			}
 		}
 	}

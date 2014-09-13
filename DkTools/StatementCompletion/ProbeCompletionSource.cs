@@ -94,7 +94,7 @@ namespace DkTools.StatementCompletion
 
 		private Completion CreateCompletion(Definition def)
 		{
-			return CreateCompletion(def.Name, def.CompletionDescription, def.CompletionType);
+			return CreateCompletion(def.Name, def.QuickInfoText, def.CompletionType);
 		}
 
 		private IEnumerable<Completion> CreateCompletions(IEnumerable<string> strings, CompletionType complType)
@@ -181,7 +181,7 @@ namespace DkTools.StatementCompletion
 							var dt = prevToken.ValueDataType;
 							if (dt != null && dt.HasCompletionOptions)
 							{
-								foreach (var opt in dt.CompletionOptions) completionList[opt] = CreateCompletion(opt, opt, CompletionType.Constant);
+								foreach (var opt in dt.CompletionOptions) completionList[opt.Name] = CreateCompletion(opt);
 							}
 						}
 					}
@@ -238,7 +238,7 @@ namespace DkTools.StatementCompletion
 					var dataType = funcToken.DataTypeToken;
 					if (dataType != null && dataType is CodeModel.Tokens.IDataTypeToken)
 					{
-						foreach (var opt in (dataType as CodeModel.Tokens.IDataTypeToken).DataType.CompletionOptions) completionList[opt] = CreateCompletion(opt, opt, CompletionType.Constant);
+						foreach (var opt in (dataType as CodeModel.Tokens.IDataTypeToken).DataType.CompletionOptions) completionList[opt.Name] = CreateCompletion(opt);
 					}
 				}
 			}
@@ -253,7 +253,7 @@ namespace DkTools.StatementCompletion
 					var dt = switchToken.ExpressionDataType;
 					if (dt != null && dt.HasCompletionOptions)
 					{
-						foreach (var opt in dt.CompletionOptions) completionList[opt] = CreateCompletion(opt, opt, CompletionType.Constant);
+						foreach (var opt in dt.CompletionOptions) completionList[opt.Name] = CreateCompletion(opt);
 					}
 				}
 			}
@@ -300,9 +300,14 @@ namespace DkTools.StatementCompletion
 			var editPos = model.GetPosition(snapPt);
 			var parentToken = model.FindTokens(editPos, t => t is GroupToken).LastOrDefault() as GroupToken;
 
-			foreach (var opt in CodeModel.DataType.ParseCompletionOptionsFromArgText(argText, model, parentToken))
+			var argParser = new TokenParser.Parser(argText);
+			var dataType = CodeModel.DataType.Parse(argParser, null, model, parentToken);
+			if (dataType != null)
 			{
-				yield return CreateCompletion(opt, opt, CompletionType.Constant);
+				foreach (var opt in dataType.CompletionOptions)
+				{
+					yield return CreateCompletion(opt);
+				}
 			}
 		}
 

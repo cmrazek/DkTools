@@ -41,11 +41,6 @@ namespace DkTools.CodeModel.Definitions
 			get { return StatementCompletion.CompletionType.DataType; }
 		}
 
-		public override string CompletionDescription
-		{
-			get { return _dataType.InfoText; }
-		}
-
 		public override Classifier.ProbeClassifierType ClassifierType
 		{
 			get { return Classifier.ProbeClassifierType.DataType; }

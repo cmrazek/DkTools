@@ -42,15 +42,6 @@ namespace DkTools.CodeModel.Definitions
 			get { return StatementCompletion.CompletionType.Variable; }
 		}
 
-		public override string CompletionDescription
-		{
-			get
-			{
-				if (_dataType != null) return string.Concat(_dataType.Name, " ", Name);
-				return Name;
-			}
-		}
-
 		public override Classifier.ProbeClassifierType ClassifierType
 		{
 			get { return Classifier.ProbeClassifierType.Normal; }
@@ -58,7 +49,11 @@ namespace DkTools.CodeModel.Definitions
 
 		public override string QuickInfoText
 		{
-			get { return this.CompletionDescription; }
+			get
+			{
+				if (_dataType != null) return string.Concat(_dataType.Name, " ", Name);
+				return Name;
+			}
 		}
 
 		public override void DumpTreeInner(System.Xml.XmlWriter xml)
