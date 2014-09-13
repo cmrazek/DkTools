@@ -18,6 +18,8 @@ namespace DkTools.CodeModel
 		private CodeModel _model;
 		private Guid _guid;
 
+		private static CodeModel _stdLibModel;
+
 		public FileStore()
 		{
 			_guid = Guid.NewGuid();
@@ -257,22 +259,23 @@ namespace DkTools.CodeModel
 			var defProvider = new DefinitionProvider();
 			defProvider.Preprocessor = true;
 
-			var includeStdLib = true;
-			if (!string.IsNullOrWhiteSpace(fileName))
-			{
-				var titleExt = Path.GetFileName(fileName);
-				if (titleExt.Equals("stdlib.i", StringComparison.OrdinalIgnoreCase) ||
-					titleExt.Equals("stdlib.i&", StringComparison.OrdinalIgnoreCase) ||
-					titleExt.Equals("stdlib.i+", StringComparison.OrdinalIgnoreCase))
-				{
-					includeStdLib = false;
-				}
-			}
+			// TODO: remove
+			//var includeStdLib = true;
+			//if (!string.IsNullOrWhiteSpace(fileName))
+			//{
+			//	var titleExt = Path.GetFileName(fileName);
+			//	if (titleExt.Equals("stdlib.i", StringComparison.OrdinalIgnoreCase) ||
+			//		titleExt.Equals("stdlib.i&", StringComparison.OrdinalIgnoreCase) ||
+			//		titleExt.Equals("stdlib.i+", StringComparison.OrdinalIgnoreCase))
+			//	{
+			//		includeStdLib = false;
+			//	}
+			//}
 
 			var ext = Path.GetExtension(fileName);
 			var serverContext = GetServerContextFromFileExtension(ext);
 			var prep = new Preprocessor(this);
-			prep.Preprocess(reader, prepSource, fileName, new string[0], includeStdLib, serverContext);
+			prep.Preprocess(reader, prepSource, fileName, new string[0], serverContext);
 			prep.AddDefinitionsToProvider(defProvider);
 
 			var modelType = CodeModel.DetectFileTypeFromFileName(fileName);
@@ -341,6 +344,29 @@ namespace DkTools.CodeModel
 					return ServerContext.Include;
 				default:
 					return ServerContext.Unknown;
+			}
+		}
+
+		private static void CreateStdLibModel()
+		{
+			var tempStore = new FileStore();
+			var includeFile = tempStore.GetIncludeFile(null, "stdlib.i", false, new string[0]);
+			if (includeFile != null)
+			{
+				_stdLibModel = tempStore.CreatePreprocessedModel(includeFile.Source.Text, includeFile.FullPathName, "stdlib.i model");
+			}
+			else
+			{
+				_stdLibModel = tempStore.CreatePreprocessedModel(string.Empty, "stdlib.i", "stdlib.i model (blank)");
+			}
+		}
+
+		public static CodeModel StdLibModel
+		{
+			get
+			{
+				if (_stdLibModel == null) CreateStdLibModel();
+				return _stdLibModel;
 			}
 		}
 

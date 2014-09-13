@@ -664,7 +664,7 @@ namespace DkTools
 				var serverContext = CodeModel.FileStore.GetServerContextFromFileExtension(Path.GetExtension(fileName));
 
 				var prep = new CodeModel.Preprocessor(store);
-				prep.Preprocess(reader, dest, fileName, null, true, serverContext);
+				prep.Preprocess(reader, dest, fileName, null, serverContext);
 
 				Shell.OpenTempContent(string.Concat(dest.Text, "\r\nCONTINUOUS SEGMENTS:\r\n", dest.DumpContinuousSegments()), Path.GetFileName(fileName), ".preprocessor.txt");
 			}

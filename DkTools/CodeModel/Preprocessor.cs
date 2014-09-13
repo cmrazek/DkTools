@@ -19,21 +19,16 @@ namespace DkTools.CodeModel
 			_store = store;
 		}
 
-		public void Preprocess(IPreprocessorReader reader, IPreprocessorWriter writer, string fileName, IEnumerable<string> parentFiles, bool includeStdLib, ServerContext serverContext)
+		public void Preprocess(IPreprocessorReader reader, IPreprocessorWriter writer, string fileName, IEnumerable<string> parentFiles, ServerContext serverContext)
 		{
 			if (reader == null) throw new ArgumentNullException("reader");
 
-			Preprocess(new PreprocessorParams(reader, writer, fileName, parentFiles, serverContext), includeStdLib);
+			Preprocess(new PreprocessorParams(reader, writer, fileName, parentFiles, serverContext));
 		}
 
-		private void Preprocess(PreprocessorParams p, bool includeStdLib)
+		private void Preprocess(PreprocessorParams p)
 		{
 			// This function assumes the source has already been merged.
-
-			if (includeStdLib)
-			{
-				AppendIncludeFile(p, "stdlib.i", false);
-			}
 
 			string str;
 			var sb = new StringBuilder();
@@ -448,7 +443,7 @@ namespace DkTools.CodeModel
 			parms.args = args;
 			parms.resolvingMacros = true;
 
-			Preprocess(parms, false);
+			Preprocess(parms);
 			return writer.Text;
 		}
 
@@ -508,7 +503,7 @@ namespace DkTools.CodeModel
 			// Run the preprocessor on the include file.
 			var includeSource = new CodeSource();
 			var parms = new PreprocessorParams(reader, includeSource, includeNode.FullPathName, parentFiles, p.serverContext);
-			Preprocess(parms, false);
+			Preprocess(parms);
 
 			p.writer.Append(includeSource);
 		}
@@ -904,7 +899,7 @@ namespace DkTools.CodeModel
 			var parms = new PreprocessorParams(reader, writer, string.Empty, null, p.serverContext);
 			parms.allowDirectives = false;
 			parms.contentType = ContentType.Condition;
-			Preprocess(parms, false);
+			Preprocess(parms);
 
 			// Evaluate the condition string
 			var parser = new TokenParser.Parser(writer.Text);

@@ -89,6 +89,14 @@ namespace DkTools.CodeModel
 					defs.Add(def);
 				}
 
+				if (!Path.GetFileName(fileName).Equals("stdlib.i", StringComparison.OrdinalIgnoreCase))
+				{
+					foreach (var def in FileStore.StdLibModel.GetDefinitions())
+					{
+						defs.Add(def);
+					}
+				}
+
 				_file.AddDefinitions(defs);
 			}
 			else CopyDefinitionsFromProvider();
