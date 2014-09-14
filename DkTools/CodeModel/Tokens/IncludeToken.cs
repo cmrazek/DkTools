@@ -53,7 +53,7 @@ namespace DkTools.CodeModel.Tokens
 				fileName = match.Groups[1].Value.Trim();
 
 				var rawFileName = lineText.Substring(0, match.Groups[1].Index + match.Groups[1].Length + 1);
-				stringLitToken = new StringLiteralToken(parent, scope, new Span(fileNameStartPos, fileNameStartPos.Advance(rawFileName)), rawFileName);
+				stringLitToken = new StringLiteralToken(parent, scope, new Span(fileNameStartPos, fileNameStartPos + rawFileName.Length), rawFileName);
 			}
 			else if ((match = _rxQuotes.Match(lineText)).Success)
 			{
@@ -61,7 +61,7 @@ namespace DkTools.CodeModel.Tokens
 				searchFileDir = true;
 
 				var rawFileName = lineText.Substring(0, match.Groups[1].Index + match.Groups[1].Length + 1);
-				stringLitToken = new StringLiteralToken(parent, scope, new Span(fileNameStartPos, fileNameStartPos.Advance(rawFileName)), rawFileName);
+				stringLitToken = new StringLiteralToken(parent, scope, new Span(fileNameStartPos, fileNameStartPos + rawFileName.Length), rawFileName);
 			}
 
 			var ret = new IncludeToken(parent, scope, new Span(prepToken.Span.Start, file.Position), prepToken, fileName, searchFileDir);

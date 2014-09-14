@@ -68,7 +68,7 @@ namespace DkTools.SmartIndenting
 				if (bracesToken != null)
 				{
 					// Get the indent of the line where the opening brace resides.
-					var openOffset = bracesToken.OpenToken.Span.Start.Offset;
+					var openOffset = bracesToken.OpenToken.Span.Start;
 					openOffset = model.Snapshot.TranslateOffsetToSnapshot(openOffset, line.Snapshot);
 					var openLine = line.Snapshot.GetLineFromPosition(openOffset);
 					return openLine.GetText().GetIndentCount(_tabSize);

@@ -125,9 +125,9 @@ namespace DkTools.CodeModel
 			get { return string.Empty; }
 		}
 
-		public Position Position
+		public int Position
 		{
-			get { return Position.Start; }
+			get { return _pos; }
 		}
 
 		public Match Match(Regex rx)

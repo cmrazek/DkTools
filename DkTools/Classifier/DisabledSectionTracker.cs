@@ -30,11 +30,11 @@ namespace DkTools.Classifier
 			while (_sectionIndex < _sections.Length)
 			{
 				var sec = _sections[_sectionIndex];
-				if (sec.End.Offset <= offset)
+				if (sec.End <= offset)
 				{
 					_sectionIndex++;
 				}
-				else if (sec.Start.Offset > offset)
+				else if (sec.Start > offset)
 				{
 					_disabled = false;
 					break;

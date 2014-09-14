@@ -9,12 +9,12 @@ namespace DkTools.CodeModel
 	internal struct LocalFilePosition
 	{
 		private string _fileName;
-		private Position _pos;
+		private int _pos;
 		private bool _primaryFile;
 
 		public static readonly LocalFilePosition Empty = new LocalFilePosition();
 
-		public LocalFilePosition(string fileName, Position pos, bool primaryFile)
+		public LocalFilePosition(string fileName, int pos, bool primaryFile)
 		{
 			_fileName = fileName;
 			_pos = pos;
@@ -26,7 +26,7 @@ namespace DkTools.CodeModel
 			get { return _fileName; }
 		}
 
-		public Position Position
+		public int Position
 		{
 			get { return _pos; }
 		}

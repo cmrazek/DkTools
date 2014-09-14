@@ -165,9 +165,9 @@ namespace DkTools.StatementCompletion
 			else if ((match = _rxAfterAssignOrCompare.Match(prefix)).Success)
 			{
 				var model = CodeModel.FileStore.GetOrCreateForTextBuffer(_textBuffer).GetCurrentModel(snapshot, "Auto-completion after assign or compare");
-				var modelPos = model.GetPosition(curPos, snapshot);
+				var modelPos = model.AdjustPosition(curPos, snapshot);
 				var parentToken = (from t in model.FindTokens(modelPos)
-								   where t is GroupToken && t.Span.Start.Offset < curPos
+								   where t is GroupToken && t.Span.Start < curPos
 								   select t as GroupToken).LastOrDefault();
 				if (parentToken != null)
 				{
@@ -230,7 +230,7 @@ namespace DkTools.StatementCompletion
 			else if ((match = _rxReturn.Match(prefix)).Success)
 			{
 				var model = CodeModel.FileStore.GetOrCreateForTextBuffer(_textBuffer).GetCurrentModel(_textBuffer.CurrentSnapshot, "Auto-completion after return");
-				var modelPos = model.GetPosition(curPos, snapshot);
+				var modelPos = model.AdjustPosition(curPos, snapshot);
 
 				var funcToken = model.FindTokens(modelPos).LastOrDefault(x => x is CodeModel.Tokens.FunctionToken) as CodeModel.Tokens.FunctionToken;
 				if (funcToken != null)
@@ -245,7 +245,7 @@ namespace DkTools.StatementCompletion
 			else if ((match = _rxCase.Match(prefix)).Success)
 			{
 				var model = CodeModel.FileStore.GetOrCreateForTextBuffer(_textBuffer).GetCurrentModel(_textBuffer.CurrentSnapshot, "Auto-completion after case");
-				var modelPos = model.GetPosition(curPos, snapshot);
+				var modelPos = model.AdjustPosition(curPos, snapshot);
 
 				var switchToken = (from t in model.FindTokens(modelPos) where t is SwitchToken select t as SwitchToken).LastOrDefault();
 				if (switchToken != null)
@@ -357,7 +357,7 @@ namespace DkTools.StatementCompletion
 		private IEnumerable<Completion> GetWordCompletions(int curPos, ITextSnapshot snapshot)
 		{
 			var model = CodeModel.FileStore.GetOrCreateForTextBuffer(_textBuffer).GetMostRecentModel(snapshot, "Auto-completion get word completions");
-			var modelPos = model.GetPosition(curPos, snapshot);
+			var modelPos = model.AdjustPosition(curPos, snapshot);
 
 			var tokens = model.FindTokens(modelPos).ToArray();
 

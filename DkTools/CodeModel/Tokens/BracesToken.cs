@@ -11,7 +11,7 @@ namespace DkTools.CodeModel.Tokens
 		private Token _closeToken;
 		private List<Token> _innerTokens = new List<Token>();
 
-		private BracesToken(GroupToken parent, Scope scope, Position startPos)
+		private BracesToken(GroupToken parent, Scope scope, int startPos)
 			: base(parent, scope, startPos)
 		{
 			IsLocalScope = true;
@@ -70,25 +70,29 @@ namespace DkTools.CodeModel.Tokens
 		{
 			get
 			{
-				if (_openToken != null && _closeToken != null && _closeToken.Span.Start.LineNum > _openToken.Span.End.LineNum)
+				if (_openToken != null && _closeToken != null)
 				{
-					foreach (var region in base.OutliningRegions) yield return region;
-
-					if (!(Parent is FunctionToken) && !(Parent is DefineToken))
+					var startLineEnd = File.FindEndOfLine(_openToken.Span.End);
+					if (_closeToken.Span.Start > startLineEnd)
 					{
-						yield return new OutliningRegion
+						foreach (var region in base.OutliningRegions) yield return region;
+
+						if (!(Parent is FunctionToken) && !(Parent is DefineToken))
 						{
-							Span = Span,
-							CollapseToDefinition = false,
-							Text = Constants.DefaultOutliningText,
-							TooltipText = File.GetRegionText(Span)
-						};
+							yield return new OutliningRegion
+							{
+								Span = Span,
+								CollapseToDefinition = false,
+								Text = Constants.DefaultOutliningText,
+								TooltipText = File.GetRegionText(Span)
+							};
+						}
+
+						yield break;
 					}
 				}
-				else
-				{
-					foreach (var region in base.OutliningRegions) yield return region;
-				}
+
+				foreach (var region in base.OutliningRegions) yield return region;
 			}
 		}
 

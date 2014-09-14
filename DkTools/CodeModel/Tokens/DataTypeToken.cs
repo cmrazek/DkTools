@@ -18,7 +18,7 @@ namespace DkTools.CodeModel.Tokens
 		/// <param name="parent">(required) Parent token</param>
 		/// <param name="scope">(required) Current scope</param>
 		/// <param name="startPos">(required) Starting position for the group</param>
-		private DataTypeToken(GroupToken parent, Scope scope, Position startPos)
+		private DataTypeToken(GroupToken parent, Scope scope, int startPos)
 			: base(parent, scope, startPos)
 		{
 			_dataType = DataType.Void;

@@ -8,30 +8,30 @@ namespace DkTools.CodeModel
 {
 	public struct Span
 	{
-		private Position _start;
-		private Position _end;
+		private int _start;
+		private int _end;
 
-		public static readonly Span Empty = new Span(Position.Start, Position.Start);
+		public static readonly Span Empty = new Span(0, 0);
 
-		public Span(Position start, Position end)
+		public Span(int start, int end)
 		{
 			_start = start;
 			_end = end;
 		}
 
-		public Position Start
+		public int Start
 		{
 			get { return _start; }
 		}
 
-		public Position End
+		public int End
 		{
 			get { return _end; }
 		}
 
 		public int Length
 		{
-			get { return _end.Offset - _start.Offset; }
+			get { return _end - _start; }
 		}
 
 		public override string ToString()
@@ -39,24 +39,14 @@ namespace DkTools.CodeModel
 			return string.Format("[{0}] - [{1}]", _start, _end);
 		}
 
-		public bool Contains(Position pos)
+		public bool Contains(int pos)
 		{
 			return _start <= pos && _end > pos;
 		}
 
-		public bool Contains(int offset)
-		{
-			return _start.Offset <= offset && _end.Offset > offset;
-		}
-
-		public bool Touching(Position pos)
+		public bool Touching(int pos)
 		{
 			return _start <= pos && _end >= pos;
-		}
-
-		public bool Touching(int offset)
-		{
-			return _start.Offset <= offset && _end.Offset >= offset;
 		}
 
 		public bool Intersects(Span span)
@@ -66,23 +56,41 @@ namespace DkTools.CodeModel
 
 		public bool Intersects(int start, int length)
 		{
-			return (start + length) > _start.Offset && start < _end.Offset;
+			return (start + length) > _start && start < _end;
 		}
 
-		public Microsoft.VisualStudio.TextManager.Interop.TextSpan ToVsTextInteropSpan()
+		public Microsoft.VisualStudio.TextManager.Interop.TextSpan ToVsTextInteropSpan(Microsoft.VisualStudio.TextManager.Interop.IVsTextView view)
 		{
-			return new Microsoft.VisualStudio.TextManager.Interop.TextSpan()
+			if (_end > _start)
 			{
-				iStartLine = _start.LineNum,
-				iStartIndex = _start.LinePos,
-				iEndLine = _end.LineNum,
-				iEndIndex = _end.LinePos
-			};
+				int startLine, startPos, endLine, endPos;
+				view.GetLineAndColumn(_start, out startLine, out startPos);
+				view.GetLineAndColumn(_end, out endLine, out endPos);
+				return new Microsoft.VisualStudio.TextManager.Interop.TextSpan()
+				{
+					iStartLine = startLine,
+					iStartIndex = startPos,
+					iEndLine = endLine,
+					iEndIndex = endPos
+				};
+			}
+			else
+			{
+				int startLine, startPos;
+				view.GetLineAndColumn(_start, out startLine, out startPos);
+				return new Microsoft.VisualStudio.TextManager.Interop.TextSpan()
+				{
+					iStartLine = startLine,
+					iStartIndex = startPos,
+					iEndLine = startLine,
+					iEndIndex = startPos
+				};
+			}
 		}
 
 		public Microsoft.VisualStudio.Text.Span ToVsTextSpan()
 		{
-			return new Microsoft.VisualStudio.Text.Span(_start.Offset, _end.Offset - _start.Offset);
+			return new Microsoft.VisualStudio.Text.Span(_start, _end - _start);
 		}
 
 		public override bool Equals(object obj)
@@ -93,29 +101,31 @@ namespace DkTools.CodeModel
 
 		public override int GetHashCode()
 		{
-			uint end = (uint)_end.Offset;
-			return _start.Offset ^ ((int)((end << 16) & 0xffff0000) | (int)((end >> 16) & 0x0000ffff));
-		}
-
-		public Span MoveOffset(int offset)
-		{
-			return new Span(_start.MoveOffset(offset), _end.MoveOffset(offset));
+			uint end = (uint)_end;
+			return _start ^ ((int)((end << 16) & 0xffff0000) | (int)((end >> 16) & 0x0000ffff));
 		}
 
 		public string SaveString
 		{
 			get
 			{
-				return string.Concat(_start.Offset, ", ", _start.LineNum, ", ", _start.LinePos, ", ", _end.Offset, ", ", _end.LineNum, ", ", _end.LinePos);
+				return string.Concat(_start, ", ", _end);
 			}
 		}
 
 		public static Span FromSaveString(string str)
 		{
 			var coords = str.Split(',');
-			if (coords.Length != 6) return Span.Empty;
-			return new Span(new Position(int.Parse(coords[0].Trim()), int.Parse(coords[1].Trim()), int.Parse(coords[2].Trim())),
-				new Position(int.Parse(coords[3].Trim()), int.Parse(coords[4].Trim()), int.Parse(coords[5].Trim())));
+			if (coords.Length == 2)
+			{
+				return new Span(int.Parse(coords[0].Trim()), int.Parse(coords[1].Trim()));
+			}
+			else if (coords.Length == 6)
+			{
+				// For backward compatibility with old span strings.
+				return new Span(int.Parse(coords[0].Trim()), int.Parse(coords[3].Trim()));
+			}
+			else return Span.Empty;
 		}
 	}
 }

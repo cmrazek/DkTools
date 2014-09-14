@@ -74,19 +74,19 @@ namespace DkTools.SignatureHelp
 			else if (ProbeSignatureHelpCommandHandler.s_typedChar == ',')
 			{
 				var model = CodeModel.FileStore.GetOrCreateForTextBuffer(_textBuffer).GetCurrentModel(snapshot, "Signature help after ','");
-
-				var tokens = model.FindTokens(model.GetPosition(origPos));
+				var modelPos = model.AdjustPosition(origPos, snapshot);
+				var tokens = model.FindTokens(modelPos);
 				var funcCallToken = tokens.LastOrDefault(t => t.GetType() == typeof(FunctionCallToken));
 				if (funcCallToken != null)
 				{
 					var nameToken = (funcCallToken as FunctionCallToken).NameToken;
 					var word = nameToken.Text;
 
-					var bracketPos = nameToken.Span.End.Offset;
-					if (origPos >= bracketPos)
+					var bracketPos = nameToken.Span.End;
+					if (modelPos >= bracketPos)
 					{
 						VsText.ITrackingSpan applicableToSpan = _textBuffer.CurrentSnapshot.CreateTrackingSpan(
-							new Microsoft.VisualStudio.Text.Span(bracketPos, origPos - bracketPos), VsText.SpanTrackingMode.EdgeInclusive, 0);
+							new Microsoft.VisualStudio.Text.Span(snapshot.TranslateOffsetToSnapshot(bracketPos, model.Snapshot), modelPos - bracketPos), VsText.SpanTrackingMode.EdgeInclusive, 0);
 
 						foreach (var sig in GetSignatures(model, word, applicableToSpan))
 						{

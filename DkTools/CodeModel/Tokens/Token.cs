@@ -30,7 +30,7 @@ namespace DkTools.CodeModel.Tokens
 
 		public virtual void DumpTreeAttribs(System.Xml.XmlWriter xml)
 		{
-			xml.WriteAttributeString("offset", _span.Start.Offset.ToString());
+			xml.WriteAttributeString("offset", _span.Start.ToString());
 		}
 
 		public virtual void DumpTreeInner(System.Xml.XmlWriter xml)
@@ -94,7 +94,7 @@ namespace DkTools.CodeModel.Tokens
 			if (!scope.Preprocessor)
 			{
 				var defProv = _scope.DefinitionProvider;
-				if (defProv != null) AddDefinitions(defProv.GetLocalDefinitionsForOffset(span.Start.Offset));
+				if (defProv != null) AddDefinitions(defProv.GetLocalDefinitionsForOffset(span.Start));
 			}
 		}
 
@@ -168,7 +168,7 @@ namespace DkTools.CodeModel.Tokens
 			return string.Format("\"{0}\" ({1})", text, this.GetType());
 		}
 
-		public Token FindTokenOfType(Position pos, Type type)
+		public Token FindTokenOfType(int pos, Type type)
 		{
 			if (!_span.Contains(pos)) return null;
 			if (this is GroupToken)
@@ -191,7 +191,7 @@ namespace DkTools.CodeModel.Tokens
 			}
 		}
 
-		public Token FindNearbyTokenOfType(Position pos, Type type)
+		public Token FindNearbyTokenOfType(int pos, Type type)
 		{
 			if (!_span.Touching(pos)) return null;
 			if (this is GroupToken)
@@ -316,7 +316,7 @@ namespace DkTools.CodeModel.Tokens
 		}
 
 		#region Find Operations
-		public IEnumerable<Token> FindDownward(Position pos)
+		public IEnumerable<Token> FindDownward(int pos)
 		{
 			if (!_span.Contains(pos)) yield break;
 
@@ -335,43 +335,6 @@ namespace DkTools.CodeModel.Tokens
 			else
 			{
 				yield return this;
-			}
-		}
-
-		public IEnumerable<Token> FindDownwardTouching(Position pos)
-		{
-			if (!_span.Touching(pos)) yield break;
-
-			if (this is GroupToken)
-			{
-				yield return this;
-
-				foreach (var token in (this as GroupToken).SubTokens)
-				{
-					foreach (var token2 in token.FindDownwardTouching(pos))
-					{
-						yield return token2;
-					}
-				}
-			}
-			else
-			{
-				yield return this;
-			}
-		}
-
-		public IEnumerable<Token> FindDownward(int offset)
-		{
-			if (!_span.Contains(offset)) yield break;
-
-			yield return this;
-
-			if (this is GroupToken)
-			{
-				foreach (var token in (this as GroupToken).SubTokens)
-				{
-					foreach (var token2 in token.FindDownward(offset)) yield return token2;
-				}
 			}
 		}
 
@@ -428,7 +391,7 @@ namespace DkTools.CodeModel.Tokens
 			}
 		}
 
-		public IEnumerable<Token> FindDownward(Position pos, Predicate<Token> pred)
+		public IEnumerable<Token> FindDownward(int pos, Predicate<Token> pred)
 		{
 			if (!_span.Contains(pos)) yield break;
 			if (pred(this)) yield return this;
@@ -445,24 +408,7 @@ namespace DkTools.CodeModel.Tokens
 			}
 		}
 
-		public IEnumerable<Token> FindDownward(int offset, Predicate<Token> pred)
-		{
-			if (!_span.Contains(offset)) yield break;
-			if (pred(this)) yield return this;
-
-			if (this is GroupToken)
-			{
-				foreach (var token in (this as GroupToken).SubTokens)
-				{
-					foreach (var token2 in token.FindDownward(offset, pred))
-					{
-						yield return token2;
-					}
-				}
-			}
-		}
-
-		public IEnumerable<Token> FindDownwardTouching(Position pos, Predicate<Token> pred)
+		public IEnumerable<Token> FindDownwardTouching(int pos, Predicate<Token> pred)
 		{
 			if (!_span.Touching(pos)) yield break;
 			if (pred(this)) yield return this;
@@ -684,7 +630,7 @@ namespace DkTools.CodeModel.Tokens
 		{
 			foreach (var def in GetDefinitionsAtThisLevel())
 			{
-				yield return new DefinitionLocation(def, Span.Start.Offset);
+				yield return new DefinitionLocation(def, Span.Start);
 			}
 		}
 
@@ -749,7 +695,7 @@ namespace DkTools.CodeModel.Tokens
 			{
 				if (!_localFilePos.HasValue)
 				{
-					_localFilePos = _scope.File.CodeSource.GetFilePosition(Span.Start.Offset);
+					_localFilePos = _scope.File.CodeSource.GetFilePosition(Span.Start);
 				}
 				return _localFilePos.Value;
 			}

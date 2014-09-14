@@ -12,7 +12,7 @@ namespace DkTools.CodeModel.Tokens
 		private List<IdentifierToken> _nameTokens = new List<IdentifierToken>();
 		private bool _args;
 
-		private VariableDeclarationToken(GroupToken parent, Scope scope, Position startPos, DataTypeToken dataTypeToken, bool args)
+		private VariableDeclarationToken(GroupToken parent, Scope scope, int startPos, DataTypeToken dataTypeToken, bool args)
 			: base(parent, scope, startPos)
 		{
 			_dataTypeToken = dataTypeToken;

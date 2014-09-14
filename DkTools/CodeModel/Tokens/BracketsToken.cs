@@ -11,7 +11,7 @@ namespace DkTools.CodeModel.Tokens
 		private BracketToken _openToken;
 		private BracketToken _closeToken;
 
-		private BracketsToken(GroupToken parent, Scope scope, Position startPos)
+		private BracketsToken(GroupToken parent, Scope scope, int startPos)
 			: base(parent, scope, startPos)
 		{
 		}

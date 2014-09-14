@@ -9,8 +9,8 @@ namespace DkTools.CodeModel.Tokens
 {
 	internal class FunctionPlaceholderToken : WordToken
 	{
-		private Position _bodyStart;
-		private Position _argsEnd;
+		private int _bodyStart;
+		private int _argsEnd;
 		private Span? _entireFunctionSpan;
 		private bool _bodyTokenSearched;
 		private BracesToken _bodyToken;

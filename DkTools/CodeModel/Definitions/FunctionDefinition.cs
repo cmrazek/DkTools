@@ -11,8 +11,8 @@ namespace DkTools.CodeModel.Definitions
 	{
 		private DataType _dataType;
 		private string _signature;
-		private Position _bodyStartPos;
-		private Position _argsEndPos;
+		private int _bodyStartPos;
+		private int _argsEndPos;
 		private FunctionPrivacy _privacy;
 		private bool _extern;
 
@@ -26,7 +26,7 @@ namespace DkTools.CodeModel.Definitions
 		/// <param name="signature">Signature text</param>
 		/// <param name="argsEndPos">Ending position of the argument brackets</param>
 		/// <param name="bodyStartPos">Position of the function's body braces (if does not match, then will be ignored)</param>
-		public FunctionDefinition(Scope scope, string name, Token sourceToken, DataType dataType, string signature, Position argsEndPos, Position bodyStartPos, FunctionPrivacy privacy, bool isExtern)
+		public FunctionDefinition(Scope scope, string name, Token sourceToken, DataType dataType, string signature, int argsEndPos, int bodyStartPos, FunctionPrivacy privacy, bool isExtern)
 			: base(scope, name, sourceToken, true)
 		{
 #if DEBUG
@@ -75,12 +75,12 @@ namespace DkTools.CodeModel.Definitions
 			get { return _signature; }
 		}
 
-		public Position BodyStartPosition
+		public int BodyStartPosition
 		{
 			get { return _bodyStartPos; }
 		}
 
-		public Position ArgsEndPosition
+		public int ArgsEndPosition
 		{
 			get { return _argsEndPos; }
 		}
@@ -99,13 +99,13 @@ namespace DkTools.CodeModel.Definitions
 		{
 			if (SourceFile != null)
 			{
-				var localPos = SourceFile.CodeSource.GetFilePosition(_bodyStartPos.Offset);
+				var localPos = SourceFile.CodeSource.GetFilePosition(_bodyStartPos);
 				if (localPos.PrimaryFile) _bodyStartPos = localPos.Position;
-				else _bodyStartPos = Position.Start;
+				else _bodyStartPos = 0;
 
-				localPos = SourceFile.CodeSource.GetFilePosition(_argsEndPos.Offset);
+				localPos = SourceFile.CodeSource.GetFilePosition(_argsEndPos);
 				if (localPos.PrimaryFile) _argsEndPos = localPos.Position;
-				else _argsEndPos = Position.Start;
+				else _argsEndPos = 0;
 			}
 
 			return base.MoveFromPreprocessorToVisibleModel(visibleFile, visibleSource);

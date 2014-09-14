@@ -39,7 +39,7 @@ namespace DkTools
 			if (targetSnapshot == null) throw new ArgumentNullException("targetSnapshot");
 #endif
 
-			var snapSpan = new SnapshotSpan(modelSnapshot, new Span(modelSpan.Start.Offset, modelSpan.End.Offset - modelSpan.Start.Offset));
+			var snapSpan = new SnapshotSpan(modelSnapshot, new Span(modelSpan.Start, modelSpan.End - modelSpan.Start));
 			if (modelSnapshot != targetSnapshot) snapSpan = snapSpan.TranslateTo(targetSnapshot, trackingMode);
 			return snapSpan;
 		}

@@ -93,13 +93,14 @@ namespace DkTools.CodeModel.Definitions
 			get { return _sourcePrimary; }
 		}
 
-		public string LocationText
-		{
-			get
-			{
-				return string.Concat(_sourceFileName, "(", _sourceSpan.Start.LineNum + 1, ")");
-			}
-		}
+		// TODO: remove
+		//public string LocationText
+		//{
+		//	get
+		//	{
+		//		return string.Concat(_sourceFileName, "(", _sourceSpan.Start.LineNum + 1, ")");
+		//	}
+		//}
 
 		public void DumpTree(System.Xml.XmlWriter xml)
 		{
@@ -163,7 +164,7 @@ namespace DkTools.CodeModel.Definitions
 			var sb = new StringBuilder();
 			sb.AppendFormat("Type [{0}]", GetType());
 			sb.AppendFormat(" File [{0}]", SourceFile != null ? SourceFile.FileName : "(null)");
-			sb.AppendFormat(" Offset [{0}]", SourceSpan.Start.Offset);
+			sb.AppendFormat(" Offset [{0}]", SourceSpan.Start);
 			sb.AppendFormat(" CompletionType [{0}]", CompletionType);
 			sb.AppendFormat(" QuickInfoText [{0}]", QuickInfoText);
 			return sb.ToString();

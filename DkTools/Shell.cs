@@ -42,8 +42,25 @@ namespace DkTools
 				IVsWindowFrame windowFrame;
 				OpenDocument(fileName, out view, out windowFrame);
 				ErrorHandler.ThrowOnFailure(windowFrame.Show());
-				ErrorHandler.ThrowOnFailure(view.SetSelection(selectSpan.Start.LineNum, selectSpan.Start.LinePos, selectSpan.End.LineNum, selectSpan.End.LinePos));
-				ErrorHandler.ThrowOnFailure(view.CenterLines(selectSpan.Start.LineNum, 1));
+
+				if (selectSpan.End > selectSpan.Start)
+				{
+					int startLine, startCol;
+					view.GetLineAndColumn(selectSpan.Start, out startLine, out startCol);
+
+					int endLine, endCol;
+					view.GetLineAndColumn(selectSpan.End, out endLine, out endCol);
+
+					view.SetSelection(startLine, startCol, endLine, endCol);
+					view.CenterLines(startLine, 1);
+				}
+				else
+				{
+					int startLine, startCol;
+					view.GetLineAndColumn(selectSpan.Start, out startLine, out startCol);
+					view.SetSelection(startLine, startCol, startLine, startCol);
+					view.CenterLines(startLine, 1);
+				}
 			}
 			catch (Exception ex)
 			{

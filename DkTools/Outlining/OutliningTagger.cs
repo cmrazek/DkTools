@@ -74,11 +74,11 @@ namespace DkTools.Outlining
 			var model = CodeModel.FileStore.GetOrCreateForTextBuffer(_buffer).GetCurrentModel(_snapshot, "OutliningTagger.Reparse()");
 
 			_modelRegions.Clear();
-			foreach (var region in model.OutliningRegions.OrderBy(r => r.Span.Start.Offset))
+			foreach (var region in model.OutliningRegions.OrderBy(r => r.Span.Start))
 			{
 				_modelRegions.Add(new ModelRegion
 				{
-					span = new SnapshotSpan(model.Snapshot, new Span(region.Span.Start.Offset, region.Span.End.Offset - region.Span.Start.Offset)),
+					span = new SnapshotSpan(model.Snapshot, new Span(region.Span.Start, region.Span.End - region.Span.Start)),
 					isFunction = region.CollapseToDefinition,
 					text = region.Text,
 					tooltipText = region.TooltipText

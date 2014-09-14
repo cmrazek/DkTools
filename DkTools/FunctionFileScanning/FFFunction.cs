@@ -73,7 +73,7 @@ namespace DkTools.FunctionFileScanning
 			if (!Enum.TryParse<CodeModel.FunctionPrivacy>(str, out _privacy)) _privacy = CodeModel.FunctionPrivacy.Public;
 
 			_def = new CodeModel.Definitions.FunctionDefinition(new CodeModel.Scope(), _name, new CodeModel.Tokens.ExternalToken(_file.FileName, _span), _dataType, _sig,
-					CodeModel.Position.Start, CodeModel.Position.Start, _privacy, true);
+					0, 0, _privacy, true);
 		}
 
 		public void UpdateFromDefinition(CodeModel.Definitions.FunctionDefinition def)

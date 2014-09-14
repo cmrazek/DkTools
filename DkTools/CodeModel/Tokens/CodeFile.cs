@@ -23,7 +23,7 @@ namespace DkTools.CodeModel.Tokens
 
 		#region Construction
 		public CodeFile(CodeModel model)
-			: base(null, new Scope(model), Position.Start)
+			: base(null, new Scope(model), 0)
 		{
 			if (model == null) throw new ArgumentNullException("model");
 			_model = model;
@@ -66,8 +66,6 @@ namespace DkTools.CodeModel.Tokens
 		private string _fileName;
 		private int _pos = 0;
 		private int _length = 0;
-		private int _lineNum = 0;
-		private int _linePos = 0;
 
 		public void Parse(CodeSource source, string fileName, IEnumerable<string> parentFiles, bool visible)
 		{
@@ -79,8 +77,6 @@ namespace DkTools.CodeModel.Tokens
 
 			_pos = 0;
 			_length = _src.Length;
-			_lineNum = 0;
-			_linePos = 0;
 
 			FunctionFileScanning.FFUtil.FileNameIsClass(_fileName, out _className);
 
@@ -89,7 +85,7 @@ namespace DkTools.CodeModel.Tokens
 
 			ParseScope(scope, t => ParseScopeResult.Continue);
 
-			Span = new Span(new Position(), Position);
+			Span = new Span(0, Position);
 		}
 
 		public Token TryParseComplexToken(GroupToken parent, Scope scope)
@@ -548,8 +544,8 @@ namespace DkTools.CodeModel.Tokens
 			if (_pos >= _length) return false;
 
 			var gotComment = false;
-			var commentStartPos = Position.Start;
-			var commentEndPos = Position.Start;
+			var commentStartPos = 0;
+			var commentEndPos = 0;
 			Match match;
 
 			while (_pos < _length)
@@ -633,37 +629,13 @@ namespace DkTools.CodeModel.Tokens
 
 		public void MoveNext()
 		{
-			if (_pos < _length)
-			{
-				if (_src[_pos] == '\n')
-				{
-					_lineNum++;
-					_linePos = 0;
-				}
-				else
-				{
-					_linePos++;
-				}
-				_pos++;
-			}
+			if (_pos < _length) _pos++;
 		}
 
 		public void MoveNext(int numChars)
 		{
-			while (numChars > 0 && _pos < _length)
-			{
-				if (_src[_pos] == '\n')
-				{
-					_lineNum++;
-					_linePos = 0;
-				}
-				else
-				{
-					_linePos++;
-				}
-				_pos++;
-				numChars--;
-			}
+			_pos += numChars;
+			if (_pos > _length) _pos = _length;
 		}
 
 		public Span MoveNextSpan(int length = 1)
@@ -706,10 +678,10 @@ namespace DkTools.CodeModel.Tokens
 
 		public string GetText(Span span)
 		{
-			var startOffset = span.Start.Offset;
+			var startOffset = span.Start;
 			if (startOffset < 0 || startOffset > _length) throw new ArgumentOutOfRangeException("span");
 
-			var endOffset = span.End.Offset;
+			var endOffset = span.End;
 			if (endOffset < 0 || endOffset > _length || endOffset < startOffset) throw new ArgumentOutOfRangeException("span");
 
 			return _src.Substring(startOffset, endOffset - startOffset);
@@ -725,10 +697,10 @@ namespace DkTools.CodeModel.Tokens
 
 		public string GetRegionText(Span span)
 		{
-			var length = span.End.Offset - span.Start.Offset;
+			var length = span.End - span.Start;
 			if (length > Constants.OutliningMaxContextChars)
 			{
-				return GetText(span.Start.Offset, Constants.OutliningMaxContextChars) + "...";
+				return GetText(span.Start, Constants.OutliningMaxContextChars) + "...";
 			}
 			else
 			{
@@ -857,147 +829,103 @@ namespace DkTools.CodeModel.Tokens
 		#endregion
 
 		#region Position calculations
-		public Position Position
+		public int Position
 		{
-			get { return new Position(_pos, _lineNum, _linePos); }
+			get { return _pos; }
 			set
 			{
-				_pos = value.Offset;
-				_lineNum = value.LineNum;
-				_linePos = value.LinePos;
+				if (value < 0 || value > _length) throw new ArgumentOutOfRangeException();
+				_pos = value;
 			}
 		}
 
-		public Position FindPosition(int lineNum, int linePos)
+		// TODO: remove
+		//public int FindPosition(int lineNum, int linePos)
+		//{
+		//	int pos = 0;
+		//	int seekLineNum = 0;
+		//	int seekLinePos = 0;
+
+		//	while (pos < _length)
+		//	{
+		//		if (_src[pos] == '\n')
+		//		{
+		//			if (seekLineNum == lineNum)
+		//			{
+		//				return new Position(pos, seekLineNum, seekLinePos + 1);
+		//			}
+
+		//			seekLineNum++;
+		//			seekLinePos = 0;
+		//		}
+		//		else
+		//		{
+		//			seekLinePos++;
+		//		}
+		//		pos++;
+
+		//		if (seekLineNum == lineNum && seekLinePos == linePos)
+		//		{
+		//			return new Position(pos, lineNum, linePos);
+		//		}
+		//	}
+
+		//	return new Position(pos, seekLineNum, seekLinePos);
+		//}
+
+		//public Position FindPosition(int offset)
+		//{
+		//	int pos = 0;
+		//	int lineNum = 0;
+		//	int linePos = 0;
+
+		//	if (offset > _length) offset = _length;
+		//	while (pos < offset)
+		//	{
+		//		if (_src[pos] == '\n')
+		//		{
+		//			lineNum++;
+		//			linePos = 0;
+		//		}
+		//		else
+		//		{
+		//			linePos++;
+		//		}
+		//		pos++;
+		//	}
+
+		//	return new Position(pos, lineNum, linePos);
+		//}
+
+		public int FindStartOfLine(int pos)
 		{
-			int pos = 0;
-			int seekLineNum = 0;
-			int seekLinePos = 0;
-
-			while (pos < _length)
-			{
-				if (_src[pos] == '\n')
-				{
-					if (seekLineNum == lineNum)
-					{
-						return new Position(pos, seekLineNum, seekLinePos + 1);
-					}
-
-					seekLineNum++;
-					seekLinePos = 0;
-				}
-				else
-				{
-					seekLinePos++;
-				}
-				pos++;
-
-				if (seekLineNum == lineNum && seekLinePos == linePos)
-				{
-					return new Position(pos, lineNum, linePos);
-				}
-			}
-
-			return new Position(pos, seekLineNum, seekLinePos);
+			if (pos > _length) pos = _length;
+			while (pos > 0 && _src[pos - 1] != '\n') pos--;
+			return pos;
 		}
 
-		public Position FindPosition(int offset)
+		public int FindEndOfPreviousLine(int pos)
 		{
-			int pos = 0;
-			int lineNum = 0;
-			int linePos = 0;
+			var offset = FindStartOfLine(pos);
+			if (offset <= 0) return 0;
 
-			if (offset > _length) offset = _length;
-			while (pos < offset)
-			{
-				if (_src[pos] == '\n')
-				{
-					lineNum++;
-					linePos = 0;
-				}
-				else
-				{
-					linePos++;
-				}
-				pos++;
-			}
-
-			return new Position(pos, lineNum, linePos);
+			offset--;
+			if (offset > 0 && _src[offset] == '\n' && _src[offset - 1] == '\r') offset--;
+			return offset;
 		}
 
-		public Position FindStartOfLine(Position pos)
+		public int FindEndOfLine(int pos)
 		{
-			var offset = pos.Offset;
-			if (offset > _length) offset = _length;
-
-			while (offset > 0 && _src[offset - 1] != '\n') offset--;
-
-			return new Position(offset, pos.LineNum, 0);
+			while (pos < _length && !_src[pos].IsEndOfLineChar()) pos++;
+			return pos;
 		}
 
-		public Position FindEndOfPreviousLine(Position pos)
+		public int FindStartOfNextLine(int pos)
 		{
-			var startOfLine = FindStartOfLine(pos);
-			if (startOfLine.Offset <= 0) return startOfLine;
-
-			var offset = startOfLine.Offset - 1;
-			var linePos = 0;
-			var lineEndOffset = offset;
-			while (offset > 0 && _src[offset - 1] != '\n')
-			{
-				if (_src[offset] != '\r' && _src[offset] != '\n') linePos++;
-				else lineEndOffset = offset;
-				offset--;
-			}
-
-			return new Position(lineEndOffset, startOfLine.LineNum - 1, linePos);
-		}
-
-		public Position FindEndOfLine(Position pos)
-		{
-			var offset = pos.Offset;
-			var linePos = pos.LinePos;
-			if (offset < 0) throw new ArgumentOutOfRangeException("pos.Offset");
-
-			while (offset < _length && !_src[offset].IsEndOfLineChar())
-			{
-				offset++;
-				linePos++;
-			}
-
-			return new Position(offset, pos.LineNum, linePos);
-		}
-
-		public Position FindStartOfNextLine(Position pos)
-		{
-			var offset = pos.Offset;
-			if (offset < 0) throw new ArgumentOutOfRangeException("pos.Offset");
-
-			while (offset < _length && !_src[offset].IsEndOfLineChar()) offset++;
-			if (offset < _length && _src[offset].IsEndOfLineChar())
-			{
-				while (offset < _length && _src[offset].IsEndOfLineChar()) offset++;
-				return new Position(offset, pos.LineNum + 1, 0);
-			}
-			else
-			{
-				return new Position(offset, pos.LineNum, CalculateLinePos(offset));
-			}
-		}
-
-		public int CalculateLinePos(int offset)
-		{
-			if (offset < 0 || offset > _length) throw new ArgumentOutOfRangeException("offset");
-
-			var linePos = 0;
-
-			while (offset > 0 && !_src[offset - 1].IsEndOfLineChar())
-			{
-				offset--;
-				linePos++;
-			}
-
-			return linePos;
+			pos = FindEndOfLine(pos);
+			if (pos < _length && _src[pos] == '\r') pos++;
+			if (pos < _length && _src[pos] == '\n') pos++;
+			return pos;
 		}
 		#endregion
 
@@ -1020,21 +948,26 @@ namespace DkTools.CodeModel.Tokens
 
 		private void AddCommentRegion(Scope scope, Span span)
 		{
-			if (span.End.LineNum > span.Start.LineNum && scope.Visible)
+			if (scope.Visible)
 			{
-				_regions[span.Start.Offset] = new Region
+				// Start and end must be on separate lines.
+				var startLineEnd = FindEndOfLine(span.Start);
+				if (span.End > startLineEnd)
 				{
-					scope = scope,
-					span = span,
-					type = RegionType.Comment,
-					title = GetText(span).GetFirstLine().Trim()
-				};
+					_regions[span.Start] = new Region
+					{
+						scope = scope,
+						span = span,
+						type = RegionType.Comment,
+						title = GetText(span).GetFirstLine().Trim()
+					};
+				}
 			}
 		}
 
-		public void StartUserRegion(Scope scope, Position pos, string title)
+		public void StartUserRegion(Scope scope, int pos, string title)
 		{
-			_regions[pos.Offset] = new Region
+			_regions[pos] = new Region
 			{
 				scope = scope,
 				span = new Span(pos, pos),
@@ -1043,7 +976,7 @@ namespace DkTools.CodeModel.Tokens
 			};
 		}
 
-		private void EndUserRegion(Position pos)
+		private void EndUserRegion(int pos)
 		{
 			// Find the region with the highest start, where the end has not been found yet.
 			// - same as the start (uninitialized)
@@ -1057,10 +990,10 @@ namespace DkTools.CodeModel.Tokens
 				if (reg.type != RegionType.User) continue;
 				if (reg.span.End == pos) return;
 
-				start = reg.span.Start.Offset;
-				if (reg.span.End.Offset == start && start < pos.Offset && start > maxStart)
+				start = reg.span.Start;
+				if (reg.span.End == start && start < pos && start > maxStart)
 				{
-					maxStart = reg.span.Start.Offset;
+					maxStart = reg.span.Start;
 				}
 			}
 

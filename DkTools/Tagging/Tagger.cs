@@ -118,7 +118,7 @@ namespace DkTools.Tagging
 						var model = CodeModel.FileStore.GetOrCreateForTextBuffer(buf).GetCurrentModel(buf.CurrentSnapshot, "Insert diag");
 						if (model != null)
 						{
-							var modelPos = model.GetPosition(Shell.ActiveView.Caret.Position.BufferPosition.Position, model.Snapshot);
+							var modelPos = model.AdjustPosition(Shell.ActiveView.Caret.Position.BufferPosition.Position, model.Snapshot);
 							var funcToken = model.FindTokens(modelPos).LastOrDefault(t => t is CodeModel.Tokens.FunctionToken) as CodeModel.Tokens.FunctionToken;
 							if (funcToken != null) funcName = funcToken.Name;
 						}

@@ -10,7 +10,7 @@ namespace DkTools.CodeModel.Tokens
 		private InsertStartToken _startToken;
 		private InsertEndToken _endToken;  // Optional
 
-		private InsertToken(GroupToken parent, Scope scope, Position startPos)
+		private InsertToken(GroupToken parent, Scope scope, int startPos)
 			: base(parent, scope, startPos)
 		{
 		}
@@ -41,22 +41,25 @@ namespace DkTools.CodeModel.Tokens
 		{
 			get
 			{
-				if (_startToken != null && _endToken != null && _startToken.Span.End.LineNum < _endToken.Span.Start.LineNum)
+				if (_startToken != null && _endToken != null)
 				{
-					var span = new Span(File.FindEndOfLine(_startToken.Span.End), File.FindEndOfPreviousLine(_endToken.Span.Start));
-					return new OutliningRegion[]
+					var startLineEnd = File.FindEndOfLine(_startToken.Span.End);
+					var endPrevLine = File.FindEndOfPreviousLine(_endToken.Span.Start);
+					if (endPrevLine > startLineEnd)
 					{
-						new OutliningRegion
+						var span = new Span(startLineEnd, endPrevLine);
+						return new OutliningRegion[]
 						{
-							Span = span,
-							TooltipText = File.GetRegionText(span)
-						}
-					};
+							new OutliningRegion
+							{
+								Span = span,
+								TooltipText = File.GetRegionText(span)
+							}
+						};
+					}
 				}
-				else
-				{
-					return new OutliningRegion[0];
-				}
+
+				return new OutliningRegion[0];
 			}
 		}
 

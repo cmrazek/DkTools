@@ -314,7 +314,6 @@
     <Compile Include="CodeModel\Tokens\IdentifierToken.cs" />
     <Compile Include="CodeModel\Tokens\NumberToken.cs" />
     <Compile Include="CodeModel\Tokens\OperatorToken.cs" />
-    <Compile Include="CodeModel\Position.cs" />
     <Compile Include="CodeModel\Tokens\PreprocessorToken.cs" />
     <Compile Include="CodeModel\Tokens\ReferenceToken.cs" />
     <Compile Include="CodeModel\Tokens\ReplaceToken.cs" />
@@ -447,7 +446,6 @@
     <Compile Include="TokenParser\CommentTracker.cs" />
     <Compile Include="TokenParser\Parser.cs" />
     <Compile Include="TokenParser\ParserEnumerator.cs" />
-    <Compile Include="TokenParser\Position.cs" />
     <Compile Include="TokenParser\Source.cs" />
     <Compile Include="TokenParser\Token.cs" />
     <Compile Include="TokenParser\TokenType.cs" />

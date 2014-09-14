@@ -10,7 +10,7 @@ namespace DkTools.CodeModel.Tokens
 		private List<Token> _tokens = new List<Token>();
 		private bool _isLocalScope;
 
-		public GroupToken(GroupToken parent, Scope scope, Position startPos)
+		public GroupToken(GroupToken parent, Scope scope, int startPos)
 			: base(parent, scope, new Span(startPos, startPos))
 		{
 		}
@@ -89,21 +89,21 @@ namespace DkTools.CodeModel.Tokens
 			}
 		}
 
-		public Token FindLastChildBeforeOffset(Position pos)
+		public Token FindLastChildBeforeOffset(int pos)
 		{
-			return (from t in _tokens where t.Span.End.Offset <= pos.Offset select t).LastOrDefault();
+			return (from t in _tokens where t.Span.End <= pos select t).LastOrDefault();
 		}
 
 		public Token FindPreviousSibling(Token token)
 		{
-			var startOffset = token.Span.Start.Offset;
-			return (from t in _tokens where t.Span.End.Offset <= token.Span.Start.Offset select t).LastOrDefault();
+			var startOffset = token.Span.Start;
+			return (from t in _tokens where t.Span.End <= token.Span.Start select t).LastOrDefault();
 		}
 
 		public Token FindNextSibling(Token token)
 		{
-			var endOffset = token.Span.End.Offset;
-			return (from t in _tokens where t.Span.Start.Offset >= endOffset select t).FirstOrDefault();
+			var endOffset = token.Span.End;
+			return (from t in _tokens where t.Span.Start >= endOffset select t).FirstOrDefault();
 		}
 
 		public IEnumerable<DefinitionLocation> GetDescendentDefinitionLocations()

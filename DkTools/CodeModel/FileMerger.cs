@@ -36,10 +36,10 @@ namespace DkTools.CodeModel
 		private struct Line
 		{
 			public string fileName;
-			public Position pos;
+			public int pos;
 			public string text;
 
-			public Line(string fileName, Position pos, string text)
+			public Line(string fileName, int pos, string text)
 			{
 				this.fileName = fileName;
 				this.pos = pos;
@@ -77,7 +77,7 @@ namespace DkTools.CodeModel
 			foreach (var line in _lines)
 			{
 				var primary = _primaryFileName.Equals(line.fileName, StringComparison.OrdinalIgnoreCase);
-				var endPos = line.pos.Advance(line.text);
+				var endPos = line.pos + line.text.Length;
 				_mergedContent.Append(line.text, new CodeAttributes(line.fileName, line.pos, endPos, true, primary, false));
 				if (!line.text.EndsWith("\n") && lineIndex + 1 < _lines.Count)
 				{
@@ -163,7 +163,7 @@ namespace DkTools.CodeModel
 		private void CreateLineDataFromOrigFile()
 		{
 			var fileText = File.ReadAllText(_origFileName);
-			var pos = Position.Start;
+			var pos = 0;
 			var linePos = pos;
 			var sb = new StringBuilder();
 
@@ -177,7 +177,7 @@ namespace DkTools.CodeModel
 					_lines.Add(new Line(_origFileName, linePos, sb.ToString()));
 					sb.Clear();
 				}
-				pos = pos.CalcNext(ch);
+				pos++;
 				if (ch == '\n') linePos = pos;
 			}
 			_lines.Add(new Line(_origFileName, pos, sb.ToString()));
@@ -185,7 +185,7 @@ namespace DkTools.CodeModel
 
 		private void MergeFile(string localFileName)
 		{
-			if (_showMergeComments) _lines.Add(new Line(string.Empty, Position.Start, string.Concat("// start of local file ", localFileName)));
+			if (_showMergeComments) _lines.Add(new Line(string.Empty, 0, string.Concat("// start of local file ", localFileName)));
 
 			AnalyzeOrigFile();
 
@@ -194,7 +194,7 @@ namespace DkTools.CodeModel
 			_currentLocalLine = 1;
 
 			var fileText = File.ReadAllText(localFileName);
-			var pos = Position.Start;
+			var pos = 0;
 			var linePos = pos;
 			var sb = new StringBuilder();
 
@@ -206,13 +206,13 @@ namespace DkTools.CodeModel
 					ProcessLocalLine(new Line(localFileName, linePos, sb.ToString().TrimEnd()));
 					sb.Clear();
 				}
-				pos = pos.CalcNext(ch);
+				pos++;
 				if (ch == '\n') linePos = pos;
 			}
 
 			ProcessLocalLine(new Line(localFileName, pos, sb.ToString().TrimEnd()));
 
-			if (_showMergeComments) _lines.Add(new Line(string.Empty, Position.Start, string.Concat("// end of local file ", localFileName)));
+			if (_showMergeComments) _lines.Add(new Line(string.Empty, 0, string.Concat("// end of local file ", localFileName)));
 		}
 
 		private static Regex _rxLabelLine = new Regex(@"^\s*\#label\b");
@@ -264,7 +264,7 @@ namespace DkTools.CodeModel
 
 						if (_showMergeComments)
 						{
-							_lines.Insert(_insertLine, new Line(string.Empty, Position.Start, string.Format("// insert from {0}({1})", _currentLocalFileName, _currentLocalLine)));
+							_lines.Insert(_insertLine, new Line(string.Empty, 0, string.Format("// insert from {0}({1})", _currentLocalFileName, _currentLocalLine)));
 							BumpLabels(_insertLine, 1);
 							_insertLine += 1;
 						}
@@ -290,7 +290,7 @@ namespace DkTools.CodeModel
 
 						if (_showMergeComments)
 						{
-							_lines.Insert(_replaceLine, new Line(string.Empty, Position.Start, string.Format("// replace from {0}({1})", _currentLocalFileName, _currentLocalLine)));
+							_lines.Insert(_replaceLine, new Line(string.Empty, 0, string.Format("// replace from {0}({1})", _currentLocalFileName, _currentLocalLine)));
 							BumpLabels(_replaceLine, 1);
 							_replaceLine += 1;
 						}
@@ -303,7 +303,7 @@ namespace DkTools.CodeModel
 						if (!string.IsNullOrWhiteSpace(remain))
 						{
 							var prefixLength = match.Index + match.Length;
-							_replace.Add(new Line(line.fileName, new Position(line.pos.Offset + prefixLength, line.pos.LineNum, prefixLength), remain));
+							_replace.Add(new Line(line.fileName, line.pos + prefixLength, remain));
 						}
 					}
 					else
@@ -318,7 +318,7 @@ namespace DkTools.CodeModel
 					{
 						if (_showMergeComments)
 						{
-							_lines.Insert(_replaceLine, new Line(string.Empty, Position.Start, "// end of replace"));
+							_lines.Insert(_replaceLine, new Line(string.Empty, 0, "// end of replace"));
 							BumpLabels(_replaceLine, 1);
 							_replaceLine += 1;
 						}
@@ -338,7 +338,7 @@ namespace DkTools.CodeModel
 					{
 						if (_showMergeComments)
 						{
-							_lines.Insert(_insertLine, new Line(string.Empty, Position.Start, "// end of insert"));
+							_lines.Insert(_insertLine, new Line(string.Empty, 0, "// end of insert"));
 							BumpLabels(_insertLine, 1);
 						}
 

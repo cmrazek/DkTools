@@ -30,9 +30,9 @@ namespace DkTools.LanguageSvc
 			dropDownMembers.Clear();
 			selectedMember = -1;
 
+			int caretPos, virtualSpaces;
+			textView.GetNearestPosition(line, col, out caretPos, out virtualSpaces);
 			var fileStore = CodeModel.FileStore.GetOrCreateForTextBuffer(buf);
-			var model = fileStore.GetMostRecentModel(buf.CurrentSnapshot, "Function dropdown list");
-			var caretPos = model.GetPosition(line, col);
 			var index = 0;
 
 			var funcs = fileStore.GetFunctionDropDownList(buf.CurrentSnapshot).ToList();
@@ -40,7 +40,7 @@ namespace DkTools.LanguageSvc
 			foreach (var func in funcs)
 			{
 				var span = func.EntireFunctionSpan;
-				dropDownMembers.Add(new DropDownMember(func.Name, span.ToVsTextInteropSpan(), k_methodImageIndex, DROPDOWNFONTATTR.FONTATTR_PLAIN));
+				dropDownMembers.Add(new DropDownMember(func.Name, span.ToVsTextInteropSpan(textView), k_methodImageIndex, DROPDOWNFONTATTR.FONTATTR_PLAIN));
 				if (span.Contains(caretPos)) selectedMember = index;
 				index++;
 			}

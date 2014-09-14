@@ -251,7 +251,7 @@ namespace DkTools.CodeModel
 			Log.WriteDebug("Creating preprocessed model. Reason: {0}", reason);
 
 			var visibleSource = new CodeSource();
-			visibleSource.Append(content, fileName, Position.Start, Position.Start.Advance(content), true, true, false);
+			visibleSource.Append(content, fileName, 0, content.Length, true, true, false);
 			visibleSource.Flush();
 			var reader = new CodeSource.CodeSourcePreprocessorReader(visibleSource);
 			var prepSource = new CodeSource();
@@ -392,7 +392,7 @@ namespace DkTools.CodeModel
 						{
 							var content = File.ReadAllText(_fullPathName);
 							_source = new CodeSource();
-							_source.Append(content, _fullPathName, Position.Start, Position.Start.Advance(content), true, false, false);
+							_source.Append(content, _fullPathName, 0, content.Length, true, false, false);
 							_source.Flush();
 
 							var fileInfo = new FileInfo(_fullPathName);

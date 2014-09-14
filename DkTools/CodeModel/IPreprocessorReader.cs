@@ -24,7 +24,7 @@ namespace DkTools.CodeModel
 		void IgnoreUntil(Func<char, bool> callback);
 
 		string FileName { get; }
-		Position Position { get; }
+		int Position { get; }
 
 		void Insert(string text);
 

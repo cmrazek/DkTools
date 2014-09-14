@@ -394,7 +394,7 @@ namespace DkTools.CodeModel
 				if (args == null) args = new List<Define>();
 				for (int i = 0, ii = paramList.Count; i < ii; i++)
 				{
-					args.Add(new Define(define.ParamNames[i], paramList[i], null, string.Empty, Position.Start));
+					args.Add(new Define(define.ParamNames[i], paramList[i], null, string.Empty, 0));
 				}
 			}
 
@@ -772,11 +772,11 @@ namespace DkTools.CodeModel
 			private string _content;
 			private List<string> _paramNames;
 			private string _fileName;
-			private Position _pos;
+			private int _pos;
 			private bool _disabled;
 			private DataType _dataType;
 
-			public Define(string name, string content, List<string> paramNames, string fileName, Position pos)
+			public Define(string name, string content, List<string> paramNames, string fileName, int pos)
 			{
 				_name = name;
 				_content = content;
@@ -818,7 +818,7 @@ namespace DkTools.CodeModel
 				get { return _fileName; }
 			}
 
-			public Position Position
+			public int Position
 			{
 				get { return _pos; }
 			}
@@ -840,14 +840,14 @@ namespace DkTools.CodeModel
 					else
 					{
 						Token sourceToken = null;
-						if (!string.IsNullOrEmpty(_fileName)) sourceToken = new ExternalToken(_fileName, _pos.ToSpan());
+						if (!string.IsNullOrEmpty(_fileName)) sourceToken = new ExternalToken(_fileName, new Span(_pos, _pos));
 						return new Definitions.ConstantDefinition(new Scope(), _name, sourceToken, Token.NormalizePlainText(_content));
 					}
 				}
 				else
 				{
 					Token sourceToken = null;
-					if (!string.IsNullOrEmpty(_fileName)) sourceToken = new ExternalToken(_fileName, _pos.ToSpan());
+					if (!string.IsNullOrEmpty(_fileName)) sourceToken = new ExternalToken(_fileName, new Span(_pos, _pos));
 
 					var sig = new StringBuilder();
 					sig.Append(_name);

@@ -11,7 +11,7 @@ namespace DkTools.CodeModel.Tokens
 		private ArrayBraceToken _closeToken;
 		private List<Token> _innerTokens = new List<Token>();
 
-		private ArrayBracesToken(GroupToken parent, Scope scope, Position startPos)
+		private ArrayBracesToken(GroupToken parent, Scope scope, int startPos)
 			: base(parent, scope, startPos)
 		{
 		}

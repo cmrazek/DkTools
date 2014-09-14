@@ -12,7 +12,7 @@ namespace DkTools.CodeModel.Tokens
 		private KeywordToken _elseToken = null;
 		private Token _falseBody = null;
 
-		private IfStatementToken(GroupToken parent, Scope scope, Position startPos)
+		private IfStatementToken(GroupToken parent, Scope scope, int startPos)
 			: base(parent, scope, startPos)
 		{
 		}

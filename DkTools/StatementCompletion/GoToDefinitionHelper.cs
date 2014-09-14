@@ -19,7 +19,7 @@ namespace DkTools.StatementCompletion
 
 			var fileStore = CodeModel.FileStore.GetOrCreateForTextBuffer(textView.TextBuffer);
 			var model = fileStore.GetCurrentModel(caretPt.Snapshot, "Go to definition");
-			var modelPos = model.GetPosition(caretPt.Position, caretPt.Snapshot);
+			var modelPos = model.AdjustPosition(caretPt.Position, caretPt.Snapshot);
 			var selTokens = model.File.FindDownwardTouching(modelPos).ToArray();
 			if (selTokens.Length == 0)
 			{

@@ -64,14 +64,14 @@ namespace DkTools.CodeModel
 				var scope = new Scope();
 
 				var defs = new List<Definition>();
-				defs.Add(new FunctionDefinition(scope, "diag", null, DataType.Void, "void diag(expressions ...)", Position.Start, Position.Start, FunctionPrivacy.Public, true));
-				defs.Add(new FunctionDefinition(scope, "gofield", null, DataType.Void, "void gofield(TableName.ColumnName)", Position.Start, Position.Start, FunctionPrivacy.Public, true));
-				defs.Add(new FunctionDefinition(scope, "makestring", null, DataType.FromString("char(255)"), "char(255) makestring(expressions ...)", Position.Start, Position.Start, FunctionPrivacy.Public, true));
-				defs.Add(new FunctionDefinition(scope, "oldvalue", null, DataType.Void, "oldvalue(TableName.ColumnName)", Position.Start, Position.Start, FunctionPrivacy.Public, true));
-				defs.Add(new FunctionDefinition(scope, "qcolsend", null, DataType.Void, "void qcolsend(TableName.ColumnName ...)", Position.Start, Position.Start, FunctionPrivacy.Public, true));
-				defs.Add(new FunctionDefinition(scope, "SetMessage", null, DataType.Int, "int SetMessage(MessageControlString, expressions ...)", Position.Start, Position.Start, FunctionPrivacy.Public, true));
-				defs.Add(new FunctionDefinition(scope, "STRINGIZE", null, DataType.FromString("char(255)"), "STRINGIZE(x)", Position.Start, Position.Start, FunctionPrivacy.Public, true));
-				defs.Add(new FunctionDefinition(scope, "UNREFERENCED_PARAMETER", null, DataType.Void, "UNREFERENCED_PARAMETER(parameter)", Position.Start, Position.Start, FunctionPrivacy.Public, true));
+				defs.Add(new FunctionDefinition(scope, "diag", null, DataType.Void, "void diag(expressions ...)", 0, 0, FunctionPrivacy.Public, true));
+				defs.Add(new FunctionDefinition(scope, "gofield", null, DataType.Void, "void gofield(TableName.ColumnName)", 0, 0, FunctionPrivacy.Public, true));
+				defs.Add(new FunctionDefinition(scope, "makestring", null, DataType.FromString("char(255)"), "char(255) makestring(expressions ...)", 0, 0, FunctionPrivacy.Public, true));
+				defs.Add(new FunctionDefinition(scope, "oldvalue", null, DataType.Void, "oldvalue(TableName.ColumnName)", 0, 0, FunctionPrivacy.Public, true));
+				defs.Add(new FunctionDefinition(scope, "qcolsend", null, DataType.Void, "void qcolsend(TableName.ColumnName ...)", 0, 0, FunctionPrivacy.Public, true));
+				defs.Add(new FunctionDefinition(scope, "SetMessage", null, DataType.Int, "int SetMessage(MessageControlString, expressions ...)", 0, 0, FunctionPrivacy.Public, true));
+				defs.Add(new FunctionDefinition(scope, "STRINGIZE", null, DataType.FromString("char(255)"), "STRINGIZE(x)", 0, 0, FunctionPrivacy.Public, true));
+				defs.Add(new FunctionDefinition(scope, "UNREFERENCED_PARAMETER", null, DataType.Void, "UNREFERENCED_PARAMETER(parameter)", 0, 0, FunctionPrivacy.Public, true));
 
 				foreach (var def in ProbeEnvironment.DictDefinitions)
 				{
@@ -118,37 +118,38 @@ namespace DkTools.CodeModel
 		#endregion
 
 		#region Brace matching and outlining
-		public IEnumerable<Microsoft.VisualStudio.TextManager.Interop.TextSpan> BraceMatching(int lineNum, int linePos)
-		{
-			var pos = _file.FindPosition(lineNum, linePos);
-			var token = _file.FindTokenOfType(pos, typeof(IBraceMatchingToken));
-			if (token == null) token = _file.FindNearbyTokenOfType(pos, typeof(IBraceMatchingToken));
-			if (token != null && typeof(IBraceMatchingToken).IsAssignableFrom(token.GetType()))
-			{
-				var bm = token as IBraceMatchingToken;
-				return (from t in bm.BraceMatchingTokens select t.Span.ToVsTextInteropSpan());
-			}
-			else
-			{
-				return new Microsoft.VisualStudio.TextManager.Interop.TextSpan[0];
-			}
-		}
+		// TODO: remove
+		//public IEnumerable<Microsoft.VisualStudio.TextManager.Interop.TextSpan> BraceMatching(int lineNum, int linePos)
+		//{
+		//	var pos = _file.FindPosition(lineNum, linePos);
+		//	var token = _file.FindTokenOfType(pos, typeof(IBraceMatchingToken));
+		//	if (token == null) token = _file.FindNearbyTokenOfType(pos, typeof(IBraceMatchingToken));
+		//	if (token != null && typeof(IBraceMatchingToken).IsAssignableFrom(token.GetType()))
+		//	{
+		//		var bm = token as IBraceMatchingToken;
+		//		return (from t in bm.BraceMatchingTokens select t.Span.ToVsTextInteropSpan());
+		//	}
+		//	else
+		//	{
+		//		return new Microsoft.VisualStudio.TextManager.Interop.TextSpan[0];
+		//	}
+		//}
 
-		public IEnumerable<Span> FindMatchingBraces(int offset)
-		{
-			var pos = _file.FindPosition(offset);
-			var token = _file.FindTokenOfType(pos, typeof(IBraceMatchingToken));
-			if (token == null) token = _file.FindNearbyTokenOfType(pos, typeof(IBraceMatchingToken));
-			if (token != null && typeof(IBraceMatchingToken).IsAssignableFrom(token.GetType()))
-			{
-				var bm = token as IBraceMatchingToken;
-				return (from t in bm.BraceMatchingTokens select t.Span).ToArray();
-			}
-			else
-			{
-				return new Span[0];
-			}
-		}
+		//public IEnumerable<Span> FindMatchingBraces(int offset)
+		//{
+		//	var pos = _file.FindPosition(offset);
+		//	var token = _file.FindTokenOfType(pos, typeof(IBraceMatchingToken));
+		//	if (token == null) token = _file.FindNearbyTokenOfType(pos, typeof(IBraceMatchingToken));
+		//	if (token != null && typeof(IBraceMatchingToken).IsAssignableFrom(token.GetType()))
+		//	{
+		//		var bm = token as IBraceMatchingToken;
+		//		return (from t in bm.BraceMatchingTokens select t.Span).ToArray();
+		//	}
+		//	else
+		//	{
+		//		return new Span[0];
+		//	}
+		//}
 
 		public IEnumerable<OutliningRegion> OutliningRegions
 		{
@@ -160,35 +161,31 @@ namespace DkTools.CodeModel
 		#endregion
 
 		#region Util functions
-		public Position GetPosition(int lineNum, int linePos)
-		{
-			return _file.FindPosition(lineNum, linePos);
-		}
+		// TODO: remove
+		//public Position GetPosition(int lineNum, int linePos)
+		//{
+		//	return _file.FindPosition(lineNum, linePos);
+		//}
 
-		public Position GetPosition(int offset)
-		{
-			return _file.FindPosition(offset);
-		}
+		//public Position GetPosition(int offset)
+		//{
+		//	return _file.FindPosition(offset);
+		//}
 
-		public Position GetPosition(int offset, VsText.ITextSnapshot snapshot)
+		public int AdjustPosition(int pos, VsText.ITextSnapshot snapshot)
 		{
-			if (snapshot == null) throw new ArgumentNullException("snapshot");
-			if (_snapshot == null) throw new InvalidOperationException("Model has no snapshot.");
-
-			if (_snapshot != snapshot)
+			if (snapshot == null || _snapshot == null || _snapshot == snapshot)
 			{
-				var pt = new Microsoft.VisualStudio.Text.SnapshotPoint(snapshot, offset).TranslateTo(_snapshot, Microsoft.VisualStudio.Text.PointTrackingMode.Positive);
-				return GetPosition(pt.Position);
+				return pos;
 			}
-			else
-			{
-				return GetPosition(offset);
-			}
+
+			var pt = new Microsoft.VisualStudio.Text.SnapshotPoint(snapshot, pos).TranslateTo(_snapshot, Microsoft.VisualStudio.Text.PointTrackingMode.Positive);
+			return pt.Position;
 		}
 
-		public Position GetPosition(VsText.SnapshotPoint snapPt)
+		public int GetPosition(VsText.SnapshotPoint snapPt)
 		{
-			return GetPosition(snapPt.Position, snapPt.Snapshot);
+			return AdjustPosition(snapPt.Position, snapPt.Snapshot);
 		}
 
 		public int TranslateOffset(int offset, Microsoft.VisualStudio.Text.ITextSnapshot snapshot)
@@ -218,19 +215,14 @@ namespace DkTools.CodeModel
 			get { return _file.LocalFunctions; }
 		}
 
-		public IEnumerable<Token> FindTokens(Position pos)
+		public IEnumerable<Token> FindTokens(int pos)
 		{
 			return _file.FindDownward(pos);
 		}
 
-		public IEnumerable<Token> FindTokens(Position pos, Predicate<Token> pred)
+		public IEnumerable<Token> FindTokens(int pos, Predicate<Token> pred)
 		{
 			return _file.FindDownward(pos, pred);
-		}
-
-		public IEnumerable<Token> FindTokens(int offset)
-		{
-			return _file.FindDownward(offset);
 		}
 
 		public string FileName
@@ -324,7 +316,7 @@ namespace DkTools.CodeModel
 				{
 					var def = defLoc.Definition;
 					if (def.Preprocessor) def.MoveFromPreprocessorToVisibleModel(visibleFile, visibleSource);
-					_defProvider.AddLocalDefinition(localFilePos.Position.Offset, defLoc.Definition);
+					_defProvider.AddLocalDefinition(localFilePos.Position, defLoc.Definition);
 				}
 			}
 		}

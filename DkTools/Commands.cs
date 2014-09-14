@@ -652,7 +652,7 @@ namespace DkTools
 					var content = view.TextBuffer.CurrentSnapshot.GetText();
 
 					var codeSource = new CodeModel.CodeSource();
-					codeSource.Append(content, new CodeModel.CodeAttributes(fileName, CodeModel.Position.Start, CodeModel.Position.Start.Advance(content), true, true, false));
+					codeSource.Append(content, new CodeModel.CodeAttributes(fileName, 0, content.Length, true, true, false));
 					codeSource.Flush();
 
 					return codeSource;

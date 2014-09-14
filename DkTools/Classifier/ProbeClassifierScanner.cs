@@ -39,7 +39,7 @@ namespace DkTools.Classifier
 			_tokenMap = new Dictionary<int, Token>();
 			foreach (var token in _model.File.FindDownward(transStart, transEnd - transStart))
 			{
-				var snapStart = _model.Snapshot.TranslateOffsetToSnapshot(token.Span.Start.Offset, snapshot);
+				var snapStart = _model.Snapshot.TranslateOffsetToSnapshot(token.Span.Start, snapshot);
 				_tokenMap[snapStart] = token;
 			}
 		}

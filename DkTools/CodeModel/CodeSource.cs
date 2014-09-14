@@ -23,14 +23,14 @@ namespace DkTools.CodeModel
 			public string fileName;
 			public int start;
 			public int length;
-			public Position startPos;
-			public Position endPos;
+			public int startPos;
+			public int endPos;
 			public bool actualContent;
 			public bool primaryFile;
 			public string text;
 			public bool disabled;
 
-			public CodeSegment(string fileName, int start, Position startPos, Position endPos, bool actualContent, bool primaryFile, bool disabled)
+			public CodeSegment(string fileName, int start, int startPos, int endPos, bool actualContent, bool primaryFile, bool disabled)
 			{
 				this.fileName = fileName;
 				this.start = start;
@@ -68,7 +68,7 @@ namespace DkTools.CodeModel
 			}
 		}
 
-		public void Append(string text, string fileName, Position fileStartPos, Position fileEndPos, bool actualContent, bool primaryFile, bool disabled)
+		public void Append(string text, string fileName, int fileStartPos, int fileEndPos, bool actualContent, bool primaryFile, bool disabled)
 		{
 			var lastSeg = _segments.LastOrDefault();
 
@@ -196,18 +196,15 @@ namespace DkTools.CodeModel
 			var seg = _segments[segIndex];
 			var pos = seg.startPos;
 
-			if (seg.actualContent)
-			{
-				pos = pos.Advance(seg.text, 0, sourceOffset - seg.start);
-			}
+			if (seg.actualContent) pos += sourceOffset - seg.start;
 
 			return new LocalFilePosition(seg.fileName, pos, seg.primaryFile);
 		}
 
 		public void GetFileSpan(Span sourceSpan, out string foundFileName, out Span foundSpan, out bool foundPrimaryFile)
 		{
-			var startLocalPos = GetFilePosition(sourceSpan.Start.Offset);
-			var endLocalPos = GetFilePosition(sourceSpan.End.Offset);
+			var startLocalPos = GetFilePosition(sourceSpan.Start);
+			var endLocalPos = GetFilePosition(sourceSpan.End);
 
 			if (startLocalPos.FileName.Equals(endLocalPos.FileName, StringComparison.OrdinalIgnoreCase) && endLocalPos.Position >= startLocalPos.Position)
 			{
@@ -245,7 +242,7 @@ namespace DkTools.CodeModel
 			var sb = new StringBuilder();
 
 			var fileName = "?";
-			var pos = Position.Start;
+			var pos = 0;
 			var segIndex = 0;
 			var sample = "";
 
@@ -294,7 +291,7 @@ namespace DkTools.CodeModel
 		public IEnumerable<Span> GenerateDisabledSections()
 		{
 			var disabled = false;
-			var disableStart = Position.Start;
+			var disableStart = 0;
 
 			foreach (var seg in _segments)
 			{
@@ -325,7 +322,7 @@ namespace DkTools.CodeModel
 			private int _segIndex;
 			private CodeSegment _seg;
 			private int _segOffset;
-			private Position _pos;
+			private int _pos;
 			private StringBuilder _sb = new StringBuilder();
 			private IPreprocessorWriter _writer;
 			private Stack<State> _stack = new Stack<State>();
@@ -348,7 +345,7 @@ namespace DkTools.CodeModel
 				else
 				{
 					_seg = null;
-					_pos = Position.Start;
+					_pos = 0;
 				}
 			}
 
@@ -357,7 +354,7 @@ namespace DkTools.CodeModel
 				public int segIndex;
 				public CodeSegment seg;
 				public int segOffset;
-				public Position pos;
+				public int pos;
 
 				public State Clone()
 				{
@@ -468,7 +465,7 @@ namespace DkTools.CodeModel
 					else
 					{
 						var text = _seg.text.Substring(_segOffset, numChars);
-						var newPos = _pos.Advance(text);
+						var newPos = _pos + text.Length;
 						_writer.Append(text, new CodeAttributes(_seg.fileName, _pos, _seg.actualContent ? newPos : _pos, _seg.actualContent, _seg.primaryFile, _suppress));
 						_segOffset += numChars;
 						_pos = newPos;
@@ -532,7 +529,7 @@ namespace DkTools.CodeModel
 					else
 					{
 						var text = _seg.text.Substring(_segOffset, numChars);
-						var newPos = _pos.Advance(text);
+						var newPos = _pos + text.Length;
 						_writer.Append(string.Empty, new CodeAttributes(_seg.fileName, _pos, _seg.actualContent ? newPos : _pos, false, _seg.primaryFile, _suppress));
 						_segOffset += numChars;
 						_pos = newPos;
@@ -604,7 +601,7 @@ namespace DkTools.CodeModel
 
 				var ch = _seg.text[_segOffset];
 
-				if (_seg.actualContent) _pos = _pos.Advance(ch);
+				if (_seg.actualContent) _pos++;
 				_segOffset++;
 
 				if (_segOffset >= _seg.length) return MoveNextSegment();
@@ -636,17 +633,15 @@ namespace DkTools.CodeModel
 			{
 				get
 				{
-					if (_seg == null) return string.Empty;
-					return _seg.fileName;
+					return _seg == null ? string.Empty : _seg.fileName;
 				}
 			}
 
-			public Position Position
+			public int Position
 			{
 				get
 				{
-					if (_seg == null) return Position.Start;
-					return _pos;
+					return _seg == null ? 0 : _pos;
 				}
 			}
 
@@ -663,15 +658,15 @@ namespace DkTools.CodeModel
 	internal struct CodeAttributes
 	{
 		public string FileName;
-		public Position FileStartPosition;
-		public Position FileEndPosition;
+		public int FileStartPosition;
+		public int FileEndPosition;
 		public bool ActualContent;
 		public bool PrimaryFile;
 		public bool Disabled;
 
-		public static readonly CodeAttributes Empty = new CodeAttributes(null, Position.Start, Position.Start, false, false, false);
+		public static readonly CodeAttributes Empty = new CodeAttributes(null, 0, 0, false, false, false);
 
-		public CodeAttributes(string fileName, Position fileStartPos, Position fileEndPos, bool actualContent, bool primaryFile, bool disabled)
+		public CodeAttributes(string fileName, int fileStartPos, int fileEndPos, bool actualContent, bool primaryFile, bool disabled)
 		{
 			FileName = fileName;
 			FileStartPosition = fileStartPos;

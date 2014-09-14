@@ -15,7 +15,7 @@ namespace DkTools.CodeModel.Tokens
 		private Token[] _bodyTokens;
 		private DataType _dataType;
 
-		private DefineToken(GroupToken parent, Scope scope, Position startPos)
+		private DefineToken(GroupToken parent, Scope scope, int startPos)
 			: base(parent, scope, startPos)
 		{
 			IsLocalScope = true;
@@ -39,6 +39,7 @@ namespace DkTools.CodeModel.Tokens
 		{
 			var file = scope.File;
 			var startPos = prepToken.Span.Start;
+			var startLineEnd = file.FindEndOfLine(startPos);
 
 			var defineScope = scope;
 			defineScope.Hint |= ScopeHint.SuppressFunctionDefinition | ScopeHint.SuppressVarDecl | ScopeHint.SuppressFunctionCall;
@@ -47,7 +48,7 @@ namespace DkTools.CodeModel.Tokens
 			ret.AddToken(prepToken);
 
 			// Name
-			if (!file.SkipWhiteSpaceAndComments(defineScope) || file.Position.LineNum != startPos.LineNum) return ret;
+			if (!file.SkipWhiteSpaceAndComments(defineScope) || file.Position > startLineEnd) return ret;
 			var nameToken = IdentifierToken.TryParse(parent, defineScope);
 			if (nameToken == null) return ret;
 
@@ -65,7 +66,7 @@ namespace DkTools.CodeModel.Tokens
 			var bodyTokens = new List<Token>();
 
 			// Arguments
-			if (!file.SkipWhiteSpaceAndComments(defineScope) || file.Position.LineNum != startPos.LineNum) return ret;
+			if (!file.SkipWhiteSpaceAndComments(defineScope) || file.Position > startLineEnd) return ret;
 			var bracketsToken = BracketsToken.TryParse(parent, defineScope);
 			if (bracketsToken != null)
 			{
@@ -74,14 +75,14 @@ namespace DkTools.CodeModel.Tokens
 				else bodyTokens.Add(bracketsToken);
 			}
 
-			var lineNum = startPos.LineNum;
+			var lineEnd = startLineEnd;
 
-			while (file.SkipWhiteSpaceAndComments(defineScope) && file.Position.LineNum == lineNum)
+			while (file.SkipWhiteSpaceAndComments(defineScope) && file.Position <= lineEnd)
 			{
 				var ch = file.PeekChar();
 				if (ch == '\\')
 				{
-					lineNum++;
+					lineEnd = file.FindEndOfLine(file.FindStartOfNextLine(lineEnd));
 					ret.AddToken(new UnknownToken(ret, defineScope, file.MoveNextSpan(), "\\"));
 				}
 				else

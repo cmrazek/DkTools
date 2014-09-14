@@ -43,7 +43,7 @@ namespace DkTools.QuickInfo
 			var model = CodeModel.FileStore.GetOrCreateForTextBuffer(_subjectBuffer).Model;
 			if (model != null && model.Snapshot != null)
 			{
-				var modelPos = model.GetPosition(snapshotPoint.Position, snapshotPoint.Snapshot);
+				var modelPos = model.AdjustPosition(snapshotPoint.Position, snapshotPoint.Snapshot);
 				var tokens = model.FindTokens(modelPos).ToArray();
 				var info = GetQuickInfoForTokens(tokens);
 				if (info.HasValue)

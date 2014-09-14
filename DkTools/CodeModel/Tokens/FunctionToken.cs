@@ -213,12 +213,12 @@ namespace DkTools.CodeModel.Tokens
 			{
 				if (_bodyToken != null)
 				{
-					yield return new DefinitionLocation(def, _bodyToken.Span.Start.Offset);
+					yield return new DefinitionLocation(def, _bodyToken.Span.Start);
 				}
 
 				if (def is VariableDefinition && (def as VariableDefinition).Argument)
 				{
-					yield return new DefinitionLocation(def, _argsToken.Span.Start.Offset);
+					yield return new DefinitionLocation(def, _argsToken.Span.Start);
 				}
 			}
 		}
