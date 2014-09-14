@@ -313,6 +313,7 @@ namespace DkTools.CodeModel
 								sb.Append(' ');
 								sb.Append(code.TokenText);
 							}
+							else break;
 						}
 
 						return new DataType(typeName, sb.ToString());

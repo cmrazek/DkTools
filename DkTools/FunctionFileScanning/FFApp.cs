@@ -183,6 +183,8 @@ namespace DkTools.FunctionFileScanning
 
 		public FFFunction GetFunction(string className, string funcName)
 		{
+			if (string.IsNullOrEmpty(className)) return GetFunction(funcName);
+
 			var cls = TryGetClass(className);
 			if (cls == null) return null;
 

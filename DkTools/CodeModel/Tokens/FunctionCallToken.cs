@@ -12,6 +12,7 @@ namespace DkTools.CodeModel.Tokens
 	internal sealed class FunctionCallToken : GroupToken
 	{
 		private IdentifierToken _nameToken;
+		private ClassToken _classToken;
 		private BracketsToken _argsToken;
 		private DataType _dataType;	// Can be null
 
@@ -37,6 +38,7 @@ namespace DkTools.CodeModel.Tokens
 
 			AddToken(_nameToken = nameToken);
 			_nameToken.SourceDefinition = def;
+			_classToken = classToken;
 
 			AddToken(_argsToken = argsToken);
 
@@ -48,6 +50,11 @@ namespace DkTools.CodeModel.Tokens
 		public IdentifierToken NameToken
 		{
 			get { return _nameToken; }
+		}
+
+		public ClassToken ClassToken
+		{
+			get { return _classToken; }
 		}
 
 		public BracketsToken ArgsToken

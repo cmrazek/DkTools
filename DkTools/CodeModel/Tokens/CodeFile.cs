@@ -81,6 +81,7 @@ namespace DkTools.CodeModel.Tokens
 			FunctionFileScanning.FFUtil.FileNameIsClass(_fileName, out _className);
 
 			var scope = new Scope(this, 0, ScopeHint.None, visible, _model.DefinitionProvider);
+			scope.ClassName = _className;
 			Scope = scope;
 
 			ParseScope(scope, t => ParseScopeResult.Continue);
@@ -304,7 +305,7 @@ namespace DkTools.CodeModel.Tokens
 						tokens.Add(token3);
 						if ((token = StatementEndToken.TryParse(parent, scope)) != null) tokens.Add(token);
 
-						return new ExternFunctionToken(parent, scope, tokens, token1, token2 as IdentifierToken, token3 as BracketsToken);
+						return new ExternFunctionToken(parent, scope, tokens, token1, token2 as IdentifierToken, token3 as BracketsToken, scope.ClassName);
 					}
 				}
 			}
@@ -322,7 +323,7 @@ namespace DkTools.CodeModel.Tokens
 					tokens.Add(token2);
 					if ((token = StatementEndToken.TryParse(parent, scope)) != null) tokens.Add(token);
 
-					return new ExternFunctionToken(parent, scope, tokens, null, token1 as IdentifierToken, token2 as BracketsToken);
+					return new ExternFunctionToken(parent, scope, tokens, null, token1 as IdentifierToken, token2 as BracketsToken, scope.ClassName);
 				}
 			}
 

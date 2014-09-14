@@ -40,7 +40,9 @@ namespace DkTools.SignatureHelp
 
 			if (ProbeSignatureHelpCommandHandler.s_typedChar == '(')
 			{
-				var lineText = snapshot.GetLineFromPosition(session.GetTriggerPoint(_textBuffer).GetPosition(snapshot)).GetText();
+				//var lineText = snapshot.GetLineFromPosition(session.GetTriggerPoint(_textBuffer).GetPosition(snapshot)).GetText();
+				var triggerPos = session.GetTriggerPoint(_textBuffer).GetPosition(snapshot);
+				var lineText = snapshot.GetLineTextUpToPosition(triggerPos);
 
 				var match = _rxFuncBeforeBracket.Match(lineText);
 				if (match.Success)
@@ -52,8 +54,9 @@ namespace DkTools.SignatureHelp
 						if (string.IsNullOrEmpty(tableName))
 						{
 							var applicableToSpan = snapshot.CreateTrackingSpan(new VsText.Span(origPos, 0), VsText.SpanTrackingMode.EdgeInclusive);
-							var model = CodeModel.FileStore.GetOrCreateForTextBuffer(_textBuffer).GetCurrentModel(snapshot, "Signature help after '('");
-							foreach (var sig in GetSignatures(model, funcName, applicableToSpan)) signatures.Add(sig);
+							var fileStore = CodeModel.FileStore.GetOrCreateForTextBuffer(_textBuffer);
+							var model = fileStore.GetMostRecentModel(snapshot, "Signature help after '('");
+							foreach (var sig in GetSignatures(model, tableName, funcName, applicableToSpan)) signatures.Add(sig);
 						}
 						else
 						{
@@ -73,14 +76,17 @@ namespace DkTools.SignatureHelp
 			}
 			else if (ProbeSignatureHelpCommandHandler.s_typedChar == ',')
 			{
-				var model = CodeModel.FileStore.GetOrCreateForTextBuffer(_textBuffer).GetCurrentModel(snapshot, "Signature help after ','");
+				var fileStore = CodeModel.FileStore.GetOrCreateForTextBuffer(_textBuffer);
+				var model = fileStore.GetMostRecentModel(snapshot, "Signature help after ','");
 				var modelPos = model.AdjustPosition(origPos, snapshot);
 				var tokens = model.FindTokens(modelPos);
 				var funcCallToken = tokens.LastOrDefault(t => t.GetType() == typeof(FunctionCallToken));
 				if (funcCallToken != null)
 				{
+					var classToken = (funcCallToken as FunctionCallToken).ClassToken;
+					var className = classToken != null ? classToken.Text : null;
 					var nameToken = (funcCallToken as FunctionCallToken).NameToken;
-					var word = nameToken.Text;
+					var funcName = nameToken.Text;
 
 					var bracketPos = nameToken.Span.End;
 					if (modelPos >= bracketPos)
@@ -88,7 +94,7 @@ namespace DkTools.SignatureHelp
 						VsText.ITrackingSpan applicableToSpan = _textBuffer.CurrentSnapshot.CreateTrackingSpan(
 							new Microsoft.VisualStudio.Text.Span(snapshot.TranslateOffsetToSnapshot(bracketPos, model.Snapshot), modelPos - bracketPos), VsText.SpanTrackingMode.EdgeInclusive, 0);
 
-						foreach (var sig in GetSignatures(model, word, applicableToSpan))
+						foreach (var sig in GetSignatures(model, className, funcName, applicableToSpan))
 						{
 							signatures.Add(sig);
 						}
@@ -190,21 +196,34 @@ namespace DkTools.SignatureHelp
 		{
 		}
 
-		private IEnumerable<ProbeSignature> GetSignatures(CodeModel.CodeModel model, string name, VsText.ITrackingSpan applicableToSpan)
+		private IEnumerable<ProbeSignature> GetSignatures(CodeModel.CodeModel model, string className, string funcName, VsText.ITrackingSpan applicableToSpan)
 		{
-			foreach (var sig in GetAllSignaturesForFunction(model, name))
+			foreach (var sig in GetAllSignaturesForFunction(model, className, funcName))
 			{
 				yield return CreateSignature(_textBuffer, sig, applicableToSpan);
 			}
 		}
 
-		public static IEnumerable<string> GetAllSignaturesForFunction(CodeModel.CodeModel model, string name)
+		public static IEnumerable<string> GetAllSignaturesForFunction(CodeModel.CodeModel model, string className, string name)
 		{
 			foreach (var def in model.GetDefinitions(name))
 			{
-				if (def is CodeModel.Definitions.FunctionDefinition) yield return (def as CodeModel.Definitions.FunctionDefinition).Signature;
-				else if (def is CodeModel.Definitions.MacroDefinition) yield return (def as CodeModel.Definitions.MacroDefinition).Signature;
+				if (string.IsNullOrEmpty(className))
+				{
+					if (def is CodeModel.Definitions.FunctionDefinition) yield return (def as CodeModel.Definitions.FunctionDefinition).Signature;
+					else if (def is CodeModel.Definitions.MacroDefinition) yield return (def as CodeModel.Definitions.MacroDefinition).Signature;
+				}
+				else
+				{
+					if (def is CodeModel.Definitions.FunctionDefinition)
+					{
+						if (className == (def as CodeModel.Definitions.FunctionDefinition).ClassName) yield return (def as CodeModel.Definitions.FunctionDefinition).Signature;
+					}
+				}
 			}
+
+			var ffFunc = ProbeToolsPackage.Instance.FunctionFileScanner.GetFunction(className, name);
+			if (ffFunc != null) yield return ffFunc.Definition.Signature;
 		}
 
 		public static IEnumerable<string> GetSignatureArguments(string sig)

@@ -23,6 +23,7 @@ Features:
 
 Bug Fixes:
 - Signature help now properly ignores commas that aren't parameter delimiters (e.g. enum options)
+- Fixed problem with signature help not triggering on opening bracket when other args are present.
 - Fixed smart indenting after lines with #include, #replace/#with/#endreplace.
 
 ____________________________________________________________________________________________________

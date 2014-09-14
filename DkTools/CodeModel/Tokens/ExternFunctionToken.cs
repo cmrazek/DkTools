@@ -12,7 +12,7 @@ namespace DkTools.CodeModel.Tokens
 		private IdentifierToken _nameToken;
 		private BracketsToken _argsToken;
 
-		public ExternFunctionToken(GroupToken parent, Scope scope, IEnumerable<Token> tokens, Token dataTypeToken, IdentifierToken nameToken, BracketsToken argsToken)
+		public ExternFunctionToken(GroupToken parent, Scope scope, IEnumerable<Token> tokens, Token dataTypeToken, IdentifierToken nameToken, BracketsToken argsToken, string className)
 			: base(parent, scope, tokens)
 		{
 			_dataTypeToken = dataTypeToken;
@@ -21,7 +21,7 @@ namespace DkTools.CodeModel.Tokens
 
 			if (scope.Preprocessor)
 			{
-				var def = new FunctionDefinition(scope, _nameToken.Text, _nameToken, DataType.FromToken(_dataTypeToken), GetFunctionSignature(), argsToken.Span.End, 0, FunctionPrivacy.Private, true);
+				var def = new FunctionDefinition(scope, className, _nameToken.Text, _nameToken, DataType.FromToken(_dataTypeToken), GetFunctionSignature(), argsToken.Span.End, 0, FunctionPrivacy.Private, true);
 				AddDefinition(def);
 				_nameToken.SourceDefinition = def;
 			}

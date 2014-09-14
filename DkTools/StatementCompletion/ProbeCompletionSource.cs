@@ -220,11 +220,12 @@ namespace DkTools.StatementCompletion
 			{
 				// Moving to next argument in function.
 
+				string className;
 				string funcName;
 				int argIndex;
-				if (GetInsideFunction(snapshot, curPos, out funcName, out argIndex))
+				if (GetInsideFunction(snapshot, curPos, out className, out funcName, out argIndex))
 				{
-					foreach (var opt in GetOptionsForFunctionArg(null, funcName, argIndex, snapPt)) completionList[opt.DisplayText] = opt;
+					foreach (var opt in GetOptionsForFunctionArg(className, funcName, argIndex, snapPt)) completionList[opt.DisplayText] = opt;
 				}
 			}
 			else if ((match = _rxReturn.Match(prefix)).Success)
@@ -278,7 +279,8 @@ namespace DkTools.StatementCompletion
 
 		private IEnumerable<Completion> GetOptionsForFunctionArg(string className, string funcName, int argIndex, SnapshotPoint snapPt)
 		{
-			var model = CodeModel.FileStore.GetOrCreateForTextBuffer(_textBuffer).GetCurrentModel(_textBuffer.CurrentSnapshot, "Signature help get options for arg");
+			var fileStore = CodeModel.FileStore.GetOrCreateForTextBuffer(_textBuffer);
+			var model = fileStore.GetMostRecentModel(_textBuffer.CurrentSnapshot, "Signature help get options for arg");
 
 			string sig;
 			if (!string.IsNullOrEmpty(className))
@@ -290,7 +292,7 @@ namespace DkTools.StatementCompletion
 			}
 			else
 			{
-				sig = SignatureHelp.ProbeSignatureHelpSource.GetAllSignaturesForFunction(model, funcName).FirstOrDefault();
+				sig = SignatureHelp.ProbeSignatureHelpSource.GetAllSignaturesForFunction(model, className, funcName).FirstOrDefault();
 				if (string.IsNullOrEmpty(sig)) yield break;
 			}
 
@@ -311,12 +313,12 @@ namespace DkTools.StatementCompletion
 			}
 		}
 
-		private bool GetInsideFunction(ITextSnapshot snapshot, int pos, out string funcName, out int argIndex)
+		private bool GetInsideFunction(ITextSnapshot snapshot, int pos, out string className, out string funcName, out int argIndex)
 		{
 			var lineNum = snapshot.GetLineNumberFromPosition(pos);
 			var sb = new StringBuilder(snapshot.GetLineTextUpToPosition(pos));
 
-			var rxFuncCall = new Regex(@"(\w+)\s*(\()");
+			var rxFuncCall = new Regex(@"(?:(\w+)\s*\.\s*)?(\w+)\s*(\()");	// groups: 1 = class name, 2 = function name, 3 = start bracket
 
 			while (true)
 			{
@@ -324,11 +326,12 @@ namespace DkTools.StatementCompletion
 
 				foreach (var match in rxFuncCall.Matches(parser.Source).Cast<Match>().Reverse())
 				{
-					parser.Position = match.Groups[2].Index;
+					parser.Position = match.Groups[3].Index;	// position of start bracket
 					var startPos = parser.Position;
 					if (parser.ReadNestable() && parser.TokenType != TokenParser.TokenType.Nested)
 					{
-						funcName = match.Groups[1].Value;
+						className = match.Groups[1].Value;
+						funcName = match.Groups[2].Value;
 
 						// Count the number of commas between that position and the end.
 						parser.Position = startPos;
@@ -349,6 +352,7 @@ namespace DkTools.StatementCompletion
 				sb.Insert(0, line.GetText() + "\r\n");
 			}
 
+			className = null;
 			funcName = null;
 			argIndex = 0;
 			return false;

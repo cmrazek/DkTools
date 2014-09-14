@@ -15,6 +15,7 @@ namespace DkTools.CodeModel.Definitions
 		private int _argsEndPos;
 		private FunctionPrivacy _privacy;
 		private bool _extern;
+		private string _className;
 
 		/// <summary>
 		/// Creates a function definition object.
@@ -26,8 +27,8 @@ namespace DkTools.CodeModel.Definitions
 		/// <param name="signature">Signature text</param>
 		/// <param name="argsEndPos">Ending position of the argument brackets</param>
 		/// <param name="bodyStartPos">Position of the function's body braces (if does not match, then will be ignored)</param>
-		public FunctionDefinition(Scope scope, string name, Token sourceToken, DataType dataType, string signature, int argsEndPos, int bodyStartPos, FunctionPrivacy privacy, bool isExtern)
-			: base(scope, name, sourceToken, true)
+		public FunctionDefinition(Scope scope, string className, string funcName, Token sourceToken, DataType dataType, string signature, int argsEndPos, int bodyStartPos, FunctionPrivacy privacy, bool isExtern)
+			: base(scope, funcName, sourceToken, true)
 		{
 #if DEBUG
 			if (string.IsNullOrWhiteSpace(signature)) throw new ArgumentNullException("signature");
@@ -38,11 +39,12 @@ namespace DkTools.CodeModel.Definitions
 			_bodyStartPos = bodyStartPos;
 			_privacy = privacy;
 			_extern = isExtern;
+			_className = className;
 		}
 
 		public FunctionDefinition CloneAsExtern()
 		{
-			return new FunctionDefinition(Scope, Name, SourceToken, _dataType, _signature, _argsEndPos, _bodyStartPos, _privacy, true);
+			return new FunctionDefinition(Scope, _className, Name, SourceToken, _dataType, _signature, _argsEndPos, _bodyStartPos, _privacy, true);
 		}
 
 		public DataType DataType
@@ -126,6 +128,11 @@ namespace DkTools.CodeModel.Definitions
 			xml.WriteEndElement();
 
 			base.DumpTreeInner(xml);
+		}
+
+		public string ClassName
+		{
+			get { return _className; }
 		}
 	}
 }

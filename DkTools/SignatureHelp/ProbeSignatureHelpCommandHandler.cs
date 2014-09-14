@@ -50,18 +50,26 @@ namespace DkTools.SignatureHelp
 					if (typedChar == '(')
 					{
 						SnapshotPoint point = _textView.Caret.Position.BufferPosition;
-						var source = point.Snapshot.GetText();
+						//var source = point.Snapshot.GetText();
 						var pos = point.Position;
+						var lineText = point.Snapshot.GetLineTextUpToPosition(pos).TrimEnd();
 
-						// Back up to before any whitespace before the '('
-						while (pos > 0 && (pos >= source.Length || char.IsWhiteSpace(source[pos]))) pos--;
-
-						if (pos >= 0 && pos < source.Length && source[pos].IsWordChar(false))
+						if (lineText.Length > 0 && lineText[lineText.Length - 1].IsWordChar(false))
 						{
 							if (_session != null && !_session.IsDismissed) _session.Dismiss();
 							s_typedChar = typedChar;
 							_session = _broker.TriggerSignatureHelp(_textView);
 						}
+
+						//// Back up to before any whitespace before the '('
+						//while (pos > 0 && (pos >= source.Length || char.IsWhiteSpace(source[pos]))) pos--;
+
+						//if (pos >= 0 && pos < source.Length && source[pos].IsWordChar(false))
+						//{
+						//	if (_session != null && !_session.IsDismissed) _session.Dismiss();
+						//	s_typedChar = typedChar;
+						//	_session = _broker.TriggerSignatureHelp(_textView);
+						//}
 					}
 					else if (typedChar == ')' && _session != null)
 					{
