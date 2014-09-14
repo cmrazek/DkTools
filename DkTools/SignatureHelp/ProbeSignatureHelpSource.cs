@@ -118,7 +118,7 @@ namespace DkTools.SignatureHelp
 					if (parser.TokenText == "(")
 					{
 						insideArgs = true;
-						argStartPos = parser.Position.Offset;
+						argStartPos = parser.Position;
 						argEmpty = true;
 						argName = string.Empty;
 					}
@@ -131,8 +131,8 @@ namespace DkTools.SignatureHelp
 						case TokenParser.TokenType.Operator:
 							if (parser.TokenText == ",")
 							{
-								paramList.Add(new ProbeParameter(string.Empty, new VsText.Span(argStartPos, parser.TokenStartPostion.Offset - argStartPos), argName, sig));
-								argStartPos = parser.Position.Offset;
+								paramList.Add(new ProbeParameter(string.Empty, new VsText.Span(argStartPos, parser.TokenStartPostion - argStartPos), argName, sig));
+								argStartPos = parser.Position;
 								argEmpty = true;
 								argName = string.Empty;
 							}
@@ -140,7 +140,7 @@ namespace DkTools.SignatureHelp
 							{
 								if (!argEmpty || paramList.Count > 0)
 								{
-									paramList.Add(new ProbeParameter(string.Empty, new VsText.Span(argStartPos, parser.TokenStartPostion.Offset - argStartPos), argName, sig));
+									paramList.Add(new ProbeParameter(string.Empty, new VsText.Span(argStartPos, parser.TokenStartPostion - argStartPos), argName, sig));
 								}
 								done = true;
 							}
@@ -160,7 +160,7 @@ namespace DkTools.SignatureHelp
 
 			if (!argEmpty)
 			{
-				paramList.Add(new ProbeParameter(string.Empty, new VsText.Span(argStartPos, parser.TokenStartPostion.Offset - argStartPos), argName, sig));
+				paramList.Add(new ProbeParameter(string.Empty, new VsText.Span(argStartPos, parser.TokenStartPostion - argStartPos), argName, sig));
 			}
 
 			sig.Parameters = new ReadOnlyCollection<IParameter>(paramList);

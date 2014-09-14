@@ -9,8 +9,6 @@ namespace DkTools.TokenParser
 	internal sealed class Parser : IEnumerable<Token>
 	{
 		private int _pos;
-		private int _lineNum;
-		private int _linePos;
 		private string _source;
 		private int _length;
 		private StringBuilder _tokenText = new StringBuilder();
@@ -18,7 +16,7 @@ namespace DkTools.TokenParser
 		private TokenType _tokenType = TokenType.Unknown;
 		private bool _returnWhiteSpace = false;
 		private bool _returnComments = false;
-		private Position _tokenStartPos;
+		private int _tokenStartPos;
 		private bool _tokenTerminated = true;
 		private bool _enumNestable = false;
 
@@ -37,10 +35,7 @@ namespace DkTools.TokenParser
 		{
 			_source = source;
 			_length = _source.Length;
-
 			_pos = 0;
-			_lineNum = 0;
-			_linePos = 0;
 		}
 
 		public bool Read()
@@ -57,11 +52,10 @@ namespace DkTools.TokenParser
 				if (char.IsWhiteSpace(ch))
 				{
 					_tokenText.Append(ch);
-					MoveNext();
+					_pos++;
 					while (_pos < _length && char.IsWhiteSpace(_source[_pos]))
 					{
-						_tokenText.Append(_source[_pos]);
-						MoveNext();
+						_tokenText.Append(_source[_pos++]);
 					}
 
 					if (_returnWhiteSpace)
@@ -76,8 +70,7 @@ namespace DkTools.TokenParser
 				{
 					while (_pos < _length && (char.IsLetterOrDigit(_source[_pos]) || _source[_pos] == '_'))
 					{
-						_tokenText.Append(_source[_pos]);
-						MoveNext();
+						_tokenText.Append(_source[_pos++]);
 					}
 
 					if ((_tokenText.Length == 3 && _tokenText.ToString() == "and") ||
@@ -101,12 +94,12 @@ namespace DkTools.TokenParser
 						if (char.IsDigit(ch))
 						{
 							_tokenText.Append(ch);
-							MoveNext();
+							_pos++;
 						}
 						else if (ch == '.' && !gotDot)
 						{
 							_tokenText.Append('.');
-							MoveNext();
+							_pos++;
 							gotDot = true;
 						}
 						else break;
@@ -121,7 +114,7 @@ namespace DkTools.TokenParser
 					var startCh = ch;
 					_tokenText.Append(ch);
 					_tokenTerminated = false;
-					MoveNext();
+					_pos++;
 
 					while (_pos < _length)
 					{
@@ -130,19 +123,19 @@ namespace DkTools.TokenParser
 						{
 							_tokenText.Append(ch);
 							_tokenText.Append(_source[_pos + 1]);
-							MoveNext(2);
+							_pos += 2;
 						}
 						else if (ch == startCh)
 						{
 							_tokenText.Append(ch);
 							_tokenTerminated = true;
-							MoveNext();
+							_pos++;
 							break;
 						}
 						else
 						{
 							_tokenText.Append(ch);
-							MoveNext();
+							_pos++;
 						}
 					}
 
@@ -170,8 +163,7 @@ namespace DkTools.TokenParser
 						{
 							while (_pos < index)
 							{
-								_tokenText.Append(_source[_pos]);
-								MoveNext();
+								_tokenText.Append(_source[_pos++]);
 							}
 
 							_tokenType = TokenType.Comment;
@@ -179,7 +171,7 @@ namespace DkTools.TokenParser
 						}
 						else
 						{
-							MoveNext(index - _pos);
+							_pos = index;
 							continue;
 						}
 					}
@@ -187,7 +179,7 @@ namespace DkTools.TokenParser
 					if (_pos + 1 < _length && _source[_pos + 1] == '*')
 					{
 						if (_returnComments) _tokenText.Append("/*");
-						MoveNext(2);
+						_pos += 2;
 						var level = 1;
 						while (_pos < _length)
 						{
@@ -195,19 +187,19 @@ namespace DkTools.TokenParser
 							if (ch == '/' && _pos + 1 < _length && _source[_pos + 1] == '*')
 							{
 								if (_returnComments) _tokenText.Append("/*");
-								MoveNext(2);
+								_pos += 2;
 								level++;
 							}
 							else if (ch == '*' && _pos + 1 < _length && _source[_pos + 1] == '/')
 							{
 								if (_returnComments) _tokenText.Append("*/");
-								MoveNext(2);
+								_pos += 2;
 								if (--level == 0) break;
 							}
 							else
 							{
 								if (_returnComments) _tokenText.Append(ch);
-								MoveNext();
+								_pos++;
 							}
 						}
 
@@ -223,13 +215,13 @@ namespace DkTools.TokenParser
 					if (_pos + 1 < _length && _source[_pos + 1] == '=')
 					{
 						_tokenText.Append("/=");
-						MoveNext(2);
+						_pos += 2;
 						_tokenType = TokenParser.TokenType.Operator;
 						return true;
 					}
 
 					_tokenText.Append("/");
-					MoveNext();
+					_pos++;
 					_tokenType = TokenParser.TokenType.Operator;
 					return true;
 				}
@@ -237,13 +229,13 @@ namespace DkTools.TokenParser
 				if (ch == '+' || ch == '-' || ch == '*' || ch == '%' || ch == '=' || ch == '!' || ch == '<' || ch == '>')
 				{
 					_tokenText.Append(ch);
-					MoveNext();
+					_pos++;
 					_tokenType = TokenParser.TokenType.Operator;
 
 					if (_pos < _length && _source[_pos] == '=')
 					{
 						_tokenText.Append("=");
-						MoveNext();
+						_pos++;
 					}
 
 					return true;
@@ -252,7 +244,7 @@ namespace DkTools.TokenParser
 				if (ch == '?' || ch == ':' || ch == ',' || ch == '.' || ch == '(' || ch == ')' || ch == '{' || ch == '}' || ch == '[' || ch == ']' || ch == '^')
 				{
 					_tokenText.Append(ch);
-					MoveNext();
+					_pos++;
 					_tokenType = TokenParser.TokenType.Operator;
 					return true;
 				}
@@ -260,13 +252,13 @@ namespace DkTools.TokenParser
 				if (ch == '&' || ch == '|')
 				{
 					_tokenText.Append(ch);
-					MoveNext();
+					_pos++;
 					_tokenType = TokenParser.TokenType.Operator;
 
 					if (_pos < _length && _source[_pos] == ch)
 					{
 						_tokenText.Append(ch);
-						MoveNext();
+						_pos++;
 					}
 
 					return true;
@@ -275,13 +267,12 @@ namespace DkTools.TokenParser
 				if (ch == '#')
 				{
 					_tokenText.Append(ch);
-					MoveNext();
+					_pos++;
 					if (_pos < _length && char.IsLetter(_source[_pos]))
 					{
 						while (_pos < _length && char.IsLetter(_source[_pos]))
 						{
-							_tokenText.Append(_source[_pos]);
-							MoveNext();
+							_tokenText.Append(_source[_pos++]);
 						}
 
 						_tokenType = TokenType.Preprocessor;
@@ -295,7 +286,7 @@ namespace DkTools.TokenParser
 				}
 
 				_tokenText.Append(ch);
-				MoveNext();
+				_pos++;
 				_tokenType = TokenType.Unknown;
 				return true;
 			}
@@ -306,18 +297,17 @@ namespace DkTools.TokenParser
 			return false;
 		}
 
-		public Position Position
+		public int Position
 		{
-			get { return new Position(_pos, _lineNum, _linePos); }
+			get { return _pos; }
 			set
 			{
-				_pos = value.Offset;
-				_lineNum = value.LineNum;
-				_linePos = value.LinePos;
+				if (value < 0 || value > _length) throw new ArgumentOutOfRangeException();
+				_pos = value;
 			}
 		}
 
-		public Position TokenStartPostion
+		public int TokenStartPostion
 		{
 			get { return _tokenStartPos; }
 		}
@@ -339,26 +329,30 @@ namespace DkTools.TokenParser
 			set { _returnComments = value; }
 		}
 
-		private void MoveNext()
+		public void CalcLineAndPosFromOffset(int offset, out int lineNumOut, out int linePosOut)
 		{
-			if (_pos < _length)
+			if (offset < 0 || offset > _length) throw new ArgumentOutOfRangeException("offset");
+
+			int pos = 0;
+			int lineNum = 0;
+			int linePos = 0;
+
+			while (pos < _length)
 			{
-				if (_source[_pos] == '\n')
+				if (_source[pos] == '\n')
 				{
-					_lineNum++;
-					_linePos = 0;
+					lineNum++;
+					linePos = 0;
 				}
 				else
 				{
-					_linePos++;
+					linePos++;
 				}
-				_pos++;
+				pos++;
 			}
-		}
 
-		private void MoveNext(int numChars)
-		{
-			while ((numChars--) > 0) MoveNext();
+			lineNumOut = lineNum;
+			linePosOut = linePos;
 		}
 
 		public Token Token
@@ -410,7 +404,7 @@ namespace DkTools.TokenParser
 						{
 							_tokenStartPos = startPos;
 							_tokenText.Clear();
-							_tokenText.Append(_source.Substring(_tokenStartPos.Offset, _pos - _tokenStartPos.Offset));
+							_tokenText.Append(_source.Substring(_tokenStartPos, _pos - _tokenStartPos));
 							_tokenType = TokenParser.TokenType.Nested;
 							return true;
 						}
@@ -420,7 +414,7 @@ namespace DkTools.TokenParser
 						{
 							_tokenStartPos = startPos;
 							_tokenText.Clear();
-							_tokenText.Append(_source.Substring(_tokenStartPos.Offset, _pos - _tokenStartPos.Offset));
+							_tokenText.Append(_source.Substring(_tokenStartPos, _pos - _tokenStartPos));
 							_tokenType = TokenParser.TokenType.Nested;
 							return true;
 						}
@@ -430,7 +424,7 @@ namespace DkTools.TokenParser
 						{
 							_tokenStartPos = startPos;
 							_tokenText.Clear();
-							_tokenText.Append(_source.Substring(_tokenStartPos.Offset, _pos - _tokenStartPos.Offset));
+							_tokenText.Append(_source.Substring(_tokenStartPos, _pos - _tokenStartPos));
 							_tokenType = TokenParser.TokenType.Nested;
 							return true;
 						}
@@ -483,48 +477,6 @@ namespace DkTools.TokenParser
 			if (!Read()) return false;
 			Position = pos;
 			return true;
-		}
-
-		public bool Peek(out Position tokenEndPos)
-		{
-			var pos = Position;
-			if (!Read())
-			{
-				tokenEndPos = Position;
-				return false;
-			}
-			tokenEndPos = Position;
-			Position = pos;
-			return true;
-		}
-
-		public void ResetPosition()
-		{
-			_pos = 0;
-			_lineNum = 0;
-			_linePos = 0;
-		}
-
-		public void SetOffset(int offset)
-		{
-			if (_pos > offset)
-			{
-				_pos = 0;
-				_lineNum = 0;
-				_linePos = 0;
-			}
-
-			var stop = _length < offset ? _length : offset;
-			while (_pos < stop)
-			{
-				if (_source[_pos] == '\n')
-				{
-					_lineNum++;
-					_linePos = 0;
-				}
-				_pos++;
-				_linePos++;
-			}
 		}
 
 		public static string StringLiteralToString(string str)
@@ -620,7 +572,7 @@ namespace DkTools.TokenParser
 			_tokenText.Clear();
 			_tokenTextStr = null;
 			_tokenType = TokenParser.TokenType.Word;
-			_tokenStartPos = Position;
+			_tokenStartPos = _pos;
 			_tokenTerminated = true;
 
 			char ch;
@@ -629,7 +581,7 @@ namespace DkTools.TokenParser
 				ch = _source[_pos];
 				if (!ch.IsWordChar(false)) return true;
 				_tokenText.Append(ch);
-				MoveNext();
+				_pos++;
 			}
 
 			return true;
@@ -647,8 +599,8 @@ namespace DkTools.TokenParser
 				if (_source[_pos + i] != expecting[i]) return false;
 			}
 
-			_tokenStartPos = Position;
-			MoveNext(expLength);
+			_tokenStartPos = _pos;
+			_pos += expLength;
 
 			_tokenText.Clear();
 			_tokenText.Append(expecting);
@@ -663,8 +615,8 @@ namespace DkTools.TokenParser
 
 			if (_pos >= _length || _source[_pos] != expecting) return false;
 
-			_tokenStartPos = Position;
-			MoveNext();
+			_tokenStartPos = _pos;
+			_pos++;
 
 			_tokenText.Clear();
 			_tokenText.Append(expecting);
@@ -682,7 +634,7 @@ namespace DkTools.TokenParser
 				if (char.IsWhiteSpace(ch))
 				{
 					if (_returnWhiteSpace) return true;
-					MoveNext();
+					_pos++;
 				}
 				else if (ch == '/' && !_returnComments && _pos + 1 < _length)
 				{
@@ -691,28 +643,27 @@ namespace DkTools.TokenParser
 					{
 						// single line comment
 						var index = _source.IndexOf('\n', _pos);
-						if (index < 0) MoveNext(_length - _pos);
-						else MoveNext(index - _pos);
+						_pos = index < 0 ? _length : index;
 					}
 					else if (ch == '*')
 					{
 						// multi line comment
-						MoveNext(2);
+						_pos += 2;
 						var level = 1;
 						while (_pos < _length)
 						{
 							ch = _source[_pos];
 							if (ch == '/' && _pos + 1 < _length && _source[_pos + 1] == '*')
 							{
-								MoveNext(2);
+								_pos += 2;
 								level++;
 							}
 							else if (ch == '*' && _pos + 1 < _length && _source[_pos + 1] == '/')
 							{
-								MoveNext(2);
+								_pos += 2;
 								if (--level == 0) break;
 							}
-							else MoveNext();
+							else _pos++;
 						}
 					}
 					else return true;	// '/' not part of comment
@@ -756,12 +707,12 @@ namespace DkTools.TokenParser
 				if (char.IsDigit(ch))
 				{
 					_tokenText.Append(ch);
-					MoveNext();
+					_pos++;
 				}
 				else if (ch == '.' && !gotDot)
 				{
 					_tokenText.Append('.');
-					MoveNext();
+					_pos++;
 					gotDot = true;
 				}
 				else break;
@@ -785,7 +736,7 @@ namespace DkTools.TokenParser
 			_tokenText.Append(ch);
 			_tokenTextStr = null;
 			_tokenTerminated = false;
-			MoveNext();
+			_pos++;
 
 			while (_pos < _length)
 			{
@@ -794,19 +745,19 @@ namespace DkTools.TokenParser
 				{
 					_tokenText.Append(ch);
 					_tokenText.Append(_source[_pos + 1]);
-					MoveNext(2);
+					_pos += 2;
 				}
 				else if (ch == startCh)
 				{
 					_tokenText.Append(ch);
 					_tokenTerminated = true;
-					MoveNext();
+					_pos++;
 					break;
 				}
 				else
 				{
 					_tokenText.Append(ch);
-					MoveNext();
+					_pos++;
 				}
 			}
 

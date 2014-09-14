@@ -324,7 +324,7 @@ namespace DkTools.StatementCompletion
 
 				foreach (var match in rxFuncCall.Matches(parser.Source).Cast<Match>().Reverse())
 				{
-					parser.SetOffset(match.Groups[2].Index);
+					parser.Position = match.Groups[2].Index;
 					var startPos = parser.Position;
 					if (parser.ReadNestable() && parser.TokenType != TokenParser.TokenType.Nested)
 					{

@@ -9,10 +9,10 @@ namespace DkTools.TokenParser
 	{
 		private string _text;
 		private TokenType _type;
-		private Position _startPos;
-		private Position _endPos;
+		private int _startPos;
+		private int _endPos;
 
-		public Token(TokenType type, string text, Position startPos, Position endPos)
+		public Token(TokenType type, string text, int startPos, int endPos)
 		{
 			_type = type;
 			_text = text;
@@ -30,12 +30,12 @@ namespace DkTools.TokenParser
 			get { return _text; }
 		}
 
-		public Position StartPosition
+		public int StartPosition
 		{
 			get { return _startPos; }
 		}
 
-		public Position EndPosition
+		public int EndPosition
 		{
 			get { return _endPos; }
 		}

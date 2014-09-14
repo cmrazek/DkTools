@@ -604,7 +604,7 @@ namespace DkTools.CodeModel
 			var tokens = parser.ToArray();
 			if (tokens.Length > 0 && tokens[tokens.Length - 1].Type == TokenParser.TokenType.Comment)
 			{
-				conditionStr = conditionStr.Substring(0, tokens[tokens.Length - 1].StartPosition.Offset);
+				conditionStr = conditionStr.Substring(0, tokens[tokens.Length - 1].StartPosition);
 			}
 
 			if (elif)

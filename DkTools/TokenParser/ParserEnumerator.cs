@@ -9,7 +9,7 @@ namespace DkTools.TokenParser
 	internal sealed class ParserEnumerator : IEnumerator<Token>
 	{
 		private Parser _parser;
-		private Position _pos;
+		private int _pos;
 		private Token _token;
 		private bool _readNestable;
 
@@ -53,7 +53,7 @@ namespace DkTools.TokenParser
 
 		void IEnumerator.Reset()
 		{
-			_pos = Position.Start;
+			_pos = 0;
 		}
 
 		void IDisposable.Dispose()
