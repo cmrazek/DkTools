@@ -300,15 +300,27 @@ namespace DkTools.CodeModel
 
 		private void ProcessDefineUse(PreprocessorParams p, string name)
 		{
-			if (p.suppress) return;
-			if (p.restrictedDefines != null && p.restrictedDefines.Contains(name)) return;
-
 			var rdr = p.reader;
+
+			if (p.suppress)
+			{
+				rdr.Use(name.Length);
+				return;
+			}
+			if (p.restrictedDefines != null && p.restrictedDefines.Contains(name))
+			{
+				rdr.Use(name.Length);
+				return;
+			}
 
 			Define define = null;
 			if (p.args != null) define = p.args.FirstOrDefault(x => x.Name == name);
 			if (define == null) _defines.TryGetValue(name, out define);
-			if (define == null) return;
+			if (define == null)
+			{
+				rdr.Use(name.Length);
+				return;
+			}
 
 			if (define.IsDataType)
 			{

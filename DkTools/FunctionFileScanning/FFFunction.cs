@@ -40,6 +40,9 @@ namespace DkTools.FunctionFileScanning
 			_sig = def.Signature;
 			_span = def.SourceSpan;
 			_dataType = def.DataType;
+#if DEBUG
+			if (_dataType == null) throw new InvalidOperationException("Function data type is null.");
+#endif
 			_privacy = def.Privacy;
 			_def = def;
 		}
@@ -68,6 +71,10 @@ namespace DkTools.FunctionFileScanning
 				var options = (from o in rdr.GetString(rdr.GetOrdinal("completion_options")).Split('|') select new CodeModel.Definitions.EnumOptionDefinition(o)).ToArray();
 				_dataType = new CodeModel.DataType(dataTypeText, options, dataTypeText);
 			}
+			else
+			{
+				_dataType = new CodeModel.DataType(dataTypeText);
+			}
 
 			var str = rdr.GetString(rdr.GetOrdinal("privacy"));
 			if (!Enum.TryParse<CodeModel.FunctionPrivacy>(str, out _privacy)) _privacy = CodeModel.FunctionPrivacy.Public;
@@ -78,6 +85,10 @@ namespace DkTools.FunctionFileScanning
 
 		public void UpdateFromDefinition(CodeModel.Definitions.FunctionDefinition def)
 		{
+#if DEBUG
+			if (def == null) throw new ArgumentNullException("def");
+			if (def.DataType == null) throw new ArgumentNullException("def.DataType");
+#endif
 			_sig = def.Signature;
 			_span = def.SourceSpan;
 			_dataType = def.DataType;
@@ -108,13 +119,13 @@ namespace DkTools.FunctionFileScanning
 		public void InsertOrUpdate(FFDatabase db)
 		{
 			string completionOptions = null;
-			if (_dataType.HasCompletionOptions)
+			if (_dataType != null && _dataType.HasCompletionOptions)
 			{
 				var sb = new StringBuilder();
 				foreach (var opt in _dataType.CompletionOptions)
 				{
 					if (sb.Length > 0) sb.Append('|');
-					sb.Append(opt);
+					sb.Append(opt.Name);
 				}
 				completionOptions = sb.ToString();
 			}
