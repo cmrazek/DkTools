@@ -1,6 +1,6 @@
 DkTools2012 ChangeLog
 ____________________________________________________________________________________________________
-Version 1.2.4 - (pending):
+Version 1.2.4 - Sep 16, 2014:
 
 Features:
 - Added support for WBDK classes.
