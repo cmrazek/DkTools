@@ -660,6 +660,10 @@ namespace DkTools.CodeModel
 				{
 					p.ifStack.Push(new ConditionScope(ConditionResult.Negative, ConditionResult.Positive, p.suppress));
 				}
+				else if (p.serverContext == ServerContext.Include)
+				{
+					p.ifStack.Push(new ConditionScope(ConditionResult.Indeterminate, ConditionResult.Indeterminate, p.suppress));
+				}
 				else
 				{
 					var result = EvaluateCondition(p, conditionStr);
