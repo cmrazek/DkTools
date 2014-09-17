@@ -1,5 +1,12 @@
 DkTools2012 ChangeLog
 ____________________________________________________________________________________________________
+Version 1.2.5 - (pending)
+
+Bug Fixes:
+- Fixed slow performance/freezing when typing a ',' that's not inside a function call.
+- Fixed issue where 'insert diags' wasn't detecting the function name.
+
+____________________________________________________________________________________________________
 Version 1.2.4 - Sep 16, 2014:
 
 Features:

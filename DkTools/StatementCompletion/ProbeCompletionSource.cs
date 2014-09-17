@@ -318,7 +318,7 @@ namespace DkTools.StatementCompletion
 			var lineNum = snapshot.GetLineNumberFromPosition(pos);
 			var sb = new StringBuilder(snapshot.GetLineTextUpToPosition(pos));
 
-			var rxFuncCall = new Regex(@"(?:(\w+)\s*\.\s*)?(\w+)\s*(\()");	// groups: 1 = class name, 2 = function name, 3 = start bracket
+			var rxFuncCall = new Regex(@"(?:;|{|}|(?:(\w+)\s*\.\s*)?(\w+)\s*(\())");	// groups: 1 = class name, 2 = function name, 3 = start bracket
 
 			while (true)
 			{
@@ -326,23 +326,34 @@ namespace DkTools.StatementCompletion
 
 				foreach (var match in rxFuncCall.Matches(parser.Source).Cast<Match>().Reverse())
 				{
-					parser.Position = match.Groups[3].Index;	// position of start bracket
-					var startPos = parser.Position;
-					if (parser.ReadNestable() && parser.TokenType != TokenParser.TokenType.Nested)
+					if (match.Groups[0].Length == 1)
 					{
-						className = match.Groups[1].Value;
-						funcName = match.Groups[2].Value;
-
-						// Count the number of commas between that position and the end.
-						parser.Position = startPos;
-						var commaCount = 0;
-						while (parser.Read())
+						// Found a character that proves we're not inside a function.
+						className = null;
+						funcName = null;
+						argIndex = 0;
+						return false;
+					}
+					else
+					{
+						parser.Position = match.Groups[3].Index;	// position of start bracket
+						var startPos = parser.Position;
+						if (parser.ReadNestable() && parser.TokenType != TokenParser.TokenType.Nested)
 						{
-							if (parser.TokenText == ",") commaCount++;
-						}
+							className = match.Groups[1].Value;
+							funcName = match.Groups[2].Value;
 
-						argIndex = commaCount;
-						return true;
+							// Count the number of commas between that position and the end.
+							parser.Position = startPos;
+							var commaCount = 0;
+							while (parser.Read())
+							{
+								if (parser.TokenText == ",") commaCount++;
+							}
+
+							argIndex = commaCount;
+							return true;
+						}
 					}
 				}
 
