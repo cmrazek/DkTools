@@ -1,6 +1,9 @@
 DkTools2012 ChangeLog
 ____________________________________________________________________________________________________
-Version 1.2.5 - (pending)
+Version 1.2.5 - Sep 18, 2014
+
+Features:
+- Added toolbar icon to launch DK Application Manager (ProbeNV)
 
 Bug Fixes:
 - Fixed slow performance/freezing when typing a ',' that's not inside a function call.

@@ -260,6 +260,16 @@
 					<ButtonText>DK Application Configuration Manager (ACM)</ButtonText>
 				</Strings>
 			</Button>
+
+			<!-- DK Menu -> ProbeNV -->
+			<Button guid="guidProbeToolsCmdSet" id="cmdProbeNV" priority="0x0028" type="Button">
+				<Parent guid="guidProbeToolsCmdSet" id="SettingsGroup" />
+				<Icon guid="guidImages" id="bmpProbeNV" />
+				<Strings>
+					<CommandName>cmdProbeNV</CommandName>
+					<ButtonText>DK Application Manager (ProbeNV)</ButtonText>
+				</Strings>
+			</Button>
       
       <!-- DK Menu -> DRV -->
       <Button guid="guidProbeToolsCmdSet" id="cmdShowDrv" priority="0x0030" type="Button">
@@ -431,6 +441,16 @@
 				</Strings>
 			</Button>
 
+			<!-- DK Toolbar -> ProbeNV -->
+			<Button guid="guidProbeToolsCmdSet" id="cmdProbeNV" priority="0x0028" type="Button">
+				<Parent guid="guidProbeToolsCmdSet" id="tbSettingsGroup" />
+				<Icon guid="guidImages" id="bmpProbeNV" />
+				<Strings>
+					<CommandName>cmdProbeNV</CommandName>
+					<ButtonText>DK Application Manager (ProbeNV)</ButtonText>
+				</Strings>
+			</Button>
+
       <!-- DK Toolbar -> DRV -->
       <Button guid="guidProbeToolsCmdSet" id="cmdShowDrv" priority="0x0030" type="Button">
         <Parent guid="guidProbeToolsCmdSet" id="tbSettingsGroup" />
@@ -455,7 +475,7 @@
 
 		<Bitmaps>
 			<Bitmap guid="guidImages" href="Images\ProbeToolsCommandIcons.png" resID="bmpCompile"
-              usedList="bmpCompile, bmpKillCompile, bmpProbeExplorer, bmpFindInProbeFiles, bmpFecFile, bmpPstTable, bmpMergeFile, bmpRun, bmpInsertTag, bmpInsertDiag, bmpInsertDate, bmpInsertFileHeader, bmpSettings, bmpPSelect, bmpDccmp, bmpCredelix, bmpTableListing, bmpCompileToVisualC, bmpShowHelp, bmpShowDrv, bmpDisableDeadCode" />
+              usedList="bmpCompile, bmpKillCompile, bmpProbeExplorer, bmpFindInProbeFiles, bmpFecFile, bmpPstTable, bmpMergeFile, bmpRun, bmpInsertTag, bmpInsertDiag, bmpInsertDate, bmpInsertFileHeader, bmpSettings, bmpPSelect, bmpDccmp, bmpCredelix, bmpTableListing, bmpCompileToVisualC, bmpShowHelp, bmpShowDrv, bmpDisableDeadCode, bmpProbeNV" />
 		</Bitmaps>
 
 		<Menus>
@@ -581,6 +601,7 @@
       <IDSymbol name="cmdDisableDeadCode" value="0x0120"/>
       <IDSymbol name="menuEditorOptions" value="0x0121"/>
       <IDSymbol name="grpEditorOptionsMenu" value="0x0122"/>
+			<IDSymbol name="cmdProbeNV" value="0x0123"/>
 
 			<IDSymbol name="tbProbeToolbar" value="0x2000" />
 			<IDSymbol name="tbFileOperationsGroup" value="0x2001" />
@@ -614,6 +635,7 @@
 			<IDSymbol name="bmpShowHelp" value="0x0013"/>
       <IDSymbol name="bmpShowDrv" value="0x0014"/>
       <IDSymbol name="bmpDisableDeadCode" value="0x0015"/>
+			<IDSymbol name="bmpProbeNV" value="0x0016"/>
 		</GuidSymbol>
 	</Symbols>
 	

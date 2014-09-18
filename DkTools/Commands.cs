@@ -39,7 +39,8 @@ namespace DkTools
 		Credelix = 0x011d,
 		ShowHelp = 0x011e,
 		ShowDrv = 0x011f,
-		DisableDeadCode = 0x0120
+		DisableDeadCode = 0x0120,
+		ShowProbeNV = 0x0123
 	}
 
 	internal static class Commands
@@ -69,6 +70,7 @@ namespace DkTools
 			AddCommand(mcs, CommandId.ShowHelp, ShowHelp);
 			AddCommand(mcs, CommandId.ShowDrv, ShowDrv);
 			AddCommand(mcs, CommandId.DisableDeadCode, DisableDeadCode, checkedCallback: DisableDeadCode_Checked);
+			AddCommand(mcs, CommandId.ShowProbeNV, ShowProbeNV);
 		}
 
 		private class CommandInstance
@@ -564,6 +566,29 @@ namespace DkTools
 					else
 					{
 						Shell.ShowError("Unable to locate 'DRV.msc'");
+					}
+				}
+			}
+			catch (Exception ex)
+			{
+				Shell.ShowError(ex);
+			}
+		}
+
+		private static void ShowProbeNV(object sender, EventArgs e)
+		{
+			try
+			{
+				if (!string.IsNullOrEmpty(ProbeEnvironment.PlatformPath))
+				{
+					var pathName = Path.Combine(ProbeEnvironment.PlatformPath, "probenv.exe");
+					if (File.Exists(pathName))
+					{
+						Process.Start(pathName);
+					}
+					else
+					{
+						Shell.ShowError("Unable to locate 'ProbeNV.exe'");
 					}
 				}
 			}
