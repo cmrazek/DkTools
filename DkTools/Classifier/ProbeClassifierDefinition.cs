@@ -268,5 +268,23 @@ namespace DkTools.Classifier
 			}
 		}
 		#endregion
+
+		#region Variable
+		[Export]
+		[Name("DK.Variable")]
+		internal static ClassificationTypeDefinition Variable = null;
+
+		[Export(typeof(EditorFormatDefinition))]
+		[ClassificationType(ClassificationTypeNames = "DK.Variable")]
+		[Name("DK.Variable")]
+		[UserVisible(true)]
+		internal sealed class VariableFormat : ClassificationFormatDefinition
+		{
+			public VariableFormat()
+			{
+				ForegroundColor = Colors.DarkSlateGray;
+			}
+		}
+		#endregion
 	}
 }

@@ -20,6 +20,7 @@ namespace DkTools.Classifier
 		DataType,
 		Function,
 		Delimiter,
-		Operator
+		Operator,
+		Variable
 	}
 }

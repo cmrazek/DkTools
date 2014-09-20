@@ -44,7 +44,7 @@ namespace DkTools.CodeModel.Definitions
 
 		public override Classifier.ProbeClassifierType ClassifierType
 		{
-			get { return Classifier.ProbeClassifierType.Normal; }
+			get { return Classifier.ProbeClassifierType.Variable; }
 		}
 
 		public override string QuickInfoText

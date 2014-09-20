@@ -34,6 +34,7 @@ namespace DkTools.Classifier
 			_tokenTypes[ProbeClassifierType.Function] = registry.GetClassificationType("DK.Function");
 			_tokenTypes[ProbeClassifierType.Delimiter] = registry.GetClassificationType("DK.Delimiter");
 			_tokenTypes[ProbeClassifierType.Operator] = registry.GetClassificationType("DK.Operator");
+			_tokenTypes[ProbeClassifierType.Variable] = registry.GetClassificationType("DK.Variable");
 
 			_scanner = new ProbeClassifierScanner();
 

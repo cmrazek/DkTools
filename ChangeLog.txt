@@ -2,6 +2,9 @@ DkTools2012 ChangeLog
 ____________________________________________________________________________________________________
 Version 1.2.6 - pending:
 
+Features:
+- Added syntax highlighting for variables.
+
 Bug Fixes:
 - Improved performance of code modeling.
 
