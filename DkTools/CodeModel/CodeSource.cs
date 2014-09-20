@@ -201,6 +201,58 @@ namespace DkTools.CodeModel
 			return new LocalFilePosition(seg.fileName, pos, seg.primaryFile);
 		}
 
+		/// <summary>
+		/// Gets the position in the primary file closest to the source offset.
+		/// </summary>
+		/// <param name="sourceOffset">The position in the source, which could consist of mixed file content.</param>
+		/// <returns>The position in the primary file that's closest to sourceOffset.</returns>
+		public int GetPrimaryFilePosition(int sourceOffset)
+		{
+			if (sourceOffset < 0 || sourceOffset > _length) throw new ArgumentOutOfRangeException("offset");
+
+			var segIndex = FindSegmentIndexForOffset(sourceOffset);
+			if (segIndex < 0) return -1;
+
+			var seg = _segments[segIndex];
+			if (seg.primaryFile)
+			{
+				if (seg.actualContent) return seg.startPos + (sourceOffset - seg.start);
+				else return seg.startPos;
+			}
+			else
+			{
+				segIndex++;
+				while (segIndex < _segments.Count)
+				{
+					if (seg.primaryFile) return seg.startPos;
+					segIndex++;
+				}
+
+				return -1;
+			}
+		}
+
+		public Span GetPrimaryFileSpan(Span sourceSpan)
+		{
+			var startPos = GetPrimaryFilePosition(sourceSpan.Start);
+			var endPos = GetPrimaryFilePosition(sourceSpan.End);
+			if (startPos < 0 || endPos < 0) return Span.Empty;
+			return new Span(startPos, endPos);
+		}
+
+		/// <summary>
+		/// Determines if the provided position appears in the primary file.
+		/// </summary>
+		/// <param name="sourceOffset">The position to be tested.</param>
+		/// <returns>True if the position is in the primary file; false if it is in another file.</returns>
+		public bool PositionIsInPrimaryFile(int sourceOffset)
+		{
+			var segIndex = FindSegmentIndexForOffset(sourceOffset);
+			if (segIndex < 0) return false;
+
+			return _segments[segIndex].primaryFile;
+		}
+
 		public void GetFileSpan(Span sourceSpan, out string foundFileName, out Span foundSpan, out bool foundPrimaryFile)
 		{
 			var startLocalPos = GetFilePosition(sourceSpan.Start);

@@ -1279,68 +1279,6 @@ namespace DkTools.ProbeExplorer
 					}
 				}
 			}
-
-			// TODO: remove
-			//var text = c_dictTreeFilter.Text;
-			//if (string.IsNullOrWhiteSpace(text))
-			//{
-			//	var selItem = c_dictTree.SelectedItem as TreeViewItem;
-
-			//	foreach (TreeViewItem tableNode in c_dictTree.Items)
-			//	{
-			//		var table = tableNode.Tag as DictTable;
-			//		if (table == null) continue;
-
-			//		var containsSelItem = (from f in tableNode.Items.Cast<TreeViewItem>() where f == selItem select f).Any();
-
-			//		if (!containsSelItem)
-			//		{
-			//			tableNode.IsExpanded = false;
-			//		}
-
-			//		foreach (TreeViewItem fieldNode in tableNode.Items) fieldNode.Visibility = System.Windows.Visibility.Visible;
-			//		tableNode.Visibility = System.Windows.Visibility.Visible;
-			//	}
-
-			//	if (selItem != null) selItem.BringIntoView();
-			//}
-			//else
-			//{
-			//	var filter = new TextFilter(c_dictTreeFilter.Text);
-
-			//	foreach (TreeViewItem tableNode in c_dictTree.Items)
-			//	{
-			//		var table = tableNode.Tag as DictTable;
-			//		if (table == null) continue;
-
-			//		var showTable = false;
-			//		var expandTable = false;
-			//		if (filter.Match(table.Name) || filter.Match(table.Prompt))
-			//		{
-			//			showTable = true;
-			//		}
-
-			//		foreach (TreeViewItem fieldNode in tableNode.Items)
-			//		{
-			//			var field = fieldNode.Tag as DictField;
-			//			if (field == null) continue;
-
-			//			if (filter.Match(field.Name) || filter.Match(field.Prompt))
-			//			{
-			//				showTable = true;
-			//				expandTable = true;
-			//				fieldNode.Visibility = System.Windows.Visibility.Visible;
-			//			}
-			//			else
-			//			{
-			//				fieldNode.Visibility = System.Windows.Visibility.Collapsed;
-			//			}
-			//		}
-
-			//		tableNode.Visibility = showTable ? System.Windows.Visibility.Visible : System.Windows.Visibility.Collapsed;
-			//		if (expandTable && !tableNode.IsExpanded) tableNode.IsExpanded = true;
-			//	}
-			//}
 		}
 
 		private void DictTreeFilter_TextChanged(object sender, TextChangedEventArgs e)

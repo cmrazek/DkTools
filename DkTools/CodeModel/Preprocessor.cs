@@ -757,7 +757,7 @@ namespace DkTools.CodeModel
 		{
 			foreach (var define in _defines.Values)
 			{
-				defProv.AddGlobalDefinition(define.CreateDefinition());
+				defProv.AddGlobal(define.CreateDefinition());
 			}
 		}
 
@@ -851,20 +851,15 @@ namespace DkTools.CodeModel
 				{
 					if (_dataType != null)
 					{
-						return new Definitions.DataTypeDefinition(new Scope(), _name, _dataType);
+						return new Definitions.DataTypeDefinition(_name, _dataType);
 					}
 					else
 					{
-						Token sourceToken = null;
-						if (!string.IsNullOrEmpty(_fileName)) sourceToken = new ExternalToken(_fileName, new Span(_pos, _pos));
-						return new Definitions.ConstantDefinition(new Scope(), _name, sourceToken, Token.NormalizePlainText(_content));
+						return new Definitions.ConstantDefinition(_name, _fileName, _pos, Token.NormalizePlainText(_content));
 					}
 				}
 				else
 				{
-					Token sourceToken = null;
-					if (!string.IsNullOrEmpty(_fileName)) sourceToken = new ExternalToken(_fileName, new Span(_pos, _pos));
-
 					var sig = new StringBuilder();
 					sig.Append(_name);
 					sig.Append('(');
@@ -877,7 +872,7 @@ namespace DkTools.CodeModel
 					}
 					sig.Append(')');
 
-					return new Definitions.MacroDefinition(new Scope(), _name, sourceToken, sig.ToString(), Token.NormalizePlainText(_content));
+					return new Definitions.MacroDefinition(_name, _fileName, _pos, sig.ToString(), Token.NormalizePlainText(_content));
 				}
 			}
 

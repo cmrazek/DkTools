@@ -29,7 +29,7 @@ namespace DkTools.FunctionFileScanning
 			_app = app;
 			_file = file;
 			_name = name;
-			_def = new CodeModel.Definitions.ClassDefinition(new CodeModel.Scope(), _name, _file.FileName);
+			_def = new CodeModel.Definitions.ClassDefinition(_name, _file.FileName);
 		}
 
 		public FFClass(FFApp app, FFFile file, FFDatabase db, SqlCeDataReader classRdr)
@@ -42,7 +42,7 @@ namespace DkTools.FunctionFileScanning
 
 			_id = classRdr.GetInt32(classRdr.GetOrdinal("id"));
 			_name = classRdr.GetString(classRdr.GetOrdinal("name"));
-			_def = new CodeModel.Definitions.ClassDefinition(new CodeModel.Scope(), _name, _file.FileName);
+			_def = new CodeModel.Definitions.ClassDefinition(_name, _file.FileName);
 
 			using (var cmd = db.CreateCommand("select * from func where class_id = @class_id"))
 			{

@@ -248,7 +248,10 @@ namespace DkTools.CodeModel
 
 		public CodeModel CreatePreprocessedModel(string content, string fileName, string reason)
 		{
+#if DEBUG
 			Log.WriteDebug("Creating preprocessed model. Reason: {0}", reason);
+			var startTime = DateTime.Now;
+#endif
 
 			var visibleSource = new CodeSource();
 			visibleSource.Append(content, fileName, 0, content.Length, true, true, false);
@@ -256,8 +259,7 @@ namespace DkTools.CodeModel
 			var reader = new CodeSource.CodeSourcePreprocessorReader(visibleSource);
 			var prepSource = new CodeSource();
 
-			var defProvider = new DefinitionProvider();
-			defProvider.Preprocessor = true;
+			var defProvider = new DefinitionProvider(fileName);
 
 			var ext = Path.GetExtension(fileName);
 			var serverContext = GetServerContextFromFileExtension(ext);
@@ -265,14 +267,16 @@ namespace DkTools.CodeModel
 			prep.Preprocess(reader, prepSource, fileName, new string[0], serverContext);
 			prep.AddDefinitionsToProvider(defProvider);
 
-			var modelType = CodeModel.DetectFileTypeFromFileName(fileName);
+			var prepModel = new PreprocessorModel(prepSource, defProvider, fileName);
 
-			var prepModel = CodeModel.CreatePreprocessorModel(modelType, this, prepSource, fileName, defProvider);
-
-			defProvider.Preprocessor = false;
-			var visibleModel = prepModel.CreateVisibleModelForPreprocessed(modelType, visibleSource);
+			var visibleModel = CodeModel.CreateVisibleModelForPreprocessed(visibleSource, this, prepModel);
 			visibleModel.PreprocessorModel = prepModel;
 			visibleModel.DisabledSections = prepSource.GenerateDisabledSections().ToArray();
+
+#if DEBUG
+			var elapsed = DateTime.Now.Subtract(startTime).TotalMilliseconds;
+			Log.WriteDebug("Created model in {0} msecs.", elapsed);
+#endif
 
 			return visibleModel;
 		}

@@ -11,96 +11,56 @@ namespace DkTools.CodeModel.Definitions
 	{
 		private string _name;
 		private bool _global;
-		private Token _sourceToken;
-		private CodeFile _sourceFile;
 		private string _sourceFileName;
-		private Span _sourceSpan;
-		private bool _sourcePrimary;
-		private Scope _scope;
-		private bool _preprocessor;
+		private int _sourceStartPos;
 
 		public abstract bool CompletionVisible { get; }
 		public abstract StatementCompletion.CompletionType CompletionType { get; }
 		public abstract Classifier.ProbeClassifierType ClassifierType { get; }
 		public abstract string QuickInfoText { get; }
 
-		public Definition(Scope scope, string name, Token sourceToken, bool global)
+		public Definition(string name, string sourceFileName, int sourceStartPos, bool global)
 		{
 #if DEBUG
 			if (string.IsNullOrWhiteSpace(name)) throw new ArgumentNullException("name");
 #endif
 			_name = name;
 			_global = global;
-
-			if (sourceToken != null)
-			{
-				_sourceToken = sourceToken;
-				_sourceFile = sourceToken.File;
-				_sourceSpan = sourceToken.Span;
-				_sourcePrimary = true;
-
-				if (_sourceFile != null)
-				{
-					_sourceFileName = _sourceFile.FileName;
-				}
-				else if (sourceToken is ExternalToken)
-				{
-					_sourceFileName = (sourceToken as ExternalToken).FileName;
-				}
-				else
-				{
-					throw new InvalidOperationException("Source token has no file object.");
-				}
-			}
-
-			_scope = scope;
-			_preprocessor = scope.Preprocessor;
+			_sourceFileName = sourceFileName;
+			_sourceStartPos = sourceStartPos;
 		}
 
+		/// <summary>
+		/// Gets the name of the definition.
+		/// </summary>
 		public string Name
 		{
 			get { return _name; }
 		}
 
-		public Token SourceToken
-		{
-			get { return _sourceToken; }
-		}
-
+		/// <summary>
+		/// Gets a flag indicating if this definition extends past the local scope.
+		/// </summary>
 		public bool Global
 		{
 			get { return _global; }
 		}
 
-		public CodeFile SourceFile
-		{
-			get { return _sourceFile; }
-		}
-
+		/// <summary>
+		/// Gets the file name where this definition was defined.
+		/// </summary>
 		public string SourceFileName
 		{
 			get { return _sourceFileName; }
 		}
 
-		public Span SourceSpan
+		/// <summary>
+		/// Gets the position in the source file name where this definition was defined.
+		/// </summary>
+		public int SourceStartPos
 		{
-			get { return _sourceSpan; }
-			set { _sourceSpan = value; }
+			get { return _sourceStartPos; }
 		}
-
-		public bool SourcePrimary
-		{
-			get { return _sourcePrimary; }
-		}
-
-		// TODO: remove
-		//public string LocationText
-		//{
-		//	get
-		//	{
-		//		return string.Concat(_sourceFileName, "(", _sourceSpan.Start.LineNum + 1, ")");
-		//	}
-		//}
 
 		public void DumpTree(System.Xml.XmlWriter xml)
 		{
@@ -114,48 +74,12 @@ namespace DkTools.CodeModel.Definitions
 		{
 			xml.WriteAttributeString("name", _name);
 			xml.WriteAttributeString("global", _global.ToString());
-			xml.WriteAttributeString("sourceSpan", _sourceSpan.ToString());
-			xml.WriteAttributeString("preprocessor", _preprocessor.ToString());
+			xml.WriteAttributeString("sourceFileName", _sourceFileName);
+			xml.WriteAttributeString("sourceStartPos", _sourceStartPos.ToString());
 		}
 
 		public virtual void DumpTreeInner(System.Xml.XmlWriter xml)
 		{
-		}
-
-		public bool Preprocessor
-		{
-			get { return _preprocessor; }
-		}
-
-		public Scope Scope
-		{
-			get { return _scope; }
-		}
-
-		/// <summary>
-		/// Migrates a definition from the preprocessor to the visible model.
-		/// </summary>
-		/// <param name="visibleFile">The new CodeFile. At the time of calling, this object is not yet populated, and will not contain a code tree.</param>
-		/// <param name="visibleSource">The new CodeSource. This object is populated with the actual text visible on screen.</param>
-		/// <returns>True if the definition resides in the visible model; otherwise false.</returns>
-		/// <remarks>If a subclass overrides this method, it should call the base method AFTER performing it's own transformation, so that _sourceFile still points to the original.
-		/// Also, SourceFile could be null for external or built-in definitions.</remarks>
-		public virtual bool MoveFromPreprocessorToVisibleModel(CodeFile visibleFile, CodeSource visibleSource)
-		{
-			if (_sourceFile != null)
-			{
-				string fileName;
-				Span span;
-				bool primary;
-				_sourceFile.CodeSource.GetFileSpan(_sourceSpan, out fileName, out span, out primary);
-				_sourceFileName = fileName;
-				_sourceSpan = span;
-				_sourcePrimary = primary;
-				_sourceFile = visibleFile;
-			}
-
-			_preprocessor = false;
-			return _sourcePrimary;
 		}
 
 #if DEBUG
@@ -163,10 +87,11 @@ namespace DkTools.CodeModel.Definitions
 		{
 			var sb = new StringBuilder();
 			sb.AppendFormat("Type [{0}]", GetType());
-			sb.AppendFormat(" File [{0}]", SourceFile != null ? SourceFile.FileName : "(null)");
-			sb.AppendFormat(" Offset [{0}]", SourceSpan.Start);
+			sb.AppendFormat(" Name [{0}]", Name);
+			sb.AppendFormat(" File [{0}]", _sourceFileName != null ? _sourceFileName : "(null)");
+			sb.AppendFormat(" Offset [{0}]", _sourceStartPos.ToString());
 			sb.AppendFormat(" CompletionType [{0}]", CompletionType);
-			sb.AppendFormat(" QuickInfoText [{0}]", QuickInfoText);
+			sb.AppendFormat(" QuickInfoText [{0}]", QuickInfoText.ToSingleLine());
 			return sb.ToString();
 		}
 #endif

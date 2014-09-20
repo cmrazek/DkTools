@@ -312,6 +312,11 @@ namespace DkTools.TokenParser
 			get { return _tokenStartPos; }
 		}
 
+		public CodeModel.Span TokenSpan
+		{
+			get { return new CodeModel.Span(_tokenStartPos, _tokenStartPos + _tokenText.Length); }
+		}
+
 		public int Length
 		{
 			get { return _length; }

@@ -17,7 +17,7 @@ namespace DkTools.Dict
 		{
 			_name = repoStringDef.Name;
 			_value = repoStringDef.String[0];
-			_def = new CodeModel.Definitions.StringDefDefinition(new CodeModel.Scope(), this);
+			_def = new CodeModel.Definitions.StringDefDefinition(this);
 		}
 
 		public string Name

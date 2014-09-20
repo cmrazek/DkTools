@@ -42,7 +42,7 @@ namespace DkTools.Dict
 
 			_baseTable = _name;	// TODO: Do we need to retrieve this from somewhere?
 
-			_definition = new CodeModel.Definitions.TableDefinition(new CodeModel.Scope(), _name, this);
+			_definition = new CodeModel.Definitions.TableDefinition(_name, this);
 
 			LoadFields(repoTable);
 		}

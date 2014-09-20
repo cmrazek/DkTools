@@ -637,18 +637,12 @@ namespace DkTools
 				var fileStore = CodeModel.FileStore.GetOrCreateForTextBuffer(view.TextBuffer);
 				var model = fileStore.GetCurrentModel(view.TextSnapshot, "Debug:ShowCodeModelDump");
 
-				var prepModel = model.PreprocessorModel;
-				if (prepModel != null) Shell.OpenTempContent(prepModel.DumpTree(), Path.GetFileName(model.FileName), ".preproc.xml");
-
 				Shell.OpenTempContent(model.DumpTree(), Path.GetFileName(model.FileName), ".model.xml");
 			}
 
 			public static void ShowStdLibCodeModelDump()
 			{
 				var model = CodeModel.FileStore.StdLibModel;
-
-				var prepModel = model.PreprocessorModel;
-				if (prepModel != null) Shell.OpenTempContent(prepModel.DumpTree(), "stdlib", ".preproc.xml");
 
 				Shell.OpenTempContent(model.DumpTree(), "stdlib", ".model.xml");
 			}
@@ -658,13 +652,7 @@ namespace DkTools
 				var model = GetModelForActiveDoc();
 				if (model != null)
 				{
-					var fileName = "";
-					using (var tempFile = new TempFileOutput(Path.GetFileName(model.FileName), ".txt"))
-					{
-						tempFile.WriteLine(model.File.DumpDefinitionsText());
-						fileName = tempFile.FileName;
-					}
-					Shell.OpenDocument(fileName);
+					Shell.OpenTempContent(model.DefinitionProvider.DumpDefinitions(), Path.GetFileName(model.FileName), ".txt");
 				}
 			}
 
@@ -704,6 +692,7 @@ namespace DkTools
 				Shell.OpenTempContent(string.Concat(dest.Text, "\r\nCONTINUOUS SEGMENTS:\r\n", dest.DumpContinuousSegments()), Path.GetFileName(fileName), ".preprocessor.txt");
 			}
 
+			// TODO: remove this command
 			public static void ShowPreprocessorSegments()
 			{
 				var model = GetModelForActiveDoc();
@@ -720,7 +709,8 @@ namespace DkTools
 					return;
 				}
 
-				Shell.OpenTempContent(prepModel.File.CodeSource.Dump(), Path.GetFileName(model.FileName), ".ppsegs.txt");
+				//Shell.OpenTempContent(prepModel.File.CodeSource.Dump(), Path.GetFileName(model.FileName), ".ppsegs.txt");
+				Shell.OpenTempContent(prepModel.Dump(), Path.GetFileName(model.FileName), ".prep.txt");
 			}
 		}
 #endif

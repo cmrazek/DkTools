@@ -49,11 +49,6 @@ namespace DkTools.CodeModel.Tokens
 			get { return _parentFiles; }
 		}
 
-		public void AddImplicitInclude(CodeFile file)
-		{
-			file.CopyDefinitionsToToken(this, false);
-		}
-
 		public string ClassName
 		{
 			get { return _className; }
@@ -93,23 +88,6 @@ namespace DkTools.CodeModel.Tokens
 		{
 			if (!SkipWhiteSpaceAndComments(scope)) return null;
 		    var ch = _src[_pos];
-
-			Token token;
-
-			if (scope.Preprocessor)
-			{
-				if (!scope.Hint.HasFlag(ScopeHint.SuppressFunctionDefinition))
-				{
-					if ((token = FunctionToken.TryParse(parent, scope)) != null) return token;
-				}
-				if (!scope.Hint.HasFlag(ScopeHint.SuppressVarDecl) && scope.Preprocessor)
-				{
-					if ((token = VariableDeclarationToken.TryParse(parent, scope)) != null) return token;
-				}
-			}
-
-			if ((token = DataTypeToken.TryParse(parent, scope)) != null) return token;
-			if ((token = DefineToken.TryParse(parent, scope)) != null) return token;
 
 		    if (ch.IsWordChar(true))
 		    {
@@ -258,8 +236,6 @@ namespace DkTools.CodeModel.Tokens
 						return InsertToken.Parse(parent, scope, new InsertStartToken(parent, scope, wordSpan));
 					case "#endinsert":
 						return new InsertEndToken(parent, scope, wordSpan);
-					case "#define":
-						return DefineToken.Parse(parent, scope, new PreprocessorToken(parent, scope, wordSpan, word));
 					case "#replace":
 						return ReplaceToken.Parse(parent, scope, new ReplaceStartToken(parent, scope, wordSpan));
 					case "#with":
@@ -277,59 +253,67 @@ namespace DkTools.CodeModel.Tokens
 			return new UnknownToken(parent, scope, MoveNextSpan(), ch.ToString());
 		}
 
-		private Token ParseExtern(GroupToken parent, Scope scope, KeywordToken externToken)
+		private Token ParseTokenFromDefinition(GroupToken parent, Scope scope, Span span, string text, Definition def)
 		{
-			var externScope = scope.Clone();
-			externScope.Hint |= ScopeHint.SuppressFunctionCall | ScopeHint.SuppressFunctionDefinition | ScopeHint.SuppressVarDecl;
-			
-			var resetPos = Position;
-			Token token, token1, token2, token3;
-
-			var tokens = new List<Token>();
-			tokens.Add(externToken);
-
-			if ((token1 = DataTypeToken.TryParse(parent, scope)) != null)
+			if (def is VariableDefinition)
 			{
-				tokens.Add(token1);
-				if ((token2 = IdentifierToken.TryParse(parent, scope)) != null)
+				return new VariableToken(parent, scope, span, text, def as VariableDefinition);
+			}
+			if (def is FunctionDefinition)
+			{
+				return new FunctionPlaceholderToken(parent, scope, span, text, def as FunctionDefinition);
+			}
+			if (def is ClassDefinition)
+			{
+				return new ClassToken(parent, scope, span, text, def as ClassDefinition);
+			}
+			if (def is ConstantDefinition)
+			{
+				return new ConstantToken(parent, scope, span, text, def as ConstantDefinition);
+			}
+			if (def is DataTypeDefinition)
+			{
+				return new DataTypeToken(parent, scope, new IdentifierToken(parent, scope, span, text), (def as DataTypeDefinition).DataType, def as DataTypeDefinition);
+			}
+			if (def is MacroDefinition)
+			{
+				return new MacroCallToken(parent, scope, new IdentifierToken(parent, scope, span, text), def as MacroDefinition);
+			}
+			if (def is RelIndDefinition)
+			{
+				return new RelIndToken(parent, scope, span, text, def as RelIndDefinition);
+			}
+			if (def is TableDefinition)
+			{
+				var tableToken = new TableToken(parent, scope, span, text, def as TableDefinition);
+
+				var table = ProbeEnvironment.GetTable(text);
+				if (table != null)
 				{
-					tokens.Add(token2);
-
-					var bracketsScope = scope;
-					bracketsScope.Hint |= ScopeHint.FunctionArgs;
-
-					if ((token3 = BracketsToken.TryParse(parent, bracketsScope)) != null)
+					var resetPos = Position;
+					SkipWhiteSpaceAndComments(scope);
+					if (PeekChar() == '.')
 					{
-						// extern dataType name();
+						var dotToken = new DotToken(parent, scope, MoveNextSpan(1));
+						SkipWhiteSpaceAndComments(scope);
 
-						tokens.Add(token3);
-						if ((token = StatementEndToken.TryParse(parent, scope)) != null) tokens.Add(token);
+						var fieldName = PeekWord();
+						var field = table.GetField(fieldName);
+						if (field == null)
+						{
+							Position = resetPos;
+							return tableToken;
+						}
 
-						return new ExternFunctionToken(parent, scope, tokens, token1, token2 as IdentifierToken, token3 as BracketsToken, scope.ClassName);
+						var fieldToken = new TableFieldToken(parent, scope, MoveNextSpan(fieldName.Length), fieldName, tableToken);
+						return new TableAndFieldToken(parent, scope, tableToken, dotToken, fieldToken, field);
 					}
 				}
-			}
-			else if ((token1 = IdentifierToken.TryParse(parent, scope)) != null)
-			{
-				tokens.Add(token1);
 
-				var bracketsScope = scope;
-				bracketsScope.Hint |= ScopeHint.FunctionArgs;
-
-				if ((token2 = BracketsToken.TryParse(parent, bracketsScope)) != null)
-				{
-					// extern name();
-
-					tokens.Add(token2);
-					if ((token = StatementEndToken.TryParse(parent, scope)) != null) tokens.Add(token);
-
-					return new ExternFunctionToken(parent, scope, tokens, null, token1 as IdentifierToken, token2 as BracketsToken, scope.ClassName);
-				}
+				return tableToken;
 			}
 
-			// If we got here, then there's an invalid token after 'extern'.  Return just the extern token by itself.
-			Position = resetPos;
-			return externToken;
+			return null;
 		}
 
 		/// <summary>
@@ -343,156 +327,26 @@ namespace DkTools.CodeModel.Tokens
 		/// <remarks>This function assumes that the current position is after the word.</remarks>
 		private Token ParseWord(GroupToken parent, Scope scope, Span wordSpan, string word)
 		{
-			SkipWhiteSpaceAndComments(scope);
-
-			if (!scope.Hint.HasFlag(ScopeHint.SuppressControlStatements))
-			{
-				if (word == "if") return IfStatementToken.Parse(parent, scope, new KeywordToken(parent, scope, wordSpan, word));
-				if (word == "select") return SelectToken.Parse(parent, scope, new KeywordToken(parent, scope, wordSpan, word));
-				if (word == "switch") return SwitchToken.Parse(parent, scope, new KeywordToken(parent, scope, wordSpan, word));
-				if (word == "while") return WhileStatementToken.Parse(parent, scope, new KeywordToken(parent, scope, wordSpan, word));
-			}
-
-			if (word == "extern")
-			{
-				return ParseExtern(parent, scope, new KeywordToken(parent, scope, wordSpan, word));
-			}
-
-			if (Constants.GlobalKeywords.Contains(word) ||
-				(Constants.FunctionKeywords.Contains(word) && parent.FindUpward(t => t is FunctionCallToken) != null) ||
-				(Constants.SwitchKeywords.Contains(word) && parent.FindUpward(t => t is SwitchToken) != null) ||
-				(scope.Hint.HasFlag(ScopeHint.SelectFrom) && Constants.SelectFromKeywords.Contains(word)) ||
-				(scope.Hint.HasFlag(ScopeHint.SelectOrderBy) && Constants.SelectOrderByKeywords.Contains(word)))
+			if (Constants.Keywords.Contains(word))
 			{
 				return new KeywordToken(parent, scope, wordSpan, word);
 			}
 
-			Definition[] defs = null;
-
-			var ch = PeekChar();
-			if (ch == '(')
+			if (Constants.DataTypeKeywords.Contains(word))
 			{
-				// Could be function call/def or macro call
-
-				if (!scope.Hint.HasFlag(ScopeHint.SuppressFunctionDefinition) && scope.Preprocessor)
-				{
-					Position = wordSpan.Start;
-					var funcToken = FunctionToken.TryParse(parent, scope);
-					if (funcToken != null) return funcToken;
-					Position = wordSpan.End;
-				}
-
-				defs = parent.GetDefinitions(word).ToArray();
-				Definition bestDef = null;
-
-				if (!scope.Preprocessor)
-				{
-					// Check if the preprocessor already found the macro or function definition at this position for us.
-
-					foreach (var def in defs)
-					{
-						if (def.SourceSpan.Start == wordSpan.Start)
-						{
-							if (def is MacroDefinition)
-							{
-								var nameToken = new IdentifierToken(parent, scope, wordSpan, word);
-								var brackets = BracketsToken.Parse(parent, scope);
-								return new MacroCallToken(parent, scope, nameToken, brackets, def as MacroDefinition);
-							}
-
-							if (def is FunctionDefinition)
-							{
-								return new FunctionPlaceholderToken(parent, scope, wordSpan, word, def as FunctionDefinition);
-							}
-
-							bestDef = def;
-							break;
-						}
-					}
-				}
-
-				foreach (var def in defs)
-				{
-					if (def is MacroDefinition)
-					{
-						var nameToken = new IdentifierToken(parent, scope, wordSpan, word);
-						var brackets = BracketsToken.Parse(parent, scope);
-						return new MacroCallToken(parent, scope, nameToken, brackets, def as MacroDefinition);
-					}
-
-					if (def is FunctionDefinition)
-					{
-						if (!scope.Hint.HasFlag(ScopeHint.SuppressFunctionCall))
-						{
-							var nameToken = new IdentifierToken(parent, scope, wordSpan, word);
-							var brackets = BracketsToken.Parse(parent, scope);
-							return new FunctionCallToken(parent, scope, null, null, nameToken, brackets, def as FunctionDefinition);
-						}
-					}
-				}
-
-				// Function call to an unknown function.
-				if (!scope.Hint.HasFlag(ScopeHint.SuppressFunctionCall))
-				{
-					var nameToken = new IdentifierToken(parent, scope, wordSpan, word);
-					var brackets = BracketsToken.Parse(parent, scope);
-					return new FunctionCallToken(parent, scope, null, null, nameToken, brackets, null);
-				}
-
-				Position = wordSpan.End;
-				SkipWhiteSpaceAndComments(scope);
-			}
-			else if (ch == '.')
-			{
-				var beforeDotPos = Position;
-				var dotSpan = MoveNextSpan();
-				var tok = TryParsePossibleTableOrClassReference(parent, scope, word, wordSpan, dotSpan);
-				if (tok != null) return tok;
-				else Position = beforeDotPos;
+				return new DataTypeKeywordToken(parent, scope, wordSpan, word);
 			}
 
-			// If we got here, then the word is not followed by a '('.
-			// This could be a variable, constants or some other type of stand-alone token.
-
-			if (defs == null) defs = parent.GetDefinitions(word).ToArray();
-			foreach (var def in defs)
+			foreach (var def in scope.DefinitionProvider.GetLocal(wordSpan.Start, word))
 			{
-				if (def is VariableDefinition && !scope.Hint.HasFlag(ScopeHint.SuppressVars))
-				{
-					return new VariableToken(parent, scope, wordSpan, word, def as VariableDefinition);
-				}
+				var token = ParseTokenFromDefinition(parent, scope, wordSpan, word, def);
+				if (token != null) return token;
+			}
 
-				if (def is DataTypeDefinition && !scope.Hint.HasFlag(ScopeHint.SuppressDataType))
-				{
-					return new DataTypeToken(parent, scope, new IdentifierToken(parent, scope, wordSpan, word), (def as DataTypeDefinition).DataType, def);
-				}
-
-				if (def is ConstantDefinition || def is StringDefDefinition)
-				{
-					return new ConstantToken(parent, scope, wordSpan, word, def);
-				}
-
-				if (def is TableDefinition)
-				{
-					var tableToken = new TableToken(parent, scope, wordSpan, word, def);
-					if (SkipWhiteSpaceAndComments(scope))
-					{
-						var tableAndFieldToken = TableAndFieldToken.TryParse(parent, scope, tableToken);
-						if (tableAndFieldToken != null) return tableAndFieldToken;
-					}
-
-					return tableToken;
-				}
-
-				if (def is RelIndDefinition)
-				{
-					return new RelIndToken(parent, scope, wordSpan, word, def);
-				}
-
-				if (def is ClassDefinition)
-				{
-					return new ClassToken(parent, scope, wordSpan, word, def as ClassDefinition);
-				}
+			foreach (var def in scope.DefinitionProvider.GetGlobal(word))
+			{
+				var token = ParseTokenFromDefinition(parent, scope, wordSpan, word, def);
+				if (token != null) return token;
 			}
 
 			return new IdentifierToken(parent, scope, wordSpan, word);
@@ -839,64 +693,6 @@ namespace DkTools.CodeModel.Tokens
 				_pos = value;
 			}
 		}
-
-		// TODO: remove
-		//public int FindPosition(int lineNum, int linePos)
-		//{
-		//	int pos = 0;
-		//	int seekLineNum = 0;
-		//	int seekLinePos = 0;
-
-		//	while (pos < _length)
-		//	{
-		//		if (_src[pos] == '\n')
-		//		{
-		//			if (seekLineNum == lineNum)
-		//			{
-		//				return new Position(pos, seekLineNum, seekLinePos + 1);
-		//			}
-
-		//			seekLineNum++;
-		//			seekLinePos = 0;
-		//		}
-		//		else
-		//		{
-		//			seekLinePos++;
-		//		}
-		//		pos++;
-
-		//		if (seekLineNum == lineNum && seekLinePos == linePos)
-		//		{
-		//			return new Position(pos, lineNum, linePos);
-		//		}
-		//	}
-
-		//	return new Position(pos, seekLineNum, seekLinePos);
-		//}
-
-		//public Position FindPosition(int offset)
-		//{
-		//	int pos = 0;
-		//	int lineNum = 0;
-		//	int linePos = 0;
-
-		//	if (offset > _length) offset = _length;
-		//	while (pos < offset)
-		//	{
-		//		if (_src[pos] == '\n')
-		//		{
-		//			lineNum++;
-		//			linePos = 0;
-		//		}
-		//		else
-		//		{
-		//			linePos++;
-		//		}
-		//		pos++;
-		//	}
-
-		//	return new Position(pos, lineNum, linePos);
-		//}
 
 		public int FindStartOfLine(int pos)
 		{

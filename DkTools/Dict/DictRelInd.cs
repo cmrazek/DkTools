@@ -74,7 +74,7 @@ namespace DkTools.Dict
 				info.AppendFormat("Description: {0}", _repoDesc);
 			}
 
-			_def = new CodeModel.Definitions.RelIndDefinition(new CodeModel.Scope(), _name, table.Name, info.ToString());
+			_def = new CodeModel.Definitions.RelIndDefinition(_name, table.Name, info.ToString());
 		}
 
 		public DictRelInd(DictTable table, DICTSRVRLib.IPRelationship repoRel)
@@ -116,7 +116,7 @@ namespace DkTools.Dict
 				info.Append(_repoDesc);
 			}
 
-			_def = new RelIndDefinition(new CodeModel.Scope(), _name, table.Name, info.ToString());
+			_def = new RelIndDefinition(_name, table.Name, info.ToString());
 		}
 
 		public DictRelIndType Type

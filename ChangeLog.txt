@@ -1,6 +1,12 @@
 DkTools2012 ChangeLog
 ____________________________________________________________________________________________________
-Version 1.2.5 - Sep 18, 2014
+Version 1.2.6 - pending:
+
+Bug Fixes:
+- Improved performance of code modeling.
+
+____________________________________________________________________________________________________
+Version 1.2.5 - Sep 18, 2014:
 
 Features:
 - Added toolbar icon to launch DK Application Manager (ProbeNV)

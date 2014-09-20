@@ -77,8 +77,8 @@ namespace DkTools.CodeModel.Tokens
 					{
 						foreach (var region in base.OutliningRegions) yield return region;
 
-						if (!(Parent is FunctionToken) && !(Parent is DefineToken))
-						{
+						//if (!(Parent is FunctionToken) && !(Parent is DefineToken))
+						//{
 							yield return new OutliningRegion
 							{
 								Span = Span,
@@ -86,7 +86,7 @@ namespace DkTools.CodeModel.Tokens
 								Text = Constants.DefaultOutliningText,
 								TooltipText = File.GetRegionText(Span)
 							};
-						}
+						//}
 
 						yield break;
 					}

@@ -36,7 +36,7 @@ namespace DkTools.Dict
 				_dataType = new CodeModel.DataType(_name, data.TypeText[0]);
 			}
 
-			_def = new CodeModel.Definitions.DataTypeDefinition(new CodeModel.Scope(), _name, _dataType);
+			_def = new CodeModel.Definitions.DataTypeDefinition(_name, _dataType);
 		}
 
 		public string Name

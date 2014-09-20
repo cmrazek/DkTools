@@ -43,7 +43,7 @@ namespace DkTools.CodeModel.Tokens
 			AddToken(_argsToken = argsToken);
 
 			// If this function is already defined, then save the data type.
-			var funcDecl = this.GetDefinitions<FunctionDefinition>(_nameToken.Text).FirstOrDefault();
+			var funcDecl = DefinitionProvider.GetGlobal<FunctionDefinition>(_nameToken.Text).FirstOrDefault();
 			if (funcDecl != null) _dataType = funcDecl.DataType;
 		}
 

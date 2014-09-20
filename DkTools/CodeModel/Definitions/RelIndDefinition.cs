@@ -11,8 +11,8 @@ namespace DkTools.CodeModel.Definitions
 		private string _infoText;
 		private string _baseTableName;
 
-		public RelIndDefinition(Scope scope, string name, string baseTableName, string infoText)
-			: base(scope, name, null, true)
+		public RelIndDefinition(string name, string baseTableName, string infoText)
+			: base(name, null, -1, true)
 		{
 			_infoText = infoText;
 			_baseTableName = baseTableName;

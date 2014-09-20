@@ -18,32 +18,26 @@ namespace DkTools.CodeModel
 		private Microsoft.VisualStudio.Text.ITextSnapshot _snapshot;
 		private FileStore _store;
 		private DefinitionProvider _defProvider;
-		private CodeModel _prepModel;
+		private PreprocessorModel _prepModel;
 		private Span[] _disabledSections;
 		private ModelType _modelType;
+		private string _className;
 
-		private CodeModel(ModelType modelType, FileStore store)
+		private CodeModel()
+		{ }
+
+		private CodeModel(FileStore store)
 		{
 			if (store == null) throw new ArgumentNullException("store");
 			_store = store;
-			_modelType = modelType;
 		}
 
-		public static CodeModel CreatePreprocessorModel(ModelType modelType, FileStore store, CodeSource preprocessedSource, string fileName, DefinitionProvider defProvider)
+		public static CodeModel CreateVisibleModelForPreprocessed(CodeSource visibleSource, FileStore store, PreprocessorModel prepModel)
 		{
-			var model = new CodeModel(modelType, store);
-			model.Init(preprocessedSource, new CodeFile(model), fileName, false, defProvider);
-			return model;
-		}
-
-		public CodeModel CreateVisibleModelForPreprocessed(ModelType modelType, CodeSource visibleSource)
-		{
-			var model = new CodeModel(modelType, _store);
+			var model = new CodeModel(store);
 			var codeFile = new CodeFile(model);
 
-			CopyDefinitionsToProvider(codeFile, visibleSource);
-
-			model.Init(visibleSource, codeFile, _fileName, true, _defProvider);
+			model.Init(visibleSource, codeFile, prepModel.FileName, true, prepModel.DefinitionProvider);
 			return model;
 		}
 
@@ -56,50 +50,22 @@ namespace DkTools.CodeModel
 
 			_fileName = fileName;
 			if (!string.IsNullOrEmpty(_fileName)) _fileTitle = Path.GetFileNameWithoutExtension(_fileName);
+
+			if (FunctionFileScanning.FFUtil.FileNameIsFunction(fileName))
+			{
+				_modelType = ModelType.Function;
+			}
+			else if (FunctionFileScanning.FFUtil.FileNameIsClass(fileName, out _className))
+			{
+				_modelType = DkTools.CodeModel.ModelType.Class;
+			}
+			else
+			{
+				_modelType = DkTools.CodeModel.ModelType.Other;
+			}
+
 			_defProvider = defProvider;
 			_file = new CodeFile(this);
-
-			if (_defProvider.Preprocessor)
-			{
-				var scope = new Scope();
-
-				var defs = new List<Definition>();
-				defs.Add(new FunctionDefinition(scope, null, "diag", null, DataType.Void, "void diag(expressions ...)", 0, 0, FunctionPrivacy.Public, true));
-				defs.Add(new FunctionDefinition(scope, null, "gofield", null, DataType.Void, "void gofield(TableName.ColumnName)", 0, 0, FunctionPrivacy.Public, true));
-				defs.Add(new FunctionDefinition(scope, null, "makestring", null, DataType.FromString("char(255)"), "char(255) makestring(expressions ...)", 0, 0, FunctionPrivacy.Public, true));
-				defs.Add(new FunctionDefinition(scope, null, "oldvalue", null, DataType.Void, "oldvalue(TableName.ColumnName)", 0, 0, FunctionPrivacy.Public, true));
-				defs.Add(new FunctionDefinition(scope, null, "qcolsend", null, DataType.Void, "void qcolsend(TableName.ColumnName ...)", 0, 0, FunctionPrivacy.Public, true));
-				defs.Add(new FunctionDefinition(scope, null, "SetMessage", null, DataType.Int, "int SetMessage(MessageControlString, expressions ...)", 0, 0, FunctionPrivacy.Public, true));
-				defs.Add(new FunctionDefinition(scope, null, "STRINGIZE", null, DataType.FromString("char(255)"), "STRINGIZE(x)", 0, 0, FunctionPrivacy.Public, true));
-				defs.Add(new FunctionDefinition(scope, null, "UNREFERENCED_PARAMETER", null, DataType.Void, "UNREFERENCED_PARAMETER(parameter)", 0, 0, FunctionPrivacy.Public, true));
-
-				foreach (var def in ProbeEnvironment.DictDefinitions)
-				{
-#if DEBUG
-					if (def == null) throw new InvalidOperationException("Null definition in dictionary.");
-#endif
-					defs.Add(def);
-				}
-
-				foreach (var def in ProbeToolsPackage.Instance.FunctionFileScanner.GlobalDefinitions)
-				{
-#if DEBUG
-					if (def == null) throw new InvalidOperationException("Null definition returned by scanner.");
-#endif
-					defs.Add(def);
-				}
-
-				if (!Path.GetFileName(fileName).Equals("stdlib.i", StringComparison.OrdinalIgnoreCase))
-				{
-					foreach (var def in FileStore.StdLibModel.GetDefinitions())
-					{
-						defs.Add(def);
-					}
-				}
-
-				_file.AddDefinitions(defs);
-			}
-			else CopyDefinitionsFromProvider();
 
 			_file.Parse(source, _fileName, new string[0], visible);
 
@@ -118,39 +84,6 @@ namespace DkTools.CodeModel
 		#endregion
 
 		#region Brace matching and outlining
-		// TODO: remove
-		//public IEnumerable<Microsoft.VisualStudio.TextManager.Interop.TextSpan> BraceMatching(int lineNum, int linePos)
-		//{
-		//	var pos = _file.FindPosition(lineNum, linePos);
-		//	var token = _file.FindTokenOfType(pos, typeof(IBraceMatchingToken));
-		//	if (token == null) token = _file.FindNearbyTokenOfType(pos, typeof(IBraceMatchingToken));
-		//	if (token != null && typeof(IBraceMatchingToken).IsAssignableFrom(token.GetType()))
-		//	{
-		//		var bm = token as IBraceMatchingToken;
-		//		return (from t in bm.BraceMatchingTokens select t.Span.ToVsTextInteropSpan());
-		//	}
-		//	else
-		//	{
-		//		return new Microsoft.VisualStudio.TextManager.Interop.TextSpan[0];
-		//	}
-		//}
-
-		//public IEnumerable<Span> FindMatchingBraces(int offset)
-		//{
-		//	var pos = _file.FindPosition(offset);
-		//	var token = _file.FindTokenOfType(pos, typeof(IBraceMatchingToken));
-		//	if (token == null) token = _file.FindNearbyTokenOfType(pos, typeof(IBraceMatchingToken));
-		//	if (token != null && typeof(IBraceMatchingToken).IsAssignableFrom(token.GetType()))
-		//	{
-		//		var bm = token as IBraceMatchingToken;
-		//		return (from t in bm.BraceMatchingTokens select t.Span).ToArray();
-		//	}
-		//	else
-		//	{
-		//		return new Span[0];
-		//	}
-		//}
-
 		public IEnumerable<OutliningRegion> OutliningRegions
 		{
 			get
@@ -161,17 +94,6 @@ namespace DkTools.CodeModel
 		#endregion
 
 		#region Util functions
-		// TODO: remove
-		//public Position GetPosition(int lineNum, int linePos)
-		//{
-		//	return _file.FindPosition(lineNum, linePos);
-		//}
-
-		//public Position GetPosition(int offset)
-		//{
-		//	return _file.FindPosition(offset);
-		//}
-
 		public int AdjustPosition(int pos, VsText.ITextSnapshot snapshot)
 		{
 			if (snapshot == null || _snapshot == null || _snapshot == snapshot)
@@ -209,11 +131,6 @@ namespace DkTools.CodeModel
 			return _file.DumpTreeText();
 		}
 		#endregion
-
-		public IEnumerable<FunctionToken> LocalFunctions
-		{
-			get { return _file.LocalFunctions; }
-		}
 
 		public IEnumerable<Token> FindTokens(int pos)
 		{
@@ -269,90 +186,26 @@ namespace DkTools.CodeModel
 		#endregion
 
 		#region Definitions
-		/// <summary>
-		/// Gets a list of definitions that match this name.
-		/// </summary>
-		/// <param name="name">The name to match</param>
-		/// <returns>A list of definitions that match the provided name.</returns>
-		public IEnumerable<Definition> GetDefinitions(string name)
-		{
-			return _file.GetDefinitions(name);
-		}
-
-		/// <summary>
-		/// Gets a list of definitions that match this name with a specific type.
-		/// </summary>
-		/// <typeparam name="T">The definition type to search for</typeparam>
-		/// <param name="name">The name to match</param>
-		/// <returns>A list of definitions that match the provided name.</returns>
-		public IEnumerable<T> GetDefinitions<T>(string name) where T : Definition
-		{
-			return _file.GetDefinitions<T>(name);
-		}
-
-		public IEnumerable<Definition> GetDefinitions()
-		{
-			return _file.GetDefinitions();
-		}
-
-		public IEnumerable<T> GetDefinitions<T>() where T : Definition
-		{
-			return _file.GetDefinitions<T>();
-		}
-
-		public void CopyDefinitionsToProvider(CodeFile visibleFile, CodeSource visibleSource)
-		{
-			foreach (var def in _file.GetDefinitions())
-			{
-				if (def.Preprocessor) def.MoveFromPreprocessorToVisibleModel(visibleFile, visibleSource);
-				_defProvider.AddGlobalDefinition(def);
-			}
-
-			var source = _file.CodeSource;
-			foreach (var defLoc in _file.GetDescendentDefinitionLocations())
-			{
-				var localFilePos = source.GetFilePosition(defLoc.LocalContainerOffset);
-				if (localFilePos.PrimaryFile)
-				{
-					var def = defLoc.Definition;
-					if (def.Preprocessor) def.MoveFromPreprocessorToVisibleModel(visibleFile, visibleSource);
-					_defProvider.AddLocalDefinition(localFilePos.Position, defLoc.Definition);
-				}
-			}
-		}
-
-		private void CopyDefinitionsFromProvider()
-		{
-			_file.AddDefinitions(_defProvider.GlobalDefinitions);
-
-			// Local definitions are handled in the token constructor.
-		}
-
 		public DefinitionProvider DefinitionProvider
 		{
 			get { return _defProvider; }
 		}
 		#endregion
 
-		public CodeModel PreprocessorModel
+		public PreprocessorModel PreprocessorModel
 		{
 			get { return _prepModel; }
 			set { _prepModel = value; }
 		}
 
-		public static ModelType DetectFileTypeFromFileName(string fileName)
-		{
-			if (FunctionFileScanning.FFUtil.FileNameIsFunction(fileName)) return ModelType.Function;
-
-			string className;
-			if (FunctionFileScanning.FFUtil.FileNameIsClass(fileName, out className)) return ModelType.Class;
-
-			return ModelType.Other;
-		}
-
 		public ModelType ModelType
 		{
 			get { return _modelType; }
+		}
+
+		public string ClassName
+		{
+			get { return _className; }
 		}
 	}
 

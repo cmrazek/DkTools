@@ -27,8 +27,8 @@ namespace DkTools.CodeModel.Definitions
 		/// <param name="signature">Signature text</param>
 		/// <param name="argsEndPos">Ending position of the argument brackets</param>
 		/// <param name="bodyStartPos">Position of the function's body braces (if does not match, then will be ignored)</param>
-		public FunctionDefinition(Scope scope, string className, string funcName, Token sourceToken, DataType dataType, string signature, int argsEndPos, int bodyStartPos, FunctionPrivacy privacy, bool isExtern)
-			: base(scope, funcName, sourceToken, true)
+		public FunctionDefinition(string className, string funcName, string fileName, int nameStartPos, DataType dataType, string signature, int argsEndPos, int bodyStartPos, FunctionPrivacy privacy, bool isExtern)
+			: base(funcName, fileName, nameStartPos, true)
 		{
 #if DEBUG
 			if (string.IsNullOrWhiteSpace(signature)) throw new ArgumentNullException("signature");
@@ -44,7 +44,7 @@ namespace DkTools.CodeModel.Definitions
 
 		public FunctionDefinition CloneAsExtern()
 		{
-			return new FunctionDefinition(Scope, _className, Name, SourceToken, _dataType, _signature, _argsEndPos, _bodyStartPos, _privacy, true);
+			return new FunctionDefinition(_className, Name, SourceFileName, SourceStartPos, _dataType, _signature, _argsEndPos, _bodyStartPos, _privacy, true);
 		}
 
 		public DataType DataType
@@ -95,22 +95,6 @@ namespace DkTools.CodeModel.Definitions
 		public bool Extern
 		{
 			get { return _extern; }
-		}
-
-		public override bool MoveFromPreprocessorToVisibleModel(CodeFile visibleFile, CodeSource visibleSource)
-		{
-			if (SourceFile != null)
-			{
-				var localPos = SourceFile.CodeSource.GetFilePosition(_bodyStartPos);
-				if (localPos.PrimaryFile) _bodyStartPos = localPos.Position;
-				else _bodyStartPos = 0;
-
-				localPos = SourceFile.CodeSource.GetFilePosition(_argsEndPos);
-				if (localPos.PrimaryFile) _argsEndPos = localPos.Position;
-				else _argsEndPos = 0;
-			}
-
-			return base.MoveFromPreprocessorToVisibleModel(visibleFile, visibleSource);
 		}
 
 		public override void DumpTreeAttribs(System.Xml.XmlWriter xml)

@@ -9,7 +9,7 @@ namespace DkTools.CodeModel.Definitions
 	internal class EnumOptionDefinition : Definition
 	{
 		public EnumOptionDefinition(string text)
-			: base(new Scope(), text, null, false)
+			: base(text, null, -1, false)
 		{ }
 
 		public override bool CompletionVisible

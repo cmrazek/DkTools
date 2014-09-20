@@ -13,9 +13,17 @@ namespace DkTools
 		/// </summary>
 		/// <param name="wordList">The string to be split.</param>
 		/// <returns>A hash set containing the word list.</returns>
-		public static HashSet<string> ParseWordList(string wordList)
+		public static HashSet<string> ParseWordList(params string[] wordLists)
 		{
-			return new HashSet<string>(from w in wordList.Split(' ', '\t', '\r', '\n') where !string.IsNullOrEmpty(w) select w);
+			var ret = new HashSet<string>();
+			foreach (var wordList in wordLists)
+			{
+				foreach (var word in wordList.Split(' ', '\t', '\r', '\n'))
+				{
+					if (!string.IsNullOrEmpty(word)) ret.Add(word);
+				}
+			}
+			return ret;
 		}
 
 		/// <summary>

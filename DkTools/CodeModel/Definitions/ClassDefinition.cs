@@ -9,8 +9,8 @@ namespace DkTools.CodeModel.Definitions
 {
 	internal class ClassDefinition : Definition
 	{
-		public ClassDefinition(Scope scope, string name, string fileName)
-			: base(scope, name, new ExternalToken(fileName, Span.Empty), true)
+		public ClassDefinition(string name, string fileName)
+			: base(name, fileName, 0, true)
 		{
 		}
 

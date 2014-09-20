@@ -192,7 +192,7 @@ namespace DkTools.StatementCompletion
 				var fileStore = CodeModel.FileStore.GetOrCreateForTextBuffer(_textBuffer);
 				var model = fileStore.GetCurrentModel(_textBuffer.CurrentSnapshot, "Auto-completion after #ifdef");
 
-				foreach (var def in model.GetDefinitions<ConstantDefinition>())
+				foreach (var def in model.DefinitionProvider.GetGlobal<ConstantDefinition>())
 				{
 					completionList[def.Name] = CreateCompletion(def);
 				}
@@ -230,18 +230,20 @@ namespace DkTools.StatementCompletion
 			}
 			else if ((match = _rxReturn.Match(prefix)).Success)
 			{
-				var model = CodeModel.FileStore.GetOrCreateForTextBuffer(_textBuffer).GetCurrentModel(_textBuffer.CurrentSnapshot, "Auto-completion after return");
-				var modelPos = model.AdjustPosition(curPos, snapshot);
+				// TODO: auto completion on return enums needs to be updated to work without functions
 
-				var funcToken = model.FindTokens(modelPos).LastOrDefault(x => x is CodeModel.Tokens.FunctionToken) as CodeModel.Tokens.FunctionToken;
-				if (funcToken != null)
-				{
-					var dataType = funcToken.DataTypeToken;
-					if (dataType != null && dataType is CodeModel.Tokens.IDataTypeToken)
-					{
-						foreach (var opt in (dataType as CodeModel.Tokens.IDataTypeToken).DataType.CompletionOptions) completionList[opt.Name] = CreateCompletion(opt);
-					}
-				}
+				//var model = CodeModel.FileStore.GetOrCreateForTextBuffer(_textBuffer).GetCurrentModel(_textBuffer.CurrentSnapshot, "Auto-completion after return");
+				//var modelPos = model.AdjustPosition(curPos, snapshot);
+
+				//var funcToken = model.FindTokens(modelPos).LastOrDefault(x => x is CodeModel.Tokens.FunctionToken) as CodeModel.Tokens.FunctionToken;
+				//if (funcToken != null)
+				//{
+				//	var dataType = funcToken.DataTypeToken;
+				//	if (dataType != null && dataType is CodeModel.Tokens.IDataTypeToken)
+				//	{
+				//		foreach (var opt in (dataType as CodeModel.Tokens.IDataTypeToken).DataType.CompletionOptions) completionList[opt.Name] = CreateCompletion(opt);
+				//	}
+				//}
 			}
 			else if ((match = _rxCase.Match(prefix)).Success)
 			{
@@ -303,7 +305,21 @@ namespace DkTools.StatementCompletion
 			var parentToken = model.FindTokens(editPos, t => t is GroupToken).LastOrDefault() as GroupToken;
 
 			var argParser = new TokenParser.Parser(argText);
-			var dataType = CodeModel.DataType.Parse(argParser, null, model, parentToken);
+			var dataType = CodeModel.DataType.Parse(argParser, null,
+				dataTypeName =>
+				{
+					var def = model.DefinitionProvider.GetLocal<DataTypeDefinition>(editPos, dataTypeName).FirstOrDefault();
+					if (def != null) return def;
+
+					return model.DefinitionProvider.GetGlobal<DataTypeDefinition>(dataTypeName).FirstOrDefault();
+				},
+				varName =>
+				{
+					var def = model.DefinitionProvider.GetLocal<VariableDefinition>(editPos, varName).FirstOrDefault();
+					if (def != null) return def;
+
+					return model.DefinitionProvider.GetGlobal<VariableDefinition>(varName).FirstOrDefault();
+				});
 			if (dataType != null)
 			{
 				foreach (var opt in dataType.CompletionOptions)
@@ -376,38 +392,14 @@ namespace DkTools.StatementCompletion
 
 			var tokens = model.FindTokens(modelPos).ToArray();
 
-			if (tokens.Length > 0)
+			foreach (var def in model.DefinitionProvider.Globals)
 			{
-				var lastToken = tokens.Last();
-
-				foreach (var def in lastToken.GetDefinitions())
-				{
-					if (def.CompletionVisible) yield return CreateCompletion(def);
-				}
-
-				var hint = lastToken.Scope.Hint;
-
-				if (hint.HasFlag(ScopeHint.SelectFrom))
-				{
-					foreach (var k in Constants.SelectFromKeywords) yield return CreateCompletion(k, k, CompletionType.Keyword);
-				}
-
-				if (hint.HasFlag(ScopeHint.SelectOrderBy))
-				{
-					foreach (var k in Constants.SelectOrderByKeywords) yield return CreateCompletion(k, k, CompletionType.Keyword);
-				}
-
-				if (hint.HasFlag(ScopeHint.SelectBody))
-				{
-					foreach (var k in Constants.SelectBodyKeywords) yield return CreateCompletion(k, k, CompletionType.Keyword);
-				}
+				yield return CreateCompletion(def);
 			}
-			else
+
+			foreach (var def in model.DefinitionProvider.GetLocal(modelPos))
 			{
-				foreach (var def in model.File.GetDefinitions())
-				{
-					if (def.CompletionVisible) yield return CreateCompletion(def);
-				}
+				yield return CreateCompletion(def);
 			}
 
 			foreach (var t in ProbeEnvironment.DictDefinitions) yield return CreateCompletion(t);
@@ -422,18 +414,18 @@ namespace DkTools.StatementCompletion
 			// Global keywords
 			foreach (var k in Constants.GlobalKeywords) yield return CreateCompletion(k, k, CompletionType.Keyword);
 
-			foreach (var token in tokens)
-			{
-				if (token is SwitchToken)
-				{
-					foreach (var k in Constants.SwitchKeywords) yield return CreateCompletion(k, k, CompletionType.Keyword);
-				}
+			//foreach (var token in tokens)
+			//{
+			//	if (token is SwitchToken)
+			//	{
+			//		foreach (var k in Constants.SwitchKeywords) yield return CreateCompletion(k, k, CompletionType.Keyword);
+			//	}
 
-				if (token is FunctionToken)
-				{
-					foreach (var k in Constants.FunctionKeywords) yield return CreateCompletion(k, k, CompletionType.Keyword);
-				}
-			}
+			//	if (token is FunctionToken)
+			//	{
+			//		foreach (var k in Constants.FunctionKeywords) yield return CreateCompletion(k, k, CompletionType.Keyword);
+			//	}
+			//}
 		}
 
 		public string GetArgumentText(string sig, int argIndex)

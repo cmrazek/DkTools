@@ -12,8 +12,8 @@ namespace DkTools.CodeModel.Definitions
 		private DataType _dataType;
 		private bool _arg;
 
-		public VariableDefinition(Scope scope, string name, Token sourceToken, DataType dataType, bool arg)
-			: base(scope, name, sourceToken, false)
+		public VariableDefinition(string name, string fileName, int startPos, DataType dataType, bool arg)
+			: base(name, fileName, startPos, false)
 		{
 #if DEBUG
 			if (dataType == null) throw new ArgumentNullException("dataType");

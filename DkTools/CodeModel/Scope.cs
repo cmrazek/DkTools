@@ -13,7 +13,6 @@ namespace DkTools.CodeModel
 		private int _depth;
 		private bool _visible;	// Is this file directly visible to the user?
 		private DefinitionProvider _defProvider;
-		private bool _preprocessor;
 		private string _className;
 
 		public Scope(CodeModel model)
@@ -23,7 +22,6 @@ namespace DkTools.CodeModel
 			_depth = 0;
 			_visible = false;
 			_defProvider = model.DefinitionProvider;
-			_preprocessor = _defProvider != null ? _defProvider.Preprocessor : false;
 			_className = null;
 		}
 
@@ -37,7 +35,6 @@ namespace DkTools.CodeModel
 			_hint = hint;
 			_visible = visible;
 			_defProvider = defProvider;
-			_preprocessor = _defProvider.Preprocessor;
 			_className = null;
 		}
 
@@ -100,15 +97,6 @@ namespace DkTools.CodeModel
 		public bool Visible
 		{
 			get { return _visible; }
-		}
-
-		public bool Preprocessor
-		{
-			get
-			{
-				if (_defProvider == null) return true;
-				return _defProvider.Preprocessor;
-			}
 		}
 
 		public DefinitionProvider DefinitionProvider

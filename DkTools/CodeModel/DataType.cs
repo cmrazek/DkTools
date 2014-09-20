@@ -34,6 +34,9 @@ namespace DkTools.CodeModel
 		public static readonly DataType Date = new DataType("date");
 		public static readonly DataType Enum = new DataType("enum");
 
+		public delegate DataTypeDefinition GetDataTypeDelegate(string name);
+		public delegate VariableDefinition GetVariableDelegate(string name);
+
 		/// <summary>
 		/// Creates a new data type object.
 		/// </summary>
@@ -87,30 +90,6 @@ namespace DkTools.CodeModel
 			}
 		}
 
-		/// <summary>
-		/// Returns a data type for a specific token.
-		/// </summary>
-		/// <param name="token">The token for which the data type is to be retrieved.</param>
-		/// <returns>If the token already has an associated data type then, this will be returned; otherwise a new data type will be created with the token's text as the name.</returns>
-		public static DataType FromToken(Token token)
-		{
-			if (token == null) return DataType.Int;
-
-			// Check if this token has a data type built in.
-			if (token is IDataTypeToken) return (token as IDataTypeToken).DataType;
-
-			if (token is DataTypeToken) return (token as DataTypeToken).DataType;
-
-			// Try to find a previously defined data type.
-			var def = token.GetDefinitions<DataTypeDefinition>(token.Text).FirstOrDefault();
-			if (def != null) return def.DataType;
-
-			// Create a new data type using the token text as the definition.
-			var dataType = new DataType(token.Text, token.Text);
-			
-			return dataType;
-		}
-
 		public static DataType FromString(string str)
 		{
 			return new DataType(str, str);
@@ -154,12 +133,14 @@ namespace DkTools.CodeModel
 			}
 		}
 
+		public static string[] DataTypeStartingKeywords = new string[] { "char", "date", "enum", "int", "indrel", "like", "numeric", "string", "table", "time", "unsigned", "void" };
+
 		/// <summary>
 		/// Parses a data type from a string.
 		/// </summary>
 		/// <param name="code">The token parser to read from.</param>
 		/// <returns>A data type object, if a data type could be parsed; otherwise null.</returns>
-		public static DataType Parse(TokenParser.Parser code, string typeName, CodeModel model, GroupToken parent)
+		public static DataType Parse(TokenParser.Parser code, string typeName, GetDataTypeDelegate dataTypeCallback, GetVariableDelegate varCallback)
 		{
 			var startPos = code.Position;
 			if (!code.ReadWord()) return null;
@@ -175,6 +156,11 @@ namespace DkTools.CodeModel
 
 			switch (code.TokenText)
 			{
+				#region void
+				case "void":
+					return DataType.Void;
+				#endregion
+
 				#region numeric
 				case "numeric":
 					{
@@ -501,15 +487,14 @@ namespace DkTools.CodeModel
 								return new DataType(typeName, string.Concat("like ", word1, "."));
 							}
 						}
-						else
+
+						if (varCallback != null)
 						{
-							if (parent != null)
-							{
-								var def = parent.GetDefinitions<VariableDefinition>().FirstOrDefault();
-								if (def != null) return !string.IsNullOrEmpty(typeName) ? def.DataType.CloneWithNewName(typeName) : def.DataType;
-							}
-							return new DataType(typeName, string.Concat("like ", word1));
+							var def = varCallback(word1);
+							if (def != null) return !string.IsNullOrEmpty(typeName) ? def.DataType.CloneWithNewName(typeName) : def.DataType;
 						}
+
+						return new DataType(typeName, string.Concat("like ", word1));
 					}
 					else return null;
 				#endregion
@@ -523,15 +508,9 @@ namespace DkTools.CodeModel
 				#endregion
 
 				default:
-					if (parent != null)
+					if (dataTypeCallback != null)
 					{
-						var def = parent.GetDefinitions<DataTypeDefinition>(code.TokenText).FirstOrDefault();
-						if (def != null) return !string.IsNullOrEmpty(typeName) ? def.DataType.CloneWithNewName(typeName) : def.DataType;
-					}
-					else if (model != null)
-					{
-						// This could be a name of a pre-defined data type.
-						var def = model.GetDefinitions<DataTypeDefinition>(code.TokenText).FirstOrDefault();
+						var def = dataTypeCallback(code.TokenText);
 						if (def != null) return !string.IsNullOrEmpty(typeName) ? def.DataType.CloneWithNewName(typeName) : def.DataType;
 					}
 					code.Position = code.TokenStartPostion;

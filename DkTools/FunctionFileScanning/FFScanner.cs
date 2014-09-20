@@ -191,7 +191,7 @@ namespace DkTools.FunctionFileScanning
 
 				var fileTitle = Path.GetFileNameWithoutExtension(fileName);
 
-				var defProvider = new CodeModel.DefinitionProvider();
+				var defProvider = new CodeModel.DefinitionProvider(fileName);
 
 				app.MarkAllFunctionsForFileUnused(fileName);
 
@@ -205,7 +205,7 @@ namespace DkTools.FunctionFileScanning
 				var classList = new List<FFClass>();
 				var funcList = new List<FFFunction>();
 
-				foreach (var funcDef in model.GetDefinitions<CodeModel.Definitions.FunctionDefinition>())
+				foreach (var funcDef in model.DefinitionProvider.GetGlobal<CodeModel.Definitions.FunctionDefinition>())
 				{
 					if (funcDef.Extern) continue;
 					if (!string.IsNullOrEmpty(className))
@@ -219,14 +219,10 @@ namespace DkTools.FunctionFileScanning
 						if (!funcDef.Name.Equals(fileTitle, StringComparison.OrdinalIgnoreCase)) continue;
 					}
 
-					if (funcDef.Scope.FileStore.Guid != fileStore.Guid) continue;	// Belongs to a different set a models.
+					var funcFileName = funcDef.SourceFileName;
+					var funcPos = funcDef.SourceStartPos;
 
-					string funcFileName = funcDef.SourceFileName;
-					CodeModel.Span funcSpan = funcDef.SourceSpan;
-					bool primaryFile;
-
-					// Resolve to the actual filename/span, rather than the location within the merged content.
-					if (funcDef.SourceFile != null && funcDef.SourceFile.CodeSource != null) funcDef.SourceFile.CodeSource.GetFileSpan(funcDef.SourceSpan, out funcFileName, out funcSpan, out primaryFile);
+					if (string.IsNullOrEmpty(funcFileName) || funcPos < 0 || !string.Equals(funcFileName, fileName, StringComparison.OrdinalIgnoreCase)) continue;
 
 					FFClass ffClass;
 					FFFunction ffFunc;

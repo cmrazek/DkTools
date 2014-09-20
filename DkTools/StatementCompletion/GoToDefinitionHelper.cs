@@ -35,33 +35,6 @@ namespace DkTools.StatementCompletion
 				return;
 			}
 
-			var identToken = selTokens.LastOrDefault(t => t is CodeModel.Tokens.IdentifierToken) as CodeModel.Tokens.IdentifierToken;
-			if (identToken != null)
-			{
-				var defs = (from d in model.File.GetDefinitions(identToken.Text) where !string.IsNullOrEmpty(d.SourceFileName) select d).ToArray();
-				if (defs.Length == 1)
-				{
-					Log.WriteDebug("Found definition for basic string.");
-					BrowseToDefinition(defs[0]);
-					return;
-				}
-				if (defs.Length > 1)
-				{
-					Log.WriteDebug("Found multiple definitions for basic string.");
-					var dlg = new DefinitionPickerWindow();
-					dlg.Definitions = defs;
-					if (dlg.ShowDialog() == true)
-					{
-						var selItem = dlg.SelectedItem;
-						if (selItem != null)
-						{
-							BrowseToDefinition(selItem);
-						}
-					}
-					return;
-				}
-			}
-
 			var includeToken = selTokens.LastOrDefault(t => t is CodeModel.Tokens.IncludeToken) as CodeModel.Tokens.IncludeToken;
 			if (includeToken != null)
 			{
@@ -123,7 +96,7 @@ namespace DkTools.StatementCompletion
 			//else
 			if (!string.IsNullOrWhiteSpace(def.SourceFileName))
 			{
-				Shell.OpenDocument(def.SourceFileName, def.SourceSpan);
+				Shell.OpenDocument(def.SourceFileName, def.SourceStartPos);
 			}
 		}
 	}

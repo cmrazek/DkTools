@@ -4,6 +4,8 @@ using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using VsText = Microsoft.VisualStudio.Text;
+using DkTools.CodeModel;
+using DkTools.CodeModel.Definitions;
 using DkTools.CodeModel.Tokens;
 
 namespace DkTools.Classifier
@@ -36,6 +38,7 @@ namespace DkTools.Classifier
 			var transStart = snapshot.TranslateOffsetToSnapshot(offset, _model.Snapshot);
 			var transEnd = snapshot.TranslateOffsetToSnapshot(offset + source.Length, _model.Snapshot);
 
+			// TODO: the token map should be persisted in the model so it doesn't have to be regenerated all the time.
 			_tokenMap = new Dictionary<int, Token>();
 			foreach (var token in _model.File.FindDownward(transStart, transEnd - transStart))
 			{
@@ -70,6 +73,7 @@ namespace DkTools.Classifier
 
 			Match match;
 			char ch = _source[_pos];
+			Token token;
 
 			if ((state & k_state_comment) != 0)
 			{
@@ -144,7 +148,6 @@ namespace DkTools.Classifier
 				}
 				else
 				{
-					CodeModel.Tokens.Token token;
 					if (_tokenMap.TryGetValue(_pos + _posOffset, out token) && token.Text == word)
 					{
 						var def = token.SourceDefinition;

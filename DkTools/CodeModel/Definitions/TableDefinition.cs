@@ -13,8 +13,8 @@ namespace DkTools.CodeModel.Definitions
 		private string _comment;
 		private string _description;
 
-		public TableDefinition(Scope scope, string name, Dict.DictTable table)
-			: base(scope, name, null, true)
+		public TableDefinition(string name, Dict.DictTable table)
+			: base(name, null, -1, true)
 		{
 			_prompt = table.Prompt;
 			_comment = table.Comment;

@@ -105,26 +105,6 @@ namespace DkTools.CodeModel.Tokens
 			var endOffset = token.Span.End;
 			return (from t in _tokens where t.Span.Start >= endOffset select t).FirstOrDefault();
 		}
-
-		public IEnumerable<DefinitionLocation> GetDescendentDefinitionLocations()
-		{
-			foreach (var token in _tokens)
-			{
-				foreach (var defLoc in token.GetDefinitionLocationsAtThisLevel())
-				{
-					yield return defLoc;
-				}
-
-				var groupToken = token as GroupToken;
-				if (groupToken != null)
-				{
-					foreach (var defLoc in groupToken.GetDescendentDefinitionLocations())
-					{
-						yield return defLoc;
-					}
-				}
-			}
-		}
 	}
 
 	internal enum ParseScopeResult

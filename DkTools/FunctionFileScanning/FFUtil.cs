@@ -11,7 +11,6 @@ namespace DkTools.FunctionFileScanning
 		public static CodeModel.Definitions.ClassDefinition ClassFileNameToDefinition(string fileName)
 		{
 			return new CodeModel.Definitions.ClassDefinition(
-				new CodeModel.Scope(),
 				System.IO.Path.GetFileNameWithoutExtension(fileName).ToLower(),
 				fileName);
 		}

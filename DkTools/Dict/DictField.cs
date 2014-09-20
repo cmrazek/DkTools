@@ -49,7 +49,7 @@ namespace DkTools.Dict
 				if (description != null && description.Length == 0) description = null;
 			}
 
-			_definition = new CodeModel.Definitions.TableFieldDefinition(new CodeModel.Scope(), table.Name, Name, Prompt, Comment, DataType, description);
+			_definition = new CodeModel.Definitions.TableFieldDefinition(table.Name, Name, Prompt, Comment, DataType, description);
 		}
 
 		public IEnumerable<Definition> CompletionOptions

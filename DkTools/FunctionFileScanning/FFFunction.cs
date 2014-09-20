@@ -38,7 +38,7 @@ namespace DkTools.FunctionFileScanning
 			_class = cls;
 			_name = def.Name;
 			_sig = def.Signature;
-			_span = def.SourceSpan;
+			_span = new CodeModel.Span(def.SourceStartPos, def.SourceStartPos);
 			_dataType = def.DataType;
 #if DEBUG
 			if (_dataType == null) throw new InvalidOperationException("Function data type is null.");
@@ -79,7 +79,7 @@ namespace DkTools.FunctionFileScanning
 			var str = rdr.GetString(rdr.GetOrdinal("privacy"));
 			if (!Enum.TryParse<CodeModel.FunctionPrivacy>(str, out _privacy)) _privacy = CodeModel.FunctionPrivacy.Public;
 
-			_def = new CodeModel.Definitions.FunctionDefinition(new CodeModel.Scope(), _class != null ? _class.Name : null, _name, new CodeModel.Tokens.ExternalToken(_file.FileName, _span), _dataType, _sig,
+			_def = new CodeModel.Definitions.FunctionDefinition(_class != null ? _class.Name : null, _name, _file.FileName, _span.Start, _dataType, _sig,
 					0, 0, _privacy, true);
 		}
 
@@ -90,7 +90,7 @@ namespace DkTools.FunctionFileScanning
 			if (def.DataType == null) throw new ArgumentNullException("def.DataType");
 #endif
 			_sig = def.Signature;
-			_span = def.SourceSpan;
+			_span = new CodeModel.Span(def.SourceStartPos, def.SourceStartPos);
 			_dataType = def.DataType;
 			_privacy = def.Privacy;
 			_def = def;

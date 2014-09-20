@@ -256,6 +256,7 @@
     <Compile Include="CodeModel\Definitions\ClassDefinition.cs" />
     <Compile Include="CodeModel\Definitions\ConstantDefinition.cs" />
     <Compile Include="CodeModel\Definitions\DataTypeDefinition.cs" />
+    <Compile Include="CodeModel\Definitions\DefinitionCollection.cs" />
     <Compile Include="CodeModel\Definitions\EnumOptionDefinition.cs" />
     <Compile Include="CodeModel\Definitions\FunctionDefinition.cs" />
     <Compile Include="CodeModel\Definitions\MacroDefinition.cs" />
@@ -295,10 +296,7 @@
     <Compile Include="CodeModel\Tokens\CodeFile.cs" />
     <Compile Include="CodeModel\CodeModel.cs" />
     <Compile Include="CodeModel\Tokens\DataTypeToken.cs" />
-    <Compile Include="CodeModel\Tokens\DefineToken.cs" />
-    <Compile Include="CodeModel\Tokens\ExternFunctionToken.cs" />
     <Compile Include="CodeModel\Tokens\FunctionCallToken.cs" />
-    <Compile Include="CodeModel\Tokens\FunctionToken.cs" />
     <Compile Include="CodeModel\Tokens\IfStatementToken.cs" />
     <Compile Include="CodeModel\FileStore.cs" />
     <Compile Include="CodeModel\Tokens\IncludeToken.cs" />
@@ -327,7 +325,6 @@
     <Compile Include="CodeModel\Tokens\TableToken.cs" />
     <Compile Include="CodeModel\Tokens\Token.cs" />
     <Compile Include="CodeModel\Tokens\UnknownToken.cs" />
-    <Compile Include="CodeModel\Tokens\VariableDeclarationToken.cs" />
     <Compile Include="CodeModel\Tokens\VariableToken.cs" />
     <Compile Include="CodeModel\Tokens\WhileStatementToken.cs" />
     <Compile Include="CodeModel\Tokens\WordToken.cs" />
@@ -371,6 +368,7 @@
     <Compile Include="LanguageSvc\ProbeScanner.cs" />
     <Compile Include="LanguageSvc\ProbeDropDownHelper.cs" />
     <Compile Include="OutputPane.cs" />
+    <Compile Include="CodeModel\PreprocessorModel.cs" />
     <Compile Include="ProbeExplorer\CreateFileDialog.xaml.cs">
       <DependentUpon>CreateFileDialog.xaml</DependentUpon>
     </Compile>
@@ -446,7 +444,6 @@
     <Compile Include="TokenParser\CommentTracker.cs" />
     <Compile Include="TokenParser\Parser.cs" />
     <Compile Include="TokenParser\ParserEnumerator.cs" />
-    <Compile Include="TokenParser\Source.cs" />
     <Compile Include="TokenParser\Token.cs" />
     <Compile Include="TokenParser\TokenType.cs" />
     <Compile Include="Util.cs" />

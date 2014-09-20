@@ -49,21 +49,23 @@ namespace DkTools.SignatureHelp
 				{
 					var tableName = match.Groups[2].Value;
 					var funcName = match.Groups[3].Value;
+
 					if (!string.IsNullOrEmpty(funcName))
 					{
-						if (string.IsNullOrEmpty(tableName))
+						var applicableToSpan = snapshot.CreateTrackingSpan(new VsText.Span(origPos, 0), VsText.SpanTrackingMode.EdgeInclusive);
+						var fileStore = CodeModel.FileStore.GetOrCreateForTextBuffer(_textBuffer);
+						var model = fileStore.GetMostRecentModel(snapshot, "Signature help after '('");
+						if (string.IsNullOrEmpty(tableName)) tableName = model.ClassName;
+						foreach (var sig in GetSignatures(model, tableName, funcName, applicableToSpan))
 						{
-							var applicableToSpan = snapshot.CreateTrackingSpan(new VsText.Span(origPos, 0), VsText.SpanTrackingMode.EdgeInclusive);
-							var fileStore = CodeModel.FileStore.GetOrCreateForTextBuffer(_textBuffer);
-							var model = fileStore.GetMostRecentModel(snapshot, "Signature help after '('");
-							foreach (var sig in GetSignatures(model, tableName, funcName, applicableToSpan)) signatures.Add(sig);
+							signatures.Add(sig);
 						}
-						else
+						
+						if (!string.IsNullOrEmpty(tableName))
 						{
 							var cls = ProbeToolsPackage.Instance.FunctionFileScanner.GetClass(tableName);
 							if (cls != null)
 							{
-								var applicableToSpan = snapshot.CreateTrackingSpan(new VsText.Span(origPos, 0), VsText.SpanTrackingMode.EdgeInclusive);
 								var def = cls.GetFunctionDefinition(funcName);
 								if (def != null)
 								{
@@ -204,25 +206,35 @@ namespace DkTools.SignatureHelp
 			}
 		}
 
-		public static IEnumerable<string> GetAllSignaturesForFunction(CodeModel.CodeModel model, string className, string name)
+		public static IEnumerable<string> GetAllSignaturesForFunction(CodeModel.CodeModel model, string className, string funcName)
 		{
-			foreach (var def in model.GetDefinitions(name))
+			if (string.IsNullOrEmpty(className))
 			{
-				if (string.IsNullOrEmpty(className))
+				foreach (var def in model.DefinitionProvider.GetGlobal<CodeModel.Definitions.FunctionDefinition>(funcName))
 				{
-					if (def is CodeModel.Definitions.FunctionDefinition) yield return (def as CodeModel.Definitions.FunctionDefinition).Signature;
-					else if (def is CodeModel.Definitions.MacroDefinition) yield return (def as CodeModel.Definitions.MacroDefinition).Signature;
-				}
-				else
-				{
-					if (def is CodeModel.Definitions.FunctionDefinition)
+					if (string.IsNullOrEmpty((def as CodeModel.Definitions.FunctionDefinition).ClassName))
 					{
-						if (className == (def as CodeModel.Definitions.FunctionDefinition).ClassName) yield return (def as CodeModel.Definitions.FunctionDefinition).Signature;
+						yield return (def as CodeModel.Definitions.FunctionDefinition).Signature;
+					}
+				}
+
+				foreach (var def in model.DefinitionProvider.GetGlobal<CodeModel.Definitions.MacroDefinition>(funcName))
+				{
+					yield return (def as CodeModel.Definitions.MacroDefinition).Signature;
+				}
+			}
+			else
+			{
+				foreach (var def in model.DefinitionProvider.GetGlobal<CodeModel.Definitions.FunctionDefinition>(funcName))
+				{
+					if ((def as CodeModel.Definitions.FunctionDefinition).ClassName == className)
+					{
+						yield return (def as CodeModel.Definitions.FunctionDefinition).Signature;
 					}
 				}
 			}
 
-			var ffFunc = ProbeToolsPackage.Instance.FunctionFileScanner.GetFunction(className, name);
+			var ffFunc = ProbeToolsPackage.Instance.FunctionFileScanner.GetFunction(className, funcName);
 			if (ffFunc != null) yield return ffFunc.Definition.Signature;
 		}
 

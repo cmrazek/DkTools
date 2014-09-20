@@ -68,6 +68,11 @@ namespace DkTools
 			}
 		}
 
+		internal static void OpenDocument(string fileName, int pos)
+		{
+			OpenDocument(fileName, new CodeModel.Span(pos, pos));
+		}
+
 		private static void OpenDocument(string fileName, out IVsTextView view, out IVsWindowFrame windowFrame)
 		{
 			try

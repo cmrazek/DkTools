@@ -15,10 +15,8 @@ namespace DkTools.CodeModel.Tokens
 		private Token _parent;
 		private Scope _scope;
 		private Span _span;
-		private Dictionary<string, LinkedList<Definition>> _defs;	// Use a dictionary to make it faster to search by name
 		private Definition _sourceDefinition;
 		private Classifier.ProbeClassifierType _classifierType;
-		private LocalFilePosition? _localFilePos;
 
 		public void DumpTree(System.Xml.XmlWriter xml)
 		{
@@ -41,16 +39,6 @@ namespace DkTools.CodeModel.Tokens
 				_sourceDefinition.DumpTree(xml);
 				xml.WriteEndElement();	// SourceDefinition
 			}
-
-			if (_defs != null && _defs.Any())
-			{
-				xml.WriteStartElement("Definitions");
-				foreach (var defList in _defs.Values)
-				{
-					foreach (var def in defList) def.DumpTree(xml);
-				}
-				xml.WriteEndElement();	// Definitions
-			}
 		}
 
 		public string DumpTreeText()
@@ -67,35 +55,11 @@ namespace DkTools.CodeModel.Tokens
 			return sb.ToString();
 		}
 
-		public string DumpDefinitionsText()
-		{
-			var sb = new StringBuilder();
-
-			foreach (var defList in _defs.Values)
-			{
-				foreach (var def in defList)
-				{
-					sb.Append(def.Name);
-					sb.Append(" ");
-					sb.Append(def.GetType());
-					sb.AppendLine();
-				}
-			}
-
-			return sb.ToString();
-		}
-
 		public Token(GroupToken parent, Scope scope, Span span)
 		{
 			_parent = parent;
 			_scope = scope;
 			_span = span;
-
-			if (!scope.Preprocessor)
-			{
-				var defProv = _scope.DefinitionProvider;
-				if (defProv != null) AddDefinitions(defProv.GetLocalDefinitionsForOffset(span.Start));
-			}
 		}
 
 		/// <summary>
@@ -104,38 +68,6 @@ namespace DkTools.CodeModel.Tokens
 		public virtual void CommitToParentToken(Token parent)
 		{
 			_parent = parent;
-
-			if (_parent != null)
-			{
-				if (_defs != null &&
-					Scope.Preprocessor)	// Only move definitions around when we're in the 'create' model.
-				{
-					Dictionary<string, LinkedList<Definition>> keepDefs = null;
-
-					var copyLocal = !(this is GroupToken) || !(this as GroupToken).IsLocalScope;
-					foreach (var defList in _defs.Values)
-					{
-						foreach (var def in defList)
-						{
-							if (def.Global || copyLocal)
-							{
-								_parent.AddDefinition(def);
-							}
-							else
-							{
-								if (keepDefs == null) keepDefs = new Dictionary<string, LinkedList<Definition>>();
-
-								LinkedList<Definition> list;
-								keepDefs.TryGetValue(def.Name, out list);
-								if (list == null) keepDefs[def.Name] = list = new LinkedList<Definition>();
-								list.AddLast(def);
-							}
-						}
-					}
-
-					_defs = keepDefs;
-				}
-			}
 		}
 
 		public Token Parent
@@ -224,23 +156,6 @@ namespace DkTools.CodeModel.Tokens
 						foreach (var region in token.OutliningRegions)
 						{
 							yield return region;
-						}
-					}
-				}
-			}
-		}
-
-		public virtual IEnumerable<FunctionToken> LocalFunctions
-		{
-			get
-			{
-				if (this is GroupToken)
-				{
-					foreach (var token in (this as GroupToken).SubTokens)
-					{
-						foreach (var func in token.LocalFunctions)
-						{
-							yield return func;
 						}
 					}
 				}
@@ -491,148 +406,6 @@ namespace DkTools.CodeModel.Tokens
 		}
 
 		#region Definitions
-		public void AddDefinition(Definition def)
-		{
-#if DEBUG
-			if (def == null) throw new ArgumentNullException("def");
-#endif
-			if (_defs == null)
-			{
-				_defs = new Dictionary<string, LinkedList<Definition>>();
-
-				var list = new LinkedList<Definition>();
-				_defs[def.Name] = list;
-				list.AddFirst(def);
-			}
-			else
-			{
-				LinkedList<Definition> list;
-				if (!_defs.TryGetValue(def.Name, out list))
-				{
-					list = new LinkedList<Definition>();
-					_defs[def.Name] = list;
-					list.AddFirst(def);
-				}
-				else if (!list.Contains(def))
-				{
-					list.AddFirst(def);
-				}
-			}
-		}
-
-		public void AddDefinitions(IEnumerable<Definition> defs)
-		{
-			foreach (var def in defs) AddDefinition(def);
-		}
-
-		public void CopyDefinitionsToToken(Token token, bool move)
-		{
-			if (_defs != null)
-			{
-				foreach (var defVal in _defs)
-				{
-					foreach (var def in defVal.Value.Reverse())	// Add in reverse order so they get pushed to the front of the list in proper order.
-					{
-						token.AddDefinition(def);
-					}
-				}
-				if (move) _defs = null;
-			}
-		}
-
-		public IEnumerable<Definition> GetDefinitions(string name)
-		{
-			if (_defs != null)
-			{
-				LinkedList<Definition> list;
-				if (_defs.TryGetValue(name, out list))
-				{
-					foreach (var def in list) yield return def;
-				}
-			}
-
-			if (_parent != null)
-			{
-				foreach (var def in _parent.GetDefinitions(name)) yield return def;
-			}
-		}
-
-		public IEnumerable<T> GetDefinitions<T>(string name) where T: Definition
-		{
-			if (_defs != null)
-			{
-				LinkedList<Definition> list;
-				if (_defs.TryGetValue(name, out list))
-				{
-					foreach (var def in list)
-					{
-						if (def is T) yield return def as T;
-					}
-				}
-			}
-
-			if (_parent != null)
-			{
-				foreach (var def in _parent.GetDefinitions<T>(name)) yield return def;
-			}
-		}
-
-		public IEnumerable<Definition> GetDefinitions()
-		{
-			if (_defs != null)
-			{
-				foreach (var list in _defs.Values)
-				{
-					foreach (var def in list) yield return def;
-				}
-			}
-
-			if (_parent != null)
-			{
-				foreach (var def in _parent.GetDefinitions()) yield return def;
-			}
-		}
-
-		public IEnumerable<T> GetDefinitions<T>() where T : Definition
-		{
-			if (_defs != null)
-			{
-				foreach (var list in _defs.Values)
-				{
-					foreach (var def in list)
-					{
-						if (def is T) yield return def as T;
-					}
-				}
-			}
-
-			if (_parent != null)
-			{
-				foreach (var def in _parent.GetDefinitions<T>()) yield return def;
-			}
-		}
-
-		public IEnumerable<Definition> GetDefinitionsAtThisLevel()
-		{
-			if (_defs != null)
-			{
-				foreach (var defList in _defs)
-				{
-					foreach (var def in defList.Value)
-					{
-						yield return def;
-					}
-				}
-			}
-		}
-
-		public virtual IEnumerable<DefinitionLocation> GetDefinitionLocationsAtThisLevel()
-		{
-			foreach (var def in GetDefinitionsAtThisLevel())
-			{
-				yield return new DefinitionLocation(def, Span.Start);
-			}
-		}
 
 		public Definition SourceDefinition
 		{
@@ -643,11 +416,6 @@ namespace DkTools.CodeModel.Tokens
 		protected DefinitionProvider DefinitionProvider
 		{
 			get { return _scope.File.Model.DefinitionProvider; }
-		}
-
-		protected bool CreateDefinitions
-		{
-			get { return _scope.Preprocessor; }
 		}
 		#endregion
 
@@ -687,18 +455,6 @@ namespace DkTools.CodeModel.Tokens
 		{
 			get { return _classifierType; }
 			set { _classifierType = value; }
-		}
-
-		public LocalFilePosition LocalFilePosition
-		{
-			get
-			{
-				if (!_localFilePos.HasValue)
-				{
-					_localFilePos = _scope.File.CodeSource.GetFilePosition(Span.Start);
-				}
-				return _localFilePos.Value;
-			}
 		}
 
 		public static IEnumerable<Token> SafeTokenList(params Token[] tokens)

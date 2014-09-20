@@ -11,8 +11,8 @@ namespace DkTools.CodeModel.Definitions
 	{
 		private string _text;
 
-		public ConstantDefinition(Scope scope, string name, Token sourceToken, string text)
-			: base(scope, name, sourceToken, true)
+		public ConstantDefinition(string name, string fileName, int startPos, string text)
+			: base(name, fileName, startPos, true)
 		{
 			_text = text;
 		}
