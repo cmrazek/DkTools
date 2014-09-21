@@ -49,9 +49,13 @@ namespace DkTools.FunctionFileScanning
 	span				nvarchar(100)	not null,
 	data_type			nvarchar(4000)	not null,
 	completion_options	nvarchar(4000),
-	privacy				nvarchar(10)	not null
+	privacy				nvarchar(10)	not null,
+	description			nvarchar(4000)
 );",
 "create index func_ix_classfunc on func (class_id, name);" };
+
+		public const string DatabaseFileName = "DkScan_v2.sdf";
+		public static readonly string[] OldDatabaseFileNames = new string[] { "DkScan.sdf" };
 
 		private SqlCeConnection _conn;
 
@@ -88,20 +92,41 @@ namespace DkTools.FunctionFileScanning
 		{
 			try
 			{
-				if (File.Exists(FileName)) return true;
-
-				Log.WriteDebug("Creating new scanner database...");
-
-				var connStr = ConnectionString;
-				var engine = new SqlCeEngine(connStr);
-				engine.CreateDatabase();
-				Connect();
-
-				foreach (var query in k_databaseInitScript)
+				if (!File.Exists(FileName))
 				{
-					Log.WriteDebug("Executing database initialization query: {0}", query);
-					ExecuteNonQuery(query);
+					Log.WriteDebug("Creating new scanner database...");
+
+					var connStr = ConnectionString;
+					var engine = new SqlCeEngine(connStr);
+					engine.CreateDatabase();
+					Connect();
+
+					foreach (var query in k_databaseInitScript)
+					{
+						Log.WriteDebug("Executing database initialization query: {0}", query);
+						ExecuteNonQuery(query);
+					}
 				}
+
+				// Purge old databases
+				foreach (var oldTitleExt in OldDatabaseFileNames)
+				{
+					var oldFileName = Path.Combine(ProbeToolsPackage.AppDataDir, oldTitleExt);
+					if (File.Exists(oldFileName))
+					{
+						try
+						{
+							var attribs = File.GetAttributes(oldFileName);
+							if ((attribs & FileAttributes.ReadOnly) != 0) File.SetAttributes(oldFileName, attribs & ~FileAttributes.ReadOnly);
+							File.Delete(oldFileName);
+						}
+						catch (Exception ex)
+						{
+							Log.WriteEx(ex, "Exception when deleting old scanner database.");
+						}
+					}
+				}
+
 				return true;
 			}
 			catch (Exception ex)
@@ -124,7 +149,7 @@ namespace DkTools.FunctionFileScanning
 		{
 			get
 			{
-				return Path.Combine(ProbeToolsPackage.AppDataDir, Constants.FunctionFileDatabaseFileName_SDF);
+				return Path.Combine(ProbeToolsPackage.AppDataDir, DatabaseFileName);
 			}
 		}
 

@@ -10,7 +10,6 @@ namespace DkTools.CodeModel.Definitions
 	internal abstract class Definition
 	{
 		private string _name;
-		private bool _global;
 		private string _sourceFileName;
 		private int _sourceStartPos;
 
@@ -19,13 +18,12 @@ namespace DkTools.CodeModel.Definitions
 		public abstract Classifier.ProbeClassifierType ClassifierType { get; }
 		public abstract string QuickInfoText { get; }
 
-		public Definition(string name, string sourceFileName, int sourceStartPos, bool global)
+		public Definition(string name, string sourceFileName, int sourceStartPos)
 		{
 #if DEBUG
 			if (string.IsNullOrWhiteSpace(name)) throw new ArgumentNullException("name");
 #endif
 			_name = name;
-			_global = global;
 			_sourceFileName = sourceFileName;
 			_sourceStartPos = sourceStartPos;
 		}
@@ -36,14 +34,6 @@ namespace DkTools.CodeModel.Definitions
 		public string Name
 		{
 			get { return _name; }
-		}
-
-		/// <summary>
-		/// Gets a flag indicating if this definition extends past the local scope.
-		/// </summary>
-		public bool Global
-		{
-			get { return _global; }
 		}
 
 		/// <summary>
@@ -73,7 +63,6 @@ namespace DkTools.CodeModel.Definitions
 		public virtual void DumpTreeAttribs(System.Xml.XmlWriter xml)
 		{
 			xml.WriteAttributeString("name", _name);
-			xml.WriteAttributeString("global", _global.ToString());
 			xml.WriteAttributeString("sourceFileName", _sourceFileName);
 			xml.WriteAttributeString("sourceStartPos", _sourceStartPos.ToString());
 		}

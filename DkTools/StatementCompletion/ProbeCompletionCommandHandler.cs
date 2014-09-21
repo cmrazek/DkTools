@@ -28,7 +28,7 @@ namespace DkTools.StatementCompletion
 
 		private Regex _rxAfterAssignOrCompare = new Regex(@"(?:==|=|!=)\s$");
 		private Regex _rxFunctionStartBracket = new Regex(@"\w+\s*\($");
-		private Regex _rxAutoCompleteKeyword = new Regex(@"\b(return|case)\s$");
+		private Regex _rxAutoCompleteKeyword = new Regex(@"\b(return|case|extract|permanent)\s$");
 		private Regex _rxAfterIfDef = new Regex(@"\#ifn?def\s$");
 
 		public ProbeCompletionCommandHandler(IVsTextView textViewAdapter, ITextView textView, ProbeCompletionCommandHandlerProvider provider)

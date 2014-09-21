@@ -17,7 +17,7 @@ namespace DkTools.CodeModel.Definitions
 		private string _repoDesc;
 
 		public TableFieldDefinition(string tableName, string fieldName, string prompt, string comment, DataType dataType, string description)
-			: base(fieldName, null, -1, true)
+			: base(fieldName, null, -1)
 		{
 			_tableName = tableName;
 			_fieldName = fieldName;

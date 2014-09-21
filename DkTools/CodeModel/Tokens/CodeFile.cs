@@ -84,7 +84,7 @@ namespace DkTools.CodeModel.Tokens
 			Span = new Span(0, Position);
 		}
 
-		public Token TryParseComplexToken(GroupToken parent, Scope scope)
+		public Token ParseComplexToken(GroupToken parent, Scope scope)
 		{
 			if (!SkipWhiteSpaceAndComments(scope)) return null;
 		    var ch = _src[_pos];
@@ -253,64 +253,127 @@ namespace DkTools.CodeModel.Tokens
 			return new UnknownToken(parent, scope, MoveNextSpan(), ch.ToString());
 		}
 
-		private Token ParseTokenFromDefinition(GroupToken parent, Scope scope, Span span, string text, Definition def)
+		private Token ParseTokenFromDefinitions(GroupToken parent, Scope scope, Span span, string word, Definition[] defs)
 		{
-			if (def is VariableDefinition)
+			// Tokens that shouldn't be mixed up with other types of definitions.
+			foreach (var def in defs)
 			{
-				return new VariableToken(parent, scope, span, text, def as VariableDefinition);
-			}
-			if (def is FunctionDefinition)
-			{
-				return new FunctionPlaceholderToken(parent, scope, span, text, def as FunctionDefinition);
-			}
-			if (def is ClassDefinition)
-			{
-				return new ClassToken(parent, scope, span, text, def as ClassDefinition);
-			}
-			if (def is ConstantDefinition)
-			{
-				return new ConstantToken(parent, scope, span, text, def as ConstantDefinition);
-			}
-			if (def is DataTypeDefinition)
-			{
-				return new DataTypeToken(parent, scope, new IdentifierToken(parent, scope, span, text), (def as DataTypeDefinition).DataType, def as DataTypeDefinition);
-			}
-			if (def is MacroDefinition)
-			{
-				return new MacroCallToken(parent, scope, new IdentifierToken(parent, scope, span, text), def as MacroDefinition);
-			}
-			if (def is RelIndDefinition)
-			{
-				return new RelIndToken(parent, scope, span, text, def as RelIndDefinition);
-			}
-			if (def is TableDefinition)
-			{
-				var tableToken = new TableToken(parent, scope, span, text, def as TableDefinition);
-
-				var table = ProbeEnvironment.GetTable(text);
-				if (table != null)
+				if (def is VariableDefinition)
 				{
-					var resetPos = Position;
-					SkipWhiteSpaceAndComments(scope);
-					if (PeekChar() == '.')
+					return new VariableToken(parent, scope, span, word, def as VariableDefinition);
+				}
+				if (def is FunctionDefinition)
+				{
+					return new FunctionPlaceholderToken(parent, scope, span, word, def as FunctionDefinition);
+				}
+				if (def is ConstantDefinition)
+				{
+					return new ConstantToken(parent, scope, span, word, def as ConstantDefinition);
+				}
+				if (def is DataTypeDefinition)
+				{
+					return new DataTypeToken(parent, scope, new IdentifierToken(parent, scope, span, word), (def as DataTypeDefinition).DataType, def as DataTypeDefinition);
+				}
+				if (def is MacroDefinition)
+				{
+					return new MacroCallToken(parent, scope, new IdentifierToken(parent, scope, span, word), def as MacroDefinition);
+				}
+				if (def is RelIndDefinition)
+				{
+					return new RelIndToken(parent, scope, span, word, def as RelIndDefinition);
+				}
+			}
+
+			// Tables/classes/extracts may be mixed up due to the ability to use the same name1.
+			SkipWhiteSpaceAndComments(scope);
+			if (PeekChar() == '.')
+			{
+				var resetPos = Position;
+				var dotSpan = MoveNextSpan(1);
+				SkipWhiteSpaceAndComments(scope);
+
+				var word2 = PeekWord();
+				if (!string.IsNullOrEmpty(word2))
+				{
+					var word2Span = MoveNextSpan(word2.Length);
+
+					if (defs.Any(d => d is TableDefinition))
 					{
-						var dotToken = new DotToken(parent, scope, MoveNextSpan(1));
-						SkipWhiteSpaceAndComments(scope);
-
-						var fieldName = PeekWord();
-						var field = table.GetField(fieldName);
-						if (field == null)
+						var table = ProbeEnvironment.GetTable(word);
+						if (table != null)
 						{
-							Position = resetPos;
-							return tableToken;
+							var field = table.GetField(word2);
+							if (field != null)
+							{
+								var tableToken = new TableToken(parent, scope, span, word, table.Definition);
+								var dotToken = new DotToken(parent, scope, dotSpan);
+								var fieldToken = new TableFieldToken(parent, scope, word2Span, word2, tableToken);
+								return new TableAndFieldToken(parent, scope, tableToken, dotToken, fieldToken, field);
+							}
 						}
+					}
 
-						var fieldToken = new TableFieldToken(parent, scope, MoveNextSpan(fieldName.Length), fieldName, tableToken);
-						return new TableAndFieldToken(parent, scope, tableToken, dotToken, fieldToken, field);
+					if (defs.Any(d => d is ClassDefinition))
+					{
+						var ffClass = ProbeToolsPackage.Instance.FunctionFileScanner.GetClass(word);
+						if (ffClass != null)
+						{
+							var ffFunc = ffClass.GetFunctionDefinition(word2);
+							if (ffFunc != null)
+							{
+								SkipWhiteSpaceAndComments(scope);
+								if (PeekChar() == '(')
+								{
+									var classToken = new ClassToken(parent, scope, span, word, ffClass.ClassDefinition);
+									var dotToken = new DotToken(parent, scope, dotSpan);
+									var nameToken = new IdentifierToken(parent, scope, word2Span, word2);
+									var argsToken = BracketsToken.Parse(parent, scope);
+									var funcToken = new FunctionCallToken(parent, scope, classToken, dotToken, nameToken, argsToken, ffFunc);
+									return new ClassAndFunctionToken(parent, scope, classToken, dotToken, funcToken);
+								}
+							}
+						}
+					}
+
+					if (defs.Any(d => d is ExtractTableDefinition))
+					{
+						var exDef = DefinitionProvider.GetGlobal<ExtractTableDefinition>(word).FirstOrDefault();
+						if (exDef != null)
+						{
+							var fieldDef = exDef.GetField(word2);
+							if (fieldDef != null)
+							{
+								var exToken = new ExtractTableToken(parent, scope, span, word, exDef);
+								var dotToken = new DotToken(parent, scope, dotSpan);
+								var fieldToken = new ExtractFieldToken(parent, scope, word2Span, word2, fieldDef);
+								return new ExtractTableAndFieldToken(parent, scope, exToken, dotToken, fieldToken);
+							}
+						}
 					}
 				}
 
-				return tableToken;
+				Position = resetPos;
+			}
+
+			// If we got here, then there is no 'dot' or field name following the next word, so it will be just name1 by itself.
+
+			// Table definition takes higher precedence, since it can contain prompt/comment info.
+			var tableDef = defs.FirstOrDefault(d => d is TableDefinition);
+			if (tableDef != null)
+			{
+				return new TableToken(parent, scope, span, word, tableDef as TableDefinition);
+			}
+
+			foreach (var def in defs)
+			{
+				if (def is ClassDefinition)
+				{
+					return new ClassToken(parent, scope, span, word, def as ClassDefinition);
+				}
+				if (def is ExtractTableDefinition)
+				{
+					return new ExtractTableToken(parent, scope, span, word, def as ExtractTableDefinition);
+				}
 			}
 
 			return null;
@@ -327,6 +390,11 @@ namespace DkTools.CodeModel.Tokens
 		/// <remarks>This function assumes that the current position is after the word.</remarks>
 		private Token ParseWord(GroupToken parent, Scope scope, Span wordSpan, string word)
 		{
+			if (word == "extract")
+			{
+				return ExtractStatement.Parse(parent, scope, new KeywordToken(parent, scope, wordSpan, "extract"));
+			}
+
 			if (Constants.Keywords.Contains(word))
 			{
 				return new KeywordToken(parent, scope, wordSpan, word);
@@ -337,15 +405,10 @@ namespace DkTools.CodeModel.Tokens
 				return new DataTypeKeywordToken(parent, scope, wordSpan, word);
 			}
 
-			foreach (var def in scope.DefinitionProvider.GetLocal(wordSpan.Start, word))
+			var defs = scope.DefinitionProvider.GetAny(wordSpan.Start, word).ToArray();
+			if (defs.Length > 0)
 			{
-				var token = ParseTokenFromDefinition(parent, scope, wordSpan, word, def);
-				if (token != null) return token;
-			}
-
-			foreach (var def in scope.DefinitionProvider.GetGlobal(word))
-			{
-				var token = ParseTokenFromDefinition(parent, scope, wordSpan, word, def);
+				var token = ParseTokenFromDefinitions(parent, scope, wordSpan, word, defs);
 				if (token != null) return token;
 			}
 

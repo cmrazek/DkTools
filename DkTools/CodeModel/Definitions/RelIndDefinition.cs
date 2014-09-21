@@ -12,7 +12,7 @@ namespace DkTools.CodeModel.Definitions
 		private string _baseTableName;
 
 		public RelIndDefinition(string name, string baseTableName, string infoText)
-			: base(name, null, -1, true)
+			: base(name, null, -1)
 		{
 			_infoText = infoText;
 			_baseTableName = baseTableName;

@@ -22,39 +22,40 @@ namespace DkTools.CodeModel.Tokens
 			_dataType = field.DataType;
 		}
 
-		public static TableAndFieldToken TryParse(GroupToken parent, Scope scope)
-		{
-			var startPos = scope.File.Position;
+		// TODO: remove
+		//public static TableAndFieldToken TryParse(GroupToken parent, Scope scope)
+		//{
+		//	var startPos = scope.File.Position;
 
-			var tableToken = TableToken.TryParse(parent, scope);
-			if (tableToken == null) return null;
+		//	var tableToken = TableToken.TryParse(parent, scope);
+		//	if (tableToken == null) return null;
 
-			var ret = TryParse(parent, scope, tableToken);
-			if (ret != null) return ret;
+		//	var ret = TryParse(parent, scope, tableToken);
+		//	if (ret != null) return ret;
 
-			scope.File.Position = startPos;
-			return null;
-		}
+		//	scope.File.Position = startPos;
+		//	return null;
+		//}
 
-		public static TableAndFieldToken TryParse(GroupToken parent, Scope scope, TableToken tableToken)
-		{
-			var file = scope.File;
-			if (!file.SkipWhiteSpaceAndComments(scope) || file.PeekChar() != '.') return null;
+		//public static TableAndFieldToken TryParse(GroupToken parent, Scope scope, TableToken tableToken)
+		//{
+		//	var file = scope.File;
+		//	if (!file.SkipWhiteSpaceAndComments(scope) || file.PeekChar() != '.') return null;
 
-			var table = ProbeEnvironment.GetTable(tableToken.Text);
-			if (table == null) return null;
+		//	var table = ProbeEnvironment.GetTable(tableToken.Text);
+		//	if (table == null) return null;
 
-			var dotToken = new DotToken(parent, scope, file.MoveNextSpan());
+		//	var dotToken = new DotToken(parent, scope, file.MoveNextSpan());
 
-			if (!file.SkipWhiteSpaceAndComments(scope)) return null;
+		//	if (!file.SkipWhiteSpaceAndComments(scope)) return null;
 
-			var fieldName = file.PeekWord();
-			var field = table.GetField(fieldName);
-			if (field == null) return null;
-			var fieldToken = new TableFieldToken(parent, scope, file.MoveNextSpan(fieldName.Length), fieldName, tableToken);
+		//	var fieldName = file.PeekWord();
+		//	var field = table.GetField(fieldName);
+		//	if (field == null) return null;
+		//	var fieldToken = new TableFieldToken(parent, scope, file.MoveNextSpan(fieldName.Length), fieldName, tableToken);
 
-			return new TableAndFieldToken(parent, scope, tableToken, dotToken, fieldToken, field);
-		}
+		//	return new TableAndFieldToken(parent, scope, tableToken, dotToken, fieldToken, field);
+		//}
 
 		public override DataType ValueDataType
 		{

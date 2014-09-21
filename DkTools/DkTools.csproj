@@ -258,6 +258,8 @@
     <Compile Include="CodeModel\Definitions\DataTypeDefinition.cs" />
     <Compile Include="CodeModel\Definitions\DefinitionCollection.cs" />
     <Compile Include="CodeModel\Definitions\EnumOptionDefinition.cs" />
+    <Compile Include="CodeModel\Definitions\ExtractTableDefinition.cs" />
+    <Compile Include="CodeModel\Definitions\ExtractFieldDefinition.cs" />
     <Compile Include="CodeModel\Definitions\FunctionDefinition.cs" />
     <Compile Include="CodeModel\Definitions\MacroDefinition.cs" />
     <Compile Include="CodeModel\Definitions\RelIndDefinition.cs" />
@@ -278,12 +280,17 @@
     <Compile Include="CodeModel\ServerContext.cs" />
     <Compile Include="CodeModel\StringPreprocessorReader.cs" />
     <Compile Include="CodeModel\StringPreprocessorWriter.cs" />
+    <Compile Include="CodeModel\Tokens\ClassAndFunctionToken.cs" />
     <Compile Include="CodeModel\Tokens\ClassToken.cs" />
     <Compile Include="CodeModel\Tokens\ConstantToken.cs" />
     <Compile Include="CodeModel\DataType.cs" />
     <Compile Include="CodeModel\Tokens\DataTypeKeywordToken.cs" />
     <Compile Include="CodeModel\Definitions\Definition.cs" />
     <Compile Include="CodeModel\Tokens\ExternalToken.cs" />
+    <Compile Include="CodeModel\Tokens\ExtractStatement.cs" />
+    <Compile Include="CodeModel\Tokens\ExtractTableAndFieldToken.cs" />
+    <Compile Include="CodeModel\Tokens\ExtractFieldToken.cs" />
+    <Compile Include="CodeModel\Tokens\ExtractTableToken.cs" />
     <Compile Include="CodeModel\Tokens\FunctionPlaceholderToken.cs" />
     <Compile Include="CodeModel\Tokens\GroupToken.cs" />
     <Compile Include="CodeModel\IContextSource.cs" />

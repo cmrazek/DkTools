@@ -13,8 +13,6 @@ namespace DkTools
 		public const string SettingsRegKey = "Software\\DkTools2012";
 		public const string CompileOutputPaneTitle = "DK Compile";
 		public const string ErrorCaption = "Error";
-		public const string FunctionFileDatabaseFileName_XML = "FunctionFiles.xml";
-		public const string FunctionFileDatabaseFileName_SDF = "DkScan.sdf";
 
 		/// <summary>
 		/// Directory name where log files will be stored (under AppDataDir)
@@ -39,12 +37,12 @@ namespace DkTools
 		public static readonly HashSet<string> DataTypeKeywords = Util.ParseWordList("alternate bool char currency date enum int LEADINGZEROS like local_currency long longform nowarn numeric proto shortform string time unsigned void");
 
 		public static readonly HashSet<string> Keywords = Util.ParseWordList(
-			"after all and asc before break button by comment case col colff cols continue create default display desc",
+			"after all and asc before break button by comment case col colff cols continue create default display desc description",
 			"each else extern extract for form format from group header if index many nopick of on one or order outfile permanent private prompt protected public",
 			"relationship return row rows select snapshot static switch table to unique updates where while widthof zoom");
 
 		public static readonly HashSet<string> GlobalKeywords = Util.ParseWordList(
-			"after all and before break button comment col colff cols continue create display each else extern extract for form format from group header index",
+			"after all and before break button comment col colff cols continue create display description each else extern extract for form format from group header index",
 			"many nopick on one or outfile permanent private prompt protected public relationship row rows select snapshot static table to unique updates where widthof zoom");
 
 		public static readonly HashSet<string> SwitchKeywords = Util.ParseWordList("case default");

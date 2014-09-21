@@ -18,14 +18,23 @@ namespace DkTools.CodeModel
 			{
 				_builtInDefs = new Definition[]
 				{
-					new FunctionDefinition(null, "diag", null, -1, DataType.Void, "void diag(expressions ...)", 0, 0, Span.Empty, FunctionPrivacy.Public, true),
-					new FunctionDefinition(null, "gofield", null, -1, DataType.Void, "void gofield(TableName.ColumnName)", 0, 0, Span.Empty, FunctionPrivacy.Public, true),
-					new FunctionDefinition(null, "makestring", null, -1, DataType.FromString("char(255)"), "char(255) makestring(expressions ...)", 0, 0, Span.Empty, FunctionPrivacy.Public, true),
-					new FunctionDefinition(null, "oldvalue", null, -1, DataType.Void, "oldvalue(TableName.ColumnName)", 0, 0, Span.Empty, FunctionPrivacy.Public, true),
-					new FunctionDefinition(null, "qcolsend", null, -1, DataType.Void, "void qcolsend(TableName.ColumnName ...)", 0, 0, Span.Empty, FunctionPrivacy.Public, true),
-					new FunctionDefinition(null, "SetMessage", null, -1, DataType.Int, "int SetMessage(MessageControlString, expressions ...)", 0, 0, Span.Empty, FunctionPrivacy.Public, true),
-					new FunctionDefinition(null, "STRINGIZE", null, -1, DataType.FromString("char(255)"), "STRINGIZE(x)", 0, 0, Span.Empty, FunctionPrivacy.Public, true),
-					new FunctionDefinition(null, "UNREFERENCED_PARAMETER", null, -1, DataType.Void, "UNREFERENCED_PARAMETER(parameter)", 0, 0, Span.Empty, FunctionPrivacy.Public, true)
+					new FunctionDefinition(null, "diag", null, -1, DataType.Void, "void diag(expressions ...)", 0, 0, Span.Empty, FunctionPrivacy.Public, true,
+						"Outputs specified expressions to a diagnostic device."),
+					new FunctionDefinition(null, "gofield", null, -1, DataType.Void, "void gofield(TableName.ColumnName)", 0, 0, Span.Empty, FunctionPrivacy.Public, true,
+						"Puts the focus on the requested field on the form."),
+					new FunctionDefinition(null, "makestring", null, -1, DataType.FromString("char(255)"), "char(255) makestring(expressions ...)", 0, 0, Span.Empty, FunctionPrivacy.Public, true,
+						"Creates a string by concatenating a list of expressions."),
+					new FunctionDefinition(null, "oldvalue", null, -1, DataType.Void, "oldvalue(TableName.ColumnName)", 0, 0, Span.Empty, FunctionPrivacy.Public, true,
+						"Returns the value of a column in the old row buffer."),
+					new FunctionDefinition(null, "qcolsend", null, -1, DataType.Void, "void qcolsend(TableName.ColumnName ...)", 0, 0, Span.Empty, FunctionPrivacy.Public, true,
+						"Sends columns of the client's current row buffer to SAM or from SAM to the client. Only the current row buffer (not the old buffer) of the recepient is overwritten."),
+					new FunctionDefinition(null, "SetMessage", null, -1, DataType.Int, "int SetMessage(MessageControlString, expressions ...)", 0, 0, Span.Empty, FunctionPrivacy.Public, true,
+						"Writes to the error message buffer. CAM displays the contents of that buffer when a trigger encounters an error. In code, you can read that buffer using the getmsg function.\r\n\r\n" +
+						"Provides similar functionality to setmsg, but allows you to maintain one source code for all languages (with one set of resource files per language)."),
+					new FunctionDefinition(null, "STRINGIZE", null, -1, DataType.FromString("char(255)"), "STRINGIZE(x)", 0, 0, Span.Empty, FunctionPrivacy.Public, true,
+						"Converts macro parameters to strings."),
+					new FunctionDefinition(null, "UNREFERENCED_PARAMETER", null, -1, DataType.Void, "UNREFERENCED_PARAMETER(parameter)", 0, 0, Span.Empty, FunctionPrivacy.Public, true,
+						"Prevents a compiler warning if a parameter passed to a function is not used.")
 				};
 			}
 			AddGlobal(_builtInDefs);
@@ -129,6 +138,14 @@ namespace DkTools.CodeModel
 					}
 				}
 			}
+		}
+		#endregion
+
+		#region Global/Local Combined
+		public IEnumerable<Definition> GetAny(int pos, string name)
+		{
+			foreach (var def in GetLocal(pos, name)) yield return def;
+			foreach (var def in GetGlobal(name)) yield return def;
 		}
 		#endregion
 

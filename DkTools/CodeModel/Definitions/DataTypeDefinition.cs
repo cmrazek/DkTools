@@ -12,7 +12,7 @@ namespace DkTools.CodeModel.Definitions
 		private DataType _dataType;
 
 		public DataTypeDefinition(string name, string fileName, int startPos, DataType dataType)
-			: base(name, fileName, startPos, true)
+			: base(name, fileName, startPos)
 		{
 #if DEBUG
 			if (dataType == null) throw new ArgumentNullException("dataType");
@@ -21,7 +21,7 @@ namespace DkTools.CodeModel.Definitions
 		}
 
 		public DataTypeDefinition(string name, DataType dataType)
-			: base(name, null, -1, true)
+			: base(name, null, -1)
 		{
 			_dataType = dataType;
 		}

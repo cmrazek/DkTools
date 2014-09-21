@@ -12,7 +12,7 @@ namespace DkTools.CodeModel.Definitions
 		private string _text;
 
 		public ConstantDefinition(string name, string fileName, int startPos, string text)
-			: base(name, fileName, startPos, true)
+			: base(name, fileName, startPos)
 		{
 			_text = text;
 		}

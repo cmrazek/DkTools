@@ -137,7 +137,7 @@ namespace DkTools.CodeModel
 			{
 #if REPORT_ERRORS
 				_code.Peek();
-				ReportError(_source.GetPrimaryFileSpan(_code.TokenSpan), "Expected function or variable name to follow data type on root.");
+				ReportError(_code.TokenSpan, "Expected function or variable name to follow data type on root.");
 #endif
 			}
 		}
@@ -153,7 +153,7 @@ namespace DkTools.CodeModel
 			{
 #if REPORT_ERRORS
 				_code.Peek();
-				ReportError(_source.GetPrimaryFileSpan(_code.TokenSpan), "Expected data type to follow 'static'.");
+				ReportError(_code.TokenSpan, "Expected data type to follow 'static'.");
 #endif
 			}
 		}
@@ -173,7 +173,7 @@ namespace DkTools.CodeModel
 			{
 #if REPORT_ERRORS
 				_code.Peek();
-				ReportError(_source.GetPrimaryFileSpan(_code.TokenSpan), "Expected data type or function name to follow 'extern'.");
+				ReportError(_code.TokenSpan, "Expected data type or function name to follow 'extern'.");
 #endif
 			}
 		}
@@ -188,7 +188,7 @@ namespace DkTools.CodeModel
 			else
 			{
 #if REPORT_ERRORS
-				ReportError(_source.GetPrimaryFileSpan(wordSpan), string.Format("Unknown identifier '{0}'.", word));
+				ReportError(wordSpan, string.Format("Unknown identifier '{0}'.", word));
 #endif
 			}
 		}
@@ -214,7 +214,7 @@ namespace DkTools.CodeModel
 				{
 #if REPORT_ERRORS
 					_code.Peek();
-					ReportError(_source.GetPrimaryFileSpan(_code.TokenSpan), string.Format("Expected '(' to follow function name."));
+					ReportError(_code.TokenSpan, string.Format("Expected '(' to follow function name."));
 #endif
 				}
 			}
@@ -222,7 +222,7 @@ namespace DkTools.CodeModel
 			{
 #if REPORT_ERRORS
 				_code.Peek();
-				ReportError(_source.GetPrimaryFileSpan(_code.TokenSpan), string.Format("Expected function name or data type to follow '{0}'.", privacy.ToString().ToLower()));
+				ReportError(_code.TokenSpan, string.Format("Expected function name or data type to follow '{0}'.", privacy.ToString().ToLower()));
 #endif
 			}
 		}
@@ -267,7 +267,7 @@ namespace DkTools.CodeModel
 
 #if REPORT_ERRORS
 				_code.Peek();
-				ReportError(_source.GetPrimaryFileSpan(_code.TokenSpan), "Expected function argument.");
+				ReportError(_code.TokenSpan, "Expected function argument.");
 #endif
 				return;
 			}
@@ -276,7 +276,7 @@ namespace DkTools.CodeModel
 			{
 				var localPos = _source.GetFilePosition(nameSpan.Start);
 				var sig = Tokens.Token.NormalizePlainText(_code.GetText(allStartPos, _code.Position - allStartPos));
-				var def = new FunctionDefinition(_className, funcName, localPos.FileName, localPos.Position, returnDataType, sig, argEndPos, 0, Span.Empty, privacy, true);
+				var def = new FunctionDefinition(_className, funcName, localPos.FileName, localPos.Position, returnDataType, sig, argEndPos, 0, Span.Empty, privacy, true, null);
 				_externFuncs[funcName] = def;
 				AddGlobalDefinition(def);
 				return;
@@ -298,20 +298,17 @@ namespace DkTools.CodeModel
 					if (word == "description")
 					{
 						description = ReadDescriptionAttribute();
+						continue;
 					}
 					else
 					{
-#if REPORT_ERRORS
-						ReportError(_source.GetPrimaryFileSpan(_code.TokenSpan), "Expected '{'.");
-#endif
+						ReportError(_code.TokenSpan, "Expected '{'.");
 						return;
 					}
 				}
 
-#if REPORT_ERRORS
 				_code.Peek();
-				ReportError(_source.GetPrimaryFileSpan(_code.TokenSpan), "Expected '{'.");
-#endif
+				ReportError(_code.TokenSpan, "Expected '{'.");
 				return;
 			}
 
@@ -343,8 +340,8 @@ namespace DkTools.CodeModel
 			var argEndLocalPos = _source.GetPrimaryFilePosition(argEndPos);
 			var entireSpan = _source.GetPrimaryFileSpan(new Span(allStartPos, bodyEndPos));
 
-			var funcSig = Tokens.Token.NormalizePlainText(_code.GetText(allStartPos, bodyStartPos - allStartPos));
-			var funcDef = new FunctionDefinition(_className, funcName, _fileName, nameLocalPos, returnDataType, funcSig, argEndLocalPos, bodyStartLocalPos, entireSpan, privacy, isExtern);
+			var funcSig = Tokens.Token.NormalizePlainText(_code.GetText(allStartPos, argEndPos - allStartPos));
+			var funcDef = new FunctionDefinition(_className, funcName, _fileName, nameLocalPos, returnDataType, funcSig, argEndLocalPos, bodyStartLocalPos, entireSpan, privacy, isExtern, description);
 			_localFuncs.Add(funcDef);
 			AddGlobalDefinition(funcDef);
 
@@ -365,33 +362,31 @@ namespace DkTools.CodeModel
 
 		private void ReadFunctionBody()
 		{
+			ReadBraceScope();
+		}
+
+		private void ReadBraceScope()
+		{
 			// Read the contents of the function until '}'
 			while (!_code.EndOfFile)
 			{
 				if (_code.ReadExact('}')) break;
 
-				//if (_code.ReadWord())
-				//{
-				//	switch (_code.TokenText)
-				//	{
-				//		case "-1";
-				//	}
-				//}
+				if (_code.ReadWord())
+				{
+					switch (_code.TokenText)
+					{
+						case "extract":
+							ReadExtract(_code.TokenSpan);
+							break;
+						default:
+							// unknown word
+							break;
+					}
+					continue;
+				}
 
 				if (TryReadNestable()) continue;
-
-				//if (funcScope != null)
-				//{
-				//	if (_code.ReadWord())
-				//	{
-				//		var def = funcScope.GetDefinition(_code.TokenText);
-				//		if (def != null)
-				//		{
-				//			var localPos = _source.GetFilePosition(_code.TokenStartPostion);
-				//			if (localPos.PrimaryFile) _defProv.AddSourceDefinition(localPos.Position, def);
-				//		}
-				//	}
-				//}
 
 				// Other tokens mean nothing to the preprocessor.
 				_code.Read();
@@ -453,7 +448,7 @@ namespace DkTools.CodeModel
 				if (_code.ReadExact(';')) break;
 
 #if REPORT_ERRORS
-				ReportError(_source.GetPrimaryFileSpan(_code.TokenSpan), "Expected either ',' or ';' to follow a variable declaration.");
+				ReportError(_code.TokenSpan, "Expected either ',' or ';' to follow a variable declaration.");
 #endif
 				break;
 			}
@@ -480,7 +475,7 @@ namespace DkTools.CodeModel
 		{
 			if (_code.ReadExact('{'))
 			{
-				ReadNestable("}");
+				ReadBraceScope();
 				return true;
 			}
 
@@ -506,7 +501,7 @@ namespace DkTools.CodeModel
 			{
 				str = _code.TokenText;
 				if (str == endToken) return;
-				else if (str == "{") ReadNestable("}");
+				else if (str == "{") ReadBraceScope();
 				else if (str == "(") ReadNestable(")");
 				else if (str == "[") ReadNestable("]");
 			}
@@ -538,13 +533,80 @@ namespace DkTools.CodeModel
 			get { return _localFuncs; }
 		}
 
+		private void ReadExtract(Span extractWordSpan)
+		{
+			var errorSpan = extractWordSpan;
+			var permanent = _code.ReadExact("permanent");
+			if (permanent) errorSpan = _code.TokenSpan;
+
+			// Table name
+			if (!_code.ReadWord())
+			{
+				_code.Peek();
+				ReportError(errorSpan, "Expected extract name.");
+				return;
+			}
+			var name = _code.TokenText;
+			ExtractTableDefinition exDef = null;
+			if (!_defProv.GetGlobal<ExtractTableDefinition>(name).Any())	// Don't add a definition if it's already there (extracts can be called multiple times)
+			{
+				var localPos = _source.GetFilePosition(_code.TokenStartPostion);
+				exDef = new ExtractTableDefinition(name, localPos.FileName, localPos.Position, permanent);
+			}
+
+			string lastToken = null;
+			var fields = new List<string>();
+
+			var done = false;
+			while (!_code.EndOfFile && !done)
+			{
+				if (_code.ReadExact('=') && lastToken != null)
+				{
+					if (exDef != null)
+					{
+						var localPos = _source.GetFilePosition(_code.TokenStartPostion);
+						var fieldDef = new ExtractFieldDefinition(lastToken, localPos.FileName, localPos.Position);
+						exDef.AddField(fieldDef);
+					}
+					if (fields == null) fields = new List<string>();
+					fields.Add(lastToken);
+					lastToken = null;
+				}
+				else if (_code.ReadWord())
+				{
+					lastToken = _code.TokenText;
+				}
+				else
+				{
+					_code.Read();
+					switch (_code.TokenText)
+					{
+						case ";":
+							done = true;
+							break;
+						case "{":
+						case "}":
+							ReportError(_code.TokenSpan, "Expected ';' to end extract.");
+							done = true;
+							break;
+					}
+				}
+			}
+
+			if (exDef != null)
+			{
+				_defProv.AddGlobal(exDef);
+			}
+		}
+
 #if REPORT_ERRORS
-		private void ReportError(Span span, string message)
+		private void ReportError(Span rawSpan, string message)
 		{
 			if (!_reportErrors) return;
-			if (span.Length > 0)
+			var primarySpan = _source.GetPrimaryFileSpan(rawSpan);
+			if (primarySpan.Length > 0)
 			{
-				_errors.Add(new ErrorTagging.ErrorInfo(message, span));
+				_errors.Add(new ErrorTagging.ErrorInfo(message, primarySpan));
 			}
 		}
 

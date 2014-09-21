@@ -1,0 +1,47 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace DkTools.CodeModel.Definitions
+{
+	internal class ExtractFieldDefinition : Definition
+	{
+		private ExtractTableDefinition _ex;
+
+		public ExtractFieldDefinition(string name, string sourceFileName, int sourceStartPos)
+			: base(name, sourceFileName, sourceStartPos)
+		{ }
+
+		public override bool CompletionVisible
+		{
+			get { return true; }
+		}
+
+		public override StatementCompletion.CompletionType CompletionType
+		{
+			get { return StatementCompletion.CompletionType.TableField; }
+		}
+
+		public override Classifier.ProbeClassifierType ClassifierType
+		{
+			get { return Classifier.ProbeClassifierType.TableField; }
+		}
+
+		public override string QuickInfoText
+		{
+			get
+			{
+				if (_ex != null) return string.Concat(_ex.Name, ".", Name);
+				else return Name;
+			}
+		}
+
+		public ExtractTableDefinition ExtractDefinition
+		{
+			get { return _ex; }
+			set { _ex = value; }
+		}
+	}
+}

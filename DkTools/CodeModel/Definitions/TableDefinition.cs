@@ -14,7 +14,7 @@ namespace DkTools.CodeModel.Definitions
 		private string _description;
 
 		public TableDefinition(string name, Dict.DictTable table)
-			: base(name, null, -1, true)
+			: base(name, null, -1)
 		{
 			_prompt = table.Prompt;
 			_comment = table.Comment;

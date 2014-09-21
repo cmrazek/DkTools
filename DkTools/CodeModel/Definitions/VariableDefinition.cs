@@ -13,7 +13,7 @@ namespace DkTools.CodeModel.Definitions
 		private bool _arg;
 
 		public VariableDefinition(string name, string fileName, int startPos, DataType dataType, bool arg)
-			: base(name, fileName, startPos, false)
+			: base(name, fileName, startPos)
 		{
 #if DEBUG
 			if (dataType == null) throw new ArgumentNullException("dataType");

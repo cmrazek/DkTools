@@ -11,7 +11,7 @@ namespace DkTools.CodeModel.Definitions
 		private Dict.DictStringDef _stringDef;
 
 		public StringDefDefinition(Dict.DictStringDef stringDef)
-			: base(stringDef.Name, null, -1, true)
+			: base(stringDef.Name, null, -1)
 		{
 			_stringDef = stringDef;
 		}

@@ -21,6 +21,7 @@ namespace DkTools.FunctionFileScanning
 		private CodeModel.FunctionPrivacy _privacy;
 		private CodeModel.Definitions.FunctionDefinition _def;
 		private bool _used = true;
+		private string _devDesc;
 
 		private FFFunction()
 		{ }
@@ -44,6 +45,7 @@ namespace DkTools.FunctionFileScanning
 			if (_dataType == null) throw new InvalidOperationException("Function data type is null.");
 #endif
 			_privacy = def.Privacy;
+			_devDesc = def.DevDescription;
 			_def = def;
 		}
 
@@ -76,11 +78,15 @@ namespace DkTools.FunctionFileScanning
 				_dataType = new CodeModel.DataType(dataTypeText);
 			}
 
+			var devDescValue = rdr["description"];
+			if (!Convert.IsDBNull(devDescValue)) _devDesc = Convert.ToString(devDescValue);
+			else _devDesc = null;
+
 			var str = rdr.GetString(rdr.GetOrdinal("privacy"));
 			if (!Enum.TryParse<CodeModel.FunctionPrivacy>(str, out _privacy)) _privacy = CodeModel.FunctionPrivacy.Public;
 
 			_def = new CodeModel.Definitions.FunctionDefinition(_class != null ? _class.Name : null, _name, _file.FileName, _span.Start, _dataType, _sig,
-					0, 0, CodeModel.Span.Empty, _privacy, true);
+					0, 0, CodeModel.Span.Empty, _privacy, true, _devDesc);
 		}
 
 		public void UpdateFromDefinition(CodeModel.Definitions.FunctionDefinition def)
@@ -94,6 +100,7 @@ namespace DkTools.FunctionFileScanning
 			_dataType = def.DataType;
 			_privacy = def.Privacy;
 			_def = def;
+			_devDesc = def.DevDescription;
 		}
 
 		public string Name
@@ -132,7 +139,7 @@ namespace DkTools.FunctionFileScanning
 
 			if (_id != 0)
 			{
-				using (var cmd = db.CreateCommand("update func set file_id = @file_id, name = @name, sig = @sig, span = @span, data_type = @data_type, completion_options = @completion_options, privacy = @privacy where id = @id"))
+				using (var cmd = db.CreateCommand("update func set file_id = @file_id, name = @name, sig = @sig, span = @span, data_type = @data_type, completion_options = @completion_options, privacy = @privacy, description = @dev_desc where id = @id"))
 				{
 					cmd.Parameters.AddWithValue("@id", _id);
 					cmd.Parameters.AddWithValue("@file_id", _file.Id);
@@ -143,13 +150,15 @@ namespace DkTools.FunctionFileScanning
 					if (completionOptions != null) cmd.Parameters.AddWithValue("@completion_options", completionOptions);
 					else cmd.Parameters.AddWithValue("@completion_options", DBNull.Value);
 					cmd.Parameters.AddWithValue("@privacy", _privacy.ToString());
+					if (string.IsNullOrEmpty(_devDesc)) cmd.Parameters.AddWithValue("@dev_desc", DBNull.Value);
+					else cmd.Parameters.AddWithValue("@dev_desc", _devDesc);
 					cmd.ExecuteNonQuery();
 				}
 			}
 			else
 			{
-				using (var cmd = db.CreateCommand(@"insert into func (class_id, name, app_id, file_id, sig, span, data_type, completion_options, privacy)
-													values (@class_id, @name, @app_id, @file_id, @sig, @span, @data_type, @completion_options, @privacy)"))
+				using (var cmd = db.CreateCommand(@"insert into func (class_id, name, app_id, file_id, sig, span, data_type, completion_options, privacy, description)
+													values (@class_id, @name, @app_id, @file_id, @sig, @span, @data_type, @completion_options, @privacy, @dev_desc)"))
 				{
 					if (_class != null) cmd.Parameters.AddWithValue("@class_id", _class.Id);
 					else cmd.Parameters.AddWithValue("@class_id", DBNull.Value);
@@ -162,6 +171,8 @@ namespace DkTools.FunctionFileScanning
 					if (completionOptions != null) cmd.Parameters.AddWithValue("@completion_options", completionOptions);
 					else cmd.Parameters.AddWithValue("@completion_options", DBNull.Value);
 					cmd.Parameters.AddWithValue("@privacy", _privacy.ToString());
+					if (string.IsNullOrEmpty(_devDesc)) cmd.Parameters.AddWithValue("@dev_desc", DBNull.Value);
+					else cmd.Parameters.AddWithValue("@dev_desc", _devDesc);
 					cmd.ExecuteNonQuery();
 					_id = db.QueryIdentityInt();
 				}

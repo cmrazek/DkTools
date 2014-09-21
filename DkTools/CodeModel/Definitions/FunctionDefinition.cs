@@ -17,6 +17,7 @@ namespace DkTools.CodeModel.Definitions
 		private bool _extern;
 		private string _className;
 		private Span _entireSpan;
+		private string _devDesc;
 
 		/// <summary>
 		/// Creates a function definition object.
@@ -28,8 +29,8 @@ namespace DkTools.CodeModel.Definitions
 		/// <param name="signature">Signature text</param>
 		/// <param name="argsEndPos">Ending position of the argument brackets</param>
 		/// <param name="bodyStartPos">Position of the function's body braces (if does not match, then will be ignored)</param>
-		public FunctionDefinition(string className, string funcName, string fileName, int nameStartPos, DataType dataType, string signature, int argsEndPos, int bodyStartPos, Span entireSpan, FunctionPrivacy privacy, bool isExtern)
-			: base(funcName, fileName, nameStartPos, true)
+		public FunctionDefinition(string className, string funcName, string fileName, int nameStartPos, DataType dataType, string signature, int argsEndPos, int bodyStartPos, Span entireSpan, FunctionPrivacy privacy, bool isExtern, string devDesc)
+			: base(funcName, fileName, nameStartPos)
 		{
 #if DEBUG
 			if (string.IsNullOrWhiteSpace(signature)) throw new ArgumentNullException("signature");
@@ -42,11 +43,12 @@ namespace DkTools.CodeModel.Definitions
 			_extern = isExtern;
 			_className = className;
 			_entireSpan = entireSpan;
+			_devDesc = devDesc;
 		}
 
 		public FunctionDefinition CloneAsExtern()
 		{
-			return new FunctionDefinition(_className, Name, SourceFileName, SourceStartPos, _dataType, _signature, _argsEndPos, _bodyStartPos, _entireSpan, _privacy, true);
+			return new FunctionDefinition(_className, Name, SourceFileName, SourceStartPos, _dataType, _signature, _argsEndPos, _bodyStartPos, _entireSpan, _privacy, true, _devDesc);
 		}
 
 		public DataType DataType
@@ -76,7 +78,11 @@ namespace DkTools.CodeModel.Definitions
 
 		public override string QuickInfoText
 		{
-			get { return _signature; }
+			get
+			{
+				if (string.IsNullOrEmpty(_devDesc)) return _signature;
+				return string.Concat(_signature, "\r\n\r\n", _devDesc);
+			}
 		}
 
 		public int BodyStartPosition
@@ -124,6 +130,11 @@ namespace DkTools.CodeModel.Definitions
 		public Span EntireSpan
 		{
 			get { return _entireSpan; }
+		}
+
+		public string DevDescription
+		{
+			get { return _devDesc; }
 		}
 	}
 }

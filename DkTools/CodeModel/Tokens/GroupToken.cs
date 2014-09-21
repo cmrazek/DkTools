@@ -44,6 +44,11 @@ namespace DkTools.CodeModel.Tokens
 			return child;
 		}
 
+		public bool RemoveToken(Token child)
+		{
+			return _tokens.Remove(child);
+		}
+
 		protected virtual void OnChildTokenAdded(Token child)
 		{
 		}
@@ -71,7 +76,7 @@ namespace DkTools.CodeModel.Tokens
 		{
 			while (true)
 			{
-				var token = scope.File.TryParseComplexToken(this, scope);
+				var token = scope.File.ParseComplexToken(this, scope);
 				if (token == null) return;
 
 				switch (parseCallback(token))

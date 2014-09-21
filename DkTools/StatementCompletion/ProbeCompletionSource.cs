@@ -119,6 +119,7 @@ namespace DkTools.StatementCompletion
 		private Regex _rxReturn = new Regex(@"\breturn\s$");
 		private Regex _rxCase = new Regex(@"\bcase\s$");
 		private Regex _rxAfterIfDef = new Regex(@"\#ifn?def\s$");
+		private Regex _rxExtract = new Regex(@"\bextract\s(permanent\s)?$");
 
 		void ICompletionSource.AugmentCompletionSession(ICompletionSession session, IList<CompletionSet> completionSets)
 		{
@@ -137,6 +138,7 @@ namespace DkTools.StatementCompletion
 			{
 				// Typing a table.field.
 
+				// Table and field
 				var tableName = match.Groups[1].Value;
 				var table = ProbeEnvironment.GetTable(match.Groups[1].Value);
 				if (table != null)
@@ -145,6 +147,17 @@ namespace DkTools.StatementCompletion
 					foreach (var def in table.FieldDefinitions) completionList[def.Name] = CreateCompletion(def);
 				}
 
+				// Extract and field
+				var store = CodeModel.FileStore.GetOrCreateForTextBuffer(_textBuffer);
+				var model = store.GetMostRecentModel(snapshot, "Extract table.field completion.");
+				var exDef = model.DefinitionProvider.GetGlobal<ExtractTableDefinition>(tableName).FirstOrDefault();
+				if (exDef != null)
+				{
+					completionSpan = new Microsoft.VisualStudio.Text.Span(linePos + match.Groups[2].Index, match.Groups[2].Length);
+					foreach (var def in exDef.Fields) completionList[def.Name] = CreateCompletion(def);
+				}
+
+				// Class and method
 				var ffScanner = ProbeToolsPackage.Instance.FunctionFileScanner;
 				var cls = ffScanner.GetClass(tableName);
 				if (cls != null)
@@ -164,7 +177,8 @@ namespace DkTools.StatementCompletion
 			}
 			else if ((match = _rxAfterAssignOrCompare.Match(prefix)).Success)
 			{
-				var model = CodeModel.FileStore.GetOrCreateForTextBuffer(_textBuffer).GetCurrentModel(snapshot, "Auto-completion after assign or compare");
+				var store = CodeModel.FileStore.GetOrCreateForTextBuffer(_textBuffer);
+				var model = store.GetCurrentModel(snapshot, "Auto-completion after assign or compare");
 				var modelPos = model.AdjustPosition(curPos, snapshot);
 				var parentToken = (from t in model.FindTokens(modelPos)
 								   where t is GroupToken && t.Span.Start < curPos
@@ -247,7 +261,8 @@ namespace DkTools.StatementCompletion
 			}
 			else if ((match = _rxCase.Match(prefix)).Success)
 			{
-				var model = CodeModel.FileStore.GetOrCreateForTextBuffer(_textBuffer).GetCurrentModel(_textBuffer.CurrentSnapshot, "Auto-completion after case");
+				var store = CodeModel.FileStore.GetOrCreateForTextBuffer(_textBuffer);
+				var model = store.GetMostRecentModel(_textBuffer.CurrentSnapshot, "Auto-completion after case");
 				var modelPos = model.AdjustPosition(curPos, snapshot);
 
 				var switchToken = (from t in model.FindTokens(modelPos) where t is SwitchToken select t as SwitchToken).LastOrDefault();
@@ -258,6 +273,21 @@ namespace DkTools.StatementCompletion
 					{
 						foreach (var opt in dt.CompletionOptions) completionList[opt.Name] = CreateCompletion(opt);
 					}
+				}
+			}
+			else if ((match = _rxExtract.Match(prefix)).Success)
+			{
+				if (string.IsNullOrEmpty(match.Groups[1].Value))
+				{
+					completionList["permanent"] = CreateCompletion("permanent", "permanent extract", CompletionType.Keyword);
+				}
+
+				var store = CodeModel.FileStore.GetOrCreateForTextBuffer(_textBuffer);
+				var model = store.GetMostRecentModel(_textBuffer.CurrentSnapshot, "Auto-completion after 'extract'");
+
+				foreach (var exDef in model.DefinitionProvider.GetGlobal<ExtractTableDefinition>())
+				{
+					completionList[exDef.Name] = CreateCompletion(exDef);
 				}
 			}
 

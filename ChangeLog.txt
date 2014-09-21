@@ -4,6 +4,8 @@ Version 1.2.6 - pending:
 
 Features:
 - Added syntax highlighting for variables.
+- Add support for temporary extracts.
+- Function descriptions are now displayed in the quick-info text.
 
 Bug Fixes:
 - Improved performance of code modeling.

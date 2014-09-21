@@ -317,14 +317,6 @@ namespace DkTools.FunctionFileScanning
 			}
 		}
 
-		private string FunctionFileDatabaseFileName
-		{
-			get
-			{
-				return Path.Combine(ProbeToolsPackage.AppDataDir, Constants.FunctionFileDatabaseFileName_XML);
-			}
-		}
-
 		public void EnqueueFile(string fullPath)
 		{
 			lock (_filesToProcess)
