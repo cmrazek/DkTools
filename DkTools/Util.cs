@@ -26,6 +26,13 @@ namespace DkTools
 			return ret;
 		}
 
+		public static HashSet<char> ParseCharList(string str)
+		{
+			var ret = new HashSet<char>();
+			foreach (var ch in str) ret.Add(ch);
+			return ret;
+		}
+
 		/// <summary>
 		/// Tests if a string only consists of word characters (a-z 0-9 _)
 		/// </summary>

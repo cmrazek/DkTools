@@ -40,11 +40,11 @@ namespace DkTools.CodeModel
 				str = rdr.PeekToken(false);
 				if (string.IsNullOrEmpty(str)) continue;
 
-				if (string.IsNullOrWhiteSpace(str) && str.Contains('\n') && p.writer.IsEmptyLine)
-				{
-					rdr.Ignore(str.Length);
-					continue;
-				}
+				//if (string.IsNullOrWhiteSpace(str) && str.Contains('\n') && p.writer.IsEmptyLine)
+				//{
+				//	rdr.Ignore(str.Length);
+				//	continue;
+				//}
 
 				if (str[0] == '#')
 				{
@@ -229,12 +229,14 @@ namespace DkTools.CodeModel
 							// define continues down to the next line, but don't include the slash in the resulting text.
 							sb.Remove(index, 1);
 							if (insideBlock) sb.Append("\r\n");
-							rdr.IgnoreUntil(c => c == '\r' || c == '\n');
+							//rdr.IgnoreUntil(c => c == '\r' || c == '\n');
+							rdr.IgnoreWhile(PreprocessorReaderExtensions.LineEndChars);
 							continue;
 						}
 						else if (insideBlock)
 						{
-							rdr.IgnoreUntil(c => c == '\r' || c == '\n');
+							//rdr.IgnoreUntil(c => c == '\r' || c == '\n');
+							rdr.IgnoreWhile(PreprocessorReaderExtensions.LineEndChars);
 							sb.Append("\r\n");
 							continue;
 						}
@@ -244,7 +246,8 @@ namespace DkTools.CodeModel
 					{
 						if (insideBlock)
 						{
-							rdr.IgnoreUntil(c => c == '\r' || c == '\n');
+							//rdr.IgnoreUntil(c => c == '\r' || c == '\n');
+							rdr.IgnoreWhile(PreprocessorReaderExtensions.LineEndChars);
 							sb.Append("\r\n");
 							continue;
 						}

@@ -9,17 +9,17 @@ namespace DkTools.CodeModel
 	internal class StringPreprocessorWriter : IPreprocessorWriter
 	{
 		private StringBuilder _sb = new StringBuilder();
-		private bool _isEmptyLine = true;
+		//private bool _isEmptyLine = true;
 
 		public void Append(string text, CodeAttributes attribs)
 		{
 			_sb.Append(text);
 
-			foreach (var ch in text)
-			{
-				if (ch == '\n') _isEmptyLine = true;
-				else if (!char.IsWhiteSpace(ch)) _isEmptyLine = false;
-			}
+			//foreach (var ch in text)
+			//{
+			//	if (ch == '\n') _isEmptyLine = true;
+			//	else if (!char.IsWhiteSpace(ch)) _isEmptyLine = false;
+			//}
 		}
 
 		public void Append(CodeSource source)
@@ -36,9 +36,9 @@ namespace DkTools.CodeModel
 		{
 		}
 
-		public bool IsEmptyLine
-		{
-			get { return _isEmptyLine; }
-		}
+		//public bool IsEmptyLine
+		//{
+		//	get { return _isEmptyLine; }
+		//}
 	}
 }

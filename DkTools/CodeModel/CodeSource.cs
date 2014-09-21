@@ -16,7 +16,7 @@ namespace DkTools.CodeModel
 		private VsText.ITextSnapshot _snapshot;
 		private int _lastFindSegment = -1;
 		private int _length;
-		private bool _isEmptyLine = true;
+		//private bool _isEmptyLine = true;
 
 		private class CodeSegment
 		{
@@ -94,11 +94,11 @@ namespace DkTools.CodeModel
 
 			_text = null;
 
-			foreach (var ch in text)
-			{
-				if (ch == '\n') _isEmptyLine = true;
-				else if (!char.IsWhiteSpace(ch)) _isEmptyLine = false;
-			}
+			//foreach (var ch in text)
+			//{
+			//	if (ch == '\n') _isEmptyLine = true;
+			//	else if (!char.IsWhiteSpace(ch)) _isEmptyLine = false;
+			//}
 		}
 
 		public void Append(string text, CodeAttributes att)
@@ -335,10 +335,10 @@ namespace DkTools.CodeModel
 			set { _snapshot = value; }
 		}
 
-		public bool IsEmptyLine
-		{
-			get { return _isEmptyLine; }
-		}
+		//public bool IsEmptyLine
+		//{
+		//	get { return _isEmptyLine; }
+		//}
 
 		public IEnumerable<Span> GenerateDisabledSections()
 		{
@@ -374,6 +374,7 @@ namespace DkTools.CodeModel
 			private int _segIndex;
 			private CodeSegment _seg;
 			private int _segOffset;
+			private int _segLength;
 			private int _pos;
 			private StringBuilder _sb = new StringBuilder();
 			private IPreprocessorWriter _writer;
@@ -393,11 +394,13 @@ namespace DkTools.CodeModel
 				{
 					_seg = _src._segments[_segIndex];
 					_pos = _seg.startPos;
+					_segLength = _seg.length;
 				}
 				else
 				{
 					_seg = null;
 					_pos = 0;
+					_segLength = 0;
 				}
 			}
 
@@ -407,6 +410,7 @@ namespace DkTools.CodeModel
 				public CodeSegment seg;
 				public int segOffset;
 				public int pos;
+				public int segLength;
 
 				public State Clone()
 				{
@@ -427,7 +431,8 @@ namespace DkTools.CodeModel
 					segIndex = _segIndex,
 					seg = _seg,
 					segOffset = _segOffset,
-					pos = _pos
+					pos = _pos,
+					segLength = _segLength
 				});
 			}
 
@@ -438,6 +443,7 @@ namespace DkTools.CodeModel
 				_seg = state.seg;
 				_segOffset = state.segOffset;
 				_pos = state.pos;
+				_segLength = state.segLength;
 			}
 
 			public void SetWriter(IPreprocessorWriter writer)
@@ -455,13 +461,13 @@ namespace DkTools.CodeModel
 
 			public char Peek()
 			{
-				if (_seg == null || _segOffset >= _seg.length) return '\0';
+				if (_seg == null || _segOffset >= _segLength) return '\0';
 				return _seg.text[_segOffset];
 			}
 
 			public string Peek(int numChars)
 			{
-				if (_segOffset + numChars <= _seg.length)
+				if (_segOffset + numChars <= _segLength)
 				{
 					return _seg.text.Substring(_segOffset, numChars);
 				}
@@ -507,9 +513,9 @@ namespace DkTools.CodeModel
 			{
 				while (numChars > 0 && _seg != null)
 				{
-					if (_segOffset + numChars >= _seg.length)
+					if (_segOffset + numChars >= _segLength)
 					{
-						var length = _seg.length - _segOffset;
+						var length = _segLength - _segOffset;
 						_writer.Append(_seg.text.Substring(_segOffset, length), new CodeAttributes(_seg.fileName, _pos, _seg.endPos, _seg.actualContent, _seg.primaryFile, _suppress));
 						MoveNextSegment();
 						numChars -= length;
@@ -539,7 +545,7 @@ namespace DkTools.CodeModel
 					ch = Peek();
 					if (callback(ch))
 					{
-						if (_segOffset + 1 == _seg.length)
+						if (_segOffset + 1 == _segLength)
 						{
 							// Hits the end of the segment
 							_sb.Append(ch);
@@ -571,9 +577,9 @@ namespace DkTools.CodeModel
 			{
 				while (numChars > 0 && _seg != null)
 				{
-					if (_segOffset + numChars >= _seg.length)
+					if (_segOffset + numChars >= _segLength)
 					{
-						var length = _seg.length - _segOffset;
+						var length = _segLength - _segOffset;
 						_writer.Append(string.Empty, new CodeAttributes(_seg.fileName, _pos, _seg.endPos, false, _seg.primaryFile, _suppress));
 						MoveNextSegment();
 						numChars -= length;
@@ -590,7 +596,44 @@ namespace DkTools.CodeModel
 				}
 			}
 
-			public void IgnoreUntil(Func<char, bool> callback)
+			//public void IgnoreUntil(Func<char, bool> callback)
+			//{
+			//	char ch;
+			//	var startPos = _pos;
+			//	var gotContent = false;
+
+			//	_sb.Clear();
+
+			//	while (_seg != null)
+			//	{
+			//		ch = Peek();
+			//		if (callback(ch))
+			//		{
+			//			if (_segOffset + 1 == _segLength)
+			//			{
+			//				// Hits the end of the segment
+			//				_writer.Append(string.Empty, new CodeAttributes(_seg.fileName, startPos, _seg.endPos, false, _seg.primaryFile, _suppress));
+			//				MoveNextSegment();
+			//				startPos = _pos;
+			//				gotContent = false;
+			//			}
+			//			else
+			//			{
+			//				// Within the current segment
+			//				MoveNext();
+			//				gotContent = true;
+			//			}
+			//		}
+			//		else break;
+			//	}
+
+			//	if (gotContent)
+			//	{
+			//		_writer.Append(string.Empty, new CodeAttributes(_seg.fileName, startPos, _pos, false, _seg.primaryFile, _suppress));
+			//	}
+			//}
+
+			public void IgnoreUntil(IEnumerable<char> breakChars)
 			{
 				char ch;
 				var startPos = _pos;
@@ -601,9 +644,46 @@ namespace DkTools.CodeModel
 				while (_seg != null)
 				{
 					ch = Peek();
-					if (callback(ch))
+					if (!breakChars.Contains(ch))
 					{
-						if (_segOffset + 1 == _seg.length)
+						if (_segOffset + 1 == _segLength)
+						{
+							// Hits the end of the segment
+							_writer.Append(string.Empty, new CodeAttributes(_seg.fileName, startPos, _seg.endPos, false, _seg.primaryFile, _suppress));
+							MoveNextSegment();
+							startPos = _pos;
+							gotContent = false;
+						}
+						else
+						{
+							// Within the current segment
+							MoveNext();
+							gotContent = true;
+						}
+					}
+					else break;
+				}
+
+				if (gotContent)
+				{
+					_writer.Append(string.Empty, new CodeAttributes(_seg.fileName, startPos, _pos, false, _seg.primaryFile, _suppress));
+				}
+			}
+
+			public void IgnoreWhile(IEnumerable<char> whileChars)
+			{
+				char ch;
+				var startPos = _pos;
+				var gotContent = false;
+
+				_sb.Clear();
+
+				while (_seg != null)
+				{
+					ch = Peek();
+					if (whileChars.Contains(ch))
+					{
+						if (_segOffset + 1 == _segLength)
 						{
 							// Hits the end of the segment
 							_writer.Append(string.Empty, new CodeAttributes(_seg.fileName, startPos, _seg.endPos, false, _seg.primaryFile, _suppress));
@@ -651,12 +731,12 @@ namespace DkTools.CodeModel
 			{
 				if (_seg == null) return false;
 
-				var ch = _seg.text[_segOffset];
+				//var ch = _seg.text[_segOffset];
 
 				if (_seg.actualContent) _pos++;
 				_segOffset++;
 
-				if (_segOffset >= _seg.length) return MoveNextSegment();
+				if (_segOffset >= _segLength) return MoveNextSegment();
 				return true;
 			}
 
@@ -666,12 +746,15 @@ namespace DkTools.CodeModel
 				if (_segIndex >= _src._segments.Count)
 				{
 					_seg = null;
+					_segLength = 0;
+					_segOffset = 0;
 					return false;
 				}
 
 				_seg = _src._segments[_segIndex];
 				_segOffset = 0;
 				_pos = _seg.startPos;
+				_segLength = _seg.length;
 				return true;
 			}
 

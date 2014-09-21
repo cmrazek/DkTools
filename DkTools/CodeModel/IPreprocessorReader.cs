@@ -18,10 +18,12 @@ namespace DkTools.CodeModel
 		Match Match(Regex rx);
 
 		void Use(int numChars);
-		void UseUntil(Func<char, bool> callback);
+		//void UseUntil(Func<char, bool> callback);
 
 		void Ignore(int numChars);
-		void IgnoreUntil(Func<char, bool> callback);
+		//void IgnoreUntil(Func<char, bool> callback);
+		void IgnoreUntil(IEnumerable<char> breakChars);
+		void IgnoreWhile(IEnumerable<char> whileChars);
 
 		string FileName { get; }
 		int Position { get; }
@@ -33,6 +35,11 @@ namespace DkTools.CodeModel
 
 	internal static class PreprocessorReaderExtensions
 	{
+		public static readonly HashSet<char> LineEndChars = Util.ParseCharList("\r\n");
+		public static readonly HashSet<char> WhiteChars = Util.ParseCharList(" \t\r\n");
+
+		private static readonly HashSet<char> _multiLineCommentBreakChars = Util.ParseCharList("/*\r\n");
+
 		public static string PeekIdentifier(this IPreprocessorReader rdr)
 		{
 			var first = true;
@@ -154,7 +161,8 @@ namespace DkTools.CodeModel
 				if (str == "/*")
 				{
 					rdr.Ignore(2);
-					rdr.IgnoreUntil(c => c != '/' && c != '*' && c != '\r' && c != '\n');
+					//rdr.IgnoreUntil(c => c != '/' && c != '*' && c != '\r' && c != '\n');
+					rdr.IgnoreUntil(_multiLineCommentBreakChars);
 
 					char ch;
 					while (!rdr.EOF)
@@ -183,13 +191,15 @@ namespace DkTools.CodeModel
 							lineChangeFound = true;
 							rdr.Ignore(1);
 						}
-						rdr.IgnoreUntil(c => c != '/' && c != '*' && c != '\r' && c != '\n');
+						//rdr.IgnoreUntil(c => c != '/' && c != '*' && c != '\r' && c != '\n');
+						rdr.IgnoreUntil(_multiLineCommentBreakChars);
 					}
 					return true;
 				}
 				else if (str == "//" && multiLineOnly == false)
 				{
-					rdr.IgnoreUntil(c => c != '\r' && c != '\n');
+					//rdr.IgnoreUntil(c => c != '\r' && c != '\n');
+					rdr.IgnoreUntil(LineEndChars);
 					return true;
 				}
 			}
@@ -209,7 +219,8 @@ namespace DkTools.CodeModel
 
 				if (char.IsWhiteSpace(ch))
 				{
-					rdr.IgnoreUntil(c => char.IsWhiteSpace(c));
+					//rdr.IgnoreUntil(c => char.IsWhiteSpace(c));
+					rdr.IgnoreWhile(WhiteChars);
 					continue;
 				}
 

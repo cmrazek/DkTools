@@ -335,28 +335,7 @@ namespace DkTools.CodeModel
 				//}
 			}
 
-			// Read the contents of the function until '}'
-			while (!_code.EndOfFile)
-			{
-				if (_code.ReadExact('}')) break;
-				if (TryReadNestable()) continue;
-
-				//if (funcScope != null)
-				//{
-				//	if (_code.ReadWord())
-				//	{
-				//		var def = funcScope.GetDefinition(_code.TokenText);
-				//		if (def != null)
-				//		{
-				//			var localPos = _source.GetFilePosition(_code.TokenStartPostion);
-				//			if (localPos.PrimaryFile) _defProv.AddSourceDefinition(localPos.Position, def);
-				//		}
-				//	}
-				//}
-
-				// Other tokens mean nothing to the preprocessor.
-				_code.Read();
-			}
+			ReadFunctionBody();
 			var bodyEndPos = _code.Position;
 
 			var bodyStartLocalPos = _source.GetPrimaryFilePosition(bodyStartPos);
@@ -381,6 +360,41 @@ namespace DkTools.CodeModel
 			{
 				var varEffect = new Span(bodyStartLocalPos, _source.GetPrimaryFilePosition(bodyEndPos));
 				_defProv.AddLocal(varEffect, varList);
+			}
+		}
+
+		private void ReadFunctionBody()
+		{
+			// Read the contents of the function until '}'
+			while (!_code.EndOfFile)
+			{
+				if (_code.ReadExact('}')) break;
+
+				//if (_code.ReadWord())
+				//{
+				//	switch (_code.TokenText)
+				//	{
+				//		case "-1";
+				//	}
+				//}
+
+				if (TryReadNestable()) continue;
+
+				//if (funcScope != null)
+				//{
+				//	if (_code.ReadWord())
+				//	{
+				//		var def = funcScope.GetDefinition(_code.TokenText);
+				//		if (def != null)
+				//		{
+				//			var localPos = _source.GetFilePosition(_code.TokenStartPostion);
+				//			if (localPos.PrimaryFile) _defProv.AddSourceDefinition(localPos.Position, def);
+				//		}
+				//	}
+				//}
+
+				// Other tokens mean nothing to the preprocessor.
+				_code.Read();
 			}
 		}
 

@@ -291,15 +291,27 @@ namespace DkTools.CodeModel
 			prep.Preprocess(reader, prepSource, fileName, new string[0], serverContext);
 			prep.AddDefinitionsToProvider(defProvider);
 
+#if DEBUG
+			var midTime1 = DateTime.Now;
+#endif
+
 			var prepModel = new PreprocessorModel(prepSource, defProvider, fileName, visible);
+
+#if DEBUG
+			var midTime2 = DateTime.Now;
+#endif
 
 			var visibleModel = CodeModel.CreateVisibleModelForPreprocessed(visibleSource, this, prepModel);
 			visibleModel.PreprocessorModel = prepModel;
 			visibleModel.DisabledSections = prepSource.GenerateDisabledSections().ToArray();
 
 #if DEBUG
-			var elapsed = DateTime.Now.Subtract(startTime).TotalMilliseconds;
-			Log.WriteDebug("Created model in {0} msecs.", elapsed);
+			var endTime = DateTime.Now;
+			var elapsedTime = endTime.Subtract(startTime).TotalMilliseconds;
+			var prepTime = midTime1.Subtract(startTime).TotalMilliseconds;
+			var modelTime = midTime2.Subtract(midTime1).TotalMilliseconds;
+			var visTime = endTime.Subtract(midTime2).TotalMilliseconds;
+			Log.WriteDebug("Created model in {0} msecs ({1} preprocessor, {2} model, {3} visible)", elapsedTime, prepTime, modelTime, visTime);
 #endif
 
 			return visibleModel;

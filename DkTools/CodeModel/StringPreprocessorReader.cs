@@ -98,15 +98,25 @@ namespace DkTools.CodeModel
 			if (_pos > _len) _pos = _len;
 		}
 
-		public void IgnoreUntil(Func<char, bool> callback)
-		{
-			char ch;
+		//public void IgnoreUntil(Func<char, bool> callback)
+		//{
+		//	char ch;
 
-			while (_pos < _len)
-			{
-				if (callback(ch = _str[_pos])) _pos++;
-				else break;
-			}
+		//	while (_pos < _len)
+		//	{
+		//		if (callback(ch = _str[_pos])) _pos++;
+		//		else break;
+		//	}
+		//}
+
+		public void IgnoreUntil(IEnumerable<char> breakChars)
+		{
+			while (_pos < _len && !breakChars.Contains(_str[_pos])) _pos++;
+		}
+
+		public void IgnoreWhile(IEnumerable<char> whileChars)
+		{
+			while (_pos < _len && whileChars.Contains(_str[_pos])) _pos++;
 		}
 
 		public void Insert(string text)
