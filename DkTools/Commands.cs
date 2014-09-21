@@ -40,7 +40,8 @@ namespace DkTools
 		ShowHelp = 0x011e,
 		ShowDrv = 0x011f,
 		DisableDeadCode = 0x0120,
-		ShowProbeNV = 0x0123
+		ShowProbeNV = 0x0123,
+		ShowErrors = 0x0124
 	}
 
 	internal static class Commands
@@ -71,6 +72,7 @@ namespace DkTools
 			AddCommand(mcs, CommandId.ShowDrv, ShowDrv);
 			AddCommand(mcs, CommandId.DisableDeadCode, DisableDeadCode, checkedCallback: DisableDeadCode_Checked);
 			AddCommand(mcs, CommandId.ShowProbeNV, ShowProbeNV);
+			AddCommand(mcs, CommandId.ShowErrors, ShowErrors, checkedCallback: ShowErrors_Checked);
 		}
 
 		private class CommandInstance
@@ -615,6 +617,25 @@ namespace DkTools
 		private static bool DisableDeadCode_Checked(CommandId id)
 		{
 			return ProbeToolsPackage.Instance.EditorOptions.DisableDeadCode;
+		}
+
+		private static void ShowErrors(object sender, EventArgs e)
+		{
+			try
+			{
+				var options = ProbeToolsPackage.Instance.EditorOptions;
+				options.ShowErrors = !options.ShowErrors;
+				options.SaveSettingsToStorage();
+			}
+			catch (Exception ex)
+			{
+				Shell.ShowError(ex);
+			}
+		}
+
+		private static bool ShowErrors_Checked(CommandId id)
+		{
+			return ProbeToolsPackage.Instance.EditorOptions.ShowErrors;
 		}
 
 #if DEBUG

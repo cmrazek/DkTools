@@ -261,6 +261,8 @@ namespace DkTools.CodeModel
 						var sb = new StringBuilder();
 						sb.Append("int");
 
+						if (code.ReadExact("unsigned")) sb.Append(" unsigned");
+
 						if (code.ReadNumber())
 						{
 							// width

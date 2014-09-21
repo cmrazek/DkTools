@@ -31,12 +31,10 @@ namespace DkTools.QuickInfo
 
 		void IQuickInfoSource.AugmentQuickInfoSession(IQuickInfoSession session, IList<object> quickInfoContent, out ITrackingSpan applicableToSpan)
 		{
+			applicableToSpan = null;
+
 			var subjectTriggerPoint = session.GetTriggerPoint(_subjectBuffer.CurrentSnapshot);
-			if (!subjectTriggerPoint.HasValue)
-			{
-				applicableToSpan = null;
-				return;
-			}
+			if (!subjectTriggerPoint.HasValue) return;
 			var snapshotPoint = subjectTriggerPoint.Value;
 			var currentSnapshot = snapshotPoint.Snapshot;
 
@@ -44,17 +42,27 @@ namespace DkTools.QuickInfo
 			if (model != null && model.Snapshot != null)
 			{
 				var modelPos = model.AdjustPosition(snapshotPoint.Position, snapshotPoint.Snapshot);
+
 				var tokens = model.FindTokens(modelPos).ToArray();
 				var info = GetQuickInfoForTokens(tokens);
 				if (info.HasValue)
 				{
 					quickInfoContent.Add(info.Value.infoText);
+					var tokenSpan = info.Value.token.Span;
+					var snapSpan = new SnapshotSpan(model.Snapshot, tokenSpan.Start, tokenSpan.Length);
 					applicableToSpan = model.Snapshot.CreateTrackingSpan(info.Value.token.Span.ToVsTextSpan(), SpanTrackingMode.EdgeInclusive);
-					return;
+				}
+
+				foreach (var error in model.PreprocessorModel.GetErrorsForPos(modelPos))
+				{
+					quickInfoContent.Add(error.Message);
+					if (applicableToSpan == null)
+					{
+						var snapSpan = new SnapshotSpan(model.Snapshot, error.Span.Start, error.Span.Length);
+						applicableToSpan = model.Snapshot.CreateTrackingSpan(snapSpan, SpanTrackingMode.EdgeInclusive);
+					}
 				}
 			}
-
-			applicableToSpan = null;
 		}
 
 		private bool _disposed;

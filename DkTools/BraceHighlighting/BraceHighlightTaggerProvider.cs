@@ -21,10 +21,10 @@ namespace DkTools.BraceHighlighting
     internal class BraceHighlightTaggerProvider : IViewTaggerProvider
     {
         [Import]
-        internal ITextSearchService TextSearchService { get; set; }
+        internal ITextSearchService TextSearchService { get; set; }		// TODO: remove
 
         [Import]
-        internal ITextStructureNavigatorSelectorService TextStructureNavigatorSelector { get; set; }
+        internal ITextStructureNavigatorSelectorService TextStructureNavigatorSelector { get; set; }	// TODO: remove
 
         //[Import(typeof(IVsEditorAdaptersFactoryService))]
         //internal IVsEditorAdaptersFactoryService editorFactory { get; set; }

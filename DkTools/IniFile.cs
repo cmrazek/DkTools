@@ -54,7 +54,7 @@ namespace DkTools
 						if (!_sections.TryGetValue(sectionName.ToLower(), out curSection))
 						{
 							curSection = new IniSection();
-							_sections.Add(sectionName.ToLower(), curSection);
+							_sections[sectionName.ToLower()] = curSection;
 							_sectionNames.Add(sectionName);
 						}
 					}

@@ -343,6 +343,11 @@
     <Compile Include="EditorOptions.cs">
       <SubType>Component</SubType>
     </Compile>
+    <Compile Include="ErrorTagging\ErrorClassificationFormatDefinition.cs" />
+    <Compile Include="ErrorTagging\ErrorInfo.cs" />
+    <Compile Include="ErrorTagging\ErrorTag.cs" />
+    <Compile Include="ErrorTagging\ErrorTagger.cs" />
+    <Compile Include="ErrorTagging\ErrorTaggerProvider.cs" />
     <Compile Include="FileMergeException.cs" />
     <Compile Include="CodeModel\FileMerger.cs" />
     <Compile Include="FileUtil.cs" />

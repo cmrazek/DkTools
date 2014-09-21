@@ -20,6 +20,8 @@ namespace DkTools.CodeModel
 
 		private static CodeModel _stdLibModel;
 
+		public event EventHandler<ModelUpdatedEventArgs> ModelUpdated;
+
 		public FileStore()
 		{
 			_guid = Guid.NewGuid();
@@ -215,11 +217,17 @@ namespace DkTools.CodeModel
 				if (snapshot != null && _model.Snapshot.Version.VersionNumber < snapshot.Version.VersionNumber)
 				{
 					_model = CreatePreprocessedModel(snapshot, reason);
+
+					var ev = ModelUpdated;
+					if (ev != null) ev(this, new ModelUpdatedEventArgs(_model));
 				}
 			}
 			else
 			{
 				_model = CreatePreprocessedModel(snapshot, reason);
+
+				var ev = ModelUpdated;
+				if (ev != null) ev(this, new ModelUpdatedEventArgs(_model));
 			}
 
 			return _model;
@@ -233,20 +241,36 @@ namespace DkTools.CodeModel
 			if (_model == null)
 			{
 				_model = CreatePreprocessedModel(snapshot, reason);
-				_model.Snapshot = snapshot;
+
+				var ev = ModelUpdated;
+				if (ev != null) ev(this, new ModelUpdatedEventArgs(_model));
 			}
+
+			return _model;
+		}
+
+		public CodeModel RegenerateModel(VsText.ITextSnapshot snapshot, string reason)
+		{
+#if DEBUG
+			if (snapshot == null) throw new ArgumentNullException("snapshot");
+#endif
+
+			_model = CreatePreprocessedModel(snapshot, reason);
+
+			var ev = ModelUpdated;
+			if (ev != null) ev(this, new ModelUpdatedEventArgs(_model));
 
 			return _model;
 		}
 
 		public CodeModel CreatePreprocessedModel(VsText.ITextSnapshot snapshot, string reason)
 		{
-			var model = CreatePreprocessedModel(snapshot.GetText(), snapshot.TextBuffer.TryGetFileName(), reason);
+			var model = CreatePreprocessedModel(snapshot.GetText(), snapshot.TextBuffer.TryGetFileName(), true, reason);
 			model.Snapshot = snapshot;
 			return model;
 		}
 
-		public CodeModel CreatePreprocessedModel(string content, string fileName, string reason)
+		public CodeModel CreatePreprocessedModel(string content, string fileName, bool visible, string reason)
 		{
 #if DEBUG
 			Log.WriteDebug("Creating preprocessed model. Reason: {0}", reason);
@@ -267,7 +291,7 @@ namespace DkTools.CodeModel
 			prep.Preprocess(reader, prepSource, fileName, new string[0], serverContext);
 			prep.AddDefinitionsToProvider(defProvider);
 
-			var prepModel = new PreprocessorModel(prepSource, defProvider, fileName);
+			var prepModel = new PreprocessorModel(prepSource, defProvider, fileName, visible);
 
 			var visibleModel = CodeModel.CreateVisibleModelForPreprocessed(visibleSource, this, prepModel);
 			visibleModel.PreprocessorModel = prepModel;
@@ -293,9 +317,9 @@ namespace DkTools.CodeModel
 			var prepModel = model.PreprocessorModel;
 			if (prepModel == null) yield break;
 
-			foreach (Tokens.FunctionPlaceholderToken func in model.File.FindDownward(x => x is Tokens.FunctionPlaceholderToken))
+			foreach (var def in model.PreprocessorModel.LocalFunctions)
 			{
-				yield return new FunctionDropDownItem { Name = func.Text, Span = func.Span, EntireFunctionSpan = func.EntireFunctionSpan };
+				yield return new FunctionDropDownItem { Name = def.Name, Span = new Span(def.SourceStartPos, def.SourceStartPos), EntireFunctionSpan = def.EntireSpan };
 			}
 		}
 
@@ -344,11 +368,11 @@ namespace DkTools.CodeModel
 			var includeFile = tempStore.GetIncludeFile(null, "stdlib.i", false, new string[0]);
 			if (includeFile != null)
 			{
-				_stdLibModel = tempStore.CreatePreprocessedModel(includeFile.Source.Text, includeFile.FullPathName, "stdlib.i model");
+				_stdLibModel = tempStore.CreatePreprocessedModel(includeFile.Source.Text, includeFile.FullPathName, false, "stdlib.i model");
 			}
 			else
 			{
-				_stdLibModel = tempStore.CreatePreprocessedModel(string.Empty, "stdlib.i", "stdlib.i model (blank)");
+				_stdLibModel = tempStore.CreatePreprocessedModel(string.Empty, "stdlib.i", false, "stdlib.i model (blank)");
 			}
 		}
 
@@ -481,6 +505,16 @@ namespace DkTools.CodeModel
 			public string Name { get; set; }
 			public Span Span { get; set; }
 			public Span EntireFunctionSpan { get; set; }
+		}
+
+		public class ModelUpdatedEventArgs : EventArgs
+		{
+			public CodeModel Model { get; private set; }
+
+			public ModelUpdatedEventArgs(CodeModel model)
+			{
+				Model = model;
+			}
 		}
 	}
 }

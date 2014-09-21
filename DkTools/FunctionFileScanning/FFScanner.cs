@@ -197,7 +197,7 @@ namespace DkTools.FunctionFileScanning
 
 				var fileContent = File.ReadAllText(fileName);
 				var fileStore = new CodeModel.FileStore();
-				var model = fileStore.CreatePreprocessedModel(fileContent, fileName, string.Concat("Function file processing: ", fileName));
+				var model = fileStore.CreatePreprocessedModel(fileContent, fileName, false, string.Concat("Function file processing: ", fileName));
 
 				var ext = Path.GetExtension(fileName).ToLower();
 				string className;

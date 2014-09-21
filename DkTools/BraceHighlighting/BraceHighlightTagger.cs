@@ -24,8 +24,8 @@ namespace DkTools.BraceHighlighting
 	{
 		private ITextView _view;
 		private ITextBuffer _sourceBuffer;
-		private ITextSearchService _textSearchService;
-		private ITextStructureNavigator _textStructureNavigator;
+		private ITextSearchService _textSearchService;				// TODO: remove
+		private ITextStructureNavigator _textStructureNavigator;	// TODO: can this be removed
 		private NormalizedSnapshotSpanCollection _braceSpans;
 		private NormalizedSnapshotSpanCollection _wordSpans;
 		private SnapshotSpan? _updateSpan;

@@ -39,7 +39,7 @@ namespace DkTools.Classifier
 			_scanner = new ProbeClassifierScanner();
 
 			ProbeEnvironment.AppChanged += new EventHandler(ProbeEnvironment_AppChanged);
-			ProbeToolsPackage.Instance.EditorOptions.ClassifierRefreshRequired += EditorOptions_ClassifierRefreshRequired;
+			ProbeToolsPackage.Instance.EditorOptions.EditorRefreshRequired += EditorOptions_ClassifierRefreshRequired;
 		}
 
 		public IList<ClassificationSpan> GetClassificationSpans(SnapshotSpan span)

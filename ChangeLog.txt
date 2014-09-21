@@ -7,6 +7,7 @@ Features:
 
 Bug Fixes:
 - Improved performance of code modeling.
+- Fixed issues with function drop-down not using the correct list.
 
 ____________________________________________________________________________________________________
 Version 1.2.5 - Sep 18, 2014:

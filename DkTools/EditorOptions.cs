@@ -17,18 +17,24 @@ namespace DkTools
 		[Description("Code that is excluded due to preprocessor commands will be colored gray.")]
 		public bool DisableDeadCode { get; set; }
 
-		public event EventHandler ClassifierRefreshRequired;
+		[Category("Editor Options")]
+		[DisplayName("Show Errors")]
+		[Description("Show detected errors underlined in red. (BETA)")]
+		public bool ShowErrors { get; set; }
+
+		public event EventHandler EditorRefreshRequired;
 
 		public EditorOptions()
 		{
 			DisableDeadCode = true;
+			ShowErrors = false;
 		}
 
 		public override void SaveSettingsToStorage()
 		{
 			base.SaveSettingsToStorage();
 
-			var ev = ClassifierRefreshRequired;
+			var ev = EditorRefreshRequired;
 			if (ev != null) ev(this, EventArgs.Empty);
 		}
 	}

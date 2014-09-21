@@ -158,6 +158,16 @@
         </Strings>
       </Button>
 
+      <!-- DK Menu -> Editor -> Disable Dead Code -->
+      <Button guid="guidProbeToolsCmdSet" id="cmdShowErrors" priority="0x0020" type="Button">
+        <Parent guid="guidProbeToolsCmdSet" id="grpEditorOptionsMenu" />
+        <Icon guid="guidImages" id="bmpShowErrors" />
+        <Strings>
+          <CommandName>cmdShowErrors</CommandName>
+          <ButtonText>Show &amp;Errors (WIP)</ButtonText>
+        </Strings>
+      </Button>
+
 			<!-- DK Menu -> Compile -> Compile -->
 			<Button guid="guidProbeToolsCmdSet" id="cmdCompile" priority="0x0030" type="Button">
 				<Parent guid="guidProbeToolsCmdSet" id="CompileMenuGroup" />
@@ -431,6 +441,16 @@
         </Strings>
       </Button>
 
+      <!-- DK Toolbar -> Show Errors -->
+      <Button guid="guidProbeToolsCmdSet" id="cmdShowErrors" priority="0x0020" type="Button">
+        <Parent guid="guidProbeToolsCmdSet" id="tbEditorOptionsGroup" />
+        <Icon guid="guidImages" id="bmpShowErrors" />
+        <Strings>
+          <CommandName>cmdShowErrors</CommandName>
+          <ButtonText>Show Errors (WIP)</ButtonText>
+        </Strings>
+      </Button>
+
       <!-- DK Toolbar -> ACM -->
 			<Button guid="guidProbeToolsCmdSet" id="cmdPSelect" priority="0x0020" type="Button">
 				<Parent guid="guidProbeToolsCmdSet" id="tbSettingsGroup" />
@@ -475,7 +495,7 @@
 
 		<Bitmaps>
 			<Bitmap guid="guidImages" href="Images\ProbeToolsCommandIcons.png" resID="bmpCompile"
-              usedList="bmpCompile, bmpKillCompile, bmpProbeExplorer, bmpFindInProbeFiles, bmpFecFile, bmpPstTable, bmpMergeFile, bmpRun, bmpInsertTag, bmpInsertDiag, bmpInsertDate, bmpInsertFileHeader, bmpSettings, bmpPSelect, bmpDccmp, bmpCredelix, bmpTableListing, bmpCompileToVisualC, bmpShowHelp, bmpShowDrv, bmpDisableDeadCode, bmpProbeNV" />
+              usedList="bmpCompile, bmpKillCompile, bmpProbeExplorer, bmpFindInProbeFiles, bmpFecFile, bmpPstTable, bmpMergeFile, bmpRun, bmpInsertTag, bmpInsertDiag, bmpInsertDate, bmpInsertFileHeader, bmpSettings, bmpPSelect, bmpDccmp, bmpCredelix, bmpTableListing, bmpCompileToVisualC, bmpShowHelp, bmpShowDrv, bmpDisableDeadCode, bmpProbeNV, bmpShowErrors" />
 		</Bitmaps>
 
 		<Menus>
@@ -602,6 +622,7 @@
       <IDSymbol name="menuEditorOptions" value="0x0121"/>
       <IDSymbol name="grpEditorOptionsMenu" value="0x0122"/>
 			<IDSymbol name="cmdProbeNV" value="0x0123"/>
+      <IDSymbol name="cmdShowErrors" value="0x0124"/>
 
 			<IDSymbol name="tbProbeToolbar" value="0x2000" />
 			<IDSymbol name="tbFileOperationsGroup" value="0x2001" />
@@ -636,6 +657,7 @@
       <IDSymbol name="bmpShowDrv" value="0x0014"/>
       <IDSymbol name="bmpDisableDeadCode" value="0x0015"/>
 			<IDSymbol name="bmpProbeNV" value="0x0016"/>
+      <IDSymbol name="bmpShowErrors" value="0x0017"/>
 		</GuidSymbol>
 	</Symbols>
 	

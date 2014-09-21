@@ -18,19 +18,19 @@ namespace DkTools.CodeModel
 			{
 				_builtInDefs = new Definition[]
 				{
-					new FunctionDefinition(null, "diag", null, -1, DataType.Void, "void diag(expressions ...)", 0, 0, FunctionPrivacy.Public, true),
-					new FunctionDefinition(null, "gofield", null, -1, DataType.Void, "void gofield(TableName.ColumnName)", 0, 0, FunctionPrivacy.Public, true),
-					new FunctionDefinition(null, "makestring", null, -1, DataType.FromString("char(255)"), "char(255) makestring(expressions ...)", 0, 0, FunctionPrivacy.Public, true),
-					new FunctionDefinition(null, "oldvalue", null, -1, DataType.Void, "oldvalue(TableName.ColumnName)", 0, 0, FunctionPrivacy.Public, true),
-					new FunctionDefinition(null, "qcolsend", null, -1, DataType.Void, "void qcolsend(TableName.ColumnName ...)", 0, 0, FunctionPrivacy.Public, true),
-					new FunctionDefinition(null, "SetMessage", null, -1, DataType.Int, "int SetMessage(MessageControlString, expressions ...)", 0, 0, FunctionPrivacy.Public, true),
-					new FunctionDefinition(null, "STRINGIZE", null, -1, DataType.FromString("char(255)"), "STRINGIZE(x)", 0, 0, FunctionPrivacy.Public, true),
-					new FunctionDefinition(null, "UNREFERENCED_PARAMETER", null, -1, DataType.Void, "UNREFERENCED_PARAMETER(parameter)", 0, 0, FunctionPrivacy.Public, true)
+					new FunctionDefinition(null, "diag", null, -1, DataType.Void, "void diag(expressions ...)", 0, 0, Span.Empty, FunctionPrivacy.Public, true),
+					new FunctionDefinition(null, "gofield", null, -1, DataType.Void, "void gofield(TableName.ColumnName)", 0, 0, Span.Empty, FunctionPrivacy.Public, true),
+					new FunctionDefinition(null, "makestring", null, -1, DataType.FromString("char(255)"), "char(255) makestring(expressions ...)", 0, 0, Span.Empty, FunctionPrivacy.Public, true),
+					new FunctionDefinition(null, "oldvalue", null, -1, DataType.Void, "oldvalue(TableName.ColumnName)", 0, 0, Span.Empty, FunctionPrivacy.Public, true),
+					new FunctionDefinition(null, "qcolsend", null, -1, DataType.Void, "void qcolsend(TableName.ColumnName ...)", 0, 0, Span.Empty, FunctionPrivacy.Public, true),
+					new FunctionDefinition(null, "SetMessage", null, -1, DataType.Int, "int SetMessage(MessageControlString, expressions ...)", 0, 0, Span.Empty, FunctionPrivacy.Public, true),
+					new FunctionDefinition(null, "STRINGIZE", null, -1, DataType.FromString("char(255)"), "STRINGIZE(x)", 0, 0, Span.Empty, FunctionPrivacy.Public, true),
+					new FunctionDefinition(null, "UNREFERENCED_PARAMETER", null, -1, DataType.Void, "UNREFERENCED_PARAMETER(parameter)", 0, 0, Span.Empty, FunctionPrivacy.Public, true)
 				};
 			}
 			AddGlobal(_builtInDefs);
 			AddGlobal(ProbeEnvironment.DictDefinitions);
-			if (!System.IO.Path.GetFileName(fileName).Equals("stdlib.i", StringComparison.OrdinalIgnoreCase)) AddGlobal(FileStore.StdLibModel.PreprocessorModel.DefinitionProvider.Globals);
+			if (string.IsNullOrEmpty(fileName) || !System.IO.Path.GetFileName(fileName).Equals("stdlib.i", StringComparison.OrdinalIgnoreCase)) AddGlobal(FileStore.StdLibModel.PreprocessorModel.DefinitionProvider.Globals);
 			AddGlobal(ProbeToolsPackage.Instance.FunctionFileScanner.GlobalDefinitions);
 		}
 

@@ -1,4 +1,4 @@
-﻿//#define REPORT_ERRORS
+﻿#define REPORT_ERRORS
 
 using System;
 using System.Collections.Generic;
@@ -24,8 +24,12 @@ namespace DkTools.CodeModel
 		private List<KeyValuePair<int, Definition>> _localDefs = new List<KeyValuePair<int, Definition>>();
 #endif
 		private List<Definition> _globalDefs = new List<Definition>();
+#if REPORT_ERRORS
+		private List<ErrorTagging.ErrorInfo> _errors = new List<ErrorTagging.ErrorInfo>();
+#endif
+		private bool _reportErrors;
 
-		public PreprocessorModel(CodeSource source, DefinitionProvider defProv, string fileName)
+		public PreprocessorModel(CodeSource source, DefinitionProvider defProv, string fileName, bool visible)
 		{
 #if DEBUG
 			if (source == null) throw new ArgumentNullException("source");
@@ -36,6 +40,7 @@ namespace DkTools.CodeModel
 			_defProv = defProv;
 			_fileName = fileName;
 			FunctionFileScanning.FFUtil.FileNameIsClass(_fileName, out _className);
+			_reportErrors = visible && ProbeToolsPackage.Instance.EditorOptions.ShowErrors;
 
 			Parse();
 		}
@@ -116,14 +121,14 @@ namespace DkTools.CodeModel
 				{
 					var localPos = _source.GetFilePosition(nameSpan.Start);
 					var def = new VariableDefinition(name, localPos.FileName, localPos.Position, dataType, false);
-					_globalVars.Add(name, def);
+					_globalVars[name] = def;
 					AddGlobalDefinition(def);
 				}
 				else if (_code.ReadExact(','))
 				{
 					var localPos = _source.GetFilePosition(nameSpan.Start);
 					var def = new VariableDefinition(name, localPos.FileName, localPos.Position, dataType, false);
-					_globalVars.Add(name, def);
+					_globalVars[name] = def;
 					AddGlobalDefinition(def);
 					AfterRootDataType(dataType, dataTypeStartPos, privacy, isExtern);
 				}
@@ -271,7 +276,7 @@ namespace DkTools.CodeModel
 			{
 				var localPos = _source.GetFilePosition(nameSpan.Start);
 				var sig = Tokens.Token.NormalizePlainText(_code.GetText(allStartPos, _code.Position - allStartPos));
-				var def = new FunctionDefinition(_className, funcName, localPos.FileName, localPos.Position, returnDataType, sig, argEndPos, 0, privacy, true);
+				var def = new FunctionDefinition(_className, funcName, localPos.FileName, localPos.Position, returnDataType, sig, argEndPos, 0, Span.Empty, privacy, true);
 				_externFuncs[funcName] = def;
 				AddGlobalDefinition(def);
 				return;
@@ -357,9 +362,10 @@ namespace DkTools.CodeModel
 			var bodyStartLocalPos = _source.GetPrimaryFilePosition(bodyStartPos);
 			var nameLocalPos = _source.GetPrimaryFilePosition(nameSpan.Start);
 			var argEndLocalPos = _source.GetPrimaryFilePosition(argEndPos);
+			var entireSpan = _source.GetPrimaryFileSpan(new Span(allStartPos, bodyEndPos));
 
 			var funcSig = Tokens.Token.NormalizePlainText(_code.GetText(allStartPos, bodyStartPos - allStartPos));
-			var funcDef = new FunctionDefinition(_className, funcName, _fileName, nameLocalPos, returnDataType, funcSig, argEndLocalPos, bodyStartLocalPos, privacy, isExtern);
+			var funcDef = new FunctionDefinition(_className, funcName, _fileName, nameLocalPos, returnDataType, funcSig, argEndLocalPos, bodyStartLocalPos, entireSpan, privacy, isExtern);
 			_localFuncs.Add(funcDef);
 			AddGlobalDefinition(funcDef);
 
@@ -513,10 +519,37 @@ namespace DkTools.CodeModel
 			get { return _globalDefs; }
 		}
 
+		public IEnumerable<FunctionDefinition> LocalFunctions
+		{
+			get { return _localFuncs; }
+		}
+
 #if REPORT_ERRORS
 		private void ReportError(Span span, string message)
 		{
-			// TODO
+			if (!_reportErrors) return;
+			if (span.Length > 0)
+			{
+				_errors.Add(new ErrorTagging.ErrorInfo(message, span));
+			}
+		}
+
+		public IEnumerable<ErrorTagging.ErrorInfo> Errors
+		{
+			get { return _errors; }
+		}
+
+		public IEnumerable<ErrorTagging.ErrorInfo> GetErrorsForPos(int pos)
+		{
+			foreach (var error in _errors)
+			{
+				if (error.Span.Contains(pos)) yield return error;
+			}
+		}
+
+		public bool ReportErrors
+		{
+			get { return _reportErrors; }
 		}
 #endif
 
