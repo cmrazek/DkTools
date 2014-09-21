@@ -9,7 +9,9 @@ namespace DkTools.CodeModel
 {
 	internal class CodeSource : IPreprocessorWriter
 	{
-		private StringBuilder _writeBuf = new StringBuilder();
+		public const int InitialCapacity = 4 * 1024;
+
+		private StringBuilder _writeBuf = new StringBuilder(InitialCapacity);
 		private string _text = null;
 		private List<CodeSegment> _segments = new List<CodeSegment>();
 		private CodeSegment.CodeSegmentComparer _codeSegmentComparer = new CodeSegment.CodeSegmentComparer();
