@@ -29,12 +29,21 @@ namespace DkTools.CodeModel.Definitions
 			get { return Classifier.ProbeClassifierType.TableField; }
 		}
 
-		public override string QuickInfoText
+		public override string QuickInfoTextStr
 		{
 			get
 			{
 				if (_ex != null) return string.Concat(_ex.Name, ".", Name);
 				else return Name;
+			}
+		}
+
+		public override System.Windows.UIElement QuickInfoTextWpf
+		{
+			get
+			{
+				return WpfDivs(WpfMainLine(_ex != null ? string.Concat(_ex.Name, ".", Name) : Name),
+					_ex != null ? WpfInfoLine(_ex.Permanent ? "Permanent extract" : "Temporary extract") : null);
 			}
 		}
 

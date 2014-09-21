@@ -936,7 +936,7 @@ namespace DkTools.ProbeExplorer
 				Orientation = Orientation.Horizontal,
 				ToolTip = new ToolTip
 				{
-					Content = table.Definition.QuickInfoText
+					Content = table.Definition.QuickInfoTextWpf
 				}
 			};
 			panel.Children.Add(new Image
@@ -1013,7 +1013,7 @@ namespace DkTools.ProbeExplorer
 				Orientation = Orientation.Horizontal,
 				ToolTip = new ToolTip
 				{
-					Content = field.Definition.QuickInfoText
+					Content = field.Definition.QuickInfoTextWpf
 				}
 			};
 			panel.Children.Add(new Image
@@ -1081,7 +1081,7 @@ namespace DkTools.ProbeExplorer
 				Orientation = Orientation.Horizontal,
 				ToolTip = new ToolTip
 				{
-					Content = relind.Definition.QuickInfoText
+					Content = relind.Definition.QuickInfoTextWpf
 				}
 			};
 			panel.Children.Add(new Image

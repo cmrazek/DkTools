@@ -69,7 +69,7 @@ namespace DkTools.SignatureHelp
 								var def = cls.GetFunctionDefinition(funcName);
 								if (def != null)
 								{
-									signatures.Add(CreateSignature(_textBuffer, def.Signature, applicableToSpan));
+									signatures.Add(CreateSignature(_textBuffer, def.Signature, def.DevDescription, applicableToSpan));
 								}
 							}
 						}
@@ -105,9 +105,9 @@ namespace DkTools.SignatureHelp
 			}
 		}
 
-		private ProbeSignature CreateSignature(VsText.ITextBuffer textBuffer, string methodSig, VsText.ITrackingSpan span)
+		private ProbeSignature CreateSignature(VsText.ITextBuffer textBuffer, string methodSig, string devDesc, VsText.ITrackingSpan span)
 		{
-			var sig = new ProbeSignature(textBuffer, methodSig, string.Empty, null);
+			var sig = new ProbeSignature(textBuffer, methodSig, devDesc != null ? devDesc : string.Empty, null);
 			textBuffer.Changed += sig.SubjectBufferChanged;
 
 			var paramList = new List<IParameter>();
@@ -202,11 +202,11 @@ namespace DkTools.SignatureHelp
 		{
 			foreach (var sig in GetAllSignaturesForFunction(model, className, funcName))
 			{
-				yield return CreateSignature(_textBuffer, sig, applicableToSpan);
+				yield return CreateSignature(_textBuffer, sig.Signature, sig.DevDescription, applicableToSpan);
 			}
 		}
 
-		public static IEnumerable<string> GetAllSignaturesForFunction(CodeModel.CodeModel model, string className, string funcName)
+		public static IEnumerable<SignatureInfo> GetAllSignaturesForFunction(CodeModel.CodeModel model, string className, string funcName)
 		{
 			if (string.IsNullOrEmpty(className))
 			{
@@ -214,13 +214,13 @@ namespace DkTools.SignatureHelp
 				{
 					if (string.IsNullOrEmpty((def as CodeModel.Definitions.FunctionDefinition).ClassName))
 					{
-						yield return (def as CodeModel.Definitions.FunctionDefinition).Signature;
+						yield return new SignatureInfo(def.Signature, def.DevDescription);
 					}
 				}
 
 				foreach (var def in model.DefinitionProvider.GetGlobal<CodeModel.Definitions.MacroDefinition>(funcName))
 				{
-					yield return (def as CodeModel.Definitions.MacroDefinition).Signature;
+					yield return new SignatureInfo(def.Signature, string.Empty);
 				}
 			}
 			else
@@ -229,13 +229,13 @@ namespace DkTools.SignatureHelp
 				{
 					if ((def as CodeModel.Definitions.FunctionDefinition).ClassName == className)
 					{
-						yield return (def as CodeModel.Definitions.FunctionDefinition).Signature;
+						yield return new SignatureInfo(def.Signature, def.DevDescription);
 					}
 				}
 			}
 
 			var ffFunc = ProbeToolsPackage.Instance.FunctionFileScanner.GetFunction(className, funcName);
-			if (ffFunc != null) yield return ffFunc.Definition.Signature;
+			if (ffFunc != null) yield return new SignatureInfo(ffFunc.Definition.Signature, ffFunc.Definition.DevDescription);
 		}
 
 		public static IEnumerable<string> GetSignatureArguments(string sig)
@@ -278,6 +278,28 @@ namespace DkTools.SignatureHelp
 			}
 
 			if (gotComma) yield return sb.ToString().Trim();
+		}
+
+		public struct SignatureInfo
+		{
+			private string _sig;
+			private string _devDesc;
+
+			public SignatureInfo(string sig, string devDesc)
+			{
+				_sig = sig;
+				_devDesc = devDesc;
+			}
+
+			public string Signature
+			{
+				get { return _sig; }
+			}
+
+			public string DevDescription
+			{
+				get { return _devDesc; }
+			}
 		}
 	}
 }

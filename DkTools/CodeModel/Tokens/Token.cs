@@ -424,16 +424,28 @@ namespace DkTools.CodeModel.Tokens
 		/// </summary>
 		/// <param name="token">If not null, then the mouse is hovering over this sub-token; otherwise the mouse is hovering over this token.</param>
 		/// <returns>Tooltip text for this token.</returns>
-		public virtual string GetQuickInfo(Token token = null)
+		public virtual string GetQuickInfoStr(Token token = null)
 		{
 			if (_sourceDefinition != null)
 			{
-				var defText = _sourceDefinition.QuickInfoText;
+				var defText = _sourceDefinition.QuickInfoTextStr;
 				if (!string.IsNullOrWhiteSpace(defText)) return defText;
 			}
 
-			if (_parent != null) return _parent.GetQuickInfo(token != null ? token : this);
+			if (_parent != null) return _parent.GetQuickInfoStr(token != null ? token : this);
 			return string.Empty;
+		}
+
+		public virtual System.Windows.UIElement GetQuickInfoWpf(Token token = null)
+		{
+			if (_sourceDefinition != null)
+			{
+				var defText = _sourceDefinition.QuickInfoTextWpf;
+				if (defText != null) return defText;
+			}
+
+			if (_parent != null) return _parent.GetQuickInfoWpf(token != null ? token : this);
+			return null;
 		}
 
 		#region Data Types (assigned value)

@@ -47,12 +47,34 @@ namespace DkTools.CodeModel.Definitions
 			get { return Classifier.ProbeClassifierType.Variable; }
 		}
 
-		public override string QuickInfoText
+		public override string QuickInfoTextStr
 		{
 			get
 			{
 				if (_dataType != null) return string.Concat(_dataType.Name, " ", Name);
 				return Name;
+			}
+		}
+
+		public override System.Windows.UIElement QuickInfoTextWpf
+		{
+			get
+			{
+				if (_dataType != null)
+				{
+					if (!string.IsNullOrEmpty(_dataType.InfoText))
+					{
+						return WpfDivs(WpfMainLine(string.Concat(_dataType.Name, " ", Name)), WpfInfoLine(_dataType.InfoText));
+					}
+					else
+					{
+						return WpfDivs(WpfMainLine(string.Concat(_dataType.Name, " ", Name)));
+					}
+				}
+				else
+				{
+					return WpfMainLine(Name);
+				}
 			}
 		}
 

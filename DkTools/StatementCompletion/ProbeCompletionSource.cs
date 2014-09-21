@@ -58,43 +58,38 @@ namespace DkTools.StatementCompletion
 			if (_classImg == null) _classImg = BitmapToBitmapSource(Res.ClassImg);
 		}
 
-		private Completion CreateCompletion(string text, string description, CompletionType type)
+		private ImageSource GetImageForCompletionType(CompletionType type)
 		{
-			ImageSource img;
 			switch (type)
 			{
 				case CompletionType.Function:
-					img = _functionImg;
-					break;
+					return _functionImg;
 				case CompletionType.Constant:
-					img = _constantImg;
-					break;
+					return _constantImg;
 				case CompletionType.Table:
-					img = _tableImg;
-					break;
+					return _tableImg;
 				case CompletionType.TableField:
-					img = _fieldImg;
-					break;
+					return _fieldImg;
 				case CompletionType.DataType:
-					img = _dataTypeImg;
-					break;
+					return _dataTypeImg;
 				case CompletionType.Keyword:
-					img = _keywordImg;
-					break;
+					return _keywordImg;
 				case CompletionType.Class:
-					img = _classImg;
-					break;
+					return _classImg;
 				default:
-					img = _variableImg;
-					break;
+					return _variableImg;
 			}
+		}
 
+		private Completion CreateCompletion(string text, string description, CompletionType type)
+		{
+			var img = GetImageForCompletionType(type);
 			return new Completion(text, text, description, img, string.Empty);
 		}
 
 		private Completion CreateCompletion(Definition def)
 		{
-			return CreateCompletion(def.Name, def.QuickInfoText, def.CompletionType);
+			return CreateCompletion(def.Name, def.QuickInfoTextStr, def.CompletionType);
 		}
 
 		private IEnumerable<Completion> CreateCompletions(IEnumerable<string> strings, CompletionType complType)
@@ -324,8 +319,9 @@ namespace DkTools.StatementCompletion
 			}
 			else
 			{
-				sig = SignatureHelp.ProbeSignatureHelpSource.GetAllSignaturesForFunction(model, className, funcName).FirstOrDefault();
-				if (string.IsNullOrEmpty(sig)) yield break;
+				var sigInfos = SignatureHelp.ProbeSignatureHelpSource.GetAllSignaturesForFunction(model, className, funcName).ToArray();
+				if (sigInfos.Length == 0) yield break;
+				sig = sigInfos[0].Signature;
 			}
 
 			var argText = GetArgumentText(sig, argIndex);

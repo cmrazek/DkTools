@@ -37,9 +37,17 @@ namespace DkTools.CodeModel.Definitions
 			get { return Classifier.ProbeClassifierType.Constant; }
 		}
 
-		public override string QuickInfoText
+		public override string QuickInfoTextStr
 		{
 			get { return _text; }
+		}
+
+		public override System.Windows.UIElement QuickInfoTextWpf
+		{
+			get
+			{
+				return WpfMainLine(_text);
+			}
 		}
 	}
 }

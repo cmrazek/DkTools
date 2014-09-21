@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel.Composition;
 using System.Linq;
+using System.Windows;
 using Microsoft.VisualStudio.Language.Intellisense;
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Editor;
@@ -19,8 +20,8 @@ namespace DkTools.QuickInfo
 
 		private struct TokenInfo
 		{
-			public string infoText;
 			public CodeModel.Tokens.Token token;
+			public UIElement infoElements;
 		}
 
 		public QuickInfoSource(QuickInfoSourceProvider provider, ITextBuffer subjectBuffer)
@@ -47,7 +48,7 @@ namespace DkTools.QuickInfo
 				var info = GetQuickInfoForTokens(tokens);
 				if (info.HasValue)
 				{
-					quickInfoContent.Add(info.Value.infoText);
+					quickInfoContent.Add(info.Value.infoElements);
 					var tokenSpan = info.Value.token.Span;
 					var snapSpan = new SnapshotSpan(model.Snapshot, tokenSpan.Start, tokenSpan.Length);
 					applicableToSpan = model.Snapshot.CreateTrackingSpan(info.Value.token.Span.ToVsTextSpan(), SpanTrackingMode.EdgeInclusive);
@@ -80,10 +81,10 @@ namespace DkTools.QuickInfo
 			if (tokens.Length == 0) return null;
 
 			var lastToken = tokens.Last();
-			var infoText = lastToken.GetQuickInfo();
-			if (!string.IsNullOrEmpty(infoText))
+			var infoElements = lastToken.GetQuickInfoWpf();
+			if (infoElements != null)
 			{
-				return new TokenInfo { infoText = infoText, token = lastToken };
+				return new TokenInfo { infoElements = infoElements, token = lastToken };
 			}
 
 			return null;

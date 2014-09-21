@@ -68,13 +68,13 @@ namespace DkTools.Dict
 			}
 			_columns = info.ToString();
 
-			if (!string.IsNullOrWhiteSpace(_repoDesc))
-			{
-				info.AppendLine();
-				info.AppendFormat("Description: {0}", _repoDesc);
-			}
+			//if (!string.IsNullOrWhiteSpace(_repoDesc))
+			//{
+			//	info.AppendLine();
+			//	info.AppendFormat("Description: {0}", _repoDesc);
+			//}
 
-			_def = new CodeModel.Definitions.RelIndDefinition(_name, table.Name, info.ToString());
+			_def = new CodeModel.Definitions.RelIndDefinition(_name, table.Name, info.ToString(), _repoDesc);
 		}
 
 		public DictRelInd(DictTable table, DICTSRVRLib.IPRelationship repoRel)
@@ -91,32 +91,24 @@ namespace DkTools.Dict
 				if (!string.IsNullOrWhiteSpace(devInfo)) _repoDesc = devInfo;
 			}
 
-			var info = new StringBuilder();
-
+			string relText = string.Empty;
 			switch (repoRel.Type)
 			{
 				case DICTSRVRLib.PDS_Relationship.Relationship_ONEONE:
-					info.AppendFormat("relationship {2} one {0} to one {1}", repoRel.Parent.Name, repoRel.Child.Name, _name);
+					relText = string.Format("relationship {2} one {0} to one {1}", repoRel.Parent.Name, repoRel.Child.Name, _name);
 					break;
 				case DICTSRVRLib.PDS_Relationship.Relationship_ONEMANY:
-					info.AppendFormat("relationship {2} one {0} to many {1}", repoRel.Parent.Name, repoRel.Child.Name, _name);
+					relText = string.Format("relationship {2} one {0} to many {1}", repoRel.Parent.Name, repoRel.Child.Name, _name);
 					break;
 				case DICTSRVRLib.PDS_Relationship.Relationship_MANYMANY:
-					info.AppendFormat("relationship {2} many {0} to many {1}", repoRel.Parent.Name, repoRel.Child.Name, _name);
+					relText = string.Format("relationship {2} many {0} to many {1}", repoRel.Parent.Name, repoRel.Child.Name, _name);
 					break;
 				case DICTSRVRLib.PDS_Relationship.Relationship_TIME:
-					info.AppendFormat("time relationship {2} {0} to {1}", repoRel.Parent.Name, repoRel.Child.Name, _name);
+					relText = string.Format("time relationship {2} {0} to {1}", repoRel.Parent.Name, repoRel.Child.Name, _name);
 					break;
 			}
 
-			if (!string.IsNullOrWhiteSpace(_repoDesc))
-			{
-				info.AppendLine();
-				info.Append("Description: ");
-				info.Append(_repoDesc);
-			}
-
-			_def = new RelIndDefinition(_name, table.Name, info.ToString());
+			_def = new RelIndDefinition(_name, table.Name, relText, _repoDesc);
 		}
 
 		public DictRelIndType Type

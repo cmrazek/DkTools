@@ -5,7 +5,8 @@ Version 1.2.6 - pending:
 Features:
 - Added syntax highlighting for variables.
 - Add support for temporary extracts.
-- Function descriptions are now displayed in the quick-info text.
+- Function descriptions are now displayed in the quick-info and signature help text.
+- Quick-info text is now displayed using WPF UIElements, for a better look.
 
 Bug Fixes:
 - Improved performance of code modeling.

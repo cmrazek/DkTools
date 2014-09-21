@@ -42,7 +42,7 @@ namespace DkTools.CodeModel.Definitions
 			get { return Classifier.ProbeClassifierType.TableField; }
 		}
 
-		public override string QuickInfoText
+		public override string QuickInfoTextStr
 		{
 			get
 			{
@@ -76,7 +76,7 @@ namespace DkTools.CodeModel.Definitions
 						sb.AppendLine();
 						sb.Append("Data Type: ");
 						sb.Append(_dataType.Name);
-						if (_dataType.InfoText != _dataType.Name)
+						if (!string.IsNullOrEmpty(_dataType.InfoText))
 						{
 							sb.AppendLine();
 							sb.Append(_dataType.InfoText);
@@ -85,6 +85,21 @@ namespace DkTools.CodeModel.Definitions
 					_desc = sb.ToString();
 				}
 				return _desc;
+			}
+		}
+
+		public override System.Windows.UIElement QuickInfoTextWpf
+		{
+			get
+			{
+				var items = new List<System.Windows.UIElement>();
+				items.Add(WpfMainLine(string.Concat(_tableName, ".", _fieldName)));
+				if (!string.IsNullOrWhiteSpace(_prompt)) items.Add(WpfAttribute("Prompt", _prompt));
+				if (!string.IsNullOrWhiteSpace(_comment)) items.Add(WpfAttribute("Comment", _comment));
+				if (_dataType != null) items.Add(WpfAttribute("Data Type", _dataType.QuickInfoWpf));
+				if (!string.IsNullOrWhiteSpace(_repoDesc)) items.Add(WpfInfoLine(_repoDesc));
+
+				return WpfDivs(items);
 			}
 		}
 

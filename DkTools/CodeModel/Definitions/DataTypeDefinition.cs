@@ -46,9 +46,17 @@ namespace DkTools.CodeModel.Definitions
 			get { return Classifier.ProbeClassifierType.DataType; }
 		}
 
-		public override string QuickInfoText
+		public override string QuickInfoTextStr
 		{
-			get { return _dataType.InfoText; }
+			get { return !string.IsNullOrEmpty(_dataType.InfoText) ? _dataType.InfoText : _dataType.Name; }
+		}
+
+		public override System.Windows.UIElement QuickInfoTextWpf
+		{
+			get
+			{
+				return _dataType.QuickInfoWpf;
+			}
 		}
 	}
 }

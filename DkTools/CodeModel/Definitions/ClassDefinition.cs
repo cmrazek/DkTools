@@ -29,9 +29,17 @@ namespace DkTools.CodeModel.Definitions
 			get { return Classifier.ProbeClassifierType.TableName; }
 		}
 
-		public override string QuickInfoText
+		public override string QuickInfoTextStr
 		{
 			get { return string.Concat("Class: ", Name); }
+		}
+
+		public override System.Windows.UIElement QuickInfoTextWpf
+		{
+			get
+			{
+				return WpfAttribute("Class", Name);
+			}
 		}
 	}
 }

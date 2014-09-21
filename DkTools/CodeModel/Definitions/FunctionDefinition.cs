@@ -76,12 +76,22 @@ namespace DkTools.CodeModel.Definitions
 			get { return Classifier.ProbeClassifierType.Function; }
 		}
 
-		public override string QuickInfoText
+		public override string QuickInfoTextStr
 		{
 			get
 			{
 				if (string.IsNullOrEmpty(_devDesc)) return _signature;
 				return string.Concat(_signature, "\r\n\r\n", _devDesc);
+			}
+		}
+
+		public override System.Windows.UIElement QuickInfoTextWpf
+		{
+			get
+			{
+				return WpfDivs(
+					WpfMainLine(_signature),
+					string.IsNullOrEmpty(_devDesc) ? null : WpfInfoLine(_devDesc));
 			}
 		}
 

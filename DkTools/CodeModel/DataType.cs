@@ -62,11 +62,11 @@ namespace DkTools.CodeModel
 			}
 			else if (!string.IsNullOrEmpty(name))
 			{
-				_name = _infoText = name;
+				_name = name;
 			}
 			else if (!string.IsNullOrEmpty(infoText))
 			{
-				_name = _infoText = infoText;
+				_name = infoText;
 			}
 			else throw new ArgumentNullException("name and infoText");
 		}
@@ -599,7 +599,24 @@ namespace DkTools.CodeModel
 
 		public string InfoText
 		{
-			get { return string.IsNullOrWhiteSpace(_infoText) ? _name : _infoText; }
+			get { return _infoText; }
+		}
+
+		public System.Windows.UIElement QuickInfoWpf
+		{
+			get
+			{
+				if (!string.IsNullOrEmpty(_infoText) && _infoText != _name)
+				{
+					return Definition.WpfDivs(
+						Definition.WpfMainLine(_name),
+						Definition.WpfInfoLine(_infoText));
+				}
+				else
+				{
+					return Definition.WpfMainLine(_name);
+				}
+			}
 		}
 	}
 }

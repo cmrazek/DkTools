@@ -32,12 +32,21 @@ namespace DkTools.CodeModel.Definitions
 			get { return Classifier.ProbeClassifierType.TableName; }
 		}
 
-		public override string QuickInfoText
+		public override string QuickInfoTextStr
 		{
 			get
 			{
 				if (_permanent) return string.Concat("extract permanent ", Name);
 				else return string.Concat("extract ", Name);
+			}
+		}
+
+		public override System.Windows.UIElement QuickInfoTextWpf
+		{
+			get
+			{
+				return WpfDivs(WpfMainLine(Name),
+					WpfInfoLine(_permanent ? "Permanent extract" : "Temporary extract"));
 			}
 		}
 
@@ -59,6 +68,11 @@ namespace DkTools.CodeModel.Definitions
 		public IEnumerable<ExtractFieldDefinition> Fields
 		{
 			get { return _fields; }
+		}
+
+		public bool Permanent
+		{
+			get { return _permanent; }
 		}
 	}
 }

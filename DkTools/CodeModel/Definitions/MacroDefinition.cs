@@ -42,11 +42,19 @@ namespace DkTools.CodeModel.Definitions
 			get { return Classifier.ProbeClassifierType.Function; }
 		}
 
-		public override string QuickInfoText
+		public override string QuickInfoTextStr
 		{
 			get
 			{
 				return string.Concat(_signature, "\r\n", _body).Trim();
+			}
+		}
+
+		public override System.Windows.UIElement QuickInfoTextWpf
+		{
+			get
+			{
+				return WpfDivs(WpfMainLine(_signature), WpfInfoLine(_body.Trim()));
 			}
 		}
 	}
