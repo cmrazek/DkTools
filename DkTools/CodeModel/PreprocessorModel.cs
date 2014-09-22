@@ -114,21 +114,23 @@ namespace DkTools.CodeModel
 				var name = _code.TokenText;
 				var nameSpan = _code.TokenSpan;
 
-				if (_code.ReadExact('('))
+				var arrayLength = TryReadArrayDecl();
+
+				if (arrayLength == null && _code.ReadExact('('))
 				{
 					StartFunctionArgs(name, dataTypeStartPos, _code.TokenStartPostion, nameSpan, dataType, privacy, isExtern);
 				}
 				else if (_code.ReadExact(';'))
 				{
 					var localPos = _source.GetFilePosition(nameSpan.Start);
-					var def = new VariableDefinition(name, localPos.FileName, localPos.Position, dataType, false);
+					var def = new VariableDefinition(name, localPos.FileName, localPos.Position, dataType, false, arrayLength);
 					_globalVars[name] = def;
 					AddGlobalDefinition(def);
 				}
 				else if (_code.ReadExact(','))
 				{
 					var localPos = _source.GetFilePosition(nameSpan.Start);
-					var def = new VariableDefinition(name, localPos.FileName, localPos.Position, dataType, false);
+					var def = new VariableDefinition(name, localPos.FileName, localPos.Position, dataType, false, arrayLength);
 					_globalVars[name] = def;
 					AddGlobalDefinition(def);
 					AfterRootDataType(dataType, dataTypeStartPos, privacy, isExtern);
@@ -407,13 +409,13 @@ namespace DkTools.CodeModel
 			_code.ReadExact("+");	// Optional &+
 			if (_code.ReadWord() && createDefinitions)	// Optional var name
 			{
+				var arrayLength = TryReadArrayDecl();
+
 				var localPos = _source.GetFilePosition(_code.TokenStartPostion);
-				var def = new VariableDefinition(_code.TokenText, localPos.FileName, localPos.Position, dataType, true);
+				var def = new VariableDefinition(_code.TokenText, localPos.FileName, localPos.Position, dataType, true, arrayLength);
 				scope.AddDefinition(def);
 				if (localPos.PrimaryFile)
 				{
-					//_defProv.AddLocalDefinition(scope.StartPos, def);
-					//_defProv.AddSourceDefinition(localPos.Position, def);
 					newDefList.Add(def);
 #if DEBUG
 					_localDefs.Add(new KeyValuePair<int, Definition>(scope.StartPos, def));
@@ -435,13 +437,13 @@ namespace DkTools.CodeModel
 			{
 				if (!_code.ReadWord()) break;
 
+				var arrayLength = TryReadArrayDecl();
+
 				var localPos = _source.GetFilePosition(_code.TokenStartPostion);
-				var def = new VariableDefinition(_code.TokenText, localPos.FileName, localPos.Position, dataType, false);
+				var def = new VariableDefinition(_code.TokenText, localPos.FileName, localPos.Position, dataType, false, arrayLength);
 				scope.AddDefinition(def);
 				if (localPos.PrimaryFile)
 				{
-					//_defProv.AddLocalDefinition(scope.StartPos, def);
-					//_defProv.AddSourceDefinition(localPos.Position, def);
 					newDefList.Add(def);
 #if DEBUG
 					_localDefs.Add(new KeyValuePair<int, Definition>(scope.StartPos, def));
@@ -606,6 +608,33 @@ namespace DkTools.CodeModel
 			{
 				_defProv.AddGlobal(exDef);
 			}
+		}
+
+		private int[] TryReadArrayDecl()
+		{
+			var resetPos = _code.Position;
+			List<int> arrayLengths = null;
+			int len;
+
+			while (!_code.EndOfFile)
+			{
+				if (_code.ReadExact('[') &&
+					_code.ReadNumber() &&
+					int.TryParse(_code.TokenText, out len) &&
+					_code.ReadExact(']'))
+				{
+					if (arrayLengths == null) arrayLengths = new List<int>();
+					arrayLengths.Add(len);
+					resetPos = _code.Position;
+				}
+				else
+				{
+					_code.Position = resetPos;
+					break;
+				}
+			}
+
+			return arrayLengths != null ? arrayLengths.ToArray() : null;
 		}
 
 #if REPORT_ERRORS

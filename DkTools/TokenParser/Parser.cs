@@ -769,5 +769,29 @@ namespace DkTools.TokenParser
 			_tokenType = TokenType.StringLiteral;
 			return true;
 		}
+
+		public bool PeekExact(string expecting)
+		{
+			if (!SkipWhiteSpaceAndCommentsIfAllowed()) return false;
+
+			var expLength = expecting.Length;
+			if (_pos + expLength > _length) return false;
+
+			for (int i = 0; i < expLength; i++)
+			{
+				if (_source[_pos + i] != expecting[i]) return false;
+			}
+
+			return true;
+		}
+
+		public bool PeekExact(char expecting)
+		{
+			if (!SkipWhiteSpaceAndCommentsIfAllowed()) return false;
+
+			if (_pos >= _length || _source[_pos] != expecting) return false;
+
+			return true;
+		}
 	}
 }

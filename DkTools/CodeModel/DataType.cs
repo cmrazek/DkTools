@@ -279,6 +279,30 @@ namespace DkTools.CodeModel
 					}
 				#endregion
 
+				#region long
+				case "long":
+					{
+						var sb = new StringBuilder();
+						sb.Append("long");
+
+						if (code.ReadExact("unsigned")) sb.Append(" unsigned");
+
+						if (code.ReadNumber())
+						{
+							// width
+							sb.Append(' ');
+							sb.Append(code.TokenText);
+						}
+
+						while (!code.EndOfFile)
+						{
+							if (!ReadAttribute(code, sb)) break;
+						}
+
+						return new DataType(typeName, sb.ToString());
+					}
+				#endregion
+
 				#region char
 				case "char":
 					if (!code.ReadExact('(')) return DataType.Char;

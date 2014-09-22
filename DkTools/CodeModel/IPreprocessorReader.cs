@@ -69,9 +69,9 @@ namespace DkTools.CodeModel
 				return null;
 			}
 
-			if (char.IsWhiteSpace(ch))
+			if (ch == ' ' || ch == '\t')
 			{
-				return rdr.PeekUntil(c => char.IsWhiteSpace(c));
+				return rdr.PeekUntil(c => c == ' ' || c == '\t');
 			}
 
 			if (ch.IsWordChar(true))

@@ -11,8 +11,10 @@ namespace DkTools.CodeModel.Definitions
 	{
 		private DataType _dataType;
 		private bool _arg;
+		private int[] _arrayLengths;
+		private string _declText;
 
-		public VariableDefinition(string name, string fileName, int startPos, DataType dataType, bool arg)
+		public VariableDefinition(string name, string fileName, int startPos, DataType dataType, bool arg, int[] arrayLengths)
 			: base(name, fileName, startPos)
 		{
 #if DEBUG
@@ -20,6 +22,27 @@ namespace DkTools.CodeModel.Definitions
 #endif
 			_dataType = dataType;
 			_arg = arg;
+			_arrayLengths = arrayLengths;
+
+			// Build the declaration text
+			var sb = new StringBuilder();
+			if (_dataType != null)
+			{
+				sb.Append(_dataType.Name);
+				sb.Append(' ');
+			}
+			sb.Append(Name);
+
+			if (_arrayLengths != null)
+			{
+				foreach (var len in _arrayLengths)
+				{
+					sb.Append('[');
+					sb.Append(len);
+					sb.Append(']');
+				}
+			}
+			_declText = sb.ToString();
 		}
 
 		public DataType DataType
@@ -51,8 +74,14 @@ namespace DkTools.CodeModel.Definitions
 		{
 			get
 			{
-				if (_dataType != null) return string.Concat(_dataType.Name, " ", Name);
-				return Name;
+				if (_dataType != null && !string.IsNullOrEmpty(_dataType.InfoText))
+				{
+					return string.Concat(_declText, "\r\n", _dataType.InfoText);
+				}
+				else
+				{
+					return _declText;
+				}
 			}
 		}
 
@@ -60,20 +89,13 @@ namespace DkTools.CodeModel.Definitions
 		{
 			get
 			{
-				if (_dataType != null)
+				if (_dataType != null && !string.IsNullOrEmpty(_dataType.InfoText))
 				{
-					if (!string.IsNullOrEmpty(_dataType.InfoText))
-					{
-						return WpfDivs(WpfMainLine(string.Concat(_dataType.Name, " ", Name)), WpfInfoLine(_dataType.InfoText));
-					}
-					else
-					{
-						return WpfDivs(WpfMainLine(string.Concat(_dataType.Name, " ", Name)));
-					}
+					return WpfDivs(WpfMainLine(_declText), WpfInfoLine(_dataType.InfoText));
 				}
 				else
 				{
-					return WpfMainLine(Name);
+					return WpfMainLine(_declText);
 				}
 			}
 		}

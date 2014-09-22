@@ -1,5 +1,13 @@
 DkTools2012 ChangeLog
 ____________________________________________________________________________________________________
+Version 1.2.7 - (pending):
+
+Bug Fixes:
+- Added 'long' as a data type.
+- Array variables are now parsed properly.
+- Fixed #define not parsing properly when there's trailing whitespace.
+
+____________________________________________________________________________________________________
 Version 1.2.6 - Sep 22, 2014:
 
 Features:
