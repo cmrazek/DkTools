@@ -72,7 +72,9 @@ namespace DkTools
 			AddCommand(mcs, CommandId.ShowDrv, ShowDrv);
 			AddCommand(mcs, CommandId.DisableDeadCode, DisableDeadCode, checkedCallback: DisableDeadCode_Checked);
 			AddCommand(mcs, CommandId.ShowProbeNV, ShowProbeNV);
+#if REPORT_ERRORS
 			AddCommand(mcs, CommandId.ShowErrors, ShowErrors, checkedCallback: ShowErrors_Checked);
+#endif
 		}
 
 		private class CommandInstance
@@ -619,6 +621,7 @@ namespace DkTools
 			return ProbeToolsPackage.Instance.EditorOptions.DisableDeadCode;
 		}
 
+#if REPORT_ERRORS
 		private static void ShowErrors(object sender, EventArgs e)
 		{
 			try
@@ -637,6 +640,7 @@ namespace DkTools
 		{
 			return ProbeToolsPackage.Instance.EditorOptions.ShowErrors;
 		}
+#endif
 
 #if DEBUG
 		internal static class DebugCommands

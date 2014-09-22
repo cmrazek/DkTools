@@ -17,17 +17,22 @@ namespace DkTools
 		[Description("Code that is excluded due to preprocessor commands will be colored gray.")]
 		public bool DisableDeadCode { get; set; }
 
+#if REPORT_ERRORS
 		[Category("Editor Options")]
 		[DisplayName("Show Errors")]
 		[Description("Show detected errors underlined in red. (BETA)")]
 		public bool ShowErrors { get; set; }
+#endif
 
 		public event EventHandler EditorRefreshRequired;
 
 		public EditorOptions()
 		{
 			DisableDeadCode = true;
+
+#if REPORT_ERRORS
 			ShowErrors = false;
+#endif
 		}
 
 		public override void SaveSettingsToStorage()

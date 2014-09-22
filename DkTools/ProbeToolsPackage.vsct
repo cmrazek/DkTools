@@ -159,7 +159,8 @@
       </Button>
 
       <!-- DK Menu -> Editor -> Disable Dead Code -->
-      <Button guid="guidProbeToolsCmdSet" id="cmdShowErrors" priority="0x0020" type="Button">
+      <!-- TODO: Re-enable when ready to report errors
+			<Button guid="guidProbeToolsCmdSet" id="cmdShowErrors" priority="0x0020" type="Button">
         <Parent guid="guidProbeToolsCmdSet" id="grpEditorOptionsMenu" />
         <Icon guid="guidImages" id="bmpShowErrors" />
         <Strings>
@@ -167,6 +168,7 @@
           <ButtonText>Show &amp;Errors (WIP)</ButtonText>
         </Strings>
       </Button>
+			-->
 
 			<!-- DK Menu -> Compile -> Compile -->
 			<Button guid="guidProbeToolsCmdSet" id="cmdCompile" priority="0x0030" type="Button">
@@ -442,6 +444,7 @@
       </Button>
 
       <!-- DK Toolbar -> Show Errors -->
+			<!-- TODO: Re-enable when ready to report errors
       <Button guid="guidProbeToolsCmdSet" id="cmdShowErrors" priority="0x0020" type="Button">
         <Parent guid="guidProbeToolsCmdSet" id="tbEditorOptionsGroup" />
         <Icon guid="guidImages" id="bmpShowErrors" />
@@ -450,6 +453,7 @@
           <ButtonText>Show Errors (WIP)</ButtonText>
         </Strings>
       </Button>
+			-->
 
       <!-- DK Toolbar -> ACM -->
 			<Button guid="guidProbeToolsCmdSet" id="cmdPSelect" priority="0x0020" type="Button">

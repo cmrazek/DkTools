@@ -1,6 +1,4 @@
-﻿#define REPORT_ERRORS
-
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -26,8 +24,8 @@ namespace DkTools.CodeModel
 		private List<Definition> _globalDefs = new List<Definition>();
 #if REPORT_ERRORS
 		private List<ErrorTagging.ErrorInfo> _errors = new List<ErrorTagging.ErrorInfo>();
-#endif
 		private bool _reportErrors;
+#endif
 
 		public PreprocessorModel(CodeSource source, DefinitionProvider defProv, string fileName, bool visible)
 		{
@@ -40,7 +38,10 @@ namespace DkTools.CodeModel
 			_defProv = defProv;
 			_fileName = fileName;
 			FunctionFileScanning.FFUtil.FileNameIsClass(_fileName, out _className);
+
+#if REPORT_ERRORS
 			_reportErrors = visible && ProbeToolsPackage.Instance.EditorOptions.ShowErrors;
+#endif
 
 			Parse();
 		}
@@ -302,13 +303,17 @@ namespace DkTools.CodeModel
 					}
 					else
 					{
+#if REPORT_ERRORS
 						ReportError(_code.TokenSpan, "Expected '{'.");
+#endif
 						return;
 					}
 				}
 
+#if REPORT_ERRORS
 				_code.Peek();
 				ReportError(_code.TokenSpan, "Expected '{'.");
+#endif
 				return;
 			}
 
@@ -542,8 +547,10 @@ namespace DkTools.CodeModel
 			// Table name
 			if (!_code.ReadWord())
 			{
+#if REPORT_ERRORS
 				_code.Peek();
 				ReportError(errorSpan, "Expected extract name.");
+#endif
 				return;
 			}
 			var name = _code.TokenText;
@@ -586,7 +593,9 @@ namespace DkTools.CodeModel
 							break;
 						case "{":
 						case "}":
+#if REPORT_ERRORS
 							ReportError(_code.TokenSpan, "Expected ';' to end extract.");
+#endif
 							done = true;
 							break;
 					}

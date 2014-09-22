@@ -54,6 +54,7 @@ namespace DkTools.QuickInfo
 					applicableToSpan = model.Snapshot.CreateTrackingSpan(info.Value.token.Span.ToVsTextSpan(), SpanTrackingMode.EdgeInclusive);
 				}
 
+#if REPORT_ERRORS
 				foreach (var error in model.PreprocessorModel.GetErrorsForPos(modelPos))
 				{
 					quickInfoContent.Add(error.Message);
@@ -63,6 +64,7 @@ namespace DkTools.QuickInfo
 						applicableToSpan = model.Snapshot.CreateTrackingSpan(snapSpan, SpanTrackingMode.EdgeInclusive);
 					}
 				}
+#endif
 			}
 		}
 

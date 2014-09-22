@@ -1,4 +1,5 @@
-﻿using System;
+﻿#if REPORT_ERRORS
+using System;
 using System.Collections.Generic;
 using System.ComponentModel.Composition;
 using System.Linq;
@@ -24,3 +25,4 @@ namespace DkTools.ErrorTagging
 		}
 	}
 }
+#endif

@@ -1,6 +1,6 @@
 DkTools2012 ChangeLog
 ____________________________________________________________________________________________________
-Version 1.2.6 - pending:
+Version 1.2.6 - Sep 22, 2014:
 
 Features:
 - Added syntax highlighting for variables.
