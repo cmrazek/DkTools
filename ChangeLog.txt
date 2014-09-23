@@ -6,6 +6,7 @@ Bug Fixes:
 - Added 'long' as a data type.
 - Array variables are now parsed properly.
 - Fixed #define not parsing properly when there's trailing whitespace.
+- Fixed functions with prompts, comments or other attributes not being parsed properly.
 
 ____________________________________________________________________________________________________
 Version 1.2.6 - Sep 22, 2014:

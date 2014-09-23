@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using DkTools.CodeModel.Definitions;
 using DkTools.CodeModel.Tokens;
@@ -247,7 +248,8 @@ namespace DkTools.CodeModel
 			return false;
 		}
 
-		private void StartFunctionArgs(string funcName, int allStartPos, int argStartPos, Span nameSpan, DataType returnDataType, FunctionPrivacy privacy, bool isExtern)
+		private void StartFunctionArgs(string funcName, int allStartPos, int argStartPos, Span nameSpan,
+			DataType returnDataType, FunctionPrivacy privacy, bool isExtern)
 		{
 			var localArgStartPos = _source.GetFilePosition(argStartPos);
 			var argScope = new CodeScope(localArgStartPos.Position);
@@ -279,45 +281,16 @@ namespace DkTools.CodeModel
 			{
 				var localPos = _source.GetFilePosition(nameSpan.Start);
 				var sig = Tokens.Token.NormalizePlainText(_code.GetText(allStartPos, _code.Position - allStartPos));
-				var def = new FunctionDefinition(_className, funcName, localPos.FileName, localPos.Position, returnDataType, sig, argEndPos, 0, Span.Empty, privacy, true, null);
+				var def = new FunctionDefinition(_className, funcName, localPos.FileName, localPos.Position,
+					returnDataType, sig, argEndPos, 0, Span.Empty, privacy, true, null);
 				_externFuncs[funcName] = def;
 				AddGlobalDefinition(def);
 				return;
 			}
 
-			// Read the function attributes until '{'
-			string description = null;
-			int bodyStartPos = 0;
-			while (true)
-			{
-				if (_code.ReadExact('{'))
-				{
-					bodyStartPos = _code.TokenStartPostion;
-					break;
-				}
-				if (_code.ReadWord())
-				{
-					var word = _code.TokenText;
-					if (word == "description")
-					{
-						description = ReadDescriptionAttribute();
-						continue;
-					}
-					else
-					{
-#if REPORT_ERRORS
-						ReportError(_code.TokenSpan, "Expected '{'.");
-#endif
-						return;
-					}
-				}
-
-#if REPORT_ERRORS
-				_code.Peek();
-				ReportError(_code.TokenSpan, "Expected '{'.");
-#endif
-				return;
-			}
+			int bodyStartPos;
+			string description;
+			if (!ReadFunctionAttributes(out bodyStartPos, out description)) return;
 
 			// Read the variables at the start of the function.
 			var localBodyStartPos = _source.GetFilePosition(bodyStartPos);
@@ -400,6 +373,107 @@ namespace DkTools.CodeModel
 			}
 		}
 
+		private static readonly Regex _rxAccelWord = new Regex(@"^(CTRL|ALT|SHIFT|F\d{1,2}|[A-Za-z])$");
+
+		private bool ReadFunctionAttributes(out int bodyStartPos, out string devDesc)
+		{
+			// Read the function attributes until '{'
+
+			bodyStartPos = -1;
+			devDesc = null;
+
+			while (true)
+			{
+				if (_code.ReadExact('{'))
+				{
+					bodyStartPos = _code.TokenStartPostion;
+					return true;
+				}
+
+				if (_code.ReadWord())
+				{
+					// TODO: report an error if the first token is not a string literal
+					var word = _code.TokenText;
+					if (word == "description")
+					{
+						var sb = new StringBuilder();
+						while (_code.ReadStringLiteral())
+						{
+							if (sb.Length > 0) sb.AppendLine();
+							sb.Append(TokenParser.Parser.StringLiteralToString(_code.TokenText));
+						}
+						devDesc = sb.ToString();
+						continue;
+					}
+
+					if (word == "prompt")
+					{
+						if (!_code.ReadStringLiteral())
+						{
+							// TODO: report error
+							return false;
+						}
+						continue;
+					}
+
+					if (word == "comment")
+					{
+						if (!_code.ReadStringLiteral())
+						{
+							// TODO: report error
+							return false;
+						}
+						continue;
+					}
+
+					if (word == "nomenu")
+					{
+						continue;
+					}
+
+					if (word == "accel")
+					{
+						while (!_code.EndOfFile)
+						{
+							var resetPos = _code.Position;
+							if (_code.ReadExact('+')) { }
+							else if (_code.ReadWord())
+							{
+								if (!_rxAccelWord.IsMatch(_code.TokenText))
+								{
+									// TODO: report error
+									_code.Position = resetPos;
+									return false;
+								}
+							}
+							else if (_code.ReadNumber())
+							{
+								if (_code.TokenText.Length != 1 || !char.IsDigit(_code.TokenText[0]))
+								{
+									// TODO: report error
+									_code.Position = resetPos;
+									return false;
+								}
+							}
+							else break;
+						}
+						continue;
+					}
+
+#if REPORT_ERRORS
+					ReportError(_code.TokenSpan, "Expected '{'.");
+#endif
+					return false;
+				}
+
+#if REPORT_ERRORS
+				_code.Peek();
+				ReportError(_code.TokenSpan, "Expected '{'.");
+#endif
+				return false;
+			}
+		}
+
 		private bool TryReadFunctionArgument(CodeScope scope, bool createDefinitions, List<Definition> newDefList)
 		{
 			var dataType = DataType.Parse(_code, null, GlobalDataTypeCallback, GlobalVariableCallback);
@@ -461,21 +535,6 @@ namespace DkTools.CodeModel
 			}
 
 			return gotVars;
-		}
-
-		private string ReadDescriptionAttribute()
-		{
-			// This function assumes the leading "description" has already been read from the file.
-
-			// TODO: report an error if the first token is not a string literal
-
-			var sb = new StringBuilder();
-			while (_code.ReadStringLiteral())
-			{
-				if (sb.Length > 0) sb.AppendLine();
-				sb.Append(TokenParser.Parser.StringLiteralToString(_code.TokenText));
-			}
-			return sb.ToString();
 		}
 
 		private bool TryReadNestable()
