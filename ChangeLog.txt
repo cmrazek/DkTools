@@ -2,12 +2,15 @@ DkTools2012 ChangeLog
 ____________________________________________________________________________________________________
 Version 1.2.7 - (pending):
 
+Features:
+- Added "physical" as a completion option for indexes/relationships.
+- Added "formonly" and "tool" as keywords.
+
 Bug Fixes:
 - Added 'long' as a data type.
 - Array variables are now parsed properly.
 - Fixed #define not parsing properly when there's trailing whitespace.
 - Fixed functions with prompts, comments or other attributes not being parsed properly.
-- Added "formonly" and "tool" as keywords.
 
 ____________________________________________________________________________________________________
 Version 1.2.6 - Sep 22, 2014:

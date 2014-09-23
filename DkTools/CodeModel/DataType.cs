@@ -126,11 +126,18 @@ namespace DkTools.CodeModel
 					case CompletionOptionsType.Tables:
 						return (from t in ProbeEnvironment.Tables select t.Definition);
 					case CompletionOptionsType.RelInds:
-						return (from r in ProbeEnvironment.RelInds select r.Definition);
+						return RelIndCompletionOptions();
 					default:
 						return new Definition[0];
 				}
 			}
+		}
+
+		private IEnumerable<Definition> RelIndCompletionOptions()
+		{
+			yield return RelIndDefinition.Physical;
+
+			foreach (var r in ProbeEnvironment.RelInds) yield return r.Definition;
 		}
 
 		public static string[] DataTypeStartingKeywords = new string[] { "char", "date", "enum", "int", "indrel", "like", "numeric", "string", "table", "time", "unsigned", "void" };

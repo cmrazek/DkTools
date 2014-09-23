@@ -12,6 +12,8 @@ namespace DkTools.CodeModel.Definitions
 		private string _relText;
 		private string _devDesc;
 
+		public static readonly RelIndDefinition Physical = new RelIndDefinition("physical", string.Empty, string.Empty, "Index on rowno");
+
 		public RelIndDefinition(string name, string baseTableName, string relText, string devDesc)
 			: base(name, null, -1)
 		{
