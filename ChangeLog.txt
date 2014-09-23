@@ -1,6 +1,6 @@
 DkTools2012 ChangeLog
 ____________________________________________________________________________________________________
-Version 1.2.7 - (pending):
+Version 1.2.7 - Sep 23, 2014:
 
 Features:
 - Added "physical" as a completion option for indexes/relationships.
