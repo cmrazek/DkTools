@@ -7,6 +7,7 @@ Bug Fixes:
 - Array variables are now parsed properly.
 - Fixed #define not parsing properly when there's trailing whitespace.
 - Fixed functions with prompts, comments or other attributes not being parsed properly.
+- Added "formonly" and "tool" as keywords.
 
 ____________________________________________________________________________________________________
 Version 1.2.6 - Sep 22, 2014:
