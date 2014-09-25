@@ -372,7 +372,15 @@ namespace DkTools
 
 		public static bool IsProbeTable(string tableName)
 		{
-			return _tables.ContainsKey(tableName);
+			if (_tables.ContainsKey(tableName)) return true;
+
+			if (tableName.Length > 1 && char.IsDigit(tableName[tableName.Length - 1]))
+			{
+				var prefixTableName = tableName.Substring(0, tableName.Length - 1);
+				if (_tables.ContainsKey(prefixTableName)) return true;
+			}
+
+			return false;
 		}
 
 		public static bool IsProbeTable(int tableNum)
@@ -383,7 +391,15 @@ namespace DkTools
 		public static Dict.DictTable GetTable(string tableName)
 		{
 			Dict.DictTable table;
-			return _tables.TryGetValue(tableName, out table) ? table : null;
+			if (_tables.TryGetValue(tableName, out table)) return table;
+
+			if (tableName.Length > 1 && char.IsDigit(tableName[tableName.Length - 1]))
+			{
+				var prefixTableName = tableName.Substring(0, tableName.Length - 1);
+				if (_tables.TryGetValue(prefixTableName, out table)) return table;
+			}
+
+			return null;
 		}
 
 		public static Dict.DictTable GetTable(int tableNum)
@@ -395,7 +411,10 @@ namespace DkTools
 		{
 			get
 			{
-				foreach (var table in _tables.Values) yield return table.Definition;
+				foreach (var table in _tables.Values)
+				{
+					foreach (var def in table.Definitions) yield return def;
+				}
 				foreach (var relInd in _relInds.Values) yield return relInd.Definition;
 				foreach (var stringDef in _stringDefs.Values) yield return stringDef.Definition;
 				foreach (var typeDef in _typeDefs.Values) yield return typeDef.Definition;

@@ -305,7 +305,7 @@ namespace DkTools.CodeModel.Tokens
 							var field = table.GetField(word2);
 							if (field != null)
 							{
-								var tableToken = new TableToken(parent, scope, span, word, table.Definition);
+								var tableToken = new TableToken(parent, scope, span, word, table.BaseDefinition);
 								var dotToken = new DotToken(parent, scope, dotSpan);
 								var fieldToken = new TableFieldToken(parent, scope, word2Span, word2, tableToken);
 								return new TableAndFieldToken(parent, scope, tableToken, dotToken, fieldToken, field);
@@ -429,7 +429,7 @@ namespace DkTools.CodeModel.Tokens
 			if (tableDict != null && tableDict.IsField(word2))
 			{
 				var word2Span = MoveNextSpan(word2.Length);
-				var tableToken = new TableToken(parent, scope, word1Span, word1, tableDict.Definition);
+				var tableToken = new TableToken(parent, scope, word1Span, word1, tableDict.BaseDefinition);
 				var dotToken = new DotToken(parent, scope, dotSpan);
 				var fieldToken = new TableFieldToken(parent, scope, word2Span, word2, tableToken);
 				return new TableAndFieldToken(parent, scope, tableToken, dotToken, fieldToken, tableDict.GetField(word2));

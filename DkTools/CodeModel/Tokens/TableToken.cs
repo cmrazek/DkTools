@@ -17,7 +17,7 @@ namespace DkTools.CodeModel.Tokens
 			else
 			{
 				var table = ProbeEnvironment.GetTable(text);
-				if (table != null) this.SourceDefinition = table.Definition;
+				if (table != null) this.SourceDefinition = table.BaseDefinition;
 			}
 		}
 
@@ -30,7 +30,7 @@ namespace DkTools.CodeModel.Tokens
 			if (!ProbeEnvironment.IsProbeTable(word)) return null;
 
 			var table = ProbeEnvironment.GetTable(word);
-			Definition def = table != null ? table.Definition : null;
+			Definition def = table != null ? table.BaseDefinition : null;
 
 			return new TableToken(parent, scope, file.MoveNextSpan(word.Length), word, def);
 		}

@@ -12,13 +12,15 @@ namespace DkTools.CodeModel.Definitions
 		private string _prompt;
 		private string _comment;
 		private string _description;
+		private bool _orig;
 
-		public TableDefinition(string name, Dict.DictTable table)
+		public TableDefinition(string name, Dict.DictTable table, bool orig)
 			: base(name, null, -1)
 		{
 			_prompt = table.Prompt;
 			_comment = table.Comment;
 			_description = table.Description;
+			_orig = orig;
 		}
 
 		public override StatementCompletion.CompletionType CompletionType
@@ -28,7 +30,7 @@ namespace DkTools.CodeModel.Definitions
 
 		public override bool CompletionVisible
 		{
-			get { return true; }
+			get { return _orig; }
 		}
 
 		public override Classifier.ProbeClassifierType ClassifierType

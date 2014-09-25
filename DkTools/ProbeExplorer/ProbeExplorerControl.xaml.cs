@@ -936,7 +936,7 @@ namespace DkTools.ProbeExplorer
 				Orientation = Orientation.Horizontal,
 				ToolTip = new ToolTip
 				{
-					Content = table.Definition.QuickInfoTextWpf
+					Content = table.BaseDefinition.QuickInfoTextWpf
 				}
 			};
 			panel.Children.Add(new Image

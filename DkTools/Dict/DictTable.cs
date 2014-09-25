@@ -16,7 +16,7 @@ namespace DkTools.Dict
 		private string _description;
 		private Dictionary<string, DictField> _fields;
 		private List<DictRelInd> _relInds;
-		private CodeModel.Definitions.TableDefinition _definition;
+		private TableDefinition[] _definitions;
 		private string _baseTable;
 
 		public DictTable(DICTSRVRLib.IPTable repoTable)
@@ -42,7 +42,9 @@ namespace DkTools.Dict
 
 			_baseTable = _name;	// TODO: Do we need to retrieve this from somewhere?
 
-			_definition = new CodeModel.Definitions.TableDefinition(_name, this);
+			_definitions = new TableDefinition[11];
+			_definitions[0] = new TableDefinition(_name, this, true);
+			for (int i = 0; i < 10; i++) _definitions[i + 1] = new TableDefinition(string.Concat(_name, i), this, false);
 
 			LoadFields(repoTable);
 		}
@@ -121,9 +123,14 @@ namespace DkTools.Dict
 			get { return _relInds; }
 		}
 
-		public CodeModel.Definitions.TableDefinition Definition
+		public IEnumerable<TableDefinition> Definitions
 		{
-			get { return _definition; }
+			get { return _definitions; }
+		}
+
+		public TableDefinition BaseDefinition
+		{
+			get { return _definitions[0]; }
 		}
 
 		public IEnumerable<CodeModel.Definitions.TableFieldDefinition> FieldDefinitions

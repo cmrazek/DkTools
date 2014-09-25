@@ -139,7 +139,11 @@ namespace DkTools.StatementCompletion
 				if (table != null)
 				{
 					completionSpan = new Microsoft.VisualStudio.Text.Span(linePos + match.Groups[2].Index, match.Groups[2].Length);
-					foreach (var def in table.FieldDefinitions) completionList[def.Name] = CreateCompletion(def);
+					foreach (var def in table.FieldDefinitions)
+					{
+						if (!def.CompletionVisible) continue;
+						completionList[def.Name] = CreateCompletion(def);
+					}
 				}
 
 				// Extract and field
@@ -149,7 +153,11 @@ namespace DkTools.StatementCompletion
 				if (exDef != null)
 				{
 					completionSpan = new Microsoft.VisualStudio.Text.Span(linePos + match.Groups[2].Index, match.Groups[2].Length);
-					foreach (var def in exDef.Fields) completionList[def.Name] = CreateCompletion(def);
+					foreach (var def in exDef.Fields)
+					{
+						if (!def.CompletionVisible) continue;
+						completionList[def.Name] = CreateCompletion(def);
+					}
 				}
 
 				// Class and method
@@ -160,6 +168,7 @@ namespace DkTools.StatementCompletion
 					completionSpan = new Microsoft.VisualStudio.Text.Span(linePos + match.Groups[2].Index, match.Groups[2].Length);
 					foreach (var def in cls.FunctionDefinitions)
 					{
+						if (!def.CompletionVisible) continue;
 						if (!completionList.ContainsKey(def.Name)) completionList[def.Name] = CreateCompletion(def);
 					}
 				}
@@ -190,7 +199,11 @@ namespace DkTools.StatementCompletion
 							var dt = prevToken.ValueDataType;
 							if (dt != null && dt.HasCompletionOptions)
 							{
-								foreach (var opt in dt.CompletionOptions) completionList[opt.Name] = CreateCompletion(opt);
+								foreach (var opt in dt.CompletionOptions)
+								{
+									if (!opt.CompletionVisible) continue;
+									completionList[opt.Name] = CreateCompletion(opt);
+								}
 							}
 						}
 					}
@@ -203,6 +216,7 @@ namespace DkTools.StatementCompletion
 
 				foreach (var def in model.DefinitionProvider.GetGlobal<ConstantDefinition>())
 				{
+					if (!def.CompletionVisible) continue;
 					completionList[def.Name] = CreateCompletion(def);
 				}
 			}
@@ -266,7 +280,11 @@ namespace DkTools.StatementCompletion
 					var dt = switchToken.ExpressionDataType;
 					if (dt != null && dt.HasCompletionOptions)
 					{
-						foreach (var opt in dt.CompletionOptions) completionList[opt.Name] = CreateCompletion(opt);
+						foreach (var opt in dt.CompletionOptions)
+						{
+							if (!opt.CompletionVisible) continue;
+							completionList[opt.Name] = CreateCompletion(opt);
+						}
 					}
 				}
 			}
@@ -282,6 +300,7 @@ namespace DkTools.StatementCompletion
 
 				foreach (var exDef in model.DefinitionProvider.GetGlobal<ExtractTableDefinition>())
 				{
+					if (!exDef.CompletionVisible) continue;
 					completionList[exDef.Name] = CreateCompletion(exDef);
 				}
 			}
@@ -350,6 +369,7 @@ namespace DkTools.StatementCompletion
 			{
 				foreach (var opt in dataType.CompletionOptions)
 				{
+					if (!opt.CompletionVisible) continue;
 					yield return CreateCompletion(opt);
 				}
 			}
@@ -420,25 +440,42 @@ namespace DkTools.StatementCompletion
 
 			foreach (var def in model.DefinitionProvider.Globals)
 			{
+				if (!def.CompletionVisible) continue;
 				yield return CreateCompletion(def);
 			}
 
 			foreach (var def in model.DefinitionProvider.GetLocal(modelPos))
 			{
+				if (!def.CompletionVisible) continue;
 				yield return CreateCompletion(def);
 			}
 
-			foreach (var t in ProbeEnvironment.DictDefinitions) yield return CreateCompletion(t);
-			foreach (var d in Constants.DataTypeKeywords) yield return CreateCompletion(d, d, CompletionType.DataType);
+			foreach (var t in ProbeEnvironment.DictDefinitions)
+			{
+				if (!t.CompletionVisible) continue;
+				yield return CreateCompletion(t);
+			}
+
+			foreach (var d in Constants.DataTypeKeywords)
+			{
+				yield return CreateCompletion(d, d, CompletionType.DataType);
+			}
 
 			// Don't show functions when on the root.
 			if (tokens.Any(t => !t.IsOnRoot))
 			{
-				foreach (var f in ProbeToolsPackage.Instance.FunctionFileScanner.GlobalDefinitions) yield return CreateCompletion(f);
+				foreach (var f in ProbeToolsPackage.Instance.FunctionFileScanner.GlobalDefinitions)
+				{
+					if (!f.CompletionVisible) continue;
+					yield return CreateCompletion(f);
+				}
 			}
 
 			// Global keywords
-			foreach (var k in Constants.GlobalKeywords) yield return CreateCompletion(k, k, CompletionType.Keyword);
+			foreach (var k in Constants.GlobalKeywords)
+			{
+				yield return CreateCompletion(k, k, CompletionType.Keyword);
+			}
 
 			//foreach (var token in tokens)
 			//{

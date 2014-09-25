@@ -122,22 +122,25 @@ namespace DkTools.CodeModel
 				switch (_completionOptionsType)
 				{
 					case CompletionOptionsType.List:
-						return _completionOptions != null ? _completionOptions : new Definition[0];
+						if (_completionOptions != null)
+						{
+							foreach (var opt in _completionOptions) yield return opt;
+						}
+						break;
+
 					case CompletionOptionsType.Tables:
-						return (from t in ProbeEnvironment.Tables select t.Definition);
+						foreach (var table in ProbeEnvironment.Tables)
+						{
+							foreach (var def in table.Definitions) yield return def;
+						}
+						break;
+
 					case CompletionOptionsType.RelInds:
-						return RelIndCompletionOptions();
-					default:
-						return new Definition[0];
+						yield return RelIndDefinition.Physical;
+						foreach (var r in ProbeEnvironment.RelInds) yield return r.Definition;
+						break;
 				}
 			}
-		}
-
-		private IEnumerable<Definition> RelIndCompletionOptions()
-		{
-			yield return RelIndDefinition.Physical;
-
-			foreach (var r in ProbeEnvironment.RelInds) yield return r.Definition;
 		}
 
 		public static string[] DataTypeStartingKeywords = new string[] { "char", "date", "enum", "int", "indrel", "like", "numeric", "string", "table", "time", "unsigned", "void" };
