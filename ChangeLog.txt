@@ -5,6 +5,9 @@ Version 1.2.8 - (pending):
 Features:
 - Added support for numbered tables (dmd1, dmd2, dmd3...)
 
+Bug Fixes:
+- When the quick-info text is too wide, it will now wrap.
+
 ____________________________________________________________________________________________________
 Version 1.2.7 - Sep 23, 2014:
 

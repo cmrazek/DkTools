@@ -22,6 +22,8 @@ namespace DkTools.CodeModel.Definitions
 		public abstract string QuickInfoTextStr { get; }
 		public abstract UIElement QuickInfoTextWpf { get; }
 
+		private const int k_maxWpfWidth = 600;
+
 		public Definition(string name, string sourceFileName, int sourceStartPos)
 		{
 #if DEBUG
@@ -94,7 +96,8 @@ namespace DkTools.CodeModel.Definitions
 			var panel = new StackPanel
 			{
 				Orientation = Orientation.Vertical,
-				HorizontalAlignment = HorizontalAlignment.Left
+				HorizontalAlignment = HorizontalAlignment.Left,
+				MaxWidth = k_maxWpfWidth
 			};
 
 			foreach (var item in items)
@@ -115,7 +118,8 @@ namespace DkTools.CodeModel.Definitions
 			var panel = new StackPanel
 			{
 				Orientation = Orientation.Horizontal,
-				HorizontalAlignment = HorizontalAlignment.Left
+				HorizontalAlignment = HorizontalAlignment.Left,
+				MaxWidth = k_maxWpfWidth
 			};
 			panel.Children.Add(new TextBlock
 			{
@@ -128,7 +132,8 @@ namespace DkTools.CodeModel.Definitions
 			{
 				Text = value,
 				FontStyle = FontStyles.Normal,
-				HorizontalAlignment = HorizontalAlignment.Left
+				HorizontalAlignment = HorizontalAlignment.Left,
+				TextWrapping = TextWrapping.Wrap
 			});
 
 			return panel;
@@ -139,7 +144,8 @@ namespace DkTools.CodeModel.Definitions
 			var panel = new StackPanel
 			{
 				Orientation = Orientation.Horizontal,
-				HorizontalAlignment = HorizontalAlignment.Left
+				HorizontalAlignment = HorizontalAlignment.Left,
+				MaxWidth = k_maxWpfWidth
 			};
 			panel.Children.Add(new TextBlock
 			{
@@ -160,6 +166,8 @@ namespace DkTools.CodeModel.Definitions
 				Text = text,
 				HorizontalAlignment = HorizontalAlignment.Left,
 				Margin = new Thickness(0, 0, 0, 4),
+				MaxWidth = k_maxWpfWidth,
+				TextWrapping = TextWrapping.Wrap
 			};
 		}
 
@@ -170,7 +178,9 @@ namespace DkTools.CodeModel.Definitions
 				Text = text,
 				FontStyle = FontStyles.Italic,
 				HorizontalAlignment = HorizontalAlignment.Left,
-				Margin = new Thickness(0, 4, 0, 0)
+				Margin = new Thickness(0, 4, 0, 0),
+				MaxWidth = k_maxWpfWidth,
+				TextWrapping = TextWrapping.Wrap
 			};
 		}
 
