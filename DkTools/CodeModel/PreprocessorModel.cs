@@ -277,20 +277,20 @@ namespace DkTools.CodeModel
 				return;
 			}
 
+			int bodyStartPos;
+			string description;
+			if (!ReadFunctionAttributes(funcName, out bodyStartPos, out description, isExtern)) return;
+
 			if (isExtern)
 			{
 				var localPos = _source.GetFilePosition(nameSpan.Start);
-				var sig = Tokens.Token.NormalizePlainText(_code.GetText(allStartPos, _code.Position - allStartPos));
+				var sig = Tokens.Token.NormalizePlainText(_code.GetText(allStartPos, argEndPos - allStartPos));
 				var def = new FunctionDefinition(_className, funcName, localPos.FileName, localPos.Position,
-					returnDataType, sig, argEndPos, 0, Span.Empty, privacy, true, null);
+					returnDataType, sig, argEndPos, 0, Span.Empty, privacy, true, description);
 				_externFuncs[funcName] = def;
 				AddGlobalDefinition(def);
 				return;
 			}
-
-			int bodyStartPos;
-			string description;
-			if (!ReadFunctionAttributes(funcName, out bodyStartPos, out description)) return;
 
 			// Read the variables at the start of the function.
 			var localBodyStartPos = _source.GetFilePosition(bodyStartPos);
@@ -375,7 +375,7 @@ namespace DkTools.CodeModel
 
 		private static readonly Regex _rxAccelWord = new Regex(@"^(CTRL|ALT|SHIFT|F\d{1,2}|[A-Za-z])$");
 
-		private bool ReadFunctionAttributes(string funcName, out int bodyStartPos, out string devDesc)
+		private bool ReadFunctionAttributes(string funcName, out int bodyStartPos, out string devDesc, bool isExtern)
 		{
 			// Read the function attributes until '{'
 
@@ -384,9 +384,15 @@ namespace DkTools.CodeModel
 
 			while (true)
 			{
-				if (_code.ReadExact('{'))
+				if (!isExtern && _code.ReadExact('{'))
 				{
 					bodyStartPos = _code.TokenStartPostion;
+					return true;
+				}
+
+				if (isExtern && _code.ReadExact(';'))
+				{
+					bodyStartPos = 0;
 					return true;
 				}
 

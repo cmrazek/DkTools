@@ -6,6 +6,7 @@ Features:
 - Added support for numbered tables (dmd1, dmd2, dmd3...)
 - Added keywords "typedef", "BEGINHLP" and "ENDHLP".
 - Added support for BEGINHLP ... ENDHLP after function declarations.
+- Added support for description text on extern functions.
 
 Bug Fixes:
 - When the quick-info text is too wide, it will now wrap.
