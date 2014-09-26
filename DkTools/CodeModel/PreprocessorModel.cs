@@ -290,7 +290,7 @@ namespace DkTools.CodeModel
 
 			int bodyStartPos;
 			string description;
-			if (!ReadFunctionAttributes(out bodyStartPos, out description)) return;
+			if (!ReadFunctionAttributes(funcName, out bodyStartPos, out description)) return;
 
 			// Read the variables at the start of the function.
 			var localBodyStartPos = _source.GetFilePosition(bodyStartPos);
@@ -375,7 +375,7 @@ namespace DkTools.CodeModel
 
 		private static readonly Regex _rxAccelWord = new Regex(@"^(CTRL|ALT|SHIFT|F\d{1,2}|[A-Za-z])$");
 
-		private bool ReadFunctionAttributes(out int bodyStartPos, out string devDesc)
+		private bool ReadFunctionAttributes(string funcName, out int bodyStartPos, out string devDesc)
 		{
 			// Read the function attributes until '{'
 
@@ -460,7 +460,7 @@ namespace DkTools.CodeModel
 						continue;
 					}
 
-					if (word == "BEGINHLP")
+					if (word == "BEGINHLP" && funcName == "main")
 					{
 						var sb = new StringBuilder();
 						while (_code.ReadStringLiteral())
