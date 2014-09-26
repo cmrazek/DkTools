@@ -57,17 +57,32 @@ namespace DkTools.StatementCompletion
 				var commandId = nCmdID;
 				var typedChar = char.MinValue;
 
-				// Check for 'go to definition' command.
-				if (pguidCmdGroup == typeof(VSConstants.VSStd97CmdID).GUID && nCmdID == (uint)VSConstants.VSStd97CmdID.GotoDefn)
+				if (pguidCmdGroup == typeof(VSConstants.VSStd97CmdID).GUID)
 				{
-					GoToDefinitionHelper.TriggerGoToDefinition(_textView);
-					return VSConstants.S_OK;
+					if (nCmdID == (uint)VSConstants.VSStd97CmdID.GotoDefn)
+					{
+						GoToDefinitionHelper.TriggerGoToDefinition(_textView);
+						return VSConstants.S_OK;
+					}
 				}
 
 				// Make sure the input is a char.
-				if (pguidCmdGroup == VSConstants.VSStd2K && nCmdID == (uint)VSConstants.VSStd2KCmdID.TYPECHAR)
+				if (pguidCmdGroup == VSConstants.VSStd2K)
 				{
-					typedChar = (char)(ushort)Marshal.GetObjectForNativeVariant(pvaIn);
+					if (nCmdID == (uint)VSConstants.VSStd2KCmdID.TYPECHAR)
+					{
+						typedChar = (char)(ushort)Marshal.GetObjectForNativeVariant(pvaIn);
+					}
+					else if (nCmdID == (uint)VSConstants.VSStd2KCmdID.GOTOBRACE)
+					{
+						GoToBraceHelper.Trigger(_textView, false);
+						return VSConstants.S_OK;
+					}
+					else if (nCmdID == (uint)VSConstants.VSStd2KCmdID.GOTOBRACE_EXT)
+					{
+						GoToBraceHelper.Trigger(_textView, true);
+						return VSConstants.S_OK;
+					}
 				}
 
 				if (_session != null && !_session.IsDismissed)

@@ -8,6 +8,7 @@ Features:
 Bug Fixes:
 - When the quick-info text is too wide, it will now wrap.
 - Create File dialog now limits file length to 16 chars.
+- Fixed go-to-brace not working properly all the time.
 
 ____________________________________________________________________________________________________
 Version 1.2.7 - Sep 23, 2014:

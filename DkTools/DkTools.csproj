@@ -442,6 +442,7 @@
     <Compile Include="StatementCompletion\DefinitionPickerWindow.xaml.cs">
       <DependentUpon>DefinitionPickerWindow.xaml</DependentUpon>
     </Compile>
+    <Compile Include="StatementCompletion\GoToBraceHelper.cs" />
     <Compile Include="StatementCompletion\GoToDefinitionHelper.cs" />
     <Compile Include="StatementCompletion\ProbeCompletionCommandHandler.cs" />
     <Compile Include="StatementCompletion\ProbeCompletionCommandHandlerProvider.cs" />
