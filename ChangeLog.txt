@@ -4,6 +4,8 @@ Version 1.2.8 - (pending):
 
 Features:
 - Added support for numbered tables (dmd1, dmd2, dmd3...)
+- Added keywords "typedef", "BEGINHLP" and "ENDHLP".
+- Added support for BEGINHLP ... ENDHLP after function declarations.
 
 Bug Fixes:
 - When the quick-info text is too wide, it will now wrap.

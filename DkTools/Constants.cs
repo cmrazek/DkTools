@@ -37,13 +37,13 @@ namespace DkTools
 		public static readonly HashSet<string> DataTypeKeywords = Util.ParseWordList("alternate bool char currency date enum int LEADINGZEROS like local_currency long longform nowarn numeric proto shortform string time unsigned void");
 
 		public static readonly HashSet<string> Keywords = Util.ParseWordList(
-			"after all and asc before break button by comment case col colff cols continue create default display desc description",
-			"each else extern extract for form formonly format from group header if index many nopick of on one or order outfile permanent private prompt protected public",
-			"relationship return row rows select snapshot static switch table to tool unique updates where while widthof zoom");
+			"after all and asc BEGINHLP before break button by comment case col colff cols continue create default display desc description",
+			"each else ENDHLP extern extract for form formonly format from group header if index many nopick of on one or order outfile permanent private prompt protected public",
+			"relationship return row rows select snapshot static switch table to tool typedef unique updates where while widthof zoom");
 
 		public static readonly HashSet<string> GlobalKeywords = Util.ParseWordList(
-			"after all and before break button comment col colff cols continue create display description each else extern extract for form formonly format from group header index",
-			"many nopick on one or outfile permanent private prompt protected public relationship row rows select snapshot static table to tool unique updates where widthof zoom");
+			"after all and BEGINHLP before break button comment col colff cols continue create display description each else ENDHLP extern extract for form formonly format from group header index",
+			"many nopick on one or outfile permanent private prompt protected public relationship row rows select snapshot static table to tool typedef unique updates where widthof zoom");
 
 		public static readonly HashSet<string> SwitchKeywords = Util.ParseWordList("case default");
 		public static readonly HashSet<string> FunctionKeywords = Util.ParseWordList("if return switch while");

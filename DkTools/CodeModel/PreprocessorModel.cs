@@ -460,6 +460,25 @@ namespace DkTools.CodeModel
 						continue;
 					}
 
+					if (word == "BEGINHLP")
+					{
+						var sb = new StringBuilder();
+						while (_code.ReadStringLiteral())
+						{
+							if (sb.Length > 0) sb.AppendLine();
+							sb.Append(TokenParser.Parser.StringLiteralToString(_code.TokenText));
+						}
+						devDesc = sb.ToString();
+
+						if (!_code.ReadExact("ENDHLP"))
+						{
+#if REPORT_ERRORS
+							ReportError(_code.TokenSpan, "Expected 'ENDHLP'.");
+#endif
+						}
+						continue;
+					}
+
 #if REPORT_ERRORS
 					ReportError(_code.TokenSpan, "Expected '{'.");
 #endif
