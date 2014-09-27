@@ -267,6 +267,7 @@
     <Compile Include="CodeModel\Definitions\TableDefinition.cs" />
     <Compile Include="CodeModel\Definitions\TableFieldDefinition.cs" />
     <Compile Include="CodeModel\Definitions\VariableDefinition.cs" />
+    <Compile Include="CodeModel\ErrorProvider.cs" />
     <Compile Include="CodeModel\FunctionPrivacy.cs" />
     <Compile Include="CodeModel\LocalFilePosition.cs" />
     <Compile Include="CodeModel\Preprocessor.cs" />

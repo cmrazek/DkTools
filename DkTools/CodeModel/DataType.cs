@@ -145,17 +145,29 @@ namespace DkTools.CodeModel
 
 		public static string[] DataTypeStartingKeywords = new string[] { "char", "date", "enum", "int", "indrel", "like", "numeric", "string", "table", "time", "unsigned", "void" };
 
+		[Flags]
+		public enum ParseFlag
+		{
+			Strict,
+			FromRepo
+		}
+
 		/// <summary>
 		/// Parses a data type from a string.
 		/// </summary>
 		/// <param name="code">The token parser to read from.</param>
+		/// <param name="typeName">(optional) A name to be given to the data type. If null or blank, the actual text will be used as the name.</param>
+		/// <param name="dataTypeCallback">(optional) A callback function used to look up existing data types.</param>
+		/// <param name="varCallback">(optional) A callback function used to look up existing variables.</param>
+		/// <param name="flags">(optional) Flags to control the parsing behaviour.</param>
+		/// <param name="errorProv">(optional) An ErrorProvider to receive errors detected by this parsing function.</param>
 		/// <returns>A data type object, if a data type could be parsed; otherwise null.</returns>
-		public static DataType Parse(TokenParser.Parser code, string typeName, GetDataTypeDelegate dataTypeCallback, GetVariableDelegate varCallback)
+		public static DataType Parse(TokenParser.Parser code, string typeName = null, GetDataTypeDelegate dataTypeCallback = null, GetVariableDelegate varCallback = null, ParseFlag flags = 0, ErrorProvider errorProv = null)
 		{
 			var startPos = code.Position;
 			if (!code.ReadWord()) return null;
 
-			if (code.TokenText == "__SYSTEM__")
+			if ((flags & ParseFlag.FromRepo) != 0 && code.TokenText == "__SYSTEM__")
 			{
 				if (!code.ReadWord())
 				{
@@ -449,44 +461,141 @@ namespace DkTools.CodeModel
 						}
 
 						// Read the option list
-						var optionSB = new StringBuilder();
-						while (!code.EndOfFile)
+						if ((flags & ParseFlag.FromRepo) != 0)
 						{
-							if (code.ReadExact('}'))
-							{
-								if (optionSB.Length > 0) options.Add(new EnumOptionDefinition(optionSB.ToString()));
-								optionSB.Clear();
-								break;
-							}
-							else if (code.ReadExact(','))
-							{
-								if (optionSB.Length > 0) options.Add(new EnumOptionDefinition(optionSB.ToString()));
-								optionSB.Clear();
-							}
-							else if (code.ReadStringLiteral())
-							{
-								options.Add(new EnumOptionDefinition(code.TokenText));
-								optionSB.Clear();
-							}
-							else if (code.Read())
-							{
-								optionSB.Append(code.TokenText);
-							}
-							else break;
-						}
+							// The WBDK repository doesn't put quotes around the strings that need them.
+							code.SkipWhiteSpaceAndCommentsIfAllowed();
+							var optionStartPos = code.Position;
 
-						if (optionSB.Length > 0) options.Add(new EnumOptionDefinition(optionSB.ToString()));
+							while (!code.EndOfFile)
+							{
+								if (!code.Read() || code.TokenText == "}") break;
+
+								if (code.TokenText == ",")
+								{
+									var str = code.GetText(optionStartPos, code.TokenStartPostion - optionStartPos).Trim();
+									options.Add(new EnumOptionDefinition(DecorateEnumOptionIfRequired(str)));
+									optionStartPos = code.Position;
+								}
+							}
+						}
+						else if ((flags & ParseFlag.Strict) != 0)
+						{
+							var expectingComma = false;
+							while (!code.EndOfFile)
+							{
+								if (!code.Read())
+								{
+									if (errorProv != null) errorProv.ReportError(code, code.TokenSpan, ErrorCode.Enum_UnexpectedEndOfFile);
+									break;
+								}
+
+								if (code.TokenType == TokenParser.TokenType.Operator)
+								{
+									if (code.TokenText == "}") break;
+									if (code.TokenText == ",")
+									{
+										if (!expectingComma)
+										{
+											if (errorProv != null) errorProv.ReportError(code, code.TokenSpan, ErrorCode.Enum_UnexpectedComma);
+										}
+										else
+										{
+											expectingComma = false;
+										}
+									}
+								}
+								else if (code.TokenType == TokenParser.TokenType.StringLiteral || code.TokenType == TokenParser.TokenType.Word)
+								{
+									var str = code.TokenText;
+									if (expectingComma)
+									{
+										if (errorProv != null) errorProv.ReportError(code, code.TokenSpan, ErrorCode.Enum_NoComma);
+									}
+									else if (options.Any(x => x.Name == str))
+									{
+										if (errorProv != null) errorProv.ReportError(code, code.TokenSpan, ErrorCode.Enum_DuplicateOption, str);
+									}
+									else
+									{
+										options.Add(new EnumOptionDefinition(str));
+									}
+								}
+							}
+						}
+						else
+						{
+							while (!code.EndOfFile)
+							{
+								if (!code.Read()) break;
+								if (code.TokenText == "}") break;
+								if (code.TokenText == ",") continue;
+								switch (code.TokenType)
+								{
+									case TokenParser.TokenType.Word:
+									case TokenParser.TokenType.StringLiteral:
+										options.Add(new EnumOptionDefinition(code.TokenText));
+										break;
+								}
+							}
+						}
 
 						sb.Append(" {");
 						var first = true;
-						foreach (var opt in options)
+						foreach (var option in options)
 						{
-							if (first) first = false;
-							else sb.Append(',');
-							sb.Append(' ');
-							sb.Append(opt.Name);
+							if (first)
+							{
+								first = false;
+								sb.Append(' ');
+							}
+							else
+							{
+								sb.Append(", ");
+							}
+							sb.Append(option.Name);
 						}
 						sb.Append(" }");
+
+						// TODO
+						//var optionSB = new StringBuilder();
+						//while (!code.EndOfFile)
+						//{
+						//	if (code.ReadExact('}'))
+						//	{
+						//		if (optionSB.Length > 0) options.Add(new EnumOptionDefinition(optionSB.ToString()));
+						//		optionSB.Clear();
+						//		break;
+						//	}
+						//	else if (code.ReadExact(','))
+						//	{
+						//		if (optionSB.Length > 0) options.Add(new EnumOptionDefinition(optionSB.ToString()));
+						//		optionSB.Clear();
+						//	}
+						//	else if (code.ReadStringLiteral())
+						//	{
+						//		options.Add(new EnumOptionDefinition(code.TokenText));
+						//		optionSB.Clear();
+						//	}
+						//	else if (code.Read())
+						//	{
+						//		optionSB.Append(code.TokenText);
+						//	}
+						//	else break;
+						//}
+
+						//if (optionSB.Length > 0) options.Add(new EnumOptionDefinition(optionSB.ToString()));
+
+						//sb.Append(" {");
+						//var first = true;
+						//foreach (var opt in options)
+						//{
+						//	if (first) first = false;
+						//	else sb.Append(',');
+						//	sb.Append(' ');
+						//	sb.Append(opt.Name);
+						//}
+						//sb.Append(" }");
 
 						if (code.ReadExact("PICK")) sb.Append(" PICK");
 
@@ -651,6 +760,20 @@ namespace DkTools.CodeModel
 					return Definition.WpfMainLine(_name);
 				}
 			}
+		}
+
+		public static string DecorateEnumOptionIfRequired(string option)
+		{
+			if (string.IsNullOrEmpty(option)) return "\" \"";
+
+			if (option.StartsWith("\"") && option.EndsWith("\"")) return option;
+
+			if (!option.IsWord())
+			{
+				return string.Concat("\"", option, "\"");
+			}
+
+			return option;
 		}
 	}
 }

@@ -6,7 +6,7 @@ using System.Windows;
 
 namespace DkTools
 {
-	internal static class Util
+	public static class Util
 	{
 		/// <summary>
 		/// Splits a string containing distinct words delimited by whitespace.
@@ -50,7 +50,7 @@ namespace DkTools
 			var first = true;
 			foreach (var ch in str)
 			{
-				if (ch.IsWordChar(first)) return false;
+				if (!ch.IsWordChar(first)) return false;
 				first = false;
 			}
 			return true;
