@@ -55,7 +55,7 @@ namespace DkTools.SignatureHelp
 
         internal void ComputeCurrentParameter()
         {
-            if (_params.Count == 0)
+			if (_params.Count == 0)
             {
                 _currentParam = null;
                 return;

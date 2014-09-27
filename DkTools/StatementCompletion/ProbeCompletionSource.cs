@@ -496,7 +496,7 @@ namespace DkTools.StatementCompletion
 			var args = SignatureHelp.ProbeSignatureHelpSource.GetSignatureArguments(sig).ToArray();
 			if (argIndex < 0 || argIndex >= args.Length) return null;
 
-			return args[argIndex];
+			return args[argIndex].Text;
 		}
 	}
 }

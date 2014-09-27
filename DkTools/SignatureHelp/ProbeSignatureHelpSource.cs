@@ -55,7 +55,7 @@ namespace DkTools.SignatureHelp
 						var applicableToSpan = snapshot.CreateTrackingSpan(new VsText.Span(origPos, 0), VsText.SpanTrackingMode.EdgeInclusive);
 						var fileStore = CodeModel.FileStore.GetOrCreateForTextBuffer(_textBuffer);
 						var model = fileStore.GetMostRecentModel(snapshot, "Signature help after '('");
-						if (string.IsNullOrEmpty(tableName)) tableName = model.ClassName;
+						//if (string.IsNullOrEmpty(tableName)) tableName = model.ClassName;
 						foreach (var sig in GetSignatures(model, tableName, funcName, applicableToSpan))
 						{
 							signatures.Add(sig);
@@ -110,68 +110,9 @@ namespace DkTools.SignatureHelp
 			var sig = new ProbeSignature(textBuffer, methodSig, devDesc != null ? devDesc : string.Empty, null);
 			textBuffer.Changed += sig.SubjectBufferChanged;
 
-			var paramList = new List<IParameter>();
-			var parser = new TokenParser.Parser(methodSig);
-			var insideArgs = false;
-			var argStartPos = -1;
-			var argName = string.Empty;
-			var argEmpty = true;
-			var done = false;
+			sig.Parameters = new ReadOnlyCollection<IParameter>((from a in GetSignatureArguments(methodSig) select new ProbeParameter(string.Empty, a.Span.ToVsTextSpan(), a.Name, sig)).Cast<IParameter>().ToList());
 
-			while (!parser.EndOfFile && !done)
-			{
-				if (!insideArgs)
-				{
-					if (!parser.Read()) break;
-					if (parser.TokenText == "(")
-					{
-						insideArgs = true;
-						argStartPos = parser.Position;
-						argEmpty = true;
-						argName = string.Empty;
-					}
-				}
-				else
-				{
-					if (!parser.ReadNestable()) break;
-					switch (parser.TokenType)
-					{
-						case TokenParser.TokenType.Operator:
-							if (parser.TokenText == ",")
-							{
-								paramList.Add(new ProbeParameter(string.Empty, new VsText.Span(argStartPos, parser.TokenStartPostion - argStartPos), argName, sig));
-								argStartPos = parser.Position;
-								argEmpty = true;
-								argName = string.Empty;
-							}
-							else if (parser.TokenText == ")")
-							{
-								if (!argEmpty || paramList.Count > 0)
-								{
-									paramList.Add(new ProbeParameter(string.Empty, new VsText.Span(argStartPos, parser.TokenStartPostion - argStartPos), argName, sig));
-								}
-								done = true;
-							}
-							break;
 
-						case TokenParser.TokenType.Word:
-							argName = parser.TokenText;
-							argEmpty = false;
-							break;
-
-						default:
-							argEmpty = false;
-							break;
-					}
-				}
-			}
-
-			if (!argEmpty)
-			{
-				paramList.Add(new ProbeParameter(string.Empty, new VsText.Span(argStartPos, parser.TokenStartPostion - argStartPos), argName, sig));
-			}
-
-			sig.Parameters = new ReadOnlyCollection<IParameter>(paramList);
 			sig.ApplicableToSpan = span;
 			sig.ComputeCurrentParameter();
 			return sig;
@@ -212,7 +153,8 @@ namespace DkTools.SignatureHelp
 			{
 				foreach (var def in model.DefinitionProvider.GetGlobal<CodeModel.Definitions.FunctionDefinition>(funcName))
 				{
-					if (string.IsNullOrEmpty((def as CodeModel.Definitions.FunctionDefinition).ClassName))
+					var funcDef = (def as CodeModel.Definitions.FunctionDefinition);
+					if (string.IsNullOrEmpty(funcDef.ClassName) || funcDef.ClassName == model.ClassName)
 					{
 						yield return new SignatureInfo(def.Signature, def.DevDescription);
 					}
@@ -238,46 +180,59 @@ namespace DkTools.SignatureHelp
 			if (ffFunc != null) yield return new SignatureInfo(ffFunc.Definition.Signature, ffFunc.Definition.DevDescription);
 		}
 
-		public static IEnumerable<string> GetSignatureArguments(string sig)
+		public static IEnumerable<ArgumentInfo> GetSignatureArguments(string sig)
 		{
-			var parser = new TokenParser.Parser(sig);
-			parser.ReturnWhiteSpace = true;
-
-			var insideArgs = false;
-			var sb = new StringBuilder();
-			string str;
-			var gotComma = false;
-
-			while (!parser.EndOfFile)
+			// Find the arguments token
+			string argsText = null;
+			int argsOffset = 0;
+			var argsParser = new TokenParser.Parser(sig);
+			while (argsParser.ReadNestable())
 			{
-				if (!insideArgs)
+				if (argsParser.TokenType == TokenParser.TokenType.Nested)
 				{
-					if (!parser.Read()) yield break;
-					if (parser.TokenType == TokenParser.TokenType.Operator && parser.TokenText == "(") insideArgs = true;
-				}
-				else
-				{
-					if (!parser.ReadNestable()) yield break;
-					str = parser.TokenText;
-					switch (str)
-					{
-						case ",":
-							yield return sb.ToString().Trim();
-							sb.Clear();
-							gotComma = true;
-							break;
-						case ")":
-							str = sb.ToString().Trim();
-							if (gotComma || !string.IsNullOrEmpty(str)) yield return str;
-							yield break;
-						default:
-							sb.Append(str);
-							break;
-					}
+					argsText = argsParser.TokenText;
+					argsOffset = argsParser.TokenStartPostion + 1;
 				}
 			}
 
-			if (gotComma) yield return sb.ToString().Trim();
+			if (string.IsNullOrEmpty(argsText)) yield break;
+			if (argsText.StartsWith("(")) argsText = argsText.Substring(1);
+			if (argsText.EndsWith(")")) argsText = argsText.Substring(0, argsText.Length - 1);
+
+			// Parse the arguments
+			var parser = new TokenParser.Parser(argsText);
+			parser.ReturnWhiteSpace = true;
+
+			var sb = new StringBuilder();
+			string str;
+			var gotComma = false;
+			var argStartPos = 0;
+			string argName = null;
+			while (!parser.EndOfFile)
+			{
+				if (!parser.ReadNestable()) yield break;
+				str = parser.TokenText;
+				switch (str)
+				{
+					case ",":
+						yield return new ArgumentInfo(sb.ToString().Trim(), argName, new Span(argStartPos + argsOffset, parser.TokenStartPostion + argsOffset));
+						sb.Clear();
+						gotComma = true;
+						argStartPos = parser.Position;
+						argName = null;
+						break;
+					//case ")":
+					//	str = sb.ToString().Trim();
+					//	if (gotComma || !string.IsNullOrEmpty(str)) yield return new ArgumentInfo(str, argName, new Span(argStartPos + argsOffset, parser.TokenStartPostion + argsOffset));
+					//	yield break;
+					default:
+						sb.Append(str);
+						if (parser.TokenType == TokenParser.TokenType.Word) argName = parser.TokenText;
+						break;
+				}
+			}
+
+			if (gotComma) yield return new ArgumentInfo(sb.ToString().Trim(), argName, new Span(argStartPos + argsOffset, parser.Position + argsOffset));
 		}
 
 		public struct SignatureInfo
@@ -299,6 +254,35 @@ namespace DkTools.SignatureHelp
 			public string DevDescription
 			{
 				get { return _devDesc; }
+			}
+		}
+
+		public struct ArgumentInfo
+		{
+			private string _text;
+			private string _name;
+			private Span _span;
+
+			public ArgumentInfo(string text, string name, Span span)
+			{
+				_text = text;
+				_name = name;
+				_span = span;
+			}
+
+			public string Text
+			{
+				get { return _text; }
+			}
+
+			public string Name
+			{
+				get { return _name; }
+			}
+
+			public Span Span
+			{
+				get { return _span; }
 			}
 		}
 	}
