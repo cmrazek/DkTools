@@ -264,7 +264,21 @@ namespace DkTools.CodeModel.Tokens
 				}
 				if (def is FunctionDefinition)
 				{
-					return new FunctionPlaceholderToken(parent, scope, span, word, def as FunctionDefinition);
+					var argsToken = BracketsToken.TryParse(parent, scope);
+					if (argsToken != null)
+					{
+						var funcDef = def as FunctionDefinition;
+						if (string.Equals(funcDef.SourceFileName, _fileName, StringComparison.OrdinalIgnoreCase) &&
+							funcDef.ArgsStartPosition == argsToken.Span.Start)
+						{
+							return new FunctionPlaceholderToken(parent, scope, span, word, funcDef);
+						}
+						else
+						{
+							var nameToken = new IdentifierToken(parent, scope, span, word);
+							return new FunctionCallToken(parent, scope, null, null, nameToken, argsToken, funcDef);
+						}
+					}
 				}
 				if (def is ConstantDefinition)
 				{

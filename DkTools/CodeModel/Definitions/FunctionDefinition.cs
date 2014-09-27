@@ -12,6 +12,7 @@ namespace DkTools.CodeModel.Definitions
 		private DataType _dataType;
 		private string _signature;
 		private int _bodyStartPos;
+		private int _argsStartPos;
 		private int _argsEndPos;
 		private FunctionPrivacy _privacy;
 		private bool _extern;
@@ -29,7 +30,7 @@ namespace DkTools.CodeModel.Definitions
 		/// <param name="signature">Signature text</param>
 		/// <param name="argsEndPos">Ending position of the argument brackets</param>
 		/// <param name="bodyStartPos">Position of the function's body braces (if does not match, then will be ignored)</param>
-		public FunctionDefinition(string className, string funcName, string fileName, int nameStartPos, DataType dataType, string signature, int argsEndPos, int bodyStartPos, Span entireSpan, FunctionPrivacy privacy, bool isExtern, string devDesc)
+		public FunctionDefinition(string className, string funcName, string fileName, int nameStartPos, DataType dataType, string signature, int argsStartPos, int argsEndPos, int bodyStartPos, Span entireSpan, FunctionPrivacy privacy, bool isExtern, string devDesc)
 			: base(funcName, fileName, nameStartPos)
 		{
 #if DEBUG
@@ -37,6 +38,7 @@ namespace DkTools.CodeModel.Definitions
 #endif
 			_dataType = dataType != null ? dataType : DataType.Int;
 			_signature = signature;
+			_argsStartPos = argsStartPos;
 			_argsEndPos = argsEndPos;
 			_bodyStartPos = bodyStartPos;
 			_privacy = privacy;
@@ -46,9 +48,27 @@ namespace DkTools.CodeModel.Definitions
 			_devDesc = devDesc;
 		}
 
-		public FunctionDefinition CloneAsExtern()
+		/// <summary>
+		/// Creates a built-in function definition.
+		/// </summary>
+		/// <param name="funcName">Function name</param>
+		/// <param name="dataType">Data type</param>
+		/// <param name="signature">Signature</param>
+		/// <param name="devDesc">Developer description</param>
+		public FunctionDefinition(string funcName, DataType dataType, string signature, string devDesc)
+			: base(funcName, null, 0)
 		{
-			return new FunctionDefinition(_className, Name, SourceFileName, SourceStartPos, _dataType, _signature, _argsEndPos, _bodyStartPos, _entireSpan, _privacy, true, _devDesc);
+#if DEBUG
+			if (string.IsNullOrWhiteSpace(signature)) throw new ArgumentNullException("signature");
+#endif
+			_dataType = dataType != null ? dataType : DataType.Int;
+			_signature = signature;
+			_argsStartPos = _argsEndPos = _bodyStartPos = 0;
+			_privacy = FunctionPrivacy.Public;
+			_extern = true;
+			_className = null;
+			_entireSpan = Span.Empty;
+			_devDesc = devDesc;
 		}
 
 		public DataType DataType
@@ -98,6 +118,11 @@ namespace DkTools.CodeModel.Definitions
 		public int BodyStartPosition
 		{
 			get { return _bodyStartPos; }
+		}
+
+		public int ArgsStartPosition
+		{
+			get { return _argsStartPos; }
 		}
 
 		public int ArgsEndPosition
