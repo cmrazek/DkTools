@@ -1279,6 +1279,9 @@ namespace DkTools.ProbeExplorer
 					}
 				}
 			}
+
+			var selItem = c_dictTree.SelectedItem as TreeViewItem;
+			if (selItem != null) selItem.BringIntoView();
 		}
 
 		private void DictTreeFilter_TextChanged(object sender, TextChangedEventArgs e)

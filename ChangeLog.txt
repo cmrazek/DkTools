@@ -14,6 +14,7 @@ Bug Fixes:
 - Fixed go-to-brace not working properly all the time.
 - Fixed signature help not appearing when typing a comma into a partially completed function call.
 - Fixed signature help not parsing arguments correctly when the data type contained '(' char.
+- When clearing filter on dictionary explorer, the selected item now remains in view.
 
 ____________________________________________________________________________________________________
 Version 1.2.7 - Sep 23, 2014:
