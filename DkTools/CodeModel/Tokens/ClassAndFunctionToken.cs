@@ -8,8 +8,20 @@ namespace DkTools.CodeModel.Tokens
 {
 	internal class ClassAndFunctionToken : GroupToken
 	{
+		private FunctionCallToken _funcToken;
+
 		public ClassAndFunctionToken(GroupToken parent, Scope scope, ClassToken classToken, DotToken dotToken, FunctionCallToken funcToken)
 			: base(parent, scope, new Token[] { classToken, dotToken, funcToken })
-		{ }
+		{
+			_funcToken = funcToken;
+		}
+
+		public override DataType ValueDataType
+		{
+			get
+			{
+				return _funcToken.ValueDataType;
+			}
+		}
 	}
 }

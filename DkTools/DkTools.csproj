@@ -311,6 +311,8 @@
     <Compile Include="CodeModel\Tokens\KeywordToken.cs" />
     <Compile Include="CodeModel\Tokens\MacroCallToken.cs" />
     <Compile Include="CodeModel\OutliningRegion.cs" />
+    <Compile Include="CodeModel\Tokens\RelIndAndFieldToken.cs" />
+    <Compile Include="CodeModel\Tokens\RelIndFieldToken.cs" />
     <Compile Include="CodeModel\Tokens\RelIndToken.cs" />
     <Compile Include="CodeModel\Scope.cs" />
     <Compile Include="CodeModel\Tokens\DelimiterToken.cs" />

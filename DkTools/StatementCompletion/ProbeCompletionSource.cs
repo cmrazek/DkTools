@@ -146,6 +146,17 @@ namespace DkTools.StatementCompletion
 					}
 				}
 
+				var relInd = ProbeEnvironment.GetRelInd(match.Groups[1].Value);
+				if (relInd != null)
+				{
+					completionSpan = new Microsoft.VisualStudio.Text.Span(linePos + match.Groups[2].Index, match.Groups[2].Length);
+					foreach (var def in relInd.FieldDefinitions)
+					{
+						if (!def.CompletionVisible) continue;
+						completionList[def.Name] = CreateCompletion(def);
+					}
+				}
+
 				// Extract and field
 				var store = CodeModel.FileStore.GetOrCreateForTextBuffer(_textBuffer);
 				var model = store.GetMostRecentModel(snapshot, "Extract table.field completion.");

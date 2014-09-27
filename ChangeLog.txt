@@ -7,6 +7,7 @@ Features:
 - Added keywords "typedef", "BEGINHLP" and "ENDHLP".
 - Added support for BEGINHLP ... ENDHLP after function declarations.
 - Added support for description text on extern functions.
+- Added support for columns on relationships.
 
 Bug Fixes:
 - When the quick-info text is too wide, it will now wrap.
@@ -16,6 +17,8 @@ Bug Fixes:
 - Fixed signature help not parsing arguments correctly when the data type contained '(' char.
 - When clearing filter on dictionary explorer, the selected item now remains in view.
 - Go-To-Definition now works when on a relationship/index.
+- Fixed duplicate index error in scanner database when multiple applications have a class with the
+  same name.
 
 ____________________________________________________________________________________________________
 Version 1.2.7 - Sep 23, 2014:

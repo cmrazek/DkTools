@@ -8,7 +8,6 @@ namespace DkTools.Dict
 {
 	internal class DictField
 	{
-		public DictTable Table { get; private set; }
 		public string Name { get; private set; }
 		public string Prompt { get; private set; }
 		public string Comment { get; private set; }
@@ -16,9 +15,8 @@ namespace DkTools.Dict
 
 		private CodeModel.Definitions.TableFieldDefinition _definition;
 
-		public DictField(DictTable table, DICTSRVRLib.IPColumn repoCol)
+		public DictField(string parentName, DICTSRVRLib.IPColumn repoCol)
 		{
-			Table = table;
 			Name = repoCol.Name;
 
 			var desc = repoCol as DICTSRVRLib.IPDObjDesc;
@@ -49,7 +47,7 @@ namespace DkTools.Dict
 				if (description != null && description.Length == 0) description = null;
 			}
 
-			_definition = new CodeModel.Definitions.TableFieldDefinition(table.Name, Name, Prompt, Comment, DataType, description);
+			_definition = new CodeModel.Definitions.TableFieldDefinition(parentName, Name, Prompt, Comment, DataType, description);
 		}
 
 		public IEnumerable<Definition> CompletionOptions

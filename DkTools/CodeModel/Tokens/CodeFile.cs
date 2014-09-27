@@ -67,11 +67,10 @@ namespace DkTools.CodeModel.Tokens
 			if (source == null) throw new ArgumentNullException("source");
 			_source = source;
 			_src = _source.Text;
-			_fileName = fileName;
-			_parentFiles = parentFiles.ToArray();
-
 			_pos = 0;
 			_length = _src.Length;
+			_fileName = fileName;
+			_parentFiles = parentFiles.ToArray();
 
 			FunctionFileScanning.FFUtil.FileNameIsClass(_fileName, out _className);
 
@@ -292,13 +291,10 @@ namespace DkTools.CodeModel.Tokens
 				{
 					return new MacroCallToken(parent, scope, new IdentifierToken(parent, scope, span, word), def as MacroDefinition);
 				}
-				if (def is RelIndDefinition)
-				{
-					return new RelIndToken(parent, scope, span, word, def as RelIndDefinition);
-				}
 			}
 
 			// Tables/classes/extracts may be mixed up due to the ability to use the same name1.
+			var tokens = new List<Token>();
 			SkipWhiteSpaceAndComments(scope);
 			if (PeekChar() == '.')
 			{
@@ -321,8 +317,24 @@ namespace DkTools.CodeModel.Tokens
 							{
 								var tableToken = new TableToken(parent, scope, span, word, table.BaseDefinition);
 								var dotToken = new DotToken(parent, scope, dotSpan);
-								var fieldToken = new TableFieldToken(parent, scope, word2Span, word2, tableToken);
-								return new TableAndFieldToken(parent, scope, tableToken, dotToken, fieldToken, field);
+								var fieldToken = new TableFieldToken(parent, scope, word2Span, word2, field);
+								return new TableAndFieldToken(parent, scope, tableToken, dotToken, fieldToken);
+							}
+						}
+					}
+
+					if (defs.Any(d => d is RelIndDefinition))
+					{
+						var relInd = ProbeEnvironment.GetRelInd(word);
+						if (relInd != null)
+						{
+							var field = relInd.GetField(word2);
+							if (field != null)
+							{
+								var relIndToken = new RelIndToken(parent, scope, span, word, relInd.Definition);
+								var dotToken = new DotToken(parent, scope, dotSpan);
+								var fieldToken = new RelIndFieldToken(parent, scope, word2Span, word2, field);
+								return new RelIndAndFieldToken(parent, scope, relIndToken, dotToken, fieldToken);
 							}
 						}
 					}
@@ -429,44 +441,45 @@ namespace DkTools.CodeModel.Tokens
 			return new IdentifierToken(parent, scope, wordSpan, word);
 		}
 
-		private Token TryParsePossibleTableOrClassReference(GroupToken parent, Scope scope, string word1, Span word1Span, Span dotSpan)
-		{
-			// This function is called when a word has been parsed, and the next character is a '.'.
-			// This could be a table.field combo or a class.method() combo.
+		// TODO: remove
+		//private Token TryParsePossibleTableOrClassReference(GroupToken parent, Scope scope, string word1, Span word1Span, Span dotSpan)
+		//{
+		//	// This function is called when a word has been parsed, and the next character is a '.'.
+		//	// This could be a table.field combo or a class.method() combo.
 
-			// Check that another word follows the dot.
-			SkipWhiteSpaceAndComments(scope);
-			var word2 = PeekWord();
-			if (string.IsNullOrEmpty(word2)) return null;
+		//	// Check that another word follows the dot.
+		//	SkipWhiteSpaceAndComments(scope);
+		//	var word2 = PeekWord();
+		//	if (string.IsNullOrEmpty(word2)) return null;
 
-			var tableDict = ProbeEnvironment.GetTable(word1);
-			if (tableDict != null && tableDict.IsField(word2))
-			{
-				var word2Span = MoveNextSpan(word2.Length);
-				var tableToken = new TableToken(parent, scope, word1Span, word1, tableDict.BaseDefinition);
-				var dotToken = new DotToken(parent, scope, dotSpan);
-				var fieldToken = new TableFieldToken(parent, scope, word2Span, word2, tableToken);
-				return new TableAndFieldToken(parent, scope, tableToken, dotToken, fieldToken, tableDict.GetField(word2));
-			}
+		//	var tableDict = ProbeEnvironment.GetTable(word1);
+		//	if (tableDict != null && tableDict.IsField(word2))
+		//	{
+		//		var word2Span = MoveNextSpan(word2.Length);
+		//		var tableToken = new TableToken(parent, scope, word1Span, word1, tableDict.BaseDefinition);
+		//		var dotToken = new DotToken(parent, scope, dotSpan);
+		//		var fieldToken = new TableFieldToken(parent, scope, word2Span, word2, tableToken);
+		//		return new TableAndFieldToken(parent, scope, tableToken, dotToken, fieldToken, tableDict.GetField(word2));
+		//	}
 
-			var classFF = ProbeToolsPackage.Instance.FunctionFileScanner.GetClass(word1);
-			if (classFF != null && classFF.IsFunction(word2))
-			{
-				var word2Span = MoveNextSpan(word2.Length);
+		//	var classFF = ProbeToolsPackage.Instance.FunctionFileScanner.GetClass(word1);
+		//	if (classFF != null && classFF.IsFunction(word2))
+		//	{
+		//		var word2Span = MoveNextSpan(word2.Length);
 
-				SkipWhiteSpaceAndComments(scope);
-				if (PeekChar() == '(')
-				{
-					var classToken = new ClassToken(parent, scope, word1Span, word1, classFF);
-					var dotToken = new DotToken(parent, scope, dotSpan);
-					var nameToken = new IdentifierToken(parent, scope, word2Span, word2);
-					var argsToken = BracketsToken.Parse(parent, scope);
-					return new FunctionCallToken(parent, scope, classToken, dotToken, nameToken, argsToken, classFF.GetFunctionDefinition(word2));
-				}
-			}
+		//		SkipWhiteSpaceAndComments(scope);
+		//		if (PeekChar() == '(')
+		//		{
+		//			var classToken = new ClassToken(parent, scope, word1Span, word1, classFF);
+		//			var dotToken = new DotToken(parent, scope, dotSpan);
+		//			var nameToken = new IdentifierToken(parent, scope, word2Span, word2);
+		//			var argsToken = BracketsToken.Parse(parent, scope);
+		//			return new FunctionCallToken(parent, scope, classToken, dotToken, nameToken, argsToken, classFF.GetFunctionDefinition(word2));
+		//		}
+		//	}
 
-			return null;
-		}
+		//	return null;
+		//}
 
 		private Regex _rxRegionStart = new Regex(@"\G//\s*#region\b\s*(.*)\s*$", RegexOptions.Multiline);
 		private Regex _rxRegionEnd = new Regex(@"\G//\s*#endregion\b");
@@ -498,7 +511,6 @@ namespace DkTools.CodeModel.Tokens
 					if (_pos + 1 < _length && _src[_pos + 1] == '/')
 					{
 						// Single-line comment
-
 						if ((match = _rxRegionStart.Match(_src, _pos)).Success)	// Region is starting.
 						{
 							// If there is a previously started comment, then add the comment region now.
@@ -543,8 +555,66 @@ namespace DkTools.CodeModel.Tokens
 							commentStartPos = commentEndPos = Position;
 							gotComment = true;
 						}
-						SeekMatch("*/");
-						MoveNext(2);    // Skip past comment end
+
+						MoveNext(2);
+						var level = 1;
+
+						while (_pos < _length)
+						{
+							ch = _src[_pos];
+							if (ch == '*')
+							{
+								if (_pos + 1 < _length && _src[_pos + 1] == '/')
+								{
+									MoveNext(2);
+									if (--level == 0) break;
+								}
+								else
+								{
+									MoveNext();
+								}
+							}
+							else if (ch == '/')
+							{
+								if (_pos + 1 < _length && _src[_pos + 1] == '*')
+								{
+									MoveNext(2);
+									level++;
+								}
+								else
+								{
+									MoveNext();
+								}
+							}
+							else
+							{
+								MoveNext();
+							}
+						}
+
+						// TODO: remove
+						//// multi line comment
+						//_pos += 2;
+						//var level = 1;
+						//while (_pos < _length)
+						//{
+						//	ch = _source[_pos];
+						//	if (ch == '/' && _pos + 1 < _length && _source[_pos + 1] == '*')
+						//	{
+						//		_pos += 2;
+						//		level++;
+						//	}
+						//	else if (ch == '*' && _pos + 1 < _length && _source[_pos + 1] == '/')
+						//	{
+						//		_pos += 2;
+						//		if (--level == 0) break;
+						//	}
+						//	else _pos++;
+						//}
+
+						//SeekMatch("*/");
+						//MoveNext(2);    // Skip past comment end
+
 						commentEndPos = Position;
 						continue;
 					}

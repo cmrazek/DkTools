@@ -2,14 +2,15 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Threading.Tasks;
 
 namespace DkTools.CodeModel.Tokens
 {
-	internal class TableFieldToken : WordToken
+	internal class RelIndFieldToken : WordToken
 	{
-		private Dict.DictField _field;
+		Dict.DictField _field;
 
-		public TableFieldToken(GroupToken parent, Scope scope, Span span, string text, Dict.DictField field)
+		public RelIndFieldToken(GroupToken parent, Scope scope, Span span, string text, Dict.DictField field)
 			: base(parent, scope, span, text)
 		{
 #if DEBUG

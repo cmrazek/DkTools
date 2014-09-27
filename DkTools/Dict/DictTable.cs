@@ -101,7 +101,7 @@ namespace DkTools.Dict
 			_fields = new Dictionary<string, DictField>();
 			for (int c = 1, cc = repoTable.ColumnCount; c <= cc; c++)
 			{
-				var field = new DictField(this, repoTable.Columns[c]);
+				var field = new DictField(_name, repoTable.Columns[c]);
 				_fields[field.Name] = field;
 			}
 

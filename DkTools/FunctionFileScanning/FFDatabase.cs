@@ -37,7 +37,7 @@ namespace DkTools.FunctionFileScanning
 	app_id		int			not null,
 	file_id		int			not null
 );",
-"create unique index class_ix_name on class_ (name)",
+"create unique index class_ix_name on class_ (app_id, name)",
 @"create table func
 (
 	id					int				identity not null primary key,
@@ -54,8 +54,8 @@ namespace DkTools.FunctionFileScanning
 );",
 "create index func_ix_classfunc on func (class_id, name);" };
 
-		public const string DatabaseFileName = "DkScan_v2.sdf";
-		public static readonly string[] OldDatabaseFileNames = new string[] { "DkScan.sdf" };
+		public const string DatabaseFileName = "DkScan_v3.sdf";
+		public static readonly string[] OldDatabaseFileNames = new string[] { "DkScan.sdf", "DkScan_v2.sdf" };
 
 		private SqlCeConnection _conn;
 

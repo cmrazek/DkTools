@@ -30,6 +30,7 @@ namespace DkTools.Dict
 		private int? _number;
 		private int? _primary;
 		private int? _unique;
+		private Dictionary<string, DictField> _fields = new Dictionary<string, DictField>();
 
 		public DictRelInd(DictTable table, DICTSRVRLib.IPIndex repoIndex)
 		{
@@ -89,6 +90,20 @@ namespace DkTools.Dict
 			{
 				var devInfo = dev.DevInfo;
 				if (!string.IsNullOrWhiteSpace(devInfo)) _repoDesc = devInfo;
+			}
+
+			var repoTable = repoRel.Child;
+			if (repoTable != null)
+			{
+				for (int c = 1, cc = repoTable.ColumnCount; c <= cc; c++)
+				{
+					var col = repoTable.Columns[c];
+					if (col != null)
+					{
+						var field = new DictField(_name, col);
+						_fields[field.Name] = field;
+					}
+				}
 			}
 
 			string relText = string.Empty;
@@ -189,6 +204,21 @@ namespace DkTools.Dict
 		public int? Unique
 		{
 			get { return _unique; }
+		}
+
+		public DictField GetField(string fieldName)
+		{
+			DictField field;
+			if (_fields.TryGetValue(fieldName, out field)) return field;
+			return null;
+		}
+
+		public IEnumerable<TableFieldDefinition> FieldDefinitions
+		{
+			get
+			{
+				foreach (var field in _fields.Values) yield return field.Definition;
+			}
 		}
 	}
 }

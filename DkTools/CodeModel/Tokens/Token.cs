@@ -476,5 +476,14 @@ namespace DkTools.CodeModel.Tokens
 				if (token != null) yield return token;
 			}
 		}
+
+		/// <summary>
+		/// Gets a flag indicating if this token actually contributes to the code.
+		/// For example, comments are not solid since they disappear in the preprocessor.
+		/// </summary>
+		public virtual bool IsSolid
+		{
+			get { return true; }
+		}
 	}
 }
