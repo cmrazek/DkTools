@@ -86,15 +86,18 @@ namespace DkTools.StatementCompletion
 				}
 				else Shell.SetStatusText("Table not found.");
 			}
-			//else if (def is CodeModel.RelIndDefinition)
-			//{
-			//	var relIndDef = def as CodeModel.RelIndDefinition;
-			//	var table = ProbeEnvironment.GetTable(relIndDef.BaseTableName);
-			//	if (table != null) Commands.OpenPst(relIndDef.BaseTableName, null, null, relIndDef.Name);
-			//	else Shell.SetStatusText("Table not found.");
-			//}
-			//else
-			if (!string.IsNullOrWhiteSpace(def.SourceFileName))
+			else if (def is RelIndDefinition)
+			{
+				var relIndDef = def as RelIndDefinition;
+				var table = ProbeEnvironment.GetTable(relIndDef.BaseTableName);
+				if (table != null)
+				{
+					var window = Shell.ShowProbeExplorerToolWindow();
+					window.FocusTableRelInd(table.Name, relIndDef.Name);
+				}
+				else Shell.SetStatusText("Table not found.");
+			}
+			else if (!string.IsNullOrWhiteSpace(def.SourceFileName))
 			{
 				Shell.OpenDocument(def.SourceFileName, def.SourceStartPos);
 			}

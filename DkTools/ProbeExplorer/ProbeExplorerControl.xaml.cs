@@ -1216,11 +1216,40 @@ namespace DkTools.ProbeExplorer
 					foreach (TreeViewItem fieldNode in tableNode.Items)
 					{
 						var field = fieldNode.Tag as DictField;
-						if (field.Name == fieldName)
+						if (field != null && field.Name == fieldName)
 						{
 							fieldNode.IsSelected = true;
 							fieldNode.BringIntoView();
 							fieldNode.Focus();
+							return;
+						}
+					}
+				}
+			}
+
+			// If we got here, then the table/field wasn't found.
+			c_dictTree.Focus();
+		}
+
+		public void FocusTableRelInd(string tableName, string relIndName)
+		{
+			c_dictTab.IsSelected = true;
+			this.UpdateLayout();
+
+			foreach (TreeViewItem tableNode in c_dictTree.Items)
+			{
+				var table = tableNode.Tag as DictTable;
+				if (table.Name == tableName)
+				{
+					tableNode.IsExpanded = true;
+					foreach (TreeViewItem relIndNode in tableNode.Items)
+					{
+						var relInd = relIndNode.Tag as DictRelInd;
+						if (relInd != null && relInd.Name == relIndName)
+						{
+							relIndNode.IsSelected = true;
+							relIndNode.BringIntoView();
+							relIndNode.Focus();
 							return;
 						}
 					}

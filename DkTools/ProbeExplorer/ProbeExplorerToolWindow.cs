@@ -59,5 +59,10 @@ namespace DkTools.ProbeExplorer
 		{
 			_exp.FocusTableField(tableName, fieldName);
 		}
+
+		public void FocusTableRelInd(string tableName, string relIndName)
+		{
+			_exp.FocusTableRelInd(tableName, relIndName);
+		}
 	}
 }
