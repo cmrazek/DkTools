@@ -34,6 +34,7 @@ namespace DkTools
 		public const string FileListMaxItemsExceeded = "(more than {0} matches found)";
 
 		public static readonly HashSet<string> ProbeExtensions = Util.ParseWordList("cc cc& cc+ ct ct& ct+ f f& f+ i i& i+ gp gp& gp+ nc nc& nc+ sc sc& sc+ sp sp& sp+ st st& st+ t t& t+");
+		public static readonly HashSet<string> IncludeExtensions = Util.ParseWordList("i i& i+ id id& id+ ie ie& ie+ il il& il+");
 
 		public static readonly HashSet<string> DataTypeKeywords = Util.ParseWordList("alternate bool char currency date enum int LEADINGZEROS like local_currency long longform nowarn numeric proto shortform string time unsigned void");
 

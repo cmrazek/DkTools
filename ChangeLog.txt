@@ -10,6 +10,7 @@ Features:
 - Added support for columns on relationships.
 - Errors are now displayed in a custom dialog.
 - Added new commands to navigate to the next/previous reference of the selected item.
+- Added completion list for #include file names.
 
 Bug Fixes:
 - When the quick-info text is too wide, it will now wrap.

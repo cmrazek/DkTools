@@ -26,10 +26,11 @@ namespace DkTools.StatementCompletion
 		private int _insideCommentLineStart = -1;
 		private bool _insideComment;
 
-		private Regex _rxAfterAssignOrCompare = new Regex(@"(?:==|=|!=)\s$");
-		private Regex _rxFunctionStartBracket = new Regex(@"\w+\s*\($");
-		private Regex _rxAutoCompleteKeyword = new Regex(@"\b(return|case|extract|permanent)\s$");
-		private Regex _rxAfterIfDef = new Regex(@"\#ifn?def\s$");
+		private static readonly Regex _rxAfterAssignOrCompare = new Regex(@"(?:==|=|!=)\s$");
+		private static readonly Regex _rxFunctionStartBracket = new Regex(@"\w+\s*\($");
+		private static readonly Regex _rxAutoCompleteKeyword = new Regex(@"\b(return|case|extract|permanent)\s$");
+		private static readonly Regex _rxAfterIfDef = new Regex(@"\#ifn?def\s$");
+		private static readonly Regex _rxAfterInclude = new Regex(@"\#include\s+(?:\<|\"")$");
 
 		public ProbeCompletionCommandHandler(IVsTextView textViewAdapter, ITextView textView, ProbeCompletionCommandHandlerProvider provider)
 		{
@@ -162,6 +163,16 @@ namespace DkTools.StatementCompletion
 						if (_rxFunctionStartBracket.IsMatch(prefix)) TriggerCompletionIfAllowed(false);
 					}
 				}
+				else if (typedChar == '<' || typedChar == '\"')
+				{
+					if (_session == null || _session.IsDismissed)
+					{
+						var caretPos = _textView.Caret.Position.BufferPosition.Position;
+						var prefix = _textView.TextBuffer.CurrentSnapshot.GetLineTextUpToPosition(caretPos);
+
+						if (_rxAfterInclude.IsMatch(prefix)) TriggerCompletionIfAllowed(false, allowInsideString: true);
+					}
+				}
 
 				if (handled) return VSConstants.S_OK;
 				return retVal;
@@ -173,7 +184,7 @@ namespace DkTools.StatementCompletion
 			}
 		}
 
-		private bool TriggerCompletionIfAllowed(bool modelRebuildRequired)
+		private bool TriggerCompletionIfAllowed(bool modelRebuildRequired, bool allowInsideString = false)
 		{
 			// Get caret point
 			var caretPtTest = _textView.Caret.Position.Point.GetPoint(textBuffer => (!textBuffer.ContentType.IsOfType("projection")), PositionAffinity.Predecessor);
@@ -199,7 +210,7 @@ namespace DkTools.StatementCompletion
 					lastTokenTerminated = parser.TokenTerminated;
 				}
 
-				if ((lastTokenType == TokenParser.TokenType.StringLiteral || lastTokenType == TokenParser.TokenType.Comment) && !lastTokenTerminated)
+				if (((lastTokenType == TokenParser.TokenType.StringLiteral && !allowInsideString) || lastTokenType == TokenParser.TokenType.Comment) && !lastTokenTerminated)
 				{
 					// User is in the middle of typing a string literal or comment
 					return false;

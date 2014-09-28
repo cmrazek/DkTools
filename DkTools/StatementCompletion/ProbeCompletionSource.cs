@@ -87,6 +87,12 @@ namespace DkTools.StatementCompletion
 			return new Completion(text, text, description, img, string.Empty);
 		}
 
+		private Completion CreateCompletion(string text, string insertionText, string description, CompletionType type)
+		{
+			var img = GetImageForCompletionType(type);
+			return new Completion(text, insertionText, description, img, string.Empty);
+		}
+
 		private Completion CreateCompletion(Definition def)
 		{
 			return CreateCompletion(def.Name, def.QuickInfoTextStr, def.CompletionType);
@@ -106,15 +112,16 @@ namespace DkTools.StatementCompletion
 				System.Windows.Int32Rect.Empty, System.Windows.Media.Imaging.BitmapSizeOptions.FromEmptyOptions());
 		}
 
-		private Regex _rxTypingTable = new Regex(@"(\w{1,8})\.(\w*)$");
-		private Regex _rxTypingWord = new Regex(@"\w+$");
-		private Regex _rxAfterAssignOrCompare = new Regex(@"(==|=|!=)\s$");
-		private Regex _rxClassFunctionStartBracket = new Regex(@"(\w+)\s*\.\s*(\w+)\s*\($");
-		private Regex _rxFunctionStartBracket = new Regex(@"(\w+)\s*\($");
-		private Regex _rxReturn = new Regex(@"\breturn\s$");
-		private Regex _rxCase = new Regex(@"\bcase\s$");
-		private Regex _rxAfterIfDef = new Regex(@"\#ifn?def\s$");
-		private Regex _rxExtract = new Regex(@"\bextract\s(permanent\s)?$");
+		private static readonly Regex _rxTypingTable = new Regex(@"(\w{1,8})\.(\w*)$");
+		private static readonly Regex _rxTypingWord = new Regex(@"\w+$");
+		private static readonly Regex _rxAfterAssignOrCompare = new Regex(@"(==|=|!=)\s$");
+		private static readonly Regex _rxClassFunctionStartBracket = new Regex(@"(\w+)\s*\.\s*(\w+)\s*\($");
+		private static readonly Regex _rxFunctionStartBracket = new Regex(@"(\w+)\s*\($");
+		private static readonly Regex _rxReturn = new Regex(@"\breturn\s$");
+		private static readonly Regex _rxCase = new Regex(@"\bcase\s$");
+		private static readonly Regex _rxAfterIfDef = new Regex(@"\#ifn?def\s$");
+		private static readonly Regex _rxExtract = new Regex(@"\bextract\s(permanent\s)?$");
+		private static readonly Regex _rxAfterInclude = new Regex(@"\#include\s+(\<|\"")$");
 
 		void ICompletionSource.AugmentCompletionSession(ICompletionSession session, IList<CompletionSet> completionSets)
 		{
@@ -324,6 +331,37 @@ namespace DkTools.StatementCompletion
 						if (!exDef.CompletionVisible) continue;
 						completionList[exDef.Name] = CreateCompletion(exDef);
 					}
+				}
+			}
+			else if ((match = _rxAfterInclude.Match(prefix)).Success)
+			{
+				string endCh;
+				var startCh = match.Groups[1].Value;
+				if (startCh == "<") endCh = ">";
+				else if (startCh == "\"") endCh = "\"";
+				else endCh = string.Empty;
+
+				var curFileName = _textBuffer.TryGetFileName();
+				var curDir = System.IO.Path.GetDirectoryName(curFileName);
+
+				IEnumerable<string> fileList;
+				if (startCh == "<" || string.IsNullOrEmpty(curFileName)) fileList = ProbeEnvironment.GetAllIncludeFiles();
+				else fileList = ProbeEnvironment.GetAllIncludeFilesForDir(curDir);
+
+				foreach (var fileName in fileList)
+				{
+					if (string.IsNullOrWhiteSpace(fileName)) continue;
+
+					// Don't include the current file.
+					if (string.Equals(fileName, curFileName, StringComparison.OrdinalIgnoreCase)) continue;
+
+					// Only include files with the right extension.
+					var ext = System.IO.Path.GetExtension(fileName).ToLower();
+					if (ext.StartsWith(".")) ext = ext.Substring(1);
+					if (!Constants.IncludeExtensions.Contains(ext)) continue;
+
+					var titleExt = System.IO.Path.GetFileName(fileName);
+					if (!completionList.ContainsKey(titleExt)) completionList[titleExt] = CreateCompletion(titleExt, titleExt + endCh, fileName, CompletionType.Constant);
 				}
 			}
 

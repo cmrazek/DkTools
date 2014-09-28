@@ -78,6 +78,7 @@ namespace DkTools
 			if (keepCurrentApp) appName = _currentApp != null ? _currentApp.Name : "";
 			ReloadCurrentApp(appName);
 			ReloadTableList();
+			ClearFileLists();
 		}
 
 		public static IEnumerable<string> SourceDirs
@@ -478,7 +479,17 @@ namespace DkTools
 		#endregion
 
 		#region File Paths
-		private static HashSet<string> _probeExtensions = null;
+		private static HashSet<string> _probeExtensions;
+		private static List<string> _sourceFiles;
+		private static List<string> _includeFiles;
+		private static List<string> _sourceAndIncludeFiles;
+
+		private static void ClearFileLists()
+		{
+			_sourceFiles = null;
+			_includeFiles = null;
+			_sourceAndIncludeFiles = null;
+		}
 
 		public static string LocateFileInPath(string fileName)
 		{
@@ -583,34 +594,107 @@ namespace DkTools
 			return _probeExtensions.Contains(fileExt.ToLower());
 		}
 
-		public static IEnumerable<string> GetAllSourceIncludeFiles()
+		public static IEnumerable<string> GetAllSourceFiles()
 		{
-			var fileList = new List<string>();
-			try
+			if (_sourceFiles == null)
 			{
-				foreach (var dir in SourceDirs) GetAllSourceIncludeFiles_ProcessDir(Path.GetFullPath(dir), fileList);
-				foreach (var dir in IncludeDirs) GetAllSourceIncludeFiles_ProcessDir(Path.GetFullPath(dir), fileList);
+				_sourceFiles = new List<string>();
+				foreach (var dir in SourceDirs)
+				{
+					if (string.IsNullOrWhiteSpace(dir)) continue;
+					_sourceFiles.AddRange(GetAllSourceFiles_ProcessDir(dir));
+				}
 			}
-			catch (Exception)
-			{ }
-			return fileList;
+			return _sourceFiles;
 		}
 
-		private static void GetAllSourceIncludeFiles_ProcessDir(string path, List<string> fileList)
+		private static IEnumerable<string> GetAllSourceFiles_ProcessDir(string dir)
 		{
-			try
+			foreach (var fileName in Directory.GetFiles(dir))
 			{
-				foreach (var fileName in System.IO.Directory.GetFiles(path))
+				yield return fileName;
+			}
+
+			foreach (var subDir in Directory.GetDirectories(dir))
+			{
+				foreach (var fileName in GetAllSourceFiles_ProcessDir(subDir))
 				{
-					if (!fileList.Any(x => x.Equals(fileName, StringComparison.OrdinalIgnoreCase)))
+					yield return fileName;
+				}
+			}
+		}
+
+		public static IEnumerable<string> GetAllIncludeFiles()
+		{
+			if (_includeFiles == null)
+			{
+				_includeFiles = new List<string>();
+				foreach (var dir in IncludeDirs)
+				{
+					if (string.IsNullOrWhiteSpace(dir)) continue;
+					_includeFiles.AddRange(GetAllIncludeFiles_ProcessDir(dir));
+				}
+			}
+			return _includeFiles;
+		}
+
+		private static IEnumerable<string> GetAllIncludeFiles_ProcessDir(string dir)
+		{
+			foreach (var fileName in Directory.GetFiles(dir))
+			{
+				yield return fileName;
+			}
+
+			foreach (var subDir in Directory.GetDirectories(dir))
+			{
+				foreach (var fileName in GetAllIncludeFiles_ProcessDir(subDir))
+				{
+					yield return fileName;
+				}
+			}
+		}
+
+		public static IEnumerable<string> GetAllSourceIncludeFiles()
+		{
+			if (_sourceAndIncludeFiles == null)
+			{
+				_sourceAndIncludeFiles = new List<string>();
+
+				foreach (var fileName in GetAllSourceFiles())
+				{
+					if (!_sourceAndIncludeFiles.Any(x => string.Equals(x, fileName, StringComparison.OrdinalIgnoreCase)))
 					{
-						fileList.Add(fileName);
+						_sourceAndIncludeFiles.Add(fileName);
 					}
 				}
-				foreach (var dir in System.IO.Directory.GetDirectories(path)) GetAllSourceIncludeFiles_ProcessDir(dir, fileList);
+
+				foreach (var fileName in GetAllIncludeFiles())
+				{
+					if (!_sourceAndIncludeFiles.Any(x => string.Equals(x, fileName, StringComparison.OrdinalIgnoreCase)))
+					{
+						_sourceAndIncludeFiles.Add(fileName);
+					}
+				}
 			}
-			catch (Exception)
-			{ }
+
+			return _sourceAndIncludeFiles;
+		}
+
+		public static IEnumerable<string> GetAllIncludeFilesForDir(string path)
+		{
+			var list = new List<string>();
+
+			list.AddRange(GetAllIncludeFiles());
+
+			foreach (var fileName in (from f in GetAllSourceFiles() where f.StartsWith(path, StringComparison.OrdinalIgnoreCase) select f))
+			{
+				if (!list.Any(x => string.Equals(x, fileName, StringComparison.OrdinalIgnoreCase)))
+				{
+					list.Add(fileName);
+				}
+			}
+
+			return list;
 		}
 		#endregion
 
