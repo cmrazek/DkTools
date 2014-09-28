@@ -62,16 +62,20 @@ namespace DkTools.SmartIndenting
 				// User is typing a 'case' inside a switch.
 
 				// Try to find the braces that contain the 'case'.
-				var model = CodeModel.FileStore.GetOrCreateForTextBuffer(_view.TextBuffer).GetCurrentModel(_view.TextBuffer.CurrentSnapshot, "Smart indenting - case inside switch");
-				var offset = line.Snapshot.TranslateOffsetToSnapshot(line.Start.Position, model.Snapshot);
-				var bracesToken = model.File.FindDownward(offset, t => t is CodeModel.Tokens.BracesToken).LastOrDefault() as CodeModel.Tokens.BracesToken;
-				if (bracesToken != null)
+				var fileStore = CodeModel.FileStore.GetOrCreateForTextBuffer(_view.TextBuffer);
+				if (fileStore != null)
 				{
-					// Get the indent of the line where the opening brace resides.
-					var openOffset = bracesToken.OpenToken.Span.Start;
-					openOffset = model.Snapshot.TranslateOffsetToSnapshot(openOffset, line.Snapshot);
-					var openLine = line.Snapshot.GetLineFromPosition(openOffset);
-					return openLine.GetText().GetIndentCount(_tabSize);
+					var model = fileStore.GetCurrentModel(_view.TextBuffer.CurrentSnapshot, "Smart indenting - case inside switch");
+					var offset = line.Snapshot.TranslateOffsetToSnapshot(line.Start.Position, model.Snapshot);
+					var bracesToken = model.File.FindDownward(offset, t => t is CodeModel.Tokens.BracesToken).LastOrDefault() as CodeModel.Tokens.BracesToken;
+					if (bracesToken != null)
+					{
+						// Get the indent of the line where the opening brace resides.
+						var openOffset = bracesToken.OpenToken.Span.Start;
+						openOffset = model.Snapshot.TranslateOffsetToSnapshot(openOffset, line.Snapshot);
+						var openLine = line.Snapshot.GetLineFromPosition(openOffset);
+						return openLine.GetText().GetIndentCount(_tabSize);
+					}
 				}
 			}
 

@@ -68,7 +68,9 @@ namespace DkTools.Classifier
 			var state = GetStateForLine(line.LineNumber, snapshot);
 			var lineStartPos = line.Start.Position;
 
-			var model = CodeModel.FileStore.GetOrCreateForTextBuffer(snapshot.TextBuffer).GetMostRecentModel(snapshot, "GetStateForPosition");
+			var fileStore = CodeModel.FileStore.GetOrCreateForTextBuffer(snapshot.TextBuffer);
+			if (fileStore == null) return 0;
+			var model = fileStore.GetMostRecentModel(snapshot, "GetStateForPosition");
 
 			if (lineStartPos < pos)
 			{
@@ -100,7 +102,9 @@ namespace DkTools.Classifier
 					state = _states[stateLineNum];
 				}
 
-				var model = CodeModel.FileStore.GetOrCreateForTextBuffer(snapshot.TextBuffer).GetMostRecentModel(snapshot, "GetStateForLine()");
+				var fileStore = CodeModel.FileStore.GetOrCreateForTextBuffer(snapshot.TextBuffer);
+				if (fileStore == null) return 0;
+				var model = fileStore.GetMostRecentModel(snapshot, "GetStateForLine()");
 				_snapshot = snapshot;
 
 				var tokenInfo = new ProbeClassifierScanner.TokenInfo();

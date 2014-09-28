@@ -70,19 +70,23 @@ namespace DkTools.Outlining
 
 		private void Reparse()
 		{
-			_snapshot = _buffer.CurrentSnapshot;
-			var model = CodeModel.FileStore.GetOrCreateForTextBuffer(_buffer).GetCurrentModel(_snapshot, "OutliningTagger.Reparse()");
-
 			_modelRegions.Clear();
-			foreach (var region in model.OutliningRegions.OrderBy(r => r.Span.Start))
+			_snapshot = _buffer.CurrentSnapshot;
+			var fileStore = CodeModel.FileStore.GetOrCreateForTextBuffer(_buffer);
+			if (fileStore != null)
 			{
-				_modelRegions.Add(new ModelRegion
+				var model = fileStore.GetCurrentModel(_snapshot, "OutliningTagger.Reparse()");
+
+				foreach (var region in model.OutliningRegions.OrderBy(r => r.Span.Start))
 				{
-					span = new SnapshotSpan(model.Snapshot, new Span(region.Span.Start, region.Span.End - region.Span.Start)),
-					isFunction = region.CollapseToDefinition,
-					text = region.Text,
-					tooltipText = region.TooltipText
-				});
+					_modelRegions.Add(new ModelRegion
+					{
+						span = new SnapshotSpan(model.Snapshot, new Span(region.Span.Start, region.Span.End - region.Span.Start)),
+						isFunction = region.CollapseToDefinition,
+						text = region.Text,
+						tooltipText = region.TooltipText
+					});
+				}
 			}
 		}
 	}

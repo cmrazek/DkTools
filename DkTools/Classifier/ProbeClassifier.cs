@@ -51,7 +51,9 @@ namespace DkTools.Classifier
 			var state = tracker.GetStateForPosition(span.Start.Position, span.Snapshot);
 			var tokenInfo = new ProbeClassifierScanner.TokenInfo();
 
-			var model = CodeModel.FileStore.GetOrCreateForTextBuffer(span.Snapshot.TextBuffer).GetMostRecentModel(span.Snapshot, "GetClassificationSpans");
+			var fileStore = CodeModel.FileStore.GetOrCreateForTextBuffer(span.Snapshot.TextBuffer);
+			if (fileStore == null) return new List<ClassificationSpan>();
+			var model = fileStore.GetMostRecentModel(span.Snapshot, "GetClassificationSpans");
 			_scanner.SetSource(span.GetText(), span.Start.Position, span.Snapshot, model);
 
 			var disableDeadCode = ProbeToolsPackage.Instance.EditorOptions.DisableDeadCode;

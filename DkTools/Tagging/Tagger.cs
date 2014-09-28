@@ -116,15 +116,18 @@ namespace DkTools.Tagging
 					if (buf != null)
 					{
 						var fileStore = CodeModel.FileStore.GetOrCreateForTextBuffer(buf);
-						var funcs = fileStore.GetFunctionDropDownList(buf.CurrentSnapshot);
-						var model = fileStore.GetMostRecentModel(buf.CurrentSnapshot, "Insert diag");
-						var modelPos = model.AdjustPosition(Shell.ActiveView.Caret.Position.BufferPosition.Position, model.Snapshot);
-						foreach (var func in funcs)
+						if (fileStore != null)
 						{
-							if (func.EntireFunctionSpan.Contains(modelPos))
+							var funcs = fileStore.GetFunctionDropDownList(buf.CurrentSnapshot);
+							var model = fileStore.GetMostRecentModel(buf.CurrentSnapshot, "Insert diag");
+							var modelPos = model.AdjustPosition(Shell.ActiveView.Caret.Position.BufferPosition.Position, model.Snapshot);
+							foreach (var func in funcs)
 							{
-								funcName = func.Name;
-								break;
+								if (func.EntireFunctionSpan.Contains(modelPos))
+								{
+									funcName = func.Name;
+									break;
+								}
 							}
 						}
 					}

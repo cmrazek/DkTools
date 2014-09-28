@@ -79,15 +79,18 @@ namespace DkTools.SignatureHelp
 					else if (typedChar == ',' && (_session == null || _session.IsDismissed))
 					{
 						var fileStore = CodeModel.FileStore.GetOrCreateForTextBuffer(_textView.TextBuffer);
-						var model = fileStore.GetMostRecentModel(_textView.TextSnapshot, "Signature help command handler - after ','");
-						var caretPos = _textView.Caret.Position.BufferPosition.TranslateTo(model.Snapshot, PointTrackingMode.Positive).Position;
-
-						var tokens = model.FindTokens(caretPos);
-						var funcCallToken = tokens.LastOrDefault(t => t.GetType() == typeof(FunctionCallToken));
-						if (funcCallToken != null)
+						if (fileStore != null)
 						{
-							s_typedChar = typedChar;
-							_session = _broker.TriggerSignatureHelp(_textView);
+							var model = fileStore.GetMostRecentModel(_textView.TextSnapshot, "Signature help command handler - after ','");
+							var caretPos = _textView.Caret.Position.BufferPosition.TranslateTo(model.Snapshot, PointTrackingMode.Positive).Position;
+
+							var tokens = model.FindTokens(caretPos);
+							var funcCallToken = tokens.LastOrDefault(t => t.GetType() == typeof(FunctionCallToken));
+							if (funcCallToken != null)
+							{
+								s_typedChar = typedChar;
+								_session = _broker.TriggerSignatureHelp(_textView);
+							}
 						}
 					}
 				}

@@ -379,6 +379,7 @@
     <Compile Include="IniFile.cs" />
     <Compile Include="LockedValue.cs" />
     <Compile Include="Log.cs" />
+    <Compile Include="Navigation\ReferenceScroller.cs" />
     <Compile Include="Outlining\OutliningTagger.cs" />
     <Compile Include="Outlining\OutliningTaggerProvider.cs" />
     <Compile Include="Output.cs" />
@@ -446,11 +447,11 @@
     <Compile Include="SmartIndenting\ProbeSmartIndent.cs" />
     <Compile Include="SmartIndenting\ProbeSmartIndentCommandHandler.cs" />
     <Compile Include="SmartIndenting\ProbeSmartIndentProvider.cs" />
-    <Compile Include="StatementCompletion\DefinitionPickerWindow.xaml.cs">
+    <Compile Include="Navigation\DefinitionPickerWindow.xaml.cs">
       <DependentUpon>DefinitionPickerWindow.xaml</DependentUpon>
     </Compile>
-    <Compile Include="StatementCompletion\GoToBraceHelper.cs" />
-    <Compile Include="StatementCompletion\GoToDefinitionHelper.cs" />
+    <Compile Include="Navigation\GoToBraceHelper.cs" />
+    <Compile Include="Navigation\GoToDefinitionHelper.cs" />
     <Compile Include="StatementCompletion\ProbeCompletionCommandHandler.cs" />
     <Compile Include="StatementCompletion\ProbeCompletionCommandHandlerProvider.cs" />
     <Compile Include="StatementCompletion\ProbeCompletionSource.cs" />
@@ -568,7 +569,7 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>
-    <Page Include="StatementCompletion\DefinitionPickerWindow.xaml">
+    <Page Include="Navigation\DefinitionPickerWindow.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
       <Generator>MSBuild:Compile</Generator>
@@ -580,9 +581,7 @@
       <ResourceName>Menus.ctmenu</ResourceName>
     </VSCTCompile>
   </ItemGroup>
-  <ItemGroup>
-    <Folder Include="Commands\" />
-  </ItemGroup>
+  <ItemGroup />
   <PropertyGroup>
     <UseCodebase>true</UseCodebase>
   </PropertyGroup>

@@ -9,6 +9,7 @@ Features:
 - Added support for description text on extern functions.
 - Added support for columns on relationships.
 - Errors are now displayed in a custom dialog.
+- Added new commands to navigate to the next/previous reference of the selected item.
 
 Bug Fixes:
 - When the quick-info text is too wide, it will now wrap.

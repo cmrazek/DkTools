@@ -33,6 +33,8 @@ namespace DkTools.LanguageSvc
 			int caretPos, virtualSpaces;
 			textView.GetNearestPosition(line, col, out caretPos, out virtualSpaces);
 			var fileStore = CodeModel.FileStore.GetOrCreateForTextBuffer(buf);
+			if (fileStore == null) return false;
+
 			var index = 0;
 
 			var funcs = fileStore.GetFunctionDropDownList(buf.CurrentSnapshot).ToList();

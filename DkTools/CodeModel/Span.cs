@@ -36,7 +36,7 @@ namespace DkTools.CodeModel
 
 		public override string ToString()
 		{
-			return string.Format("[{0}] - [{1}]", _start, _end);
+			return string.Format("[{0}..{1}]", _start, _end);
 		}
 
 		public bool Contains(int pos)

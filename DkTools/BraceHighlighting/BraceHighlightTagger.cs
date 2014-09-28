@@ -149,23 +149,27 @@ namespace DkTools.BraceHighlighting
 
 			var snapshot = snapPt.Snapshot;
 
-			var model = CodeModel.FileStore.GetOrCreateForTextBuffer(_sourceBuffer).GetCurrentModel(_sourceBuffer.CurrentSnapshot, "Word select idle");
-			var modelPos = model.GetPosition(snapPt);
-			var caretToken = model.File.FindDownwardTouching(modelPos).LastOrDefault(t => t.SourceDefinition != null);
-			if (caretToken == null)
+			var fileStore = CodeModel.FileStore.GetOrCreateForTextBuffer(_sourceBuffer);
+			if (fileStore != null)
 			{
-				Update(snapPt, null);
-				return;
+				var model = fileStore.GetCurrentModel(_sourceBuffer.CurrentSnapshot, "Word select idle");
+				var modelPos = model.GetPosition(snapPt);
+				var caretToken = model.File.FindDownwardTouching(modelPos).LastOrDefault(t => t.SourceDefinition != null);
+				if (caretToken == null)
+				{
+					Update(snapPt, null);
+					return;
+				}
+
+				var sourceDef = caretToken.SourceDefinition;
+				var file = model.File;
+				var matchingTokens = file.FindDownward(t => t.SourceDefinition == sourceDef);
+
+				var wordSpans = new NormalizedSnapshotSpanCollection(from t in matchingTokens select new SnapshotSpan(snapshot, VsTextUtil.ModelSpanToVsSnapshotSpan(model.Snapshot, t.Span, snapshot)));
+				if (!wordSpans.Any()) wordSpans = null;
+
+				Update(snapPt, wordSpans);
 			}
-
-			var sourceDef = caretToken.SourceDefinition;
-			var file = model.File;
-			var matchingTokens = file.FindDownward(t => t.SourceDefinition == sourceDef);
-
-			var wordSpans = new NormalizedSnapshotSpanCollection(from t in matchingTokens select new SnapshotSpan(snapshot, VsTextUtil.ModelSpanToVsSnapshotSpan(model.Snapshot, t.Span, snapshot)));
-			if (!wordSpans.Any()) wordSpans = null;
-
-			Update(snapPt, wordSpans);
 		}
 	}
 }

@@ -30,7 +30,7 @@ namespace DkTools
 	[PackageRegistration(UseManagedResourcesOnly = true)]
 	[InstalledProductRegistration("#110", "#112", "1.0", IconResourceID = 400)]
 	[Guid(GuidList.strProbeToolsPkg)]
-	[ProvideService(typeof(ProbeLanguageService), ServiceName = "DK")]
+	[ProvideService(typeof(ProbeLanguageService), ServiceName = Constants.DkContentType)]
 	[ProvideLanguageService(typeof(ProbeLanguageService), "DK", /*50433*/ 0,
 		RequestStockColors = true,
 		EnableLineNumbers = true,

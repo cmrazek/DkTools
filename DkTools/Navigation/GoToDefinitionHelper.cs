@@ -6,7 +6,7 @@ using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Editor;
 using DkTools.CodeModel.Definitions;
 
-namespace DkTools.StatementCompletion
+namespace DkTools.Navigation
 {
 	public static class GoToDefinitionHelper
 	{
@@ -18,6 +18,8 @@ namespace DkTools.StatementCompletion
 			var caretPt = caretPtTest.Value;
 
 			var fileStore = CodeModel.FileStore.GetOrCreateForTextBuffer(textView.TextBuffer);
+			if (fileStore == null) return;
+
 			var model = fileStore.GetCurrentModel(caretPt.Snapshot, "Go to definition");
 			var modelPos = model.AdjustPosition(caretPt.Position, caretPt.Snapshot);
 			var selTokens = model.File.FindDownwardTouching(modelPos).ToArray();

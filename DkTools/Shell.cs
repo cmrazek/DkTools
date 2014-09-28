@@ -19,14 +19,13 @@ namespace DkTools
 		internal static void ShowError(Exception ex)
 		{
 			Log.WriteEx(ex);
-			System.Windows.Forms.MessageBox.Show(string.Concat(ex.GetType().ToString(), "\r\n\r\n", ex.ToString()), "Error",
-				System.Windows.Forms.MessageBoxButtons.OK, System.Windows.Forms.MessageBoxIcon.Error);
+			Util.ShowErrorDialog(ex.Message, ex.ToString());
 		}
 
 		internal static void ShowError(string text)
 		{
 			Log.Write(LogLevel.Error, text);
-			System.Windows.Forms.MessageBox.Show(text, "Error", System.Windows.Forms.MessageBoxButtons.OK, System.Windows.Forms.MessageBoxIcon.Error);
+			Util.ShowErrorDialog(text, null);
 		}
 
 		internal static void OpenDocument(string fileName)

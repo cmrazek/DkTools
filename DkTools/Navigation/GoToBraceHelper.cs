@@ -8,7 +8,7 @@ using Microsoft.VisualStudio.Text.Editor;
 using DkTools.CodeModel;
 using DkTools.CodeModel.Tokens;
 
-namespace DkTools.StatementCompletion
+namespace DkTools.Navigation
 {
 	internal class GoToBraceHelper
 	{
@@ -23,6 +23,8 @@ namespace DkTools.StatementCompletion
 			var caretPt = caretPtTest.Value;
 
 			var store = FileStore.GetOrCreateForTextBuffer(view.TextBuffer);
+			if (store == null) return;
+
 			var model = store.GetMostRecentModel(view.TextSnapshot, "GoToBraceHelper.Trigger()");
 
 			var modelPos = model.AdjustPosition(caretPt.Position, caretPt.Snapshot);

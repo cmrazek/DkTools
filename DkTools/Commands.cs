@@ -41,7 +41,9 @@ namespace DkTools
 		ShowDrv = 0x011f,
 		DisableDeadCode = 0x0120,
 		ShowProbeNV = 0x0123,
-		ShowErrors = 0x0124
+		ShowErrors = 0x0124,
+		GoToNextReference = 0x0125,
+		GoToPrevReference = 0x0126
 	}
 
 	internal static class Commands
@@ -75,6 +77,8 @@ namespace DkTools
 #if REPORT_ERRORS
 			AddCommand(mcs, CommandId.ShowErrors, ShowErrors, checkedCallback: ShowErrors_Checked);
 #endif
+			AddCommand(mcs, CommandId.GoToNextReference, GoToNextReference);
+			AddCommand(mcs, CommandId.GoToPrevReference, GoToPrevReference);
 		}
 
 		private class CommandInstance
@@ -642,6 +646,32 @@ namespace DkTools
 		}
 #endif
 
+		private static void GoToNextReference(object sender, EventArgs e)
+		{
+			try
+			{
+				var view = Shell.ActiveView;
+				Navigation.ReferenceScroller.GoToNextOrPrevReference(view, true);
+			}
+			catch (Exception ex)
+			{
+				Shell.ShowError(ex);
+			}
+		}
+
+		private static void GoToPrevReference(object sender, EventArgs e)
+		{
+			try
+			{
+				var view = Shell.ActiveView;
+				Navigation.ReferenceScroller.GoToNextOrPrevReference(view, false);
+			}
+			catch (Exception ex)
+			{
+				Shell.ShowError(ex);
+			}
+		}
+
 #if DEBUG
 		internal static class DebugCommands
 		{
@@ -651,6 +681,7 @@ namespace DkTools
 				if (view == null) return null;
 
 				var store = CodeModel.FileStore.GetOrCreateForTextBuffer(view.TextBuffer);
+				if (store == null) return null;
 				return store.GetMostRecentModel(view.TextSnapshot, "Debug Commands");
 			}
 
@@ -660,6 +691,7 @@ namespace DkTools
 				if (view == null) return;
 
 				var fileStore = CodeModel.FileStore.GetOrCreateForTextBuffer(view.TextBuffer);
+				if (fileStore == null) return;
 				var model = fileStore.GetCurrentModel(view.TextSnapshot, "Debug:ShowCodeModelDump");
 
 				Shell.OpenTempContent(model.DumpTree(), Path.GetFileName(model.FileName), ".model.xml");

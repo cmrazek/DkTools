@@ -1,4 +1,4 @@
-﻿<Window x:Class="DkTools.StatementCompletion.DefinitionPickerWindow"
+﻿<Window x:Class="DkTools.Navigation.DefinitionPickerWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         Title="Choose Definition" Height="163" Width="411" Loaded="Window_Loaded" WindowStartupLocation="CenterOwner" ShowInTaskbar="False">

@@ -33,14 +33,10 @@ namespace DkTools.CodeModel.Tokens
 			if (nameToken == null) throw new ArgumentNullException("nameToken");
 			if (argsToken == null) throw new ArgumentNullException("argsToken");
 #endif
-			if (classToken != null) AddToken(classToken);
-			if (dotToken != null) AddToken(dotToken);
-
-			AddToken(_nameToken = nameToken);
+			_nameToken = nameToken;
 			_nameToken.SourceDefinition = def;
 			_classToken = classToken;
-
-			AddToken(_argsToken = argsToken);
+			_argsToken = argsToken;
 
 			// If this function is already defined, then save the data type.
 			var funcDecl = DefinitionProvider.GetGlobal<FunctionDefinition>(_nameToken.Text).FirstOrDefault();

@@ -61,7 +61,7 @@ namespace DkTools.StatementCompletion
 				{
 					if (nCmdID == (uint)VSConstants.VSStd97CmdID.GotoDefn)
 					{
-						GoToDefinitionHelper.TriggerGoToDefinition(_textView);
+						Navigation.GoToDefinitionHelper.TriggerGoToDefinition(_textView);
 						return VSConstants.S_OK;
 					}
 				}
@@ -75,12 +75,12 @@ namespace DkTools.StatementCompletion
 					}
 					else if (nCmdID == (uint)VSConstants.VSStd2KCmdID.GOTOBRACE)
 					{
-						GoToBraceHelper.Trigger(_textView, false);
+						Navigation.GoToBraceHelper.Trigger(_textView, false);
 						return VSConstants.S_OK;
 					}
 					else if (nCmdID == (uint)VSConstants.VSStd2KCmdID.GOTOBRACE_EXT)
 					{
-						GoToBraceHelper.Trigger(_textView, true);
+						Navigation.GoToBraceHelper.Trigger(_textView, true);
 						return VSConstants.S_OK;
 					}
 				}
@@ -239,22 +239,24 @@ namespace DkTools.StatementCompletion
 			{
 				var modelSnapshot = _textView.TextSnapshot;
 				var fileStore = CodeModel.FileStore.GetOrCreateForTextBuffer(caretPt.Snapshot.TextBuffer);
-
-				ProbeToolsPackage.Instance.StartBackgroundWorkItem(() =>
-					{
-						fileStore.GetCurrentModel(caretPt.Snapshot, "Auto-completion deferred model build");
-					}, ex =>
-					{
-						if (ex != null) return;
-
-						if (_session == null || _session.IsDismissed)
+				if (fileStore != null)
+				{
+					ProbeToolsPackage.Instance.StartBackgroundWorkItem(() =>
 						{
-							if (_textView.TextSnapshot.Version.VersionNumber == modelSnapshot.Version.VersionNumber)
+							fileStore.GetCurrentModel(caretPt.Snapshot, "Auto-completion deferred model build");
+						}, ex =>
+						{
+							if (ex != null) return;
+
+							if (_session == null || _session.IsDismissed)
 							{
-								ShowSession(caretPt);
+								if (_textView.TextSnapshot.Version.VersionNumber == modelSnapshot.Version.VersionNumber)
+								{
+									ShowSession(caretPt);
+								}
 							}
-						}
-					});
+						});
+				}
 			}
 
 			return true;

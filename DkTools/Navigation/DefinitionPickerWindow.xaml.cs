@@ -12,7 +12,7 @@ using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
 using DkTools.CodeModel.Definitions;
 
-namespace DkTools.StatementCompletion
+namespace DkTools.Navigation
 {
 	/// <summary>
 	/// Interaction logic for DefinitionPickerWindow.xaml

@@ -159,15 +159,18 @@ namespace DkTools.StatementCompletion
 
 				// Extract and field
 				var store = CodeModel.FileStore.GetOrCreateForTextBuffer(_textBuffer);
-				var model = store.GetMostRecentModel(snapshot, "Extract table.field completion.");
-				var exDef = model.DefinitionProvider.GetGlobal<ExtractTableDefinition>(tableName).FirstOrDefault();
-				if (exDef != null)
+				if (store != null)
 				{
-					completionSpan = new Microsoft.VisualStudio.Text.Span(linePos + match.Groups[2].Index, match.Groups[2].Length);
-					foreach (var def in exDef.Fields)
+					var model = store.GetMostRecentModel(snapshot, "Extract table.field completion.");
+					var exDef = model.DefinitionProvider.GetGlobal<ExtractTableDefinition>(tableName).FirstOrDefault();
+					if (exDef != null)
 					{
-						if (!def.CompletionVisible) continue;
-						completionList[def.Name] = CreateCompletion(def);
+						completionSpan = new Microsoft.VisualStudio.Text.Span(linePos + match.Groups[2].Index, match.Groups[2].Length);
+						foreach (var def in exDef.Fields)
+						{
+							if (!def.CompletionVisible) continue;
+							completionList[def.Name] = CreateCompletion(def);
+						}
 					}
 				}
 
@@ -193,27 +196,30 @@ namespace DkTools.StatementCompletion
 			else if ((match = _rxAfterAssignOrCompare.Match(prefix)).Success)
 			{
 				var store = CodeModel.FileStore.GetOrCreateForTextBuffer(_textBuffer);
-				var model = store.GetCurrentModel(snapshot, "Auto-completion after assign or compare");
-				var modelPos = model.AdjustPosition(curPos, snapshot);
-				var parentToken = (from t in model.FindTokens(modelPos)
-								   where t is GroupToken && t.Span.Start < curPos
-								   select t as GroupToken).LastOrDefault();
-				if (parentToken != null)
+				if (store != null)
 				{
-					var opToken = parentToken.FindLastChildBeforeOffset(modelPos);
-					if (opToken != null && opToken is OperatorToken && opToken.Text == match.Groups[1].Value)
+					var model = store.GetCurrentModel(snapshot, "Auto-completion after assign or compare");
+					var modelPos = model.AdjustPosition(curPos, snapshot);
+					var parentToken = (from t in model.FindTokens(modelPos)
+									   where t is GroupToken && t.Span.Start < curPos
+									   select t as GroupToken).LastOrDefault();
+					if (parentToken != null)
 					{
-						var prevToken = parentToken.FindPreviousSibling(opToken);
-
-						if (prevToken != null)
+						var opToken = parentToken.FindLastChildBeforeOffset(modelPos);
+						if (opToken != null && opToken is OperatorToken && opToken.Text == match.Groups[1].Value)
 						{
-							var dt = prevToken.ValueDataType;
-							if (dt != null && dt.HasCompletionOptions)
+							var prevToken = parentToken.FindPreviousSibling(opToken);
+
+							if (prevToken != null)
 							{
-								foreach (var opt in dt.CompletionOptions)
+								var dt = prevToken.ValueDataType;
+								if (dt != null && dt.HasCompletionOptions)
 								{
-									if (!opt.CompletionVisible) continue;
-									completionList[opt.Name] = CreateCompletion(opt);
+									foreach (var opt in dt.CompletionOptions)
+									{
+										if (!opt.CompletionVisible) continue;
+										completionList[opt.Name] = CreateCompletion(opt);
+									}
 								}
 							}
 						}
@@ -223,12 +229,15 @@ namespace DkTools.StatementCompletion
 			else if ((match = _rxAfterIfDef.Match(prefix)).Success)
 			{
 				var fileStore = CodeModel.FileStore.GetOrCreateForTextBuffer(_textBuffer);
-				var model = fileStore.GetCurrentModel(_textBuffer.CurrentSnapshot, "Auto-completion after #ifdef");
-
-				foreach (var def in model.DefinitionProvider.GetGlobal<ConstantDefinition>())
+				if (fileStore != null)
 				{
-					if (!def.CompletionVisible) continue;
-					completionList[def.Name] = CreateCompletion(def);
+					var model = fileStore.GetCurrentModel(_textBuffer.CurrentSnapshot, "Auto-completion after #ifdef");
+
+					foreach (var def in model.DefinitionProvider.GetGlobal<ConstantDefinition>())
+					{
+						if (!def.CompletionVisible) continue;
+						completionList[def.Name] = CreateCompletion(def);
+					}
 				}
 			}
 			else if ((match = _rxClassFunctionStartBracket.Match(prefix)).Success)
@@ -307,12 +316,15 @@ namespace DkTools.StatementCompletion
 				}
 
 				var store = CodeModel.FileStore.GetOrCreateForTextBuffer(_textBuffer);
-				var model = store.GetMostRecentModel(_textBuffer.CurrentSnapshot, "Auto-completion after 'extract'");
-
-				foreach (var exDef in model.DefinitionProvider.GetGlobal<ExtractTableDefinition>())
+				if (store != null)
 				{
-					if (!exDef.CompletionVisible) continue;
-					completionList[exDef.Name] = CreateCompletion(exDef);
+					var model = store.GetMostRecentModel(_textBuffer.CurrentSnapshot, "Auto-completion after 'extract'");
+
+					foreach (var exDef in model.DefinitionProvider.GetGlobal<ExtractTableDefinition>())
+					{
+						if (!exDef.CompletionVisible) continue;
+						completionList[exDef.Name] = CreateCompletion(exDef);
+					}
 				}
 			}
 
@@ -337,6 +349,7 @@ namespace DkTools.StatementCompletion
 		private IEnumerable<Completion> GetOptionsForFunctionArg(string className, string funcName, int argIndex, SnapshotPoint snapPt)
 		{
 			var fileStore = CodeModel.FileStore.GetOrCreateForTextBuffer(_textBuffer);
+			if (fileStore == null) yield break;
 			var model = fileStore.GetMostRecentModel(_textBuffer.CurrentSnapshot, "Signature help get options for arg");
 
 			string sig;
@@ -444,7 +457,9 @@ namespace DkTools.StatementCompletion
 
 		private IEnumerable<Completion> GetWordCompletions(int curPos, ITextSnapshot snapshot)
 		{
-			var model = CodeModel.FileStore.GetOrCreateForTextBuffer(_textBuffer).GetMostRecentModel(snapshot, "Auto-completion get word completions");
+			var fileStore = CodeModel.FileStore.GetOrCreateForTextBuffer(_textBuffer);
+			if (fileStore == null) yield break;
+			var model = fileStore.GetMostRecentModel(snapshot, "Auto-completion get word completions");
 			var modelPos = model.AdjustPosition(curPos, snapshot);
 
 			var tokens = model.FindTokens(modelPos).ToArray();

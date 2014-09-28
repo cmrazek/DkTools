@@ -54,22 +54,25 @@ namespace DkTools.SignatureHelp
 					{
 						var applicableToSpan = snapshot.CreateTrackingSpan(new VsText.Span(origPos, 0), VsText.SpanTrackingMode.EdgeInclusive);
 						var fileStore = CodeModel.FileStore.GetOrCreateForTextBuffer(_textBuffer);
-						var model = fileStore.GetMostRecentModel(snapshot, "Signature help after '('");
-						//if (string.IsNullOrEmpty(tableName)) tableName = model.ClassName;
-						foreach (var sig in GetSignatures(model, tableName, funcName, applicableToSpan))
+						if (fileStore != null)
 						{
-							signatures.Add(sig);
-						}
-						
-						if (!string.IsNullOrEmpty(tableName))
-						{
-							var cls = ProbeToolsPackage.Instance.FunctionFileScanner.GetClass(tableName);
-							if (cls != null)
+							var model = fileStore.GetMostRecentModel(snapshot, "Signature help after '('");
+
+							foreach (var sig in GetSignatures(model, tableName, funcName, applicableToSpan))
 							{
-								var def = cls.GetFunctionDefinition(funcName);
-								if (def != null)
+								signatures.Add(sig);
+							}
+
+							if (!string.IsNullOrEmpty(tableName))
+							{
+								var cls = ProbeToolsPackage.Instance.FunctionFileScanner.GetClass(tableName);
+								if (cls != null)
 								{
-									signatures.Add(CreateSignature(_textBuffer, def.Signature, def.DevDescription, applicableToSpan));
+									var def = cls.GetFunctionDefinition(funcName);
+									if (def != null)
+									{
+										signatures.Add(CreateSignature(_textBuffer, def.Signature, def.DevDescription, applicableToSpan));
+									}
 								}
 							}
 						}
@@ -79,26 +82,29 @@ namespace DkTools.SignatureHelp
 			else if (ProbeSignatureHelpCommandHandler.s_typedChar == ',')
 			{
 				var fileStore = CodeModel.FileStore.GetOrCreateForTextBuffer(_textBuffer);
-				var model = fileStore.GetMostRecentModel(snapshot, "Signature help after ','");
-				var modelPos = model.AdjustPosition(origPos, snapshot);
-				var tokens = model.FindTokens(modelPos);
-				var funcCallToken = tokens.LastOrDefault(t => t.GetType() == typeof(FunctionCallToken));
-				if (funcCallToken != null)
+				if (fileStore != null)
 				{
-					var classToken = (funcCallToken as FunctionCallToken).ClassToken;
-					var className = classToken != null ? classToken.Text : null;
-					var nameToken = (funcCallToken as FunctionCallToken).NameToken;
-					var funcName = nameToken.Text;
-
-					var bracketPos = nameToken.Span.End;
-					if (modelPos >= bracketPos)
+					var model = fileStore.GetMostRecentModel(snapshot, "Signature help after ','");
+					var modelPos = model.AdjustPosition(origPos, snapshot);
+					var tokens = model.FindTokens(modelPos);
+					var funcCallToken = tokens.LastOrDefault(t => t.GetType() == typeof(FunctionCallToken));
+					if (funcCallToken != null)
 					{
-						VsText.ITrackingSpan applicableToSpan = _textBuffer.CurrentSnapshot.CreateTrackingSpan(
-							new Microsoft.VisualStudio.Text.Span(snapshot.TranslateOffsetToSnapshot(bracketPos, model.Snapshot), modelPos - bracketPos), VsText.SpanTrackingMode.EdgeInclusive, 0);
+						var classToken = (funcCallToken as FunctionCallToken).ClassToken;
+						var className = classToken != null ? classToken.Text : null;
+						var nameToken = (funcCallToken as FunctionCallToken).NameToken;
+						var funcName = nameToken.Text;
 
-						foreach (var sig in GetSignatures(model, className, funcName, applicableToSpan))
+						var bracketPos = nameToken.Span.End;
+						if (modelPos >= bracketPos)
 						{
-							signatures.Add(sig);
+							VsText.ITrackingSpan applicableToSpan = _textBuffer.CurrentSnapshot.CreateTrackingSpan(
+								new Microsoft.VisualStudio.Text.Span(snapshot.TranslateOffsetToSnapshot(bracketPos, model.Snapshot), modelPos - bracketPos), VsText.SpanTrackingMode.EdgeInclusive, 0);
+
+							foreach (var sig in GetSignatures(model, className, funcName, applicableToSpan))
+							{
+								signatures.Add(sig);
+							}
 						}
 					}
 				}

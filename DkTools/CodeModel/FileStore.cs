@@ -31,6 +31,8 @@ namespace DkTools.CodeModel
 		{
 			if (buf == null) throw new ArgumentNullException("buf");
 
+			if (buf.ContentType.TypeName != Constants.DkContentType) return null;
+
 			FileStore cache;
 			if (buf.Properties.TryGetProperty(typeof(FileStore), out cache)) return cache;
 

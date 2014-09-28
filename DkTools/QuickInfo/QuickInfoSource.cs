@@ -39,32 +39,36 @@ namespace DkTools.QuickInfo
 			var snapshotPoint = subjectTriggerPoint.Value;
 			var currentSnapshot = snapshotPoint.Snapshot;
 
-			var model = CodeModel.FileStore.GetOrCreateForTextBuffer(_subjectBuffer).Model;
-			if (model != null && model.Snapshot != null)
+			var fileStore = CodeModel.FileStore.GetOrCreateForTextBuffer(_subjectBuffer);
+			if (fileStore != null)
 			{
-				var modelPos = model.AdjustPosition(snapshotPoint.Position, snapshotPoint.Snapshot);
-
-				var tokens = model.FindTokens(modelPos).ToArray();
-				var info = GetQuickInfoForTokens(tokens);
-				if (info.HasValue)
+				var model = fileStore.Model;
+				if (model != null && model.Snapshot != null)
 				{
-					quickInfoContent.Add(info.Value.infoElements);
-					var tokenSpan = info.Value.token.Span;
-					var snapSpan = new SnapshotSpan(model.Snapshot, tokenSpan.Start, tokenSpan.Length);
-					applicableToSpan = model.Snapshot.CreateTrackingSpan(info.Value.token.Span.ToVsTextSpan(), SpanTrackingMode.EdgeInclusive);
-				}
+					var modelPos = model.AdjustPosition(snapshotPoint.Position, snapshotPoint.Snapshot);
+
+					var tokens = model.FindTokens(modelPos).ToArray();
+					var info = GetQuickInfoForTokens(tokens);
+					if (info.HasValue)
+					{
+						quickInfoContent.Add(info.Value.infoElements);
+						var tokenSpan = info.Value.token.Span;
+						var snapSpan = new SnapshotSpan(model.Snapshot, tokenSpan.Start, tokenSpan.Length);
+						applicableToSpan = model.Snapshot.CreateTrackingSpan(info.Value.token.Span.ToVsTextSpan(), SpanTrackingMode.EdgeInclusive);
+					}
 
 #if REPORT_ERRORS
-				foreach (var error in model.PreprocessorModel.ErrorProvider.GetErrorsForPos(modelPos))
-				{
-					quickInfoContent.Add(error.Message);
-					if (applicableToSpan == null)
+					foreach (var error in model.PreprocessorModel.ErrorProvider.GetErrorsForPos(modelPos))
 					{
-						var snapSpan = new SnapshotSpan(model.Snapshot, error.Span.Start, error.Span.Length);
-						applicableToSpan = model.Snapshot.CreateTrackingSpan(snapSpan, SpanTrackingMode.EdgeInclusive);
+						quickInfoContent.Add(error.Message);
+						if (applicableToSpan == null)
+						{
+							var snapSpan = new SnapshotSpan(model.Snapshot, error.Span.Start, error.Span.Length);
+							applicableToSpan = model.Snapshot.CreateTrackingSpan(snapSpan, SpanTrackingMode.EdgeInclusive);
+						}
 					}
-				}
 #endif
+				}
 			}
 		}
 
