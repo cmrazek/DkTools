@@ -25,6 +25,7 @@ Bug Fixes:
 - Syntax highlighter now correctly handles nested comments.
 - Background scanner will now remove missing files from the database (if the drive is mounted).
 - Added support for data types command, section, scroll and graphic.
+- Fixed completion list not being displayed after 'return'.
 
 ____________________________________________________________________________________________________
 Version 1.2.7 - Sep 23, 2014:

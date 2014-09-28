@@ -94,6 +94,9 @@ namespace DkTools.CodeModel
 		#endregion
 
 		#region Util functions
+		/// <summary>
+		/// Adjusts a position from another snapshot to the model's snapshot.
+		/// </summary>
 		public int AdjustPosition(int pos, VsText.ITextSnapshot snapshot)
 		{
 			if (snapshot == null || _snapshot == null || _snapshot == snapshot)

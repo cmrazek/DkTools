@@ -273,20 +273,19 @@ namespace DkTools.StatementCompletion
 			}
 			else if ((match = _rxReturn.Match(prefix)).Success)
 			{
-				// TODO: auto completion on return enums needs to be updated to work without functions
+				var fileStore = CodeModel.FileStore.GetOrCreateForTextBuffer(_textBuffer);
+				if (fileStore != null)
+				{
+					var model = fileStore.GetMostRecentModel(_textBuffer.CurrentSnapshot, "Auto-completion after return");
+					var modelPos = model.AdjustPosition(curPos, snapshot);
 
-				//var model = CodeModel.FileStore.GetOrCreateForTextBuffer(_textBuffer).GetCurrentModel(_textBuffer.CurrentSnapshot, "Auto-completion after return");
-				//var modelPos = model.AdjustPosition(curPos, snapshot);
-
-				//var funcToken = model.FindTokens(modelPos).LastOrDefault(x => x is CodeModel.Tokens.FunctionToken) as CodeModel.Tokens.FunctionToken;
-				//if (funcToken != null)
-				//{
-				//	var dataType = funcToken.DataTypeToken;
-				//	if (dataType != null && dataType is CodeModel.Tokens.IDataTypeToken)
-				//	{
-				//		foreach (var opt in (dataType as CodeModel.Tokens.IDataTypeToken).DataType.CompletionOptions) completionList[opt.Name] = CreateCompletion(opt);
-				//	}
-				//}
+					var funcDef = model.PreprocessorModel.LocalFunctions.FirstOrDefault(f => f.EntireSpan.Contains(modelPos));
+					var dataType = funcDef.DataType;
+					if (dataType != null)
+					{
+						foreach (var opt in dataType.CompletionOptions) completionList[opt.Name] = CreateCompletion(opt);
+					}
+				}
 			}
 			else if ((match = _rxCase.Match(prefix)).Success)
 			{
