@@ -33,6 +33,7 @@ namespace DkTools.CodeModel
 		public static readonly DataType StringVarying = new DataType("string varying");
 		public static readonly DataType Date = new DataType("date");
 		public static readonly DataType Enum = new DataType("enum");
+		public static readonly DataType Command = new DataType("command");
 
 		public delegate DataTypeDefinition GetDataTypeDelegate(string name);
 		public delegate VariableDefinition GetVariableDelegate(string name);
@@ -570,47 +571,10 @@ namespace DkTools.CodeModel
 						}
 						sb.Append(" }");
 
-						// TODO
-						//var optionSB = new StringBuilder();
-						//while (!code.EndOfFile)
-						//{
-						//	if (code.ReadExact('}'))
-						//	{
-						//		if (optionSB.Length > 0) options.Add(new EnumOptionDefinition(optionSB.ToString()));
-						//		optionSB.Clear();
-						//		break;
-						//	}
-						//	else if (code.ReadExact(','))
-						//	{
-						//		if (optionSB.Length > 0) options.Add(new EnumOptionDefinition(optionSB.ToString()));
-						//		optionSB.Clear();
-						//	}
-						//	else if (code.ReadStringLiteral())
-						//	{
-						//		options.Add(new EnumOptionDefinition(code.TokenText));
-						//		optionSB.Clear();
-						//	}
-						//	else if (code.Read())
-						//	{
-						//		optionSB.Append(code.TokenText);
-						//	}
-						//	else break;
-						//}
-
-						//if (optionSB.Length > 0) options.Add(new EnumOptionDefinition(optionSB.ToString()));
-
-						//sb.Append(" {");
-						//var first = true;
-						//foreach (var opt in options)
-						//{
-						//	if (first) first = false;
-						//	else sb.Append(',');
-						//	sb.Append(' ');
-						//	sb.Append(opt.Name);
-						//}
-						//sb.Append(" }");
+						if (code.ReadExact("@neutral")) sb.Append(" @neutral");
 
 						if (code.ReadExact("PICK")) sb.Append(" PICK");
+						else if (code.ReadExact("NOPICK")) sb.Append(" NOPICK");
 
 						return new DataType(typeName, sb.ToString())
 						{
@@ -663,6 +627,78 @@ namespace DkTools.CodeModel
 
 				case "indrel":
 					return DataType.IndRel;
+				#endregion
+
+				#region command
+				case "command":
+					return DataType.Command;
+				#endregion
+
+				#region section
+				case "Section":
+					{
+						var sb = new StringBuilder();
+						sb.Append("Section");
+						if (code.ReadExact("Level"))
+						{
+							sb.Append(" Level");
+							if (code.ReadNumber())
+							{
+								sb.Append(' ');
+								sb.Append(code.TokenText);
+							}
+						}
+						return new DataType(typeName, sb.ToString());
+					}
+				#endregion
+
+				#region scroll
+				case "scroll":
+					{
+						var sb = new StringBuilder();
+						sb.Append("scroll");
+
+						if (code.ReadNumber())
+						{
+							sb.Append(' ');
+							sb.Append(code.TokenText);
+
+							if (code.ReadExact("@neutral"))
+							{
+								sb.Append(" @neutral");
+							}
+						}
+
+						return new DataType(typeName, sb.ToString());
+					}
+				#endregion
+
+				#region graphic
+				case "graphic":
+					{
+						var sb = new StringBuilder();
+						sb.Append("graphic");
+
+						if (code.ReadNumber())	// rows
+						{
+							sb.Append(' ');
+							sb.Append(code.TokenText);
+
+							if (code.ReadNumber())	// columns
+							{
+								sb.Append(' ');
+								sb.Append(code.TokenText);
+
+								if (code.ReadNumber())	// bytes
+								{
+									sb.Append(' ');
+									sb.Append(code.TokenText);
+								}
+							}
+						}
+
+						return new DataType(typeName, sb.ToString());
+					}
 				#endregion
 
 				default:

@@ -22,6 +22,7 @@ Bug Fixes:
 - Fixed enum options not being read properly from the WBDK repository when they contain spaces.
 - Syntax highlighter now correctly handles nested comments.
 - Background scanner will now remove missing files from the database (if the drive is mounted).
+- Added support for data types command, section, scroll and graphic.
 
 ____________________________________________________________________________________________________
 Version 1.2.7 - Sep 23, 2014:
