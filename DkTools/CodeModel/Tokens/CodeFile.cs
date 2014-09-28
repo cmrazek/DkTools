@@ -963,7 +963,7 @@ namespace DkTools.CodeModel.Tokens
 							yield return new OutliningRegion
 							{
 								Span = reg.span,
-								CollapseToDefinition = !reg.scope.Hint.HasFlag(ScopeHint.NotOnRoot),	// Auto-hide comments on the root
+								CollapseToDefinition = (reg.scope.Hint & ScopeHint.NotOnRoot) == 0,	// Auto-hide comments on the root
 								Text = reg.title,
 								TooltipText = GetRegionText(reg.span)
 							};

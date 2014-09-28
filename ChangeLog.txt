@@ -20,6 +20,7 @@ Bug Fixes:
 - Fixed duplicate index error in scanner database when multiple applications have a class with the
   same name.
 - Fixed enum options not being read properly from the WBDK repository when they contain spaces.
+- Syntax highlighter now correctly handles nested comments.
 
 ____________________________________________________________________________________________________
 Version 1.2.7 - Sep 23, 2014:

@@ -5,6 +5,7 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using DkTools.CodeModel.Definitions;
+using DkTools.ErrorTagging;
 using DkTools.CodeModel.Tokens;
 
 namespace DkTools.CodeModel
@@ -24,8 +25,8 @@ namespace DkTools.CodeModel
 #endif
 		private List<Definition> _globalDefs = new List<Definition>();
 #if REPORT_ERRORS
-		private List<ErrorTagging.ErrorInfo> _errors = new List<ErrorTagging.ErrorInfo>();
 		private bool _reportErrors;
+		ErrorTagging.ErrorProvider _errProv = new ErrorTagging.ErrorProvider();
 #endif
 
 		public PreprocessorModel(CodeSource source, DefinitionProvider defProv, string fileName, bool visible)
@@ -82,6 +83,11 @@ namespace DkTools.CodeModel
 							case "extern":
 								AfterRootExtern(_code.TokenStartPostion);
 								break;
+#if REPORT_ERRORS
+							case "create":
+								AfterRootCreate(_code.TokenSpan);
+								break;
+#endif
 							default:
 								AfterRootIdentifier(_code.TokenText, _code.TokenStartPostion, _code.TokenSpan, false);
 								break;
@@ -141,7 +147,7 @@ namespace DkTools.CodeModel
 			{
 #if REPORT_ERRORS
 				_code.Peek();
-				ReportError(_code.TokenSpan, "Expected function or variable name to follow data type on root.");
+				ReportError(_code.TokenSpan, ErrorCode.Root_UnknownAfterDataType);
 #endif
 			}
 		}
@@ -157,7 +163,7 @@ namespace DkTools.CodeModel
 			{
 #if REPORT_ERRORS
 				_code.Peek();
-				ReportError(_code.TokenSpan, "Expected data type to follow 'static'.");
+				ReportError(_code.TokenSpan, ErrorCode.Root_UnknownAfterStatic);
 #endif
 			}
 		}
@@ -177,7 +183,7 @@ namespace DkTools.CodeModel
 			{
 #if REPORT_ERRORS
 				_code.Peek();
-				ReportError(_code.TokenSpan, "Expected data type or function name to follow 'extern'.");
+				ReportError(_code.TokenSpan, ErrorCode.Root_UnknownAfterExtern);
 #endif
 			}
 		}
@@ -192,7 +198,7 @@ namespace DkTools.CodeModel
 			else
 			{
 #if REPORT_ERRORS
-				ReportError(wordSpan, string.Format("Unknown identifier '{0}'.", word));
+				ReportError(wordSpan, ErrorCode.Root_UnknownIdent, word);
 #endif
 			}
 		}
@@ -218,7 +224,7 @@ namespace DkTools.CodeModel
 				{
 #if REPORT_ERRORS
 					_code.Peek();
-					ReportError(_code.TokenSpan, string.Format("Expected '(' to follow function name."));
+					ReportError(_code.TokenSpan, ErrorCode.Func_NoArgBracket);
 #endif
 				}
 			}
@@ -226,7 +232,7 @@ namespace DkTools.CodeModel
 			{
 #if REPORT_ERRORS
 				_code.Peek();
-				ReportError(_code.TokenSpan, string.Format("Expected function name or data type to follow '{0}'.", privacy.ToString().ToLower()));
+				ReportError(_code.TokenSpan, ErrorCode.Func_UnknownAfterPrivacy, privacy.ToString().ToLower());
 #endif
 			}
 		}
@@ -272,7 +278,7 @@ namespace DkTools.CodeModel
 
 #if REPORT_ERRORS
 				_code.Peek();
-				ReportError(_code.TokenSpan, "Expected function argument.");
+				ReportError(_code.TokenSpan, ErrorCode.Func_NoArg);
 #endif
 				return;
 			}
@@ -481,21 +487,21 @@ namespace DkTools.CodeModel
 						if (!_code.ReadExact("ENDHLP"))
 						{
 #if REPORT_ERRORS
-							ReportError(_code.TokenSpan, "Expected 'ENDHLP'.");
+							ReportError(_code.TokenSpan, ErrorCode.Func_NoEndHlp);
 #endif
 						}
 						continue;
 					}
 
 #if REPORT_ERRORS
-					ReportError(_code.TokenSpan, "Expected '{'.");
+					ReportError(_code.TokenSpan, ErrorCode.Func_NoBodyStart);
 #endif
 					return false;
 				}
 
 #if REPORT_ERRORS
 				_code.Peek();
-				ReportError(_code.TokenSpan, "Expected '{'.");
+				ReportError(_code.TokenSpan, ErrorCode.Func_NoBodyStart);
 #endif
 				return false;
 			}
@@ -556,7 +562,7 @@ namespace DkTools.CodeModel
 				if (_code.ReadExact(';')) break;
 
 #if REPORT_ERRORS
-				ReportError(_code.TokenSpan, "Expected either ',' or ';' to follow a variable declaration.");
+				ReportError(_code.TokenSpan, ErrorCode.VarDecl_UnknownAfterName);
 #endif
 				break;
 			}
@@ -637,7 +643,7 @@ namespace DkTools.CodeModel
 			{
 #if REPORT_ERRORS
 				_code.Peek();
-				ReportError(errorSpan, "Expected extract name.");
+				ReportError(errorSpan, ErrorCode.Extract_NoName);
 #endif
 				return;
 			}
@@ -682,7 +688,7 @@ namespace DkTools.CodeModel
 						case "{":
 						case "}":
 #if REPORT_ERRORS
-							ReportError(_code.TokenSpan, "Expected ';' to end extract.");
+							ReportError(_code.TokenSpan, ErrorCode.Extract_NoTerminator);
 #endif
 							done = true;
 							break;
@@ -724,32 +730,24 @@ namespace DkTools.CodeModel
 		}
 
 #if REPORT_ERRORS
-		private void ReportError(Span rawSpan, string message)
+		private void ReportError(Span rawSpan, ErrorCode errCode, params object[] args)
 		{
 			if (!_reportErrors) return;
 			var primarySpan = _source.GetPrimaryFileSpan(rawSpan);
 			if (primarySpan.Length > 0)
 			{
-				_errors.Add(new ErrorTagging.ErrorInfo(message, primarySpan));
-			}
-		}
-
-		public IEnumerable<ErrorTagging.ErrorInfo> Errors
-		{
-			get { return _errors; }
-		}
-
-		public IEnumerable<ErrorTagging.ErrorInfo> GetErrorsForPos(int pos)
-		{
-			foreach (var error in _errors)
-			{
-				if (error.Span.Contains(pos)) yield return error;
+				_errProv.ReportError(_code, primarySpan, errCode, args);
 			}
 		}
 
 		public bool ReportErrors
 		{
 			get { return _reportErrors; }
+		}
+
+		public ErrorProvider ErrorProvider
+		{
+			get { return _errProv; }
 		}
 #endif
 
@@ -867,5 +865,365 @@ namespace DkTools.CodeModel
 				get { return _startPos; }
 			}
 		}
+
+#if REPORT_ERRORS
+		private void AfterRootCreate(Span createSpan)
+		{
+			if (_code.ReadExact("table"))
+			{
+				AfterCreateTable(createSpan, _code.TokenSpan);
+			}
+			else
+			{
+				ReportError(_code.TokenSpan, ErrorCode.Root_UnknownAfterCreate, _code.TokenText);
+			}
+		}
+
+		private void AfterCreateTable(Span createSpan, Span tableSpan)
+		{
+			// Table name
+			if (!_code.ReadWord())
+			{
+				ReportError(tableSpan, ErrorCode.CreateTable_NoTableName);
+				return;
+			}
+			var tableName = _code.TokenText;
+			var tableNameSpan = _code.TokenSpan;
+
+			// Schema number
+			if (!_code.ReadNumber())
+			{
+				ReportError(tableNameSpan, ErrorCode.CreateTable_NoTableNumber, tableName);
+				return;
+			}
+
+			// Schema number + 1
+			_code.ReadNumber();
+
+			// Read the attributes before the columns
+			while (!_code.EndOfFile)
+			{
+				if (!_code.Read()) break;
+
+				if (_code.TokenType == TokenParser.TokenType.Operator)
+				{
+					if (_code.TokenText == "(")
+					{
+						break;
+					}
+					else if (_code.TokenText == "{")
+					{
+						ReportError(_code.TokenSpan, ErrorCode.CreateTable_UsingOpenBraceInsteadOfBracket);
+						break;
+					}
+					else
+					{
+						ReportError(_code.TokenSpan, ErrorCode.CreateTable_NoOpenBrace);
+						break;
+					}
+				}
+				else if (_code.TokenType == TokenParser.TokenType.Word)
+				{
+					var word = _code.TokenText;
+					var wordSpan = _code.TokenSpan;
+					switch (word)
+					{
+						case "updates":
+						case "display":
+						case "modal":
+						case "pick":
+						case "nopick":
+							// No trailing values required.
+							break;
+						case "database":
+							if (!_code.ReadNumber())
+							{
+
+								ReportError(wordSpan, ErrorCode.CreateTable_NoDatabaseNumber);
+							}
+							break;
+						case "snapshot":
+							if (!_code.ReadNumber())
+							{
+								ReportError(wordSpan, ErrorCode.CreateTable_NoFrequencyNumber);
+							}
+							break;
+						case "prompt":
+							if (!_code.ReadStringLiteral())
+							{
+								ReportError(wordSpan, ErrorCode.CreateTable_NoPromptString);
+							}
+							break;
+						case "comment":
+							if (!_code.ReadStringLiteral())
+							{
+								ReportError(wordSpan, ErrorCode.CreateTable_NoCommentString);
+							}
+							break;
+						case "image":
+							if (!_code.ReadStringLiteral())
+							{
+								ReportError(wordSpan, ErrorCode.CreateTable_NoImageString);
+							}
+							break;
+						case "description":
+							{
+								var gotString = false;
+								while (_code.ReadStringLiteral())
+								{
+									gotString = true;
+								}
+								if (!gotString)
+								{
+									ReportError(wordSpan, ErrorCode.CreateTable_NoDescriptionString);
+								}
+							}
+							break;
+						case "tag":
+							{
+								if (!_code.ReadTagName())
+								{
+									ReportError(wordSpan, ErrorCode.CreateTable_NoTagName);
+								}
+								var tagName = _code.TokenText;
+
+								switch (tagName)
+								{
+									case "probeform:nobuttonbar":
+									case "probeform:stayloaded":
+									case "cols":
+									case "rows":
+									case "formposition":
+										break;
+									default:
+										ReportError(_code.TokenSpan, ErrorCode.CreateTable_InvalidTagName, tagName);
+										break;
+								}
+
+								if (!_code.ReadStringLiteral())
+								{
+									ReportError(_code.TokenSpan, ErrorCode.CreateTable_NoTagValue, tagName);
+									return;
+								}
+							}
+							break;
+					}
+				}
+				else
+				{
+					ReportError(_code.TokenSpan, ErrorCode.CreateTable_NoOpenBrace);
+					break;
+				}
+			}
+
+			// Column definitions
+			var gotUpdates = false;
+			while (!_code.EndOfFile)
+			{
+				if (_code.ReadExact("updates") && !gotUpdates)
+				{
+					gotUpdates = true;
+					if (!_code.ReadWord())
+					{
+						ReportError(_code.TokenSpan, ErrorCode.CreateTable_NoUpdatesTableName);
+						return;
+					}
+					if (_code.TokenText.Length > Constants.MaxTableNameLength)
+					{
+						ReportError(_code.TokenSpan, ErrorCode.CreateTable_UpdatesTableNameTooLong, Constants.MaxTableNameLength);
+					}
+				}
+
+				if (TryReadColumnDefinition()) continue;
+
+				if (!_code.ReadExact(')'))
+				{
+					if (_code.ReadExact('}'))
+					{
+						ReportError(_code.TokenSpan, ErrorCode.CreateTable_UsingCloseBraceInsteadOfBracket);
+					}
+					else
+					{
+						ReportError(_code.TokenSpan, ErrorCode.CreateTable_NoCloseBrace);
+						return;
+					}
+				}
+				else break;
+			}
+		}
+
+		private static Regex _rxIntensityKeyword = new Regex(@"^INTENSITY_\d+$");
+
+		private bool TryReadColumnDefinition()
+		{
+			if (!_code.ReadWord()) return false;
+
+			var colName = _code.TokenText;
+			var colNameSpan = _code.TokenSpan;
+
+			var dataType = DataType.Parse(_code, dataTypeCallback: GlobalDataTypeCallback, flags: DataType.ParseFlag.Strict, errorProv: _errProv);
+			if (dataType == null)
+			{
+				ReportError(colNameSpan, ErrorCode.ColDef_NoDataType, colName);
+				return false;
+			}
+
+			_code.ReadStringLiteral();	// mask
+
+			var stopColDef = false;
+			while (!_code.EndOfFile && !stopColDef)
+			{
+				if (_code.ReadExact(','))
+				{
+					stopColDef = true;
+				}
+				else if (_code.ReadWord())
+				{
+					var word = _code.TokenText;
+					var wordSpan = _code.TokenSpan;
+					switch (word)
+					{
+						case "ALLCAPS":
+						case "AUTOCAP":
+						case "form":
+						case "formonly":
+						case "audit":
+						case "noaudit":
+						case "tool":
+						case "endgroup":
+							// These keywords don't have any trailing values.
+							break;
+						case "INPUT":
+						case "NOINPUT":
+						case "NOECHO":
+						case "NODISPLAY":
+						case "NOCHANGE":
+						case "NOUSE":
+						case "REQUIRED":
+							if (_code.ReadExact('+'))
+							{
+								if (!_code.ReadWord())
+								{
+									if (!_rxIntensityKeyword.IsMatch(_code.TokenText))
+									{
+										ReportError(_code.TokenSpan, ErrorCode.ColDef_NoIntensity);
+									}
+								}
+							}
+							break;
+						case "accel":
+							if (!TryReadAccelSequence())
+							{
+								ReportError(wordSpan, ErrorCode.ColDef_NoAccelSequence);
+							}
+							break;
+						case "zoom":
+							_code.ReadExact("nopersist");
+							break;
+						case "image":
+							if (!_code.ReadStringLiteral())
+							{
+								ReportError(wordSpan, ErrorCode.ColDef_NoImageFileName);
+							}
+							break;
+						case "prompt":
+							if (!_code.ReadStringLiteral())
+							{
+								ReportError(wordSpan, ErrorCode.ColDef_NoPromptString);
+							}
+							break;
+						case "comment":
+							if (!_code.ReadStringLiteral())
+							{
+								ReportError(wordSpan, ErrorCode.ColDef_NoCommentString);
+							}
+							break;
+						case "description":
+							if (_code.ReadStringLiteral())
+							{
+								while (_code.ReadStringLiteral()) ;
+							}
+							else
+							{
+								ReportError(wordSpan, ErrorCode.ColDef_NoDescriptionStrings);
+							}
+							break;
+						case "row":
+						case "col":
+							if (_code.ReadExact('+') || _code.ReadExact('-'))
+							{
+								if (!_code.ReadNumber())
+								{
+									ReportError(_code.TokenSpan, ErrorCode.ColDef_NoCoordinateOffset, _code.TokenText);
+								}
+							}
+							else if (!_code.ReadNumber())
+							{
+								ReportError(_code.TokenSpan, ErrorCode.ColDef_NoCoordinate, word);
+							}
+							break;
+						case "rows":
+						case "cols":
+							if (!_code.ReadNumber())
+							{
+								ReportError(wordSpan, ErrorCode.ColDef_NoCoordinate, word == "rows" ? "width" : "height", word);
+							}
+							break;
+						case "group":
+							if (!_code.ReadStringLiteral())
+							{
+								ReportError(wordSpan, ErrorCode.ColDef_NoGroupTitle);
+							}
+							break;
+						default:
+							stopColDef = true;
+							break;
+					}
+				}
+				else
+				{
+					_code.Peek();
+					ReportError(_code.TokenSpan, ErrorCode.ColDef_UnknownAttribute, _code.TokenText);
+				}
+			}
+
+			return true;
+		}
+
+		private static readonly Regex _rxFKey = new Regex(@"\G(ALT|CTRL|SHIFT|F\d{1,2}|[A-Za-z0-9])");
+
+		private bool TryReadAccelSequence()
+		{
+			var expectingPlus = false;
+			var gotItem = false;
+			var plusSpan = Span.Empty;
+
+			while (!_code.EndOfFile)
+			{
+				if (expectingPlus)
+				{
+					if (!_code.ReadExact('+')) break;
+					plusSpan = _code.TokenSpan;
+					expectingPlus = false;
+				}
+				else
+				{
+					if (_code.ReadPattern(_rxFKey))
+					{
+						gotItem = true;
+						expectingPlus = true;
+					}
+					else if (gotItem)
+					{
+						ReportError(plusSpan, ErrorCode.ColDef_NoKeyCodeAfterPlus);
+						break;
+					}
+					else break;
+				}
+			}
+
+			return gotItem;
+		}
+#endif
 	}
 }

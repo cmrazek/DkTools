@@ -60,5 +60,7 @@ namespace DkTools
 
 		public const int WordSelectDelay = 600;	// milliseconds
 		public const int IncludeFileCheckFrequency = 30;	// seconds
+
+		public const int MaxTableNameLength = 8;
 	}
 }

@@ -36,7 +36,7 @@ namespace DkTools.ErrorTagging
 
 			if (!ProbeToolsPackage.Instance.EditorOptions.ShowErrors) yield break;
 
-			foreach (var error in _model.PreprocessorModel.Errors)
+			foreach (var error in _model.PreprocessorModel.ErrorProvider.Errors)
 			{
 				foreach (var span in spans)
 				{

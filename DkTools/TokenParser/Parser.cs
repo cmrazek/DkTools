@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 
 namespace DkTools.TokenParser
 {
@@ -19,6 +20,8 @@ namespace DkTools.TokenParser
 		private int _tokenStartPos;
 		private bool _tokenTerminated = true;
 		private bool _enumNestable = false;
+		private int _documentOffset;
+		private StringBuilder _peekSB = new StringBuilder();
 
 		public Parser(string source)
 		{
@@ -592,6 +595,63 @@ namespace DkTools.TokenParser
 			return true;
 		}
 
+		public string PeekWord()
+		{
+			if (!SkipWhiteSpaceAndCommentsIfAllowed()) return null;
+
+			if (_pos >= _length || !_source[_pos].IsWordChar(true)) return null;
+
+			_peekSB.Clear();
+
+			var pos = _pos;
+			char ch;
+			while (pos < _length)
+			{
+				ch = _source[pos];
+				if (!ch.IsWordChar(false)) return _peekSB.ToString();
+				_peekSB.Append(ch);
+				pos++;
+			}
+
+			return _peekSB.ToString();
+		}
+
+		public bool ReadTagName()
+		{
+			if (!SkipWhiteSpaceAndCommentsIfAllowed()) return false;
+
+			if (_pos >= _length || !_source[_pos].IsWordChar(true)) return false;
+
+			_tokenText.Clear();
+			_tokenTextStr = null;
+			_tokenType = TokenParser.TokenType.Word;
+			_tokenStartPos = _pos;
+			_tokenTerminated = true;
+
+			char ch;
+			var gotColon = false;
+			while (_pos < _length)
+			{
+				ch = _source[_pos];
+				if (!ch.IsWordChar(false))
+				{
+					if (ch == ':')
+					{
+						if (gotColon) return true;
+						gotColon = true;
+					}
+					else
+					{
+						return true;
+					}
+				}
+				_tokenText.Append(ch);
+				_pos++;
+			}
+
+			return true;
+		}
+
 		public bool ReadExact(string expecting)
 		{
 			if (!SkipWhiteSpaceAndCommentsIfAllowed()) return false;
@@ -625,6 +685,25 @@ namespace DkTools.TokenParser
 
 			_tokenText.Clear();
 			_tokenText.Append(expecting);
+			_tokenTextStr = null;
+			_tokenType = TokenParser.TokenType.Unknown;
+			return true;
+		}
+
+		public bool ReadPattern(Regex rx)
+		{
+			if (!SkipWhiteSpaceAndCommentsIfAllowed()) return false;
+			if (_pos >= _length) return false;
+
+			var match = rx.Match(_source, _pos);
+			if (!match.Success) return false;
+			if (match.Index != _pos) throw new InvalidOperationException("Regular expression read must begin with \\G in order to properly parse.");
+
+			_tokenStartPos = _pos;
+			_pos += match.Length;
+
+			_tokenText.Clear();
+			_tokenText.Append(match.Value);
 			_tokenTextStr = null;
 			_tokenType = TokenParser.TokenType.Unknown;
 			return true;
@@ -792,6 +871,12 @@ namespace DkTools.TokenParser
 			if (_pos >= _length || _source[_pos] != expecting) return false;
 
 			return true;
+		}
+
+		public int DocumentOffset
+		{
+			get { return _documentOffset; }
+			set { _documentOffset = value; }
 		}
 	}
 }

@@ -10,11 +10,13 @@ namespace DkTools.ErrorTagging
 {
 	internal class ErrorInfo
 	{
-		public Span Span { get; private set; }
-		public string Message { get; private set; }
+		public ErrorCode Code { get; set; }
+		public string Message { get; set; }
+		public Span Span { get; set; }
 
-		public ErrorInfo(string message, Span span)
+		public ErrorInfo(ErrorCode code, string message, Span span)
 		{
+			Code = code;
 			Message = message;
 			Span = span;
 		}

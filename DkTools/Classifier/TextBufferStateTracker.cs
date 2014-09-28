@@ -20,6 +20,9 @@ namespace DkTools.Classifier
 			_buffer.Changed += new EventHandler<TextContentChangedEventArgs>(Buffer_Changed);
 
 			_scanner = new ProbeClassifierScanner();
+
+			// First line always has a zero state.
+			_states.Add(0);
 		}
 
 		public static TextBufferStateTracker GetTrackerForTextBuffer(ITextBuffer buffer)

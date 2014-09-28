@@ -55,7 +55,7 @@ namespace DkTools.QuickInfo
 				}
 
 #if REPORT_ERRORS
-				foreach (var error in model.PreprocessorModel.GetErrorsForPos(modelPos))
+				foreach (var error in model.PreprocessorModel.ErrorProvider.GetErrorsForPos(modelPos))
 				{
 					quickInfoContent.Add(error.Message);
 					if (applicableToSpan == null)

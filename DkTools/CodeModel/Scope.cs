@@ -63,7 +63,7 @@ namespace DkTools.CodeModel
 
 		public bool Root
 		{
-			get { return !_hint.HasFlag(ScopeHint.NotOnRoot); }
+			get { return (_hint & ScopeHint.NotOnRoot) == 0; }
 			set
 			{
 				if (value) _hint &= ~ScopeHint.NotOnRoot;

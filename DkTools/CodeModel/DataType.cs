@@ -162,7 +162,12 @@ namespace DkTools.CodeModel
 		/// <param name="flags">(optional) Flags to control the parsing behaviour.</param>
 		/// <param name="errorProv">(optional) An ErrorProvider to receive errors detected by this parsing function.</param>
 		/// <returns>A data type object, if a data type could be parsed; otherwise null.</returns>
-		public static DataType Parse(TokenParser.Parser code, string typeName = null, GetDataTypeDelegate dataTypeCallback = null, GetVariableDelegate varCallback = null, ParseFlag flags = 0, ErrorProvider errorProv = null)
+		public static DataType Parse(TokenParser.Parser code, string typeName = null, GetDataTypeDelegate dataTypeCallback = null, GetVariableDelegate varCallback = null,
+			ParseFlag flags = 0
+#if REPORT_ERRORS
+			, ErrorTagging.ErrorProvider errorProv = null
+#endif
+			)
 		{
 			var startPos = code.Position;
 			if (!code.ReadWord()) return null;
@@ -486,7 +491,9 @@ namespace DkTools.CodeModel
 							{
 								if (!code.Read())
 								{
-									if (errorProv != null) errorProv.ReportError(code, code.TokenSpan, ErrorCode.Enum_UnexpectedEndOfFile);
+#if REPORT_ERRORS
+									if (errorProv != null) errorProv.ReportError(code, code.TokenSpan, ErrorTagging.ErrorCode.Enum_UnexpectedEndOfFile);
+#endif
 									break;
 								}
 
@@ -497,7 +504,9 @@ namespace DkTools.CodeModel
 									{
 										if (!expectingComma)
 										{
-											if (errorProv != null) errorProv.ReportError(code, code.TokenSpan, ErrorCode.Enum_UnexpectedComma);
+#if REPORT_ERRORS
+											if (errorProv != null) errorProv.ReportError(code, code.TokenSpan, ErrorTagging.ErrorCode.Enum_UnexpectedComma);
+#endif
 										}
 										else
 										{
@@ -510,11 +519,15 @@ namespace DkTools.CodeModel
 									var str = code.TokenText;
 									if (expectingComma)
 									{
-										if (errorProv != null) errorProv.ReportError(code, code.TokenSpan, ErrorCode.Enum_NoComma);
+#if REPORT_ERRORS
+										if (errorProv != null) errorProv.ReportError(code, code.TokenSpan, ErrorTagging.ErrorCode.Enum_NoComma);
+#endif
 									}
 									else if (options.Any(x => x.Name == str))
 									{
-										if (errorProv != null) errorProv.ReportError(code, code.TokenSpan, ErrorCode.Enum_DuplicateOption, str);
+#if REPORT_ERRORS
+										if (errorProv != null) errorProv.ReportError(code, code.TokenSpan, ErrorTagging.ErrorCode.Enum_DuplicateOption, str);
+#endif
 									}
 									else
 									{

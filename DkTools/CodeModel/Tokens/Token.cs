@@ -460,7 +460,7 @@ namespace DkTools.CodeModel.Tokens
 
 		public bool IsOnRoot
 		{
-			get { return !_scope.Hint.HasFlag(ScopeHint.NotOnRoot); }
+			get { return (_scope.Hint & ScopeHint.NotOnRoot) == 0; }
 		}
 
 		public Classifier.ProbeClassifierType ClassifierType

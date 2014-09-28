@@ -60,10 +60,11 @@ namespace DkTools.Classifier
 		private static Regex _rxPreprocessor = new Regex(@"\G\#\w+");
 		private static Regex _rxIncludeString = new Regex(@"\G(?:<[^>]+>|""[^""]+"")");
 
-		private const int k_state_comment = 0x01;
-		//private const int k_state_replace = 0x02;
-		public const int k_state_disabled = 0x40;
-		private const int k_state_afterInclude = 0x10;
+		private const int k_state_commentMask = 0xff;
+		public const int k_state_disabled = 0x100;
+		private const int k_state_afterInclude = 0x200;
+
+		private static readonly char[] k_commentEndKickOffChars = new char[] { '*', '/' };
 
 		public bool ScanTokenAndProvideInfoAboutIt(TokenInfo tokenInfo, ref int state)
 		{
@@ -75,25 +76,14 @@ namespace DkTools.Classifier
 			char ch = _source[_pos];
 			Token token;
 
-			if ((state & k_state_comment) != 0)
+			if ((state & k_state_commentMask) != 0)
 			{
 				// Inside a multi-line comment.
 
 				if ((state & k_state_disabled) != 0) tokenInfo.Type = ProbeClassifierType.Inactive;
 				else tokenInfo.Type = ProbeClassifierType.Comment;
 
-				var index = _source.IndexOf("*/", _pos);
-				if (index >= 0)
-				{
-					// Comment end occurs on same line
-					_pos = index + 2;
-					state &= ~k_state_comment;
-				}
-				else
-				{
-					// No comment end on this line.
-					_pos = _length;
-				}
+				SkipComments(ref state);
 			}
 			else if (Char.IsWhiteSpace(ch))
 			{
@@ -124,19 +114,9 @@ namespace DkTools.Classifier
 				if ((state & k_state_disabled) != 0) tokenInfo.Type = ProbeClassifierType.Inactive;
 				else tokenInfo.Type = ProbeClassifierType.Comment;
 
-				var index = _source.IndexOf("*/", _pos);
-				if (index >= 0)
-				{
-					// Comment end occurs on same line
-					_pos = index + 2;
-					state &= ~k_state_comment;
-				}
-				else
-				{
-					// No comment end on this line.
-					_pos = _length;
-					state |= k_state_comment;
-				}
+				_pos += 2;
+				state = (state & ~k_state_commentMask) | 1;	// Set comment level to 1.
+				SkipComments(ref state);
 			}
 			else if ((match = _rxWord.Match(_source, _pos)).Success)
 			{
@@ -273,6 +253,74 @@ namespace DkTools.Classifier
 		public CodeModel.CodeModel CodeModel
 		{
 			get { return _model; }
+		}
+
+		private void SkipComments(ref int state)
+		{
+			char ch;
+
+			ch = '\0';	// TODO: remove this
+
+			while (_pos < _length & (state & k_state_commentMask) != 0)
+			{
+				var index = _source.IndexOfAny(k_commentEndKickOffChars, _pos);
+				if (index < 0)
+				{
+					// No comment start or ends on this line.
+					_pos = _length;
+				}
+				else
+				{
+					ch = _source[index];
+					if (ch == '*')
+					{
+						if (index + 1 < _length && _source[index + 1] == '/')
+						{
+							var level = state & k_state_commentMask;
+							level--;
+							if (level <= 0)
+							{
+								// End of outer comment
+								state &= ~k_state_commentMask;
+							}
+							else
+							{
+								// End of inner comment. Not out of the woods yet...
+								state = (state & ~k_state_commentMask) | (level & k_state_commentMask);
+							}
+							_pos = index + 2;
+						}
+						else
+						{
+							// False positive
+							_pos = index + 1;
+						}
+					}
+					else if (ch == '/')
+					{
+						if (index + 1 < _length && _source[index + 1] == '*')
+						{
+							// Start of a nested comment
+							var level = state & k_state_commentMask;
+							if (level < k_state_commentMask) level++;
+							state = (state & ~k_state_commentMask) | (level & k_state_commentMask);
+							_pos = index + 2;
+						}
+						else
+						{
+							// False positive
+							_pos = index + 1;
+						}
+					}
+					else
+					{
+						// This shouldn't happen
+						_pos = index + 1;
+					}
+				}
+			}
+
+			ch = '\0';	// TODO: remove this
 		}
 	}
 }
