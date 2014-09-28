@@ -319,7 +319,14 @@ namespace DkTools.FunctionFileScanning
 			get { return _id; }
 		}
 
-		public void PurgeUnused(FFDatabase db)
+		public void PurgeData(FFDatabase db)
+		{
+			PurgeUnusedRecords(db);
+			PurgeMissingFilesFromMemory(db);
+			PurgeOrphanedRecords(db);
+		}
+
+		private void PurgeUnusedRecords(FFDatabase db)
 		{
 			// Remove entries in memory that are known to be unused.
 
@@ -368,8 +375,10 @@ namespace DkTools.FunctionFileScanning
 				file.Remove(db);
 				_files.Remove(file.FileName.ToLower());
 			}
+		}
 
-
+		private void PurgeOrphanedRecords(FFDatabase db)
+		{
 			// Scan the database to find entries not in memory.
 
 			var removeList = new List<int>();
@@ -468,6 +477,96 @@ namespace DkTools.FunctionFileScanning
 			{
 				Log.WriteDebug("Remove orphaned file from database: {0}", id);
 				db.ExecuteNonQuery(string.Format("delete file_ where id = {0}", id));
+			}
+		}
+
+		private void PurgeMissingFilesFromMemory(FFDatabase db)
+		{
+			using (var cmd = db.CreateCommand("select id, file_name from file_ where app_id = @app_id"))
+			{
+				cmd.Parameters.AddWithValue("@app_id", _id);
+				using (var rdr = cmd.ExecuteReader())
+				{
+					var ordId = rdr.GetOrdinal("id");
+					var ordFileName = rdr.GetOrdinal("file_name");
+					while (rdr.Read())
+					{
+						var fileId = rdr.GetInt32(ordId);
+						var fileName = rdr.GetString(ordFileName);
+
+						PurgeFileFromMemoryIfMissing(db, fileId, fileName);
+					}
+				}
+			}
+		}
+
+		private void PurgeFileFromMemoryIfMissing(FFDatabase db, int fileId, string fileName)
+		{
+			if (File.Exists(fileName)) return;
+
+			// Check if the drive exists. If the drive doesn't exist, then don't purge the file just yet because it might not be mounted.
+			var drivePath = Path.GetPathRoot(fileName);
+			if (!Directory.Exists(drivePath)) return;
+
+			// Purge the file
+			lock (_files)
+			{
+				var fileNameLower = fileName.ToLower();
+				if (_files.ContainsKey(fileNameLower))
+				{
+					Log.WriteDebug("Purging missing file from memory: {0}", fileName);
+					_files.Remove(fileNameLower);
+				}
+			}
+
+			using (var cmd = db.CreateCommand("select id, name from class_ where file_id = @file_id"))
+			{
+				cmd.Parameters.AddWithValue("@file_id", fileId);
+				using (var rdr = cmd.ExecuteReader())
+				{
+					var ordId = rdr.GetOrdinal("id");
+					var ordName = rdr.GetOrdinal("name");
+					while (rdr.Read())
+					{
+						var classId = rdr.GetInt32(ordId);
+						var className = rdr.GetString(ordName);
+
+						lock (_classes)
+						{
+							FFClass cls;
+							if (_classes.TryGetValue(className, out cls) && cls.Id == classId)
+							{
+								Log.WriteDebug("Purging class from missing file from memory: {0}", className);
+								_classes.Remove(className);
+							}
+						}
+					}
+				}
+			}
+
+			using (var cmd = db.CreateCommand("select id, name from func where file_id = @file_id"))
+			{
+				cmd.Parameters.AddWithValue("@file_id", fileId);
+				using (var rdr = cmd.ExecuteReader())
+				{
+					var ordId = rdr.GetOrdinal("id");
+					var ordName = rdr.GetOrdinal("name");
+					while (rdr.Read())
+					{
+						var funcId = rdr.GetInt32(ordId);
+						var funcName = rdr.GetString(ordName);
+
+						lock (_functions)
+						{
+							FFFunction func;
+							if (_functions.TryGetValue(funcName, out func) && func.Id == funcId)
+							{
+								Log.WriteDebug("Purging function from missing file from memory: {0}", funcName);
+								_functions.Remove(funcName);
+							}
+						}
+					}
+				}
 			}
 		}
 	}

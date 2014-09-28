@@ -134,8 +134,10 @@ namespace DkTools.FunctionFileScanning
 						}
 						else
 						{
+							Shell.SetStatusText("DkTools background purging...");
+							_currentApp.PurgeData(db);
+
 							Shell.SetStatusText("DkTools background scanning complete.");
-							_currentApp.PurgeUnused(db);
 							return;
 						}
 					}

@@ -52,7 +52,7 @@ namespace DkTools.FunctionFileScanning
 	privacy				nvarchar(10)	not null,
 	description			nvarchar(4000)
 );",
-"create index func_ix_classfunc on func (class_id, name);" };
+"create unique index func_ix_classfunc on func (app_id, class_id, name);" };
 
 		public const string DatabaseFileName = "DkScan_v3.sdf";
 		public static readonly string[] OldDatabaseFileNames = new string[] { "DkScan.sdf", "DkScan_v2.sdf" };
