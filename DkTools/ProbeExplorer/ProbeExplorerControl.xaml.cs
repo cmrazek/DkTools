@@ -229,6 +229,7 @@ namespace DkTools.ProbeExplorer
 					{
 						e.Handled = true;
 						var dlg = new CreateFileDialog();
+						dlg.Owner = System.Windows.Application.Current.MainWindow;
 						dlg.Directory = tag.path;
 						if (dlg.ShowDialog() == true)
 						{
@@ -826,6 +827,11 @@ namespace DkTools.ProbeExplorer
 				menuItem.Click += ShowPreprocessorSegments_Click;
 				menu.Items.Add(menuItem);
 
+				menuItem = new MenuItem();
+				menuItem.Header = "Sample Error";
+				menuItem.Click += SampleError_Click;
+				menu.Items.Add(menuItem);
+
 				menu.PlacementTarget = c_appLabel;
 				menu.IsOpen = true;
 			}
@@ -888,6 +894,22 @@ namespace DkTools.ProbeExplorer
 			try
 			{
 				Commands.DebugCommands.ShowPreprocessorSegments();
+			}
+			catch (Exception ex)
+			{
+				this.ShowError(ex);
+			}
+		}
+
+		private void SampleError_Click(object sender, RoutedEventArgs e)
+		{
+			try
+			{
+				var dlg = new ErrorDialog("This is an error without details.");
+				dlg.Owner = System.Windows.Application.Current.MainWindow;
+				dlg.ShowDialog();
+
+				throw new InvalidOperationException("This is a sample exception.");
 			}
 			catch (Exception ex)
 			{

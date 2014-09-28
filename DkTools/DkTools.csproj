@@ -267,6 +267,9 @@
     <Compile Include="CodeModel\Definitions\TableDefinition.cs" />
     <Compile Include="CodeModel\Definitions\TableFieldDefinition.cs" />
     <Compile Include="CodeModel\Definitions\VariableDefinition.cs" />
+    <Compile Include="ErrorDialog.xaml.cs">
+      <DependentUpon>ErrorDialog.xaml</DependentUpon>
+    </Compile>
     <Compile Include="ErrorTagging\ErrorCode.cs" />
     <Compile Include="ErrorTagging\ErrorProvider.cs" />
     <Compile Include="CodeModel\FunctionPrivacy.cs" />
@@ -521,6 +524,9 @@
     <None Include="Resources\class.png" />
     <None Include="Resources\Index.png" />
     <None Include="Resources\Field.png" />
+    <None Include="Resources\Error48.png" />
+    <None Include="Resources\Error16.png" />
+    <Resource Include="Images\error16.png" />
     <Content Include="Resources\Package.ico" />
   </ItemGroup>
   <ItemGroup>
@@ -546,6 +552,10 @@
     </BootstrapperPackage>
   </ItemGroup>
   <ItemGroup>
+    <Page Include="ErrorDialog.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Include="ProbeExplorer\CreateFileDialog.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>

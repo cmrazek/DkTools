@@ -119,30 +119,45 @@ namespace DkTools
 		public static void ShowError(this System.Windows.Controls.UserControl ctrl, Exception ex)
 		{
 			Log.WriteEx(ex);
-			MessageBox.Show(ex.ToString(), Constants.ErrorCaption, MessageBoxButton.OK, MessageBoxImage.Error);
+			ShowErrorDialog(ex.Message, ex.ToString());
 		}
 
 		public static void ShowError(this System.Windows.Controls.UserControl ctrl, string message)
 		{
-			MessageBox.Show(message, Constants.ErrorCaption, MessageBoxButton.OK, MessageBoxImage.Error);
+			Log.Write(LogLevel.Error, message);
+			ShowErrorDialog(message, null);
 		}
 
 		public static void ShowError(this System.Windows.Window window, Exception ex)
 		{
 			Log.WriteEx(ex);
-			MessageBox.Show(ex.ToString(), Constants.ErrorCaption, MessageBoxButton.OK, MessageBoxImage.Error);
+			ShowErrorDialog(ex.Message, ex.ToString());
 		}
 
 		public static void ShowError(this System.Windows.Forms.IWin32Window window, Exception ex)
 		{
 			Log.WriteEx(ex);
-			System.Windows.Forms.MessageBox.Show(window, ex.ToString(), Constants.ErrorCaption, System.Windows.Forms.MessageBoxButtons.OK, System.Windows.Forms.MessageBoxIcon.Error);
+			ShowErrorDialog(ex.Message, ex.ToString());
 		}
 
 		public static void ShowError(this System.Windows.Forms.IWin32Window window, string message)
 		{
 			Log.Write(LogLevel.Error, message);
-			System.Windows.Forms.MessageBox.Show(window, message, Constants.ErrorCaption, System.Windows.Forms.MessageBoxButtons.OK, System.Windows.Forms.MessageBoxIcon.Error);
+			ShowErrorDialog(message, null);
+		}
+
+		public static void ShowErrorDialog(string message, string details)
+		{
+			try
+			{
+				var dlg = new ErrorDialog(message, details);
+				dlg.Owner = System.Windows.Application.Current.MainWindow;
+				dlg.ShowDialog();
+			}
+			catch (Exception ex2)
+			{
+				MessageBox.Show(ex2.ToString(), Constants.ErrorCaption, MessageBoxButton.OK, MessageBoxImage.Error);
+			}
 		}
 
 		#region Indenting

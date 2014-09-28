@@ -8,6 +8,7 @@ Features:
 - Added support for BEGINHLP ... ENDHLP after function declarations.
 - Added support for description text on extern functions.
 - Added support for columns on relationships.
+- Errors are now displayed in a custom dialog.
 
 Bug Fixes:
 - When the quick-info text is too wide, it will now wrap.

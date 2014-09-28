@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
+using Microsoft.Win32;
 
 namespace DkTools
 {
@@ -39,6 +40,8 @@ namespace DkTools
 		private static string[] _libDirs;
 		private static string[] _exeDirs;
 		private static string _platformPath;
+
+		private const string k_wbdkKey = "Software\\Fincentric\\WBDK";
 
 		public static void ReloadCurrentApp(string appName = "")
 		{
@@ -279,10 +282,22 @@ namespace DkTools
 							if (ev != null) ev(null, EventArgs.Empty);
 						}
 					}
+
+					//try
+					//{
+					//	using (var key = Registry.LocalMachine.OpenSubKey(k_wbdkKey, true))
+					//	{
+					//		key.SetValue("CurrentConfig", _currentApp.Name);
+					//	}
+					//}
+					//catch (System.Security.SecurityException ex)
+					//{
+					//	// TODO - report the error to the user
+					//}
 				}
 				catch (Exception ex)
 				{
-					Log.WriteEx(ex, "Error when retrieving current Probe app.");
+					Log.WriteEx(ex, "Error when setting current Probe app.");
 				}
 			}
 		}
