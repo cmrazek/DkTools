@@ -1,6 +1,6 @@
 DkTools2012 ChangeLog
 ____________________________________________________________________________________________________
-Version 1.2.8 - (pending):
+Version 1.2.8 - Sep 29, 2014:
 
 Features:
 - Added support for numbered tables (dmd1, dmd2, dmd3...)
