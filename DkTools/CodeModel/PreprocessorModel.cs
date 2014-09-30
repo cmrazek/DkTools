@@ -544,10 +544,12 @@ namespace DkTools.CodeModel
 			{
 				if (!_code.ReadWord()) break;
 
+				var varName = _code.TokenText;
+				var localPos = _source.GetFilePosition(_code.TokenStartPostion);
+
 				var arrayLength = TryReadArrayDecl();
 
-				var localPos = _source.GetFilePosition(_code.TokenStartPostion);
-				var def = new VariableDefinition(_code.TokenText, localPos.FileName, localPos.Position, dataType, false, arrayLength);
+				var def = new VariableDefinition(varName, localPos.FileName, localPos.Position, dataType, false, arrayLength);
 				scope.AddDefinition(def);
 				if (localPos.PrimaryFile)
 				{

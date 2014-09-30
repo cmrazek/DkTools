@@ -1,5 +1,13 @@
 DkTools2012 ChangeLog
 ____________________________________________________________________________________________________
+Version 1.2.9 - Sep 30, 2014:
+
+Bug Fixes:
+- Fixed index/relationships not being detected properly without a column attached.
+- Fixed functions definitions not parsing arguments correctly.
+- Fixed array variable declarations not being detected properly.
+
+____________________________________________________________________________________________________
 Version 1.2.8 - Sep 29, 2014:
 
 Features:

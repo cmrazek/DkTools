@@ -7,7 +7,7 @@ using DkTools.CodeModel.Definitions;
 
 namespace DkTools.CodeModel.Tokens
 {
-	internal class FunctionPlaceholderToken : WordToken
+	internal class FunctionPlaceholderToken : GroupToken
 	{
 		private int _bodyStart;
 		private int _argsEnd;
@@ -15,13 +15,15 @@ namespace DkTools.CodeModel.Tokens
 		private bool _bodyTokenSearched;
 		private BracesToken _bodyToken;
 
-		public FunctionPlaceholderToken(GroupToken parent, Scope scope, Span span, string text, FunctionDefinition sourceDef)
-			: base(parent, scope, span, text)
+		public FunctionPlaceholderToken(GroupToken parent, Scope scope, Span span, string text, IdentifierToken nameToken, BracketsToken argsToken, FunctionDefinition sourceDef)
+			: base(parent, scope, new Token[] { nameToken, argsToken })
 		{
 #if DEBUG
+			if (nameToken == null) throw new ArgumentNullException("nameToken");
+			if (argsToken == null) throw new ArgumentNullException("argsToken");
 			if (sourceDef == null) throw new ArgumentNullException("sourceDef");
 #endif
-			SourceDefinition = sourceDef;
+			nameToken.SourceDefinition = sourceDef;
 			_bodyStart = sourceDef.BodyStartPosition;
 			_argsEnd = sourceDef.ArgsEndPosition;
 		}

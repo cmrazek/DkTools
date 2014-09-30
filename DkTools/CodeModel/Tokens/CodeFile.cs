@@ -270,7 +270,8 @@ namespace DkTools.CodeModel.Tokens
 						if (string.Equals(funcDef.SourceFileName, _fileName, StringComparison.OrdinalIgnoreCase) &&
 							funcDef.ArgsStartPosition == argsToken.Span.Start)
 						{
-							return new FunctionPlaceholderToken(parent, scope, span, word, funcDef);
+							var nameToken = new IdentifierToken(parent, scope, span, word);
+							return new FunctionPlaceholderToken(parent, scope, span, word, nameToken, argsToken, funcDef);
 						}
 						else
 						{
@@ -399,6 +400,10 @@ namespace DkTools.CodeModel.Tokens
 				if (def is ExtractTableDefinition)
 				{
 					return new ExtractTableToken(parent, scope, span, word, def as ExtractTableDefinition);
+				}
+				if (def is RelIndDefinition)
+				{
+					return new RelIndToken(parent, scope, span, word, def as RelIndDefinition);
 				}
 			}
 
