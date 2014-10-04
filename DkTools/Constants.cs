@@ -11,6 +11,7 @@ namespace DkTools
 		public const string EventLogSource = "DkTools2012";
 		public const string TempDir = "Temp";
 		public const string SettingsRegKey = "Software\\DkTools2012";
+		public const string WbdkRegKey = "Software\\Fincentric\\WBDK";
 		public const string CompileOutputPaneTitle = "DK Compile";
 		public const string ErrorCaption = "Error";
 		public const string DkContentType = "DK";

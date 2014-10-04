@@ -41,8 +41,6 @@ namespace DkTools
 		private static string[] _exeDirs;
 		private static string _platformPath;
 
-		private const string k_wbdkKey = "Software\\Fincentric\\WBDK";
-
 		public static void ReloadCurrentApp(string appName = "")
 		{
 			_sourceDirs = null;
@@ -282,23 +280,54 @@ namespace DkTools
 							EventHandler ev = AppChanged;
 							if (ev != null) ev(null, EventArgs.Empty);
 						}
-					}
 
-					//try
-					//{
-					//	using (var key = Registry.LocalMachine.OpenSubKey(k_wbdkKey, true))
-					//	{
-					//		key.SetValue("CurrentConfig", _currentApp.Name);
-					//	}
-					//}
-					//catch (System.Security.SecurityException ex)
-					//{
-					//	// TODO - report the error to the user
-					//}
+						TryUpdateDefaultCurrentApp();
+					}
 				}
 				catch (Exception ex)
 				{
 					Log.WriteEx(ex, "Error when setting current Probe app.");
+				}
+			}
+		}
+
+		private static void TryUpdateDefaultCurrentApp()
+		{
+			// Read the current value from the registry in read-only mode, to see if it needs updating.
+			using (var key = Registry.LocalMachine.OpenSubKey(Constants.WbdkRegKey, false))
+			{
+				var value = Convert.ToString(key.GetValue("CurrentConfig", string.Empty));
+				if (value == _currentApp.Name)
+				{
+					// No update required.
+					return;
+				}
+			}
+
+			// Try to update the registry.
+			try
+			{
+				using (var key = Registry.LocalMachine.OpenSubKey(Constants.WbdkRegKey, true))
+				{
+					key.SetValue("CurrentConfig", _currentApp.Name);
+				}
+			}
+			catch (System.Security.SecurityException ex)
+			{
+				var options = ProbeToolsPackage.Instance.ErrorSuppressionOptions;
+				if (!options.DkAppChangeAdminFailure)
+				{
+					var msg = "The system-wide default DK application can't be changed because access was denied. To resolve this problem, run Visual Studio as an administrator.";
+					var dlg = new ErrorDialog(msg, ex.ToString());
+					dlg.ShowUserSuppress = true;
+					dlg.Owner = System.Windows.Application.Current.MainWindow;
+					dlg.ShowDialog();
+
+					if (options.DkAppChangeAdminFailure != dlg.UserSuppress)
+					{
+						options.DkAppChangeAdminFailure = dlg.UserSuppress;
+						options.SaveSettingsToStorage();
+					}
 				}
 			}
 		}

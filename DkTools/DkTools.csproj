@@ -270,6 +270,9 @@
     <Compile Include="ErrorDialog.xaml.cs">
       <DependentUpon>ErrorDialog.xaml</DependentUpon>
     </Compile>
+    <Compile Include="ErrorSuppressionOptions.cs">
+      <SubType>Component</SubType>
+    </Compile>
     <Compile Include="ErrorTagging\ErrorCode.cs" />
     <Compile Include="ErrorTagging\ErrorProvider.cs" />
     <Compile Include="CodeModel\FunctionPrivacy.cs" />

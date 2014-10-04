@@ -21,8 +21,8 @@ namespace DkTools
 	{
 		private string _message;
 		private string _details;
-		private bool _dontShowAgain;
-		private bool _showDontShowAgain;
+		private bool _userSuppress;
+		private bool _showUserSuppress;
 
 		public ErrorDialog(string message = null, string details = null)
 		{
@@ -64,21 +64,21 @@ namespace DkTools
 			get { return !string.IsNullOrEmpty(_details) ? Visibility.Visible : Visibility.Hidden; }
 		}
 
-		public bool DontShowAgain
+		public bool UserSuppress
 		{
-			get { return _dontShowAgain; }
-			set { _dontShowAgain = value; }
+			get { return _userSuppress; }
+			set { _userSuppress = value; }
 		}
 
-		public bool ShowDontShowAgain
+		public bool ShowUserSuppress
 		{
-			get { return _showDontShowAgain; }
-			set { _showDontShowAgain = value; }
+			get { return _showUserSuppress; }
+			set { _showUserSuppress = value; }
 		}
 
 		public Visibility DontShowAgainVisibility
 		{
-			get { return _showDontShowAgain ? Visibility.Visible : Visibility.Hidden; }
+			get { return _showUserSuppress ? Visibility.Visible : Visibility.Hidden; }
 		}
 	}
 }

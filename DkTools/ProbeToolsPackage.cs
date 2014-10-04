@@ -80,6 +80,7 @@ namespace DkTools
 	[ProvideOptionPage(typeof(ProbeExplorer.ProbeExplorerOptions), "DK", "DkTools Options", 101, 106, true)]
 	[ProvideOptionPage(typeof(Tagging.TaggingOptions), "DK", "Tagging", 101, 107, true)]
 	[ProvideOptionPage(typeof(EditorOptions), "DK", "Editor", 101, 108, true)]
+	[ProvideOptionPage(typeof(ErrorSuppressionOptions), "DK", "Error Suppressions", 101, 109, true)]
 	public sealed partial class ProbeToolsPackage : Package, IOleComponent
 	{
 		private uint _componentId;
@@ -311,6 +312,11 @@ namespace DkTools
 		internal EditorOptions EditorOptions
 		{
 			get { return GetDialogPage(typeof(EditorOptions)) as EditorOptions; }
+		}
+
+		internal ErrorSuppressionOptions ErrorSuppressionOptions
+		{
+			get { return GetDialogPage(typeof(ErrorSuppressionOptions)) as ErrorSuppressionOptions; }
 		}
 		#endregion
 

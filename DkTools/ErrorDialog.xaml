@@ -39,7 +39,7 @@
                   VerticalAlignment="Center"
                   Content="Don't show this error again."
                   Margin="4,0,0,0"
-                  IsChecked="{Binding Path=DontShowAgain, Mode=TwoWay}"
+                  IsChecked="{Binding Path=UserSuppress, Mode=TwoWay}"
                   Visibility="{Binding Path=DontShowAgainVisibility}"
                   />
         <Button Name="c_okButton"

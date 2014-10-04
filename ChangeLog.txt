@@ -4,6 +4,8 @@ Version 1.2.10 - (pending):
 
 Features:
 - Added extended information to the dictionary explorer.
+- When changing the DK app, it will now try to change the system-wide app in the registry, but this
+  will fail if VS is not running as an administrator. A message will be displayed when this happens.
 
 Bug Fixes:
 - Fixed problem with last option being dropped off enums read from the dictionary.
