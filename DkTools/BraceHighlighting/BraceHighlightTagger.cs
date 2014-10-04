@@ -24,8 +24,6 @@ namespace DkTools.BraceHighlighting
 	{
 		private ITextView _view;
 		private ITextBuffer _sourceBuffer;
-		private ITextSearchService _textSearchService;				// TODO: remove
-		private ITextStructureNavigator _textStructureNavigator;	// TODO: can this be removed
 		private NormalizedSnapshotSpanCollection _braceSpans;
 		private NormalizedSnapshotSpanCollection _wordSpans;
 		private SnapshotSpan? _updateSpan;
@@ -34,13 +32,10 @@ namespace DkTools.BraceHighlighting
 
 		public event EventHandler<SnapshotSpanEventArgs> TagsChanged;
 
-		public BraceHighlightTagger(ITextView view, ITextBuffer sourceBuffer, ITextSearchService textSearchService,
-			ITextStructureNavigator textStructureNavigator)
+		public BraceHighlightTagger(ITextView view, ITextBuffer sourceBuffer)
 		{
 			_view = view;
 			_sourceBuffer = sourceBuffer;
-			_textSearchService = textSearchService;
-			_textStructureNavigator = textStructureNavigator;
 
 			_view.Caret.PositionChanged += new EventHandler<CaretPositionChangedEventArgs>(Caret_PositionChanged);
 			_view.LayoutChanged += new EventHandler<TextViewLayoutChangedEventArgs>(_view_LayoutChanged);

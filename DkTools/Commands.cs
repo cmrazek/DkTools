@@ -650,8 +650,8 @@ namespace DkTools
 		{
 			try
 			{
-				var view = Shell.ActiveView;
-				Navigation.ReferenceScroller.GoToNextOrPrevReference(view, true);
+				var nav = Navigation.Navigator.TryGetForView(Shell.ActiveView);
+				if (nav != null) nav.GoToNextOrPrevReference(true);
 			}
 			catch (Exception ex)
 			{
@@ -663,8 +663,8 @@ namespace DkTools
 		{
 			try
 			{
-				var view = Shell.ActiveView;
-				Navigation.ReferenceScroller.GoToNextOrPrevReference(view, false);
+				var nav = Navigation.Navigator.TryGetForView(Shell.ActiveView);
+				if (nav != null) nav.GoToNextOrPrevReference(false);
 			}
 			catch (Exception ex)
 			{

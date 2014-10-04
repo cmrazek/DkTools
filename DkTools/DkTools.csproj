@@ -382,6 +382,7 @@
     <Compile Include="IniFile.cs" />
     <Compile Include="LockedValue.cs" />
     <Compile Include="Log.cs" />
+    <Compile Include="Navigation\Navigator.cs" />
     <Compile Include="Navigation\ReferenceScroller.cs" />
     <Compile Include="Outlining\OutliningTagger.cs" />
     <Compile Include="Outlining\OutliningTaggerProvider.cs" />
@@ -446,6 +447,7 @@
     <Compile Include="Run\RunOptions.cs">
       <SubType>Component</SubType>
     </Compile>
+    <Compile Include="MefServices.cs" />
     <Compile Include="Shell.cs" />
     <Compile Include="SignatureHelp\ProbeParameter.cs" />
     <Compile Include="SignatureHelp\ProbeSignature.cs" />

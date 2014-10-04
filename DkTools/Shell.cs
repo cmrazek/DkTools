@@ -8,6 +8,7 @@ using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Editor;
+using Microsoft.VisualStudio.Text.Outlining;
 using Microsoft.VisualStudio.TextManager.Interop;
 
 namespace DkTools
@@ -223,5 +224,28 @@ namespace DkTools
 		{
 			public string FileName { get; set; }
 		}
+
+		// TODO: remove
+		//public static void MoveTo(ITextView view, SnapshotSpan span)
+		//{
+		//	if (span.Snapshot != view.TextSnapshot) span = span.TranslateTo(view.TextSnapshot, SpanTrackingMode.EdgeExclusive);
+
+		//	view.Caret.MoveTo(span.Start);
+		//	view.Selection.Select(span, false);
+		//	view.ViewScroller.EnsureSpanVisible(span);
+
+		//	var wpfView = view as IWpfTextView;
+		//	if (wpfView != null)
+		//	{
+		//		IOutliningManager outMgr;
+		//		if (wpfView.Properties.TryGetProperty(typeof(IOutliningManager), out outMgr) && outMgr != null)
+		//		{
+		//			foreach (var region in outMgr.GetCollapsedRegions(span, false))
+		//			{
+		//				outMgr.Expand(region);
+		//			}
+		//		}
+		//	}
+		//}
 	}
 }

@@ -8,10 +8,11 @@ using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Classification;
 using Microsoft.VisualStudio.Text.Editor;
 using Microsoft.VisualStudio.Text.Operations;
+using Microsoft.VisualStudio.Text.Outlining;
 using Microsoft.VisualStudio.Text.Tagging;
 using Microsoft.VisualStudio.Utilities;
 using Microsoft.VisualStudio.Editor;
-using Microsoft.VisualStudio.TextManager.Interop;
+//using Microsoft.VisualStudio.TextManager.Interop;
 
 namespace DkTools.BraceHighlighting
 {
@@ -20,23 +21,23 @@ namespace DkTools.BraceHighlighting
     [ContentType("DK")]
     internal class BraceHighlightTaggerProvider : IViewTaggerProvider
     {
-        [Import]
-        internal ITextSearchService TextSearchService { get; set; }		// TODO: remove
-
-        [Import]
-        internal ITextStructureNavigatorSelectorService TextStructureNavigatorSelector { get; set; }	// TODO: remove
-
-        //[Import(typeof(IVsEditorAdaptersFactoryService))]
-        //internal IVsEditorAdaptersFactoryService editorFactory { get; set; }
+		[Import]
+		public IOutliningManagerService OutliningManagerService = null;
 
         public ITagger<T> CreateTagger<T>(ITextView textView, ITextBuffer buffer) where T : ITag
         {
-            //provide highlighting only on the top buffer 
-            if (textView.TextBuffer != buffer) return null;
+			//provide highlighting only on the top buffer 
+			if (textView.TextBuffer != buffer) return null;
 
-            ITextStructureNavigator textStructureNavigator = TextStructureNavigatorSelector.GetTextStructureNavigator(buffer);
+			var wpfView = textView as IWpfTextView;
+			if (wpfView != null)
+			{
+				var outMgr = OutliningManagerService.GetOutliningManager(textView);
+				Func<Navigation.Navigator> createHandler = () => { return new Navigation.Navigator(wpfView, outMgr); };
+				wpfView.Properties.GetOrCreateSingletonProperty(createHandler);
+			}
 
-            return new BraceHighlightTagger(textView, buffer, TextSearchService, textStructureNavigator) as ITagger<T>;
+            return new BraceHighlightTagger(textView, buffer) as ITagger<T>;
         }
     }
 }

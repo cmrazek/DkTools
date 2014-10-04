@@ -14,6 +14,8 @@ Bug Fixes:
   indenting to put the cursor at 1 char.
 - In Run CAM/SAM dialog, if diags are checked and CAM devmode is not, a warning will be displayed.
 - Go To Next/Prev Reference commands reported the wrong reference number in the status text.
+- Fixed bug where Go To Next/Prev Reference would go to the wrong position if the next reference
+  was inside a collapsed section.
 
 ____________________________________________________________________________________________________
 Version 1.2.9 - Sep 30, 2014:
