@@ -85,7 +85,7 @@ namespace DkTools.Navigation
 			view.Selection.Select(snapSpan, false);
 			view.ViewScroller.EnsureSpanVisible(snapSpan);
 
-			Shell.SetStatusText(string.Format("Reference {0} of {1}.", refIndex + 1, refs.Length));
+			Shell.SetStatusText(string.Format("Reference {0} of {1}.", nextIndex + 1, refs.Length));
 		}
 	}
 }

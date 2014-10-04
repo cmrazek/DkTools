@@ -12,7 +12,8 @@ Bug Fixes:
 - When after a multi-line comment, smart indenting will now use the indent from the first line of
   the comment, not the last line. This was causing problems with file headers causing smart
   indenting to put the cursor at 1 char.
-- In Run CAM/SAM dialog, if diags are checks and CAM devmode is not, a warning will be displayed.
+- In Run CAM/SAM dialog, if diags are checked and CAM devmode is not, a warning will be displayed.
+- Go To Next/Prev Reference commands reported the wrong reference number in the status text.
 
 ____________________________________________________________________________________________________
 Version 1.2.9 - Sep 30, 2014:
