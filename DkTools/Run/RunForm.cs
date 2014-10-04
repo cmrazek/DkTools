@@ -440,6 +440,7 @@ namespace DkTools.Run
 			{
 				_options.CamDevMode = chkCamDevMode.Checked;
 				UpdateCamCmdLine();
+				UpdateCamDevModeWarningVisibility();
 			}
 			catch (Exception ex)
 			{
@@ -467,6 +468,58 @@ namespace DkTools.Run
 				_options.Diags = chkDiags.Checked;
 				UpdateSamCmdLine();
 				UpdateCamCmdLine();
+				UpdateCamDevModeWarningVisibility();
+			}
+			catch (Exception ex)
+			{
+				this.ShowError(ex);
+			}
+		}
+
+		private void UpdateCamDevModeWarningVisibility()
+		{
+			if ((radCam.Checked || radSamAndCam.Checked) &&
+				chkDiags.Checked &&
+				!chkCamDevMode.Checked)
+			{
+				// This is a case where the diags checkbox overrides the dev-mode checkbox, and might cause confusion for the user why the CAM is running in dev-mode.
+				txtCamDiagsDevModeWarning.Visible = true;
+			}
+			else
+			{
+				txtCamDiagsDevModeWarning.Visible = false;
+			}
+		}
+
+		private void radSamAndCam_CheckedChanged(object sender, EventArgs e)
+		{
+			try
+			{
+				UpdateCamDevModeWarningVisibility();
+			}
+			catch (Exception ex)
+			{
+				this.ShowError(ex);
+			}
+		}
+
+		private void radSam_CheckedChanged(object sender, EventArgs e)
+		{
+			try
+			{
+				UpdateCamDevModeWarningVisibility();
+			}
+			catch (Exception ex)
+			{
+				this.ShowError(ex);
+			}
+		}
+
+		private void radCam_CheckedChanged(object sender, EventArgs e)
+		{
+			try
+			{
+				UpdateCamDevModeWarningVisibility();
 			}
 			catch (Exception ex)
 			{
