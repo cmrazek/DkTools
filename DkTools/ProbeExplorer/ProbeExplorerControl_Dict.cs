@@ -16,7 +16,7 @@ using DkTools.Dict;
 
 namespace DkTools.ProbeExplorer
 {
-	public partial class ProbeExplorerControl
+	public sealed partial class ProbeExplorerControl
 	{
 		private void RefreshDictTree()
 		{
@@ -120,7 +120,7 @@ namespace DkTools.ProbeExplorer
 							}
 						}
 
-						foreach (var relind in table.RelInds)
+						foreach (var relind in table.RelInds.OrderBy(x => x.Name))
 						{
 							if (_dictFilter.Match(relind.Name))
 							{

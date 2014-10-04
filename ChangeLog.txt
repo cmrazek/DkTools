@@ -11,6 +11,7 @@ Features:
   known tag names.
 - Added keywords "endgroup", "tag", "nomenu" and "physical"
 - Improved quick-info text for indexes.
+- In dictionary explorer, indexes/relationships are now sorted alphabetically by name.
 
 Bug Fixes:
 - Fixed problem with last option being dropped off enums read from the dictionary.
