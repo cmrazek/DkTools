@@ -9,6 +9,8 @@ Features:
 - After typing 'order by', a completion list of indexes/relationships is now displayed.
 - Tag names are now highlighted properly, and after typing 'tag', a completion list appears with the
   known tag names.
+- Added keywords "endgroup", "tag", "nomenu" and "physical"
+- Improved quick-info text for indexes.
 
 Bug Fixes:
 - Fixed problem with last option being dropped off enums read from the dictionary.
@@ -19,7 +21,6 @@ Bug Fixes:
 - Go To Next/Prev Reference commands reported the wrong reference number in the status text.
 - Fixed bug where Go To Next/Prev Reference would go to the wrong position if the next reference
   was inside a collapsed section.
-- Added keywords "endgroup", "tag" and "nomenu"
 
 ____________________________________________________________________________________________________
 Version 1.2.9 - Sep 30, 2014:

@@ -21,15 +21,15 @@ namespace DkTools.Dict
 		private string _prompt;
 		private string _comment;
 		private string _columns;
-		private int? _autoSequence;
-		private int? _autoSequenceBase;
-		private int? _autoSequenceIncrement;
-		private int? _clustered;
-		private int? _descending;
-		private int? _noPick;
-		private int? _number;
-		private int? _primary;
-		private int? _unique;
+		//private int? _autoSequence;
+		//private int? _autoSequenceBase;
+		//private int? _autoSequenceIncrement;
+		//private int? _clustered;
+		//private int? _descending;
+		//private int? _noPick;
+		//private int? _number;
+		//private int? _primary;
+		//private int? _unique;
 		private Dictionary<string, DictField> _fields = new Dictionary<string, DictField>();
 		private object _repoObj;
 
@@ -37,15 +37,15 @@ namespace DkTools.Dict
 		{
 			_type = DictRelIndType.Index;
 			_name = repoIndex.Name;
-			_autoSequence = repoIndex.AutoSequence;
-			_autoSequenceBase = repoIndex.AutoSequenceBase;
-			_autoSequenceIncrement = repoIndex.AutoSequenceIncrement;
-			_clustered = repoIndex.Clustered;
-			_descending = repoIndex.Descending;
-			_noPick = repoIndex.NoPick;
-			_number = repoIndex.Number;
-			_primary = repoIndex.Primary;
-			_unique = repoIndex.Unique;
+			//_autoSequence = repoIndex.AutoSequence;
+			//_autoSequenceBase = repoIndex.AutoSequenceBase;
+			//_autoSequenceIncrement = repoIndex.AutoSequenceIncrement;
+			//_clustered = repoIndex.Clustered;
+			//_descending = repoIndex.Descending;
+			//_noPick = repoIndex.NoPick;
+			//_number = repoIndex.Number;
+			//_primary = repoIndex.Primary;
+			//_unique = repoIndex.Unique;
 			_repoObj = repoIndex;
 
 			var dev = repoIndex as DICTSRVRLib.IPDictObj;
@@ -64,12 +64,33 @@ namespace DkTools.Dict
 
 			// Info text will be the list of columns in the index.
 			var info = new StringBuilder();
+			if (repoIndex.Unique != 0) info.Append("unique ");
+			if (repoIndex.Primary != 0) info.Append("primary ");
+			if (repoIndex.NoPick != 0) info.Append("NOPICK ");
+			info.Append("index ");
+			info.Append(_name);
+			info.Append(" on ");
+			info.Append(table.Name);
+			info.Append(" (");
+
+			var first = true;
+			var cols = new StringBuilder();
 			for (int c = 1, cc = repoIndex.ColumnCount; c <= cc; c++)
 			{
-				if (info.Length > 0) info.Append(", ");
-				info.Append(repoIndex.Columns[c].Name);
+				var colName = repoIndex.Columns[c].Name;
+
+				if (first) first = false;
+				else
+				{
+					info.Append(", ");
+					cols.Append(", ");
+				}
+
+				info.Append(colName);
+				cols.Append(colName);
 			}
-			_columns = info.ToString();
+			info.Append(')');
+			_columns = cols.ToString();
 
 			//if (!string.IsNullOrWhiteSpace(_repoDesc))
 			//{
@@ -162,51 +183,6 @@ namespace DkTools.Dict
 		public string Description
 		{
 			get { return _repoDesc; }
-		}
-
-		public int? AutoSequence
-		{
-			get { return _autoSequence; }
-		}
-
-		public int? AutoSequenceBase
-		{
-			get { return _autoSequenceBase; }
-		}
-
-		public int? AutoSequenceIncrement
-		{
-			get { return _autoSequenceIncrement; }
-		}
-
-		public int? Clustered
-		{
-			get { return _clustered; }
-		}
-
-		public int? Descending
-		{
-			get { return _descending; }
-		}
-
-		public int? NoPick
-		{
-			get { return _noPick; }
-		}
-
-		public int? Number
-		{
-			get { return _number; }
-		}
-
-		public int? Primary
-		{
-			get { return _primary; }
-		}
-
-		public int? Unique
-		{
-			get { return _unique; }
 		}
 
 		public DictField GetField(string fieldName)
