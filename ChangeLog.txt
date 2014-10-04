@@ -7,6 +7,8 @@ Features:
 - When changing the DK app, it will now try to change the system-wide app in the registry, but this
   will fail if VS is not running as an administrator. A message will be displayed when this happens.
 - After typing 'order by', a completion list of indexes/relationships is now displayed.
+- Tag names are now highlighted properly, and after typing 'tag', a completion list appears with the
+  known tag names.
 
 Bug Fixes:
 - Fixed problem with last option being dropped off enums read from the dictionary.

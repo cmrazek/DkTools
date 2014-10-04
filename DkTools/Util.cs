@@ -67,6 +67,12 @@ namespace DkTools
 			else return char.IsLetterOrDigit(ch) || ch == '_';
 		}
 
+		public static bool IsTagNameChar(this char ch, bool firstChar)
+		{
+			if (firstChar) return char.IsLetter(ch) || ch == '_';
+			else return char.IsLetterOrDigit(ch) || ch == '_' || ch == ':';
+		}
+
 		public static bool IsIdentifier(this string str)
 		{
 			var first = true;

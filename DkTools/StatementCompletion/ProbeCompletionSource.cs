@@ -123,6 +123,7 @@ namespace DkTools.StatementCompletion
 		private static readonly Regex _rxExtract = new Regex(@"\bextract\s(permanent\s)?$");
 		private static readonly Regex _rxAfterInclude = new Regex(@"\#include\s+(\<|\"")$");
 		private static readonly Regex _rxOrderBy = new Regex(@"\border\s+by\s$");
+		private static readonly Regex _rxTag = new Regex(@"\btag\s$");
 
 		void ICompletionSource.AugmentCompletionSession(ICompletionSession session, IList<CompletionSet> completionSets)
 		{
@@ -397,7 +398,15 @@ namespace DkTools.StatementCompletion
 				}
 			}
 			#endregion
-
+			#region tag
+			else if ((match = _rxTag.Match(prefix)).Success)
+			{
+				foreach (var name in Constants.TagNames)
+				{
+					completionList[name] = CreateCompletion(name, name, CompletionType.Keyword);
+				}
+			}
+			#endregion
 
 			if (completionList.Count > 0)
 			{

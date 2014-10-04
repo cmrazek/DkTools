@@ -32,6 +32,7 @@ namespace DkTools.StatementCompletion
 		private static readonly Regex _rxAfterIfDef = new Regex(@"\#ifn?def\s$");
 		private static readonly Regex _rxAfterInclude = new Regex(@"\#include\s+(?:\<|\"")$");
 		private static readonly Regex _rxOrderBy = new Regex(@"\border\s+by\s$");
+		private static readonly Regex _rxTag = new Regex(@"\btag\s$");
 
 		public ProbeCompletionCommandHandler(IVsTextView textViewAdapter, ITextView textView, ProbeCompletionCommandHandlerProvider provider)
 		{
@@ -144,7 +145,11 @@ namespace DkTools.StatementCompletion
 						var caretPos = _textView.Caret.Position.BufferPosition.Position;
 						var prefix = _textView.TextBuffer.CurrentSnapshot.GetLineTextUpToPosition(caretPos);
 
-						if (prefix.EndsWith(", ") || _rxAutoCompleteKeyword.IsMatch(prefix) || _rxAfterIfDef.IsMatch(prefix) || _rxOrderBy.IsMatch(prefix))
+						if (prefix.EndsWith(", ") ||
+							_rxAutoCompleteKeyword.IsMatch(prefix) ||
+							_rxAfterIfDef.IsMatch(prefix) ||
+							_rxOrderBy.IsMatch(prefix) ||
+							_rxTag.IsMatch(prefix))
 						{
 							TriggerCompletionIfAllowed(false);
 						}

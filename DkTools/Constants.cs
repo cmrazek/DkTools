@@ -54,6 +54,12 @@ namespace DkTools
 		public static readonly HashSet<string> SelectOrderByKeywords = Util.ParseWordList("order by asc desc");
 		public static readonly HashSet<string> SelectBodyKeywords = Util.ParseWordList("after all before default each for group");
 
+		public static readonly HashSet<string> TagNames = Util.ParseWordList(
+			"accesstype checkbox cols controlstyle defaultenumcontrolstyle disabledborder formatstring formposition hideModalMenus",
+			"probeform:col probeform:expressentry probeform:nobuttonbar probeform:row probeform:SelectedHighLight probeform:ShowChildForm",
+			"probeform:tabkeycapture probeformgroup:folder probeformgroup:folderorder probeformgroup:homeform probeformgroup:LogicalCascadeClearParent",
+			"probeformgroup:nextform probeformgroup:stayloaded probeformgroup:tooln probegroupmenu:alltables rows scrollbars wordwrap");
+
 		public static readonly char[] OperatorChars = "(){}|+-*/%?:<>=!&".ToCharArray();
 
 		public const string DefaultDateFormat = "ddMMMyyyy";

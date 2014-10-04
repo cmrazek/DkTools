@@ -267,6 +267,8 @@
     <Compile Include="CodeModel\Definitions\TableDefinition.cs" />
     <Compile Include="CodeModel\Definitions\TableFieldDefinition.cs" />
     <Compile Include="CodeModel\Definitions\VariableDefinition.cs" />
+    <Compile Include="CodeModel\Tokens\CodeFile_Parsing.cs" />
+    <Compile Include="CodeModel\Tokens\TagToken.cs" />
     <Compile Include="ErrorDialog.xaml.cs">
       <DependentUpon>ErrorDialog.xaml</DependentUpon>
     </Compile>
