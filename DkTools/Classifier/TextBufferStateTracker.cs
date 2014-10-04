@@ -126,5 +126,10 @@ namespace DkTools.Classifier
 
 			return _states[lineNum];
 		}
+
+		public ITextSnapshot Snapshot
+		{
+			get { return _snapshot; }
+		}
 	}
 }

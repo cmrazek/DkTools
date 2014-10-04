@@ -322,5 +322,10 @@ namespace DkTools.Classifier
 
 			ch = '\0';	// TODO: remove this
 		}
+
+		public static bool StateInsideComment(int state)
+		{
+			return (state & k_state_commentMask) != 0;
+		}
 	}
 }

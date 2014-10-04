@@ -7,6 +7,9 @@ Features:
 
 Bug Fixes:
 - Fixed problem with last option being dropped off enums read from the dictionary.
+- When after a multi-line comment, smart indenting will now use the indent from the first line of
+  the comment, not the last line. This was causing problems with file headers causing smart
+  indenting to put the cursor at 1 char.
 
 ____________________________________________________________________________________________________
 Version 1.2.9 - Sep 30, 2014:

@@ -79,10 +79,25 @@ namespace DkTools.SmartIndenting
 				}
 			}
 
+			// If we got to this point, then the default smart indenting is to be used.
 			{
 				var prevLine = GetPreviousCodeLine(line);
 				if (prevLine != null)
 				{
+					Classifier.TextBufferStateTracker tracker;
+					if (prevLine.Snapshot.TextBuffer.Properties.TryGetProperty<Classifier.TextBufferStateTracker>(typeof(Classifier.TextBufferStateTracker), out tracker))
+					{
+						var lineNumber = prevLine.LineNumber;
+						var state = tracker.GetStateForLine(lineNumber, tracker.Snapshot);
+						while (Classifier.ProbeClassifierScanner.StateInsideComment(state))
+						{
+							if (lineNumber == 0) break;	// At start of file. In theory, this should never happen as the state for the start of the file is always zero.
+							state = tracker.GetStateForLine(--lineNumber, tracker.Snapshot);
+						}
+
+						if (prevLine.LineNumber != lineNumber) prevLine = prevLine.Snapshot.GetLineFromLineNumber(lineNumber);
+					}
+
 					var prevLineText = prevLine.GetText().TrimEnd();
 					if (prevLineText.EndsWith("{") || _rxCaseLine.IsMatch(prevLineText))
 					{
