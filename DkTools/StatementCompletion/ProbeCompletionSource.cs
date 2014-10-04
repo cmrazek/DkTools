@@ -122,6 +122,7 @@ namespace DkTools.StatementCompletion
 		private static readonly Regex _rxAfterIfDef = new Regex(@"\#ifn?def\s$");
 		private static readonly Regex _rxExtract = new Regex(@"\bextract\s(permanent\s)?$");
 		private static readonly Regex _rxAfterInclude = new Regex(@"\#include\s+(\<|\"")$");
+		private static readonly Regex _rxOrderBy = new Regex(@"\border\s+by\s$");
 
 		void ICompletionSource.AugmentCompletionSession(ICompletionSession session, IList<CompletionSet> completionSets)
 		{
@@ -136,6 +137,7 @@ namespace DkTools.StatementCompletion
 			var completionSpan = new Microsoft.VisualStudio.Text.Span(curPos, 0);
 			Match match;
 
+			#region Table.Field
 			if ((match = _rxTypingTable.Match(prefix)).Success)
 			{
 				// Typing a table.field.
@@ -194,12 +196,16 @@ namespace DkTools.StatementCompletion
 					}
 				}
 			}
+			#endregion
+			#region Word
 			else if ((match = _rxTypingWord.Match(prefix)).Success)
 			{
 				// Typing a regular word.
 				completionSpan = new Microsoft.VisualStudio.Text.Span(linePos + match.Index, match.Length);
 				foreach (var comp in GetWordCompletions(curPos, snapshot)) completionList[comp.DisplayText] = comp;
 			}
+			#endregion
+			#region Assignment or Comparison
 			else if ((match = _rxAfterAssignOrCompare.Match(prefix)).Success)
 			{
 				var store = CodeModel.FileStore.GetOrCreateForTextBuffer(_textBuffer);
@@ -233,6 +239,8 @@ namespace DkTools.StatementCompletion
 					}
 				}
 			}
+			#endregion
+			#region #ifdef
 			else if ((match = _rxAfterIfDef.Match(prefix)).Success)
 			{
 				var fileStore = CodeModel.FileStore.GetOrCreateForTextBuffer(_textBuffer);
@@ -247,6 +255,8 @@ namespace DkTools.StatementCompletion
 					}
 				}
 			}
+			#endregion
+			#region Class function bracket
 			else if ((match = _rxClassFunctionStartBracket.Match(prefix)).Success)
 			{
 				// Starting a new function that belongs to a class
@@ -259,6 +269,8 @@ namespace DkTools.StatementCompletion
 					foreach (var opt in GetOptionsForFunctionArg(className, funcName, 0, snapPt)) completionList[opt.DisplayText] = opt;
 				}
 			}
+			#endregion
+			#region Function bracket
 			else if ((match = _rxFunctionStartBracket.Match(prefix)).Success)
 			{
 				// Starting a new function.
@@ -266,6 +278,8 @@ namespace DkTools.StatementCompletion
 				var funcName = match.Groups[1].Value;
 				foreach (var opt in GetOptionsForFunctionArg(null, funcName, 0, snapPt)) completionList[opt.DisplayText] = opt;
 			}
+			#endregion
+			#region Comma
 			else if (prefix.EndsWith(", "))
 			{
 				// Moving to next argument in function.
@@ -278,6 +292,8 @@ namespace DkTools.StatementCompletion
 					foreach (var opt in GetOptionsForFunctionArg(className, funcName, argIndex, snapPt)) completionList[opt.DisplayText] = opt;
 				}
 			}
+			#endregion
+			#region Return
 			else if ((match = _rxReturn.Match(prefix)).Success)
 			{
 				var fileStore = CodeModel.FileStore.GetOrCreateForTextBuffer(_textBuffer);
@@ -294,6 +310,8 @@ namespace DkTools.StatementCompletion
 					}
 				}
 			}
+			#endregion
+			#region Case
 			else if ((match = _rxCase.Match(prefix)).Success)
 			{
 				var store = CodeModel.FileStore.GetOrCreateForTextBuffer(_textBuffer);
@@ -314,6 +332,8 @@ namespace DkTools.StatementCompletion
 					}
 				}
 			}
+			#endregion
+			#region Extract
 			else if ((match = _rxExtract.Match(prefix)).Success)
 			{
 				if (string.IsNullOrEmpty(match.Groups[1].Value))
@@ -333,6 +353,8 @@ namespace DkTools.StatementCompletion
 					}
 				}
 			}
+			#endregion
+			#region #include
 			else if ((match = _rxAfterInclude.Match(prefix)).Success)
 			{
 				string endCh;
@@ -364,6 +386,18 @@ namespace DkTools.StatementCompletion
 					if (!completionList.ContainsKey(titleExt)) completionList[titleExt] = CreateCompletion(titleExt, titleExt + endCh, fileName, CompletionType.Constant);
 				}
 			}
+			#endregion
+			#region order by
+			else if ((match = _rxOrderBy.Match(prefix)).Success)
+			{
+				foreach (var relind in ProbeEnvironment.RelInds)
+				{
+					var def = relind.Definition;
+					completionList[def.Name] = CreateCompletion(def);
+				}
+			}
+			#endregion
+
 
 			if (completionList.Count > 0)
 			{

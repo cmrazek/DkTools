@@ -6,6 +6,7 @@ Features:
 - Added extended information to the dictionary explorer.
 - When changing the DK app, it will now try to change the system-wide app in the registry, but this
   will fail if VS is not running as an administrator. A message will be displayed when this happens.
+- After typing 'order by', a completion list of indexes/relationships is now displayed.
 
 Bug Fixes:
 - Fixed problem with last option being dropped off enums read from the dictionary.
