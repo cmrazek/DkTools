@@ -1,5 +1,14 @@
 DkTools2012 ChangeLog
 ____________________________________________________________________________________________________
+Version 1.2.10 - (pending):
+
+Features:
+- Added extended information to the dictionary explorer.
+
+Bug Fixes:
+- Fixed problem with last option being dropped off enums read from the dictionary.
+
+____________________________________________________________________________________________________
 Version 1.2.9 - Sep 30, 2014:
 
 Bug Fixes:

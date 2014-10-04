@@ -472,16 +472,29 @@ namespace DkTools.CodeModel
 							// The WBDK repository doesn't put quotes around the strings that need them.
 							code.SkipWhiteSpaceAndCommentsIfAllowed();
 							var optionStartPos = code.Position;
+							var gotComma = false;
 
 							while (!code.EndOfFile)
 							{
-								if (!code.Read() || code.TokenText == "}") break;
+								if (!code.Read()) break;
+
+								if (code.TokenText == "}")
+								{
+									if (gotComma)
+									{
+										var str = code.GetText(optionStartPos, code.TokenStartPostion - optionStartPos).Trim();
+										options.Add(new EnumOptionDefinition(DecorateEnumOptionIfRequired(str)));
+										optionStartPos = code.Position;
+									}
+									break;
+								}
 
 								if (code.TokenText == ",")
 								{
 									var str = code.GetText(optionStartPos, code.TokenStartPostion - optionStartPos).Trim();
 									options.Add(new EnumOptionDefinition(DecorateEnumOptionIfRequired(str)));
 									optionStartPos = code.Position;
+									gotComma = true;
 								}
 							}
 						}
