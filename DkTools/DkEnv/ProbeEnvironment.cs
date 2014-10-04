@@ -313,6 +313,26 @@ namespace DkTools
 		private static Dictionary<string, Dict.DictTable> _tables = new Dictionary<string, Dict.DictTable>();
 		private static Dictionary<string, Dict.DictStringDef> _stringDefs = new Dictionary<string, Dict.DictStringDef>();
 		private static Dictionary<string, Dict.DictTypeDef> _typeDefs = new Dictionary<string, Dict.DictTypeDef>();
+		private static DICTSRVRLib.PRepository _repo;
+		private static DICTSRVRLib.PDictionary _dict;
+
+		public static DICTSRVRLib.PRepository ProbeRepo
+		{
+			get
+			{
+				if (_repo == null) _repo = new DICTSRVRLib.PRepository();
+				return _repo;
+			}
+		}
+
+		public static DICTSRVRLib.PDictionary ProbeDict
+		{
+			get
+			{
+				if (_dict == null) _dict = ProbeRepo.LoadDictionary(_currentApp.Name, string.Empty, DICTSRVRLib.PDS_Access.Access_BROWSE);
+				return _dict;
+			}
+		}
 
 		private static void ReloadTableList()
 		{
@@ -322,14 +342,15 @@ namespace DkTools
 				Debug.WriteLine("Loading dictionary...");
 #endif
 
+				_repo = null;
+				_dict = null;
 				_tables.Clear();
 				_stringDefs.Clear();
 				_typeDefs.Clear();
 
 				if (_currentApp != null)
 				{
-					var repo = new DICTSRVRLib.PRepository();
-					var dict = repo.LoadDictionary(_currentApp.Name, string.Empty, DICTSRVRLib.PDS_Access.Access_BROWSE);
+					var dict = ProbeDict;
 					if (dict != null)
 					{
 						for (int t = 1, tt = dict.TableCount; t <= tt; t++)

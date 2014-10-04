@@ -102,6 +102,26 @@ namespace DkTools {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
+        internal static System.Drawing.Bitmap ExpandMinus {
+            get {
+                object obj = ResourceManager.GetObject("ExpandMinus", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        internal static System.Drawing.Bitmap ExpandPlus {
+            get {
+                object obj = ResourceManager.GetObject("ExpandPlus", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
         internal static System.Drawing.Bitmap FieldImg {
             get {
                 object obj = ResourceManager.GetObject("FieldImg", resourceCulture);

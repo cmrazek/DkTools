@@ -14,10 +14,12 @@ namespace DkTools.Dict
 		public CodeModel.DataType DataType { get; private set; }
 
 		private CodeModel.Definitions.TableFieldDefinition _definition;
+		private DICTSRVRLib.IPColumn _repoCol;
 
 		public DictField(string parentName, DICTSRVRLib.IPColumn repoCol)
 		{
 			Name = repoCol.Name;
+			_repoCol = repoCol;
 
 			var desc = repoCol as DICTSRVRLib.IPDObjDesc;
 			Prompt = desc.Prompt[0];
@@ -58,6 +60,11 @@ namespace DkTools.Dict
 		public CodeModel.Definitions.TableFieldDefinition Definition
 		{
 			get { return _definition; }
+		}
+
+		public DICTSRVRLib.IPColumn RepoColumn
+		{
+			get { return _repoCol; }
 		}
 	}
 }

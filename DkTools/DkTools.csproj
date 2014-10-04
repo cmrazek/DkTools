@@ -392,6 +392,7 @@
     <Compile Include="ProbeExplorer\CreateFileDialog.xaml.cs">
       <DependentUpon>CreateFileDialog.xaml</DependentUpon>
     </Compile>
+    <Compile Include="ProbeExplorer\ProbeExplorerControl_Dict.cs" />
     <Compile Include="ProbeExplorer\ProbeExplorerOptions.cs">
       <SubType>Component</SubType>
     </Compile>
@@ -404,6 +405,11 @@
     <Compile Include="Dict\DictField.cs" />
     <Compile Include="Dict\DictRelInd.cs" />
     <Compile Include="Dict\DictTable.cs" />
+    <Compile Include="ProbeExplorer\RepoInfo.cs" />
+    <Compile Include="ProbeExplorer\RepoInfoItem.cs" />
+    <Compile Include="ProbeExplorer\RepoInfoWindow.xaml.cs">
+      <DependentUpon>RepoInfoWindow.xaml</DependentUpon>
+    </Compile>
     <Compile Include="ProcessRunner.cs" />
     <Compile Include="PromptForm.cs">
       <SubType>Form</SubType>
@@ -467,6 +473,7 @@
     <Compile Include="TokenParser\ParserEnumerator.cs" />
     <Compile Include="TokenParser\Token.cs" />
     <Compile Include="TokenParser\TokenType.cs" />
+    <Compile Include="TypeUtil.cs" />
     <Compile Include="Util.cs" />
     <Compile Include="VsTextUtil.cs" />
     <Compile Include="WpfUtil.cs" />
@@ -528,6 +535,8 @@
     <None Include="Resources\Error48.png" />
     <None Include="Resources\Error16.png" />
     <Resource Include="Images\error16.png" />
+    <None Include="Resources\ExpandMinus.png" />
+    <None Include="Resources\ExpandPlus.png" />
     <Content Include="Resources\Package.ico" />
   </ItemGroup>
   <ItemGroup>
@@ -574,6 +583,10 @@
       <Generator>MSBuild:Compile</Generator>
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
+    </Page>
+    <Page Include="ProbeExplorer\RepoInfoWindow.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
     </Page>
   </ItemGroup>
   <ItemGroup>

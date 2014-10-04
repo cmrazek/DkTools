@@ -31,6 +31,7 @@ namespace DkTools.Dict
 		private int? _primary;
 		private int? _unique;
 		private Dictionary<string, DictField> _fields = new Dictionary<string, DictField>();
+		private object _repoObj;
 
 		public DictRelInd(DictTable table, DICTSRVRLib.IPIndex repoIndex)
 		{
@@ -45,6 +46,7 @@ namespace DkTools.Dict
 			_number = repoIndex.Number;
 			_primary = repoIndex.Primary;
 			_unique = repoIndex.Unique;
+			_repoObj = repoIndex;
 
 			var dev = repoIndex as DICTSRVRLib.IPDictObj;
 			if (dev != null)
@@ -84,6 +86,7 @@ namespace DkTools.Dict
 			_name = repoRel.Name;
 			_prompt = repoRel.Prompt[0];
 			_comment = repoRel.Comment[0];
+			_repoObj = repoRel;
 
 			var dev = repoRel as DICTSRVRLib.IPDictObj;
 			if (dev != null)
@@ -219,6 +222,11 @@ namespace DkTools.Dict
 			{
 				foreach (var field in _fields.Values) yield return field.Definition;
 			}
+		}
+
+		public object RepoObj
+		{
+			get { return _repoObj; }
 		}
 	}
 }

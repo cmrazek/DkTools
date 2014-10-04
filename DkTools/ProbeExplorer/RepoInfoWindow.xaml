@@ -1,0 +1,55 @@
+﻿<Window x:Class="DkTools.ProbeExplorer.RepoInfoWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Repository Information" Height="500" Width="650" WindowStartupLocation="CenterOwner">
+    <Grid>
+        <TextBox Name="c_filterTextBox" HorizontalAlignment="Stretch" VerticalAlignment="Top" Height="23" TextChanged="FilterTextBox_TextChanged"/>
+        <Image Name="c_filterClearImage" Width="16" Height="16" VerticalAlignment="Top" HorizontalAlignment="Right"
+                           Source="/DkTools2012;component/Images/Clear.png" Opacity="0.5" Margin="0,4,4,0"
+                           MouseUp="FilterClear_MouseUp_1" MouseEnter="FilterClear_MouseEnter_1" MouseLeave="FilterClear_MouseLeave_1"/>
+        <ListView Name="c_mainListView" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" ItemsSource="{Binding RepoInfoItems}" Margin="0,25,0,0">
+            <ListView.View>
+                <GridView>
+                    <GridViewColumn Header="Interface" Width="100">
+                        <GridViewColumn.CellTemplate>
+                            <DataTemplate>
+                                <StackPanel Orientation="Horizontal">
+                                    <Image Source="{Binding Icon}" Margin="{Binding IconMargin}" Width="16" Height="16"/>
+                                    <TextBlock Text="{Binding Interface}" Margin="4,0,0,0"/>
+                                </StackPanel>
+                            </DataTemplate>
+                        </GridViewColumn.CellTemplate>
+                    </GridViewColumn>
+                    <GridViewColumn Header="Property" Width="150">
+                        <GridViewColumn.CellTemplate>
+                            <DataTemplate>
+                                <TextBlock Text="{Binding PropertyName}"/>
+                            </DataTemplate>
+                        </GridViewColumn.CellTemplate>
+                    </GridViewColumn>
+                    <GridViewColumn Header="Value" Width="150">
+                        <GridViewColumn.CellTemplate>
+                            <DataTemplate>
+                                <TextBlock Text="{Binding Value}"/>
+                            </DataTemplate>
+                        </GridViewColumn.CellTemplate>
+                    </GridViewColumn>
+                    <GridViewColumn Header="Type" Width="200">
+                        <GridViewColumn.CellTemplate>
+                            <DataTemplate>
+                                <TextBlock Text="{Binding TypeText}"/>
+                            </DataTemplate>
+                        </GridViewColumn.CellTemplate>
+                    </GridViewColumn>
+                </GridView>
+            </ListView.View>
+            <ListView.ItemContainerStyle>
+                <Style TargetType="{x:Type ListViewItem}">
+                    <EventSetter Event="MouseDoubleClick" Handler="ListViewItem_MouseDoubleClick"/>
+                    <Setter Property="Visibility" Value="{Binding Visibility}"/>
+                </Style>
+            </ListView.ItemContainerStyle>
+        </ListView>
+
+    </Grid>
+</Window>

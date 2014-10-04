@@ -18,11 +18,13 @@ namespace DkTools.Dict
 		private List<DictRelInd> _relInds;
 		private TableDefinition[] _definitions;
 		private string _baseTable;
+		private DICTSRVRLib.IPTable _repoTable;
 
 		public DictTable(DICTSRVRLib.IPTable repoTable)
 		{
 			if (repoTable == null) throw new ArgumentNullException("repoTable");
 
+			_repoTable = repoTable;
 			_number = repoTable.Number;
 			_name = repoTable.Name;
 
@@ -138,6 +140,14 @@ namespace DkTools.Dict
 			get
 			{
 				foreach (var field in _fields.Values) yield return field.Definition;
+			}
+		}
+
+		public DICTSRVRLib.IPTable RepoTable
+		{
+			get
+			{
+				return _repoTable;
 			}
 		}
 	}
