@@ -1,0 +1,480 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<CodeSnippets  xmlns="http://schemas.microsoft.com/VisualStudio/2005/CodeSnippet">
+	<CodeSnippet Format="1.0.0">
+		<Header>
+			<Title>Server Trigger - Action</Title>
+			<Description>Code snippet for Server Trigger Action</Description>
+			<SnippetTypes>
+				<SnippetType>Expansion</SnippetType>
+			</SnippetTypes>
+		</Header>
+		<Snippet>
+			<Declarations>
+				<Literal>
+					<ID>actionname</ID>
+					<ToolTip>Name of the action</ToolTip>
+					<Default>ActionName</Default>
+				</Literal>
+				<Literal>
+					<ID>prompt</ID>
+					<ToolTip>Prompt</ToolTip>
+					<Default>Prompt</Default>
+				</Literal>
+				<Literal>
+					<ID>comment</ID>
+					<ToolTip>Comment</ToolTip>
+					<Default>Comment</Default>
+				</Literal>
+				<Literal>
+					<ID>description</ID>
+					<ToolTip>Description of what the file contains</ToolTip>
+					<Default>Description</Default>
+				</Literal>
+			</Declarations>
+			<Code Language="DK" Kind="clientservertrigger">
+				<![CDATA[int action_$actionname$()
+	prompt	"$prompt$"
+	comment	"$comment$"
+description "$description$"
+{
+	return 0;
+}
+]]>
+			</Code>
+		</Snippet>
+	</CodeSnippet>
+	<CodeSnippet Format="1.0.0">
+		<Header>
+			<Title>Defaults</Title>
+			<Description>Code snippet for Server Trigger Defaults</Description>
+			<SnippetTypes>
+				<SnippetType>Expansion</SnippetType>
+			</SnippetTypes>
+		</Header>
+		<Snippet>
+			<Declarations>
+				<Literal>
+					<ID>description</ID>
+					<ToolTip>Description of what the file contains</ToolTip>
+					<Default>Executed at the server when a row is about to be inserted in the database (i.e., during the insert and insrel events).</Default>
+				</Literal>
+			</Declarations>
+			<Code Language="DK" Kind="clientservertrigger">
+				<![CDATA[int defaults()
+description "$description$"
+{
+	return 0;
+}
+]]>
+			</Code>
+		</Snippet>
+	</CodeSnippet>
+	<CodeSnippet Format="1.0.0">
+		<Header>
+			<Title>Listing</Title>
+			<Description>Code snippet for Server Trigger Listing</Description>
+			<SnippetTypes>
+				<SnippetType>Expansion</SnippetType>
+			</SnippetTypes>
+		</Header>
+		<Snippet>
+			<Declarations>
+				<Literal>
+					<ID>listingname</ID>
+					<ToolTip>Name of the listing</ToolTip>
+					<Default>ListingName</Default>
+				</Literal>
+				<Literal>
+					<ID>prompt</ID>
+					<ToolTip>Prompt</ToolTip>
+					<Default>Prompt</Default>
+				</Literal>
+				<Literal>
+					<ID>comment</ID>
+					<ToolTip>Comment</ToolTip>
+					<Default>Comment</Default>
+				</Literal>
+				<Literal>
+					<ID>description</ID>
+					<ToolTip>Description of what the file contains</ToolTip>
+					<Default>Executed when the CAM user chooses the listing.</Default>
+				</Literal>
+			</Declarations>
+			<Code Language="DK" Kind="clientservertrigger">
+				<![CDATA[int listing_$listingname$()
+	prompt	"$prompt$"
+	comment	"$comment$"
+description "$description$"
+{
+	return 0;
+}
+]]>
+			</Code>
+		</Snippet>
+	</CodeSnippet>
+	<CodeSnippet Format="1.0.0">
+		<Header>
+			<Title>Listing Column</Title>
+			<Description>Code snippet for Server Trigger Listing Column</Description>
+			<SnippetTypes>
+				<SnippetType>Expansion</SnippetType>
+			</SnippetTypes>
+		</Header>
+		<Snippet>
+			<Declarations>
+				<Literal>
+					<ID>listingname</ID>
+					<ToolTip>Name of the listing</ToolTip>
+					<Default>ListingName</Default>
+				</Literal>
+				<Literal>
+					<ID>columnname</ID>
+					<ToolTip>Name of the column</ToolTip>
+					<Default>ColumnName</Default>
+				</Literal>
+				<Literal>
+					<ID>prompt</ID>
+					<ToolTip>Prompt</ToolTip>
+					<Default>Prompt</Default>
+				</Literal>
+				<Literal>
+					<ID>comment</ID>
+					<ToolTip>Comment</ToolTip>
+					<Default>Comment</Default>
+				</Literal>
+				<Literal>
+					<ID>description</ID>
+					<ToolTip>Description of what the file contains</ToolTip>
+					<Default>Executed when the CAM user chooses the listing.</Default>
+				</Literal>
+			</Declarations>
+			<Code Language="DK" Kind="clientservertrigger">
+				<![CDATA[int listing_$listingname$_$columnname$()
+	prompt	"$prompt$"
+	comment	"$comment$"
+description "$description$"
+{
+	return 0;
+}
+]]>
+			</Code>
+		</Snippet>
+	</CodeSnippet>
+	<CodeSnippet Format="1.0.0">
+		<Header>
+			<Title>Global Initialize</Title>
+			<Description>Code snippet for Other Server Global Initialize</Description>
+			<SnippetTypes>
+				<SnippetType>Expansion</SnippetType>
+			</SnippetTypes>
+		</Header>
+		<Snippet>
+			<Declarations>
+				<Literal>
+					<ID>description</ID>
+					<ToolTip>Description of what the file contains</ToolTip>
+					<Default>WBDK fires this trigger as soon as the DLL containing it is loaded.</Default>
+				</Literal>
+				<Literal>
+					<ID>assumptions</ID>
+					<ToolTip>Assumptions</ToolTip>
+					<Default>Assumptions that the method makes (i.e. context)</Default>
+				</Literal>
+				<Literal>
+					<ID>notes</ID>
+					<ToolTip>Notes</ToolTip>
+					<Default>Additional notes others should be aware of</Default>
+				</Literal>
+			</Declarations>
+			<Code Language="DK" Kind="classtrigger">
+				<![CDATA[int globalinitialize()
+description "$description$"
+{
+	return 0;
+}
+]]>
+			</Code>
+		</Snippet>
+	</CodeSnippet>
+	<CodeSnippet Format="1.0.0">
+		<Header>
+			<Title>Global Terminate</Title>
+			<Description>Code snippet for Server Trigger Global Terminate</Description>
+			<SnippetTypes>
+				<SnippetType>Expansion</SnippetType>
+			</SnippetTypes>
+		</Header>
+		<Snippet>
+			<Declarations>
+				<Literal>
+					<ID>description</ID>
+					<ToolTip>Description of what the file contains</ToolTip>
+					<Default>WBDK fires this trigger when the DLL containing it is terminated.</Default>
+				</Literal>
+				<Literal>
+					<ID>assumptions</ID>
+					<ToolTip>Assumptions</ToolTip>
+					<Default>Assumptions that the method makes (i.e. context)</Default>
+				</Literal>
+				<Literal>
+					<ID>notes</ID>
+					<ToolTip>Notes</ToolTip>
+					<Default>Additional notes others should be aware of</Default>
+				</Literal>
+			</Declarations>
+			<Code Language="DK" Kind="classtrigger">
+				<![CDATA[int globalterminate()
+description "$description$"
+{
+	return 0;
+}
+]]>
+			</Code>
+		</Snippet>
+	</CodeSnippet>
+	<CodeSnippet Format="1.0.0">
+		<Header>
+			<Title>Static Initialize</Title>
+			<Description>Code snippet for Server Trigger Static Initialize</Description>
+			<SnippetTypes>
+				<SnippetType>Expansion</SnippetType>
+			</SnippetTypes>
+		</Header>
+		<Snippet>
+			<Declarations>
+				<Literal>
+					<ID>description</ID>
+					<ToolTip>Description of what the file contains</ToolTip>
+					<Default>WBDK fires this trigger as soon as the DLL containing it is referenced by the application.</Default>
+				</Literal>
+			</Declarations>
+			<Code Language="DK" Kind="classtrigger">
+				<![CDATA[int staticinitialize()
+description "$description$"
+{
+	return 0;
+}
+]]>
+			</Code>
+		</Snippet>
+	</CodeSnippet>
+	<CodeSnippet Format="1.0.0">
+		<Header>
+			<Title>Static Terminate</Title>
+			<Description>Code snippet for Server Trigger Static Terminate</Description>
+			<SnippetTypes>
+				<SnippetType>Expansion</SnippetType>
+			</SnippetTypes>
+		</Header>
+		<Snippet>
+			<Declarations>
+				<Literal>
+					<ID>description</ID>
+					<ToolTip>Description of what the file contains</ToolTip>
+					<Default>WBDK fires this trigger when the DLL containing it is no longer referenced by the application.</Default>
+				</Literal>
+			</Declarations>
+			<Code Language="DK" Kind="classtrigger">
+				<![CDATA[int staticterminate()
+description "$description$"
+{
+	return 0;
+}
+]]>
+			</Code>
+		</Snippet>
+	</CodeSnippet>
+		<CodeSnippet Format="1.0.0">
+			<Header>
+				<Title>Activity</Title>
+				<Description>Code snippet for Server Trigger Activity</Description>
+				<SnippetTypes>
+					<SnippetType>Expansion</SnippetType>
+				</SnippetTypes>
+			</Header>
+			<Snippet>
+				<Declarations>
+					<Literal>
+						<ID>description</ID>
+						<ToolTip>Description of what the file contains</ToolTip>
+						<Default>Executed when a normal transaction is inserted in a time relationship, or when a future-dated transaction is applied.</Default>
+					</Literal>
+				</Declarations>
+				<Code Language="DK" Kind="servertrigger">
+					<![CDATA[int activity(recalc_t recalc)
+description "$description$"
+{
+    UNREFERENCED_PARAMETER(recalc);
+
+	return 0;
+}
+]]>
+				</Code>
+			</Snippet>
+		</CodeSnippet>
+		<CodeSnippet Format="1.0.0">
+			<Header>
+				<Title>After Insert</Title>
+				<Description>Code snippet for Server Trigger After Insert</Description>
+				<SnippetTypes>
+					<SnippetType>Expansion</SnippetType>
+				</SnippetTypes>
+			</Header>
+			<Snippet>
+				<Declarations>
+					<Literal>
+						<ID>description</ID>
+						<ToolTip>Description of what the file contains</ToolTip>
+						<Default>Executed as the last step prior to committing an inserted row in the database.</Default>
+					</Literal>
+				</Declarations>
+				<Code Language="DK" Kind="servertrigger">
+					<![CDATA[int afterinsert()
+description "$description$"
+{
+	return 0;
+}
+]]>
+				</Code>
+			</Snippet>
+		</CodeSnippet>
+	<CodeSnippet Format="1.0.0">
+		<Header>
+			<Title>After Select</Title>
+			<Description>Code snippet for Server Trigger After Select</Description>
+			<SnippetTypes>
+				<SnippetType>Expansion</SnippetType>
+			</SnippetTypes>
+		</Header>
+		<Snippet>
+			<Declarations>
+				<Literal>
+					<ID>description</ID>
+					<ToolTip>Description of what the file contains</ToolTip>
+					<Default>Executed when a row has been retrieved from the database, via a qfind.</Default>
+				</Literal>
+			</Declarations>
+			<Code Language="DK" Kind="servertrigger">
+				<![CDATA[int afterselect()
+description "$description$"
+{
+	return 0;
+}
+]]>
+			</Code>
+		</Snippet>
+	</CodeSnippet>
+	<CodeSnippet Format="1.0.0">
+		<Header>
+			<Title>After Update</Title>
+			<Description>Code snippet for Server Trigger After Update</Description>
+			<SnippetTypes>
+				<SnippetType>Expansion</SnippetType>
+			</SnippetTypes>
+		</Header>
+		<Snippet>
+			<Declarations>
+				<Literal>
+					<ID>description</ID>
+					<ToolTip>Description of what the file contains</ToolTip>
+					<Default>Executed after the row has been updated in the database.</Default>
+				</Literal>
+			</Declarations>
+			<Code Language="DK" Kind="servertrigger">
+				<![CDATA[int afterupdate()
+description "$description$"
+{
+	return 0;
+}
+]]>
+			</Code>
+		</Snippet>
+	</CodeSnippet>
+	<CodeSnippet Format="1.0.0">
+		<Header>
+			<Title>Confirm</Title>
+			<Description>Code snippet for Server Trigger Confirm</Description>
+			<SnippetTypes>
+				<SnippetType>Expansion</SnippetType>
+			</SnippetTypes>
+		</Header>
+		<Snippet>
+			<Declarations>
+				<Literal>
+					<ID>description</ID>
+					<ToolTip>Description of what the file contains</ToolTip>
+					<Default>Executed when a row is successfuly inserted in the database via the Add client event. Used to list any information the user would want to see after inserting a row.</Default>
+				</Literal>
+			</Declarations>
+			<Code Language="DK" Kind="servertrigger">
+				<![CDATA[int confirm(int dupbefore, int dupafter)
+description "$description$"
+{
+    UNREFERENCED_PARAMETER(dupbefore);
+    UNREFERENCED_PARAMETER(dupafter);
+	return 0;
+}
+]]>
+			</Code>
+		</Snippet>
+	</CodeSnippet>
+	<CodeSnippet Format="1.0.0">
+		<Header>
+			<Title>Edits</Title>
+			<Description>Code snippet for Server Trigger Edits</Description>
+			<SnippetTypes>
+				<SnippetType>Expansion</SnippetType>
+			</SnippetTypes>
+		</Header>
+		<Snippet>
+			<Declarations>
+				<Literal>
+					<ID>description</ID>
+					<ToolTip>Description of what the file contains</ToolTip>
+					<Default>Executed at the server when a row is about to be inserted or updated in the database.</Default>
+				</Literal>
+			</Declarations>
+			<Code Language="DK" Kind="servertrigger">
+				<![CDATA[int edits(edits_t action, warehstatus_t whstatus)
+description "$description$"
+{
+    UNREFERENCED_PARAMETER(action);
+    UNREFERENCED_PARAMETER(whstatus);
+	return 0;
+}
+]]>
+			</Code>
+		</Snippet>
+	</CodeSnippet>
+	<CodeSnippet Format="1.0.0">
+		<Header>
+			<Title>Periodic</Title>
+			<Description>Code snippet for Server Trigger Periodic</Description>
+			<SnippetTypes>
+				<SnippetType>Expansion</SnippetType>
+			</SnippetTypes>
+		</Header>
+		<Snippet>
+			<Declarations>
+				<Literal>
+					<ID>description</ID>
+					<ToolTip>Description of what the file contains</ToolTip>
+					<Default>Executed when a transaction is inserted in a time relationship.</Default>
+				</Literal>
+			</Declarations>
+			<Code Language="DK" Kind="servertrigger">
+				<![CDATA[int periodic(date todate, unsigned caller, recalc_t recalc, position_t pos)
+description "$description$"
+{
+    UNREFERENCED_PARAMETER(todate);
+    UNREFERENCED_PARAMETER(caller);
+    UNREFERENCED_PARAMETER(recalc);
+    UNREFERENCED_PARAMETER(pos);
+	
+	return 0;
+}
+]]>
+			</Code>
+		</Snippet>
+	</CodeSnippet>
+</CodeSnippets>

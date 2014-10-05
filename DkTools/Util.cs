@@ -176,9 +176,11 @@ namespace DkTools
 		public static string GetIndentText(this string str)
 		{
 			var pos = 0;
+			char ch;
 			while (pos < str.Length)
 			{
-				if (!char.IsWhiteSpace(str[pos])) return str.Substring(0, pos);
+				ch = str[pos];
+				if (ch != ' ' && ch != '\t') return str.Substring(0, pos);
 				pos++;
 			}
 			return string.Empty;
@@ -195,7 +197,7 @@ namespace DkTools
 			{
 				ch = lineText[pos++];
 
-				if (!char.IsWhiteSpace(ch)) return indent;
+				if (ch != ' ' && ch != '\t') return indent;
 
 				if (ch == '\t') indent = indent.AddIndentTab(tabSize);
 				else indent++;

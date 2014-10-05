@@ -19,7 +19,7 @@ namespace DkTools.SignatureHelp
     [Name("Probe Signature Help Controller")]
     [TextViewRole(PredefinedTextViewRoles.Editable)]
 	[ContentType("DK")]
-    internal class ProbeSignatureHelpCommandProvider : IVsTextViewCreationListener
+    internal sealed class ProbeSignatureHelpCommandProvider : IVsTextViewCreationListener
     {
         [Import]
         internal IVsEditorAdaptersFactoryService AdapterService { get; set; }
@@ -30,15 +30,10 @@ namespace DkTools.SignatureHelp
         [Import]
         internal ISignatureHelpBroker SignatureHelpBroker { get; set; }
 
-        public static ProbeSignatureHelpCommandProvider Instance = null;
-
         public void VsTextViewCreated(IVsTextView textViewAdapter)
         {
-            Instance = this;
-
             ITextView textView = AdapterService.GetWpfTextView(textViewAdapter);
-            if (textView == null)
-                return;
+            if (textView == null) return;
 
             textView.Properties.GetOrCreateSingletonProperty(
                  () => new ProbeSignatureHelpCommandHandler(textViewAdapter,

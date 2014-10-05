@@ -1,0 +1,2355 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<CodeSnippets  xmlns="http://schemas.microsoft.com/VisualStudio/2005/CodeSnippet">
+  <CodeSnippet Format="1.0.0">
+    <Header>
+      <Title>Client Trigger - Activate</Title>
+      <Description>Code snippet for Client Trigger Activate</Description>
+      <Author>Fincentric Corporation</Author>
+      <SnippetTypes>
+        <SnippetType>Expansion</SnippetType>
+      </SnippetTypes>
+    </Header>
+    <Snippet>
+      <Declarations>
+        <Literal>
+          <ID>description</ID>
+          <ToolTip>Description of what the file contains</ToolTip>
+          <Default>What kind of things should go into the method.</Default>
+        </Literal>
+        <Literal>
+          <ID>assumptions</ID>
+          <ToolTip>Assumptions</ToolTip>
+          <Default>Assumptions that the method makes (i.e. context)</Default>
+        </Literal>
+        <Literal>
+          <ID>notes</ID>
+          <ToolTip>Notes</ToolTip>
+          <Default>Additional notes others should be aware of</Default>
+        </Literal>
+      </Declarations>
+      <Code Language="DK" Kind="clienttrigger">
+        <![CDATA[int
+activate(noyes_t eAction)
+description
+    "                                                               "
+    "   Description of method.                                      "
+    "       - $description$        "
+    "                                                               "
+    "   Assumptions:                                                "
+    "       - $assumptions$      "
+    "   Notes:                                                      "
+    "       - $notes$            "
+    "                                                               "
+{
+	UNREFERENCED_PARAMETER(eAction);
+
+	return 0;
+}
+]]>
+      </Code>
+    </Snippet>
+  </CodeSnippet>
+  <CodeSnippet Format="1.0.0">
+    <Header>
+      <Title>Client Trigger - After Listing</Title>
+      <Description>Code snippet for Client Trigger After Listing</Description>
+      <Author>Fincentric Corporation</Author>
+      <SnippetTypes>
+        <SnippetType>Expansion</SnippetType>
+      </SnippetTypes>
+    </Header>
+    <Snippet>
+      <Declarations>
+        <Literal>
+          <ID>listingname</ID>
+          <ToolTip>Name of the listing</ToolTip>
+          <Default>ListingName</Default>
+        </Literal>
+        <Literal>
+          <ID>description</ID>
+          <ToolTip>Description of what the file contains</ToolTip>
+          <Default>What kind of things should go into the method.</Default>
+        </Literal>
+        <Literal>
+          <ID>assumptions</ID>
+          <ToolTip>Assumptions</ToolTip>
+          <Default>Assumptions that the method makes (i.e. context)</Default>
+        </Literal>
+        <Literal>
+          <ID>notes</ID>
+          <ToolTip>Notes</ToolTip>
+          <Default>Additional notes others should be aware of</Default>
+        </Literal>
+      </Declarations>
+      <Code Language="DK" Kind="clienttrigger">
+        <![CDATA[int
+after_listing_$listingname$()
+description
+    "                                                               "
+    "   Description of method.                                      "
+    "       - $description$        "
+    "                                                               "
+    "   Assumptions:                                                "
+    "       - $assumptions$      "
+    "   Notes:                                                      "
+    "       - $notes$            "
+    "                                                               "
+{
+	return 0;
+}
+]]>
+      </Code>
+    </Snippet>
+  </CodeSnippet>
+  <CodeSnippet Format="1.0.0">
+    <Header>
+      <Title>Client Trigger - After Log</Title>
+      <Description>Code snippet for Client Trigger After Log</Description>
+      <Author>Fincentric Corporation</Author>
+      <SnippetTypes>
+        <SnippetType>Expansion</SnippetType>
+      </SnippetTypes>
+    </Header>
+    <Snippet>
+      <Declarations>
+        <Literal>
+          <ID>description</ID>
+          <ToolTip>Description of what the file contains</ToolTip>
+          <Default>What kind of things should go into the method.</Default>
+        </Literal>
+        <Literal>
+          <ID>assumptions</ID>
+          <ToolTip>Assumptions</ToolTip>
+          <Default>Assumptions that the method makes (i.e. context)</Default>
+        </Literal>
+        <Literal>
+          <ID>notes</ID>
+          <ToolTip>Notes</ToolTip>
+          <Default>Additional notes others should be aware of</Default>
+        </Literal>
+      </Declarations>
+      <Code Language="DK" Kind="clienttrigger">
+        <![CDATA[int
+afterlog(int status, multi_t sequence)
+description
+    "                                                               "
+    "   Description of method.                                      "
+    "       - $description$        "
+    "                                                               "
+    "   Assumptions:                                                "
+    "       - $assumptions$      "
+    "   Notes:                                                      "
+    "       - $notes$            "
+    "                                                               "
+{
+	UNREFERENCED_PARAMETER(status);
+	UNREFERENCED_PARAMETER(sequence);
+
+	return 0;
+}
+]]>
+      </Code>
+    </Snippet>
+  </CodeSnippet>
+  <CodeSnippet Format="1.0.0">
+    <Header>
+      <Title>Client Trigger - Before Action</Title>
+      <Description>Code snippet for Client Trigger Before Action</Description>
+      <Author>Fincentric Corporation</Author>
+      <SnippetTypes>
+        <SnippetType>Expansion</SnippetType>
+      </SnippetTypes>
+    </Header>
+    <Snippet>
+      <Declarations>
+        <Literal>
+          <ID>actionname</ID>
+          <ToolTip>Name of the action</ToolTip>
+          <Default>ActionName</Default>
+        </Literal>
+        <Literal>
+          <ID>description</ID>
+          <ToolTip>Description of what the file contains</ToolTip>
+          <Default>What kind of things should go into the method.</Default>
+        </Literal>
+        <Literal>
+          <ID>assumptions</ID>
+          <ToolTip>Assumptions</ToolTip>
+          <Default>Assumptions that the method makes (i.e. context)</Default>
+        </Literal>
+        <Literal>
+          <ID>notes</ID>
+          <ToolTip>Notes</ToolTip>
+          <Default>Additional notes others should be aware of</Default>
+        </Literal>
+      </Declarations>
+      <Code Language="DK" Kind="clienttrigger">
+        <![CDATA[int
+before_action_$actionname$()
+description
+    "                                                               "
+    "   Description of method.                                      "
+    "       - $description$        "
+    "                                                               "
+    "   Assumptions:                                                "
+    "       - $assumptions$      "
+    "   Notes:                                                      "
+    "       - $notes$            "
+    "                                                               "
+{
+	return 0;
+}
+]]>
+      </Code>
+    </Snippet>
+  </CodeSnippet>
+  <CodeSnippet Format="1.0.0">
+    <Header>
+      <Title>Client Trigger - Before Column</Title>
+      <Description>Code snippet for Client Trigger Before Column</Description>
+      <Author>Fincentric Corporation</Author>
+      <SnippetTypes>
+        <SnippetType>Expansion</SnippetType>
+      </SnippetTypes>
+    </Header>
+    <Snippet>
+      <Declarations>
+        <Literal>
+          <ID>columnname</ID>
+          <ToolTip>Name of the column</ToolTip>
+          <Default>ColumnName</Default>
+        </Literal>
+        <Literal>
+          <ID>description</ID>
+          <ToolTip>Description of what the file contains</ToolTip>
+          <Default>What kind of things should go into the method.</Default>
+        </Literal>
+        <Literal>
+          <ID>assumptions</ID>
+          <ToolTip>Assumptions</ToolTip>
+          <Default>Assumptions that the method makes (i.e. context)</Default>
+        </Literal>
+        <Literal>
+          <ID>notes</ID>
+          <ToolTip>Notes</ToolTip>
+          <Default>Additional notes others should be aware of</Default>
+        </Literal>
+      </Declarations>
+      <Code Language="DK" Kind="clienttrigger">
+        <![CDATA[int
+before_$columnname$()
+description
+    "                                                               "
+    "   Description of method.                                      "
+    "       - $description$        "
+    "                                                               "
+    "   Assumptions:                                                "
+    "       - $assumptions$      "
+    "   Notes:                                                      "
+    "       - $notes$            "
+    "                                                               "
+{
+	return 0;
+}
+]]>
+      </Code>
+    </Snippet>
+  </CodeSnippet>
+  <CodeSnippet Format="1.0.0">
+    <Header>
+      <Title>Client Trigger - Before Column</Title>
+      <Description>Code snippet for Client Trigger Before Column</Description>
+      <Author>Fincentric Corporation</Author>
+      <SnippetTypes>
+        <SnippetType>Expansion</SnippetType>
+      </SnippetTypes>
+    </Header>
+    <Snippet>
+      <Declarations>
+        <Literal>
+          <ID>columnname</ID>
+          <ToolTip>Name of the column</ToolTip>
+          <Default>ColumnName</Default>
+        </Literal>
+        <Literal>
+          <ID>description</ID>
+          <ToolTip>Description of what the file contains</ToolTip>
+          <Default>What kind of things should go into the method.</Default>
+        </Literal>
+        <Literal>
+          <ID>assumptions</ID>
+          <ToolTip>Assumptions</ToolTip>
+          <Default>Assumptions that the method makes (i.e. context)</Default>
+        </Literal>
+        <Literal>
+          <ID>notes</ID>
+          <ToolTip>Notes</ToolTip>
+          <Default>Additional notes others should be aware of</Default>
+        </Literal>
+      </Declarations>
+      <Code Language="DK" Kind="clienttrigger">
+        <![CDATA[int
+before_$columnname$()
+description
+    "                                                               "
+    "   Description of method.                                      "
+    "       - $description$        "
+    "                                                               "
+    "   Assumptions:                                                "
+    "       - $assumptions$      "
+    "   Notes:                                                      "
+    "       - $notes$            "
+    "                                                               "
+{
+	return 0;
+}
+]]>
+      </Code>
+    </Snippet>
+  </CodeSnippet>
+  <CodeSnippet Format="1.0.0">
+    <Header>
+      <Title>Client Trigger - Before Listing</Title>
+      <Description>Code snippet for Client Trigger Before Listing</Description>
+      <Author>Fincentric Corporation</Author>
+      <SnippetTypes>
+        <SnippetType>Expansion</SnippetType>
+      </SnippetTypes>
+    </Header>
+    <Snippet>
+      <Declarations>
+        <Literal>
+          <ID>listingname</ID>
+          <ToolTip>Name of the listing</ToolTip>
+          <Default>ListingName</Default>
+        </Literal>
+        <Literal>
+          <ID>description</ID>
+          <ToolTip>Description of what the file contains</ToolTip>
+          <Default>What kind of things should go into the method.</Default>
+        </Literal>
+        <Literal>
+          <ID>assumptions</ID>
+          <ToolTip>Assumptions</ToolTip>
+          <Default>Assumptions that the method makes (i.e. context)</Default>
+        </Literal>
+        <Literal>
+          <ID>notes</ID>
+          <ToolTip>Notes</ToolTip>
+          <Default>Additional notes others should be aware of</Default>
+        </Literal>
+      </Declarations>
+      <Code Language="DK" Kind="clienttrigger">
+        <![CDATA[int
+before_listing_$listingname$()
+description
+    "                                                               "
+    "   Description of method.                                      "
+    "       - $description$        "
+    "                                                               "
+    "   Assumptions:                                                "
+    "       - $assumptions$      "
+    "   Notes:                                                      "
+    "       - $notes$            "
+    "                                                               "
+{
+	return 0;
+}
+]]>
+      </Code>
+    </Snippet>
+  </CodeSnippet>
+  <CodeSnippet Format="1.0.0">
+    <Header>
+      <Title>Client Trigger - Before Log</Title>
+      <Description>Code snippet for Client Trigger Before Log</Description>
+      <Author>Fincentric Corporation</Author>
+      <SnippetTypes>
+        <SnippetType>Expansion</SnippetType>
+      </SnippetTypes>
+    </Header>
+    <Snippet>
+      <Declarations>
+        <Literal>
+          <ID>description</ID>
+          <ToolTip>Description of what the file contains</ToolTip>
+          <Default>What kind of things should go into the method.</Default>
+        </Literal>
+        <Literal>
+          <ID>assumptions</ID>
+          <ToolTip>Assumptions</ToolTip>
+          <Default>Assumptions that the method makes (i.e. context)</Default>
+        </Literal>
+        <Literal>
+          <ID>notes</ID>
+          <ToolTip>Notes</ToolTip>
+          <Default>Additional notes others should be aware of</Default>
+        </Literal>
+      </Declarations>
+      <Code Language="DK" Kind="clienttrigger">
+        <![CDATA[int
+beforelog()
+description
+    "                                                               "
+    "   Description of method.                                      "
+    "       - $description$        "
+    "                                                               "
+    "   Assumptions:                                                "
+    "       - $assumptions$      "
+    "   Notes:                                                      "
+    "       - $notes$            "
+    "                                                               "
+{
+	return 0;
+}
+]]>
+      </Code>
+    </Snippet>
+  </CodeSnippet>
+  <CodeSnippet Format="1.0.0">
+    <Header>
+      <Title>Client Trigger - Change Column</Title>
+      <Description>Code snippet for Client Trigger Change Column</Description>
+      <Author>Fincentric Corporation</Author>
+      <SnippetTypes>
+        <SnippetType>Expansion</SnippetType>
+      </SnippetTypes>
+    </Header>
+    <Snippet>
+      <Declarations>
+        <Literal>
+          <ID>columnname</ID>
+          <ToolTip>Name of the column</ToolTip>
+          <Default>ColumnName</Default>
+        </Literal>
+        <Literal>
+          <ID>description</ID>
+          <ToolTip>Description of what the file contains</ToolTip>
+          <Default>What kind of things should go into the method.</Default>
+        </Literal>
+        <Literal>
+          <ID>assumptions</ID>
+          <ToolTip>Assumptions</ToolTip>
+          <Default>Assumptions that the method makes (i.e. context)</Default>
+        </Literal>
+        <Literal>
+          <ID>notes</ID>
+          <ToolTip>Notes</ToolTip>
+          <Default>Additional notes others should be aware of</Default>
+        </Literal>
+      </Declarations>
+      <Code Language="DK" Kind="clienttrigger">
+        <![CDATA[int
+change_$columnname$()
+description
+    "                                                               "
+    "   Description of method.                                      "
+    "       - $description$        "
+    "                                                               "
+    "   Assumptions:                                                "
+    "       - $assumptions$      "
+    "   Notes:                                                      "
+    "       - $notes$            "
+    "                                                               "
+{
+	return 0;
+}
+]]>
+      </Code>
+    </Snippet>
+  </CodeSnippet>
+  <CodeSnippet Format="1.0.0">
+    <Header>
+      <Title>Client Trigger - Control Action</Title>
+      <Description>Code snippet for Client Trigger Control Action</Description>
+      <Author>Fincentric Corporation</Author>
+      <SnippetTypes>
+        <SnippetType>Expansion</SnippetType>
+      </SnippetTypes>
+    </Header>
+    <Snippet>
+      <Declarations>
+        <Literal>
+          <ID>actionname</ID>
+          <ToolTip>Name of the action</ToolTip>
+          <Default>ActionName</Default>
+        </Literal>
+        <Literal>
+          <ID>description</ID>
+          <ToolTip>Description of what the file contains</ToolTip>
+          <Default>What kind of things should go into the method.</Default>
+        </Literal>
+        <Literal>
+          <ID>assumptions</ID>
+          <ToolTip>Assumptions</ToolTip>
+          <Default>Assumptions that the method makes (i.e. context)</Default>
+        </Literal>
+        <Literal>
+          <ID>notes</ID>
+          <ToolTip>Notes</ToolTip>
+          <Default>Additional notes others should be aware of</Default>
+        </Literal>
+      </Declarations>
+      <Code Language="DK" Kind="clienttrigger">
+        <![CDATA[int
+control_action_$actionname$()
+description
+    "                                                               "
+    "   Description of method.                                      "
+    "       - $description$        "
+    "                                                               "
+    "   Assumptions:                                                "
+    "       - $assumptions$      "
+    "   Notes:                                                      "
+    "       - $notes$            "
+    "                                                               "
+{
+	return 0;
+}
+]]>
+      </Code>
+    </Snippet>
+  </CodeSnippet>
+  <CodeSnippet Format="1.0.0">
+    <Header>
+      <Title>Client Trigger - Control Field</Title>
+      <Description>Code snippet for Client Trigger Control Field</Description>
+      <Author>Fincentric Corporation</Author>
+      <SnippetTypes>
+        <SnippetType>Expansion</SnippetType>
+      </SnippetTypes>
+    </Header>
+    <Snippet>
+      <Declarations>
+        <Literal>
+          <ID>columnname</ID>
+          <ToolTip>Name of the column</ToolTip>
+          <Default>ColumnName</Default>
+        </Literal>
+        <Literal>
+          <ID>description</ID>
+          <ToolTip>Description of what the file contains</ToolTip>
+          <Default>What kind of things should go into the method.</Default>
+        </Literal>
+        <Literal>
+          <ID>assumptions</ID>
+          <ToolTip>Assumptions</ToolTip>
+          <Default>Assumptions that the method makes (i.e. context)</Default>
+        </Literal>
+        <Literal>
+          <ID>notes</ID>
+          <ToolTip>Notes</ToolTip>
+          <Default>Additional notes others should be aware of</Default>
+        </Literal>
+      </Declarations>
+      <Code Language="DK" Kind="clienttrigger">
+        <![CDATA[int
+control_field_$columnname$()
+description
+    "                                                               "
+    "   Description of method.                                      "
+    "       - $description$        "
+    "                                                               "
+    "   Assumptions:                                                "
+    "       - $assumptions$      "
+    "   Notes:                                                      "
+    "       - $notes$            "
+    "                                                               "
+{
+	return 0;
+}
+]]>
+      </Code>
+    </Snippet>
+  </CodeSnippet>
+  <CodeSnippet Format="1.0.0">
+    <Header>
+      <Title>Client Trigger - Control Form</Title>
+      <Description>Code snippet for Client Trigger Control Form</Description>
+      <Author>Fincentric Corporation</Author>
+      <SnippetTypes>
+        <SnippetType>Expansion</SnippetType>
+      </SnippetTypes>
+    </Header>
+    <Snippet>
+      <Declarations>
+        <Literal>
+          <ID>tablename</ID>
+          <ToolTip>Name of the table</ToolTip>
+          <Default>TableName</Default>
+        </Literal>
+        <Literal>
+          <ID>description</ID>
+          <ToolTip>Description of what the file contains</ToolTip>
+          <Default>What kind of things should go into the method.</Default>
+        </Literal>
+        <Literal>
+          <ID>assumptions</ID>
+          <ToolTip>Assumptions</ToolTip>
+          <Default>Assumptions that the method makes (i.e. context)</Default>
+        </Literal>
+        <Literal>
+          <ID>notes</ID>
+          <ToolTip>Notes</ToolTip>
+          <Default>Additional notes others should be aware of</Default>
+        </Literal>
+      </Declarations>
+      <Code Language="DK" Kind="clienttrigger">
+        <![CDATA[int
+control_form_$tablename$()
+description
+    "                                                               "
+    "   Description of method.                                      "
+    "       - $description$        "
+    "                                                               "
+    "   Assumptions:                                                "
+    "       - $assumptions$      "
+    "   Notes:                                                      "
+    "       - $notes$            "
+    "                                                               "
+{
+	return 0;
+}
+]]>
+      </Code>
+    </Snippet>
+  </CodeSnippet>
+  <CodeSnippet Format="1.0.0">
+    <Header>
+      <Title>Client Trigger - Control Listing</Title>
+      <Description>Code snippet for Client Trigger Control Listing</Description>
+      <Author>Fincentric Corporation</Author>
+      <SnippetTypes>
+        <SnippetType>Expansion</SnippetType>
+      </SnippetTypes>
+    </Header>
+    <Snippet>
+      <Declarations>
+        <Literal>
+          <ID>listingname</ID>
+          <ToolTip>Name of the listing</ToolTip>
+          <Default>ListingName</Default>
+        </Literal>
+        <Literal>
+          <ID>description</ID>
+          <ToolTip>Description of what the file contains</ToolTip>
+          <Default>What kind of things should go into the method.</Default>
+        </Literal>
+        <Literal>
+          <ID>assumptions</ID>
+          <ToolTip>Assumptions</ToolTip>
+          <Default>Assumptions that the method makes (i.e. context)</Default>
+        </Literal>
+        <Literal>
+          <ID>notes</ID>
+          <ToolTip>Notes</ToolTip>
+          <Default>Additional notes others should be aware of</Default>
+        </Literal>
+      </Declarations>
+      <Code Language="DK" Kind="clienttrigger">
+        <![CDATA[int
+control_listing_$listingname$()
+description
+    "                                                               "
+    "   Description of method.                                      "
+    "       - $description$        "
+    "                                                               "
+    "   Assumptions:                                                "
+    "       - $assumptions$      "
+    "   Notes:                                                      "
+    "       - $notes$            "
+    "                                                               "
+{
+	return 0;
+}
+]]>
+      </Code>
+    </Snippet>
+  </CodeSnippet>
+  <CodeSnippet Format="1.0.0">
+    <Header>
+      <Title>Client Trigger - Control Method - Insert Form</Title>
+      <Description>Code snippet for Client Trigger Control Method Insert Form</Description>
+      <Author>Fincentric Corporation</Author>
+      <SnippetTypes>
+        <SnippetType>Expansion</SnippetType>
+      </SnippetTypes>
+    </Header>
+    <Snippet>
+      <Declarations>
+        <Literal>
+          <ID>description</ID>
+          <ToolTip>Description of what the file contains</ToolTip>
+          <Default>What kind of things should go into the method.</Default>
+        </Literal>
+        <Literal>
+          <ID>assumptions</ID>
+          <ToolTip>Assumptions</ToolTip>
+          <Default>Assumptions that the method makes (i.e. context)</Default>
+        </Literal>
+        <Literal>
+          <ID>notes</ID>
+          <ToolTip>Notes</ToolTip>
+          <Default>Additional notes others should be aware of</Default>
+        </Literal>
+      </Declarations>
+      <Code Language="DK" Kind="clienttrigger">
+        <![CDATA[int
+control_method_insertform()
+description
+    "                                                               "
+    "   Description of method.                                      "
+    "       - $description$        "
+    "                                                               "
+    "   Assumptions:                                                "
+    "       - $assumptions$      "
+    "   Notes:                                                      "
+    "       - $notes$            "
+    "                                                               "
+{
+	return 0;
+}
+]]>
+      </Code>
+    </Snippet>
+  </CodeSnippet>
+  <CodeSnippet Format="1.0.0">
+    <Header>
+      <Title>Client Trigger - Control Method - Search Equal</Title>
+      <Description>Code snippet for Client Trigger Control Method Search Equal</Description>
+      <Author>Fincentric Corporation</Author>
+      <SnippetTypes>
+        <SnippetType>Expansion</SnippetType>
+      </SnippetTypes>
+    </Header>
+    <Snippet>
+      <Declarations>
+        <Literal>
+          <ID>description</ID>
+          <ToolTip>Description of what the file contains</ToolTip>
+          <Default>What kind of things should go into the method.</Default>
+        </Literal>
+        <Literal>
+          <ID>assumptions</ID>
+          <ToolTip>Assumptions</ToolTip>
+          <Default>Assumptions that the method makes (i.e. context)</Default>
+        </Literal>
+        <Literal>
+          <ID>notes</ID>
+          <ToolTip>Notes</ToolTip>
+          <Default>Additional notes others should be aware of</Default>
+        </Literal>
+      </Declarations>
+      <Code Language="DK" Kind="clienttrigger">
+        <![CDATA[int
+control_method_searchequal()
+description
+    "                                                               "
+    "   Description of method.                                      "
+    "       - $description$        "
+    "                                                               "
+    "   Assumptions:                                                "
+    "       - $assumptions$      "
+    "   Notes:                                                      "
+    "       - $notes$            "
+    "                                                               "
+{
+	return 0;
+}
+]]>
+      </Code>
+    </Snippet>
+  </CodeSnippet>
+  <CodeSnippet Format="1.0.0">
+    <Header>
+      <Title>Client Trigger - Control Method - Search First</Title>
+      <Description>Code snippet for Client Trigger Control Method Search First</Description>
+      <Author>Fincentric Corporation</Author>
+      <SnippetTypes>
+        <SnippetType>Expansion</SnippetType>
+      </SnippetTypes>
+    </Header>
+    <Snippet>
+      <Declarations>
+        <Literal>
+          <ID>description</ID>
+          <ToolTip>Description of what the file contains</ToolTip>
+          <Default>What kind of things should go into the method.</Default>
+        </Literal>
+        <Literal>
+          <ID>assumptions</ID>
+          <ToolTip>Assumptions</ToolTip>
+          <Default>Assumptions that the method makes (i.e. context)</Default>
+        </Literal>
+        <Literal>
+          <ID>notes</ID>
+          <ToolTip>Notes</ToolTip>
+          <Default>Additional notes others should be aware of</Default>
+        </Literal>
+      </Declarations>
+      <Code Language="DK" Kind="clienttrigger">
+        <![CDATA[int
+control_method_searchfirst()
+description
+    "                                                               "
+    "   Description of method.                                      "
+    "       - $description$        "
+    "                                                               "
+    "   Assumptions:                                                "
+    "       - $assumptions$      "
+    "   Notes:                                                      "
+    "       - $notes$            "
+    "                                                               "
+{
+	return 0;
+}
+]]>
+      </Code>
+    </Snippet>
+  </CodeSnippet>
+  <CodeSnippet Format="1.0.0">
+    <Header>
+      <Title>Client Trigger - Control Method - Search Last</Title>
+      <Description>Code snippet for Client Trigger Control Method Search Last</Description>
+      <Author>Fincentric Corporation</Author>
+      <SnippetTypes>
+        <SnippetType>Expansion</SnippetType>
+      </SnippetTypes>
+    </Header>
+    <Snippet>
+      <Declarations>
+        <Literal>
+          <ID>description</ID>
+          <ToolTip>Description of what the file contains</ToolTip>
+          <Default>What kind of things should go into the method.</Default>
+        </Literal>
+        <Literal>
+          <ID>assumptions</ID>
+          <ToolTip>Assumptions</ToolTip>
+          <Default>Assumptions that the method makes (i.e. context)</Default>
+        </Literal>
+        <Literal>
+          <ID>notes</ID>
+          <ToolTip>Notes</ToolTip>
+          <Default>Additional notes others should be aware of</Default>
+        </Literal>
+      </Declarations>
+      <Code Language="DK" Kind="clienttrigger">
+        <![CDATA[int
+control_method_searchlast()
+description
+    "                                                               "
+    "   Description of method.                                      "
+    "       - $description$        "
+    "                                                               "
+    "   Assumptions:                                                "
+    "       - $assumptions$      "
+    "   Notes:                                                      "
+    "       - $notes$            "
+    "                                                               "
+{
+	return 0;
+}
+]]>
+      </Code>
+    </Snippet>
+  </CodeSnippet>
+  <CodeSnippet Format="1.0.0">
+    <Header>
+      <Title>Client Trigger - Control Method - Search Next</Title>
+      <Description>Code snippet for Client Trigger Control Method Search Next</Description>
+      <Author>Fincentric Corporation</Author>
+      <SnippetTypes>
+        <SnippetType>Expansion</SnippetType>
+      </SnippetTypes>
+    </Header>
+    <Snippet>
+      <Declarations>
+        <Literal>
+          <ID>description</ID>
+          <ToolTip>Description of what the file contains</ToolTip>
+          <Default>What kind of things should go into the method.</Default>
+        </Literal>
+        <Literal>
+          <ID>assumptions</ID>
+          <ToolTip>Assumptions</ToolTip>
+          <Default>Assumptions that the method makes (i.e. context)</Default>
+        </Literal>
+        <Literal>
+          <ID>notes</ID>
+          <ToolTip>Notes</ToolTip>
+          <Default>Additional notes others should be aware of</Default>
+        </Literal>
+      </Declarations>
+      <Code Language="DK" Kind="clienttrigger">
+        <![CDATA[int
+control_method_searchnext()
+description
+    "                                                               "
+    "   Description of method.                                      "
+    "       - $description$        "
+    "                                                               "
+    "   Assumptions:                                                "
+    "       - $assumptions$      "
+    "   Notes:                                                      "
+    "       - $notes$            "
+    "                                                               "
+{
+	return 0;
+}
+]]>
+      </Code>
+    </Snippet>
+  </CodeSnippet>
+  <CodeSnippet Format="1.0.0">
+    <Header>
+      <Title>Client Trigger - Control Method - Search Previous</Title>
+      <Description>Code snippet for Client Trigger Control Method Search Previous</Description>
+      <Author>Fincentric Corporation</Author>
+      <SnippetTypes>
+        <SnippetType>Expansion</SnippetType>
+      </SnippetTypes>
+    </Header>
+    <Snippet>
+      <Declarations>
+        <Literal>
+          <ID>description</ID>
+          <ToolTip>Description of what the file contains</ToolTip>
+          <Default>What kind of things should go into the method.</Default>
+        </Literal>
+        <Literal>
+          <ID>assumptions</ID>
+          <ToolTip>Assumptions</ToolTip>
+          <Default>Assumptions that the method makes (i.e. context)</Default>
+        </Literal>
+        <Literal>
+          <ID>notes</ID>
+          <ToolTip>Notes</ToolTip>
+          <Default>Additional notes others should be aware of</Default>
+        </Literal>
+      </Declarations>
+      <Code Language="DK" Kind="clienttrigger">
+        <![CDATA[int
+control_method_searchprevious()
+description
+    "                                                               "
+    "   Description of method.                                      "
+    "       - $description$        "
+    "                                                               "
+    "   Assumptions:                                                "
+    "       - $assumptions$      "
+    "   Notes:                                                      "
+    "       - $notes$            "
+    "                                                               "
+{
+	return 0;
+}
+]]>
+      </Code>
+    </Snippet>
+  </CodeSnippet>
+  <CodeSnippet Format="1.0.0">
+    <Header>
+      <Title>Client Trigger - Control Method - Update Form</Title>
+      <Description>Code snippet for Client Trigger Control Method Update Form</Description>
+      <Author>Fincentric Corporation</Author>
+      <SnippetTypes>
+        <SnippetType>Expansion</SnippetType>
+      </SnippetTypes>
+    </Header>
+    <Snippet>
+      <Declarations>
+        <Literal>
+          <ID>description</ID>
+          <ToolTip>Description of what the file contains</ToolTip>
+          <Default>What kind of things should go into the method.</Default>
+        </Literal>
+        <Literal>
+          <ID>assumptions</ID>
+          <ToolTip>Assumptions</ToolTip>
+          <Default>Assumptions that the method makes (i.e. context)</Default>
+        </Literal>
+        <Literal>
+          <ID>notes</ID>
+          <ToolTip>Notes</ToolTip>
+          <Default>Additional notes others should be aware of</Default>
+        </Literal>
+      </Declarations>
+      <Code Language="DK" Kind="clienttrigger">
+        <![CDATA[int
+control_method_updateform()
+description
+    "                                                               "
+    "   Description of method.                                      "
+    "       - $description$        "
+    "                                                               "
+    "   Assumptions:                                                "
+    "       - $assumptions$      "
+    "   Notes:                                                      "
+    "       - $notes$            "
+    "                                                               "
+{
+	return 0;
+}
+]]>
+      </Code>
+    </Snippet>
+  </CodeSnippet>
+  <CodeSnippet Format="1.0.0">
+    <Header>
+      <Title>Client Trigger - Default Column</Title>
+      <Description>Code snippet for Client Trigger Default Column</Description>
+      <Author>Fincentric Corporation</Author>
+      <SnippetTypes>
+        <SnippetType>Expansion</SnippetType>
+      </SnippetTypes>
+    </Header>
+    <Snippet>
+      <Declarations>
+        <Literal>
+          <ID>columnname</ID>
+          <ToolTip>Name of the column</ToolTip>
+          <Default>ColumnName</Default>
+        </Literal>
+        <Literal>
+          <ID>description</ID>
+          <ToolTip>Description of what the file contains</ToolTip>
+          <Default>What kind of things should go into the method.</Default>
+        </Literal>
+        <Literal>
+          <ID>assumptions</ID>
+          <ToolTip>Assumptions</ToolTip>
+          <Default>Assumptions that the method makes (i.e. context)</Default>
+        </Literal>
+        <Literal>
+          <ID>notes</ID>
+          <ToolTip>Notes</ToolTip>
+          <Default>Additional notes others should be aware of</Default>
+        </Literal>
+      </Declarations>
+      <Code Language="DK" Kind="clienttrigger">
+        <![CDATA[int
+default_$columnname$()
+description
+    "                                                               "
+    "   Description of method.                                      "
+    "       - $description$        "
+    "                                                               "
+    "   Assumptions:                                                "
+    "       - $assumptions$      "
+    "   Notes:                                                      "
+    "       - $notes$            "
+    "                                                               "
+{
+	return 0;
+}
+]]>
+      </Code>
+    </Snippet>
+  </CodeSnippet>
+  <CodeSnippet Format="1.0.0">
+    <Header>
+      <Title>Client Trigger - Edit Column</Title>
+      <Description>Code snippet for Client Trigger Edit Column</Description>
+      <Author>Fincentric Corporation</Author>
+      <SnippetTypes>
+        <SnippetType>Expansion</SnippetType>
+      </SnippetTypes>
+    </Header>
+    <Snippet>
+      <Declarations>
+        <Literal>
+          <ID>columnname</ID>
+          <ToolTip>Name of the column</ToolTip>
+          <Default>ColumnName</Default>
+        </Literal>
+        <Literal>
+          <ID>description</ID>
+          <ToolTip>Description of what the file contains</ToolTip>
+          <Default>What kind of things should go into the method.</Default>
+        </Literal>
+        <Literal>
+          <ID>assumptions</ID>
+          <ToolTip>Assumptions</ToolTip>
+          <Default>Assumptions that the method makes (i.e. context)</Default>
+        </Literal>
+        <Literal>
+          <ID>notes</ID>
+          <ToolTip>Notes</ToolTip>
+          <Default>Additional notes others should be aware of</Default>
+        </Literal>
+      </Declarations>
+      <Code Language="DK" Kind="clienttrigger">
+        <![CDATA[int
+edit_$columnname$()
+description
+    "                                                               "
+    "   Description of method.                                      "
+    "       - $description$        "
+    "                                                               "
+    "   Assumptions:                                                "
+    "       - $assumptions$      "
+    "   Notes:                                                      "
+    "       - $notes$            "
+    "                                                               "
+{
+	return 0;
+}
+]]>
+      </Code>
+    </Snippet>
+  </CodeSnippet>
+  <CodeSnippet Format="1.0.0">
+    <Header>
+      <Title>Client Trigger - Edits</Title>
+      <Description>Code snippet for Client Trigger Edits</Description>
+      <Author>Fincentric Corporation</Author>
+      <SnippetTypes>
+        <SnippetType>Expansion</SnippetType>
+      </SnippetTypes>
+    </Header>
+    <Snippet>
+      <Declarations>
+        <Literal>
+          <ID>description</ID>
+          <ToolTip>Description of what the file contains</ToolTip>
+          <Default>What kind of things should go into the method.</Default>
+        </Literal>
+        <Literal>
+          <ID>assumptions</ID>
+          <ToolTip>Assumptions</ToolTip>
+          <Default>Assumptions that the method makes (i.e. context)</Default>
+        </Literal>
+        <Literal>
+          <ID>notes</ID>
+          <ToolTip>Notes</ToolTip>
+          <Default>Additional notes others should be aware of</Default>
+        </Literal>
+      </Declarations>
+      <Code Language="DK" Kind="clienttrigger">
+        <![CDATA[int
+edits(edits_t action)
+description
+    "                                                               "
+    "   Description of method.                                      "
+    "       - $description$        "
+    "                                                               "
+    "   Assumptions:                                                "
+    "       - $assumptions$      "
+    "   Notes:                                                      "
+    "       - $notes$            "
+    "                                                               "
+{
+    UNREFERENCED_PARAMETER(action);
+
+	return 0;
+}
+]]>
+      </Code>
+    </Snippet>
+  </CodeSnippet>
+  <CodeSnippet Format="1.0.0">
+    <Header>
+      <Title>Client Trigger - Format Column</Title>
+      <Description>Code snippet for Client Trigger Format Column</Description>
+      <Author>Fincentric Corporation</Author>
+      <SnippetTypes>
+        <SnippetType>Expansion</SnippetType>
+      </SnippetTypes>
+    </Header>
+    <Snippet>
+      <Declarations>
+        <Literal>
+          <ID>columnname</ID>
+          <ToolTip>Name of the column</ToolTip>
+          <Default>ColumnName</Default>
+        </Literal>
+        <Literal>
+          <ID>description</ID>
+          <ToolTip>Description of what the file contains</ToolTip>
+          <Default>What kind of things should go into the method.</Default>
+        </Literal>
+        <Literal>
+          <ID>assumptions</ID>
+          <ToolTip>Assumptions</ToolTip>
+          <Default>Assumptions that the method makes (i.e. context)</Default>
+        </Literal>
+        <Literal>
+          <ID>notes</ID>
+          <ToolTip>Notes</ToolTip>
+          <Default>Additional notes others should be aware of</Default>
+        </Literal>
+      </Declarations>
+      <Code Language="DK" Kind="clienttrigger">
+        <![CDATA[int
+format_ColumnName(formatdir_t dir, char(255) strBuffer, oleobject obj)
+description
+    "                                                               "
+    "   Description of method.                                      "
+    "       - $description$        "
+    "                                                               "
+    "   Assumptions:                                                "
+    "       - $assumptions$      "
+    "   Notes:                                                      "
+    "       - $notes$            "
+    "                                                               "
+{
+	UNREFERENCED_PARAMETER(dir);
+	UNREFERENCED_PARAMETER(strbuffer);
+	UNREFERENCED_PARAMETER(obj);
+
+	return 0;
+}
+]]>
+      </Code>
+    </Snippet>
+  </CodeSnippet>
+  <CodeSnippet Format="1.0.0">
+    <Header>
+      <Title>Client Trigger - Initialize</Title>
+      <Description>Code snippet for Client Trigger Initialize</Description>
+      <Author>Fincentric Corporation</Author>
+      <SnippetTypes>
+        <SnippetType>Expansion</SnippetType>
+      </SnippetTypes>
+    </Header>
+    <Snippet>
+      <Declarations>
+        <Literal>
+          <ID>description</ID>
+          <ToolTip>Description of what the file contains</ToolTip>
+          <Default>What kind of things should go into the method.</Default>
+        </Literal>
+        <Literal>
+          <ID>assumptions</ID>
+          <ToolTip>Assumptions</ToolTip>
+          <Default>Assumptions that the method makes (i.e. context)</Default>
+        </Literal>
+        <Literal>
+          <ID>notes</ID>
+          <ToolTip>Notes</ToolTip>
+          <Default>Additional notes others should be aware of</Default>
+        </Literal>
+      </Declarations>
+      <Code Language="DK" Kind="clienttrigger">
+        <![CDATA[int
+initialize()
+description
+    "                                                               "
+    "   Description of method.                                      "
+    "       - $description$        "
+    "                                                               "
+    "   Assumptions:                                                "
+    "       - $assumptions$      "
+    "   Notes:                                                      "
+    "       - $notes$            "
+    "                                                               "
+{
+	return 0;
+}
+]]>
+      </Code>
+    </Snippet>
+  </CodeSnippet>
+  <CodeSnippet Format="1.0.0">
+    <Header>
+      <Title>Client Trigger - Insert Form</Title>
+      <Description>Code snippet for Client Trigger Insert Form</Description>
+      <Author>Fincentric Corporation</Author>
+      <SnippetTypes>
+        <SnippetType>Expansion</SnippetType>
+      </SnippetTypes>
+    </Header>
+    <Snippet>
+      <Declarations>
+        <Literal>
+          <ID>description</ID>
+          <ToolTip>Description of what the file contains</ToolTip>
+          <Default>What kind of things should go into the method.</Default>
+        </Literal>
+        <Literal>
+          <ID>assumptions</ID>
+          <ToolTip>Assumptions</ToolTip>
+          <Default>Assumptions that the method makes (i.e. context)</Default>
+        </Literal>
+        <Literal>
+          <ID>notes</ID>
+          <ToolTip>Notes</ToolTip>
+          <Default>Additional notes others should be aware of</Default>
+        </Literal>
+      </Declarations>
+      <Code Language="DK" Kind="clienttrigger">
+        <![CDATA[int
+insertform()
+description
+    "                                                               "
+    "   Description of method.                                      "
+    "       - $description$        "
+    "                                                               "
+    "   Assumptions:                                                "
+    "       - $assumptions$      "
+    "   Notes:                                                      "
+    "       - $notes$            "
+    "                                                               "
+{
+	return 0;
+}
+]]>
+      </Code>
+    </Snippet>
+  </CodeSnippet>
+  <CodeSnippet Format="1.0.0">
+    <Header>
+      <Title>Client Trigger - Search</Title>
+      <Description>Code snippet for Client Trigger Search</Description>
+      <Author>Fincentric Corporation</Author>
+      <SnippetTypes>
+        <SnippetType>Expansion</SnippetType>
+      </SnippetTypes>
+    </Header>
+    <Snippet>
+      <Declarations>
+        <Literal>
+          <ID>description</ID>
+          <ToolTip>Description of what the file contains</ToolTip>
+          <Default>What kind of things should go into the method.</Default>
+        </Literal>
+        <Literal>
+          <ID>assumptions</ID>
+          <ToolTip>Assumptions</ToolTip>
+          <Default>Assumptions that the method makes (i.e. context)</Default>
+        </Literal>
+        <Literal>
+          <ID>notes</ID>
+          <ToolTip>Notes</ToolTip>
+          <Default>Additional notes others should be aware of</Default>
+        </Literal>
+      </Declarations>
+      <Code Language="DK" Kind="clienttrigger">
+        <![CDATA[int
+search(search_t eType)
+description
+    "                                                               "
+    "   Description of method.                                      "
+    "       - $description$        "
+    "                                                               "
+    "   Assumptions:                                                "
+    "       - $assumptions$      "
+    "   Notes:                                                      "
+    "       - $notes$            "
+    "                                                               "
+{
+	UNREFERENCED_PARAMETER(eType);
+
+	return 0;
+}
+]]>
+      </Code>
+    </Snippet>
+  </CodeSnippet>
+  <CodeSnippet Format="1.0.0">
+    <Header>
+      <Title>Client Trigger - Terminate</Title>
+      <Description>Code snippet for Client Trigger Terminate</Description>
+      <Author>Fincentric Corporation</Author>
+      <SnippetTypes>
+        <SnippetType>Expansion</SnippetType>
+      </SnippetTypes>
+    </Header>
+    <Snippet>
+      <Declarations>
+        <Literal>
+          <ID>description</ID>
+          <ToolTip>Description of what the file contains</ToolTip>
+          <Default>What kind of things should go into the method.</Default>
+        </Literal>
+        <Literal>
+          <ID>assumptions</ID>
+          <ToolTip>Assumptions</ToolTip>
+          <Default>Assumptions that the method makes (i.e. context)</Default>
+        </Literal>
+        <Literal>
+          <ID>notes</ID>
+          <ToolTip>Notes</ToolTip>
+          <Default>Additional notes others should be aware of</Default>
+        </Literal>
+      </Declarations>
+      <Code Language="DK" Kind="clienttrigger">
+        <![CDATA[int
+terminate()
+description
+    "                                                               "
+    "   Description of method.                                      "
+    "       - $description$        "
+    "                                                               "
+    "   Assumptions:                                                "
+    "       - $assumptions$      "
+    "   Notes:                                                      "
+    "       - $notes$            "
+    "                                                               "
+{
+	return 0;
+}
+]]>
+      </Code>
+    </Snippet>
+  </CodeSnippet>
+  <CodeSnippet Format="1.0.0">
+    <Header>
+      <Title>Client Trigger - Update Form</Title>
+      <Description>Code snippet for Client Trigger Update Form</Description>
+      <Author>Fincentric Corporation</Author>
+      <SnippetTypes>
+        <SnippetType>Expansion</SnippetType>
+      </SnippetTypes>
+    </Header>
+    <Snippet>
+      <Declarations>
+        <Literal>
+          <ID>description</ID>
+          <ToolTip>Description of what the file contains</ToolTip>
+          <Default>What kind of things should go into the method.</Default>
+        </Literal>
+        <Literal>
+          <ID>assumptions</ID>
+          <ToolTip>Assumptions</ToolTip>
+          <Default>Assumptions that the method makes (i.e. context)</Default>
+        </Literal>
+        <Literal>
+          <ID>notes</ID>
+          <ToolTip>Notes</ToolTip>
+          <Default>Additional notes others should be aware of</Default>
+        </Literal>
+      </Declarations>
+      <Code Language="DK" Kind="clienttrigger">
+        <![CDATA[int
+updateform()
+description
+    "                                                               "
+    "   Description of method.                                      "
+    "       - $description$        "
+    "                                                               "
+    "   Assumptions:                                                "
+    "       - $assumptions$      "
+    "   Notes:                                                      "
+    "       - $notes$            "
+    "                                                               "
+{
+	return 0;
+}
+]]>
+      </Code>
+    </Snippet>
+  </CodeSnippet>
+  <CodeSnippet Format="1.0.0">
+    <Header>
+      <Title>Comment Block - File Header</Title>
+      <Shortcut>fh</Shortcut>
+      <Description>Code snippet for File Header</Description>
+      <Author>Fincentric Corporation</Author>
+      <SnippetTypes>
+        <SnippetType>Expansion</SnippetType>
+      </SnippetTypes>
+    </Header>
+    <Snippet>
+      <Declarations>
+        <Literal>
+          <ID>filename</ID>
+          <ToolTip>File name</ToolTip>
+          <Default>MyFile.t</Default>
+        </Literal>
+        <Literal>
+          <ID>description</ID>
+          <ToolTip>Description of what the file contains</ToolTip>
+          <Default>Description</Default>
+        </Literal>
+        <Literal>
+          <ID>assumptions</ID>
+          <ToolTip>Assumptions</ToolTip>
+          <Default>None</Default>
+        </Literal>
+        <Literal>
+          <ID>notes</ID>
+          <ToolTip>Notes</ToolTip>
+          <Default>None</Default>
+        </Literal>
+        <Literal>
+          <ID>creationdate</ID>
+          <ToolTip>Creation date (DDMMMYYYY)</ToolTip>
+          <Default>DDMMMYYYY</Default>
+        </Literal>
+        <Literal>
+          <ID>creationauthor</ID>
+          <ToolTip>Creation author (???)</ToolTip>
+          <Default>???</Default>
+        </Literal>
+        <Literal>
+          <ID>incidentnumber</ID>
+          <ToolTip>Incident number or reference (00000)</ToolTip>
+          <Default>00000</Default>
+        </Literal>
+      </Declarations>
+      <Code Language="DK">
+        <![CDATA[/***************************************************************************
+* The information contained herein is a  trade secret  of  Fincentric
+* Corporation and is confidential.  It is provided under a  Software License
+* Agreement with you, and may be copied or disclosed only under the terms of
+* that agreement.  Any reproduction or disclosure  of this material
+* without the express written authorization of Fincentric Corporation
+* or pursuant to the Software License Agreement is unlawful.
+*
+* Copyright (c) 2007 Fincentric Corporation
+* All rights reserved.
+****************************************************************************
+* File Name: $filename$
+*
+* DESCRIPTION:
+* $description$
+*
+* ASSUMPTIONS:
+* $assumptions$
+*
+* NOTES:
+* $notes$
+*
+* Modification History:
+* DATE      WHO   #    DESCRIPTION OF CHANGES
+* --------- --- ----- -----------------------------------------------------
+* $creationdate$ $creationauthor$ $incidentnumber$ Created.
+****************************************************************************/
+
+]]>
+      </Code>
+    </Snippet>
+  </CodeSnippet>
+  <CodeSnippet Format="1.0.0">
+    <Header>
+      <Title>Comment Block - Method Description</Title>
+      <Description>Code snippet for Method Description</Description>
+      <Author>Fincentric Corporation</Author>
+      <SnippetTypes>
+        <SnippetType>Expansion</SnippetType>
+      </SnippetTypes>
+    </Header>
+    <Snippet>
+      <Declarations>
+        <Literal>
+          <ID>description</ID>
+          <ToolTip>Description of what the file contains</ToolTip>
+          <Default>What kind of things should go into the method.</Default>
+        </Literal>
+        <Literal>
+          <ID>assumptions</ID>
+          <ToolTip>Assumptions</ToolTip>
+          <Default>Assumptions that the method makes (i.e. context)</Default>
+        </Literal>
+        <Literal>
+          <ID>notes</ID>
+          <ToolTip>Notes</ToolTip>
+          <Default>Additional notes others should be aware of</Default>
+        </Literal>
+      </Declarations>
+      <Code Language="DK">
+        <![CDATA[description
+    "                                                               "
+    "   Description of method.                                      "
+    "       - $description$        "
+    "                                                               "
+    "   Assumptions:                                                "
+    "       - $assumptions$      "
+    "   Notes:                                                      "
+    "       - $notes$            "
+    "                                                               "
+]]>
+      </Code>
+    </Snippet>
+  </CodeSnippet>
+  <CodeSnippet Format="1.0.0">
+    <Header>
+      <Title>Comment Block - UNREFERENCED_PARAMETER</Title>
+      <Description>Code snippet for UNREFERENCED_PARAMETER</Description>
+      <Author>Fincentric Corporation</Author>
+      <SnippetTypes>
+        <SnippetType>Expansion</SnippetType>
+      </SnippetTypes>
+    </Header>
+    <Snippet>
+      <Code Language="DK">
+        <![CDATA[	UNREFERENCED_PARAMETER();
+]]>
+      </Code>
+    </Snippet>
+  </CodeSnippet>
+  <CodeSnippet Format="1.0.0">
+    <Header>
+      <Title>General Trigger - Action</Title>
+      <Description>Code snippet for General Trigger Action</Description>
+      <Author>Fincentric Corporation</Author>
+      <SnippetTypes>
+        <SnippetType>Expansion</SnippetType>
+      </SnippetTypes>
+    </Header>
+    <Snippet>
+      <Declarations>
+        <Literal>
+          <ID>actionname</ID>
+          <ToolTip>Name of the action</ToolTip>
+          <Default>ActionName</Default>
+        </Literal>
+        <Literal>
+          <ID>prompt</ID>
+          <ToolTip>Prompt</ToolTip>
+          <Default>Prompt</Default>
+        </Literal>
+        <Literal>
+          <ID>comment</ID>
+          <ToolTip>Comment</ToolTip>
+          <Default>Comment</Default>
+        </Literal>
+        <Literal>
+          <ID>description</ID>
+          <ToolTip>Description of what the file contains</ToolTip>
+          <Default>What kind of things should go into the method.</Default>
+        </Literal>
+        <Literal>
+          <ID>assumptions</ID>
+          <ToolTip>Assumptions</ToolTip>
+          <Default>Assumptions that the method makes (i.e. context)</Default>
+        </Literal>
+        <Literal>
+          <ID>notes</ID>
+          <ToolTip>Notes</ToolTip>
+          <Default>Additional notes others should be aware of</Default>
+        </Literal>
+      </Declarations>
+      <Code Language="DK" Kind="clientservertrigger">
+        <![CDATA[int
+action_$actionname$()
+	prompt	"$prompt$"
+	comment	"$comment$"
+description
+    "                                                               "
+    "   Description of method.                                      "
+    "       - $description$        "
+    "                                                               "
+    "   Assumptions:                                                "
+    "       - $assumptions$      "
+    "   Notes:                                                      "
+    "       - $notes$            "
+    "                                                               "
+{
+	return 0;
+}
+]]>
+      </Code>
+    </Snippet>
+  </CodeSnippet>
+  <CodeSnippet Format="1.0.0">
+    <Header>
+      <Title>General Trigger - Defaults</Title>
+      <Description>Code snippet for General Trigger Defaults</Description>
+      <Author>Fincentric Corporation</Author>
+      <SnippetTypes>
+        <SnippetType>Expansion</SnippetType>
+      </SnippetTypes>
+    </Header>
+    <Snippet>
+      <Declarations>
+        <Literal>
+          <ID>description</ID>
+          <ToolTip>Description of what the file contains</ToolTip>
+          <Default>What kind of things should go into the method.</Default>
+        </Literal>
+        <Literal>
+          <ID>assumptions</ID>
+          <ToolTip>Assumptions</ToolTip>
+          <Default>Assumptions that the method makes (i.e. context)</Default>
+        </Literal>
+        <Literal>
+          <ID>notes</ID>
+          <ToolTip>Notes</ToolTip>
+          <Default>Additional notes others should be aware of</Default>
+        </Literal>
+      </Declarations>
+      <Code Language="DK" Kind="clientservertrigger">
+        <![CDATA[int
+defaults()
+description
+    "                                                               "
+    "   Description of method.                                      "
+    "       - $description$        "
+    "                                                               "
+    "   Assumptions:                                                "
+    "       - $assumptions$      "
+    "   Notes:                                                      "
+    "       - $notes$            "
+    "                                                               "
+{
+	return 0;
+}
+]]>
+      </Code>
+    </Snippet>
+  </CodeSnippet>
+  <CodeSnippet Format="1.0.0">
+    <Header>
+      <Title>General Trigger - Listing</Title>
+      <Description>Code snippet for General Trigger Listing</Description>
+      <Author>Fincentric Corporation</Author>
+      <SnippetTypes>
+        <SnippetType>Expansion</SnippetType>
+      </SnippetTypes>
+    </Header>
+    <Snippet>
+      <Declarations>
+        <Literal>
+          <ID>listingname</ID>
+          <ToolTip>Name of the listing</ToolTip>
+          <Default>ListingName</Default>
+        </Literal>
+        <Literal>
+          <ID>prompt</ID>
+          <ToolTip>Prompt</ToolTip>
+          <Default>Prompt</Default>
+        </Literal>
+        <Literal>
+          <ID>comment</ID>
+          <ToolTip>Comment</ToolTip>
+          <Default>Comment</Default>
+        </Literal>
+        <Literal>
+          <ID>description</ID>
+          <ToolTip>Description of what the file contains</ToolTip>
+          <Default>What kind of things should go into the method.</Default>
+        </Literal>
+        <Literal>
+          <ID>assumptions</ID>
+          <ToolTip>Assumptions</ToolTip>
+          <Default>Assumptions that the method makes (i.e. context)</Default>
+        </Literal>
+        <Literal>
+          <ID>notes</ID>
+          <ToolTip>Notes</ToolTip>
+          <Default>Additional notes others should be aware of</Default>
+        </Literal>
+      </Declarations>
+      <Code Language="DK" Kind="clientservertrigger">
+        <![CDATA[int
+listing_$listingname$()
+	prompt	"$prompt$"
+	comment	"$comment$"
+description
+    "                                                               "
+    "   Description of method.                                      "
+    "       - $description$        "
+    "                                                               "
+    "   Assumptions:                                                "
+    "       - $assumptions$      "
+    "   Notes:                                                      "
+    "       - $notes$            "
+    "                                                               "
+{
+	return 0;
+}
+]]>
+      </Code>
+    </Snippet>
+  </CodeSnippet>
+  <CodeSnippet Format="1.0.0">
+    <Header>
+      <Title>General Trigger - Listing Column</Title>
+      <Description>Code snippet for General Trigger Listing Column</Description>
+      <Author>Fincentric Corporation</Author>
+      <SnippetTypes>
+        <SnippetType>Expansion</SnippetType>
+      </SnippetTypes>
+    </Header>
+    <Snippet>
+      <Declarations>
+        <Literal>
+          <ID>listingname</ID>
+          <ToolTip>Name of the listing</ToolTip>
+          <Default>ListingName</Default>
+        </Literal>
+        <Literal>
+          <ID>columnname</ID>
+          <ToolTip>Name of the column</ToolTip>
+          <Default>ColumnName</Default>
+        </Literal>
+        <Literal>
+          <ID>prompt</ID>
+          <ToolTip>Prompt</ToolTip>
+          <Default>Prompt</Default>
+        </Literal>
+        <Literal>
+          <ID>comment</ID>
+          <ToolTip>Comment</ToolTip>
+          <Default>Comment</Default>
+        </Literal>
+        <Literal>
+          <ID>description</ID>
+          <ToolTip>Description of what the file contains</ToolTip>
+          <Default>What kind of things should go into the method.</Default>
+        </Literal>
+        <Literal>
+          <ID>assumptions</ID>
+          <ToolTip>Assumptions</ToolTip>
+          <Default>Assumptions that the method makes (i.e. context)</Default>
+        </Literal>
+        <Literal>
+          <ID>notes</ID>
+          <ToolTip>Notes</ToolTip>
+          <Default>Additional notes others should be aware of</Default>
+        </Literal>
+      </Declarations>
+      <Code Language="DK" Kind="clientservertrigger">
+        <![CDATA[int
+listing_$listingname$_$columnname$()
+	prompt	"$prompt$"
+	comment	"$comment$"
+description
+    "                                                               "
+    "   Description of method.                                      "
+    "       - $description$        "
+    "                                                               "
+    "   Assumptions:                                                "
+    "       - $assumptions$      "
+    "   Notes:                                                      "
+    "       - $notes$            "
+    "                                                               "
+{
+	return 0;
+}
+]]>
+      </Code>
+    </Snippet>
+  </CodeSnippet>
+  <CodeSnippet Format="1.0.0">
+    <Header>
+      <Title>Other Trigger - Global Initialize</Title>
+      <Description>Code snippet for Other Trigger Global Initialize</Description>
+      <Author>Fincentric Corporation</Author>
+      <SnippetTypes>
+        <SnippetType>Expansion</SnippetType>
+      </SnippetTypes>
+    </Header>
+    <Snippet>
+      <Declarations>
+        <Literal>
+          <ID>description</ID>
+          <ToolTip>Description of what the file contains</ToolTip>
+          <Default>What kind of things should go into the method.</Default>
+        </Literal>
+        <Literal>
+          <ID>assumptions</ID>
+          <ToolTip>Assumptions</ToolTip>
+          <Default>Assumptions that the method makes (i.e. context)</Default>
+        </Literal>
+        <Literal>
+          <ID>notes</ID>
+          <ToolTip>Notes</ToolTip>
+          <Default>Additional notes others should be aware of</Default>
+        </Literal>
+      </Declarations>
+      <Code Language="DK" Kind="classtrigger">
+        <![CDATA[int
+globalinitialize()
+description
+    "                                                               "
+    "   Description of method.                                      "
+    "       - $description$        "
+    "                                                               "
+    "   Assumptions:                                                "
+    "       - $assumptions$      "
+    "   Notes:                                                      "
+    "       - $notes$            "
+    "                                                               "
+{
+	return 0;
+}
+]]>
+      </Code>
+    </Snippet>
+  </CodeSnippet>
+  <CodeSnippet Format="1.0.0">
+    <Header>
+      <Title>Other Trigger - Global Terminate</Title>
+      <Description>Code snippet for Other Trigger Global Terminate</Description>
+      <Author>Fincentric Corporation</Author>
+      <SnippetTypes>
+        <SnippetType>Expansion</SnippetType>
+      </SnippetTypes>
+    </Header>
+    <Snippet>
+      <Declarations>
+        <Literal>
+          <ID>description</ID>
+          <ToolTip>Description of what the file contains</ToolTip>
+          <Default>What kind of things should go into the method.</Default>
+        </Literal>
+        <Literal>
+          <ID>assumptions</ID>
+          <ToolTip>Assumptions</ToolTip>
+          <Default>Assumptions that the method makes (i.e. context)</Default>
+        </Literal>
+        <Literal>
+          <ID>notes</ID>
+          <ToolTip>Notes</ToolTip>
+          <Default>Additional notes others should be aware of</Default>
+        </Literal>
+      </Declarations>
+      <Code Language="DK" Kind="classtrigger">
+        <![CDATA[int
+globalterminate()
+description
+    "                                                               "
+    "   Description of method.                                      "
+    "       - $description$        "
+    "                                                               "
+    "   Assumptions:                                                "
+    "       - $assumptions$      "
+    "   Notes:                                                      "
+    "       - $notes$            "
+    "                                                               "
+{
+	return 0;
+}
+]]>
+      </Code>
+    </Snippet>
+  </CodeSnippet>
+  <CodeSnippet Format="1.0.0">
+    <Header>
+      <Title>Other Trigger - Static Initialize</Title>
+      <Description>Code snippet for Other Trigger Static Initialize</Description>
+      <Author>Fincentric Corporation</Author>
+      <SnippetTypes>
+        <SnippetType>Expansion</SnippetType>
+      </SnippetTypes>
+    </Header>
+    <Snippet>
+      <Declarations>
+        <Literal>
+          <ID>description</ID>
+          <ToolTip>Description of what the file contains</ToolTip>
+          <Default>What kind of things should go into the method.</Default>
+        </Literal>
+        <Literal>
+          <ID>assumptions</ID>
+          <ToolTip>Assumptions</ToolTip>
+          <Default>Assumptions that the method makes (i.e. context)</Default>
+        </Literal>
+        <Literal>
+          <ID>notes</ID>
+          <ToolTip>Notes</ToolTip>
+          <Default>Additional notes others should be aware of</Default>
+        </Literal>
+      </Declarations>
+      <Code Language="DK" Kind="classtrigger">
+        <![CDATA[int
+staticinitialize()
+description
+    "                                                               "
+    "   Description of method.                                      "
+    "       - $description$        "
+    "                                                               "
+    "   Assumptions:                                                "
+    "       - $assumptions$      "
+    "   Notes:                                                      "
+    "       - $notes$            "
+    "                                                               "
+{
+	return 0;
+}
+]]>
+      </Code>
+    </Snippet>
+  </CodeSnippet>
+  <CodeSnippet Format="1.0.0">
+    <Header>
+      <Title>Other Trigger - Static Terminate</Title>
+      <Description>Code snippet for Other Trigger Static Terminate</Description>
+      <Author>Fincentric Corporation</Author>
+      <SnippetTypes>
+        <SnippetType>Expansion</SnippetType>
+      </SnippetTypes>
+    </Header>
+    <Snippet>
+      <Declarations>
+        <Literal>
+          <ID>description</ID>
+          <ToolTip>Description of what the file contains</ToolTip>
+          <Default>What kind of things should go into the method.</Default>
+        </Literal>
+        <Literal>
+          <ID>assumptions</ID>
+          <ToolTip>Assumptions</ToolTip>
+          <Default>Assumptions that the method makes (i.e. context)</Default>
+        </Literal>
+        <Literal>
+          <ID>notes</ID>
+          <ToolTip>Notes</ToolTip>
+          <Default>Additional notes others should be aware of</Default>
+        </Literal>
+      </Declarations>
+      <Code Language="DK" Kind="classtrigger">
+        <![CDATA[int
+staticterminate()
+description
+    "                                                               "
+    "   Description of method.                                      "
+    "       - $description$        "
+    "                                                               "
+    "   Assumptions:                                                "
+    "       - $assumptions$      "
+    "   Notes:                                                      "
+    "       - $notes$            "
+    "                                                               "
+{
+	return 0;
+}
+]]>
+      </Code>
+    </Snippet>
+  </CodeSnippet>
+  <CodeSnippet Format="1.0.0">
+    <Header>
+      <Title>Server Trigger - Activity</Title>
+      <Description>Code snippet for Server Trigger Activity</Description>
+      <Author>Fincentric Corporation</Author>
+      <SnippetTypes>
+        <SnippetType>Expansion</SnippetType>
+      </SnippetTypes>
+    </Header>
+    <Snippet>
+      <Declarations>
+        <Literal>
+          <ID>description</ID>
+          <ToolTip>Description of what the file contains</ToolTip>
+          <Default>What kind of things should go into the method.</Default>
+        </Literal>
+        <Literal>
+          <ID>assumptions</ID>
+          <ToolTip>Assumptions</ToolTip>
+          <Default>Assumptions that the method makes (i.e. context)</Default>
+        </Literal>
+        <Literal>
+          <ID>notes</ID>
+          <ToolTip>Notes</ToolTip>
+          <Default>Additional notes others should be aware of</Default>
+        </Literal>
+      </Declarations>
+      <Code Language="DK" Kind="servertrigger">
+        <![CDATA[int
+activity(recalc_t recalc)
+description
+    "                                                               "
+    "   Description of method.                                      "
+    "       - $description$        "
+    "                                                               "
+    "   Assumptions:                                                "
+    "       - $assumptions$      "
+    "   Notes:                                                      "
+    "       - $notes$            "
+    "                                                               "
+{
+    UNREFERENCED_PARAMETER(recalc);
+
+	return 0;
+}
+]]>
+      </Code>
+    </Snippet>
+  </CodeSnippet>
+  <CodeSnippet Format="1.0.0">
+    <Header>
+      <Title>Server Trigger - After Insert</Title>
+      <Description>Code snippet for Server Trigger After Insert</Description>
+      <Author>Fincentric Corporation</Author>
+      <SnippetTypes>
+        <SnippetType>Expansion</SnippetType>
+      </SnippetTypes>
+    </Header>
+    <Snippet>
+      <Declarations>
+        <Literal>
+          <ID>description</ID>
+          <ToolTip>Description of what the file contains</ToolTip>
+          <Default>What kind of things should go into the method.</Default>
+        </Literal>
+        <Literal>
+          <ID>assumptions</ID>
+          <ToolTip>Assumptions</ToolTip>
+          <Default>Assumptions that the method makes (i.e. context)</Default>
+        </Literal>
+        <Literal>
+          <ID>notes</ID>
+          <ToolTip>Notes</ToolTip>
+          <Default>Additional notes others should be aware of</Default>
+        </Literal>
+      </Declarations>
+      <Code Language="DK" Kind="servertrigger">
+        <![CDATA[int
+afterinsert()
+description
+    "                                                               "
+    "   Description of method.                                      "
+    "       - $description$        "
+    "                                                               "
+    "   Assumptions:                                                "
+    "       - $assumptions$      "
+    "   Notes:                                                      "
+    "       - $notes$            "
+    "                                                               "
+{
+	return 0;
+}
+]]>
+      </Code>
+    </Snippet>
+  </CodeSnippet>
+  <CodeSnippet Format="1.0.0">
+    <Header>
+      <Title>Server Trigger - After Select</Title>
+      <Description>Code snippet for Server Trigger After Select</Description>
+      <Author>Fincentric Corporation</Author>
+      <SnippetTypes>
+        <SnippetType>Expansion</SnippetType>
+      </SnippetTypes>
+    </Header>
+    <Snippet>
+      <Declarations>
+        <Literal>
+          <ID>description</ID>
+          <ToolTip>Description of what the file contains</ToolTip>
+          <Default>What kind of things should go into the method.</Default>
+        </Literal>
+        <Literal>
+          <ID>assumptions</ID>
+          <ToolTip>Assumptions</ToolTip>
+          <Default>Assumptions that the method makes (i.e. context)</Default>
+        </Literal>
+        <Literal>
+          <ID>notes</ID>
+          <ToolTip>Notes</ToolTip>
+          <Default>Additional notes others should be aware of</Default>
+        </Literal>
+      </Declarations>
+      <Code Language="DK" Kind="servertrigger">
+        <![CDATA[int
+afterselect()
+description
+    "                                                               "
+    "   Description of method.                                      "
+    "       - $description$        "
+    "                                                               "
+    "   Assumptions:                                                "
+    "       - $assumptions$      "
+    "   Notes:                                                      "
+    "       - $notes$            "
+    "                                                               "
+{
+	return 0;
+}
+]]>
+      </Code>
+    </Snippet>
+  </CodeSnippet>
+  <CodeSnippet Format="1.0.0">
+    <Header>
+      <Title>Server Trigger - After Update</Title>
+      <Description>Code snippet for Server Trigger After Update</Description>
+      <Author>Fincentric Corporation</Author>
+      <SnippetTypes>
+        <SnippetType>Expansion</SnippetType>
+      </SnippetTypes>
+    </Header>
+    <Snippet>
+      <Declarations>
+        <Literal>
+          <ID>description</ID>
+          <ToolTip>Description of what the file contains</ToolTip>
+          <Default>What kind of things should go into the method.</Default>
+        </Literal>
+        <Literal>
+          <ID>assumptions</ID>
+          <ToolTip>Assumptions</ToolTip>
+          <Default>Assumptions that the method makes (i.e. context)</Default>
+        </Literal>
+        <Literal>
+          <ID>notes</ID>
+          <ToolTip>Notes</ToolTip>
+          <Default>Additional notes others should be aware of</Default>
+        </Literal>
+      </Declarations>
+      <Code Language="DK" Kind="servertrigger">
+        <![CDATA[int
+afterupdate()
+description
+    "                                                               "
+    "   Description of method.                                      "
+    "       - $description$        "
+    "                                                               "
+    "   Assumptions:                                                "
+    "       - $assumptions$      "
+    "   Notes:                                                      "
+    "       - $notes$            "
+    "                                                               "
+{
+	return 0;
+}
+]]>
+      </Code>
+    </Snippet>
+  </CodeSnippet>
+  <CodeSnippet Format="1.0.0">
+    <Header>
+      <Title>Server Trigger - Confirm</Title>
+      <Description>Code snippet for Server Trigger Confirm</Description>
+      <Author>Fincentric Corporation</Author>
+      <SnippetTypes>
+        <SnippetType>Expansion</SnippetType>
+      </SnippetTypes>
+    </Header>
+    <Snippet>
+      <Declarations>
+        <Literal>
+          <ID>description</ID>
+          <ToolTip>Description of what the file contains</ToolTip>
+          <Default>What kind of things should go into the method.</Default>
+        </Literal>
+        <Literal>
+          <ID>assumptions</ID>
+          <ToolTip>Assumptions</ToolTip>
+          <Default>Assumptions that the method makes (i.e. context)</Default>
+        </Literal>
+        <Literal>
+          <ID>notes</ID>
+          <ToolTip>Notes</ToolTip>
+          <Default>Additional notes others should be aware of</Default>
+        </Literal>
+      </Declarations>
+      <Code Language="DK" Kind="servertrigger">
+        <![CDATA[int
+confirm(int dupbefore, int dupafter)
+description
+    "                                                               "
+    "   Description of method.                                      "
+    "       - $description$        "
+    "                                                               "
+    "   Assumptions:                                                "
+    "       - $assumptions$      "
+    "   Notes:                                                      "
+    "       - $notes$            "
+    "                                                               "
+{
+    UNREFERENCED_PARAMETER(dupbefore);
+    UNREFERENCED_PARAMETER(dupafter);
+	return 0;
+}
+]]>
+      </Code>
+    </Snippet>
+  </CodeSnippet>
+  <CodeSnippet Format="1.0.0">
+    <Header>
+      <Title>Server Trigger - Edits</Title>
+      <Description>Code snippet for Server Trigger Edits</Description>
+      <Author>Fincentric Corporation</Author>
+      <SnippetTypes>
+        <SnippetType>Expansion</SnippetType>
+      </SnippetTypes>
+    </Header>
+    <Snippet>
+      <Declarations>
+        <Literal>
+          <ID>description</ID>
+          <ToolTip>Description of what the file contains</ToolTip>
+          <Default>What kind of things should go into the method.</Default>
+        </Literal>
+        <Literal>
+          <ID>assumptions</ID>
+          <ToolTip>Assumptions</ToolTip>
+          <Default>Assumptions that the method makes (i.e. context)</Default>
+        </Literal>
+        <Literal>
+          <ID>notes</ID>
+          <ToolTip>Notes</ToolTip>
+          <Default>Additional notes others should be aware of</Default>
+        </Literal>
+      </Declarations>
+      <Code Language="DK" Kind="servertrigger">
+        <![CDATA[int
+edits(edits_t action, warehstatus_t whstatus)
+description
+    "                                                               "
+    "   Description of method.                                      "
+    "       - $description$        "
+    "                                                               "
+    "   Assumptions:                                                "
+    "       - $assumptions$      "
+    "   Notes:                                                      "
+    "       - $notes$            "
+    "                                                               "
+{
+    UNREFERENCED_PARAMETER(action);
+    UNREFERENCED_PARAMETER(whstatus);
+	return 0;
+}
+]]>
+      </Code>
+    </Snippet>
+  </CodeSnippet>
+  <CodeSnippet Format="1.0.0">
+    <Header>
+      <Title>Server Trigger - Periodic</Title>
+      <Description>Code snippet for Server Trigger Periodic</Description>
+      <Author>Fincentric Corporation</Author>
+      <SnippetTypes>
+        <SnippetType>Expansion</SnippetType>
+      </SnippetTypes>
+    </Header>
+    <Snippet>
+      <Declarations>
+        <Literal>
+          <ID>description</ID>
+          <ToolTip>Description of what the file contains</ToolTip>
+          <Default>What kind of things should go into the method.</Default>
+        </Literal>
+        <Literal>
+          <ID>assumptions</ID>
+          <ToolTip>Assumptions</ToolTip>
+          <Default>Assumptions that the method makes (i.e. context)</Default>
+        </Literal>
+        <Literal>
+          <ID>notes</ID>
+          <ToolTip>Notes</ToolTip>
+          <Default>Additional notes others should be aware of</Default>
+        </Literal>
+      </Declarations>
+      <Code Language="DK" Kind="servertrigger">
+        <![CDATA[int
+periodic(date todate, unsigned caller, recalc_t recalc, position_t pos)
+description
+    "                                                               "
+    "   Description of method.                                      "
+    "       - $description$        "
+    "                                                               "
+    "   Assumptions:                                                "
+    "       - $assumptions$      "
+    "   Notes:                                                      "
+    "       - $notes$            "
+    "                                                               "
+{
+    UNREFERENCED_PARAMETER(todate);
+    UNREFERENCED_PARAMETER(caller);
+    UNREFERENCED_PARAMETER(recalc);
+    UNREFERENCED_PARAMETER(pos);
+	
+	return 0;
+}
+]]>
+      </Code>
+    </Snippet>
+  </CodeSnippet>
+</CodeSnippets>

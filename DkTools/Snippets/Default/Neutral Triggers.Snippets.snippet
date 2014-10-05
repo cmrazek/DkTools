@@ -1,0 +1,127 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<CodeSnippets  xmlns="http://schemas.microsoft.com/VisualStudio/2005/CodeSnippet">
+	<CodeSnippet Format="1.0.0">
+		<Header>
+			<Title>Global Initialize</Title>
+			<Description>Code snippet for Other Neutral Global Initialize</Description>
+			<SnippetTypes>
+				<SnippetType>Expansion</SnippetType>
+			</SnippetTypes>
+		</Header>
+		<Snippet>
+			<Declarations>
+				<Literal>
+					<ID>description</ID>
+					<ToolTip>Description of what the file contains</ToolTip>
+					<Default>WBDK fires this trigger as soon as the DLL containing it is loaded.</Default>
+				</Literal>
+				<Literal>
+					<ID>assumptions</ID>
+					<ToolTip>Assumptions</ToolTip>
+					<Default>Assumptions that the method makes (i.e. context)</Default>
+				</Literal>
+				<Literal>
+					<ID>notes</ID>
+					<ToolTip>Notes</ToolTip>
+					<Default>Additional notes others should be aware of</Default>
+				</Literal>
+			</Declarations>
+			<Code Language="DK" Kind="classtrigger">
+				<![CDATA[int globalinitialize()
+description "$description$"
+{
+	return 0;
+}
+]]>
+			</Code>
+		</Snippet>
+	</CodeSnippet>
+	<CodeSnippet Format="1.0.0">
+		<Header>
+			<Title>Global Terminate</Title>
+			<Description>Code snippet for Neutral Trigger Global Terminate</Description>
+			<SnippetTypes>
+				<SnippetType>Expansion</SnippetType>
+			</SnippetTypes>
+		</Header>
+		<Snippet>
+			<Declarations>
+				<Literal>
+					<ID>description</ID>
+					<ToolTip>Description of what the file contains</ToolTip>
+					<Default>WBDK fires this trigger when the DLL containing it is terminated.</Default>
+				</Literal>
+				<Literal>
+					<ID>assumptions</ID>
+					<ToolTip>Assumptions</ToolTip>
+					<Default>Assumptions that the method makes (i.e. context)</Default>
+				</Literal>
+				<Literal>
+					<ID>notes</ID>
+					<ToolTip>Notes</ToolTip>
+					<Default>Additional notes others should be aware of</Default>
+				</Literal>
+			</Declarations>
+			<Code Language="DK" Kind="classtrigger">
+				<![CDATA[int globalterminate()
+description "$description$"
+{
+	return 0;
+}
+]]>
+			</Code>
+		</Snippet>
+	</CodeSnippet>
+	<CodeSnippet Format="1.0.0">
+		<Header>
+			<Title>Static Initialize</Title>
+			<Description>Code snippet for Neutral Trigger Static Initialize</Description>
+			<SnippetTypes>
+				<SnippetType>Expansion</SnippetType>
+			</SnippetTypes>
+		</Header>
+		<Snippet>
+			<Declarations>
+				<Literal>
+					<ID>description</ID>
+					<ToolTip>Description of what the file contains</ToolTip>
+					<Default>WBDK fires this trigger as soon as the DLL containing it is referenced by the application.</Default>
+				</Literal>
+			</Declarations>
+			<Code Language="DK" Kind="classtrigger">
+				<![CDATA[int staticinitialize()
+description "$description$"
+{
+	return 0;
+}
+]]>
+			</Code>
+		</Snippet>
+	</CodeSnippet>
+	<CodeSnippet Format="1.0.0">
+		<Header>
+			<Title>Static Terminate</Title>
+			<Description>Code snippet for Neutral Trigger Static Terminate</Description>
+			<SnippetTypes>
+				<SnippetType>Expansion</SnippetType>
+			</SnippetTypes>
+		</Header>
+		<Snippet>
+			<Declarations>
+				<Literal>
+					<ID>description</ID>
+					<ToolTip>Description of what the file contains</ToolTip>
+					<Default>WBDK fires this trigger when the DLL containing it is no longer referenced by the application.</Default>
+				</Literal>
+			</Declarations>
+			<Code Language="DK" Kind="classtrigger">
+				<![CDATA[int staticterminate()
+description "$description$"
+{
+	return 0;
+}
+]]>
+			</Code>
+		</Snippet>
+	</CodeSnippet>
+</CodeSnippets>

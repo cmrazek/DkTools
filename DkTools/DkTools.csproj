@@ -66,6 +66,9 @@
     </Reference>
     <Reference Include="Microsoft.Build.Utilities.v4.0" />
     <Reference Include="Microsoft.CSharp" />
+    <Reference Include="microsoft.msxml, Version=8.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <EmbedInteropTypes>False</EmbedInteropTypes>
+    </Reference>
     <Reference Include="Microsoft.VisualStudio.ComponentModelHost, Version=11.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" />
     <Reference Include="Microsoft.VisualStudio.CoreUtility, Version=11.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
@@ -432,6 +435,7 @@
     <Compile Include="QuickInfo\QuickInfoControllerProvider.cs" />
     <Compile Include="QuickInfo\QuickInfoSource.cs" />
     <Compile Include="QuickInfo\QuickInfoSourceProvider.cs" />
+    <Compile Include="Reformatting\FormatSource.cs" />
     <Compile Include="Res.Designer.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
@@ -465,6 +469,9 @@
     </Compile>
     <Compile Include="Navigation\GoToBraceHelper.cs" />
     <Compile Include="Navigation\GoToDefinitionHelper.cs" />
+    <Compile Include="Snippets\SnippetCommandHandler.cs" />
+    <Compile Include="Snippets\SnippetCommandProvider.cs" />
+    <Compile Include="Snippets\SnippetDeploy.cs" />
     <Compile Include="StatementCompletion\ProbeCompletionCommandHandler.cs" />
     <Compile Include="StatementCompletion\ProbeCompletionCommandHandlerProvider.cs" />
     <Compile Include="StatementCompletion\ProbeCompletionSource.cs" />
@@ -513,6 +520,11 @@
       <Generator>SettingsSingleFileGenerator</Generator>
       <LastGenOutput>Settings.Designer.cs</LastGenOutput>
     </None>
+    <None Include="Snippets\Default\Fincentric.Default.snippet" />
+    <EmbeddedResource Include="Snippets\Default\Client Triggers.Snippets.snippet" />
+    <EmbeddedResource Include="Snippets\Default\Neutral Triggers.Snippets.snippet" />
+    <EmbeddedResource Include="Snippets\Default\Server Triggers.Snippets.snippet" />
+    <EmbeddedResource Include="Snippets\Default\Misc.Snippets.snippet" />
     <None Include="source.extension.vsixmanifest">
       <SubType>Designer</SubType>
     </None>
@@ -521,6 +533,7 @@
     <None Include="Key.snk" />
   </ItemGroup>
   <ItemGroup>
+    <EmbeddedResource Include="Snippets\SnippetIndex.xml" />
     <None Include="Resources\Relationship.png" />
     <None Include="Resources\Table.png" />
     <None Include="Resources\ProbeExplorerIcon.png" />

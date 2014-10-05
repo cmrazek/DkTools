@@ -1,0 +1,1029 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<CodeSnippets  xmlns="http://schemas.microsoft.com/VisualStudio/2005/CodeSnippet">
+	<CodeSnippet Format="1.0.0">
+		<Header>
+			<Title>Client Trigger - Activate</Title>
+			<Description>Code snippet for Client Trigger Activate</Description>
+			<SnippetTypes>
+				<SnippetType>Expansion</SnippetType>
+			</SnippetTypes>
+		</Header>
+		<Snippet>
+			<Code Language="DK" Kind="clienttrigger">
+				<![CDATA[int activate(noyes_t eAction)
+description "This trigger fires when currency shifts from one form to another."
+{
+	UNREFERENCED_PARAMETER(eAction);
+
+	return 0;
+}
+]]>
+			</Code>
+		</Snippet>
+	</CodeSnippet>
+	<CodeSnippet Format="1.0.0">
+		<Header>
+			<Title>Client Trigger - After Listing</Title>
+			<Description>Code snippet for Client Trigger After Listing</Description>
+			<SnippetTypes>
+				<SnippetType>Expansion</SnippetType>
+			</SnippetTypes>
+		</Header>
+		<Snippet>
+			<Declarations>
+				<Literal>
+					<ID>listingname</ID>
+					<ToolTip>Name of the listing</ToolTip>
+					<Default>ListingName</Default>
+				</Literal>
+			</Declarations>
+			<Code Language="DK" Kind="clienttrigger">
+				<![CDATA[int after_listing_$listingname$()
+description "Executed after the user picks a row from the $listingname$ listing."
+{
+	return 0;
+}
+]]>
+			</Code>
+		</Snippet>
+	</CodeSnippet>
+	<CodeSnippet Format="1.0.0">
+		<Header>
+			<Title>Client Trigger - After Log</Title>
+			<Description>Code snippet for Client Trigger After Log</Description>
+			<SnippetTypes>
+				<SnippetType>Expansion</SnippetType>
+			</SnippetTypes>
+		</Header>
+		<Snippet>
+			<Code Language="DK" Kind="clienttrigger">
+				<![CDATA[int afterlog(int status, multi_t sequence)
+description "Executed at CAM after an Add or Update."
+{
+	UNREFERENCED_PARAMETER(status);
+	UNREFERENCED_PARAMETER(sequence);
+
+	return 0;
+}
+]]>
+			</Code>
+		</Snippet>
+	</CodeSnippet>
+	<CodeSnippet Format="1.0.0">
+		<Header>
+			<Title>Client Trigger - Before Action</Title>
+			<Description>Code snippet for Client Trigger Before Action</Description>
+			<SnippetTypes>
+				<SnippetType>Expansion</SnippetType>
+			</SnippetTypes>
+		</Header>
+		<Snippet>
+			<Declarations>
+				<Literal>
+					<ID>actionname</ID>
+					<ToolTip>Name of the action</ToolTip>
+					<Default>ActionName</Default>
+				</Literal>
+			</Declarations>
+			<Code Language="DK" Kind="clienttrigger">
+				<![CDATA[int before_action_$actionname$()
+description "Executed before the $actionname$ action can be executed."
+{
+	return 0;
+}
+]]>
+			</Code>
+		</Snippet>
+	</CodeSnippet>
+	<CodeSnippet Format="1.0.0">
+		<Header>
+			<Title>Client Trigger - Before Column</Title>
+			<Description>Code snippet for Client Trigger Before Column</Description>
+			<SnippetTypes>
+				<SnippetType>Expansion</SnippetType>
+			</SnippetTypes>
+		</Header>
+		<Snippet>
+			<Declarations>
+				<Literal>
+					<ID>columnname</ID>
+					<ToolTip>Name of the column</ToolTip>
+					<Default>ColumnName</Default>
+				</Literal>
+			</Declarations>
+			<Code Language="DK" Kind="clienttrigger">
+				<![CDATA[int before_$columnname$()
+description "Executed when the CAM user selects the $columnname$ field on the form."
+{
+	return 0;
+}
+]]>
+			</Code>
+		</Snippet>
+	</CodeSnippet>
+	<CodeSnippet Format="1.0.0">
+		<Header>
+			<Title>Client Trigger - Before Listing</Title>
+			<Description>Code snippet for Client Trigger Before Listing</Description>
+			<SnippetTypes>
+				<SnippetType>Expansion</SnippetType>
+			</SnippetTypes>
+		</Header>
+		<Snippet>
+			<Declarations>
+				<Literal>
+					<ID>listingname</ID>
+					<ToolTip>Name of the listing</ToolTip>
+					<Default>ListingName</Default>
+				</Literal>
+			</Declarations>
+			<Code Language="DK" Kind="clienttrigger">
+				<![CDATA[int before_listing_$listingname$()
+description "Executed before the $listingname$ listing can be executed."
+{
+	return 0;
+}
+]]>
+			</Code>
+		</Snippet>
+	</CodeSnippet>
+	<CodeSnippet Format="1.0.0">
+		<Header>
+			<Title>Client Trigger - Before Log</Title>
+			<Description>Code snippet for Client Trigger Before Log</Description>
+			<SnippetTypes>
+				<SnippetType>Expansion</SnippetType>
+			</SnippetTypes>
+		</Header>
+		<Snippet>
+			<Code Language="DK" Kind="clienttrigger">
+				<![CDATA[int beforelog()
+description "Executed when CAM performs an Add or Update, just before data is sent to the server."
+{
+	return 0;
+}
+]]>
+			</Code>
+		</Snippet>
+	</CodeSnippet>
+	<CodeSnippet Format="1.0.0">
+		<Header>
+			<Title>Client Trigger - Change Column</Title>
+			<Description>Code snippet for Client Trigger Change Column</Description>
+			<SnippetTypes>
+				<SnippetType>Expansion</SnippetType>
+			</SnippetTypes>
+		</Header>
+		<Snippet>
+			<Declarations>
+				<Literal>
+					<ID>columnname</ID>
+					<ToolTip>Name of the column</ToolTip>
+					<Default>ColumnName</Default>
+				</Literal>
+				<Literal>
+					<ID>description</ID>
+					<ToolTip>Description of what the file contains</ToolTip>
+					<Default>What kind of things should go into the method.</Default>
+				</Literal>
+				<Literal>
+					<ID>assumptions</ID>
+					<ToolTip>Assumptions</ToolTip>
+					<Default>Assumptions that the method makes (i.e. context)</Default>
+				</Literal>
+				<Literal>
+					<ID>notes</ID>
+					<ToolTip>Notes</ToolTip>
+					<Default>Additional notes others should be aware of</Default>
+				</Literal>
+			</Declarations>
+			<Code Language="DK" Kind="clienttrigger">
+				<![CDATA[int change_$columnname$()
+description "Executed when the user manually changes the $columnname$ field on the CAM form."
+{
+	return 0;
+}
+]]>
+			</Code>
+		</Snippet>
+	</CodeSnippet>
+	<CodeSnippet Format="1.0.0">
+		<Header>
+			<Title>Client Trigger - Control Action</Title>
+			<Description>Code snippet for Client Trigger Control Action</Description>
+			<SnippetTypes>
+				<SnippetType>Expansion</SnippetType>
+			</SnippetTypes>
+		</Header>
+		<Snippet>
+			<Declarations>
+				<Literal>
+					<ID>actionname</ID>
+					<ToolTip>Name of the action</ToolTip>
+					<Default>ActionName</Default>
+				</Literal>
+			</Declarations>
+			<Code Language="DK" Kind="clienttrigger">
+				<![CDATA[int control_action_$actionname$()
+description "Determines whether or not to display the $actionname$ action in CAM's pop-up menu of listings and actions."
+{
+	return 0;
+}
+]]>
+			</Code>
+		</Snippet>
+	</CodeSnippet>
+	<CodeSnippet Format="1.0.0">
+		<Header>
+			<Title>Client Trigger - Control Field</Title>
+			<Description>Code snippet for Client Trigger Control Field</Description>
+			<SnippetTypes>
+				<SnippetType>Expansion</SnippetType>
+			</SnippetTypes>
+		</Header>
+		<Snippet>
+			<Declarations>
+				<Literal>
+					<ID>columnname</ID>
+					<ToolTip>Name of the column</ToolTip>
+					<Default>ColumnName</Default>
+				</Literal>
+			</Declarations>
+			<Code Language="DK" Kind="clienttrigger">
+				<![CDATA[int control_field_$columnname$()
+description "Determines the data attribute of the $columnname$ field in CAM when the focus is about to switch to it."
+{
+	return 0;
+}
+]]>
+			</Code>
+		</Snippet>
+	</CodeSnippet>
+	<CodeSnippet Format="1.0.0">
+		<Header>
+			<Title>Client Trigger - Control Form</Title>
+			<Description>Code snippet for Client Trigger Control Form</Description>
+			<SnippetTypes>
+				<SnippetType>Expansion</SnippetType>
+			</SnippetTypes>
+		</Header>
+		<Snippet>
+			<Declarations>
+				<Literal>
+					<ID>tablename</ID>
+					<ToolTip>Name of the table</ToolTip>
+					<Default>TableName</Default>
+				</Literal>
+			</Declarations>
+			<Code Language="DK" Kind="clienttrigger">
+				<![CDATA[int control_form_$tablename$()
+description "Determines whether or not to hide the name of the $tablename$ form (and all its children) within CAM's Open dialog."
+{
+	return 0;
+}
+]]>
+			</Code>
+		</Snippet>
+	</CodeSnippet>
+	<CodeSnippet Format="1.0.0">
+		<Header>
+			<Title>Client Trigger - Control Listing</Title>
+			<Description>Code snippet for Client Trigger Control Listing</Description>
+			<SnippetTypes>
+				<SnippetType>Expansion</SnippetType>
+			</SnippetTypes>
+		</Header>
+		<Snippet>
+			<Declarations>
+				<Literal>
+					<ID>listingname</ID>
+					<ToolTip>Name of the listing</ToolTip>
+					<Default>ListingName</Default>
+				</Literal>
+			</Declarations>
+			<Code Language="DK" Kind="clienttrigger">
+				<![CDATA[int control_listing_$listingname$()
+description "Determines whether or not to display the $listingname$ listing in CAM's pop-up menu of listings and actions."
+{
+	return 0;
+}
+]]>
+			</Code>
+		</Snippet>
+	</CodeSnippet>
+	<CodeSnippet Format="1.0.0">
+		<Header>
+			<Title>Client Trigger - Control Method - Clear Form</Title>
+			<Description>Code snippet for Client Trigger Control Method Clear Form</Description>
+			<SnippetTypes>
+				<SnippetType>Expansion</SnippetType>
+			</SnippetTypes>
+		</Header>
+		<Snippet>
+			<Code Language="DK" Kind="clienttrigger">
+				<![CDATA[int control_method_clearform()
+description "Determines whether or not to enable the clearform client method. "
+{
+	return 0;
+}
+]]>
+			</Code>
+		</Snippet>
+	</CodeSnippet>
+	<CodeSnippet Format="1.0.0">
+		<Header>
+			<Title>Client Trigger - Control Method - Insert Form</Title>
+			<Description>Code snippet for Client Trigger Control Method Insert Form</Description>
+			<SnippetTypes>
+				<SnippetType>Expansion</SnippetType>
+			</SnippetTypes>
+		</Header>
+		<Snippet>
+			<Code Language="DK" Kind="clienttrigger">
+				<![CDATA[int control_method_insertform()
+description "Determines whether or not to enable the insertform client method."
+{
+	return 0;
+}
+]]>
+			</Code>
+		</Snippet>
+	</CodeSnippet>
+	<CodeSnippet Format="1.0.0">
+		<Header>
+			<Title>Client Trigger - Control Method - Search Equal</Title>
+			<Description>Code snippet for Client Trigger Control Method Search Equal</Description>
+			<SnippetTypes>
+				<SnippetType>Expansion</SnippetType>
+			</SnippetTypes>
+		</Header>
+		<Snippet>
+			<Code Language="DK" Kind="clienttrigger">
+				<![CDATA[int control_method_searchequal()
+description "Determines whether or not to enable the searchequal client method. "
+{
+	return 0;
+}
+]]>
+			</Code>
+		</Snippet>
+	</CodeSnippet>
+	<CodeSnippet Format="1.0.0">
+		<Header>
+			<Title>Client Trigger - Control Method - Search First</Title>
+			<Description>Code snippet for Client Trigger Control Method Search First</Description>
+			<SnippetTypes>
+				<SnippetType>Expansion</SnippetType>
+			</SnippetTypes>
+		</Header>
+		<Snippet>
+			<Code Language="DK" Kind="clienttrigger">
+				<![CDATA[int control_method_searchfirst()
+description "Determines whether or not to enable the searchfirst client method."
+{
+	return 0;
+}
+]]>
+			</Code>
+		</Snippet>
+	</CodeSnippet>
+	<CodeSnippet Format="1.0.0">
+		<Header>
+			<Title>Client Trigger - Control Method - Search Last</Title>
+			<Description>Code snippet for Client Trigger Control Method Search Last</Description>
+			<SnippetTypes>
+				<SnippetType>Expansion</SnippetType>
+			</SnippetTypes>
+		</Header>
+		<Snippet>
+			<Declarations>
+				<Literal>
+					<ID>description</ID>
+					<ToolTip>Description of what the file contains</ToolTip>
+					<Default>What kind of things should go into the method.</Default>
+				</Literal>
+				<Literal>
+					<ID>assumptions</ID>
+					<ToolTip>Assumptions</ToolTip>
+					<Default>Assumptions that the method makes (i.e. context)</Default>
+				</Literal>
+				<Literal>
+					<ID>notes</ID>
+					<ToolTip>Notes</ToolTip>
+					<Default>Additional notes others should be aware of</Default>
+				</Literal>
+			</Declarations>
+			<Code Language="DK" Kind="clienttrigger">
+				<![CDATA[int control_method_searchlast()
+description "Determines whether or not to enable the searchlast client method."
+{
+	return 0;
+}
+]]>
+			</Code>
+		</Snippet>
+	</CodeSnippet>
+	<CodeSnippet Format="1.0.0">
+		<Header>
+			<Title>Client Trigger - Control Method - Search Next</Title>
+			<Description>Code snippet for Client Trigger Control Method Search Next</Description>
+			<SnippetTypes>
+				<SnippetType>Expansion</SnippetType>
+			</SnippetTypes>
+		</Header>
+		<Snippet>
+			<Code Language="DK" Kind="clienttrigger">
+				<![CDATA[int control_method_searchnext()
+description "Determines whether or not to enable the searchnext client method."
+{
+	return 0;
+}
+]]>
+			</Code>
+		</Snippet>
+	</CodeSnippet>
+	<CodeSnippet Format="1.0.0">
+		<Header>
+			<Title>Client Trigger - Control Method - Search Previous</Title>
+			<Description>Code snippet for Client Trigger Control Method Search Previous</Description>
+			<SnippetTypes>
+				<SnippetType>Expansion</SnippetType>
+			</SnippetTypes>
+		</Header>
+		<Snippet>
+			<Declarations>
+				<Literal>
+					<ID>description</ID>
+					<ToolTip>Description of what the file contains</ToolTip>
+					<Default>What kind of things should go into the method.</Default>
+				</Literal>
+				<Literal>
+					<ID>assumptions</ID>
+					<ToolTip>Assumptions</ToolTip>
+					<Default>Assumptions that the method makes (i.e. context)</Default>
+				</Literal>
+				<Literal>
+					<ID>notes</ID>
+					<ToolTip>Notes</ToolTip>
+					<Default>Additional notes others should be aware of</Default>
+				</Literal>
+			</Declarations>
+			<Code Language="DK" Kind="clienttrigger">
+				<![CDATA[int control_method_searchprevious()
+description "Determines whether or not to enable the searchprevious client method."
+{
+	return 0;
+}
+]]>
+			</Code>
+		</Snippet>
+	</CodeSnippet>
+	<CodeSnippet Format="1.0.0">
+		<Header>
+			<Title>Client Trigger - Control Method - Update Form</Title>
+			<Description>Code snippet for Client Trigger Control Method Update Form</Description>
+			<SnippetTypes>
+				<SnippetType>Expansion</SnippetType>
+			</SnippetTypes>
+		</Header>
+		<Snippet>
+			<Code Language="DK" Kind="clienttrigger">
+				<![CDATA[int control_method_updateform()
+description "Determines whether or not to enable the AFS updateform client method."
+{
+	return 0;
+}
+]]>
+			</Code>
+		</Snippet>
+	</CodeSnippet>
+	<CodeSnippet Format="1.0.0">
+		<Header>
+			<Title>Client Trigger - Default Column</Title>
+			<Description>Code snippet for Client Trigger Default Column</Description>
+			<SnippetTypes>
+				<SnippetType>Expansion</SnippetType>
+			</SnippetTypes>
+		</Header>
+		<Snippet>
+			<Declarations>
+				<Literal>
+					<ID>columnname</ID>
+					<ToolTip>Name of the column</ToolTip>
+					<Default>ColumnName</Default>
+				</Literal>
+			</Declarations>
+			<Code Language="DK" Kind="clienttrigger">
+				<![CDATA[int default_$columnname$()
+description "Executed in CAM when the Cascading triggers reaches the $columnname$ field."
+{
+	return 0;
+}
+]]>
+			</Code>
+		</Snippet>
+	</CodeSnippet>
+	<CodeSnippet Format="1.0.0">
+		<Header>
+			<Title>Client Trigger - Edit Column</Title>
+			<Description>Code snippet for Client Trigger Edit Column</Description>
+			<SnippetTypes>
+				<SnippetType>Expansion</SnippetType>
+			</SnippetTypes>
+		</Header>
+		<Snippet>
+			<Declarations>
+				<Literal>
+					<ID>columnname</ID>
+					<ToolTip>Name of the column</ToolTip>
+					<Default>ColumnName</Default>
+				</Literal>
+			</Declarations>
+			<Code Language="DK" Kind="clienttrigger">
+				<![CDATA[int edit_$columnname$()
+description "Executed in CAM under a variety of circumstances, including: the Add, Update, Cascade, and Exit field events."
+{
+	return 0;
+}
+]]>
+			</Code>
+		</Snippet>
+	</CodeSnippet>
+	<CodeSnippet Format="1.0.0">
+		<Header>
+			<Title>Client Trigger - Edits</Title>
+			<Description>Code snippet for Client Trigger Edits</Description>
+			<SnippetTypes>
+				<SnippetType>Expansion</SnippetType>
+			</SnippetTypes>
+		</Header>
+		<Snippet>
+			<Declarations>
+				<Literal>
+					<ID>description</ID>
+					<ToolTip>Description of what the file contains</ToolTip>
+					<Default>What kind of things should go into the method.</Default>
+				</Literal>
+				<Literal>
+					<ID>assumptions</ID>
+					<ToolTip>Assumptions</ToolTip>
+					<Default>Assumptions that the method makes (i.e. context)</Default>
+				</Literal>
+				<Literal>
+					<ID>notes</ID>
+					<ToolTip>Notes</ToolTip>
+					<Default>Additional notes others should be aware of</Default>
+				</Literal>
+			</Declarations>
+			<Code Language="DK" Kind="clienttrigger">
+				<![CDATA[int edits(edits_t action)
+description "Executed in CAM during the Add and Update events."
+{
+    UNREFERENCED_PARAMETER(action);
+
+	return 0;
+}
+]]>
+			</Code>
+		</Snippet>
+	</CodeSnippet>
+	<CodeSnippet Format="1.0.0">
+		<Header>
+			<Title>Client Trigger - Format Column</Title>
+			<Description>Code snippet for Client Trigger Format Column</Description>
+			<SnippetTypes>
+				<SnippetType>Expansion</SnippetType>
+			</SnippetTypes>
+		</Header>
+		<Snippet>
+			<Declarations>
+				<Literal>
+					<ID>columnname</ID>
+					<ToolTip>Name of the column</ToolTip>
+					<Default>ColumnName</Default>
+				</Literal>
+			</Declarations>
+			<Code Language="DK" Kind="clienttrigger">
+				<![CDATA[int format_$columnname$(formatdir_t dir, char(255) strBuffer, oleobject obj)
+description "Provides a portal between raw data as it is stored at the client, and data as it is displayed on a client form or entered by the user."
+{
+	UNREFERENCED_PARAMETER(dir);
+	UNREFERENCED_PARAMETER(strbuffer);
+	UNREFERENCED_PARAMETER(obj);
+
+	return 0;
+}
+]]>
+			</Code>
+		</Snippet>
+	</CodeSnippet>
+	<CodeSnippet Format="1.0.0">
+		<Header>
+			<Title>Client Trigger - Initialize</Title>
+			<Description>Code snippet for Client Trigger Initialize</Description>
+			<SnippetTypes>
+				<SnippetType>Expansion</SnippetType>
+			</SnippetTypes>
+		</Header>
+		<Snippet>
+			<Code Language="DK" Kind="clienttrigger">
+				<![CDATA[int initialize()
+description "Executes statements when a form is created."
+{
+	return 0;
+}
+]]>
+			</Code>
+		</Snippet>
+	</CodeSnippet>
+	<CodeSnippet Format="1.0.0">
+		<Header>
+			<Title>Client Trigger - Insert Form</Title>
+			<Description>Code snippet for Client Trigger Insert Form</Description>
+			<SnippetTypes>
+				<SnippetType>Expansion</SnippetType>
+			</SnippetTypes>
+		</Header>
+		<Snippet>
+			<Declarations>
+				<Literal>
+					<ID>description</ID>
+					<ToolTip>Description of what the file contains</ToolTip>
+					<Default>Instructs WBDK to replace the automatic packaging and sending of qcalls to the server, associated with the AFS client insert method.</Default>
+				</Literal>
+			</Declarations>
+			<Code Language="DK" Kind="clienttrigger">
+				<![CDATA[int insertform()
+description "$description$"
+{
+	return 0;
+}
+]]>
+			</Code>
+		</Snippet>
+	</CodeSnippet>
+	<CodeSnippet Format="1.0.0">
+		<Header>
+			<Title>Client Trigger - Search</Title>
+			<Description>Code snippet for Client Trigger Search</Description>
+			<SnippetTypes>
+				<SnippetType>Expansion</SnippetType>
+			</SnippetTypes>
+		</Header>
+		<Snippet>
+			<Declarations>
+				<Literal>
+					<ID>description</ID>
+					<ToolTip>Description of what the file contains</ToolTip>
+					<Default>Instructs WBDK to replace the automatic packaging and sending of qcalls to the server, associated with the AFS client search method.</Default>
+				</Literal>
+			</Declarations>
+			<Code Language="DK" Kind="clienttrigger">
+				<![CDATA[int search(search_t eType)
+description "$description$"
+{
+	UNREFERENCED_PARAMETER(eType);
+
+	return 0;
+}
+]]>
+			</Code>
+		</Snippet>
+	</CodeSnippet>
+	<CodeSnippet Format="1.0.0">
+		<Header>
+			<Title>Client Trigger - Terminate</Title>
+			<Description>Code snippet for Client Trigger Terminate</Description>
+			<SnippetTypes>
+				<SnippetType>Expansion</SnippetType>
+			</SnippetTypes>
+		</Header>
+		<Snippet>
+			<Declarations>
+				<Literal>
+					<ID>description</ID>
+					<ToolTip>Description of what the file contains</ToolTip>
+					<Default>Executes statements when a form is about to close.</Default>
+				</Literal>
+			</Declarations>
+			<Code Language="DK" Kind="clienttrigger">
+				<![CDATA[int terminate()
+description "$description$"
+{
+	return 0;
+}
+]]>
+			</Code>
+		</Snippet>
+	</CodeSnippet>
+	<CodeSnippet Format="1.0.0">
+		<Header>
+			<Title>Client Trigger - Update Form</Title>
+			<Description>Code snippet for Client Trigger Update Form</Description>
+			<SnippetTypes>
+				<SnippetType>Expansion</SnippetType>
+			</SnippetTypes>
+		</Header>
+		<Snippet>
+			<Declarations>
+				<Literal>
+					<ID>description</ID>
+					<ToolTip>Description of what the file contains</ToolTip>
+					<Default>Instructs WBDK to replace the automatic packaging and sending of qcalls to the server, associated with the AFS client update method.</Default>
+				</Literal>
+			</Declarations>
+			<Code Language="DK" Kind="clienttrigger">
+				<![CDATA[int updateform()
+description "$description$"
+{
+	return 0;
+}
+]]>
+			</Code>
+		</Snippet>
+	</CodeSnippet>
+	<CodeSnippet Format="1.0.0">
+		<Header>
+			<Title>Client Trigger - Action</Title>
+			<Description>Code snippet for Client Trigger Action</Description>
+			<SnippetTypes>
+				<SnippetType>Expansion</SnippetType>
+			</SnippetTypes>
+		</Header>
+		<Snippet>
+			<Declarations>
+				<Literal>
+					<ID>actionname</ID>
+					<ToolTip>Name of the action</ToolTip>
+					<Default>ActionName</Default>
+				</Literal>
+				<Literal>
+					<ID>prompt</ID>
+					<ToolTip>Prompt</ToolTip>
+					<Default>Prompt</Default>
+				</Literal>
+				<Literal>
+					<ID>comment</ID>
+					<ToolTip>Comment</ToolTip>
+					<Default>Comment</Default>
+				</Literal>
+				<Literal>
+					<ID>description</ID>
+					<ToolTip>Description of what the file contains</ToolTip>
+					<Default>Description</Default>
+				</Literal>
+			</Declarations>
+			<Code Language="DK" Kind="clientservertrigger">
+				<![CDATA[int action_$actionname$()
+	prompt	"$prompt$"
+	comment	"$comment$"
+description "$description$"
+{
+	return 0;
+}
+]]>
+			</Code>
+		</Snippet>
+	</CodeSnippet>
+	<CodeSnippet Format="1.0.0">
+		<Header>
+			<Title>Defaults</Title>
+			<Description>Code snippet for Client Trigger Defaults</Description>
+			<SnippetTypes>
+				<SnippetType>Expansion</SnippetType>
+			</SnippetTypes>
+		</Header>
+		<Snippet>
+			<Declarations>
+				<Literal>
+					<ID>description</ID>
+					<ToolTip>Description of what the file contains</ToolTip>
+					<Default>Executed in CAM during the Start form and Add events.</Default>
+				</Literal>
+			</Declarations>
+			<Code Language="DK" Kind="clientservertrigger">
+				<![CDATA[int defaults()
+description "$description$"
+{
+	return 0;
+}
+]]>
+			</Code>
+		</Snippet>
+	</CodeSnippet>
+	<CodeSnippet Format="1.0.0">
+		<Header>
+			<Title>Listing</Title>
+			<Description>Code snippet for Client Trigger Listing</Description>
+			<SnippetTypes>
+				<SnippetType>Expansion</SnippetType>
+			</SnippetTypes>
+		</Header>
+		<Snippet>
+			<Declarations>
+				<Literal>
+					<ID>listingname</ID>
+					<ToolTip>Name of the listing</ToolTip>
+					<Default>ListingName</Default>
+				</Literal>
+				<Literal>
+					<ID>prompt</ID>
+					<ToolTip>Prompt</ToolTip>
+					<Default>Prompt</Default>
+				</Literal>
+				<Literal>
+					<ID>comment</ID>
+					<ToolTip>Comment</ToolTip>
+					<Default>Comment</Default>
+				</Literal>
+				<Literal>
+					<ID>description</ID>
+					<ToolTip>Description of what the file contains</ToolTip>
+					<Default>Executed when the CAM user chooses the listing.</Default>
+				</Literal>
+			</Declarations>
+			<Code Language="DK" Kind="clientservertrigger">
+				<![CDATA[int listing_$listingname$()
+	prompt	"$prompt$"
+	comment	"$comment$"
+description "$description$"
+{
+	return 0;
+}
+]]>
+			</Code>
+		</Snippet>
+	</CodeSnippet>
+	<CodeSnippet Format="1.0.0">
+		<Header>
+			<Title>Listing Column</Title>
+			<Description>Code snippet for Client Trigger Listing Column</Description>
+			<SnippetTypes>
+				<SnippetType>Expansion</SnippetType>
+			</SnippetTypes>
+		</Header>
+		<Snippet>
+			<Declarations>
+				<Literal>
+					<ID>listingname</ID>
+					<ToolTip>Name of the listing</ToolTip>
+					<Default>ListingName</Default>
+				</Literal>
+				<Literal>
+					<ID>columnname</ID>
+					<ToolTip>Name of the column</ToolTip>
+					<Default>ColumnName</Default>
+				</Literal>
+				<Literal>
+					<ID>prompt</ID>
+					<ToolTip>Prompt</ToolTip>
+					<Default>Prompt</Default>
+				</Literal>
+				<Literal>
+					<ID>comment</ID>
+					<ToolTip>Comment</ToolTip>
+					<Default>Comment</Default>
+				</Literal>
+				<Literal>
+					<ID>description</ID>
+					<ToolTip>Description of what the file contains</ToolTip>
+					<Default>Executed when the CAM user chooses the listing.</Default>
+				</Literal>
+			</Declarations>
+			<Code Language="DK" Kind="clientservertrigger">
+				<![CDATA[int listing_$listingname$_$columnname$()
+	prompt	"$prompt$"
+	comment	"$comment$"
+description "$description$"
+{
+	return 0;
+}
+]]>
+			</Code>
+		</Snippet>
+	</CodeSnippet>
+	<CodeSnippet Format="1.0.0">
+		<Header>
+			<Title>Global Initialize</Title>
+			<Description>Code snippet for Other Client Global Initialize</Description>
+			<SnippetTypes>
+				<SnippetType>Expansion</SnippetType>
+			</SnippetTypes>
+		</Header>
+		<Snippet>
+			<Declarations>
+				<Literal>
+					<ID>description</ID>
+					<ToolTip>Description of what the file contains</ToolTip>
+					<Default>WBDK fires this trigger as soon as the DLL containing it is loaded.</Default>
+				</Literal>
+				<Literal>
+					<ID>assumptions</ID>
+					<ToolTip>Assumptions</ToolTip>
+					<Default>Assumptions that the method makes (i.e. context)</Default>
+				</Literal>
+				<Literal>
+					<ID>notes</ID>
+					<ToolTip>Notes</ToolTip>
+					<Default>Additional notes others should be aware of</Default>
+				</Literal>
+			</Declarations>
+			<Code Language="DK" Kind="classtrigger">
+				<![CDATA[int globalinitialize()
+description "$description$"
+{
+	return 0;
+}
+]]>
+			</Code>
+		</Snippet>
+	</CodeSnippet>
+	<CodeSnippet Format="1.0.0">
+		<Header>
+			<Title>Global Terminate</Title>
+			<Description>Code snippet for Client Trigger Global Terminate</Description>
+			<SnippetTypes>
+				<SnippetType>Expansion</SnippetType>
+			</SnippetTypes>
+		</Header>
+		<Snippet>
+			<Declarations>
+				<Literal>
+					<ID>description</ID>
+					<ToolTip>Description of what the file contains</ToolTip>
+					<Default>WBDK fires this trigger when the DLL containing it is terminated.</Default>
+				</Literal>
+				<Literal>
+					<ID>assumptions</ID>
+					<ToolTip>Assumptions</ToolTip>
+					<Default>Assumptions that the method makes (i.e. context)</Default>
+				</Literal>
+				<Literal>
+					<ID>notes</ID>
+					<ToolTip>Notes</ToolTip>
+					<Default>Additional notes others should be aware of</Default>
+				</Literal>
+			</Declarations>
+			<Code Language="DK" Kind="classtrigger">
+				<![CDATA[int globalterminate()
+description "$description$"
+{
+	return 0;
+}
+]]>
+			</Code>
+		</Snippet>
+	</CodeSnippet>
+	<CodeSnippet Format="1.0.0">
+		<Header>
+			<Title>Static Initialize</Title>
+			<Description>Code snippet for Client Trigger Static Initialize</Description>
+			<SnippetTypes>
+				<SnippetType>Expansion</SnippetType>
+			</SnippetTypes>
+		</Header>
+		<Snippet>
+			<Declarations>
+				<Literal>
+					<ID>description</ID>
+					<ToolTip>Description of what the file contains</ToolTip>
+					<Default>WBDK fires this trigger as soon as the DLL containing it is referenced by the application.</Default>
+				</Literal>
+			</Declarations>
+			<Code Language="DK" Kind="classtrigger">
+				<![CDATA[int staticinitialize()
+description "$description$"
+{
+	return 0;
+}
+]]>
+			</Code>
+		</Snippet>
+	</CodeSnippet>
+	<CodeSnippet Format="1.0.0">
+		<Header>
+			<Title>Static Terminate</Title>
+			<Description>Code snippet for Client Trigger Static Terminate</Description>
+			<SnippetTypes>
+				<SnippetType>Expansion</SnippetType>
+			</SnippetTypes>
+		</Header>
+		<Snippet>
+			<Declarations>
+				<Literal>
+					<ID>description</ID>
+					<ToolTip>Description of what the file contains</ToolTip>
+					<Default>WBDK fires this trigger when the DLL containing it is no longer referenced by the application.</Default>
+				</Literal>
+			</Declarations>
+			<Code Language="DK" Kind="classtrigger">
+				<![CDATA[int staticterminate()
+description "$description$"
+{
+	return 0;
+}
+]]>
+			</Code>
+		</Snippet>
+	</CodeSnippet>
+</CodeSnippets>

@@ -4,6 +4,7 @@ using System.Configuration;
 using System.Diagnostics;
 using System.Drawing;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Text;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Package;
@@ -11,6 +12,7 @@ using Microsoft.VisualStudio.TextManager.Interop;
 
 namespace DkTools.LanguageSvc
 {
+	[Guid(GuidList.strLanguageService)]
 	internal class ProbeLanguageService : LanguageService
 	{
 		private LanguagePreferences _prefs;
@@ -29,6 +31,7 @@ namespace DkTools.LanguageSvc
 				_prefs.EnableShowMatchingBrace = false;
 				_prefs.HighlightMatchingBraceFlags = _HighlightMatchingBraceFlags.HMB_SUPPRESS_STATUS_BAR_UPDATE;
 				_prefs.EnableCommenting = true;
+				_prefs.EnableFormatSelection = true;
 				//_prefs.AutoOutlining = true;
 				//_prefs.ShowNavigationBar = true;
 			}
@@ -76,6 +79,11 @@ namespace DkTools.LanguageSvc
 		public override TypeAndMemberDropdownBars CreateDropDownHelper(IVsTextView forView)
 		{
 			return new ProbeDropDownHelper(this);
+		}
+
+		public override Source CreateSource(IVsTextLines buffer)
+		{
+			return new Reformatting.FormatSource(this, buffer, GetColorizer(buffer));
 		}
 	}
 }

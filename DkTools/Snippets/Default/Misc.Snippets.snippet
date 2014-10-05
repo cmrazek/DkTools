@@ -1,0 +1,28 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<CodeSnippets  xmlns="http://schemas.microsoft.com/VisualStudio/2005/CodeSnippet">
+	<CodeSnippet Format="1.0.0">
+		<Header>
+			<Title>Region</Title>
+			<Shortcut>#region</Shortcut>
+			<Description>Inserts a #region comment for outlining.</Description>
+			<!--<Author>Chris Mrazek</Author>-->
+			<SnippetTypes>
+				<SnippetType>Expansion</SnippetType>
+			</SnippetTypes>
+		</Header>
+		<Snippet>
+			<Declarations>
+				<Literal>
+					<ID>name</ID>
+					<ToolTip>Region name</ToolTip>
+					<Default>name</Default>
+				</Literal>
+			</Declarations>
+			<Code Language="DK">
+				<![CDATA[//#region $name$
+$selected$$end$
+//#endregion]]>
+			</Code>
+		</Snippet>
+	</CodeSnippet>
+</CodeSnippets>

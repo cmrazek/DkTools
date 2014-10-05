@@ -12,19 +12,22 @@ namespace DkTools.SmartIndenting
 {
 	[Export(typeof(ISmartIndentProvider))]
 	[Export(typeof(IVsTextViewCreationListener))]
-	[ContentType("DK")]
+	[ContentType(Constants.DkContentType)]
 	[TextViewRole(PredefinedTextViewRoles.Editable)]
-	public class ProbeSmartIndentProvider : ISmartIndentProvider, IVsTextViewCreationListener
+	public sealed class ProbeSmartIndentProvider : ISmartIndentProvider, IVsTextViewCreationListener
 	{
-		ISmartIndent ISmartIndentProvider.CreateSmartIndent(ITextView textView)
+		public ISmartIndent CreateSmartIndent(ITextView textView)
 		{
 			Func<ProbeSmartIndent> createObj = () => { return new ProbeSmartIndent(textView); };
 			return textView.Properties.GetOrCreateSingletonProperty(createObj);
 		}
 
-		void IVsTextViewCreationListener.VsTextViewCreated(IVsTextView textViewAdapter)
+		public void VsTextViewCreated(IVsTextView textViewAdapter)
 		{
 			var textView = Shell.VsTextViewToWpfTextView(textViewAdapter);
+
+			// Create the smart indent now so that it's available before VS determines it's needed (e.g. when cleaning up snippets)
+			CreateSmartIndent(textView);
 
 			Func<ProbeSmartIndentCommandHandler> createObj = () => { return new ProbeSmartIndentCommandHandler(textViewAdapter, textView, this); };
 			textView.Properties.GetOrCreateSingletonProperty(createObj);

@@ -1,0 +1,12 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<SnippetCollection>
+  <Language Lang="DK" Guid="{38ad600c-15b8-4899-be00-9361f35cd8d9}">
+    <SnippetDir>
+      <OnOff>On</OnOff>
+      <Installed>true</Installed>
+      <Locale>1033</Locale>
+      <DirPath>%LocalAppData%\DkTools2012\Snippets\</DirPath>
+      <LocalizedName>DK</LocalizedName>
+    </SnippetDir>
+  </Language>
+</SnippetCollection>

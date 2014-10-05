@@ -38,7 +38,8 @@ namespace DkTools
 		MatchBraces = false,
 		MatchBracesAtCaret = false,
 		ShowMatchingBrace = false,
-		EnableAsyncCompletion = false)]
+		EnableAsyncCompletion = false,
+		EnableFormatSelection = true)]
 	[ProvideLanguageExtension(typeof(ProbeLanguageService), ".cc")]
 	[ProvideLanguageExtension(typeof(ProbeLanguageService), ".cc&")]
 	[ProvideLanguageExtension(typeof(ProbeLanguageService), ".cc+")]
@@ -81,6 +82,9 @@ namespace DkTools
 	[ProvideOptionPage(typeof(Tagging.TaggingOptions), "DK", "Tagging", 101, 107, true)]
 	[ProvideOptionPage(typeof(EditorOptions), "DK", "Editor", 101, 108, true)]
 	[ProvideOptionPage(typeof(ErrorSuppressionOptions), "DK", "Error Suppressions", 101, 109, true)]
+	[ProvideLanguageCodeExpansion(typeof(ProbeLanguageService), Constants.DkContentType, 0, Constants.DkContentType,
+		"%LocalAppData%\\DkTools2012\\SnippetIndex.xml",
+		SearchPaths = "%LocalAppData%\\DkTools2012\\Snippets\\;%MyDocs%\\Code Snippets\\DK\\My Code Snippets\\")]
 	public sealed partial class ProbeToolsPackage : Package, IOleComponent
 	{
 		private uint _componentId;
@@ -112,6 +116,7 @@ namespace DkTools
 			Log.Initialize();
 			ProbeEnvironment.Initialize();
 			TempManager.Init(TempDir);
+			Snippets.SnippetDeploy.DeploySnippets();
 
 			// Proffer the service.	http://msdn.microsoft.com/en-us/library/bb166498.aspx
 			var langService = new ProbeLanguageService(this);
@@ -422,6 +427,20 @@ namespace DkTools
 					if (_textManagerService == null) throw new InvalidOperationException("Unable to get service 'Microsoft.VisualStudio.TextManager.Interop.SVsTextManager'.");
 				}
 				return _textManagerService;
+			}
+		}
+
+		private Microsoft.VisualStudio.TextManager.Interop.IVsTextManager2 _textManager2Service;
+		internal Microsoft.VisualStudio.TextManager.Interop.IVsTextManager2 TextManager2Service
+		{
+			get
+			{
+				if (_textManager2Service == null)
+				{
+					_textManager2Service = ProbeToolsPackage.Instance.GetService(typeof(Microsoft.VisualStudio.TextManager.Interop.SVsTextManager)) as Microsoft.VisualStudio.TextManager.Interop.IVsTextManager2;
+					if (_textManager2Service == null) throw new InvalidOperationException("Unable to get service 'Microsoft.VisualStudio.TextManager.Interop.SVsTextManager'.");
+				}
+				return _textManager2Service;
 			}
 		}
 

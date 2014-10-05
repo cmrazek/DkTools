@@ -12,11 +12,11 @@ namespace DkTools.SmartIndenting
 	internal class ProbeSmartIndent : ISmartIndent
 	{
 		private ITextView _view;
-		private int _tabSize = 4;
-		private bool _keepTabs = true;
+		private static int _tabSize = 4;
+		private static bool _keepTabs = true;
 
-		private Regex _rxPreprocessorLine = new Regex(@"^\s*#(?:if|ifdef|ifndef|elif|else|endif|define|undef)");
-		private Regex _rxCaseLine = new Regex(@"^\s*(case\s+.*\:|default\:|before\s+group.*\:|after\s+group.*\:|for\s+each\s*\:)");
+		private static readonly Regex _rxPreprocessorLine = new Regex(@"^\s*#(?:if|ifdef|ifndef|elif|else|endif|define|undef)");
+		private static readonly Regex _rxCaseLine = new Regex(@"^\s*(case\s+.*\:|default\:|before\s+group.*\:|after\s+group.*\:|for\s+each\s*\:)");
 
 		public ProbeSmartIndent(ITextView view)
 		{
@@ -27,12 +27,17 @@ namespace DkTools.SmartIndenting
 		{
 		}
 
-		int? ISmartIndent.GetDesiredIndentation(ITextSnapshotLine line)
+		public int? GetDesiredIndentation(ITextSnapshotLine line)
+		{
+			_tabSize = _view.GetTabSize();
+			_keepTabs = _view.GetKeepTabs();
+
+			return GetDesiredIndentation(line.Snapshot.TextBuffer, line, _tabSize, _keepTabs);
+		}
+
+		public static int? GetDesiredIndentation(ITextBuffer buffer, ITextSnapshotLine line, int tabSize, bool keepTabs)
 		{
 			if (line.LineNumber == 0) return 0;
-
-			_tabSize = _view.Options.GetOptionValue<int>(DefaultOptions.TabSizeOptionId);
-			_keepTabs = !_view.Options.GetOptionValue<bool>(DefaultOptions.ConvertTabsToSpacesOptionId);
 
 			var lineText = line.GetText();
 			var lineTextTrim = lineText.Trim();
@@ -48,7 +53,7 @@ namespace DkTools.SmartIndenting
 				{
 					if (span.End < bracePos)
 					{
-						return span.Start.GetContainingLine().GetText().GetIndentCount(_tabSize);
+						return span.Start.GetContainingLine().GetText().GetIndentCount(tabSize);
 					}
 				}
 			}
@@ -62,10 +67,10 @@ namespace DkTools.SmartIndenting
 				// User is typing a 'case' inside a switch.
 
 				// Try to find the braces that contain the 'case'.
-				var fileStore = CodeModel.FileStore.GetOrCreateForTextBuffer(_view.TextBuffer);
+				var fileStore = CodeModel.FileStore.GetOrCreateForTextBuffer(buffer);
 				if (fileStore != null)
 				{
-					var model = fileStore.GetCurrentModel(_view.TextBuffer.CurrentSnapshot, "Smart indenting - case inside switch");
+					var model = fileStore.GetCurrentModel(buffer.CurrentSnapshot, "Smart indenting - case inside switch");
 					var offset = line.Snapshot.TranslateOffsetToSnapshot(line.Start.Position, model.Snapshot);
 					var bracesToken = model.File.FindDownward(offset, t => t is CodeModel.Tokens.BracesToken).LastOrDefault() as CodeModel.Tokens.BracesToken;
 					if (bracesToken != null)
@@ -74,7 +79,7 @@ namespace DkTools.SmartIndenting
 						var openOffset = bracesToken.OpenToken.Span.Start;
 						openOffset = model.Snapshot.TranslateOffsetToSnapshot(openOffset, line.Snapshot);
 						var openLine = line.Snapshot.GetLineFromPosition(openOffset);
-						return openLine.GetText().GetIndentCount(_tabSize);
+						return openLine.GetText().GetIndentCount(tabSize);
 					}
 				}
 			}
@@ -84,35 +89,40 @@ namespace DkTools.SmartIndenting
 				var prevLine = GetPreviousCodeLine(line);
 				if (prevLine != null)
 				{
-					Classifier.TextBufferStateTracker tracker;
-					if (prevLine.Snapshot.TextBuffer.Properties.TryGetProperty<Classifier.TextBufferStateTracker>(typeof(Classifier.TextBufferStateTracker), out tracker))
+					var tracker = Classifier.TextBufferStateTracker.GetTrackerForTextBuffer(buffer);
+					if (tracker != null)
 					{
 						var lineNumber = prevLine.LineNumber;
-						var state = tracker.GetStateForLine(lineNumber, tracker.Snapshot);
-						while (Classifier.ProbeClassifierScanner.StateInsideComment(state))
+						var prevState = tracker.GetStateForLine(lineNumber, tracker.Snapshot);
+						while (Classifier.ProbeClassifierScanner.StateInsideComment(prevState))
 						{
 							if (lineNumber == 0) break;	// At start of file. In theory, this should never happen as the state for the start of the file is always zero.
-							state = tracker.GetStateForLine(--lineNumber, tracker.Snapshot);
+							prevState = tracker.GetStateForLine(--lineNumber, tracker.Snapshot);
 						}
 
 						if (prevLine.LineNumber != lineNumber) prevLine = prevLine.Snapshot.GetLineFromLineNumber(lineNumber);
 					}
 
-					var prevLineText = prevLine.GetText().TrimEnd();
-					if (prevLineText.EndsWith("{") || _rxCaseLine.IsMatch(prevLineText))
+					var prevLineText = prevLine.Snapshot.GetText(prevLine.Start.Position, line.Start.Position - prevLine.Start.Position);
+
+					//var tracker = ;
+					//var state = tracker != null ? tracker.GetStateForLine(prevLine.LineNumber, _view.TextSnapshot) : 0;
+
+					//if (prevLineText.EndsWith("{") || _rxCaseLine.IsMatch(prevLineText))
+					if (PrevLineTextWarrantsIndent(prevLineText))
 					{
-						return prevLineText.GetIndentCount(_tabSize).AddIndentTab(_tabSize);
+						return prevLineText.GetIndentCount(tabSize).AddIndentTab(tabSize);
 					}
 					else
 					{
-						return prevLineText.GetIndentCount(_tabSize);
+						return prevLineText.GetIndentCount(tabSize);
 					}
 				}
 				return 0;
 			}
 		}
 
-		private ITextSnapshotLine GetPreviousCodeLine(ITextSnapshotLine line)
+		private static ITextSnapshotLine GetPreviousCodeLine(ITextSnapshotLine line)
 		{
 			var prevLineNum = line.LineNumber - 1;
 			ITextSnapshotLine prevLine = null;
@@ -152,6 +162,83 @@ namespace DkTools.SmartIndenting
 		public bool KeepTabs
 		{
 			get { return _keepTabs; }
+		}
+
+		public void FixIndentingBetweenLines(int startLineNumber, int endLineNumber)
+		{
+			using (var tran = _view.TextBuffer.CreateUndoTransaction("Indentation fix"))
+			{
+				for (int lineNumber = startLineNumber; lineNumber <= endLineNumber; lineNumber++)
+				{
+					var line = _view.TextSnapshot.GetLineFromLineNumber(lineNumber);
+					var indent = GetDesiredIndentation(line);
+					if (!indent.HasValue) continue;
+					var desiredIndent = indent.Value;
+
+					var lineText = line.GetText();
+					var actualIndent = lineText.GetIndentCount(_tabSize);
+
+					if (desiredIndent != actualIndent)
+					{
+						lineText = lineText.AdjustIndent(desiredIndent, _tabSize, _keepTabs);
+						_view.TextBuffer.Replace(new SnapshotSpan(line.Start, line.End), lineText);
+					}
+				}
+
+				tran.Complete();
+			}
+		}
+
+		public static void FixIndentingBetweenLines(ITextBuffer buffer, int startLineNumber, int endLineNumber, int tabSize, bool keepTabs)
+		{
+			for (int lineNumber = startLineNumber; lineNumber <= endLineNumber; lineNumber++)
+			{
+				var line = buffer.CurrentSnapshot.GetLineFromLineNumber(lineNumber);
+				var indent = GetDesiredIndentation(buffer, line, tabSize, keepTabs);
+				if (!indent.HasValue) continue;
+				var desiredIndent = indent.Value;
+
+				var lineText = line.GetText();
+				var actualIndent = lineText.GetIndentCount(tabSize);
+
+				if (desiredIndent != actualIndent)
+				{
+					var oldIndent = lineText.GetIndentText();
+					lineText = lineText.AdjustIndent(desiredIndent, tabSize, keepTabs);
+					var newIndent = lineText.GetIndentText();
+					buffer.Replace(new SnapshotSpan(line.Snapshot, line.Start.Position, oldIndent.Length), newIndent);
+				}
+			}
+		}
+
+		public static bool PrevLineTextWarrantsIndent(string lineText)
+		{
+			var code = new TokenParser.Parser(lineText);
+			var indent = 0;
+
+			if (_rxCaseLine.IsMatch(lineText)) return true;
+
+			while (code.Read())
+			{
+				if (code.TokenType == TokenParser.TokenType.Operator)
+				{
+					switch (code.TokenText)
+					{
+						case "{":
+						case "(":
+						case "[":
+							indent++;
+							break;
+						case "}":
+						case ")":
+						case "]":
+							indent--;
+							break;
+					}
+				}
+			}
+
+			return indent > 0;
 		}
 	}
 }

@@ -4,6 +4,8 @@ using System.Linq;
 using System.Text;
 using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudio.Text;
+using Microsoft.VisualStudio.Text.Editor;
+using Microsoft.VisualStudio.Text.Operations;
 using Microsoft.VisualStudio.TextManager.Interop;
 
 namespace DkTools
@@ -103,6 +105,26 @@ namespace DkTools
 			persistFileFormat.GetCurFile(out fileName, out formatIndex);
 
 			return fileName;
+		}
+
+		public static ITextUndoTransaction CreateUndoTransaction(this ITextBuffer buf, string description)
+		{
+			if (buf == null) return null;
+
+			ITextBufferUndoManager manager;
+			if (!buf.Properties.TryGetProperty(typeof(ITextBufferUndoManager), out manager) || manager == null) return null;
+
+			return manager.TextBufferUndoHistory.CreateTransaction(description);
+		}
+
+		public static int GetTabSize(this ITextView view)
+		{
+			return view.Options.GetOptionValue<int>(DefaultOptions.TabSizeOptionId);
+		}
+
+		public static bool GetKeepTabs(this ITextView view)
+		{
+			return !view.Options.GetOptionValue<bool>(DefaultOptions.ConvertTabsToSpacesOptionId);
 		}
 	}
 }
