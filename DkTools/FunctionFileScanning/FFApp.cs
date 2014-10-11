@@ -151,6 +151,10 @@ namespace DkTools.FunctionFileScanning
 						func = new FFFunction(this, file, null, funcDef);
 						_functions[funcDef.Name] = func;
 					}
+					else
+					{
+						func.UpdateFromDefinition(funcDef);
+					}
 				}
 
 				classOut = null;

@@ -17,7 +17,6 @@ namespace DkTools.Dict
 		private Dictionary<string, DictField> _fields;
 		private List<DictRelInd> _relInds;
 		private TableDefinition[] _definitions;
-		private string _baseTable;
 		private DICTSRVRLib.IPTable _repoTable;
 
 		public DictTable(DICTSRVRLib.IPTable repoTable)
@@ -41,8 +40,6 @@ namespace DkTools.Dict
 				var devInfo = dev.DevInfo;
 				if (!string.IsNullOrEmpty(devInfo)) _description = devInfo;
 			}
-
-			_baseTable = _name;	// TODO: Do we need to retrieve this from somewhere?
 
 			_definitions = new TableDefinition[11];
 			_definitions[0] = new TableDefinition(_name, this, true);
@@ -74,11 +71,6 @@ namespace DkTools.Dict
 		public string Description
 		{
 			get { return _description; }
-		}
-
-		public string BaseTable
-		{
-			get { return _baseTable; }
 		}
 
 		public bool IsField(string fieldName)

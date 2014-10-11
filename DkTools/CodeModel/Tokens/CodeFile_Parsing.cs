@@ -322,7 +322,7 @@ namespace DkTools.CodeModel.Tokens
 
 					if (defs.Any(d => d is ExtractTableDefinition))
 					{
-						var exDef = DefinitionProvider.GetGlobal<ExtractTableDefinition>(word).FirstOrDefault();
+						var exDef = defs.FirstOrDefault(d => d is ExtractTableDefinition) as ExtractTableDefinition;
 						if (exDef != null)
 						{
 							var fieldDef = exDef.GetField(word2);
@@ -520,29 +520,6 @@ namespace DkTools.CodeModel.Tokens
 								MoveNext();
 							}
 						}
-
-						// TODO: remove
-						//// multi line comment
-						//_pos += 2;
-						//var level = 1;
-						//while (_pos < _length)
-						//{
-						//	ch = _source[_pos];
-						//	if (ch == '/' && _pos + 1 < _length && _source[_pos + 1] == '*')
-						//	{
-						//		_pos += 2;
-						//		level++;
-						//	}
-						//	else if (ch == '*' && _pos + 1 < _length && _source[_pos + 1] == '/')
-						//	{
-						//		_pos += 2;
-						//		if (--level == 0) break;
-						//	}
-						//	else _pos++;
-						//}
-
-						//SeekMatch("*/");
-						//MoveNext(2);    // Skip past comment end
 
 						commentEndPos = Position;
 						continue;

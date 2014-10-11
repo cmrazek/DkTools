@@ -207,7 +207,7 @@ namespace DkTools.FunctionFileScanning
 				var classList = new List<FFClass>();
 				var funcList = new List<FFFunction>();
 
-				foreach (var funcDef in model.DefinitionProvider.GetGlobal<CodeModel.Definitions.FunctionDefinition>())
+				foreach (var funcDef in model.DefinitionProvider.GetGlobalFromFile<CodeModel.Definitions.FunctionDefinition>())
 				{
 					if (funcDef.Extern) continue;
 					if (!string.IsNullOrEmpty(className))
@@ -226,9 +226,11 @@ namespace DkTools.FunctionFileScanning
 
 					if (string.IsNullOrEmpty(funcFileName) || funcPos < 0 || !string.Equals(funcFileName, fileName, StringComparison.OrdinalIgnoreCase)) continue;
 
+					var saveDef = funcDef.CloneAsExtern();	// This should appear as extern when used in other files.
+
 					FFClass ffClass;
 					FFFunction ffFunc;
-					app.UpdateFunction(ffFile, className, funcDef, out ffClass, out ffFunc);
+					app.UpdateFunction(ffFile, className, saveDef, out ffClass, out ffFunc);
 					if (ffClass != null && !classList.Contains(ffClass))
 					{
 						classList.Add(ffClass);

@@ -157,7 +157,7 @@ namespace DkTools.SignatureHelp
 		{
 			if (string.IsNullOrEmpty(className))
 			{
-				foreach (var def in model.DefinitionProvider.GetGlobal<CodeModel.Definitions.FunctionDefinition>(funcName))
+				foreach (var def in model.DefinitionProvider.GetGlobalFromAnywhere<CodeModel.Definitions.FunctionDefinition>(funcName))
 				{
 					var funcDef = (def as CodeModel.Definitions.FunctionDefinition);
 					if (string.IsNullOrEmpty(funcDef.ClassName) || funcDef.ClassName == model.ClassName)
@@ -165,15 +165,10 @@ namespace DkTools.SignatureHelp
 						yield return new SignatureInfo(def.Signature, def.DevDescription);
 					}
 				}
-
-				foreach (var def in model.DefinitionProvider.GetGlobal<CodeModel.Definitions.MacroDefinition>(funcName))
-				{
-					yield return new SignatureInfo(def.Signature, string.Empty);
-				}
 			}
 			else
 			{
-				foreach (var def in model.DefinitionProvider.GetGlobal<CodeModel.Definitions.FunctionDefinition>(funcName))
+				foreach (var def in model.DefinitionProvider.GetGlobalFromAnywhere<CodeModel.Definitions.FunctionDefinition>(funcName))
 				{
 					if ((def as CodeModel.Definitions.FunctionDefinition).ClassName == className)
 					{
@@ -181,9 +176,6 @@ namespace DkTools.SignatureHelp
 					}
 				}
 			}
-
-			var ffFunc = ProbeToolsPackage.Instance.FunctionFileScanner.GetFunction(className, funcName);
-			if (ffFunc != null) yield return new SignatureInfo(ffFunc.Definition.Signature, ffFunc.Definition.DevDescription);
 		}
 
 		public static IEnumerable<ArgumentInfo> GetSignatureArguments(string sig)

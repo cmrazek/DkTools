@@ -388,7 +388,6 @@
     <Compile Include="LockedValue.cs" />
     <Compile Include="Log.cs" />
     <Compile Include="Navigation\Navigator.cs" />
-    <Compile Include="Navigation\ReferenceScroller.cs" />
     <Compile Include="Outlining\OutliningTagger.cs" />
     <Compile Include="Outlining\OutliningTaggerProvider.cs" />
     <Compile Include="Output.cs" />
@@ -435,7 +434,6 @@
     <Compile Include="QuickInfo\QuickInfoControllerProvider.cs" />
     <Compile Include="QuickInfo\QuickInfoSource.cs" />
     <Compile Include="QuickInfo\QuickInfoSourceProvider.cs" />
-    <Compile Include="Reformatting\FormatSource.cs" />
     <Compile Include="Res.Designer.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
@@ -524,7 +522,9 @@
     <EmbeddedResource Include="Snippets\Default\Client Triggers.Snippets.snippet" />
     <EmbeddedResource Include="Snippets\Default\Neutral Triggers.Snippets.snippet" />
     <EmbeddedResource Include="Snippets\Default\Server Triggers.Snippets.snippet" />
-    <EmbeddedResource Include="Snippets\Default\Misc.Snippets.snippet" />
+    <EmbeddedResource Include="Snippets\Default\Misc.Snippets.snippet">
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
     <None Include="source.extension.vsixmanifest">
       <SubType>Designer</SubType>
     </None>
@@ -614,7 +614,9 @@
       <ResourceName>Menus.ctmenu</ResourceName>
     </VSCTCompile>
   </ItemGroup>
-  <ItemGroup />
+  <ItemGroup>
+    <Folder Include="Reformatting\" />
+  </ItemGroup>
   <PropertyGroup>
     <UseCodebase>true</UseCodebase>
   </PropertyGroup>

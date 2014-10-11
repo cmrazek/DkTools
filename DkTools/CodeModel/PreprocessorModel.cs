@@ -100,7 +100,7 @@ namespace DkTools.CodeModel
 
 		private DataTypeDefinition GlobalDataTypeCallback(string name)
 		{
-			var def = _defProv.GetGlobal(name).FirstOrDefault();
+			var def = _defProv.GetGlobalFromAnywhere(name).FirstOrDefault();
 			return def as DataTypeDefinition;
 		}
 
@@ -620,7 +620,7 @@ namespace DkTools.CodeModel
 
 		private void AddGlobalDefinition(Definition def)
 		{
-			_defProv.AddGlobal(def);
+			_defProv.AddGlobalFromFile(def);
 			_globalDefs.Add(def);
 		}
 
@@ -651,7 +651,7 @@ namespace DkTools.CodeModel
 			}
 			var name = _code.TokenText;
 			ExtractTableDefinition exDef = null;
-			if (!_defProv.GetGlobal<ExtractTableDefinition>(name).Any())	// Don't add a definition if it's already there (extracts can be called multiple times)
+			if (!_defProv.GetGlobalFromFile<ExtractTableDefinition>(name).Any())	// Don't add a definition if it's already there (extracts can be called multiple times)
 			{
 				var localPos = _source.GetFilePosition(_code.TokenStartPostion);
 				exDef = new ExtractTableDefinition(name, localPos.FileName, localPos.Position, permanent);
@@ -700,7 +700,7 @@ namespace DkTools.CodeModel
 
 			if (exDef != null)
 			{
-				_defProv.AddGlobal(exDef);
+				_defProv.AddGlobalFromFile(exDef);
 			}
 		}
 

@@ -47,7 +47,6 @@ namespace DkTools.Snippets
 				if (_exManager != null)
 				{
 					int result = _exManager.InvokeInsertionUI(_viewAdapter, this, GuidList.guidSnippets, null, 0, 0, null, 0, 0, "DK Snippets", string.Empty);
-					Log.WriteDebug("_exManager.InvokeInsertionUI returned {0}", result);	// TODO
 					return VSConstants.S_OK;
 				}
 			}

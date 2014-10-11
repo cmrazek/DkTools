@@ -760,7 +760,7 @@ namespace DkTools.CodeModel
 		{
 			foreach (var define in _defines.Values)
 			{
-				defProv.AddGlobal(define.CreateDefinition());
+				defProv.AddGlobalFromFile(define.CreateDefinition());
 			}
 		}
 

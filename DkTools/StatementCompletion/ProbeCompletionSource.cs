@@ -172,7 +172,7 @@ namespace DkTools.StatementCompletion
 				if (store != null)
 				{
 					var model = store.GetMostRecentModel(snapshot, "Extract table.field completion.");
-					var exDef = model.DefinitionProvider.GetGlobal<ExtractTableDefinition>(tableName).FirstOrDefault();
+					var exDef = model.DefinitionProvider.GetGlobalFromFile<ExtractTableDefinition>(tableName).FirstOrDefault();
 					if (exDef != null)
 					{
 						completionSpan = new Microsoft.VisualStudio.Text.Span(linePos + match.Groups[2].Index, match.Groups[2].Length);
@@ -249,7 +249,7 @@ namespace DkTools.StatementCompletion
 				{
 					var model = fileStore.GetCurrentModel(_textBuffer.CurrentSnapshot, "Auto-completion after #ifdef");
 
-					foreach (var def in model.DefinitionProvider.GetGlobal<ConstantDefinition>())
+					foreach (var def in model.DefinitionProvider.GetGlobalFromAnywhere<ConstantDefinition>())
 					{
 						if (!def.CompletionVisible) continue;
 						completionList[def.Name] = CreateCompletion(def);
@@ -347,7 +347,7 @@ namespace DkTools.StatementCompletion
 				{
 					var model = store.GetMostRecentModel(_textBuffer.CurrentSnapshot, "Auto-completion after 'extract'");
 
-					foreach (var exDef in model.DefinitionProvider.GetGlobal<ExtractTableDefinition>())
+					foreach (var exDef in model.DefinitionProvider.GetGlobalFromFile<ExtractTableDefinition>())
 					{
 						if (!exDef.CompletionVisible) continue;
 						completionList[exDef.Name] = CreateCompletion(exDef);
@@ -460,14 +460,14 @@ namespace DkTools.StatementCompletion
 					var def = model.DefinitionProvider.GetLocal<DataTypeDefinition>(editPos, dataTypeName).FirstOrDefault();
 					if (def != null) return def;
 
-					return model.DefinitionProvider.GetGlobal<DataTypeDefinition>(dataTypeName).FirstOrDefault();
+					return model.DefinitionProvider.GetGlobalFromAnywhere<DataTypeDefinition>(dataTypeName).FirstOrDefault();
 				},
 				varName =>
 				{
 					var def = model.DefinitionProvider.GetLocal<VariableDefinition>(editPos, varName).FirstOrDefault();
 					if (def != null) return def;
 
-					return model.DefinitionProvider.GetGlobal<VariableDefinition>(varName).FirstOrDefault();
+					return model.DefinitionProvider.GetGlobalFromAnywhere<VariableDefinition>(varName).FirstOrDefault();
 				});
 			if (dataType != null)
 			{
@@ -544,7 +544,7 @@ namespace DkTools.StatementCompletion
 
 			var tokens = model.FindTokens(modelPos).ToArray();
 
-			foreach (var def in model.DefinitionProvider.Globals)
+			foreach (var def in model.DefinitionProvider.GlobalsFromAnywhere)
 			{
 				if (!def.CompletionVisible) continue;
 				yield return CreateCompletion(def);

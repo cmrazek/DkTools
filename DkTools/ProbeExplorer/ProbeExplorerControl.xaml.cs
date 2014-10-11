@@ -809,8 +809,8 @@ namespace DkTools.ProbeExplorer
 				menu.Items.Add(menuItem);
 
 				menuItem = new MenuItem();
-				menuItem.Header = "Show Preprocessor Segments";
-				menuItem.Click += ShowPreprocessorSegments_Click;
+				menuItem.Header = "Show Preprocessor Dump";
+				menuItem.Click += ShowPreprocessorDump_Click;
 				menu.Items.Add(menuItem);
 
 				menuItem = new MenuItem();
@@ -875,11 +875,11 @@ namespace DkTools.ProbeExplorer
 			}
 		}
 
-		private void ShowPreprocessorSegments_Click(object sender, RoutedEventArgs e)
+		private void ShowPreprocessorDump_Click(object sender, RoutedEventArgs e)
 		{
 			try
 			{
-				Commands.DebugCommands.ShowPreprocessorSegments();
+				Commands.DebugCommands.ShowPreprocessorDump();
 			}
 			catch (Exception ex)
 			{

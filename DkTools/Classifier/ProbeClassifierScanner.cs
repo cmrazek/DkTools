@@ -259,8 +259,6 @@ namespace DkTools.Classifier
 		{
 			char ch;
 
-			ch = '\0';	// TODO: remove this
-
 			while (_pos < _length & (state & k_state_commentMask) != 0)
 			{
 				var index = _source.IndexOfAny(k_commentEndKickOffChars, _pos);
@@ -319,8 +317,6 @@ namespace DkTools.Classifier
 					}
 				}
 			}
-
-			ch = '\0';	// TODO: remove this
 		}
 
 		public static bool StateInsideComment(int state)

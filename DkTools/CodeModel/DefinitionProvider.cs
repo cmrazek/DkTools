@@ -31,43 +31,110 @@ namespace DkTools.CodeModel
 					new FunctionDefinition("UNREFERENCED_PARAMETER", DataType.Void, "UNREFERENCED_PARAMETER(parameter)", "Prevents a compiler warning if a parameter passed to a function is not used.")
 				};
 			}
-			AddGlobal(_builtInDefs);
-			AddGlobal(ProbeEnvironment.DictDefinitions);
-			if (string.IsNullOrEmpty(fileName) || !System.IO.Path.GetFileName(fileName).Equals("stdlib.i", StringComparison.OrdinalIgnoreCase)) AddGlobal(FileStore.StdLibModel.PreprocessorModel.DefinitionProvider.Globals);
-			AddGlobal(ProbeToolsPackage.Instance.FunctionFileScanner.GlobalDefinitions);
+			AddGlobalFromAnywhere(_builtInDefs);
+			AddGlobalFromAnywhere(ProbeEnvironment.DictDefinitions);
+			if (string.IsNullOrEmpty(fileName) || !System.IO.Path.GetFileName(fileName).Equals("stdlib.i", StringComparison.OrdinalIgnoreCase))
+			{
+				AddGlobalFromAnywhere(FileStore.StdLibModel.PreprocessorModel.DefinitionProvider.GlobalsFromFile);
+			}
+			AddGlobalFromAnywhere(ProbeToolsPackage.Instance.FunctionFileScanner.GlobalDefinitions);
 		}
 
 		#region Global Definitions
-		private DefinitionCollection _globalDefs = new DefinitionCollection();
+		private DefinitionCollection _fileGlobalDefs = new DefinitionCollection();
+		private DefinitionCollection _anywhereGlobalDefs = new DefinitionCollection();
 
-		public IEnumerable<Definition> Globals
+		public IEnumerable<Definition> GlobalsFromAnywhere
 		{
-			get { return _globalDefs.All; }
+			get
+			{
+				foreach (var def in _fileGlobalDefs.All)
+				{
+					yield return def;
+				}
+
+				foreach (var def in _anywhereGlobalDefs.All)
+				{
+					yield return def;
+				}
+			}
 		}
 
-		public void AddGlobal(Definition def)
+		public IEnumerable<Definition> GlobalsFromFile
 		{
-			_globalDefs.Add(def);
+			get
+			{
+				return _fileGlobalDefs.All;
+			}
 		}
 
-		public void AddGlobal(IEnumerable<Definition> defs)
+		public void AddGlobalFromAnywhere(Definition def)
 		{
-			_globalDefs.Add(defs);
+			_anywhereGlobalDefs.Add(def);
 		}
 
-		public IEnumerable<Definition> GetGlobal(string name)
+		public void AddGlobalFromAnywhere(IEnumerable<Definition> defs)
 		{
-			return _globalDefs.Get(name);
+			_anywhereGlobalDefs.Add(defs);
 		}
 
-		public IEnumerable<T> GetGlobal<T>(string name) where T : Definition
+		public void AddGlobalFromFile(Definition def)
 		{
-			return _globalDefs.Get<T>(name);
+			_fileGlobalDefs.Add(def);
 		}
 
-		public IEnumerable<T> GetGlobal<T>() where T : Definition
+		public void AddGlobalFromFile(IEnumerable<Definition> defs)
 		{
-			return _globalDefs.Get<T>();
+			_fileGlobalDefs.Add(defs);
+		}
+
+		public IEnumerable<Definition> GetGlobalFromAnywhere(string name)
+		{
+			foreach (var def in _fileGlobalDefs.Get(name))
+			{
+				yield return def;
+			}
+
+			foreach (var def in _anywhereGlobalDefs.Get(name))
+			{
+				yield return def;
+			}
+		}
+
+		public IEnumerable<T> GetGlobalFromAnywhere<T>(string name) where T : Definition
+		{
+			foreach (var def in _fileGlobalDefs.Get<T>(name))
+			{
+				yield return def;
+			}
+
+			foreach (var def in _anywhereGlobalDefs.Get<T>(name))
+			{
+				yield return def;
+			}
+		}
+
+		public IEnumerable<T> GetGlobalFromAnywhere<T>() where T : Definition
+		{
+			foreach (var def in _fileGlobalDefs.Get<T>())
+			{
+				yield return def;
+			}
+
+			foreach (var def in _anywhereGlobalDefs.Get<T>())
+			{
+				yield return def;
+			}
+		}
+
+		public IEnumerable<T> GetGlobalFromFile<T>() where T : Definition
+		{
+			return _fileGlobalDefs.Get<T>();
+		}
+
+		public IEnumerable<T> GetGlobalFromFile<T>(string name) where T : Definition
+		{
+			return _fileGlobalDefs.Get<T>(name);
 		}
 		#endregion
 
@@ -139,7 +206,7 @@ namespace DkTools.CodeModel
 		public IEnumerable<Definition> GetAny(int pos, string name)
 		{
 			foreach (var def in GetLocal(pos, name)) yield return def;
-			foreach (var def in GetGlobal(name)) yield return def;
+			foreach (var def in GetGlobalFromAnywhere(name)) yield return def;
 		}
 		#endregion
 
@@ -148,8 +215,15 @@ namespace DkTools.CodeModel
 		{
 			var sb = new StringBuilder();
 
-			sb.AppendLine("Global Definitions:");
-			foreach (var def in _globalDefs.All)
+			sb.AppendLine("Global Definitions (from file):");
+			foreach (var def in _fileGlobalDefs.All)
+			{
+				sb.AppendLine(def.Dump());
+			}
+
+			sb.AppendLine();
+			sb.AppendLine("Global Definitions (anywhere):");
+			foreach (var def in _anywhereGlobalDefs.All)
 			{
 				sb.AppendLine(def.Dump());
 			}

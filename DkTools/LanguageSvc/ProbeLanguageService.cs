@@ -80,10 +80,5 @@ namespace DkTools.LanguageSvc
 		{
 			return new ProbeDropDownHelper(this);
 		}
-
-		public override Source CreateSource(IVsTextLines buffer)
-		{
-			return new Reformatting.FormatSource(this, buffer, GetColorizer(buffer));
-		}
 	}
 }

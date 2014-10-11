@@ -746,11 +746,11 @@ namespace DkTools
 				var prep = new CodeModel.Preprocessor(store);
 				prep.Preprocess(reader, dest, fileName, null, serverContext);
 
-				Shell.OpenTempContent(string.Concat(dest.Text, "\r\nCONTINUOUS SEGMENTS:\r\n", dest.DumpContinuousSegments()), Path.GetFileName(fileName), ".preprocessor.txt");
+				//Shell.OpenTempContent(string.Concat(dest.Text, "\r\nCONTINUOUS SEGMENTS:\r\n", dest.DumpContinuousSegments()), Path.GetFileName(fileName), ".preprocessor.txt");
+				Shell.OpenTempContent(dest.Text, Path.GetFileName(fileName), ".preprocessor.txt");
 			}
 
-			// TODO: remove this command
-			public static void ShowPreprocessorSegments()
+			public static void ShowPreprocessorDump()
 			{
 				var model = GetModelForActiveDoc();
 				if (model == null)

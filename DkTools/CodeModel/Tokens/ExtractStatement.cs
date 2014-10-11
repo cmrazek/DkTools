@@ -34,7 +34,7 @@ namespace DkTools.CodeModel.Tokens
 			}
 
 			if (!string.IsNullOrEmpty(word) &&
-				(exDef = scope.DefinitionProvider.GetGlobal<ExtractTableDefinition>(word).FirstOrDefault()) != null)
+				(exDef = scope.DefinitionProvider.GetGlobalFromFile<ExtractTableDefinition>(word).FirstOrDefault()) != null)
 			{
 				exToken = new ExtractTableToken(parent, scope, file.MoveNextSpan(word.Length), word, exDef);
 				tokens.Add(exToken);

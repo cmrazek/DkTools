@@ -30,7 +30,8 @@ namespace DkTools.CodeModel.Definitions
 		/// <param name="signature">Signature text</param>
 		/// <param name="argsEndPos">Ending position of the argument brackets</param>
 		/// <param name="bodyStartPos">Position of the function's body braces (if does not match, then will be ignored)</param>
-		public FunctionDefinition(string className, string funcName, string fileName, int nameStartPos, DataType dataType, string signature, int argsStartPos, int argsEndPos, int bodyStartPos, Span entireSpan, FunctionPrivacy privacy, bool isExtern, string devDesc)
+		public FunctionDefinition(string className, string funcName, string fileName, int nameStartPos, DataType dataType, string signature,
+			int argsStartPos, int argsEndPos, int bodyStartPos, Span entireSpan, FunctionPrivacy privacy, bool isExtern, string devDesc)
 			: base(funcName, fileName, nameStartPos)
 		{
 #if DEBUG
@@ -69,6 +70,11 @@ namespace DkTools.CodeModel.Definitions
 			_className = null;
 			_entireSpan = Span.Empty;
 			_devDesc = devDesc;
+		}
+
+		public FunctionDefinition CloneAsExtern()
+		{
+			return new FunctionDefinition(_className, Name, SourceFileName, SourceStartPos, _dataType, _signature, _argsStartPos, _argsEndPos, _bodyStartPos, _entireSpan, _privacy, true, _devDesc);
 		}
 
 		public DataType DataType

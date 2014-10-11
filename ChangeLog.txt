@@ -1,5 +1,12 @@
 DkTools2012 ChangeLog
 ____________________________________________________________________________________________________
+Version 1.2.11 - (pending):
+
+Bug Fixes:
+- Fixed problem with .f function info not updating properly after being changed.
+- Eliminated duplicate signature help signatures for every global function.
+
+____________________________________________________________________________________________________
 Version 1.2.10 - Oct 6, 2014:
 
 Features:
