@@ -70,6 +70,7 @@ namespace DkTools
 
 		internal static void OpenDocument(string fileName, int pos)
 		{
+			if (pos < 0) pos = 0;
 			OpenDocument(fileName, new CodeModel.Span(pos, pos));
 		}
 

@@ -5,6 +5,8 @@ Version 1.2.11 - (pending):
 Bug Fixes:
 - Fixed problem with .f function info not updating properly after being changed.
 - Eliminated duplicate signature help signatures for every global function.
+- Fixed problem with some .f functions with the name made entirely out of preprocessor statements
+  not being detected correctly (bohipohi, pohibohi).
 
 ____________________________________________________________________________________________________
 Version 1.2.10 - Oct 6, 2014:

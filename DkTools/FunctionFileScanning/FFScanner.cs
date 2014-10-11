@@ -222,9 +222,8 @@ namespace DkTools.FunctionFileScanning
 					}
 
 					var funcFileName = funcDef.SourceFileName;
-					var funcPos = funcDef.SourceStartPos;
 
-					if (string.IsNullOrEmpty(funcFileName) || funcPos < 0 || !string.Equals(funcFileName, fileName, StringComparison.OrdinalIgnoreCase)) continue;
+					if (string.IsNullOrEmpty(funcFileName) || !string.Equals(funcFileName, fileName, StringComparison.OrdinalIgnoreCase)) continue;
 
 					var saveDef = funcDef.CloneAsExtern();	// This should appear as extern when used in other files.
 

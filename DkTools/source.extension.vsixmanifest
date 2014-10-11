@@ -2,8 +2,8 @@
 <Vsix xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" Version="1.0.0" xmlns="http://schemas.microsoft.com/developer/vsx-schema/2010">
 	<Identifier Id="A0EF133B-F328-4137-8CCB-9A09EC7E665E">
 		<Name>DkTools2012</Name>
-		<Author>Servus Credit Union Ltd.</Author>
-		<Version>1.2.10</Version>
+		<Author>Chris Mrazek</Author>
+		<Version>1.2.11</Version>
 		<Description xml:space="preserve">DK development tools for Visual Studio 2012.</Description>
 		<Locale>1033</Locale>
 		<InstalledByMsi>false</InstalledByMsi>

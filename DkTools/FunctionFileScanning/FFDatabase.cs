@@ -54,8 +54,8 @@ namespace DkTools.FunctionFileScanning
 );",
 "create unique index func_ix_classfunc on func (app_id, class_id, name);" };
 
-		public const string DatabaseFileName = "DkScan_v3.sdf";
-		public static readonly string[] OldDatabaseFileNames = new string[] { "DkScan.sdf", "DkScan_v2.sdf" };
+		public const string DatabaseFileName = "DkScan_v4.sdf";
+		public static readonly string[] OldDatabaseFileNames = new string[] { "DkScan.sdf", "DkScan_v2.sdf", "DkScan_v3.sdf" };
 
 		private SqlCeConnection _conn;
 
