@@ -46,6 +46,7 @@ namespace DkTools.CodeModel
 		public static readonly DataType String = new DataType("string");
 		public static readonly DataType StringVarying = new DataType("string varying");
 		public static readonly DataType Table = new DataType("table") { _completionOptionsType = CompletionOptionsType.Tables };
+		public static readonly DataType Ulong = new DataType("ulong");
 		public static readonly DataType Unsigned = new DataType("unsigned");
 		public static readonly DataType Variant = new DataType("variant");
 		public static readonly DataType Void = new DataType("void");
@@ -355,6 +356,12 @@ namespace DkTools.CodeModel
 
 						return new DataType(typeName, sb.ToString());
 					}
+				#endregion
+
+				#region ulong
+				case "ulong":
+					if ((flags & ParseFlag.FromRepo) != 0) IgnoreRepoWords(code, startWord);
+					return DataType.Ulong;
 				#endregion
 
 				#region char
