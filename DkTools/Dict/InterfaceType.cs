@@ -27,9 +27,6 @@ namespace DkTools.Dict
 				if (!string.IsNullOrEmpty(devInfo)) _devDesc = devInfo;
 			}
 
-
-			Log.WriteDebug("Loading interface type: {0}", _name);	// TODO: remove
-
 			var sb = new StringBuilder();
 			var methods = new List<InterfaceMethodDefinition>();
 			var props = new List<InterfacePropertyDefinition>();
@@ -74,8 +71,6 @@ namespace DkTools.Dict
 				sb.Append(')');
 
 				methods.Add(new InterfaceMethodDefinition(_definition, methodName, sb.ToString(), returnDataType));
-
-				Log.WriteDebug("  Method: {0}'", sb);	// TODO: remove
 			}
 
 			_methodDefs = methods.ToArray();
@@ -96,8 +91,6 @@ namespace DkTools.Dict
 
 				var propName = repoIntType.PropertyName[p];
 				sb.Append(propName);
-
-				Log.WriteDebug("  Property: {0}", sb);	// TODO: remove
 
 				props.Add(new InterfacePropertyDefinition(_definition, propName, dataType));
 			}

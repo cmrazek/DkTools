@@ -153,7 +153,9 @@ namespace DkTools.CodeModel.PreprocessorTokens
 			// If syntax is correct, there should only be a single token remaining at the end.
 			if (_tokens.Count != 1)
 			{
+#if DEBUG
 				Log.WriteDebug("Syntax error.");
+#endif
 				return null;
 			}
 			return _tokens[0].Value;

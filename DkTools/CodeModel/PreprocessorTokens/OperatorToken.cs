@@ -19,6 +19,7 @@ namespace DkTools.CodeModel.PreprocessorTokens
 			------------------- ------------------- ---------------	-----------
 			( ) [ ]									Left to right	100
 			-					unary arithmetic	Right to left	91 (odd number means right-to-left)
+			!					not					Right to left	90 (not in WBDK help, but added here because it's undocumented, apparently)
 			* / %				arithmetic			Left to right	80
 			+ -					arithmetic			Left to right	70
 			< > <= =>			comparison			Left to right	60
@@ -33,6 +34,9 @@ namespace DkTools.CodeModel.PreprocessorTokens
 
 			switch (text)
 			{
+				case "!":
+					_precedence = 90;
+					break;
 				case "*":
 				case "/":
 				case "%":
@@ -70,17 +74,28 @@ namespace DkTools.CodeModel.PreprocessorTokens
 		{
 			_precedence = 0;
 
-			var leftToken = _parent.GetTokenOnLeft(this);
-			if (leftToken == null)
+			var requiresLValue = true;
+			if (_text == "!")
 			{
-				//Log.WriteDebug("Operator '{0}' expects token on left.", _text);
-				return;
+				requiresLValue = false;
 			}
-			var left = leftToken.Value;
-			if (!left.HasValue)
+
+			Token leftToken = null;
+			long? left = null;
+			if (requiresLValue)
 			{
-				//Log.WriteDebug("Operator '{0}' expects value on left.", _text);
-				return;
+				leftToken = _parent.GetTokenOnLeft(this);
+				if (leftToken == null)
+				{
+					//Log.WriteDebug("Operator '{0}' expects token on left.", _text);
+					return;
+				}
+				left = leftToken.Value;
+				if (!left.HasValue)
+				{
+					//Log.WriteDebug("Operator '{0}' expects value on left.", _text);
+					return;
+				}
 			}
 
 			var rightToken = _parent.GetTokenOnRight(this);
@@ -148,6 +163,9 @@ namespace DkTools.CodeModel.PreprocessorTokens
 				case "or":
 				case "||":
 					_parent.ReplaceTokens(new NumberToken(_parent, (left.Value != 0 || right.Value != 0) ? 1 : 0), leftToken, this, rightToken);
+					break;
+				case "!":
+					_parent.ReplaceTokens(new NumberToken(_parent, right.Value != 0 ? 0 : 1), this, rightToken);
 					break;
 				default:
 					//Log.WriteDebug("Unexpected operator '{0}'.", _text);
