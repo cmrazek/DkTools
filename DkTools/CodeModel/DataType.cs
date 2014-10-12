@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using DkTools.CodeModel.Definitions;
 using DkTools.CodeModel.Tokens;
 
@@ -13,6 +14,8 @@ namespace DkTools.CodeModel
 		private string _infoText;
 		private Definition[] _completionOptions;
 		private CompletionOptionsType _completionOptionsType;
+		private Definition[] _methods;
+		private Definition[] _properties;
 
 		private enum CompletionOptionsType
 		{
@@ -22,18 +25,30 @@ namespace DkTools.CodeModel
 			RelInds
 		}
 
-		public static readonly DataType Int = new DataType("int");
-		public static readonly DataType Void = new DataType("void");
-		public static readonly DataType Table = new DataType("table") { _completionOptionsType = CompletionOptionsType.Tables };
-		public static readonly DataType IndRel = new DataType("indrel") { _completionOptionsType = CompletionOptionsType.RelInds };
-		public static readonly DataType Numeric = new DataType("numeric");
-		public static readonly DataType Unsigned = new DataType("unsigned");
+		public static readonly DataType Boolean_t = new DataType("Boolean_t")
+		{
+			_completionOptionsType = CompletionOptionsType.List,
+			_completionOptions = new Definition[]
+			{
+				new EnumOptionDefinition("TRUE"),
+				new EnumOptionDefinition("FALSE")
+			}
+		};
 		public static readonly DataType Char = new DataType("char");
-		public static readonly DataType String = new DataType("string");
-		public static readonly DataType StringVarying = new DataType("string varying");
+		public static readonly DataType Char255 = new DataType("char(255)");
+		public static readonly DataType Command = new DataType("command");
 		public static readonly DataType Date = new DataType("date");
 		public static readonly DataType Enum = new DataType("enum");
-		public static readonly DataType Command = new DataType("command");
+		public static readonly DataType IndRel = new DataType("indrel") { _completionOptionsType = CompletionOptionsType.RelInds };
+		public static readonly DataType Int = new DataType("int");
+		public static readonly DataType Numeric = new DataType("numeric");
+		public static readonly DataType OleObject = new DataType("oleobject");
+		public static readonly DataType String = new DataType("string");
+		public static readonly DataType StringVarying = new DataType("string varying");
+		public static readonly DataType Table = new DataType("table") { _completionOptionsType = CompletionOptionsType.Tables };
+		public static readonly DataType Unsigned = new DataType("unsigned");
+		public static readonly DataType Variant = new DataType("variant");
+		public static readonly DataType Void = new DataType("void");
 
 		public delegate DataTypeDefinition GetDataTypeDelegate(string name);
 		public delegate VariableDefinition GetVariableDelegate(string name);
@@ -163,8 +178,8 @@ namespace DkTools.CodeModel
 		/// <param name="flags">(optional) Flags to control the parsing behaviour.</param>
 		/// <param name="errorProv">(optional) An ErrorProvider to receive errors detected by this parsing function.</param>
 		/// <returns>A data type object, if a data type could be parsed; otherwise null.</returns>
-		public static DataType Parse(TokenParser.Parser code, string typeName = null, GetDataTypeDelegate dataTypeCallback = null, GetVariableDelegate varCallback = null,
-			ParseFlag flags = 0
+		public static DataType Parse(TokenParser.Parser code, string typeName = null, GetDataTypeDelegate dataTypeCallback = null,
+			GetVariableDelegate varCallback = null, ParseFlag flags = 0
 #if REPORT_ERRORS
 			, ErrorTagging.ErrorProvider errorProv = null
 #endif
@@ -172,6 +187,7 @@ namespace DkTools.CodeModel
 		{
 			var startPos = code.Position;
 			if (!code.ReadWord()) return null;
+			var startWord = code.TokenText;
 
 			if ((flags & ParseFlag.FromRepo) != 0 && code.TokenText == "__SYSTEM__")
 			{
@@ -180,12 +196,14 @@ namespace DkTools.CodeModel
 					code.Position = startPos;
 					return null;
 				}
+				startWord = code.TokenText;
 			}
 
 			switch (code.TokenText)
 			{
 				#region void
 				case "void":
+					if ((flags & ParseFlag.FromRepo) != 0) IgnoreRepoWords(code, startWord);
 					return DataType.Void;
 				#endregion
 
@@ -227,6 +245,8 @@ namespace DkTools.CodeModel
 							}
 							else break;
 						}
+
+						if ((flags & ParseFlag.FromRepo) != 0) IgnoreRepoWords(code, startWord);
 
 						return new DataType(typeName, sb.ToString());
 					}
@@ -279,6 +299,8 @@ namespace DkTools.CodeModel
 							else break;
 						}
 
+						if ((flags & ParseFlag.FromRepo) != 0) IgnoreRepoWords(code, startWord);
+
 						return new DataType(typeName, sb.ToString());
 					}
 				#endregion
@@ -303,6 +325,8 @@ namespace DkTools.CodeModel
 							if (!ReadAttribute(code, sb)) break;
 						}
 
+						if ((flags & ParseFlag.FromRepo) != 0) IgnoreRepoWords(code, startWord);
+
 						return new DataType(typeName, sb.ToString());
 					}
 				#endregion
@@ -326,6 +350,8 @@ namespace DkTools.CodeModel
 						{
 							if (!ReadAttribute(code, sb)) break;
 						}
+
+						if ((flags & ParseFlag.FromRepo) != 0) IgnoreRepoWords(code, startWord);
 
 						return new DataType(typeName, sb.ToString());
 					}
@@ -356,9 +382,16 @@ namespace DkTools.CodeModel
 							else break;
 						}
 
+						if ((flags & ParseFlag.FromRepo) != 0) IgnoreRepoWords(code, startWord);
+
 						return new DataType(typeName, sb.ToString());
 					}
-					else return new DataType(typeName, "char");
+					else
+					{
+						if ((flags & ParseFlag.FromRepo) != 0) IgnoreRepoWords(code, startWord);
+
+						return new DataType(typeName, "char");
+					}
 				#endregion
 
 				#region string
@@ -386,6 +419,8 @@ namespace DkTools.CodeModel
 							}
 							else break;
 						}
+
+						if ((flags & ParseFlag.FromRepo) != 0) IgnoreRepoWords(code, startWord);
 
 						return new DataType(typeName, sb.ToString());
 					}
@@ -417,6 +452,8 @@ namespace DkTools.CodeModel
 							else break;
 						}
 
+						if ((flags & ParseFlag.FromRepo) != 0) IgnoreRepoWords(code, startWord);
+
 						return new DataType(typeName, sb.ToString());
 					}
 				#endregion
@@ -439,6 +476,8 @@ namespace DkTools.CodeModel
 							}
 							else break;
 						}
+
+						if ((flags & ParseFlag.FromRepo) != 0) IgnoreRepoWords(code, startWord);
 
 						return new DataType(typeName, sb.ToString());
 					}
@@ -584,10 +623,7 @@ namespace DkTools.CodeModel
 						}
 						sb.Append(" }");
 
-						if (code.ReadExact("@neutral")) sb.Append(" @neutral");
-
-						if (code.ReadExact("PICK")) sb.Append(" PICK");
-						else if (code.ReadExact("NOPICK")) sb.Append(" NOPICK");
+						if ((flags & ParseFlag.FromRepo) != 0) IgnoreRepoWords(code, startWord);
 
 						return new DataType(typeName, sb.ToString())
 						{
@@ -629,6 +665,8 @@ namespace DkTools.CodeModel
 							if (def != null) return !string.IsNullOrEmpty(typeName) ? def.DataType.CloneWithNewName(typeName) : def.DataType;
 						}
 
+						if ((flags & ParseFlag.FromRepo) != 0) IgnoreRepoWords(code, startWord);
+
 						return new DataType(typeName, string.Concat("like ", word1));
 					}
 					else return null;
@@ -636,14 +674,17 @@ namespace DkTools.CodeModel
 
 				#region table/indrel
 				case "table":
+					if ((flags & ParseFlag.FromRepo) != 0) IgnoreRepoWords(code, startWord);
 					return DataType.Table;
 
 				case "indrel":
+					if ((flags & ParseFlag.FromRepo) != 0) IgnoreRepoWords(code, startWord);
 					return DataType.IndRel;
 				#endregion
 
 				#region command
 				case "command":
+					if ((flags & ParseFlag.FromRepo) != 0) IgnoreRepoWords(code, startWord);
 					return DataType.Command;
 				#endregion
 
@@ -661,6 +702,9 @@ namespace DkTools.CodeModel
 								sb.Append(code.TokenText);
 							}
 						}
+
+						if ((flags & ParseFlag.FromRepo) != 0) IgnoreRepoWords(code, startWord);
+
 						return new DataType(typeName, sb.ToString());
 					}
 				#endregion
@@ -675,12 +719,9 @@ namespace DkTools.CodeModel
 						{
 							sb.Append(' ');
 							sb.Append(code.TokenText);
-
-							if (code.ReadExact("@neutral"))
-							{
-								sb.Append(" @neutral");
-							}
 						}
+
+						if ((flags & ParseFlag.FromRepo) != 0) IgnoreRepoWords(code, startWord);
 
 						return new DataType(typeName, sb.ToString());
 					}
@@ -710,8 +751,67 @@ namespace DkTools.CodeModel
 							}
 						}
 
+						if ((flags & ParseFlag.FromRepo) != 0) IgnoreRepoWords(code, startWord);
+
 						return new DataType(typeName, sb.ToString());
 					}
+				#endregion
+
+				#region interface
+				case "interface":
+					{
+						var sb = new StringBuilder();
+						sb.Append("interface");
+
+						if (code.ReadWord())
+						{
+							sb.Append(' ');
+							sb.Append(code.TokenText);
+
+							var completionOptions = new List<Definition>();
+							Definition[] methods = null;
+							Definition[] properties = null;
+
+							var intType = ProbeEnvironment.GetInterfaceType(code.TokenText);
+							if (intType != null)
+							{
+								methods = intType.MethodDefinitions.ToArray();
+								completionOptions.AddRange(methods);
+								properties = intType.PropertyDefinitions.ToArray();
+								completionOptions.AddRange(properties);
+							}
+
+							if ((flags & ParseFlag.FromRepo) != 0) IgnoreRepoWords(code, startWord);
+
+							return new DataType(typeName, sb.ToString())
+							{
+								_completionOptions = completionOptions.ToArray(),
+								_completionOptionsType = CompletionOptionsType.List,
+								_methods = methods,
+								_properties = properties
+							};
+						}
+
+						return new DataType(typeName, sb.ToString());
+					}
+				#endregion
+
+				#region variant
+				case "variant":
+					if ((flags & ParseFlag.FromRepo) != 0) IgnoreRepoWords(code, startWord);
+					return DataType.Variant;
+				#endregion
+
+				#region oleobject
+				case "oleobject":
+					if ((flags & ParseFlag.FromRepo) != 0) IgnoreRepoWords(code, startWord);
+					return DataType.OleObject;
+				#endregion
+
+				#region Boolean_t
+				case "Boolean_t":
+					if ((flags & ParseFlag.FromRepo) != 0) IgnoreRepoWords(code, startWord);
+					return DataType.Boolean_t;
 				#endregion
 
 				default:
@@ -785,6 +885,22 @@ namespace DkTools.CodeModel
 			return false;
 		}
 
+		private static readonly Regex _rxRepoWords = new Regex(@"\G((nomask|(NO)?PROBE|[%@]undefined|@neutral|(NO)?PICK)\b|&)");
+
+		private static void IgnoreRepoWords(TokenParser.Parser code, string type)
+		{
+			while (!code.EndOfFile)
+			{
+				code.SkipWhiteSpaceAndCommentsIfAllowed();
+
+				if (code.ReadPattern(_rxRepoWords)) continue;
+
+				if (type == "enum" && code.ReadStringLiteral()) continue;
+
+				break;
+			}
+		}
+
 		public void DumpTree(System.Xml.XmlWriter xml)
 		{
 			xml.WriteStartElement("dataType");
@@ -837,5 +953,62 @@ namespace DkTools.CodeModel
 
 			return option;
 		}
+
+		public bool HasMethodsOrProperties
+		{
+			get { return _methods != null || _properties != null; }
+		}
+
+		public Definition GetMethod(string name)
+		{
+			if (_methods == null) return null;
+			foreach (var method in _methods)
+			{
+				if (method.Name == name) return method;
+			}
+			return null;
+		}
+
+		public Definition GetProperty(string name)
+		{
+			if (_properties == null) return null;
+			foreach (var prop in _properties)
+			{
+				if (prop.Name == name) return prop;
+			}
+			return null;
+		}
+
+		public IEnumerable<Definition> MethodsAndProperties
+		{
+			get
+			{
+				if (_methods != null)
+				{
+					foreach (var meth in _methods) yield return meth;
+				}
+
+				if (_properties != null)
+				{
+					foreach (var prop in _properties) yield return prop;
+				}
+			}
+		}
+
+#if DEBUG
+		public static void CheckDataTypeParsing(string dataTypeText)
+		{
+			var parser = new TokenParser.Parser(dataTypeText);
+			var dataType = DataType.Parse(parser, flags: DataType.ParseFlag.FromRepo);
+			if (dataType == null)
+			{
+				Log.WriteDebug("WARNING: DataType.Parse was unable to parse [{0}]", dataTypeText);
+			}
+			else if (parser.Read())
+			{
+				Log.WriteDebug("WARNING: DataType.Parse stopped before end of text [{0}] got [{1}]", dataTypeText, dataType.Name);
+			}
+		}
+#endif
 	}
 }

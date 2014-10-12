@@ -286,5 +286,23 @@ namespace DkTools.Classifier
 			}
 		}
 		#endregion
+
+		#region Interface
+		[Export]
+		[Name("DK.Interface")]
+		internal static ClassificationTypeDefinition Interface = null;
+
+		[Export(typeof(EditorFormatDefinition))]
+		[ClassificationType(ClassificationTypeNames = "DK.Interface")]
+		[Name("DK.Interface")]
+		[UserVisible(true)]
+		internal sealed class InterfaceFormat : ClassificationFormatDefinition
+		{
+			public InterfaceFormat()
+			{
+				ForegroundColor = Colors.DarkOrange;
+			}
+		}
+		#endregion
 	}
 }

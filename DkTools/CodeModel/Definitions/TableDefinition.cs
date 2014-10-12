@@ -14,7 +14,7 @@ namespace DkTools.CodeModel.Definitions
 		private string _description;
 		private bool _orig;
 
-		public TableDefinition(string name, Dict.DictTable table, bool orig)
+		public TableDefinition(string name, Dict.Table table, bool orig)
 			: base(name, null, -1)
 		{
 			_prompt = table.Prompt;

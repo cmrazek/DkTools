@@ -8,9 +8,9 @@ namespace DkTools.CodeModel.Definitions
 {
 	internal class StringDefDefinition : Definition
 	{
-		private Dict.DictStringDef _stringDef;
+		private Dict.StringDef _stringDef;
 
-		public StringDefDefinition(Dict.DictStringDef stringDef)
+		public StringDefDefinition(Dict.StringDef stringDef)
 			: base(stringDef.Name, null, -1)
 		{
 			_stringDef = stringDef;

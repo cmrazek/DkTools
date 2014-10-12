@@ -21,6 +21,7 @@ namespace DkTools.Classifier
 		Function,
 		Delimiter,
 		Operator,
-		Variable
+		Variable,
+		Interface
 	}
 }

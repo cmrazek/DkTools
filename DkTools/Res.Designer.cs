@@ -172,6 +172,16 @@ namespace DkTools {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
+        internal static System.Drawing.Bitmap InterfaceImg {
+            get {
+                object obj = ResourceManager.GetObject("InterfaceImg", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
         internal static System.Drawing.Bitmap KeywordImg {
             get {
                 object obj = ResourceManager.GetObject("KeywordImg", resourceCulture);

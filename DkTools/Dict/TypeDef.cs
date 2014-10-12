@@ -6,13 +6,13 @@ using System.Threading.Tasks;
 
 namespace DkTools.Dict
 {
-	internal class DictTypeDef
+	internal sealed class TypeDef : IDictObj
 	{
 		private string _name;
 		private CodeModel.DataType _dataType;
 		private CodeModel.Definitions.DataTypeDefinition _def;
 
-		public DictTypeDef(DICTSRVRLib.IPTypeDefine repoTypeDef)
+		public TypeDef(DICTSRVRLib.IPTypeDefine repoTypeDef)
 		{
 			_name = repoTypeDef.Name;
 
@@ -52,6 +52,11 @@ namespace DkTools.Dict
 		public CodeModel.Definitions.DataTypeDefinition Definition
 		{
 			get { return _def; }
+		}
+
+		public object CreateRepoObject(Dict dict)
+		{
+			return dict.GetTypeDefine(_name);
 		}
 	}
 }

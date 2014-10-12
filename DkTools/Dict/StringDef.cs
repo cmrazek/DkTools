@@ -7,13 +7,13 @@ using DkTools.CodeModel.Definitions;
 
 namespace DkTools.Dict
 {
-	internal class DictStringDef
+	internal sealed class StringDef : IDictObj
 	{
 		private string _name;
 		private string _value;
 		private CodeModel.Definitions.StringDefDefinition _def;
 
-		public DictStringDef(DICTSRVRLib.IPStringDefine repoStringDef)
+		public StringDef(DICTSRVRLib.IPStringDefine repoStringDef)
 		{
 			_name = repoStringDef.Name;
 			_value = repoStringDef.String[0];
@@ -33,6 +33,11 @@ namespace DkTools.Dict
 		public CodeModel.Definitions.StringDefDefinition Definition
 		{
 			get { return _def; }
+		}
+
+		public object CreateRepoObject(Dict dict)
+		{
+			return dict.GetStringDefine(_name);
 		}
 	}
 }

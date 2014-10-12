@@ -217,7 +217,18 @@ namespace DkTools.CodeModel.Tokens
 			{
 				if (def is VariableDefinition)
 				{
-					return new VariableToken(parent, scope, span, word, def as VariableDefinition);
+					var varDef = def as VariableDefinition;
+					if (varDef.DataType.HasMethodsOrProperties)
+					{
+						SkipWhiteSpaceAndComments(scope);
+						if (PeekChar() == '.')
+						{
+							// This will be handled below when processing the combination tokens.
+							continue;
+						}
+					}
+
+					return new VariableToken(parent, scope, span, word, varDef);
 				}
 				if (def is FunctionDefinition)
 				{
@@ -249,6 +260,10 @@ namespace DkTools.CodeModel.Tokens
 				if (def is MacroDefinition)
 				{
 					return new MacroCallToken(parent, scope, new IdentifierToken(parent, scope, span, word), def as MacroDefinition);
+				}
+				if (def is InterfaceTypeDefinition)
+				{
+					return new InterfaceTypeToken(parent, scope, span, def as InterfaceTypeDefinition);
 				}
 			}
 
@@ -332,6 +347,37 @@ namespace DkTools.CodeModel.Tokens
 								var dotToken = new DotToken(parent, scope, dotSpan);
 								var fieldToken = new ExtractFieldToken(parent, scope, word2Span, word2, fieldDef);
 								return new ExtractTableAndFieldToken(parent, scope, exToken, dotToken, fieldToken);
+							}
+						}
+					}
+
+					if (defs.Any(d => d is VariableDefinition))
+					{
+						var varDef = defs.FirstOrDefault(d => d is VariableDefinition) as VariableDefinition;
+						if (varDef != null)
+						{
+							var dataType = varDef.DataType;
+							var methodDef = dataType.GetMethod(word2) as InterfaceMethodDefinition;
+							if (methodDef != null)
+							{
+								SkipWhiteSpaceAndComments(scope);
+								if (PeekChar() == '(')
+								{
+									var varToken = new VariableToken(parent, scope, span, word, varDef);
+									var dotToken = new DotToken(parent, scope, dotSpan);
+									var nameToken = new IdentifierToken(parent, scope, word2Span, word2);
+									var argsToken = BracketsToken.Parse(parent, scope);
+									return new InterfaceMethodCallToken(parent, scope, varToken, dotToken, nameToken, argsToken, methodDef);
+								}
+							}
+
+							var propDef = dataType.GetProperty(word2) as InterfacePropertyDefinition;
+							if (propDef != null)
+							{
+								var varToken = new VariableToken(parent, scope, span, word, varDef);
+								var dotToken = new DotToken(parent, scope, dotSpan);
+								var nameToken = new IdentifierToken(parent, scope, word2Span, word2);
+								return new InterfacePropertyToken(parent, scope, varToken, dotToken, nameToken, propDef);
 							}
 						}
 					}

@@ -12,7 +12,6 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
-using DkTools.Dict;
 
 namespace DkTools.ProbeExplorer
 {
@@ -30,11 +29,11 @@ namespace DkTools.ProbeExplorer
 				c_dictTree.Items.Add(CreateTableTvi(table));
 			}
 
-			var repoDict = ProbeEnvironment.ProbeDict;
-			if (repoDict != null)
-			{
-				c_dictTree.Items.Add(CreateDictObjExtendedItem(repoDict, "Dictionary", "Dictionary Extended Information"));
-			}
+			//var repoDict = ProbeEnvironment.CreateDictionary(ProbeEnvironment.CurrentApp);
+			//if (repoDict != null)
+			//{
+			//	c_dictTree.Items.Add(CreateDictObjExtendedItem(repoDict, "Dictionary", "Dictionary Extended Information"));
+			//}
 
 			//var repo = ProbeEnvironment.ProbeRepo;
 			//if (repo != null)
@@ -90,7 +89,7 @@ namespace DkTools.ProbeExplorer
 			return tvi;
 		}
 
-		private TreeViewItem CreateTableTvi(DictTable table)
+		private TreeViewItem CreateTableTvi(Dict.Table table)
 		{
 			var tvi = CreateStandardTvi(_tableImg, table.Name, table.Prompt, table.BaseDefinition.QuickInfoTextWpf, true);
 			tvi.Expanded += TableTvi_Expanded;
@@ -105,12 +104,12 @@ namespace DkTools.ProbeExplorer
 				var tableNode = (sender as TreeViewItem);
 				if (tableNode != null)
 				{
-					var table = tableNode.Tag as DictTable;
+					var table = tableNode.Tag as Dict.Table;
 					if (table != null)
 					{
 						tableNode.Items.Clear();
 
-						tableNode.Items.Add(CreateDictObjExtendedItem(table.RepoTable, string.Concat("Table: ", table.Name)));
+						tableNode.Items.Add(CreateDictObjExtendedItem(table, string.Concat("Table: ", table.Name)));
 
 						foreach (var field in table.Fields)
 						{
@@ -138,7 +137,7 @@ namespace DkTools.ProbeExplorer
 			}
 		}
 
-		private TreeViewItem CreateFieldTvi(DictField field)
+		private TreeViewItem CreateFieldTvi(Dict.Field field)
 		{
 			var tvi = CreateStandardTvi(_fieldImg, field.Name, field.Prompt, field.Definition.QuickInfoTextWpf, true);
 			tvi.Tag = field;
@@ -153,12 +152,12 @@ namespace DkTools.ProbeExplorer
 				var fieldItem = (sender as TreeViewItem);
 				if (fieldItem != null)
 				{
-					var field = fieldItem.Tag as DictField;
+					var field = fieldItem.Tag as Dict.Field;
 					if (field != null)
 					{
 						fieldItem.Items.Clear();
 						CreateFieldInfoItems(fieldItem, field);
-						fieldItem.Items.Add(CreateDictObjExtendedItem(field.RepoColumn, string.Concat("Column: ", field.Name)));
+						fieldItem.Items.Add(CreateDictObjExtendedItem(field, string.Concat("Column: ", field.Name)));
 						e.Handled = true;
 					}
 				}
@@ -169,7 +168,7 @@ namespace DkTools.ProbeExplorer
 			}
 		}
 
-		private void CreateFieldInfoItems(TreeViewItem fieldItem, DictField field)
+		private void CreateFieldInfoItems(TreeViewItem fieldItem, Dict.Field field)
 		{
 			fieldItem.Items.Add(CreateInfoTvi("Name", field.Name));
 			if (!string.IsNullOrEmpty(field.Prompt)) fieldItem.Items.Add(CreateInfoTvi("Prompt", field.Prompt));
@@ -177,9 +176,9 @@ namespace DkTools.ProbeExplorer
 			fieldItem.Items.Add(CreateInfoTvi("Data Type", field.DataType.Name));
 		}
 
-		private TreeViewItem CreateRelIndTreeViewItem(DictRelInd relind)
+		private TreeViewItem CreateRelIndTreeViewItem(Dict.RelInd relind)
 		{
-			var tvi = CreateStandardTvi(relind.Type == DictRelIndType.Index ? _indexImg : _relationshipImg, relind.Name, relind.Prompt, relind.Definition.QuickInfoTextWpf, true);
+			var tvi = CreateStandardTvi(relind.Type == Dict.RelIndType.Index ? _indexImg : _relationshipImg, relind.Name, relind.Prompt, relind.Definition.QuickInfoTextWpf, true);
 			tvi.Tag = relind;
 			tvi.Expanded += RelIndTvi_Expanded;
 			return tvi;
@@ -192,12 +191,12 @@ namespace DkTools.ProbeExplorer
 				var relindItem = (sender as TreeViewItem);
 				if (relindItem != null)
 				{
-					var relind = relindItem.Tag as DictRelInd;
+					var relind = relindItem.Tag as Dict.RelInd;
 					if (relind != null)
 					{
 						relindItem.Items.Clear();
-						CreateRelIndInfoItems(relindItem, relindItem.Tag as DictRelInd);
-						relindItem.Items.Add(CreateDictObjExtendedItem(relind.RepoObj, string.Concat("Index/Relationship: ", relind.Name)));
+						CreateRelIndInfoItems(relindItem, relindItem.Tag as Dict.RelInd);
+						relindItem.Items.Add(CreateDictObjExtendedItem(relind, string.Concat("Index/Relationship: ", relind.Name)));
 						e.Handled = true;
 					}
 				}
@@ -208,7 +207,7 @@ namespace DkTools.ProbeExplorer
 			}
 		}
 
-		private void CreateRelIndInfoItems(TreeViewItem item, DictRelInd relind)
+		private void CreateRelIndInfoItems(TreeViewItem item, Dict.RelInd relind)
 		{
 			item.Items.Add(CreateInfoTvi("Name", relind.Name));
 			if (!string.IsNullOrWhiteSpace(relind.Prompt)) item.Items.Add(CreateInfoTvi("Prompt", relind.Prompt));
@@ -257,7 +256,7 @@ namespace DkTools.ProbeExplorer
 
 			foreach (TreeViewItem tableNode in c_dictTree.Items)
 			{
-				var table = tableNode.Tag as DictTable;
+				var table = tableNode.Tag as Table;
 				if (table.Name == tableName)
 				{
 					tableNode.IsSelected = true;
@@ -278,13 +277,13 @@ namespace DkTools.ProbeExplorer
 
 			foreach (TreeViewItem tableNode in c_dictTree.Items)
 			{
-				var table = tableNode.Tag as DictTable;
+				var table = tableNode.Tag as Table;
 				if (table.Name == tableName)
 				{
 					tableNode.IsExpanded = true;
 					foreach (TreeViewItem fieldNode in tableNode.Items)
 					{
-						var field = fieldNode.Tag as DictField;
+						var field = fieldNode.Tag as Dict.Field;
 						if (field != null && field.Name == fieldName)
 						{
 							fieldNode.IsSelected = true;
@@ -307,13 +306,13 @@ namespace DkTools.ProbeExplorer
 
 			foreach (TreeViewItem tableNode in c_dictTree.Items)
 			{
-				var table = tableNode.Tag as DictTable;
+				var table = tableNode.Tag as Table;
 				if (table.Name == tableName)
 				{
 					tableNode.IsExpanded = true;
 					foreach (TreeViewItem relIndNode in tableNode.Items)
 					{
-						var relInd = relIndNode.Tag as DictRelInd;
+						var relInd = relIndNode.Tag as Dict.RelInd;
 						if (relInd != null && relInd.Name == relIndName)
 						{
 							relIndNode.IsSelected = true;
@@ -342,7 +341,7 @@ namespace DkTools.ProbeExplorer
 
 			foreach (TreeViewItem tableNode in c_dictTree.Items)
 			{
-				var table = tableNode.Tag as DictTable;
+				var table = tableNode.Tag as Dict.Table;
 				if (table == null) continue;
 
 				if (empty)
@@ -467,11 +466,11 @@ namespace DkTools.ProbeExplorer
 
 		private class ExtendedItemInfo
 		{
-			public object DictObject { get; set; }
+			public Dict.IDictObj DictObject { get; set; }
 			public string WindowTitle { get; set; }
 		}
 
-		private TreeViewItem CreateDictObjExtendedItem(object obj, string windowTitle, string headerText = "extended information")
+		private TreeViewItem CreateDictObjExtendedItem(Dict.IDictObj obj, string windowTitle, string headerText = "extended information")
 		{
 			var tvi = CreateStandardTvi(_extendedImg, string.Empty, headerText, null, false);
 			tvi.Tag = new ExtendedItemInfo { DictObject = obj, WindowTitle = windowTitle };
@@ -489,7 +488,10 @@ namespace DkTools.ProbeExplorer
 				var info = item.Tag as ExtendedItemInfo;
 				if (info == null) return;
 
-				var dlg = new RepoInfoWindow(info.DictObject);
+				var dict = ProbeEnvironment.CreateDictionary(ProbeEnvironment.CurrentApp);
+				var repoObj = info.DictObject.CreateRepoObject(dict);
+				if (repoObj == null) return;
+				var dlg = new RepoInfoWindow(repoObj, dict);
 				dlg.Title = info.WindowTitle;
 				dlg.Owner = System.Windows.Application.Current.MainWindow;
 				dlg.Show();

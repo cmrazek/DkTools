@@ -25,7 +25,8 @@ namespace DkTools.StatementCompletion
 		Table,
 		TableField,
 		Keyword,
-		Class
+		Class,
+		Interface
 	}
 
 	internal class ProbeCompletionSource : ICompletionSource
@@ -42,6 +43,7 @@ namespace DkTools.StatementCompletion
 		private static ImageSource _dataTypeImg = null;
 		private static ImageSource _keywordImg = null;
 		private static ImageSource _classImg = null;
+		private static ImageSource _interfaceImg = null;
 
 		public ProbeCompletionSource(ProbeCompletionSourceProvider sourceProvider, ITextBuffer textBuffer)
 		{
@@ -56,6 +58,7 @@ namespace DkTools.StatementCompletion
 			if (_dataTypeImg == null) _dataTypeImg = BitmapToBitmapSource(Res.DataTypeImg);
 			if (_keywordImg == null) _keywordImg = BitmapToBitmapSource(Res.KeywordImg);
 			if (_classImg == null) _classImg = BitmapToBitmapSource(Res.ClassImg);
+			if (_interfaceImg == null) _interfaceImg = BitmapToBitmapSource(Res.InterfaceImg);
 		}
 
 		private ImageSource GetImageForCompletionType(CompletionType type)
@@ -76,6 +79,8 @@ namespace DkTools.StatementCompletion
 					return _keywordImg;
 				case CompletionType.Class:
 					return _classImg;
+				case CompletionType.Interface:
+					return _interfaceImg;
 				default:
 					return _variableImg;
 			}
@@ -95,6 +100,7 @@ namespace DkTools.StatementCompletion
 
 		private Completion CreateCompletion(Definition def)
 		{
+			if (!def.CompletionVisible) return null;
 			return CreateCompletion(def.Name, def.QuickInfoTextStr, def.CompletionType);
 		}
 
@@ -127,7 +133,8 @@ namespace DkTools.StatementCompletion
 
 		void ICompletionSource.AugmentCompletionSession(ICompletionSession session, IList<CompletionSet> completionSets)
 		{
-			var completionList = new Dictionary<string, Completion>();
+			//var completionList = new Dictionary<string, Completion>();
+			var completionList = new List<Completion>();
 
 			var snapPt = session.TextView.Caret.Position.BufferPosition;
 			var curPos = snapPt.Position;
@@ -135,285 +142,365 @@ namespace DkTools.StatementCompletion
 			var prefix = snapshot.GetLineTextUpToPosition(curPos);
 			var linePos = snapshot.GetLineFromPosition(curPos).Start.Position;
 
-			var completionSpan = new Microsoft.VisualStudio.Text.Span(curPos, 0);
+			var completionSpan = new SnapshotSpan(snapshot, curPos, 0);
 			Match match;
 
 			#region Table.Field
 			if ((match = _rxTypingTable.Match(prefix)).Success)
 			{
-				// Typing a table.field.
-
-				// Table and field
-				var tableName = match.Groups[1].Value;
-				var table = ProbeEnvironment.GetTable(match.Groups[1].Value);
-				if (table != null)
-				{
-					completionSpan = new Microsoft.VisualStudio.Text.Span(linePos + match.Groups[2].Index, match.Groups[2].Length);
-					foreach (var def in table.FieldDefinitions)
-					{
-						if (!def.CompletionVisible) continue;
-						completionList[def.Name] = CreateCompletion(def);
-					}
-				}
-
-				var relInd = ProbeEnvironment.GetRelInd(match.Groups[1].Value);
-				if (relInd != null)
-				{
-					completionSpan = new Microsoft.VisualStudio.Text.Span(linePos + match.Groups[2].Index, match.Groups[2].Length);
-					foreach (var def in relInd.FieldDefinitions)
-					{
-						if (!def.CompletionVisible) continue;
-						completionList[def.Name] = CreateCompletion(def);
-					}
-				}
-
-				// Extract and field
-				var store = CodeModel.FileStore.GetOrCreateForTextBuffer(_textBuffer);
-				if (store != null)
-				{
-					var model = store.GetMostRecentModel(snapshot, "Extract table.field completion.");
-					var exDef = model.DefinitionProvider.GetGlobalFromFile<ExtractTableDefinition>(tableName).FirstOrDefault();
-					if (exDef != null)
-					{
-						completionSpan = new Microsoft.VisualStudio.Text.Span(linePos + match.Groups[2].Index, match.Groups[2].Length);
-						foreach (var def in exDef.Fields)
-						{
-							if (!def.CompletionVisible) continue;
-							completionList[def.Name] = CreateCompletion(def);
-						}
-					}
-				}
-
-				// Class and method
-				var ffScanner = ProbeToolsPackage.Instance.FunctionFileScanner;
-				var cls = ffScanner.GetClass(tableName);
-				if (cls != null)
-				{
-					completionSpan = new Microsoft.VisualStudio.Text.Span(linePos + match.Groups[2].Index, match.Groups[2].Length);
-					foreach (var def in cls.FunctionDefinitions)
-					{
-						if (!def.CompletionVisible) continue;
-						if (!completionList.ContainsKey(def.Name)) completionList[def.Name] = CreateCompletion(def);
-					}
-				}
+				completionSpan = new SnapshotSpan(snapshot, linePos + match.Groups[2].Index, match.Groups[2].Length);
+				completionList.AddRange(HandleDotSeparatedWords(completionSpan, match.Groups[1].Value, match.Groups[2].Value));
 			}
 			#endregion
 			#region Word
 			else if ((match = _rxTypingWord.Match(prefix)).Success)
 			{
 				// Typing a regular word.
-				completionSpan = new Microsoft.VisualStudio.Text.Span(linePos + match.Index, match.Length);
-				foreach (var comp in GetWordCompletions(curPos, snapshot)) completionList[comp.DisplayText] = comp;
+				completionSpan = new SnapshotSpan(snapshot, linePos + match.Index, match.Length);
+				completionList.AddRange(GetWordCompletions(curPos, snapshot));
 			}
 			#endregion
 			#region Assignment or Comparison
 			else if ((match = _rxAfterAssignOrCompare.Match(prefix)).Success)
 			{
-				var store = CodeModel.FileStore.GetOrCreateForTextBuffer(_textBuffer);
-				if (store != null)
-				{
-					var model = store.GetCurrentModel(snapshot, "Auto-completion after assign or compare");
-					var modelPos = model.AdjustPosition(curPos, snapshot);
-					var parentToken = (from t in model.FindTokens(modelPos)
-									   where t is GroupToken && t.Span.Start < curPos
-									   select t as GroupToken).LastOrDefault();
-					if (parentToken != null)
-					{
-						var opToken = parentToken.FindLastChildBeforeOffset(modelPos);
-						if (opToken != null && opToken is OperatorToken && opToken.Text == match.Groups[1].Value)
-						{
-							var prevToken = parentToken.FindPreviousSibling(opToken);
+				var operatorText = match.Groups[1].Value;
+				completionList.AddRange(HandleAfterAssignOrCompare(completionSpan, operatorText));
+			}
+			#endregion
+			#region #ifdef
+			else if ((match = _rxAfterIfDef.Match(prefix)).Success)
+			{
+				completionList.AddRange(HandleAfterIfDef(completionSpan));
+			}
+			#endregion
+			#region Class function bracket
+			else if ((match = _rxClassFunctionStartBracket.Match(prefix)).Success)
+			{
+				//completionSpan = new SnapshotSpan(snapshot, linePos + match.Groups[2].Index, match.Groups[2].Length);
+				completionList.AddRange(HandleAfterMethodArgsStart(completionSpan, match.Groups[1].Value, match.Groups[2].Value));
+			}
+			#endregion
+			#region Function bracket
+			else if ((match = _rxFunctionStartBracket.Match(prefix)).Success)
+			{
+				completionList.AddRange(HandleAfterFunctionArgsStart(completionSpan, match.Groups[1].Value));
+			}
+			#endregion
+			#region Comma
+			else if (prefix.EndsWith(", "))
+			{
+				completionList.AddRange(HandleAfterComma(completionSpan));
+			}
+			#endregion
+			#region Return
+			else if ((match = _rxReturn.Match(prefix)).Success)
+			{
+				completionList.AddRange(HandleAfterReturn(completionSpan));
+			}
+			#endregion
+			#region Case
+			else if ((match = _rxCase.Match(prefix)).Success)
+			{
+				completionList.AddRange(HandleAfterCase(completionSpan));
+			}
+			#endregion
+			#region Extract
+			else if ((match = _rxExtract.Match(prefix)).Success)
+			{
+				completionList.AddRange(HandleAfterExtract(completionSpan, match.Groups[1].Value));
+			}
+			#endregion
+			#region #include
+			else if ((match = _rxAfterInclude.Match(prefix)).Success)
+			{
+				completionSpan = new SnapshotSpan(snapshot, linePos + match.Groups[1].Index, match.Groups[1].Length);
+				completionList.AddRange(HandleAfterInclude(completionSpan, match.Groups[1].Value));
+			}
+			#endregion
+			#region order by
+			else if ((match = _rxOrderBy.Match(prefix)).Success)
+			{
+				completionList.AddRange(HandleAfterOrderBy());
+			}
+			#endregion
+			#region tag
+			else if ((match = _rxTag.Match(prefix)).Success)
+			{
+				completionList.AddRange(HandleAfterTag());
+			}
+			#endregion
 
-							if (prevToken != null)
+			if (completionList.Count > 0)
+			{
+				var sortedCompletionList = (from c in completionList where c != null orderby c.DisplayText select c).ToArray();
+				var trackingSpan = snapshot.CreateTrackingSpan(completionSpan, SpanTrackingMode.EdgeInclusive);
+				completionSets.Add(new CompletionSet("Tokens", "Tokens", trackingSpan, sortedCompletionList, null));
+			}
+		}
+
+		private IEnumerable<Completion> HandleDotSeparatedWords(SnapshotSpan completionSpan, string word1, string word2)
+		{
+			// Typing a table.field.
+
+			// Table and field
+			var table = ProbeEnvironment.GetTable(word1);
+			if (table != null)
+			{
+				foreach (var def in table.FieldDefinitions)
+				{
+					yield return CreateCompletion(def);
+				}
+			}
+
+			// Relationship and field
+			var relInd = ProbeEnvironment.GetRelInd(word1);
+			if (relInd != null)
+			{
+				foreach (var def in relInd.FieldDefinitions)
+				{
+					yield return CreateCompletion(def);
+				}
+			}
+
+			// Extract and field
+			var store = CodeModel.FileStore.GetOrCreateForTextBuffer(_textBuffer);
+			if (store != null)
+			{
+				var model = store.GetMostRecentModel(completionSpan.Snapshot, "Extract table.field completion.");
+				var exDef = model.DefinitionProvider.GetGlobalFromFile<ExtractTableDefinition>(word1).FirstOrDefault();
+				if (exDef != null)
+				{
+					foreach (var def in exDef.Fields)
+					{
+						yield return CreateCompletion(def);
+					}
+				}
+			}
+
+			// Class and method
+			var ffScanner = ProbeToolsPackage.Instance.FunctionFileScanner;
+			var cls = ffScanner.GetClass(word1);
+			if (cls != null)
+			{
+				foreach (var def in cls.FunctionDefinitions)
+				{
+					yield return CreateCompletion(def);
+				}
+			}
+
+			// Interface and method/property
+			var fileStore = CodeModel.FileStore.GetOrCreateForTextBuffer(_textBuffer);
+			if (fileStore != null)
+			{
+				var model = fileStore.GetMostRecentModel(completionSpan.Snapshot, "Interface auto-completion");
+				var modelSpan = completionSpan.TranslateTo(model.Snapshot, SpanTrackingMode.EdgeInclusive);
+
+				foreach (var def in model.DefinitionProvider.GetAny(modelSpan.Start.Position, word1))
+				{
+					if (def is VariableDefinition)
+					{
+						var varDef = def as VariableDefinition;
+						foreach (var def2 in varDef.DataType.MethodsAndProperties)
+						{
+							yield return CreateCompletion(def2);
+						}
+					}
+				}
+			}
+		}
+
+		private IEnumerable<Completion> HandleAfterAssignOrCompare(SnapshotSpan completionSpan, string operatorText)
+		{
+			var store = CodeModel.FileStore.GetOrCreateForTextBuffer(_textBuffer);
+			if (store != null)
+			{
+				var model = store.GetCurrentModel(completionSpan.Snapshot, "Auto-completion after assign or compare");
+				var modelPos = completionSpan.Start.TranslateTo(model.Snapshot, PointTrackingMode.Positive).Position;
+				var parentToken = (from t in model.FindTokens(modelPos)
+								   where t is GroupToken && t.Span.Start < modelPos
+								   select t as GroupToken).LastOrDefault();
+				if (parentToken != null)
+				{
+					var opToken = parentToken.FindLastChildBeforeOffset(modelPos);
+					if (opToken != null && opToken is OperatorToken && opToken.Text == operatorText)
+					{
+						var prevToken = parentToken.FindPreviousSibling(opToken);
+
+						if (prevToken != null)
+						{
+							var dt = prevToken.ValueDataType;
+							if (dt != null && dt.HasCompletionOptions)
 							{
-								var dt = prevToken.ValueDataType;
-								if (dt != null && dt.HasCompletionOptions)
+								foreach (var opt in dt.CompletionOptions)
 								{
-									foreach (var opt in dt.CompletionOptions)
-									{
-										if (!opt.CompletionVisible) continue;
-										completionList[opt.Name] = CreateCompletion(opt);
-									}
+									yield return CreateCompletion(opt);
 								}
 							}
 						}
 					}
 				}
 			}
-			#endregion
-			#region #ifdef
-			else if ((match = _rxAfterIfDef.Match(prefix)).Success)
-			{
-				var fileStore = CodeModel.FileStore.GetOrCreateForTextBuffer(_textBuffer);
-				if (fileStore != null)
-				{
-					var model = fileStore.GetCurrentModel(_textBuffer.CurrentSnapshot, "Auto-completion after #ifdef");
+		}
 
-					foreach (var def in model.DefinitionProvider.GetGlobalFromAnywhere<ConstantDefinition>())
+		private IEnumerable<Completion> HandleAfterIfDef(SnapshotSpan completionSpan)
+		{
+			var fileStore = CodeModel.FileStore.GetOrCreateForTextBuffer(_textBuffer);
+			if (fileStore != null)
+			{
+				var model = fileStore.GetCurrentModel(_textBuffer.CurrentSnapshot, "Auto-completion after #ifdef");
+
+				foreach (var def in model.DefinitionProvider.GetGlobalFromAnywhere<ConstantDefinition>())
+				{
+					if (!def.CompletionVisible) continue;
+					yield return CreateCompletion(def);
+				}
+			}
+		}
+
+		private IEnumerable<Completion> HandleAfterMethodArgsStart(SnapshotSpan completionSpan, string word1, string word2)
+		{
+			// Starting a new function that belongs to a class or interface.
+
+			foreach (var opt in GetOptionsForFunctionArg(word1, word2, 0, completionSpan.Start))
+			{
+				yield return opt;
+			}
+		}
+
+		private IEnumerable<Completion> HandleAfterFunctionArgsStart(SnapshotSpan completionSpan, string funcName)
+		{
+			foreach (var opt in GetOptionsForFunctionArg(null, funcName, 0, completionSpan.Start))
+			{
+				yield return opt;
+			}
+		}
+
+		private IEnumerable<Completion> HandleAfterComma(SnapshotSpan completionSpan)
+		{
+			var snapPt = completionSpan.Start;
+			string className;
+			string funcName;
+			int argIndex;
+			if (GetInsideFunction(completionSpan.Snapshot, completionSpan.Start.Position, out className, out funcName, out argIndex))
+			{
+				foreach (var opt in GetOptionsForFunctionArg(className, funcName, argIndex, snapPt))
+				{
+					yield return opt;
+				}
+			}
+		}
+
+		private IEnumerable<Completion> HandleAfterReturn(SnapshotSpan completionSpan)
+		{
+			var fileStore = CodeModel.FileStore.GetOrCreateForTextBuffer(_textBuffer);
+			if (fileStore != null)
+			{
+				var model = fileStore.GetMostRecentModel(_textBuffer.CurrentSnapshot, "Auto-completion after return");
+				var modelPos = completionSpan.Start.TranslateTo(model.Snapshot, PointTrackingMode.Positive);
+
+				var funcDef = model.PreprocessorModel.LocalFunctions.FirstOrDefault(f => f.EntireSpan.Contains(modelPos));
+				var dataType = funcDef.DataType;
+				if (dataType != null)
+				{
+					foreach (var opt in dataType.CompletionOptions)
 					{
-						if (!def.CompletionVisible) continue;
-						completionList[def.Name] = CreateCompletion(def);
+						yield return CreateCompletion(opt);
 					}
 				}
 			}
-			#endregion
-			#region Class function bracket
-			else if ((match = _rxClassFunctionStartBracket.Match(prefix)).Success)
-			{
-				// Starting a new function that belongs to a class
+		}
 
-				var cls = ProbeToolsPackage.Instance.FunctionFileScanner.GetClass(match.Groups[1].Value);
-				if (cls != null)
+		private IEnumerable<Completion> HandleAfterCase(SnapshotSpan completionSpan)
+		{
+			var store = CodeModel.FileStore.GetOrCreateForTextBuffer(_textBuffer);
+			var model = store.GetMostRecentModel(_textBuffer.CurrentSnapshot, "Auto-completion after case");
+			var modelPos = completionSpan.Start.TranslateTo(model.Snapshot, PointTrackingMode.Positive);
+
+			var switchToken = (from t in model.FindTokens(modelPos) where t is SwitchToken select t as SwitchToken).LastOrDefault();
+			if (switchToken != null)
+			{
+				var dt = switchToken.ExpressionDataType;
+				if (dt != null && dt.HasCompletionOptions)
 				{
-					var className = match.Groups[1].Value;
-					var funcName = match.Groups[2].Value;
-					foreach (var opt in GetOptionsForFunctionArg(className, funcName, 0, snapPt)) completionList[opt.DisplayText] = opt;
-				}
-			}
-			#endregion
-			#region Function bracket
-			else if ((match = _rxFunctionStartBracket.Match(prefix)).Success)
-			{
-				// Starting a new function.
-
-				var funcName = match.Groups[1].Value;
-				foreach (var opt in GetOptionsForFunctionArg(null, funcName, 0, snapPt)) completionList[opt.DisplayText] = opt;
-			}
-			#endregion
-			#region Comma
-			else if (prefix.EndsWith(", "))
-			{
-				// Moving to next argument in function.
-
-				string className;
-				string funcName;
-				int argIndex;
-				if (GetInsideFunction(snapshot, curPos, out className, out funcName, out argIndex))
-				{
-					foreach (var opt in GetOptionsForFunctionArg(className, funcName, argIndex, snapPt)) completionList[opt.DisplayText] = opt;
-				}
-			}
-			#endregion
-			#region Return
-			else if ((match = _rxReturn.Match(prefix)).Success)
-			{
-				var fileStore = CodeModel.FileStore.GetOrCreateForTextBuffer(_textBuffer);
-				if (fileStore != null)
-				{
-					var model = fileStore.GetMostRecentModel(_textBuffer.CurrentSnapshot, "Auto-completion after return");
-					var modelPos = model.AdjustPosition(curPos, snapshot);
-
-					var funcDef = model.PreprocessorModel.LocalFunctions.FirstOrDefault(f => f.EntireSpan.Contains(modelPos));
-					var dataType = funcDef.DataType;
-					if (dataType != null)
+					foreach (var opt in dt.CompletionOptions)
 					{
-						foreach (var opt in dataType.CompletionOptions) completionList[opt.Name] = CreateCompletion(opt);
+						yield return CreateCompletion(opt);
 					}
 				}
 			}
-			#endregion
-			#region Case
-			else if ((match = _rxCase.Match(prefix)).Success)
-			{
-				var store = CodeModel.FileStore.GetOrCreateForTextBuffer(_textBuffer);
-				var model = store.GetMostRecentModel(_textBuffer.CurrentSnapshot, "Auto-completion after case");
-				var modelPos = model.AdjustPosition(curPos, snapshot);
+		}
 
-				var switchToken = (from t in model.FindTokens(modelPos) where t is SwitchToken select t as SwitchToken).LastOrDefault();
-				if (switchToken != null)
+		private IEnumerable<Completion> HandleAfterExtract(SnapshotSpan completionSpan, string permWord)
+		{
+			if (string.IsNullOrEmpty(permWord))
+			{
+				yield return CreateCompletion("permanent", "permanent extract", CompletionType.Keyword);
+			}
+
+			var store = CodeModel.FileStore.GetOrCreateForTextBuffer(_textBuffer);
+			if (store != null)
+			{
+				var model = store.GetMostRecentModel(_textBuffer.CurrentSnapshot, "Auto-completion after 'extract'");
+
+				foreach (var exDef in model.DefinitionProvider.GetGlobalFromFile<ExtractTableDefinition>())
 				{
-					var dt = switchToken.ExpressionDataType;
-					if (dt != null && dt.HasCompletionOptions)
-					{
-						foreach (var opt in dt.CompletionOptions)
-						{
-							if (!opt.CompletionVisible) continue;
-							completionList[opt.Name] = CreateCompletion(opt);
-						}
-					}
+					yield return CreateCompletion(exDef);
 				}
 			}
-			#endregion
-			#region Extract
-			else if ((match = _rxExtract.Match(prefix)).Success)
+		}
+
+		private IEnumerable<Completion> HandleAfterInclude(SnapshotSpan completionSpan, string startCh)
+		{
+			string endCh;
+			if (startCh == "<") endCh = ">";
+			else if (startCh == "\"") endCh = "\"";
+			else endCh = string.Empty;
+
+			var curFileName = _textBuffer.TryGetFileName();
+			var curDir = System.IO.Path.GetDirectoryName(curFileName);
+
+			IEnumerable<string> fileList;
+			if (startCh == "<" || string.IsNullOrEmpty(curFileName)) fileList = ProbeEnvironment.GetAllIncludeFiles();
+			else fileList = ProbeEnvironment.GetAllIncludeFilesForDir(curDir);
+
+			var retDict = new Dictionary<string, Completion>();
+
+			foreach (var fileName in fileList)
 			{
-				if (string.IsNullOrEmpty(match.Groups[1].Value))
+				if (string.IsNullOrWhiteSpace(fileName)) continue;
+
+				// Don't include the current file.
+				if (string.Equals(fileName, curFileName, StringComparison.OrdinalIgnoreCase)) continue;
+
+				// Only include files with the right extension.
+				var ext = System.IO.Path.GetExtension(fileName).ToLower();
+				if (ext.StartsWith(".")) ext = ext.Substring(1);
+				if (!Constants.IncludeExtensions.Contains(ext)) continue;
+
+				var titleExt = System.IO.Path.GetFileName(fileName);
+				if (!retDict.ContainsKey(titleExt))
 				{
-					completionList["permanent"] = CreateCompletion("permanent", "permanent extract", CompletionType.Keyword);
-				}
-
-				var store = CodeModel.FileStore.GetOrCreateForTextBuffer(_textBuffer);
-				if (store != null)
-				{
-					var model = store.GetMostRecentModel(_textBuffer.CurrentSnapshot, "Auto-completion after 'extract'");
-
-					foreach (var exDef in model.DefinitionProvider.GetGlobalFromFile<ExtractTableDefinition>())
-					{
-						if (!exDef.CompletionVisible) continue;
-						completionList[exDef.Name] = CreateCompletion(exDef);
-					}
-				}
-			}
-			#endregion
-			#region #include
-			else if ((match = _rxAfterInclude.Match(prefix)).Success)
-			{
-				string endCh;
-				var startCh = match.Groups[1].Value;
-				if (startCh == "<") endCh = ">";
-				else if (startCh == "\"") endCh = "\"";
-				else endCh = string.Empty;
-
-				var curFileName = _textBuffer.TryGetFileName();
-				var curDir = System.IO.Path.GetDirectoryName(curFileName);
-
-				IEnumerable<string> fileList;
-				if (startCh == "<" || string.IsNullOrEmpty(curFileName)) fileList = ProbeEnvironment.GetAllIncludeFiles();
-				else fileList = ProbeEnvironment.GetAllIncludeFilesForDir(curDir);
-
-				foreach (var fileName in fileList)
-				{
-					if (string.IsNullOrWhiteSpace(fileName)) continue;
-
-					// Don't include the current file.
-					if (string.Equals(fileName, curFileName, StringComparison.OrdinalIgnoreCase)) continue;
-
-					// Only include files with the right extension.
-					var ext = System.IO.Path.GetExtension(fileName).ToLower();
-					if (ext.StartsWith(".")) ext = ext.Substring(1);
-					if (!Constants.IncludeExtensions.Contains(ext)) continue;
-
-					var titleExt = System.IO.Path.GetFileName(fileName);
-					if (!completionList.ContainsKey(titleExt)) completionList[titleExt] = CreateCompletion(titleExt, titleExt + endCh, fileName, CompletionType.Constant);
+					retDict[titleExt] = CreateCompletion(titleExt, titleExt + endCh, fileName, CompletionType.Constant);
 				}
 			}
-			#endregion
-			#region order by
-			else if ((match = _rxOrderBy.Match(prefix)).Success)
-			{
-				foreach (var relind in ProbeEnvironment.RelInds)
-				{
-					var def = relind.Definition;
-					completionList[def.Name] = CreateCompletion(def);
-				}
-			}
-			#endregion
-			#region tag
-			else if ((match = _rxTag.Match(prefix)).Success)
-			{
-				foreach (var name in Constants.TagNames)
-				{
-					completionList[name] = CreateCompletion(name, name, CompletionType.Keyword);
-				}
-			}
-			#endregion
 
-			if (completionList.Count > 0)
+			return retDict.Values;
+		}
+
+		private IEnumerable<Completion> HandleAfterOrderBy()
+		{
+			foreach (var relind in ProbeEnvironment.RelInds)
 			{
-				var trackingSpan = snapshot.CreateTrackingSpan(completionSpan, SpanTrackingMode.EdgeInclusive);
-				completionSets.Add(new CompletionSet("Tokens", "Tokens", trackingSpan,
-					(from c in completionList.Values orderby c.DisplayText select c),
-					null));
+				var def = relind.Definition;
+				yield return CreateCompletion(def);
+			}
+		}
+
+		private IEnumerable<Completion> HandleAfterTag()
+		{
+			foreach (var name in Constants.TagNames)
+			{
+				yield return CreateCompletion(name, name, CompletionType.Keyword);
 			}
 		}
 
@@ -431,26 +518,16 @@ namespace DkTools.StatementCompletion
 			var fileStore = CodeModel.FileStore.GetOrCreateForTextBuffer(_textBuffer);
 			if (fileStore == null) yield break;
 			var model = fileStore.GetMostRecentModel(_textBuffer.CurrentSnapshot, "Signature help get options for arg");
+			var modelPos = model.AdjustPosition(snapPt);
 
-			string sig;
-			if (!string.IsNullOrEmpty(className))
-			{
-				var func = ProbeToolsPackage.Instance.FunctionFileScanner.GetFunction(className, funcName);
-				if (func == null) yield break;
-				sig = func.Signature;
-				if (string.IsNullOrWhiteSpace(sig)) yield break;
-			}
-			else
-			{
-				var sigInfos = SignatureHelp.ProbeSignatureHelpSource.GetAllSignaturesForFunction(model, className, funcName).ToArray();
-				if (sigInfos.Length == 0) yield break;
-				sig = sigInfos[0].Signature;
-			}
+			var sigInfos = SignatureHelp.ProbeSignatureHelpSource.GetAllSignaturesForFunction(model, modelPos, className, funcName).ToArray();
+			if (sigInfos.Length == 0) yield break;
+			var sig = sigInfos[0].Signature;
 
 			var argText = GetArgumentText(sig, argIndex);
 			if (string.IsNullOrWhiteSpace(argText)) yield break;
 
-			var editPos = model.GetPosition(snapPt);
+			var editPos = model.AdjustPosition(snapPt);
 			var parentToken = model.FindTokens(editPos, t => t is GroupToken).LastOrDefault() as GroupToken;
 
 			var argParser = new TokenParser.Parser(argText);

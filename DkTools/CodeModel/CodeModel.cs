@@ -108,7 +108,7 @@ namespace DkTools.CodeModel
 			return pt.Position;
 		}
 
-		public int GetPosition(VsText.SnapshotPoint snapPt)
+		public int AdjustPosition(VsText.SnapshotPoint snapPt)
 		{
 			return AdjustPosition(snapPt.Position, snapPt.Snapshot);
 		}

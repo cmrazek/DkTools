@@ -40,72 +40,109 @@ namespace DkTools.SignatureHelp
 
 			if (ProbeSignatureHelpCommandHandler.s_typedChar == '(')
 			{
-				//var lineText = snapshot.GetLineFromPosition(session.GetTriggerPoint(_textBuffer).GetPosition(snapshot)).GetText();
-				var triggerPos = session.GetTriggerPoint(_textBuffer).GetPosition(snapshot);
-				var lineText = snapshot.GetLineTextUpToPosition(triggerPos);
-
-				var match = _rxFuncBeforeBracket.Match(lineText);
-				if (match.Success)
+				foreach (var sig in HandleOpenBracket(snapshot, origPos))
 				{
-					var tableName = match.Groups[2].Value;
-					var funcName = match.Groups[3].Value;
+					signatures.Add(sig);
+				}
+			}
+			else if (ProbeSignatureHelpCommandHandler.s_typedChar == ',')
+			{
+				foreach (var sig in HandleComma(snapshot, origPos))
+				{
+					signatures.Add(sig);
+				}
+			}
+		}
 
-					if (!string.IsNullOrEmpty(funcName))
+		private IEnumerable<ISignature> HandleOpenBracket(VsText.ITextSnapshot snapshot, int triggerPos)
+		{
+			var lineText = snapshot.GetLineTextUpToPosition(triggerPos);
+
+			var match = _rxFuncBeforeBracket.Match(lineText);
+			if (match.Success)
+			{
+				var tableName = match.Groups[2].Value;
+				var funcName = match.Groups[3].Value;
+
+				if (!string.IsNullOrEmpty(funcName))
+				{
+					var applicableToSpan = snapshot.CreateTrackingSpan(new VsText.Span(triggerPos, 0), VsText.SpanTrackingMode.EdgeInclusive);
+					var fileStore = CodeModel.FileStore.GetOrCreateForTextBuffer(_textBuffer);
+					if (fileStore != null)
 					{
-						var applicableToSpan = snapshot.CreateTrackingSpan(new VsText.Span(origPos, 0), VsText.SpanTrackingMode.EdgeInclusive);
-						var fileStore = CodeModel.FileStore.GetOrCreateForTextBuffer(_textBuffer);
-						if (fileStore != null)
+						var model = fileStore.GetMostRecentModel(snapshot, "Signature help after '('");
+						var modelPos = model.AdjustPosition(triggerPos, snapshot);
+
+						foreach (var sig in GetSignatures(model, modelPos, tableName, funcName, applicableToSpan))
 						{
-							var model = fileStore.GetMostRecentModel(snapshot, "Signature help after '('");
+							yield return sig;
+						}
 
-							foreach (var sig in GetSignatures(model, tableName, funcName, applicableToSpan))
+						if (!string.IsNullOrEmpty(tableName))
+						{
+							var cls = ProbeToolsPackage.Instance.FunctionFileScanner.GetClass(tableName);
+							if (cls != null)
 							{
-								signatures.Add(sig);
-							}
-
-							if (!string.IsNullOrEmpty(tableName))
-							{
-								var cls = ProbeToolsPackage.Instance.FunctionFileScanner.GetClass(tableName);
-								if (cls != null)
+								var def = cls.GetFunctionDefinition(funcName);
+								if (def != null)
 								{
-									var def = cls.GetFunctionDefinition(funcName);
-									if (def != null)
-									{
-										signatures.Add(CreateSignature(_textBuffer, def.Signature, def.DevDescription, applicableToSpan));
-									}
+									yield return CreateSignature(_textBuffer, def.Signature, def.DevDescription, applicableToSpan);
 								}
 							}
 						}
 					}
 				}
 			}
-			else if (ProbeSignatureHelpCommandHandler.s_typedChar == ',')
+		}
+
+		private IEnumerable<ISignature> HandleComma(VsText.ITextSnapshot snapshot, int triggerPos)
+		{
+			var fileStore = CodeModel.FileStore.GetOrCreateForTextBuffer(_textBuffer);
+			if (fileStore != null)
 			{
-				var fileStore = CodeModel.FileStore.GetOrCreateForTextBuffer(_textBuffer);
-				if (fileStore != null)
+				var model = fileStore.GetMostRecentModel(snapshot, "Signature help after ','");
+				var modelPos = model.AdjustPosition(triggerPos, snapshot);
+				var tokens = model.FindTokens(modelPos).ToArray();
+
+				var lastToken = tokens.LastOrDefault(t => t is FunctionCallToken || t is InterfaceMethodCallToken);
+				if (lastToken != null)
 				{
-					var model = fileStore.GetMostRecentModel(snapshot, "Signature help after ','");
-					var modelPos = model.AdjustPosition(origPos, snapshot);
-					var tokens = model.FindTokens(modelPos);
-					var funcCallToken = tokens.LastOrDefault(t => t.GetType() == typeof(FunctionCallToken));
-					if (funcCallToken != null)
+					if (lastToken is FunctionCallToken)
 					{
-						var classToken = (funcCallToken as FunctionCallToken).ClassToken;
+						var funcCallToken = lastToken as FunctionCallToken;
+						var classToken = funcCallToken.ClassToken;
 						var className = classToken != null ? classToken.Text : null;
-						var nameToken = (funcCallToken as FunctionCallToken).NameToken;
+						var nameToken = funcCallToken.NameToken;
 						var funcName = nameToken.Text;
 
 						var bracketPos = nameToken.Span.End;
 						if (modelPos >= bracketPos)
 						{
-							VsText.ITrackingSpan applicableToSpan = _textBuffer.CurrentSnapshot.CreateTrackingSpan(
-								new Microsoft.VisualStudio.Text.Span(snapshot.TranslateOffsetToSnapshot(bracketPos, model.Snapshot), modelPos - bracketPos), VsText.SpanTrackingMode.EdgeInclusive, 0);
+							var modelSpan = new VsText.SnapshotSpan(model.Snapshot, bracketPos, modelPos - bracketPos);
+							var snapshotSpan = modelSpan.TranslateTo(snapshot, VsText.SpanTrackingMode.EdgeInclusive);
+							var applicableToSpan = snapshot.CreateTrackingSpan(snapshotSpan.Span, VsText.SpanTrackingMode.EdgeInclusive, 0);
 
-							foreach (var sig in GetSignatures(model, className, funcName, applicableToSpan))
+							foreach (var sig in GetSignatures(model, modelPos, className, funcName, applicableToSpan))
 							{
-								signatures.Add(sig);
+								yield return sig;
 							}
 						}
+
+						yield break;
+					}
+
+					if (lastToken is InterfaceMethodCallToken)
+					{
+						var methodToken = lastToken as InterfaceMethodCallToken;
+						var bracketPos = methodToken.NameToken.Span.End;
+
+						var modelSpan = new VsText.SnapshotSpan(model.Snapshot, bracketPos, modelPos - bracketPos);
+						var snapshotSpan = modelSpan.TranslateTo(snapshot, VsText.SpanTrackingMode.EdgeInclusive);
+						var applicableToSpan = snapshot.CreateTrackingSpan(snapshotSpan.Span, VsText.SpanTrackingMode.EdgeInclusive, 0);
+						
+						var methodDef = methodToken.MethodDefinition;
+						yield return CreateSignature(_textBuffer, methodDef.Signature, methodDef.DevDescription, applicableToSpan);
+						yield break;
 					}
 				}
 			}
@@ -145,15 +182,15 @@ namespace DkTools.SignatureHelp
 		{
 		}
 
-		private IEnumerable<ProbeSignature> GetSignatures(CodeModel.CodeModel model, string className, string funcName, VsText.ITrackingSpan applicableToSpan)
+		private IEnumerable<ProbeSignature> GetSignatures(CodeModel.CodeModel model, int modelPos, string className, string funcName, VsText.ITrackingSpan applicableToSpan)
 		{
-			foreach (var sig in GetAllSignaturesForFunction(model, className, funcName))
+			foreach (var sig in GetAllSignaturesForFunction(model, modelPos, className, funcName))
 			{
 				yield return CreateSignature(_textBuffer, sig.Signature, sig.DevDescription, applicableToSpan);
 			}
 		}
 
-		public static IEnumerable<SignatureInfo> GetAllSignaturesForFunction(CodeModel.CodeModel model, string className, string funcName)
+		public static IEnumerable<SignatureInfo> GetAllSignaturesForFunction(CodeModel.CodeModel model, int modelPos, string className, string funcName)
 		{
 			if (string.IsNullOrEmpty(className))
 			{
@@ -173,6 +210,22 @@ namespace DkTools.SignatureHelp
 					if ((def as CodeModel.Definitions.FunctionDefinition).ClassName == className)
 					{
 						yield return new SignatureInfo(def.Signature, def.DevDescription);
+						yield break;
+					}
+				}
+
+				foreach (var def1 in model.DefinitionProvider.GetAny(modelPos, className))
+				{
+					if (def1 is CodeModel.Definitions.VariableDefinition)
+					{
+						var varDef = def1 as CodeModel.Definitions.VariableDefinition;
+						var dataType = varDef.DataType;
+						var method = dataType.GetMethod(funcName) as CodeModel.Definitions.InterfaceMethodDefinition;
+						if (method != null)
+						{
+							yield return new SignatureInfo(method.Signature, method.DevDescription);
+							yield break;
+						}
 					}
 				}
 			}
@@ -230,7 +283,8 @@ namespace DkTools.SignatureHelp
 				}
 			}
 
-			if (gotComma) yield return new ArgumentInfo(sb.ToString().Trim(), argName, new Span(argStartPos + argsOffset, parser.Position + argsOffset));
+			var lastArg = sb.ToString();
+			if (gotComma || !string.IsNullOrWhiteSpace(lastArg)) yield return new ArgumentInfo(lastArg.Trim(), argName, new Span(argStartPos + argsOffset, parser.Position + argsOffset));
 		}
 
 		public struct SignatureInfo

@@ -85,7 +85,7 @@ namespace DkTools.SignatureHelp
 							var caretPos = _textView.Caret.Position.BufferPosition.TranslateTo(model.Snapshot, PointTrackingMode.Positive).Position;
 
 							var tokens = model.FindTokens(caretPos);
-							var funcCallToken = tokens.LastOrDefault(t => t.GetType() == typeof(FunctionCallToken));
+							var funcCallToken = tokens.LastOrDefault(t => t is FunctionCallToken || t is InterfaceMethodCallToken);
 							if (funcCallToken != null)
 							{
 								s_typedChar = typedChar;

@@ -6,7 +6,7 @@ using DkTools.CodeModel.Definitions;
 
 namespace DkTools.Dict
 {
-	internal class DictField
+	internal sealed class Field : IDictObj
 	{
 		public string Name { get; private set; }
 		public string Prompt { get; private set; }
@@ -14,12 +14,16 @@ namespace DkTools.Dict
 		public CodeModel.DataType DataType { get; private set; }
 
 		private CodeModel.Definitions.TableFieldDefinition _definition;
-		private DICTSRVRLib.IPColumn _repoCol;
+		//private DICTSRVRLib.IPColumn _repoCol;
+		private FieldParentType _parentType;
+		private string _parentName;
 
-		public DictField(string parentName, DICTSRVRLib.IPColumn repoCol)
+		public Field(FieldParentType parentType, string parentName, DICTSRVRLib.IPColumn repoCol)
 		{
 			Name = repoCol.Name;
-			_repoCol = repoCol;
+			//_repoCol = repoCol;
+			_parentType = parentType;
+			_parentName = parentName;
 
 			var desc = repoCol as DICTSRVRLib.IPDObjDesc;
 			Prompt = desc.Prompt[0];
@@ -62,9 +66,43 @@ namespace DkTools.Dict
 			get { return _definition; }
 		}
 
-		public DICTSRVRLib.IPColumn RepoColumn
+		public object CreateRepoObject(Dict dict)
 		{
-			get { return _repoCol; }
+			switch (_parentType)
+			{
+				case FieldParentType.Table:
+					{
+						var table = dict.GetTable(_parentName);
+						if (table != null)
+						{
+							return table.Columns[Name];
+						}
+					}
+					return null;
+
+				case FieldParentType.Relationship:
+					{
+						var rel = dict.GetRelationship(_parentName);
+						if (rel != null)
+						{
+							var table = rel.Child;
+							if (table != null)
+							{
+								return table.Columns[Name];
+							}
+						}
+					}
+					return null;
+
+				default:
+					return null;
+			}
 		}
+	}
+
+	internal enum FieldParentType
+	{
+		Table,
+		Relationship
 	}
 }

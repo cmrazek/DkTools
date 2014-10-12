@@ -18,17 +18,31 @@ namespace DkTools.CodeModel
 			{
 				_builtInDefs = new Definition[]
 				{
-					new FunctionDefinition("diag", DataType.Void, "void diag(expressions ...)", "Outputs specified expressions to a diagnostic device."),
-					new FunctionDefinition("gofield", DataType.Void, "void gofield(TableName.ColumnName)", "Puts the focus on the requested field on the form."),
-					new FunctionDefinition("makestring", DataType.FromString("char(255)"), "char(255) makestring(expressions ...)", "Creates a string by concatenating a list of expressions."),
-					new FunctionDefinition("oldvalue", DataType.Void, "oldvalue(TableName.ColumnName)", "Returns the value of a column in the old row buffer."),
+					new FunctionDefinition("diag", DataType.Void, "void diag(expressions ...)",
+						"Outputs specified expressions to a diagnostic device."),
+					new FunctionDefinition("gofield", DataType.Void, "void gofield(TableName.ColumnName)",
+						"Puts the focus on the requested field on the form."),
+					new FunctionDefinition("invokeerror", DataType.Int, "int invokeerror(iObj)",
+						"Determines whether an instantiated COM or .NET object has encountered an error. If an error, returns the error code of the object."),
+					new FunctionDefinition("invokeerrorstring", DataType.Char255, "char(255) invokeerrorstring(iObj)",
+						"Returns the text of the last error invoked on the object."),
+					new FunctionDefinition("isinstance", DataType.Int, "int isinstance(iObj);",
+						"Determines whether a variable points to a valid instance of the variable interface type. "),
+					new FunctionDefinition("makestring", DataType.FromString("char(255)"), "char(255) makestring(expressions ...)",
+						"Creates a string by concatenating a list of expressions."),
+					new FunctionDefinition("oldvalue", DataType.Void, "oldvalue(TableName.ColumnName)",
+						"Returns the value of a column in the old row buffer."),
 					new FunctionDefinition("qcolsend", DataType.Void, "void qcolsend(TableName.ColumnName ...)",
 						"Sends columns of the client's current row buffer to SAM or from SAM to the client. Only the current row buffer (not the old buffer) of the recepient is overwritten."),
 					new FunctionDefinition("SetMessage", DataType.Int, "int SetMessage(MessageControlString, expressions ...)",
 						"Writes to the error message buffer. CAM displays the contents of that buffer when a trigger encounters an error. In code, you can read that buffer using the getmsg function.\r\n\r\n" +
 						"Provides similar functionality to setmsg, but allows you to maintain one source code for all languages (with one set of resource files per language)."),
-					new FunctionDefinition("STRINGIZE", DataType.FromString("char(255)"), "STRINGIZE(x)", "Converts macro parameters to strings."),
-					new FunctionDefinition("UNREFERENCED_PARAMETER", DataType.Void, "UNREFERENCED_PARAMETER(parameter)", "Prevents a compiler warning if a parameter passed to a function is not used.")
+					new FunctionDefinition("STRINGIZE", DataType.FromString("char(255)"), "STRINGIZE(x)",
+						"Converts macro parameters to strings."),
+					new FunctionDefinition("UNREFERENCED_PARAMETER", DataType.Void, "UNREFERENCED_PARAMETER(parameter)",
+						"Prevents a compiler warning if a parameter passed to a function is not used."),
+
+					new InterfaceTypeDefinition("oleobject")
 				};
 			}
 			AddGlobalFromAnywhere(_builtInDefs);

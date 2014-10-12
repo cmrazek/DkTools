@@ -8,9 +8,9 @@ namespace DkTools.CodeModel.Tokens
 {
 	internal class RelIndFieldToken : WordToken
 	{
-		Dict.DictField _field;
+		Dict.Field _field;
 
-		public RelIndFieldToken(GroupToken parent, Scope scope, Span span, string text, Dict.DictField field)
+		public RelIndFieldToken(GroupToken parent, Scope scope, Span span, string text, Dict.Field field)
 			: base(parent, scope, span, text)
 		{
 #if DEBUG

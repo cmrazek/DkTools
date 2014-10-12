@@ -6,47 +6,29 @@ using DkTools.CodeModel.Definitions;
 
 namespace DkTools.Dict
 {
-	internal enum DictRelIndType
+	internal enum RelIndType
 	{
 		Index,
 		Relationship
 	}
 
-	internal class DictRelInd
+	internal sealed class RelInd : IDictObj
 	{
-		private DictRelIndType _type;
+		private RelIndType _type;
 		private string _name;
 		private CodeModel.Definitions.RelIndDefinition _def;
 		private string _repoDesc;
 		private string _prompt;
 		private string _comment;
 		private string _columns;
-		//private int? _autoSequence;
-		//private int? _autoSequenceBase;
-		//private int? _autoSequenceIncrement;
-		//private int? _clustered;
-		//private int? _descending;
-		//private int? _noPick;
-		//private int? _number;
-		//private int? _primary;
-		//private int? _unique;
-		private Dictionary<string, DictField> _fields = new Dictionary<string, DictField>();
-		private object _repoObj;
+		private Dictionary<string, Field> _fields = new Dictionary<string, Field>();
+		private string _tableName;
 
-		public DictRelInd(DictTable table, DICTSRVRLib.IPIndex repoIndex)
+		public RelInd(Table table, DICTSRVRLib.IPIndex repoIndex)
 		{
-			_type = DictRelIndType.Index;
+			_type = RelIndType.Index;
 			_name = repoIndex.Name;
-			//_autoSequence = repoIndex.AutoSequence;
-			//_autoSequenceBase = repoIndex.AutoSequenceBase;
-			//_autoSequenceIncrement = repoIndex.AutoSequenceIncrement;
-			//_clustered = repoIndex.Clustered;
-			//_descending = repoIndex.Descending;
-			//_noPick = repoIndex.NoPick;
-			//_number = repoIndex.Number;
-			//_primary = repoIndex.Primary;
-			//_unique = repoIndex.Unique;
-			_repoObj = repoIndex;
+			_tableName = table.Name;
 
 			var dev = repoIndex as DICTSRVRLib.IPDictObj;
 			if (dev != null)
@@ -92,22 +74,16 @@ namespace DkTools.Dict
 			info.Append(')');
 			_columns = cols.ToString();
 
-			//if (!string.IsNullOrWhiteSpace(_repoDesc))
-			//{
-			//	info.AppendLine();
-			//	info.AppendFormat("Description: {0}", _repoDesc);
-			//}
-
 			_def = new CodeModel.Definitions.RelIndDefinition(_name, table.Name, info.ToString(), _repoDesc);
 		}
 
-		public DictRelInd(DictTable table, DICTSRVRLib.IPRelationship repoRel)
+		public RelInd(Table table, DICTSRVRLib.IPRelationship repoRel)
 		{
-			_type = DictRelIndType.Relationship;
+			_type = RelIndType.Relationship;
 			_name = repoRel.Name;
 			_prompt = repoRel.Prompt[0];
 			_comment = repoRel.Comment[0];
-			_repoObj = repoRel;
+			_tableName = table.Name;
 
 			var dev = repoRel as DICTSRVRLib.IPDictObj;
 			if (dev != null)
@@ -124,7 +100,7 @@ namespace DkTools.Dict
 					var col = repoTable.Columns[c];
 					if (col != null)
 					{
-						var field = new DictField(_name, col);
+						var field = new Field(FieldParentType.Relationship, _name, col);
 						_fields[field.Name] = field;
 					}
 				}
@@ -150,7 +126,7 @@ namespace DkTools.Dict
 			_def = new RelIndDefinition(_name, table.Name, relText, _repoDesc);
 		}
 
-		public DictRelIndType Type
+		public RelIndType Type
 		{
 			get { return _type; }
 		}
@@ -185,9 +161,9 @@ namespace DkTools.Dict
 			get { return _repoDesc; }
 		}
 
-		public DictField GetField(string fieldName)
+		public Field GetField(string fieldName)
 		{
-			DictField field;
+			Field field;
 			if (_fields.TryGetValue(fieldName, out field)) return field;
 			return null;
 		}
@@ -200,9 +176,26 @@ namespace DkTools.Dict
 			}
 		}
 
-		public object RepoObj
+		public object CreateRepoObject(Dict dict)
 		{
-			get { return _repoObj; }
+			switch (_type)
+			{
+				case RelIndType.Relationship:
+					return dict.GetRelationship(_name);
+
+				case RelIndType.Index:
+					{
+						var table = dict.GetTable(_tableName);
+						if (table != null)
+						{
+							return table.Indexes[_name];
+						}
+					}
+					return null;
+
+				default:
+					return null;
+			}
 		}
 	}
 }

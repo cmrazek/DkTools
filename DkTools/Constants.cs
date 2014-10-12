@@ -37,18 +37,20 @@ namespace DkTools
 		public static readonly HashSet<string> ProbeExtensions = Util.ParseWordList("cc cc& cc+ ct ct& ct+ f f& f+ i i& i+ gp gp& gp+ nc nc& nc+ sc sc& sc+ sp sp& sp+ st st& st+ t t& t+");
 		public static readonly HashSet<string> IncludeExtensions = Util.ParseWordList("i i& i+ id id& id+ ie ie& ie+ il il& il+");
 
-		public static readonly HashSet<string> DataTypeKeywords = Util.ParseWordList("alternate bool char currency date enum int LEADINGZEROS like local_currency long longform nowarn numeric proto shortform string time unsigned void");
+		public static readonly HashSet<string> DataTypeKeywords = Util.ParseWordList(
+			"alternate Boolean_t char currency date enum int LEADINGZEROS like local_currency long longform",
+			"nowarn numeric oleobject proto shortform string time unsigned variant void");
 
 		public static readonly HashSet<string> Keywords = Util.ParseWordList(
 			"after all and asc BEGINHLP before break button by comment case col colff cols continue create default display desc description",
-			"each else endgroup ENDHLP extern extract for form formonly format from group header if index many nomenu nopick of on one or order outfile",
-			"permanent physical private prompt protected public",
+			"each else endgroup ENDHLP extern extract for form formonly format from group header if index interface interfacetype many nomenu nopick of on one or order outfile",
+			"permanent physical private progid prompt protected public",
 			"relationship return row rows select snapshot static switch table tag to tool typedef unique updates where while widthof zoom");
 
 		public static readonly HashSet<string> GlobalKeywords = Util.ParseWordList(
 			"after all and BEGINHLP before break button comment col colff cols continue create display description each else endgroup ENDHLP extern extract",
-			"for form formonly format from group header index",
-			"many nomenu nopick on one or outfile permanent physical private prompt protected public relationship row rows select snapshot static",
+			"for form formonly format from group header index interface interfacetype",
+			"many nomenu nopick on one or outfile permanent physical private progid prompt protected public relationship row rows select snapshot static",
 			"table tag to tool typedef unique updates where widthof zoom");
 
 		public static readonly HashSet<string> SwitchKeywords = Util.ParseWordList("case default");

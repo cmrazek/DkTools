@@ -7,23 +7,22 @@ using DkTools.CodeModel.Definitions;
 
 namespace DkTools.Dict
 {
-	internal class DictTable
+	internal sealed class Table : IDictObj
 	{
 		private int _number;
 		private string _name;
 		private string _prompt;
 		private string _comment;
 		private string _description;
-		private Dictionary<string, DictField> _fields;
-		private List<DictRelInd> _relInds;
+		private Dictionary<string, Field> _fields;
+		private List<RelInd> _relInds;
 		private TableDefinition[] _definitions;
-		private DICTSRVRLib.IPTable _repoTable;
+		//private DICTSRVRLib.IPTable _repoTable;
 
-		public DictTable(DICTSRVRLib.IPTable repoTable)
+		public Table(DICTSRVRLib.IPTable repoTable)
 		{
 			if (repoTable == null) throw new ArgumentNullException("repoTable");
 
-			_repoTable = repoTable;
 			_number = repoTable.Number;
 			_name = repoTable.Name;
 
@@ -78,41 +77,41 @@ namespace DkTools.Dict
 			return _fields.ContainsKey(fieldName);
 		}
 
-		public IEnumerable<DictField> Fields
+		public IEnumerable<Field> Fields
 		{
 			get { return _fields.Values; }
 		}
 
-		public DictField GetField(string fieldName)
+		public Field GetField(string fieldName)
 		{
-			DictField field;
+			Field field;
 			if (_fields.TryGetValue(fieldName, out field)) return field;
 			return null;
 		}
 
 		private void LoadFields(DICTSRVRLib.IPTable repoTable)
 		{
-			_fields = new Dictionary<string, DictField>();
+			_fields = new Dictionary<string, Field>();
 			for (int c = 1, cc = repoTable.ColumnCount; c <= cc; c++)
 			{
-				var field = new DictField(_name, repoTable.Columns[c]);
+				var field = new Field(FieldParentType.Table, _name, repoTable.Columns[c]);
 				_fields[field.Name] = field;
 			}
 
-			_relInds = new List<DictRelInd>();
+			_relInds = new List<RelInd>();
 			for (int i = 1, ii = repoTable.IndexCount; i <= ii; i++)
 			{
-				var relind = new DictRelInd(this, repoTable.Indexes[i]);
+				var relind = new RelInd(this, repoTable.Indexes[i]);
 				_relInds.Add(relind);
 			}
 		}
 
-		public void AddRelInd(DictRelInd relInd)
+		public void AddRelInd(RelInd relInd)
 		{
 			_relInds.Add(relInd);
 		}
 
-		public IEnumerable<DictRelInd> RelInds
+		public IEnumerable<RelInd> RelInds
 		{
 			get { return _relInds; }
 		}
@@ -135,12 +134,9 @@ namespace DkTools.Dict
 			}
 		}
 
-		public DICTSRVRLib.IPTable RepoTable
+		public object CreateRepoObject(Dict dict)
 		{
-			get
-			{
-				return _repoTable;
-			}
+			return dict.GetTable(_name);
 		}
 	}
 }

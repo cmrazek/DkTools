@@ -148,7 +148,7 @@ namespace DkTools.BraceHighlighting
 			if (fileStore != null)
 			{
 				var model = fileStore.GetCurrentModel(_sourceBuffer.CurrentSnapshot, "Word select idle");
-				var modelPos = model.GetPosition(snapPt);
+				var modelPos = model.AdjustPosition(snapPt);
 				var caretToken = model.File.FindDownwardTouching(modelPos).LastOrDefault(t => t.SourceDefinition != null);
 				if (caretToken == null)
 				{

@@ -264,6 +264,9 @@
     <Compile Include="CodeModel\Definitions\ExtractTableDefinition.cs" />
     <Compile Include="CodeModel\Definitions\ExtractFieldDefinition.cs" />
     <Compile Include="CodeModel\Definitions\FunctionDefinition.cs" />
+    <Compile Include="CodeModel\Definitions\InterfaceMethodDefinition.cs" />
+    <Compile Include="CodeModel\Definitions\InterfacePropertyDefinintion.cs" />
+    <Compile Include="CodeModel\Definitions\InterfaceTypeDefinition.cs" />
     <Compile Include="CodeModel\Definitions\MacroDefinition.cs" />
     <Compile Include="CodeModel\Definitions\RelIndDefinition.cs" />
     <Compile Include="CodeModel\Definitions\StringDefDefinition.cs" />
@@ -271,7 +274,13 @@
     <Compile Include="CodeModel\Definitions\TableFieldDefinition.cs" />
     <Compile Include="CodeModel\Definitions\VariableDefinition.cs" />
     <Compile Include="CodeModel\Tokens\CodeFile_Parsing.cs" />
+    <Compile Include="CodeModel\Tokens\InterfaceMethodCallToken.cs" />
+    <Compile Include="CodeModel\Tokens\InterfacePropertyToken.cs" />
+    <Compile Include="CodeModel\Tokens\InterfaceTypeToken.cs" />
     <Compile Include="CodeModel\Tokens\TagToken.cs" />
+    <Compile Include="Dict\Dict.cs" />
+    <Compile Include="Dict\IDictObj.cs" />
+    <Compile Include="Dict\InterfaceType.cs" />
     <Compile Include="ErrorDialog.xaml.cs">
       <DependentUpon>ErrorDialog.xaml</DependentUpon>
     </Compile>
@@ -357,8 +366,8 @@
     <Compile Include="Commands.cs" />
     <Compile Include="Compiler\ProbeCompiler.cs" />
     <Compile Include="Constants.cs" />
-    <Compile Include="Dict\DictStringDef.cs" />
-    <Compile Include="Dict\DictTypeDef.cs" />
+    <Compile Include="Dict\StringDef.cs" />
+    <Compile Include="Dict\TypeDef.cs" />
     <Compile Include="DkEnv\DkEnvVarMerger.cs" />
     <Compile Include="DkEnv\EnvVarList.cs" />
     <Compile Include="DkEnv\RegUtil.cs" />
@@ -410,9 +419,9 @@
       <DependentUpon>ProbeExplorerControl.xaml</DependentUpon>
     </Compile>
     <Compile Include="ProbeExplorer\ProbeExplorerToolWindow.cs" />
-    <Compile Include="Dict\DictField.cs" />
-    <Compile Include="Dict\DictRelInd.cs" />
-    <Compile Include="Dict\DictTable.cs" />
+    <Compile Include="Dict\Field.cs" />
+    <Compile Include="Dict\RelInd.cs" />
+    <Compile Include="Dict\Table.cs" />
     <Compile Include="ProbeExplorer\RepoInfo.cs" />
     <Compile Include="ProbeExplorer\RepoInfoItem.cs" />
     <Compile Include="ProbeExplorer\RepoInfoWindow.xaml.cs">
@@ -557,6 +566,7 @@
     <Resource Include="Images\error16.png" />
     <None Include="Resources\ExpandMinus.png" />
     <None Include="Resources\ExpandPlus.png" />
+    <None Include="Resources\Interface.gif" />
     <Content Include="Resources\Package.ico" />
   </ItemGroup>
   <ItemGroup>

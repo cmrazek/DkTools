@@ -339,28 +339,14 @@ namespace DkTools
 		#endregion
 
 		#region Table List
-		private static Dictionary<string, Dict.DictTable> _tables = new Dictionary<string, Dict.DictTable>();
-		private static Dictionary<string, Dict.DictStringDef> _stringDefs = new Dictionary<string, Dict.DictStringDef>();
-		private static Dictionary<string, Dict.DictTypeDef> _typeDefs = new Dictionary<string, Dict.DictTypeDef>();
-		private static DICTSRVRLib.PRepository _repo;
-		private static DICTSRVRLib.PDictionary _dict;
+		private static Dictionary<string, Dict.Table> _tables = new Dictionary<string, Dict.Table>();
+		private static Dictionary<string, Dict.StringDef> _stringDefs = new Dictionary<string, Dict.StringDef>();
+		private static Dictionary<string, Dict.TypeDef> _typeDefs = new Dictionary<string, Dict.TypeDef>();
+		private static Dictionary<string, Dict.InterfaceType> _intTypes = new Dictionary<string, Dict.InterfaceType>();
 
-		public static DICTSRVRLib.PRepository ProbeRepo
+		public static Dict.Dict CreateDictionary(string appName)
 		{
-			get
-			{
-				if (_repo == null) _repo = new DICTSRVRLib.PRepository();
-				return _repo;
-			}
-		}
-
-		public static DICTSRVRLib.PDictionary ProbeDict
-		{
-			get
-			{
-				if (_dict == null) _dict = ProbeRepo.LoadDictionary(_currentApp.Name, string.Empty, DICTSRVRLib.PDS_Access.Access_BROWSE);
-				return _dict;
-			}
+			return new Dict.Dict(appName);
 		}
 
 		private static void ReloadTableList()
@@ -371,50 +357,52 @@ namespace DkTools
 				Debug.WriteLine("Loading dictionary...");
 #endif
 
-				_repo = null;
-				_dict = null;
 				_tables.Clear();
 				_stringDefs.Clear();
 				_typeDefs.Clear();
 
 				if (_currentApp != null)
 				{
-					var dict = ProbeDict;
-					if (dict != null)
+					using (var dict = CreateDictionary(_currentApp.Name))
 					{
-						for (int t = 1, tt = dict.TableCount; t <= tt; t++)
+						foreach (var repoTable in dict.Tables)
 						{
-							var table = new Dict.DictTable(dict.Tables[t]);
+							var table = new Dict.Table(repoTable);
 							_tables[table.Name] = table;
 						}
 
-						for (int s = 1, ss = dict.StringDefineCount; s <= ss; s++)
+						foreach (var repoSD in dict.StringDefines)
 						{
-							var stringDef = new Dict.DictStringDef(dict.StringDefines[s]);
+							var stringDef = new Dict.StringDef(repoSD);
 							_stringDefs[stringDef.Name] = stringDef;
 						}
 
-						for (int t = 1, tt = dict.TypeDefineCount; t <= tt; t++)
+						foreach (var repoTD in dict.TypeDefines)
 						{
-							var typeDef = new Dict.DictTypeDef(dict.TypeDefines[t]);
+							var typeDef = new Dict.TypeDef(repoTD);
 							_typeDefs[typeDef.Name] = typeDef;
 						}
 
-						for (int r = 1, rr = dict.RelationshipCount; r <= rr; r++)
+						foreach (var repoRel in dict.Relationships)
 						{
-							var repoRel = dict.Relationships[r];
 							var parent = repoRel.Parent;
 
-							Dict.DictTable table;
+							Dict.Table table;
 							if (_tables.TryGetValue(repoRel.Parent.Name, out table))
 							{
-								var relind = new Dict.DictRelInd(table, repoRel);
+								var relind = new Dict.RelInd(table, repoRel);
 								table.AddRelInd(relind);
 							}
 							else
 							{
 								Log.WriteDebug("Could not find parent table for relationship '{0}'.", repoRel.Name);
 							}
+						}
+
+						foreach (var repoIntType in dict.Interfaces)
+						{
+							var intType = new Dict.InterfaceType(repoIntType);
+							_intTypes[intType.Name] = intType;
 						}
 					}
 				}
@@ -431,7 +419,7 @@ namespace DkTools
 			}
 		}
 
-		public static IEnumerable<Dict.DictTable> Tables
+		public static IEnumerable<Dict.Table> Tables
 		{
 			get { return _tables.Values; }
 		}
@@ -454,9 +442,9 @@ namespace DkTools
 			return _tables.Any(t => { return t.Value.Number == tableNum; });
 		}
 
-		public static Dict.DictTable GetTable(string tableName)
+		public static Dict.Table GetTable(string tableName)
 		{
-			Dict.DictTable table;
+			Dict.Table table;
 			if (_tables.TryGetValue(tableName, out table)) return table;
 
 			if (tableName.Length > 1 && char.IsDigit(tableName[tableName.Length - 1]))
@@ -468,7 +456,7 @@ namespace DkTools
 			return null;
 		}
 
-		public static Dict.DictTable GetTable(int tableNum)
+		public static Dict.Table GetTable(int tableNum)
 		{
 			return (from t in _tables where t.Value.Number == tableNum select t.Value).FirstOrDefault();
 		}
@@ -484,26 +472,34 @@ namespace DkTools
 				foreach (var relInd in _relInds.Values) yield return relInd.Definition;
 				foreach (var stringDef in _stringDefs.Values) yield return stringDef.Definition;
 				foreach (var typeDef in _typeDefs.Values) yield return typeDef.Definition;
+				foreach (var intType in _intTypes.Values) yield return intType.Definition;
 			}
 		}
 
-		public static Dict.DictStringDef GetStringDef(string name)
+		public static Dict.StringDef GetStringDef(string name)
 		{
-			Dict.DictStringDef ret;
+			Dict.StringDef ret;
 			if (_stringDefs.TryGetValue(name, out ret)) return ret;
 			return null;
 		}
 
-		public static Dict.DictTypeDef GetTypeDef(string name)
+		public static Dict.TypeDef GetTypeDef(string name)
 		{
-			Dict.DictTypeDef ret;
+			Dict.TypeDef ret;
 			if (_typeDefs.TryGetValue(name, out ret)) return ret;
+			return null;
+		}
+
+		public static Dict.InterfaceType GetInterfaceType(string name)
+		{
+			Dict.InterfaceType intType;
+			if (_intTypes.TryGetValue(name, out intType)) return intType;
 			return null;
 		}
 		#endregion
 
 		#region RelInds
-		private static Dictionary<string, Dict.DictRelInd> _relInds = new Dictionary<string, Dict.DictRelInd>();
+		private static Dictionary<string, Dict.RelInd> _relInds = new Dictionary<string, Dict.RelInd>();
 
 		private static void LoadRelInds()
 		{
@@ -515,14 +511,14 @@ namespace DkTools
 			}
 		}
 
-		public static IEnumerable<Dict.DictRelInd> RelInds
+		public static IEnumerable<Dict.RelInd> RelInds
 		{
 			get { return _relInds.Values; }
 		}
 
-		public static Dict.DictRelInd GetRelInd(string name)
+		public static Dict.RelInd GetRelInd(string name)
 		{
-			Dict.DictRelInd relind;
+			Dict.RelInd relind;
 			if (_relInds.TryGetValue(name, out relind)) return relind;
 			return null;
 		}

@@ -24,12 +24,14 @@ namespace DkTools.ProbeExplorer
 		private object _repoObj;
 		//private List<RepoInfoItem> _items;
 		private ObservableCollection<RepoInfoItem> _items;
+		private Dict.Dict _dict;
 
 		public event PropertyChangedEventHandler PropertyChanged;
 
-		public RepoInfoWindow(object repoObj)
+		internal RepoInfoWindow(object repoObj, Dict.Dict dict)
 		{
 			_repoObj = repoObj;
+			_dict = dict;
 			_items = new ObservableCollection<RepoInfoItem>(RepoInfo.GenerateInfoItems(_repoObj, 0));
 
 			InitializeComponent();
@@ -61,8 +63,6 @@ namespace DkTools.ProbeExplorer
 			var ev = PropertyChanged;
 			if (ev != null) ev(this, new PropertyChangedEventArgs(propName));
 		}
-
-		
 
 		private void ListViewItem_MouseDoubleClick(object sender, MouseButtonEventArgs e)
 		{

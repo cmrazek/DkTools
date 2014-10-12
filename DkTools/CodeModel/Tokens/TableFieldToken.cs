@@ -7,9 +7,9 @@ namespace DkTools.CodeModel.Tokens
 {
 	internal class TableFieldToken : WordToken
 	{
-		private Dict.DictField _field;
+		private Dict.Field _field;
 
-		public TableFieldToken(GroupToken parent, Scope scope, Span span, string text, Dict.DictField field)
+		public TableFieldToken(GroupToken parent, Scope scope, Span span, string text, Dict.Field field)
 			: base(parent, scope, span, text)
 		{
 #if DEBUG
