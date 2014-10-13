@@ -741,10 +741,10 @@ namespace DkTools
 				var store = new CodeModel.FileStore();
 				var reader = new CodeModel.CodeSource.CodeSourcePreprocessorReader(codeSource);
 				var dest = new CodeModel.CodeSource();
-				var serverContext = CodeModel.FileStore.GetServerContextFromFileExtension(Path.GetExtension(fileName));
+				var fileContext = CodeModel.FileContextUtil.GetFileContextFromFileName(fileName);
 
 				var prep = new CodeModel.Preprocessor(store);
-				prep.Preprocess(reader, dest, fileName, null, serverContext);
+				prep.Preprocess(reader, dest, fileName, null, fileContext);
 
 				//Shell.OpenTempContent(string.Concat(dest.Text, "\r\nCONTINUOUS SEGMENTS:\r\n", dest.DumpContinuousSegments()), Path.GetFileName(fileName), ".preprocessor.txt");
 				Shell.OpenTempContent(dest.Text, Path.GetFileName(fileName), ".preprocessor.txt");

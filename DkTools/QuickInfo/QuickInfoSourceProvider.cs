@@ -14,15 +14,9 @@ namespace DkTools.QuickInfo
 	[Export(typeof(IQuickInfoSourceProvider))]
 	[Name("ToolTip QuickInfo Source")]
 	[Order(Before = "Default Quick Info Presenter")]
-	[ContentType("text")]
+	[ContentType(Constants.DkContentType)]
 	internal class QuickInfoSourceProvider : IQuickInfoSourceProvider
 	{
-		[Import]
-		internal ITextStructureNavigatorSelectorService NavigatorService { get; set; }
-
-		[Import]
-		internal ITextBufferFactoryService TextBufferFactoryService { get; set; }
-
 		IQuickInfoSource IQuickInfoSourceProvider.TryCreateQuickInfoSource(ITextBuffer textBuffer)
 		{
 			return new QuickInfoSource(this, textBuffer);

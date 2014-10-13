@@ -12,25 +12,14 @@
 			<Declarations>
 				<Literal>
 					<ID>description</ID>
-					<ToolTip>Description of what the file contains</ToolTip>
+					<ToolTip>Description of the function's purpose.</ToolTip>
 					<Default>WBDK fires this trigger as soon as the DLL containing it is loaded.</Default>
-				</Literal>
-				<Literal>
-					<ID>assumptions</ID>
-					<ToolTip>Assumptions</ToolTip>
-					<Default>Assumptions that the method makes (i.e. context)</Default>
-				</Literal>
-				<Literal>
-					<ID>notes</ID>
-					<ToolTip>Notes</ToolTip>
-					<Default>Additional notes others should be aware of</Default>
 				</Literal>
 			</Declarations>
 			<Code Language="DK" Kind="classtrigger">
 				<![CDATA[int globalinitialize()
 description "$description$"
 {
-	return 0;
 }
 ]]>
 			</Code>
@@ -48,25 +37,14 @@ description "$description$"
 			<Declarations>
 				<Literal>
 					<ID>description</ID>
-					<ToolTip>Description of what the file contains</ToolTip>
+					<ToolTip>Description of the function's purpose.</ToolTip>
 					<Default>WBDK fires this trigger when the DLL containing it is terminated.</Default>
-				</Literal>
-				<Literal>
-					<ID>assumptions</ID>
-					<ToolTip>Assumptions</ToolTip>
-					<Default>Assumptions that the method makes (i.e. context)</Default>
-				</Literal>
-				<Literal>
-					<ID>notes</ID>
-					<ToolTip>Notes</ToolTip>
-					<Default>Additional notes others should be aware of</Default>
 				</Literal>
 			</Declarations>
 			<Code Language="DK" Kind="classtrigger">
 				<![CDATA[int globalterminate()
 description "$description$"
 {
-	return 0;
 }
 ]]>
 			</Code>
@@ -84,7 +62,7 @@ description "$description$"
 			<Declarations>
 				<Literal>
 					<ID>description</ID>
-					<ToolTip>Description of what the file contains</ToolTip>
+					<ToolTip>Description of the function's purpose.</ToolTip>
 					<Default>WBDK fires this trigger as soon as the DLL containing it is referenced by the application.</Default>
 				</Literal>
 			</Declarations>
@@ -92,7 +70,6 @@ description "$description$"
 				<![CDATA[int staticinitialize()
 description "$description$"
 {
-	return 0;
 }
 ]]>
 			</Code>
@@ -110,7 +87,7 @@ description "$description$"
 			<Declarations>
 				<Literal>
 					<ID>description</ID>
-					<ToolTip>Description of what the file contains</ToolTip>
+					<ToolTip>Description of the function's purpose.</ToolTip>
 					<Default>WBDK fires this trigger when the DLL containing it is no longer referenced by the application.</Default>
 				</Literal>
 			</Declarations>
@@ -118,7 +95,6 @@ description "$description$"
 				<![CDATA[int staticterminate()
 description "$description$"
 {
-	return 0;
 }
 ]]>
 			</Code>

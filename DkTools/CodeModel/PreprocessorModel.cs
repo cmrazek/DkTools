@@ -20,6 +20,7 @@ namespace DkTools.CodeModel
 		private Dictionary<string, VariableDefinition> _globalVars = new Dictionary<string, VariableDefinition>();
 		private Dictionary<string, FunctionDefinition> _externFuncs = new Dictionary<string, FunctionDefinition>();
 		private List<FunctionDefinition> _localFuncs = new List<FunctionDefinition>();
+		private FileContext _fileContext;
 #if DEBUG
 		private List<KeyValuePair<int, Definition>> _localDefs = new List<KeyValuePair<int, Definition>>();
 #endif
@@ -40,9 +41,10 @@ namespace DkTools.CodeModel
 			_defProv = defProv;
 			_fileName = fileName;
 			FunctionFileScanning.FFUtil.FileNameIsClass(_fileName, out _className);
+			_fileContext = FileContextUtil.GetFileContextFromFileName(fileName);
 
 #if REPORT_ERRORS
-			_reportErrors = visible && ProbeToolsPackage.Instance.EditorOptions.ShowErrors;
+			_reportErrors = visible && _fileContext != FileContext.Include && ProbeToolsPackage.Instance.EditorOptions.ShowErrors;
 #endif
 
 			Parse();
@@ -1184,7 +1186,7 @@ namespace DkTools.CodeModel
 				}
 				else
 				{
-					_code.Peek();
+					_code.Read();
 					ReportError(_code.TokenSpan, ErrorCode.ColDef_UnknownAttribute, _code.TokenText);
 				}
 			}

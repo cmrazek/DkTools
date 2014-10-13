@@ -287,8 +287,7 @@ namespace DkTools.CodeModel
 
 			var defProvider = new DefinitionProvider(fileName);
 
-			var ext = Path.GetExtension(fileName);
-			var serverContext = GetServerContextFromFileExtension(ext);
+			var serverContext = FileContextUtil.GetFileContextFromFileName(fileName);
 			var prep = new Preprocessor(this);
 			prep.Preprocess(reader, prepSource, fileName, new string[0], serverContext);
 			prep.AddDefinitionsToProvider(defProvider);
@@ -340,40 +339,6 @@ namespace DkTools.CodeModel
 		public Guid Guid
 		{
 			get { return _guid; }
-		}
-
-		public static ServerContext GetServerContextFromFileExtension(string ext)
-		{
-			switch (ext.ToLower())
-			{
-				case ".sc":
-				case ".sc+":
-				case ".sc&":
-				case ".st":
-				case ".st+":
-				case ".st&":
-					return ServerContext.Server;
-				case ".cc":
-				case ".cc+":
-				case ".cc&":
-				case ".ct":
-				case ".ct+":
-				case ".ct&":
-					return ServerContext.Client;
-				case ".nc":
-				case ".nc+":
-				case ".nc&":
-					return ServerContext.Neutral;
-				case ".i":
-				case ".i+":
-				case ".i&":
-				case ".il":
-				case ".il+":
-				case ".il&":
-					return ServerContext.Include;
-				default:
-					return ServerContext.Unknown;
-			}
 		}
 
 		private static void CreateStdLibModel()

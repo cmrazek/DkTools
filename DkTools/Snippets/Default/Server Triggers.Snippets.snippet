@@ -27,7 +27,7 @@
 				</Literal>
 				<Literal>
 					<ID>description</ID>
-					<ToolTip>Description of what the file contains</ToolTip>
+					<ToolTip>Description of the function's purpose.</ToolTip>
 					<Default>Description</Default>
 				</Literal>
 			</Declarations>
@@ -55,7 +55,7 @@ description "$description$"
 			<Declarations>
 				<Literal>
 					<ID>description</ID>
-					<ToolTip>Description of what the file contains</ToolTip>
+					<ToolTip>Description of the function's purpose.</ToolTip>
 					<Default>Executed at the server when a row is about to be inserted in the database (i.e., during the insert and insrel events).</Default>
 				</Literal>
 			</Declarations>
@@ -96,7 +96,7 @@ description "$description$"
 				</Literal>
 				<Literal>
 					<ID>description</ID>
-					<ToolTip>Description of what the file contains</ToolTip>
+					<ToolTip>Description of the function's purpose.</ToolTip>
 					<Default>Executed when the CAM user chooses the listing.</Default>
 				</Literal>
 			</Declarations>
@@ -144,7 +144,7 @@ description "$description$"
 				</Literal>
 				<Literal>
 					<ID>description</ID>
-					<ToolTip>Description of what the file contains</ToolTip>
+					<ToolTip>Description of the function's purpose.</ToolTip>
 					<Default>Executed when the CAM user chooses the listing.</Default>
 				</Literal>
 			</Declarations>
@@ -172,25 +172,14 @@ description "$description$"
 			<Declarations>
 				<Literal>
 					<ID>description</ID>
-					<ToolTip>Description of what the file contains</ToolTip>
+					<ToolTip>Description of the function's purpose.</ToolTip>
 					<Default>WBDK fires this trigger as soon as the DLL containing it is loaded.</Default>
-				</Literal>
-				<Literal>
-					<ID>assumptions</ID>
-					<ToolTip>Assumptions</ToolTip>
-					<Default>Assumptions that the method makes (i.e. context)</Default>
-				</Literal>
-				<Literal>
-					<ID>notes</ID>
-					<ToolTip>Notes</ToolTip>
-					<Default>Additional notes others should be aware of</Default>
 				</Literal>
 			</Declarations>
 			<Code Language="DK" Kind="classtrigger">
 				<![CDATA[int globalinitialize()
 description "$description$"
 {
-	return 0;
 }
 ]]>
 			</Code>
@@ -208,25 +197,14 @@ description "$description$"
 			<Declarations>
 				<Literal>
 					<ID>description</ID>
-					<ToolTip>Description of what the file contains</ToolTip>
+					<ToolTip>Description of the function's purpose.</ToolTip>
 					<Default>WBDK fires this trigger when the DLL containing it is terminated.</Default>
-				</Literal>
-				<Literal>
-					<ID>assumptions</ID>
-					<ToolTip>Assumptions</ToolTip>
-					<Default>Assumptions that the method makes (i.e. context)</Default>
-				</Literal>
-				<Literal>
-					<ID>notes</ID>
-					<ToolTip>Notes</ToolTip>
-					<Default>Additional notes others should be aware of</Default>
 				</Literal>
 			</Declarations>
 			<Code Language="DK" Kind="classtrigger">
 				<![CDATA[int globalterminate()
 description "$description$"
 {
-	return 0;
 }
 ]]>
 			</Code>
@@ -244,7 +222,7 @@ description "$description$"
 			<Declarations>
 				<Literal>
 					<ID>description</ID>
-					<ToolTip>Description of what the file contains</ToolTip>
+					<ToolTip>Description of the function's purpose.</ToolTip>
 					<Default>WBDK fires this trigger as soon as the DLL containing it is referenced by the application.</Default>
 				</Literal>
 			</Declarations>
@@ -252,7 +230,6 @@ description "$description$"
 				<![CDATA[int staticinitialize()
 description "$description$"
 {
-	return 0;
 }
 ]]>
 			</Code>
@@ -270,7 +247,7 @@ description "$description$"
 			<Declarations>
 				<Literal>
 					<ID>description</ID>
-					<ToolTip>Description of what the file contains</ToolTip>
+					<ToolTip>Description of the function's purpose.</ToolTip>
 					<Default>WBDK fires this trigger when the DLL containing it is no longer referenced by the application.</Default>
 				</Literal>
 			</Declarations>
@@ -278,7 +255,6 @@ description "$description$"
 				<![CDATA[int staticterminate()
 description "$description$"
 {
-	return 0;
 }
 ]]>
 			</Code>
@@ -296,7 +272,7 @@ description "$description$"
 				<Declarations>
 					<Literal>
 						<ID>description</ID>
-						<ToolTip>Description of what the file contains</ToolTip>
+						<ToolTip>Description of the function's purpose.</ToolTip>
 						<Default>Executed when a normal transaction is inserted in a time relationship, or when a future-dated transaction is applied.</Default>
 					</Literal>
 				</Declarations>
@@ -324,7 +300,7 @@ description "$description$"
 				<Declarations>
 					<Literal>
 						<ID>description</ID>
-						<ToolTip>Description of what the file contains</ToolTip>
+						<ToolTip>Description of the function's purpose.</ToolTip>
 						<Default>Executed as the last step prior to committing an inserted row in the database.</Default>
 					</Literal>
 				</Declarations>
@@ -350,7 +326,7 @@ description "$description$"
 			<Declarations>
 				<Literal>
 					<ID>description</ID>
-					<ToolTip>Description of what the file contains</ToolTip>
+					<ToolTip>Description of the function's purpose.</ToolTip>
 					<Default>Executed when a row has been retrieved from the database, via a qfind.</Default>
 				</Literal>
 			</Declarations>
@@ -376,7 +352,7 @@ description "$description$"
 			<Declarations>
 				<Literal>
 					<ID>description</ID>
-					<ToolTip>Description of what the file contains</ToolTip>
+					<ToolTip>Description of the function's purpose.</ToolTip>
 					<Default>Executed after the row has been updated in the database.</Default>
 				</Literal>
 			</Declarations>
@@ -402,7 +378,7 @@ description "$description$"
 			<Declarations>
 				<Literal>
 					<ID>description</ID>
-					<ToolTip>Description of what the file contains</ToolTip>
+					<ToolTip>Description of the function's purpose.</ToolTip>
 					<Default>Executed when a row is successfuly inserted in the database via the Add client event. Used to list any information the user would want to see after inserting a row.</Default>
 				</Literal>
 			</Declarations>
@@ -430,7 +406,7 @@ description "$description$"
 			<Declarations>
 				<Literal>
 					<ID>description</ID>
-					<ToolTip>Description of what the file contains</ToolTip>
+					<ToolTip>Description of the function's purpose.</ToolTip>
 					<Default>Executed at the server when a row is about to be inserted or updated in the database.</Default>
 				</Literal>
 			</Declarations>
@@ -458,7 +434,7 @@ description "$description$"
 			<Declarations>
 				<Literal>
 					<ID>description</ID>
-					<ToolTip>Description of what the file contains</ToolTip>
+					<ToolTip>Description of the function's purpose.</ToolTip>
 					<Default>Executed when a transaction is inserted in a time relationship.</Default>
 				</Literal>
 			</Declarations>

@@ -18,6 +18,8 @@ namespace DkTools.CodeModel
 			{
 				_builtInDefs = new Definition[]
 				{
+					new FunctionDefinition("abs", DataType.Void, "abs(expression to be evaluated)",
+						"Calculates the absolute value of an expression."),
 					new FunctionDefinition("diag", DataType.Void, "void diag(expressions ...)",
 						"Outputs specified expressions to a diagnostic device."),
 					new FunctionDefinition("gofield", DataType.Void, "void gofield(TableName.ColumnName)",

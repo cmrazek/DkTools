@@ -5,6 +5,7 @@ Version 1.2.11 - (pending):
 Features:
 - Added support for interfaces.
 - Dict file is now treated as DK source.
+- Added funk abs()
 
 Bug Fixes:
 - Fixed problem with .f function info not updating properly after being changed.
@@ -14,6 +15,8 @@ Bug Fixes:
 - Fixed bug where the compile would always fail if there are dictionary changes because DkTools was
   keeping the dictionary open as read-only.
 - Misc preprocessor fixes
+- Removed not-allowed return statements from staticinitialize, staticterminate, globalinitialize and
+  globalterminate code snippets.
 
 ____________________________________________________________________________________________________
 Version 1.2.10 - Oct 6, 2014:

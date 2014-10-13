@@ -9,9 +9,16 @@
 			</SnippetTypes>
 		</Header>
 		<Snippet>
+			<Declarations>
+				<Literal>
+					<ID>description</ID>
+					<ToolTip>Description of the function's purpose.</ToolTip>
+					<Default>This trigger fires when currency shifts from one form to another.</Default>
+				</Literal>
+			</Declarations>
 			<Code Language="DK" Kind="clienttrigger">
 				<![CDATA[int activate(noyes_t eAction)
-description "This trigger fires when currency shifts from one form to another."
+description "$description$"
 {
 	UNREFERENCED_PARAMETER(eAction);
 
@@ -36,10 +43,15 @@ description "This trigger fires when currency shifts from one form to another."
 					<ToolTip>Name of the listing</ToolTip>
 					<Default>ListingName</Default>
 				</Literal>
+				<Literal>
+					<ID>description</ID>
+					<ToolTip>Description of the function's purpose.</ToolTip>
+					<Default>Executed after the user picks a row from the listing.</Default>
+				</Literal>
 			</Declarations>
 			<Code Language="DK" Kind="clienttrigger">
 				<![CDATA[int after_listing_$listingname$()
-description "Executed after the user picks a row from the $listingname$ listing."
+description "$description$"
 {
 	return 0;
 }
@@ -56,9 +68,16 @@ description "Executed after the user picks a row from the $listingname$ listing.
 			</SnippetTypes>
 		</Header>
 		<Snippet>
+			<Declarations>
+				<Literal>
+					<ID>description</ID>
+					<ToolTip>Description of the function's purpose.</ToolTip>
+					<Default>Executed at CAM after an Add or Update.</Default>
+				</Literal>
+			</Declarations>
 			<Code Language="DK" Kind="clienttrigger">
 				<![CDATA[int afterlog(int status, multi_t sequence)
-description "Executed at CAM after an Add or Update."
+description "$description$"
 {
 	UNREFERENCED_PARAMETER(status);
 	UNREFERENCED_PARAMETER(sequence);
@@ -84,10 +103,15 @@ description "Executed at CAM after an Add or Update."
 					<ToolTip>Name of the action</ToolTip>
 					<Default>ActionName</Default>
 				</Literal>
+				<Literal>
+					<ID>description</ID>
+					<ToolTip>Description of the function's purpose.</ToolTip>
+					<Default>Executed before the action can be executed.</Default>
+				</Literal>
 			</Declarations>
 			<Code Language="DK" Kind="clienttrigger">
 				<![CDATA[int before_action_$actionname$()
-description "Executed before the $actionname$ action can be executed."
+description "$description$"
 {
 	return 0;
 }
@@ -110,10 +134,15 @@ description "Executed before the $actionname$ action can be executed."
 					<ToolTip>Name of the column</ToolTip>
 					<Default>ColumnName</Default>
 				</Literal>
+				<Literal>
+					<ID>description</ID>
+					<ToolTip>Description of the function's purpose.</ToolTip>
+					<Default>Executed when the CAM user selects the field on the form.</Default>
+				</Literal>
 			</Declarations>
 			<Code Language="DK" Kind="clienttrigger">
 				<![CDATA[int before_$columnname$()
-description "Executed when the CAM user selects the $columnname$ field on the form."
+description "$description$"
 {
 	return 0;
 }
@@ -136,10 +165,15 @@ description "Executed when the CAM user selects the $columnname$ field on the fo
 					<ToolTip>Name of the listing</ToolTip>
 					<Default>ListingName</Default>
 				</Literal>
+				<Literal>
+					<ID>description</ID>
+					<ToolTip>Description of the function's purpose.</ToolTip>
+					<Default>Executed before the listing can be executed.</Default>
+				</Literal>
 			</Declarations>
 			<Code Language="DK" Kind="clienttrigger">
 				<![CDATA[int before_listing_$listingname$()
-description "Executed before the $listingname$ listing can be executed."
+description "$description$"
 {
 	return 0;
 }
@@ -156,9 +190,16 @@ description "Executed before the $listingname$ listing can be executed."
 			</SnippetTypes>
 		</Header>
 		<Snippet>
+			<Declarations>
+				<Literal>
+					<ID>description</ID>
+					<ToolTip>Description of the function's purpose.</ToolTip>
+					<Default>Executed when CAM performs an Add or Update, just before data is sent to the server.</Default>
+				</Literal>
+			</Declarations>
 			<Code Language="DK" Kind="clienttrigger">
 				<![CDATA[int beforelog()
-description "Executed when CAM performs an Add or Update, just before data is sent to the server."
+description "$description$"
 {
 	return 0;
 }
@@ -183,23 +224,13 @@ description "Executed when CAM performs an Add or Update, just before data is se
 				</Literal>
 				<Literal>
 					<ID>description</ID>
-					<ToolTip>Description of what the file contains</ToolTip>
-					<Default>What kind of things should go into the method.</Default>
-				</Literal>
-				<Literal>
-					<ID>assumptions</ID>
-					<ToolTip>Assumptions</ToolTip>
-					<Default>Assumptions that the method makes (i.e. context)</Default>
-				</Literal>
-				<Literal>
-					<ID>notes</ID>
-					<ToolTip>Notes</ToolTip>
-					<Default>Additional notes others should be aware of</Default>
+					<ToolTip>Description of the function's purpose.</ToolTip>
+					<Default>Executed when the user manually changes the field on the CAM form.</Default>
 				</Literal>
 			</Declarations>
 			<Code Language="DK" Kind="clienttrigger">
 				<![CDATA[int change_$columnname$()
-description "Executed when the user manually changes the $columnname$ field on the CAM form."
+description "$description$"
 {
 	return 0;
 }
@@ -222,10 +253,15 @@ description "Executed when the user manually changes the $columnname$ field on t
 					<ToolTip>Name of the action</ToolTip>
 					<Default>ActionName</Default>
 				</Literal>
+				<Literal>
+					<ID>description</ID>
+					<ToolTip>Description of the function's purpose.</ToolTip>
+					<Default>Determines whether or not to display the action in CAM's pop-up menu of listings and actions.</Default>
+				</Literal>
 			</Declarations>
 			<Code Language="DK" Kind="clienttrigger">
 				<![CDATA[int control_action_$actionname$()
-description "Determines whether or not to display the $actionname$ action in CAM's pop-up menu of listings and actions."
+description "$description$"
 {
 	return 0;
 }
@@ -248,10 +284,15 @@ description "Determines whether or not to display the $actionname$ action in CAM
 					<ToolTip>Name of the column</ToolTip>
 					<Default>ColumnName</Default>
 				</Literal>
+				<Literal>
+					<ID>description</ID>
+					<ToolTip>Description of the function's purpose.</ToolTip>
+					<Default>Determines the data attribute of the field in CAM when the focus is about to switch to it.</Default>
+				</Literal>
 			</Declarations>
 			<Code Language="DK" Kind="clienttrigger">
 				<![CDATA[int control_field_$columnname$()
-description "Determines the data attribute of the $columnname$ field in CAM when the focus is about to switch to it."
+description "$description$"
 {
 	return 0;
 }
@@ -274,10 +315,15 @@ description "Determines the data attribute of the $columnname$ field in CAM when
 					<ToolTip>Name of the table</ToolTip>
 					<Default>TableName</Default>
 				</Literal>
+				<Literal>
+					<ID>description</ID>
+					<ToolTip>Description of the function's purpose.</ToolTip>
+					<Default>Determines whether or not to hide the name of the form (and all its children) within CAM's Open dialog.</Default>
+				</Literal>
 			</Declarations>
 			<Code Language="DK" Kind="clienttrigger">
 				<![CDATA[int control_form_$tablename$()
-description "Determines whether or not to hide the name of the $tablename$ form (and all its children) within CAM's Open dialog."
+description "$description$"
 {
 	return 0;
 }
@@ -300,10 +346,15 @@ description "Determines whether or not to hide the name of the $tablename$ form 
 					<ToolTip>Name of the listing</ToolTip>
 					<Default>ListingName</Default>
 				</Literal>
+				<Literal>
+					<ID>description</ID>
+					<ToolTip>Description of the function's purpose.</ToolTip>
+					<Default>Determines whether or not to display the listing in CAM's pop-up menu of listings and actions.</Default>
+				</Literal>
 			</Declarations>
 			<Code Language="DK" Kind="clienttrigger">
 				<![CDATA[int control_listing_$listingname$()
-description "Determines whether or not to display the $listingname$ listing in CAM's pop-up menu of listings and actions."
+description "$description$"
 {
 	return 0;
 }
@@ -320,9 +371,16 @@ description "Determines whether or not to display the $listingname$ listing in C
 			</SnippetTypes>
 		</Header>
 		<Snippet>
+			<Declarations>
+				<Literal>
+					<ID>description</ID>
+					<ToolTip>Description of the function's purpose.</ToolTip>
+					<Default>Determines whether or not to enable the clearform client method.</Default>
+				</Literal>
+			</Declarations>
 			<Code Language="DK" Kind="clienttrigger">
 				<![CDATA[int control_method_clearform()
-description "Determines whether or not to enable the clearform client method. "
+description "$description$"
 {
 	return 0;
 }
@@ -339,9 +397,16 @@ description "Determines whether or not to enable the clearform client method. "
 			</SnippetTypes>
 		</Header>
 		<Snippet>
+			<Declarations>
+				<Literal>
+					<ID>description</ID>
+					<ToolTip>Description of the function's purpose.</ToolTip>
+					<Default>Determines whether or not to enable the insertform client method.</Default>
+				</Literal>
+			</Declarations>
 			<Code Language="DK" Kind="clienttrigger">
 				<![CDATA[int control_method_insertform()
-description "Determines whether or not to enable the insertform client method."
+description "$description$"
 {
 	return 0;
 }
@@ -358,9 +423,16 @@ description "Determines whether or not to enable the insertform client method."
 			</SnippetTypes>
 		</Header>
 		<Snippet>
+			<Declarations>
+				<Literal>
+					<ID>description</ID>
+					<ToolTip>Description of the function's purpose.</ToolTip>
+					<Default>Determines whether or not to enable the searchequal client method.</Default>
+				</Literal>
+			</Declarations>
 			<Code Language="DK" Kind="clienttrigger">
 				<![CDATA[int control_method_searchequal()
-description "Determines whether or not to enable the searchequal client method. "
+description "$description$"
 {
 	return 0;
 }
@@ -377,9 +449,16 @@ description "Determines whether or not to enable the searchequal client method. 
 			</SnippetTypes>
 		</Header>
 		<Snippet>
+			<Declarations>
+				<Literal>
+					<ID>description</ID>
+					<ToolTip>Description of the function's purpose.</ToolTip>
+					<Default>Determines whether or not to enable the searchfirst client method.</Default>
+				</Literal>
+			</Declarations>
 			<Code Language="DK" Kind="clienttrigger">
 				<![CDATA[int control_method_searchfirst()
-description "Determines whether or not to enable the searchfirst client method."
+description "$description$"
 {
 	return 0;
 }
@@ -399,23 +478,13 @@ description "Determines whether or not to enable the searchfirst client method."
 			<Declarations>
 				<Literal>
 					<ID>description</ID>
-					<ToolTip>Description of what the file contains</ToolTip>
-					<Default>What kind of things should go into the method.</Default>
-				</Literal>
-				<Literal>
-					<ID>assumptions</ID>
-					<ToolTip>Assumptions</ToolTip>
-					<Default>Assumptions that the method makes (i.e. context)</Default>
-				</Literal>
-				<Literal>
-					<ID>notes</ID>
-					<ToolTip>Notes</ToolTip>
-					<Default>Additional notes others should be aware of</Default>
+					<ToolTip>Description of the function's purpose.</ToolTip>
+					<Default>Determines whether or not to enable the searchlast client method.</Default>
 				</Literal>
 			</Declarations>
 			<Code Language="DK" Kind="clienttrigger">
 				<![CDATA[int control_method_searchlast()
-description "Determines whether or not to enable the searchlast client method."
+description "$description$"
 {
 	return 0;
 }
@@ -432,9 +501,16 @@ description "Determines whether or not to enable the searchlast client method."
 			</SnippetTypes>
 		</Header>
 		<Snippet>
+			<Declarations>
+				<Literal>
+					<ID>description</ID>
+					<ToolTip>Description of the function's purpose.</ToolTip>
+					<Default>Determines whether or not to enable the searchnext client method.</Default>
+				</Literal>
+			</Declarations>
 			<Code Language="DK" Kind="clienttrigger">
 				<![CDATA[int control_method_searchnext()
-description "Determines whether or not to enable the searchnext client method."
+description "$description$"
 {
 	return 0;
 }
@@ -454,23 +530,13 @@ description "Determines whether or not to enable the searchnext client method."
 			<Declarations>
 				<Literal>
 					<ID>description</ID>
-					<ToolTip>Description of what the file contains</ToolTip>
-					<Default>What kind of things should go into the method.</Default>
-				</Literal>
-				<Literal>
-					<ID>assumptions</ID>
-					<ToolTip>Assumptions</ToolTip>
-					<Default>Assumptions that the method makes (i.e. context)</Default>
-				</Literal>
-				<Literal>
-					<ID>notes</ID>
-					<ToolTip>Notes</ToolTip>
-					<Default>Additional notes others should be aware of</Default>
+					<ToolTip>Description of the function's purpose.</ToolTip>
+					<Default>Determines whether or not to enable the searchprevious client method.</Default>
 				</Literal>
 			</Declarations>
 			<Code Language="DK" Kind="clienttrigger">
 				<![CDATA[int control_method_searchprevious()
-description "Determines whether or not to enable the searchprevious client method."
+description "$description$"
 {
 	return 0;
 }
@@ -487,9 +553,16 @@ description "Determines whether or not to enable the searchprevious client metho
 			</SnippetTypes>
 		</Header>
 		<Snippet>
+			<Declarations>
+				<Literal>
+					<ID>description</ID>
+					<ToolTip>Description of the function's purpose.</ToolTip>
+					<Default>Determines whether or not to enable the AFS updateform client method.</Default>
+				</Literal>
+			</Declarations>
 			<Code Language="DK" Kind="clienttrigger">
 				<![CDATA[int control_method_updateform()
-description "Determines whether or not to enable the AFS updateform client method."
+description "$description$"
 {
 	return 0;
 }
@@ -512,10 +585,15 @@ description "Determines whether or not to enable the AFS updateform client metho
 					<ToolTip>Name of the column</ToolTip>
 					<Default>ColumnName</Default>
 				</Literal>
+				<Literal>
+					<ID>description</ID>
+					<ToolTip>Description of the function's purpose.</ToolTip>
+					<Default>Executed in CAM when the Cascading triggers reaches the field.</Default>
+				</Literal>
 			</Declarations>
 			<Code Language="DK" Kind="clienttrigger">
 				<![CDATA[int default_$columnname$()
-description "Executed in CAM when the Cascading triggers reaches the $columnname$ field."
+description "$description$"
 {
 	return 0;
 }
@@ -538,10 +616,15 @@ description "Executed in CAM when the Cascading triggers reaches the $columnname
 					<ToolTip>Name of the column</ToolTip>
 					<Default>ColumnName</Default>
 				</Literal>
+				<Literal>
+					<ID>description</ID>
+					<ToolTip>Description of the function's purpose.</ToolTip>
+					<Default>Executed in CAM under a variety of circumstances, including: the Add, Update, Cascade, and Exit field events.</Default>
+				</Literal>
 			</Declarations>
 			<Code Language="DK" Kind="clienttrigger">
 				<![CDATA[int edit_$columnname$()
-description "Executed in CAM under a variety of circumstances, including: the Add, Update, Cascade, and Exit field events."
+description "$description$"
 {
 	return 0;
 }
@@ -561,23 +644,13 @@ description "Executed in CAM under a variety of circumstances, including: the Ad
 			<Declarations>
 				<Literal>
 					<ID>description</ID>
-					<ToolTip>Description of what the file contains</ToolTip>
-					<Default>What kind of things should go into the method.</Default>
-				</Literal>
-				<Literal>
-					<ID>assumptions</ID>
-					<ToolTip>Assumptions</ToolTip>
-					<Default>Assumptions that the method makes (i.e. context)</Default>
-				</Literal>
-				<Literal>
-					<ID>notes</ID>
-					<ToolTip>Notes</ToolTip>
-					<Default>Additional notes others should be aware of</Default>
+					<ToolTip>Description of the function's purpose.</ToolTip>
+					<Default>Executed in CAM during the Add and Update events.</Default>
 				</Literal>
 			</Declarations>
 			<Code Language="DK" Kind="clienttrigger">
 				<![CDATA[int edits(edits_t action)
-description "Executed in CAM during the Add and Update events."
+description "$description$"
 {
     UNREFERENCED_PARAMETER(action);
 
@@ -602,10 +675,15 @@ description "Executed in CAM during the Add and Update events."
 					<ToolTip>Name of the column</ToolTip>
 					<Default>ColumnName</Default>
 				</Literal>
+				<Literal>
+					<ID>description</ID>
+					<ToolTip>Description of the function's purpose.</ToolTip>
+					<Default>Provides a portal between raw data as it is stored at the client, and data as it is displayed on a client form or entered by the user.</Default>
+				</Literal>
 			</Declarations>
 			<Code Language="DK" Kind="clienttrigger">
 				<![CDATA[int format_$columnname$(formatdir_t dir, char(255) strBuffer, oleobject obj)
-description "Provides a portal between raw data as it is stored at the client, and data as it is displayed on a client form or entered by the user."
+description "$description$"
 {
 	UNREFERENCED_PARAMETER(dir);
 	UNREFERENCED_PARAMETER(strbuffer);
@@ -626,9 +704,16 @@ description "Provides a portal between raw data as it is stored at the client, a
 			</SnippetTypes>
 		</Header>
 		<Snippet>
+			<Declarations>
+				<Literal>
+					<ID>description</ID>
+					<ToolTip>Description of the function's purpose.</ToolTip>
+					<Default>Executes statements when a form is created.</Default>
+				</Literal>
+			</Declarations>
 			<Code Language="DK" Kind="clienttrigger">
 				<![CDATA[int initialize()
-description "Executes statements when a form is created."
+description "$description$"
 {
 	return 0;
 }
@@ -648,7 +733,7 @@ description "Executes statements when a form is created."
 			<Declarations>
 				<Literal>
 					<ID>description</ID>
-					<ToolTip>Description of what the file contains</ToolTip>
+					<ToolTip>Description of the function's purpose.</ToolTip>
 					<Default>Instructs WBDK to replace the automatic packaging and sending of qcalls to the server, associated with the AFS client insert method.</Default>
 				</Literal>
 			</Declarations>
@@ -674,7 +759,7 @@ description "$description$"
 			<Declarations>
 				<Literal>
 					<ID>description</ID>
-					<ToolTip>Description of what the file contains</ToolTip>
+					<ToolTip>Description of the function's purpose.</ToolTip>
 					<Default>Instructs WBDK to replace the automatic packaging and sending of qcalls to the server, associated with the AFS client search method.</Default>
 				</Literal>
 			</Declarations>
@@ -702,7 +787,7 @@ description "$description$"
 			<Declarations>
 				<Literal>
 					<ID>description</ID>
-					<ToolTip>Description of what the file contains</ToolTip>
+					<ToolTip>Description of the function's purpose.</ToolTip>
 					<Default>Executes statements when a form is about to close.</Default>
 				</Literal>
 			</Declarations>
@@ -728,7 +813,7 @@ description "$description$"
 			<Declarations>
 				<Literal>
 					<ID>description</ID>
-					<ToolTip>Description of what the file contains</ToolTip>
+					<ToolTip>Description of the function's purpose.</ToolTip>
 					<Default>Instructs WBDK to replace the automatic packaging and sending of qcalls to the server, associated with the AFS client update method.</Default>
 				</Literal>
 			</Declarations>
@@ -769,7 +854,7 @@ description "$description$"
 				</Literal>
 				<Literal>
 					<ID>description</ID>
-					<ToolTip>Description of what the file contains</ToolTip>
+					<ToolTip>Description of the function's purpose.</ToolTip>
 					<Default>Description</Default>
 				</Literal>
 			</Declarations>
@@ -797,7 +882,7 @@ description "$description$"
 			<Declarations>
 				<Literal>
 					<ID>description</ID>
-					<ToolTip>Description of what the file contains</ToolTip>
+					<ToolTip>Description of the function's purpose.</ToolTip>
 					<Default>Executed in CAM during the Start form and Add events.</Default>
 				</Literal>
 			</Declarations>
@@ -838,7 +923,7 @@ description "$description$"
 				</Literal>
 				<Literal>
 					<ID>description</ID>
-					<ToolTip>Description of what the file contains</ToolTip>
+					<ToolTip>Description of the function's purpose.</ToolTip>
 					<Default>Executed when the CAM user chooses the listing.</Default>
 				</Literal>
 			</Declarations>
@@ -886,7 +971,7 @@ description "$description$"
 				</Literal>
 				<Literal>
 					<ID>description</ID>
-					<ToolTip>Description of what the file contains</ToolTip>
+					<ToolTip>Description of the function's purpose.</ToolTip>
 					<Default>Executed when the CAM user chooses the listing.</Default>
 				</Literal>
 			</Declarations>
@@ -914,25 +999,14 @@ description "$description$"
 			<Declarations>
 				<Literal>
 					<ID>description</ID>
-					<ToolTip>Description of what the file contains</ToolTip>
+					<ToolTip>Description of the function's purpose.</ToolTip>
 					<Default>WBDK fires this trigger as soon as the DLL containing it is loaded.</Default>
-				</Literal>
-				<Literal>
-					<ID>assumptions</ID>
-					<ToolTip>Assumptions</ToolTip>
-					<Default>Assumptions that the method makes (i.e. context)</Default>
-				</Literal>
-				<Literal>
-					<ID>notes</ID>
-					<ToolTip>Notes</ToolTip>
-					<Default>Additional notes others should be aware of</Default>
 				</Literal>
 			</Declarations>
 			<Code Language="DK" Kind="classtrigger">
 				<![CDATA[int globalinitialize()
 description "$description$"
 {
-	return 0;
 }
 ]]>
 			</Code>
@@ -950,25 +1024,14 @@ description "$description$"
 			<Declarations>
 				<Literal>
 					<ID>description</ID>
-					<ToolTip>Description of what the file contains</ToolTip>
+					<ToolTip>Description of the function's purpose.</ToolTip>
 					<Default>WBDK fires this trigger when the DLL containing it is terminated.</Default>
-				</Literal>
-				<Literal>
-					<ID>assumptions</ID>
-					<ToolTip>Assumptions</ToolTip>
-					<Default>Assumptions that the method makes (i.e. context)</Default>
-				</Literal>
-				<Literal>
-					<ID>notes</ID>
-					<ToolTip>Notes</ToolTip>
-					<Default>Additional notes others should be aware of</Default>
 				</Literal>
 			</Declarations>
 			<Code Language="DK" Kind="classtrigger">
 				<![CDATA[int globalterminate()
 description "$description$"
 {
-	return 0;
 }
 ]]>
 			</Code>
@@ -986,7 +1049,7 @@ description "$description$"
 			<Declarations>
 				<Literal>
 					<ID>description</ID>
-					<ToolTip>Description of what the file contains</ToolTip>
+					<ToolTip>Description of the function's purpose.</ToolTip>
 					<Default>WBDK fires this trigger as soon as the DLL containing it is referenced by the application.</Default>
 				</Literal>
 			</Declarations>
@@ -994,7 +1057,6 @@ description "$description$"
 				<![CDATA[int staticinitialize()
 description "$description$"
 {
-	return 0;
 }
 ]]>
 			</Code>
@@ -1012,7 +1074,7 @@ description "$description$"
 			<Declarations>
 				<Literal>
 					<ID>description</ID>
-					<ToolTip>Description of what the file contains</ToolTip>
+					<ToolTip>Description of the function's purpose.</ToolTip>
 					<Default>WBDK fires this trigger when the DLL containing it is no longer referenced by the application.</Default>
 				</Literal>
 			</Declarations>
@@ -1020,7 +1082,6 @@ description "$description$"
 				<![CDATA[int staticterminate()
 description "$description$"
 {
-	return 0;
 }
 ]]>
 			</Code>

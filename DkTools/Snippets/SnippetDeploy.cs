@@ -17,11 +17,14 @@ namespace DkTools.Snippets
 		{
 			try
 			{
+				var asmInfo = new FileInfo(Assembly.GetExecutingAssembly().Location);
+				var modified = asmInfo.LastWriteTime;
+
 				var appDataDir = ProbeToolsPackage.AppDataDir;
 				var snippetDir = Path.Combine(appDataDir, "Snippets");
 
 				var asm = Assembly.GetExecutingAssembly();
-				DeployFile(asm, "DkTools.Snippets.SnippetIndex.xml", Path.Combine(appDataDir, "SnippetIndex.xml"));
+				DeployFile(asm, "DkTools.Snippets.SnippetIndex.xml", Path.Combine(appDataDir, "SnippetIndex.xml"), modified);
 
 				foreach (var resName in asm.GetManifestResourceNames())
 				{
@@ -39,7 +42,7 @@ namespace DkTools.Snippets
 							fileName = string.Concat(title, ext);
 						}
 
-						DeployFile(asm, resName, Path.Combine(snippetDir, fileName));
+						DeployFile(asm, resName, Path.Combine(snippetDir, fileName), modified);
 					}
 				}
 			}
@@ -49,7 +52,7 @@ namespace DkTools.Snippets
 			}
 		}
 
-		private static void DeployFile(Assembly asm, string resourceName, string fileName)
+		private static void DeployFile(Assembly asm, string resourceName, string fileName, DateTime deployDate)
 		{
 			try
 			{
@@ -57,6 +60,16 @@ namespace DkTools.Snippets
 
 				var dirPath = Path.GetDirectoryName(fileName);
 				if (!Directory.Exists(dirPath)) FileUtil.CreateDirectoryRecursive(dirPath);
+
+				if (File.Exists(fileName))
+				{
+					var fileInfo = new FileInfo(fileName);
+					if (fileInfo.LastWriteTime >= deployDate)
+					{
+						Log.WriteDebug("Snippet file '{0}' is already up-to-date.", fileName);
+						return;
+					}
+				}
 
 				using (var stream = asm.GetManifestResourceStream(resourceName))
 				{

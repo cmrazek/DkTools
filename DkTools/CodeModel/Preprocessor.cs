@@ -19,11 +19,11 @@ namespace DkTools.CodeModel
 			_store = store;
 		}
 
-		public void Preprocess(IPreprocessorReader reader, IPreprocessorWriter writer, string fileName, IEnumerable<string> parentFiles, ServerContext serverContext)
+		public void Preprocess(IPreprocessorReader reader, IPreprocessorWriter writer, string fileName, IEnumerable<string> parentFiles, FileContext fileContext)
 		{
 			if (reader == null) throw new ArgumentNullException("reader");
 
-			Preprocess(new PreprocessorParams(reader, writer, fileName, parentFiles, serverContext, ContentType.File));
+			Preprocess(new PreprocessorParams(reader, writer, fileName, parentFiles, fileContext, ContentType.File));
 		}
 
 		private void Preprocess(PreprocessorParams p)
@@ -417,7 +417,7 @@ namespace DkTools.CodeModel
 			if (p.restrictedDefines != null) restrictedDefines = p.restrictedDefines.Concat(new string[] { name }).ToArray();
 			else restrictedDefines = new string[] { name };
 
-			var textToAdd = ResolveMacros(define.Content, restrictedDefines, args, p.serverContext, p.contentType);
+			var textToAdd = ResolveMacros(define.Content, restrictedDefines, args, p.fileContext, p.contentType);
 			rdr.Insert(textToAdd);
 		}
 
@@ -432,7 +432,7 @@ namespace DkTools.CodeModel
 			rdr.IgnoreWhiteSpaceAndComments(true);
 
 			var content = rdr.ReadAndIgnoreNestableContent(")");
-			content = ResolveMacros(content, p.restrictedDefines, p.args, p.serverContext, p.contentType);
+			content = ResolveMacros(content, p.restrictedDefines, p.args, p.fileContext, p.contentType);
 
 			p.reader.Insert(EscapeString(content));
 		}
@@ -457,7 +457,7 @@ namespace DkTools.CodeModel
 			if (rdr.Peek() == ')') rdr.Ignore(1);
 		}
 
-		private string ResolveMacros(string source, IEnumerable<string> restrictedDefines, IEnumerable<Define> args, ServerContext serverContext, ContentType contentType)
+		private string ResolveMacros(string source, IEnumerable<string> restrictedDefines, IEnumerable<Define> args, FileContext serverContext, ContentType contentType)
 		{
 			var reader = new StringPreprocessorReader(source);
 			var writer = new StringPreprocessorWriter();
@@ -526,7 +526,7 @@ namespace DkTools.CodeModel
 
 			// Run the preprocessor on the include file.
 			var includeSource = new CodeSource();
-			var parms = new PreprocessorParams(reader, includeSource, includeNode.FullPathName, parentFiles, p.serverContext, p.contentType);
+			var parms = new PreprocessorParams(reader, includeSource, includeNode.FullPathName, parentFiles, p.fileContext, p.contentType);
 			Preprocess(parms);
 
 			p.writer.Append(includeSource);
@@ -541,7 +541,7 @@ namespace DkTools.CodeModel
 			if (string.IsNullOrEmpty(name)) return;
 			rdr.Ignore(name.Length);
 
-			if (p.serverContext == ServerContext.Include)
+			if (p.fileContext == FileContext.Include)
 			{
 				p.ifStack.Push(new ConditionScope(ConditionResult.Indeterminate, ConditionResult.Indeterminate, p.suppress));
 			}
@@ -638,15 +638,18 @@ namespace DkTools.CodeModel
 						switch (ifLevel.prevResult)
 						{
 							case ConditionResult.Positive:
+								// A previous #if evaluated to true, so this will never be positive.
 								ifLevel.result = ConditionResult.Negative;
 								break;
 
 							case ConditionResult.Negative:
+								// No previous #if was true, so this could be the one...
 								ifLevel.result = EvaluateCondition(p, conditionStr, conditionFileName, conditionPosition);
 								if (ifLevel.result == ConditionResult.Positive) ifLevel.prevResult = ConditionResult.Positive;
 								break;
 
 							case ConditionResult.Indeterminate:
+								// An error on a previous #if
 								ifLevel.result = EvaluateCondition(p, conditionStr, conditionFileName, conditionPosition);
 								ifLevel.prevResult = ifLevel.result;
 								break;
@@ -665,7 +668,7 @@ namespace DkTools.CodeModel
 				{
 					p.ifStack.Push(new ConditionScope(ConditionResult.Negative, ConditionResult.Positive, p.suppress));
 				}
-				else if (p.serverContext == ServerContext.Include)
+				else if (p.fileContext == FileContext.Include)
 				{
 					p.ifStack.Push(new ConditionScope(ConditionResult.Indeterminate, ConditionResult.Indeterminate, p.suppress));
 				}
@@ -931,15 +934,15 @@ namespace DkTools.CodeModel
 			public ContentType contentType;
 			public bool replaceInEffect;
 			public bool resolvingMacros;
-			public ServerContext serverContext;
+			public FileContext fileContext;
 
-			public PreprocessorParams(IPreprocessorReader reader, IPreprocessorWriter writer, string fileName, IEnumerable<string> parentFiles, ServerContext serverContext, ContentType contentType)
+			public PreprocessorParams(IPreprocessorReader reader, IPreprocessorWriter writer, string fileName, IEnumerable<string> parentFiles, FileContext serverContext, ContentType contentType)
 			{
 				this.reader = reader;
 				this.writer = writer;
 				this.fileName = fileName;
 				if (parentFiles != null) this.parentFiles = parentFiles.ToArray();
-				this.serverContext = serverContext;
+				this.fileContext = serverContext;
 				this.contentType = contentType;
 			}
 		}
@@ -949,7 +952,7 @@ namespace DkTools.CodeModel
 			// Run preprocessor on the condition string
 			var reader = new StringPreprocessorReader(conditionStr);
 			var writer = new StringPreprocessorWriter();
-			var parms = new PreprocessorParams(reader, writer, string.Empty, null, p.serverContext, ContentType.Condition);
+			var parms = new PreprocessorParams(reader, writer, string.Empty, null, p.fileContext, ContentType.Condition);
 			parms.allowDirectives = false;
 			parms.args = p.args;
 			Preprocess(parms);
