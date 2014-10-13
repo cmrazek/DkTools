@@ -6,6 +6,7 @@ Features:
 - Added support for interfaces.
 - Dict file is now treated as DK source.
 - Added funk abs()
+- Added option to run CAM with designmode.
 
 Bug Fixes:
 - Fixed problem with .f function info not updating properly after being changed.

@@ -526,5 +526,18 @@ namespace DkTools.Run
 				this.ShowError(ex);
 			}
 		}
+
+		private void chkCamDesignMode_CheckedChanged(object sender, EventArgs e)
+		{
+			try
+			{
+				_options.CamDesignMode = chkCamDesignMode.Checked;
+				UpdateCamCmdLine();
+			}
+			catch (Exception ex)
+			{
+				this.ShowError(ex);
+			}
+		}
 	}
 }

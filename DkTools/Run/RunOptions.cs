@@ -21,6 +21,7 @@ namespace DkTools.Run
 		public int MaxChannels { get; set; }
 		public int LoadSamTime { get; set; }
 		public bool CamDevMode { get; set; }
+		public bool CamDesignMode { get; set; }
 		public string SamArgs { get; set; }
 		public string CamArgs { get; set; }
 
@@ -37,6 +38,7 @@ namespace DkTools.Run
 			this.MinChannels = 1;
 			this.MaxChannels = 2;
 			this.CamDevMode = true;
+			this.CamDesignMode = false;
 		}
 
 		internal string CreateSamArgsString()
@@ -68,6 +70,8 @@ namespace DkTools.Run
 
 			if (Diags) sb.Append(" devmode=2");
 			else if (CamDevMode) sb.Append(" devmode");
+
+			if (CamDesignMode) sb.Append(" designmode=true");
 
 			if (!string.IsNullOrWhiteSpace(CamArgs))
 			{

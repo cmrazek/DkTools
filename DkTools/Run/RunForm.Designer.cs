@@ -39,6 +39,7 @@ namespace DkTools.Run
 			this.chkSetDbDate = new System.Windows.Forms.CheckBox();
 			this.tabControl = new System.Windows.Forms.TabControl();
 			this.tabApp = new System.Windows.Forms.TabPage();
+			this.txtCamDiagsDevModeWarning = new System.Windows.Forms.TextBox();
 			this.tabSam = new System.Windows.Forms.TabPage();
 			this.c_samCmdLineLabel = new System.Windows.Forms.Label();
 			this.c_samCmdLine = new System.Windows.Forms.TextBox();
@@ -65,7 +66,7 @@ namespace DkTools.Run
 			this.c_camExtraArgs = new System.Windows.Forms.TextBox();
 			this.chkCamDevMode = new System.Windows.Forms.CheckBox();
 			this.panel1 = new System.Windows.Forms.Panel();
-			this.txtCamDiagsDevModeWarning = new System.Windows.Forms.TextBox();
+			this.chkCamDesignMode = new System.Windows.Forms.CheckBox();
 			this.groupBox1.SuspendLayout();
 			this.tabControl.SuspendLayout();
 			this.tabApp.SuspendLayout();
@@ -205,6 +206,17 @@ namespace DkTools.Run
 			this.tabApp.Text = "Applications";
 			this.tabApp.UseVisualStyleBackColor = true;
 			// 
+			// txtCamDiagsDevModeWarning
+			// 
+			this.txtCamDiagsDevModeWarning.BorderStyle = System.Windows.Forms.BorderStyle.None;
+			this.txtCamDiagsDevModeWarning.ForeColor = System.Drawing.Color.Red;
+			this.txtCamDiagsDevModeWarning.Location = new System.Drawing.Point(145, 50);
+			this.txtCamDiagsDevModeWarning.Multiline = true;
+			this.txtCamDiagsDevModeWarning.Name = "txtCamDiagsDevModeWarning";
+			this.txtCamDiagsDevModeWarning.Size = new System.Drawing.Size(182, 47);
+			this.txtCamDiagsDevModeWarning.TabIndex = 2;
+			this.txtCamDiagsDevModeWarning.Text = "Note: When diags are enabled CAM.NET will run in dev mode.";
+			// 
 			// tabSam
 			// 
 			this.tabSam.Controls.Add(this.c_samCmdLineLabel);
@@ -220,7 +232,7 @@ namespace DkTools.Run
 			this.tabSam.Location = new System.Drawing.Point(4, 22);
 			this.tabSam.Name = "tabSam";
 			this.tabSam.Padding = new System.Windows.Forms.Padding(3);
-			this.tabSam.Size = new System.Drawing.Size(335, 191);
+			this.tabSam.Size = new System.Drawing.Size(335, 190);
 			this.tabSam.TabIndex = 1;
 			this.tabSam.Text = "SAM Settings";
 			this.tabSam.UseVisualStyleBackColor = true;
@@ -396,6 +408,7 @@ namespace DkTools.Run
 			// 
 			// tabCam
 			// 
+			this.tabCam.Controls.Add(this.chkCamDesignMode);
 			this.tabCam.Controls.Add(this.c_camCmdLine);
 			this.tabCam.Controls.Add(this.label6);
 			this.tabCam.Controls.Add(this.label5);
@@ -404,7 +417,7 @@ namespace DkTools.Run
 			this.tabCam.Location = new System.Drawing.Point(4, 22);
 			this.tabCam.Name = "tabCam";
 			this.tabCam.Padding = new System.Windows.Forms.Padding(3);
-			this.tabCam.Size = new System.Drawing.Size(335, 191);
+			this.tabCam.Size = new System.Drawing.Size(335, 190);
 			this.tabCam.TabIndex = 2;
 			this.tabCam.Text = "CAM Settings";
 			this.tabCam.UseVisualStyleBackColor = true;
@@ -468,16 +481,16 @@ namespace DkTools.Run
 			this.panel1.Size = new System.Drawing.Size(343, 30);
 			this.panel1.TabIndex = 1;
 			// 
-			// txtCamDiagsDevModeWarning
+			// chkCamDesignMode
 			// 
-			this.txtCamDiagsDevModeWarning.BorderStyle = System.Windows.Forms.BorderStyle.None;
-			this.txtCamDiagsDevModeWarning.ForeColor = System.Drawing.Color.Red;
-			this.txtCamDiagsDevModeWarning.Location = new System.Drawing.Point(145, 50);
-			this.txtCamDiagsDevModeWarning.Multiline = true;
-			this.txtCamDiagsDevModeWarning.Name = "txtCamDiagsDevModeWarning";
-			this.txtCamDiagsDevModeWarning.Size = new System.Drawing.Size(182, 47);
-			this.txtCamDiagsDevModeWarning.TabIndex = 2;
-			this.txtCamDiagsDevModeWarning.Text = "Note: When diags are enabled CAM.NET will run in dev mode.";
+			this.chkCamDesignMode.AutoSize = true;
+			this.chkCamDesignMode.Location = new System.Drawing.Point(6, 29);
+			this.chkCamDesignMode.Name = "chkCamDesignMode";
+			this.chkCamDesignMode.Size = new System.Drawing.Size(89, 17);
+			this.chkCamDesignMode.TabIndex = 5;
+			this.chkCamDesignMode.Text = "Design Mode";
+			this.chkCamDesignMode.UseVisualStyleBackColor = true;
+			this.chkCamDesignMode.CheckedChanged += new System.EventHandler(this.chkCamDesignMode_CheckedChanged);
 			// 
 			// RunForm
 			// 
@@ -554,5 +567,6 @@ namespace DkTools.Run
 		private System.Windows.Forms.Label label5;
 		private System.Windows.Forms.TextBox c_camExtraArgs;
 		private System.Windows.Forms.TextBox txtCamDiagsDevModeWarning;
+		private System.Windows.Forms.CheckBox chkCamDesignMode;
 	}
 }
