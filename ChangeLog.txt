@@ -1,6 +1,6 @@
 DkTools2012 ChangeLog
 ____________________________________________________________________________________________________
-Version 1.2.11 - (pending):
+Version 1.2.11 - Oct 14, 2014:
 
 Features:
 - Added support for interfaces.
