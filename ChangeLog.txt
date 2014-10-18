@@ -5,6 +5,7 @@ Version 1.2.12 - (pending):
 Bug Fixes:
 - On signature help for extern functions, dropped the leading 'extern'.
 - Added missing data type keyword 'short'.
+- Added built-in function FormatString().
 
 ____________________________________________________________________________________________________
 Version 1.2.11 - Oct 14, 2014:

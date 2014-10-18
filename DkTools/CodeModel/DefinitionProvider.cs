@@ -22,6 +22,8 @@ namespace DkTools.CodeModel
 						"Calculates the absolute value of an expression."),
 					new FunctionDefinition("diag", DataType.Void, "void diag(expressions ...)",
 						"Outputs specified expressions to a diagnostic device."),
+					new FunctionDefinition("FormatString", DataType.Char255, "char(255) FormatString(FormatControlString, expression1, expression2, ... )",
+						"Generates a message from a format string containing placeholder substrings '%1', '%2', '%3' etc., in any order, along with other optional user-specified substrings."),
 					new FunctionDefinition("gofield", DataType.Void, "void gofield(TableName.ColumnName)",
 						"Puts the focus on the requested field on the form."),
 					new FunctionDefinition("invokeerror", DataType.Int, "int invokeerror(iObj)",
