@@ -475,6 +475,14 @@ namespace DkTools.ProbeExplorer
 			var tvi = CreateStandardTvi(_extendedImg, string.Empty, headerText, null, false);
 			tvi.Tag = new ExtendedItemInfo { DictObject = obj, WindowTitle = windowTitle };
 			tvi.MouseDoubleClick += ExtendedItem_MouseDoubleClick;
+
+			var menu = new ContextMenu();
+			var menuItem = new MenuItem { Header = "Export to CSV" };
+			menuItem.Click += ExtendedItem_ExportToCsv_Click;
+			menuItem.Tag = obj;
+			menu.Items.Add(menuItem);
+			tvi.ContextMenu = menu;
+
 			return tvi;
 		}
 
@@ -497,6 +505,55 @@ namespace DkTools.ProbeExplorer
 				dlg.Show();
 
 				e.Handled = true;
+			}
+			catch (Exception ex)
+			{
+				this.ShowError(ex);
+			}
+		}
+
+		void ExtendedItem_ExportToCsv_Click(object sender, RoutedEventArgs e)
+		{
+			try
+			{
+				var menuItem = sender as MenuItem;
+				if (menuItem == null) return;
+
+				var dictObj = menuItem.Tag as Dict.IDictObj;
+				if (dictObj == null) return;
+
+				var dlg = new System.Windows.Forms.SaveFileDialog();
+				dlg.DefaultExt = "csv";
+				dlg.Filter = "CSV Files (*.csv)|*.csv|All Files (*.*)|*.*";
+				dlg.FilterIndex = 1;
+				if (dlg.ShowDialog() != System.Windows.Forms.DialogResult.OK) return;
+				var fileName = dlg.FileName;
+
+				var dict = ProbeEnvironment.CreateDictionary(ProbeEnvironment.CurrentApp);
+				var repoObj = dictObj.CreateRepoObject(dict);
+				if (repoObj == null) return;
+
+				var items = RepoInfo.GenerateInfoItems(repoObj, 0);
+
+				using (var csv = new CsvWriter(fileName))
+				{
+					csv.Write("Interface");
+					csv.Write("Property");
+					csv.Write("Value");
+					csv.Write("Type");
+					csv.EndLine();
+
+					foreach (var item in items)
+					{
+						csv.Write(item.Interface);
+						csv.Write(item.PropertyName);
+						var value = item.Value;
+						if (value == null) csv.Write("(null)");
+						else csv.Write(value.ToString());
+						csv.Write(item.TypeText);
+						csv.EndLine();
+					}
+				}
 			}
 			catch (Exception ex)
 			{

@@ -172,14 +172,15 @@ namespace DkTools.CodeModel
 
 		private void AfterRootExtern(int startPos)
 		{
+			var dataTypeStartPos = _code.Position;
 			var dataType = DataType.Parse(_code, null, GlobalDataTypeCallback, GlobalVariableCallback);
 			if (dataType != null)
 			{
-				AfterRootDataType(dataType, startPos, FunctionPrivacy.Public, true);
+				AfterRootDataType(dataType, dataTypeStartPos, FunctionPrivacy.Public, true);
 			}
 			else if (_code.ReadWord())
 			{
-				AfterRootIdentifier(_code.TokenText, startPos, _code.TokenSpan, true);
+				AfterRootIdentifier(_code.TokenText, _code.TokenStartPostion, _code.TokenSpan, true);
 			}
 			else
 			{
@@ -292,7 +293,7 @@ namespace DkTools.CodeModel
 			if (isExtern)
 			{
 				var localPos = _source.GetFilePosition(nameSpan.Start);
-				var sig = Tokens.Token.NormalizePlainText(_code.GetText(allStartPos, argEndPos - allStartPos));
+				var sig = TokenParser.Parser.NormalizeText(_code.GetText(allStartPos, argEndPos - allStartPos));
 
 				var def = new FunctionDefinition(_className, funcName, localPos.FileName, localPos.Position,
 					returnDataType, sig, 0, 0, 0, Span.Empty, privacy, true, description);
@@ -330,7 +331,7 @@ namespace DkTools.CodeModel
 			var argEndPrimaryPos = _source.GetPrimaryFilePosition(argEndPos);
 			var entireSpan = _source.GetPrimaryFileSpan(new Span(allStartPos, bodyEndPos));
 
-			var funcSig = Tokens.Token.NormalizePlainText(_code.GetText(allStartPos, argEndPos - allStartPos));
+			var funcSig = TokenParser.Parser.NormalizeText(_code.GetText(allStartPos, argEndPos - allStartPos));
 			var funcDef = new FunctionDefinition(_className, funcName, _fileName, nameLocalPos, returnDataType, funcSig, argStartPrimaryPos, argEndPrimaryPos, bodyStartLocalPos, entireSpan, privacy, isExtern, description);
 			_localFuncs.Add(funcDef);
 			AddGlobalDefinition(funcDef);

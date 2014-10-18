@@ -244,7 +244,7 @@ namespace DkTools.TokenParser
 					return true;
 				}
 
-				if (ch == '?' || ch == ':' || ch == ',' || ch == '.' || ch == '(' || ch == ')' || ch == '{' || ch == '}' || ch == '[' || ch == ']' || ch == '^')
+				if (ch == '?' || ch == ':' || ch == ',' || ch == '.' || ch == '(' || ch == ')' || ch == '{' || ch == '}' || ch == '[' || ch == ']' || ch == '^' || ch == '!')
 				{
 					_tokenText.Append(ch);
 					_pos++;
@@ -252,15 +252,38 @@ namespace DkTools.TokenParser
 					return true;
 				}
 
-				if (ch == '&' || ch == '|')
+				if (ch == '&')
 				{
-					_tokenText.Append(ch);
+					_tokenText.Append('&');
 					_pos++;
 					_tokenType = TokenParser.TokenType.Operator;
 
-					if (_pos < _length && _source[_pos] == ch)
+					if (_pos < _length)
 					{
-						_tokenText.Append(ch);
+						if (_source[_pos] == '+')
+						{
+							_tokenText.Append('+');
+							_pos++;
+						}
+						else if (_source[_pos] == '&')
+						{
+							_tokenText.Append('&');
+							_pos++;
+						}
+					}
+
+					return true;
+				}
+
+				if (ch == '|')
+				{
+					_tokenText.Append('|');
+					_pos++;
+					_tokenType = TokenParser.TokenType.Operator;
+
+					if (_pos < _length && _source[_pos] == '|')
+					{
+						_tokenText.Append('|');
 						_pos++;
 					}
 
@@ -877,6 +900,104 @@ namespace DkTools.TokenParser
 		{
 			get { return _documentOffset; }
 			set { _documentOffset = value; }
+		}
+
+		public static string NormalizeText(string text)
+		{
+			var code = new Parser(text);
+			var needSpace = false;
+			TokenType lastTokenType = TokenType.Unknown;
+			string lastTokenText = null;
+			TokenType tokenType;
+			string tokenText;
+			var sb = new StringBuilder(text.Length);
+
+			while (code.Read())
+			{
+				tokenType = code.TokenType;
+				tokenText = code.TokenText;
+
+				if (sb.Length == 0)
+				{
+					needSpace = false;
+				}
+				if (lastTokenText == "," || lastTokenText == ";")
+				{
+					needSpace = true;
+				}
+				else if (lastTokenText == "." || lastTokenText == "(" || lastTokenText == "[")
+				{
+					needSpace = false;
+				}
+				else if (tokenType == TokenType.Operator)
+				{
+					switch (tokenText)
+					{
+						case ",":
+						case ".":
+						case ";":
+							needSpace = false;
+							break;
+						case "{":
+						case "}":
+							needSpace = false;
+							break;
+						case "(":
+							if (lastTokenText == "(" || lastTokenText == "[" || lastTokenType == TokenType.Word) needSpace = false;
+							else needSpace = true;
+							break;
+						case ")":
+							if (lastTokenText == "(" || lastTokenText == ")" || lastTokenText == "]" ||
+								lastTokenType == TokenType.Word || lastTokenType == TokenType.Number || lastTokenType == TokenType.StringLiteral)
+							{
+								needSpace = false;
+							}
+							else needSpace = true;
+							break;
+						case "[":
+							if (lastTokenText == "(" || lastTokenText == "[" || lastTokenType == TokenType.Word) needSpace = false;
+							else needSpace = true;
+							break;
+						case "]":
+							if (lastTokenText == ")" || lastTokenText == "]" || lastTokenType == TokenType.Word || lastTokenType == TokenType.Number ||
+								lastTokenType == TokenType.StringLiteral)
+							{
+								needSpace = false;
+							}
+							else needSpace = true;
+							break;
+						default:
+							needSpace = true;
+							break;
+					}
+				}
+				else if (tokenType == TokenType.Word)
+				{
+					if (lastTokenText == "&") needSpace = false;
+					else needSpace = true;
+				}
+				else if (tokenType == TokenType.Number || tokenType == TokenType.StringLiteral)
+				{
+					if (lastTokenText == "(" || lastTokenText == "[") needSpace = false;
+					else needSpace = true;
+				}
+				else if (tokenType == TokenType.Preprocessor)
+				{
+					needSpace = true;
+				}
+				else
+				{
+					needSpace = true;
+				}
+
+				if (needSpace) sb.Append(' ');
+				sb.Append(tokenText);
+
+				lastTokenType = tokenType;
+				lastTokenText = tokenText;
+			}
+
+			return sb.ToString();
 		}
 	}
 }

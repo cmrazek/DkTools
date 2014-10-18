@@ -51,6 +51,7 @@ namespace DkTools.ProbeExplorer
 						dict["IPColumn:CustomPersistFile"] = repo.CustomPersistFile;
 						dict["IPColumn:Itype"] = repo.Itype;
 						dict["IPColumn:Number"] = repo.Number;
+						dict["IPColumn:Persistent"] = repo.Persistent;
 						dict["IPColumn:Vtype"] = repo.Vtype;
 						dict["IPColumn:GroupPrompt"] = repo.GroupPrompt[0];
 					}

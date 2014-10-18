@@ -278,6 +278,7 @@
     <Compile Include="CodeModel\Tokens\InterfacePropertyToken.cs" />
     <Compile Include="CodeModel\Tokens\InterfaceTypeToken.cs" />
     <Compile Include="CodeModel\Tokens\TagToken.cs" />
+    <Compile Include="CsvWriter.cs" />
     <Compile Include="DictTextViewListener.cs" />
     <Compile Include="Dict\Dict.cs" />
     <Compile Include="Dict\IDictObj.cs" />

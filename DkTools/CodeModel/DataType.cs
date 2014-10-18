@@ -306,11 +306,12 @@ namespace DkTools.CodeModel
 					}
 				#endregion
 
-				#region int
+				#region int, short
 				case "int":
+				case "short":
 					{
 						var sb = new StringBuilder();
-						sb.Append("int");
+						sb.Append(code.TokenText);
 
 						if (code.ReadExact("unsigned")) sb.Append(" unsigned");
 

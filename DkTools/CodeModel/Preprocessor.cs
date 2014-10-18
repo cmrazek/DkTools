@@ -863,7 +863,7 @@ namespace DkTools.CodeModel
 					}
 					else
 					{
-						return new Definitions.ConstantDefinition(_name, _fileName, _pos, Token.NormalizePlainText(_content));
+						return new Definitions.ConstantDefinition(_name, _fileName, _pos, TokenParser.Parser.NormalizeText(_content));
 					}
 				}
 				else
@@ -880,7 +880,7 @@ namespace DkTools.CodeModel
 					}
 					sig.Append(')');
 
-					return new Definitions.MacroDefinition(_name, _fileName, _pos, sig.ToString(), Token.NormalizePlainText(_content));
+					return new Definitions.MacroDefinition(_name, _fileName, _pos, sig.ToString(), TokenParser.Parser.NormalizeText(_content));
 				}
 			}
 

@@ -1,5 +1,12 @@
 DkTools2012 ChangeLog
 ____________________________________________________________________________________________________
+Version 1.2.12 - (pending):
+
+Bug Fixes:
+- On signature help for extern functions, dropped the leading 'extern'.
+- Added missing data type keyword 'short'.
+
+____________________________________________________________________________________________________
 Version 1.2.11 - Oct 14, 2014:
 
 Features:
