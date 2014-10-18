@@ -4,6 +4,7 @@ Version 1.2.12 - (pending):
 
 Features:
 - Added a way to specify the diag level in Run dialog.
+- Added settings to customize the arguments passed to 'pc', 'dccmp' and 'credelix'.
 
 Bug Fixes:
 - On signature help for extern functions, dropped the leading 'extern'.

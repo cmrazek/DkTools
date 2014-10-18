@@ -193,13 +193,16 @@ namespace DkTools.Compiler
 				}
 
 				_proc = new Process();
-				ProcessStartInfo info = new ProcessStartInfo("pc.bat", "/w");
+				var switches = GenerateCompileSwitches();
+				ProcessStartInfo info = new ProcessStartInfo("pc.bat", switches);
 				info.UseShellExecute = false;
 				info.RedirectStandardOutput = true;
 				info.RedirectStandardError = true;
 				info.CreateNoWindow = true;
 				info.WorkingDirectory = ProbeEnvironment.ObjectDir;
                 ProbeEnvironment.MergeEnvironmentVariables(info.EnvironmentVariables);
+
+				WriteLine(string.Concat("pc ", switches));
 
 				_proc.StartInfo = info;
 				if (!_proc.Start())
@@ -293,13 +296,17 @@ namespace DkTools.Compiler
 				Shell.SetStatusText("DCCMP starting...");
 
 				_proc = new Process();
-				var info = new ProcessStartInfo("dccmp.exe", string.Format("/z /D /P \"{0}\"", ProbeEnvironment.CurrentApp));
+				var switches = GenerateDccmpSwitches();
+				var info = new ProcessStartInfo("dccmp.exe", switches);
 				info.UseShellExecute = false;
 				info.RedirectStandardOutput = true;
 				info.RedirectStandardError = true;
 				info.CreateNoWindow = true;
 				info.WorkingDirectory = ProbeEnvironment.ObjectDir;
 				_proc.StartInfo = info;
+
+				WriteLine("dccmp " + switches);
+
 				if (!_proc.Start())
 				{
 					WriteLine("Unable to start DCCMP.");
@@ -355,13 +362,17 @@ namespace DkTools.Compiler
 				Shell.SetStatusText("Probe credelix starting...");
 
 				_proc = new Process();
-				var info = new ProcessStartInfo("credelix.exe", string.Format("/p /P \"{0}\"", ProbeEnvironment.CurrentApp));
+				var switches = GenerateCredelixSwitches();
+				var info = new ProcessStartInfo("credelix.exe", switches);
 				info.UseShellExecute = false;
 				info.RedirectStandardOutput = true;
 				info.RedirectStandardError = true;
 				info.CreateNoWindow = true;
 				info.WorkingDirectory = ProbeEnvironment.ObjectDir;
 				_proc.StartInfo = info;
+
+				WriteLine("credelix " + switches);
+
 				if (!_proc.Start())
 				{
 					WriteLine("Unable to start CREDELIX.");
@@ -564,6 +575,45 @@ namespace DkTools.Compiler
 			fileName = "";
 			lineNum = 0;
 			return false;
+		}
+
+		private string GenerateCompileSwitches()
+		{
+			return ProbeToolsPackage.Instance.ProbeExplorerOptions.CompileArguments;
+		}
+
+		private string GenerateDccmpSwitches()
+		{
+			var sb = new StringBuilder();
+			sb.Append("/P \"");
+			sb.Append(ProbeEnvironment.CurrentApp);
+			sb.Append('\"');
+
+			var custom = ProbeToolsPackage.Instance.ProbeExplorerOptions.DccmpArguments;
+			if (!string.IsNullOrWhiteSpace(custom))
+			{
+				sb.Append(' ');
+				sb.Append(custom);
+			}
+
+			return sb.ToString();
+		}
+
+		private string GenerateCredelixSwitches()
+		{
+			var sb = new StringBuilder();
+			sb.Append("/P \"");
+			sb.Append(ProbeEnvironment.CurrentApp);
+			sb.Append('\"');
+
+			var custom = ProbeToolsPackage.Instance.ProbeExplorerOptions.CredelixArguments;
+			if (!string.IsNullOrWhiteSpace(custom))
+			{
+				sb.Append(' ');
+				sb.Append(custom);
+			}
+
+			return sb.ToString();
 		}
 	}
 }

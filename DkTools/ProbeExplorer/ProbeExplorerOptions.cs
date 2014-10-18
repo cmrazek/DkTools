@@ -26,11 +26,29 @@ namespace DkTools.ProbeExplorer
 		[Description("When a compile completes successfully, the DCCMP process will be automatically run with /z. You may want to disable this if need to run dccmp in manual mode.")]
 		public bool RunDccmpAfterCompile { get; set; }
 
+		[Category("Compile")]
+		[DisplayName("Compile Arguments")]
+		[Description("Arguments passed to 'pc' when compiling")]
+		public string CompileArguments { get; set; }
+
+		[Category("Compile")]
+		[DisplayName("DCCMP Arguments")]
+		[Description("Arguments passed to 'dccmp'\r\n(/P automatically appended to specify current app)")]
+		public string DccmpArguments { get; set; }
+
+		[Category("Compile")]
+		[DisplayName("CREDELIX Arguments")]
+		[Description("Arguments passed to 'credelix'\r\n(/P automatically appended to specify current app)")]
+		public string CredelixArguments { get; set; }
+
 		public ProbeExplorerOptions()
 		{
 			ShowFilesInTree = false;
 			ShowErrorListAfterCompile = false;
 			RunDccmpAfterCompile = true;
+			CompileArguments = "/w";
+			DccmpArguments = "/z /D";
+			CredelixArguments = "/p";
 		}
 	}
 }
