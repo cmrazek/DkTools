@@ -63,6 +63,13 @@ namespace DkTools.Run
 				c_camExtraArgs.Text = _options.CamArgs;
 				c_samCmdLine.Text = _options.CreateSamArgsString();
 				c_camCmdLine.Text = _options.CreateCamArgsString();
+
+				c_diagLevelCombo.Items.Add("1 - To Screen");
+				c_diagLevelCombo.Items.Add("2 - To File");
+				c_diagLevelCombo.Items.Add("3 - To File and Flush");
+				var diagLevel = _options.DiagLevel;
+				if (diagLevel < 1 || diagLevel > 3) diagLevel = RunOptions.DefaultDiagLevel;
+				c_diagLevelCombo.SelectedIndex = diagLevel - 1;
 			}
 			catch (Exception ex)
 			{
@@ -469,6 +476,7 @@ namespace DkTools.Run
 				UpdateSamCmdLine();
 				UpdateCamCmdLine();
 				UpdateCamDevModeWarningVisibility();
+				UpdateDiagLevelVisiblity();
 			}
 			catch (Exception ex)
 			{
@@ -533,6 +541,26 @@ namespace DkTools.Run
 			{
 				_options.CamDesignMode = chkCamDesignMode.Checked;
 				UpdateCamCmdLine();
+			}
+			catch (Exception ex)
+			{
+				this.ShowError(ex);
+			}
+		}
+
+		private void UpdateDiagLevelVisiblity()
+		{
+			c_diagLevelCombo.Visible = chkDiags.Checked;
+		}
+
+		private void c_diagLevelCombo_SelectedIndexChanged(object sender, EventArgs e)
+		{
+			try
+			{
+				_options.DiagLevel = c_diagLevelCombo.SelectedIndex + 1;
+				UpdateSamCmdLine();
+				UpdateCamCmdLine();
+				UpdateCamDevModeWarningVisibility();
 			}
 			catch (Exception ex)
 			{

@@ -28,6 +28,7 @@ namespace DkTools.Run
 		/// </summary>
 		private void InitializeComponent()
 		{
+			System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(RunForm));
 			this.groupBox1 = new System.Windows.Forms.GroupBox();
 			this.radCam = new System.Windows.Forms.RadioButton();
 			this.radSam = new System.Windows.Forms.RadioButton();
@@ -60,13 +61,14 @@ namespace DkTools.Run
 			this.label9 = new System.Windows.Forms.Label();
 			this.txtLoadSamTime = new System.Windows.Forms.TextBox();
 			this.tabCam = new System.Windows.Forms.TabPage();
+			this.chkCamDesignMode = new System.Windows.Forms.CheckBox();
 			this.c_camCmdLine = new System.Windows.Forms.TextBox();
 			this.label6 = new System.Windows.Forms.Label();
 			this.label5 = new System.Windows.Forms.Label();
 			this.c_camExtraArgs = new System.Windows.Forms.TextBox();
 			this.chkCamDevMode = new System.Windows.Forms.CheckBox();
 			this.panel1 = new System.Windows.Forms.Panel();
-			this.chkCamDesignMode = new System.Windows.Forms.CheckBox();
+			this.c_diagLevelCombo = new System.Windows.Forms.ComboBox();
 			this.groupBox1.SuspendLayout();
 			this.tabControl.SuspendLayout();
 			this.tabApp.SuspendLayout();
@@ -195,6 +197,7 @@ namespace DkTools.Run
 			// 
 			// tabApp
 			// 
+			this.tabApp.Controls.Add(this.c_diagLevelCombo);
 			this.tabApp.Controls.Add(this.txtCamDiagsDevModeWarning);
 			this.tabApp.Controls.Add(this.groupBox1);
 			this.tabApp.Controls.Add(this.chkDiags);
@@ -214,7 +217,7 @@ namespace DkTools.Run
 			this.txtCamDiagsDevModeWarning.Multiline = true;
 			this.txtCamDiagsDevModeWarning.Name = "txtCamDiagsDevModeWarning";
 			this.txtCamDiagsDevModeWarning.Size = new System.Drawing.Size(182, 47);
-			this.txtCamDiagsDevModeWarning.TabIndex = 2;
+			this.txtCamDiagsDevModeWarning.TabIndex = 3;
 			this.txtCamDiagsDevModeWarning.Text = "Note: When diags are enabled CAM.NET will run in dev mode.";
 			// 
 			// tabSam
@@ -422,6 +425,17 @@ namespace DkTools.Run
 			this.tabCam.Text = "CAM Settings";
 			this.tabCam.UseVisualStyleBackColor = true;
 			// 
+			// chkCamDesignMode
+			// 
+			this.chkCamDesignMode.AutoSize = true;
+			this.chkCamDesignMode.Location = new System.Drawing.Point(6, 29);
+			this.chkCamDesignMode.Name = "chkCamDesignMode";
+			this.chkCamDesignMode.Size = new System.Drawing.Size(89, 17);
+			this.chkCamDesignMode.TabIndex = 5;
+			this.chkCamDesignMode.Text = "Design Mode";
+			this.chkCamDesignMode.UseVisualStyleBackColor = true;
+			this.chkCamDesignMode.CheckedChanged += new System.EventHandler(this.chkCamDesignMode_CheckedChanged);
+			// 
 			// c_camCmdLine
 			// 
 			this.c_camCmdLine.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
@@ -481,16 +495,15 @@ namespace DkTools.Run
 			this.panel1.Size = new System.Drawing.Size(343, 30);
 			this.panel1.TabIndex = 1;
 			// 
-			// chkCamDesignMode
+			// c_diagLevelCombo
 			// 
-			this.chkCamDesignMode.AutoSize = true;
-			this.chkCamDesignMode.Location = new System.Drawing.Point(6, 29);
-			this.chkCamDesignMode.Name = "chkCamDesignMode";
-			this.chkCamDesignMode.Size = new System.Drawing.Size(89, 17);
-			this.chkCamDesignMode.TabIndex = 5;
-			this.chkCamDesignMode.Text = "Design Mode";
-			this.chkCamDesignMode.UseVisualStyleBackColor = true;
-			this.chkCamDesignMode.CheckedChanged += new System.EventHandler(this.chkCamDesignMode_CheckedChanged);
+			this.c_diagLevelCombo.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+			this.c_diagLevelCombo.FormattingEnabled = true;
+			this.c_diagLevelCombo.Location = new System.Drawing.Point(186, 24);
+			this.c_diagLevelCombo.Name = "c_diagLevelCombo";
+			this.c_diagLevelCombo.Size = new System.Drawing.Size(141, 21);
+			this.c_diagLevelCombo.TabIndex = 2;
+			this.c_diagLevelCombo.SelectedIndexChanged += new System.EventHandler(this.c_diagLevelCombo_SelectedIndexChanged);
 			// 
 			// RunForm
 			// 
@@ -501,6 +514,7 @@ namespace DkTools.Run
 			this.ClientSize = new System.Drawing.Size(343, 246);
 			this.Controls.Add(this.tabControl);
 			this.Controls.Add(this.panel1);
+			this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
 			this.MaximumSize = new System.Drawing.Size(32767, 285);
 			this.MinimumSize = new System.Drawing.Size(359, 285);
 			this.Name = "RunForm";
@@ -568,5 +582,6 @@ namespace DkTools.Run
 		private System.Windows.Forms.TextBox c_camExtraArgs;
 		private System.Windows.Forms.TextBox txtCamDiagsDevModeWarning;
 		private System.Windows.Forms.CheckBox chkCamDesignMode;
+		private System.Windows.Forms.ComboBox c_diagLevelCombo;
 	}
 }

@@ -13,6 +13,7 @@ namespace DkTools.Run
 		public bool RunSam { get; set; }
 		public bool RunCam { get; set; }
 		public bool Diags { get; set; }
+		public int DiagLevel { get; set; }
 		public bool LoadSam { get; set; }
 		public bool SetDbDate { get; set; }
 		public int TransReportTimeout { get; set; }
@@ -25,11 +26,14 @@ namespace DkTools.Run
 		public string SamArgs { get; set; }
 		public string CamArgs { get; set; }
 
+		public const int DefaultDiagLevel = 2;
+
 		public RunOptions()
 		{
 			this.RunSam = true;
 			this.RunCam = true;
 			this.Diags = true;
+			this.DiagLevel = DefaultDiagLevel;
 			this.LoadSam = false;
 			this.LoadSamTime = 10000;
 			this.SetDbDate = true;
@@ -51,7 +55,7 @@ namespace DkTools.Run
 			sb.Append(string.Format(" /z{0}", MinChannels));
 			sb.Append(string.Format(" /Z{0}", MaxChannels));
 			sb.Append(string.Format(" /P{0}", ProbeEnvironment.CurrentApp));
-			if (Diags) sb.Append(" /d2");
+			if (Diags) sb.AppendFormat(" /d{0}", this.DiagLevel);
 
 			if (!string.IsNullOrWhiteSpace(SamArgs))
 			{
