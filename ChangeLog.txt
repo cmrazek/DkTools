@@ -10,6 +10,7 @@ Bug Fixes:
 - On signature help for extern functions, dropped the leading 'extern'.
 - Added missing data type keyword 'short'.
 - Added built-in function FormatString().
+- Function drop down list no longer shows functions that are defined in includes.
 
 ____________________________________________________________________________________________________
 Version 1.2.11 - Oct 14, 2014:

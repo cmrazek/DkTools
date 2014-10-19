@@ -37,9 +37,10 @@ namespace DkTools.LanguageSvc
 
 			var index = 0;
 
-			var funcs = fileStore.GetFunctionDropDownList(buf.CurrentSnapshot).ToList();
-			funcs.Sort((a,b) => a.Name.CompareTo(b.Name));
-			foreach (var func in funcs)
+			foreach (var func in (from f in fileStore.GetFunctionDropDownList(buf.CurrentSnapshot)
+								  where f.EntireFunctionSpan.Length > 0
+								  orderby f.Name.ToLower()
+								  select f))
 			{
 				var span = func.EntireFunctionSpan;
 				dropDownMembers.Add(new DropDownMember(func.Name, span.ToVsTextInteropSpan(textView), k_methodImageIndex, DROPDOWNFONTATTR.FONTATTR_PLAIN));
