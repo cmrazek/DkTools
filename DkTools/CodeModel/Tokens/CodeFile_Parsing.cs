@@ -467,6 +467,7 @@ namespace DkTools.CodeModel.Tokens
 			var commentStartPos = 0;
 			var commentEndPos = 0;
 			Match match;
+			var endLineCount = 0;
 
 			while (_pos < _length)
 			{
@@ -475,9 +476,13 @@ namespace DkTools.CodeModel.Tokens
 				if (Char.IsWhiteSpace(ch))
 				{
 					// WhiteSpace
-					MoveNext();
-					while (_pos < _length && Char.IsWhiteSpace(_src[_pos])) MoveNext();
-					if (_pos >= _length) return false;
+					endLineCount = 0;
+					while (_pos < _length && Char.IsWhiteSpace(ch = _src[_pos]))
+					{
+						if (ch == '\n') endLineCount++;
+						MoveNext();
+					}
+					if (_pos >= _length) break;
 					ch = _src[_pos];
 				}
 
@@ -514,11 +519,26 @@ namespace DkTools.CodeModel.Tokens
 						{
 							if (!gotComment)
 							{
-								commentStartPos = commentEndPos = Position;
+								// First comment found
+								commentStartPos = Position;
+								SeekEndOfLine();
+								commentEndPos = Position;
 								gotComment = true;
 							}
-							SeekEndOfLine();
-							commentEndPos = Position;
+							else if (endLineCount > 1)
+							{
+								// Blank lines between comments; don't combine those into a single region.
+								AddCommentRegion(scope, new Span(commentStartPos, commentEndPos));
+								commentStartPos = Position;
+								SeekEndOfLine();
+								commentEndPos = Position;
+							}
+							else
+							{
+								// Nth comment found
+								SeekEndOfLine();
+								commentEndPos = Position;
+							}
 						}
 						continue;
 					}
@@ -529,6 +549,12 @@ namespace DkTools.CodeModel.Tokens
 						{
 							commentStartPos = commentEndPos = Position;
 							gotComment = true;
+						}
+						else if (endLineCount > 1)
+						{
+							// Blank lines between comments; don't combine those into a single region.
+							AddCommentRegion(scope, new Span(commentStartPos, commentEndPos));
+							commentStartPos = commentEndPos = Position;
 						}
 
 						MoveNext(2);
@@ -573,7 +599,6 @@ namespace DkTools.CodeModel.Tokens
 				}
 
 				if (gotComment) AddCommentRegion(scope, new Span(commentStartPos, commentEndPos));
-
 				return true;
 			}
 

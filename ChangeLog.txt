@@ -12,6 +12,7 @@ Bug Fixes:
 - Added missing data type keyword 'short'.
 - Added built-in function FormatString().
 - Function drop down list no longer shows functions that are defined in includes.
+- Outlining no longer combines comments with blank lines between them.
 
 ____________________________________________________________________________________________________
 Version 1.2.11 - Oct 14, 2014:
