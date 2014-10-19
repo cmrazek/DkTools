@@ -36,6 +36,7 @@ namespace DkTools
 
 		public static readonly HashSet<string> ProbeExtensions = Util.ParseWordList("cc cc& cc+ ct ct& ct+ f f& f+ i i& i+ gp gp& gp+ nc nc& nc+ sc sc& sc+ sp sp& sp+ st st& st+ t t& t+");
 		public static readonly HashSet<string> IncludeExtensions = Util.ParseWordList("i i& i+ id id& id+ ie ie& ie+ il il& il+");
+		public const string DefaultHiddenExtensions = ".c .dll .exe .h .hlp .lib .obj .pdb .res .ss";
 
 		public static readonly HashSet<string> DataTypeKeywords = Util.ParseWordList(
 			"alternate Boolean_t char currency date enum int LEADINGZEROS like local_currency long longform",

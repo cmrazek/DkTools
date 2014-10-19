@@ -16,6 +16,11 @@ namespace DkTools.ProbeExplorer
 		[Description("Show all the files when expanding folders in the tree-view. The tree list can get slow if there are many files to display. If turned off, files are still accessible through the filter list.")]
 		public bool ShowFilesInTree { get; set; }
 
+		[Category("DK Explorer Options")]
+		[DisplayName("Hidden Extensions")]
+		[Description("List of extensions to be not displayed in DK Explorer, separated by spaces. If blank, default extensions hidden will be (" + Constants.DefaultHiddenExtensions + ")")]
+		public string HiddenExtensions { get; set; }
+
 		[Category("Compile")]
 		[DisplayName("Show Error List After Compile")]
 		[Description("When a compile is complete, if there are errors or warnings, then display Error List tool window.")]

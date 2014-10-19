@@ -502,7 +502,19 @@ namespace DkTools.ProbeExplorer
 		{
 			if (ProbeEnvironment.Initialized)
 			{
-				_fileList = ProbeEnvironment.GetAllSourceIncludeFiles().ToList();
+				var hiddenExt = ProbeToolsPackage.Instance.ProbeExplorerOptions.HiddenExtensions;
+				if (string.IsNullOrWhiteSpace(hiddenExt)) hiddenExt = Constants.DefaultHiddenExtensions;
+
+				var hiddenExtList = new HashSet<string>(from e in Util.ParseWordList(hiddenExt)
+														select e.StartsWith(".") ? e.ToLower() : string.Concat(".", e.ToLower()));
+
+				_fileList = new List<string>();
+				foreach (var fileName in ProbeEnvironment.GetAllSourceIncludeFiles())
+				{
+					var extLower = System.IO.Path.GetExtension(fileName).ToLower();
+					if (hiddenExtList.Contains(extLower)) continue;
+					_fileList.Add(fileName);
+				}
 
 				if (!string.IsNullOrEmpty(c_fileFilterTextBox.Text)) c_fileFilterTextBox.Text = string.Empty;
 			}
