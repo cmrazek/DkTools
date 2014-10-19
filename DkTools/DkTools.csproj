@@ -273,6 +273,7 @@
     <Compile Include="CodeModel\Definitions\TableDefinition.cs" />
     <Compile Include="CodeModel\Definitions\TableFieldDefinition.cs" />
     <Compile Include="CodeModel\Definitions\VariableDefinition.cs" />
+    <Compile Include="CodeModel\Tokens\AlterToken.cs" />
     <Compile Include="CodeModel\Tokens\CodeFile_Parsing.cs" />
     <Compile Include="CodeModel\Tokens\InterfaceMethodCallToken.cs" />
     <Compile Include="CodeModel\Tokens\InterfacePropertyToken.cs" />

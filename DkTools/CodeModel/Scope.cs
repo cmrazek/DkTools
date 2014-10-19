@@ -192,5 +192,10 @@ namespace DkTools.CodeModel
 		/// Inside the from section of a select statement.
 		/// </summary>
 		SelectFrom = 0x800,
+
+		/// <summary>
+		/// Currently parsing inside an alter statement.
+		/// </summary>
+		InsideAlter = 0x1000,
 	}
 }

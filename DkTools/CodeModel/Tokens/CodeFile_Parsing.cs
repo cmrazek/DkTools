@@ -425,16 +425,9 @@ namespace DkTools.CodeModel.Tokens
 		/// <remarks>This function assumes that the current position is after the word.</remarks>
 		private Token ParseWord(GroupToken parent, Scope scope, Span wordSpan, string word)
 		{
-			if (word == "extract")
-			{
-				return ExtractStatement.Parse(parent, scope, new KeywordToken(parent, scope, wordSpan, "extract"));
-			}
-
-			if (word == "tag")
-			{
-				var tagToken = new KeywordToken(parent, scope, wordSpan, word);
-				return TagToken.Parse(parent, scope, tagToken);
-			}
+			if (word == "extract") return ExtractStatement.Parse(parent, scope, new KeywordToken(parent, scope, wordSpan, "extract"));
+			if (word == "tag") return TagToken.Parse(parent, scope, new KeywordToken(parent, scope, wordSpan, word));
+			if (word == "alter" || word == "ALTER") return AlterToken.Parse(parent, scope, new KeywordToken(parent, scope, wordSpan, word));
 
 			if (Constants.Keywords.Contains(word))
 			{
@@ -444,6 +437,11 @@ namespace DkTools.CodeModel.Tokens
 			if (Constants.DataTypeKeywords.Contains(word))
 			{
 				return new DataTypeKeywordToken(parent, scope, wordSpan, word);
+			}
+
+			if ((scope.Hint & ScopeHint.InsideAlter) != 0)
+			{
+				if (Constants.AlterKeywords.Contains(word)) return new KeywordToken(parent, scope, wordSpan, word);
 			}
 
 			var defs = scope.DefinitionProvider.GetAny(wordSpan.Start, word).ToArray();

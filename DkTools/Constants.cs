@@ -66,6 +66,9 @@ namespace DkTools
 			"probeform:tabkeycapture probeformgroup:folder probeformgroup:folderorder probeformgroup:homeform probeformgroup:LogicalCascadeClearParent",
 			"probeformgroup:nextform probeformgroup:stayloaded probeformgroup:tooln probegroupmenu:alltables rows scrollbars wordwrap");
 
+		public static readonly HashSet<string> AlterKeywords = Util.ParseWordList(
+			"add ADD after AFTER alter ALTER AppIID application APPLICATION before BEFORE column COLUMN drop DROP extends EXTENDS move MOVE sametype SAMETYPE stringdef STRINGDEF table TABLE typedef TYPEDEF workspace WORKSPACE");
+
 		public static readonly char[] OperatorChars = "(){}|+-*/%?:<>=!&".ToCharArray();
 
 		public const string DefaultDateFormat = "ddMMMyyyy";
