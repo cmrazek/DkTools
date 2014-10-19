@@ -315,10 +315,9 @@ namespace DkTools.CodeModel.Tokens
 
 					if (defs.Any(d => d is ClassDefinition))
 					{
-						var ffClass = ProbeToolsPackage.Instance.FunctionFileScanner.GetClass(word);
-						if (ffClass != null)
+						foreach (var ffClass in ProbeToolsPackage.Instance.FunctionFileScanner.CurrentApp.GetClasses(word))
 						{
-							var ffFunc = ffClass.GetFunctionDefinition(word2);
+							var ffFunc = ffClass.GetFunctionDefinitions(word2).FirstOrDefault();
 							if (ffFunc != null)
 							{
 								SkipWhiteSpaceAndComments(scope);

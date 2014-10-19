@@ -80,11 +80,9 @@ namespace DkTools.SignatureHelp
 
 						if (!string.IsNullOrEmpty(tableName))
 						{
-							var cls = ProbeToolsPackage.Instance.FunctionFileScanner.GetClass(tableName);
-							if (cls != null)
+							foreach (var cls in ProbeToolsPackage.Instance.FunctionFileScanner.CurrentApp.GetClasses(tableName))
 							{
-								var def = cls.GetFunctionDefinition(funcName);
-								if (def != null)
+								foreach (var def in cls.GetFunctionDefinitions(funcName))
 								{
 									yield return CreateSignature(_textBuffer, def.Signature, def.DevDescription, applicableToSpan);
 								}

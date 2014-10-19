@@ -83,5 +83,10 @@ namespace DkTools.CodeModel.Definitions
 		{
 			return _intType.GetProperty(name);
 		}
+
+		public override string PickText
+		{
+			get { return QuickInfoTextStr; }
+		}
 	}
 }

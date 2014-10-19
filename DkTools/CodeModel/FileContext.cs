@@ -74,5 +74,17 @@ namespace DkTools.CodeModel
 					return FileContext.Include;
 			}
 		}
+
+		public static bool IsClass(this FileContext fc)
+		{
+			return fc == FileContext.ServerClass || fc == FileContext.ClientClass || fc == FileContext.NeutralClass;
+		}
+
+		public static string GetClassNameFromFileName(string fileName)
+		{
+			var context = GetFileContextFromFileName(fileName);
+			if (!context.IsClass()) return null;
+			return System.IO.Path.GetFileNameWithoutExtension(fileName).ToLower();
+		}
 	}
 }

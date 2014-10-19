@@ -52,5 +52,10 @@ namespace DkTools.CodeModel.Definitions
 			get { return _ex; }
 			set { _ex = value; }
 		}
+
+		public override string PickText
+		{
+			get { return QuickInfoTextStr; }
+		}
 	}
 }

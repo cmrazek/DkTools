@@ -43,5 +43,10 @@ namespace DkTools.CodeModel.Definitions
 				return WpfMainLine(_stringDef.Value);
 			}
 		}
+
+		public override string PickText
+		{
+			get { return QuickInfoTextStr; }
+		}
 	}
 }

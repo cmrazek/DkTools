@@ -61,5 +61,10 @@ namespace DkTools.CodeModel.Definitions
 		{
 			get { return _baseTableName; }
 		}
+
+		public override string PickText
+		{
+			get { return QuickInfoTextStr; }
+		}
 	}
 }

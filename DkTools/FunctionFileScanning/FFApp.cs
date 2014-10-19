@@ -15,10 +15,23 @@ namespace DkTools.FunctionFileScanning
 		private string _name;
 		private int _id;
 		private Dictionary<string, FFFile> _files = new Dictionary<string, FFFile>();
-		private Dictionary<string, FFFunction> _functions = new Dictionary<string, FFFunction>();
-		private Dictionary<string, FFClass> _classes = new Dictionary<string, FFClass>();
-		private CodeModel.Definitions.Definition[] _definitions = null;
-		private object _definitionsLock = new object();
+		private Dictionary<string, DateTime> _invisibleFiles = new Dictionary<string, DateTime>();
+
+		private GroupedList<string, FFFunction> _consolidatedFunctions;
+		private GroupedList<string, FFClass> _consolidatedClasses;
+
+		///// <summary>
+		///// Functions visible globally without an extern.
+		///// </summary>
+		//private GroupedList<string, FFFunction> _functions = new GroupedList<string, FFFunction>();
+
+		///// <summary>
+		///// Classes available globally.
+		///// </summary>
+		//private GroupedList<string, FFClass> _classes = new GroupedList<string, FFClass>();
+
+		//private CodeModel.Definitions.Definition[] _definitions = null;
+		//private object _definitionsLock = new object();
 
 		public FFApp(FFScanner scanner, FFDatabase db, string name)
 		{
@@ -45,8 +58,21 @@ namespace DkTools.FunctionFileScanning
 
 			if (_id != 0)
 			{
-				// Load file dates
-				using (var cmd = db.CreateCommand("select * from file_ where app_id = @app_id"))
+				// Load files
+				using (var cmd = db.CreateCommand("select * from file_ where app_id = @app_id and visible != 0"))
+				{
+					cmd.Parameters.AddWithValue("@app_id", _id);
+					using (var rdr = cmd.ExecuteReader())
+					{
+						while (rdr.Read())
+						{
+							var file = new FFFile(this, db, rdr);
+							_files[file.FileName.ToLower()] = file;
+						}
+					}
+				}
+
+				using (var cmd = db.CreateCommand("select file_name, modified from file_ where app_id = @app_id and visible = 0"))
 				{
 					cmd.Parameters.AddWithValue("@app_id", _id);
 					using (var rdr = cmd.ExecuteReader())
@@ -57,47 +83,66 @@ namespace DkTools.FunctionFileScanning
 						{
 							var fileName = rdr.GetString(ordFileName);
 							var modified = rdr.GetDateTime(ordModified);
-
-							GetOrCreateFile(db, fileName).Modified = modified;
+							_invisibleFiles[fileName.ToLower()] = modified;
 						}
 					}
 				}
 
-				// Load classes
-				using (var cmd = db.CreateCommand("select f.file_name, c.* from class_ c inner join file_ f on f.id = c.file_id where c.app_id = @app_id"))
-				{
-					cmd.Parameters.AddWithValue("@app_id", _id);
-					using (var rdr = cmd.ExecuteReader())
-					{
-						var ordName = rdr.GetOrdinal("name");
-						var ordFileName = rdr.GetOrdinal("file_name");
+				// TODO: remove
+				//using (var cmd = db.CreateCommand("select * from file_ where app_id = @app_id"))
+				//{
+				//	cmd.Parameters.AddWithValue("@app_id", _id);
+				//	using (var rdr = cmd.ExecuteReader())
+				//	{
+				//		var ordFileName = rdr.GetOrdinal("file_name");
+				//		var ordModified = rdr.GetOrdinal("modified");
+				//		while (rdr.Read())
+				//		{
+				//			var fileName = rdr.GetString(ordFileName);
+				//			var modified = rdr.GetDateTime(ordModified);
 
-						while (rdr.Read())
-						{
-							var file = GetOrCreateFile(db, rdr.GetString(ordFileName));
+				//			GetOrCreateFile(db, fileName).Modified = modified;
+				//		}
+				//	}
+				//}
 
-							var cls = new FFClass(this, file, db, rdr);
-							_classes[cls.Name] = cls;
-						}
-					}
-				}
+				// TODO: this should be moved to within the file
+				//// Load classes
+				//using (var cmd = db.CreateCommand("select f.file_name, c.* from class_ c inner join file_ f on f.id = c.file_id where c.app_id = @app_id"))
+				//{
+				//	cmd.Parameters.AddWithValue("@app_id", _id);
+				//	using (var rdr = cmd.ExecuteReader())
+				//	{
+				//		var ordName = rdr.GetOrdinal("name");
+				//		var ordFileName = rdr.GetOrdinal("file_name");
 
-				// Load functions
-				using (var cmd = db.CreateCommand("select fl.file_name, fn.* from func fn inner join file_ fl on fl.id = fn.file_id where fn.app_id = @app_id and fn.class_id is null"))
-				{
-					cmd.Parameters.AddWithValue("@app_id", _id);
-					using (var rdr = cmd.ExecuteReader())
-					{
-						var ordFileName = rdr.GetOrdinal("file_name");
+				//		while (rdr.Read())
+				//		{
+				//			var file = GetOrCreateFile(db, rdr.GetString(ordFileName));
 
-						while (rdr.Read())
-						{
-							var file = GetOrCreateFile(db, rdr.GetString(ordFileName));
-							var func = new FFFunction(this, file, null, rdr);
-							_functions[func.Name] = func;
-						}
-					}
-				}
+				//			var cls = new FFClass(this, file, db, rdr);
+				//			_classes[cls.Name] = cls;
+				//		}
+				//	}
+				//}
+
+				// TODO: this should be moved to within the file
+				//// Load functions
+				//using (var cmd = db.CreateCommand("select fl.file_name, fn.* from func fn inner join file_ fl on fl.id = fn.file_id where fn.app_id = @app_id and fn.class_id is null"))
+				//{
+				//	cmd.Parameters.AddWithValue("@app_id", _id);
+				//	using (var rdr = cmd.ExecuteReader())
+				//	{
+				//		var ordFileName = rdr.GetOrdinal("file_name");
+
+				//		while (rdr.Read())
+				//		{
+				//			var file = GetOrCreateFile(db, rdr.GetString(ordFileName));
+				//			var func = new FFFunction(this, file, null, rdr);
+				//			_functions[func.Name] = func;
+				//		}
+				//	}
+				//}
 			}
 			else // _id == 0
 			{
@@ -119,81 +164,160 @@ namespace DkTools.FunctionFileScanning
 			get { return _name; }
 		}
 
-		public void UpdateFunction(FFFile file, string className, FunctionDefinition funcDef, out FFClass classOut, out FFFunction funcOut)
-		{
-			if (funcDef == null) throw new ArgumentNullException("funcDef");
+		// TODO: remove
+		//public void UpdateFunction(FFFile file, string className, FunctionDefinition funcDef, out FFClass classOut, out FFFunction funcOut)
+		//{
+		//	if (funcDef == null) throw new ArgumentNullException("funcDef");
 
-			if (!string.IsNullOrEmpty(className))
+		//	if (!string.IsNullOrEmpty(className))
+		//	{
+		//		FFClass cls;
+		//		lock (_classes)
+		//		{
+		//			if (!_classes.TryGetValue(className, out cls))
+		//			{
+		//				cls = new FFClass(this, file, className);
+		//				_classes[className] = cls;
+		//			}
+		//		}
+
+		//		FFFunction func;
+		//		cls.UpdateFunction(funcDef, file, out func);
+
+		//		classOut = cls;
+		//		funcOut = func;
+		//	}
+		//	else
+		//	{
+		//		FFFunction func;
+		//		lock (_functions)
+		//		{
+		//			if (!_functions.TryGetValue(funcDef.Name, out func))
+		//			{
+		//				func = new FFFunction(this, file, null, funcDef);
+		//				_functions[funcDef.Name] = func;
+		//			}
+		//			else
+		//			{
+		//				func.UpdateFromDefinition(funcDef);
+		//			}
+		//		}
+
+		//		classOut = null;
+		//		funcOut = func;
+		//	}
+
+		//	lock (_definitionsLock)
+		//	{
+		//		_definitions = null;
+		//	}
+		//}
+
+		public void OnVisibleFileChanged(FFFile file)
+		{
+			_consolidatedFunctions = null;
+			_consolidatedClasses = null;
+
+			var fileNameLower = file.FileName.ToLower();
+			if (!_files.ContainsKey(fileNameLower))
 			{
-				FFClass cls;
-				lock (_classes)
+				_files[fileNameLower] = file;
+			}
+		}
+
+		public void OnInvisibleFileChanged(FFFile file)
+		{
+			var fileNameLower = file.FileName.ToLower();
+			_invisibleFiles[fileNameLower] = file.Modified;
+		}
+
+		private void CheckConsolidatedLists()
+		{
+			if (_consolidatedFunctions == null)
+			{
+				_consolidatedFunctions = new GroupedList<string, FFFunction>();
+				_consolidatedClasses = new GroupedList<string, FFClass>();
+				foreach (var file in _files.Values)
 				{
-					if (!_classes.TryGetValue(className, out cls))
+					foreach (var func in file.Functions)
 					{
-						cls = new FFClass(this, file, className);
-						_classes[className] = cls;
+						if (!func.Visible) continue;
+						_consolidatedFunctions.Add(func.Name, func);
 					}
+
+					var cls = file.Class;
+					if (cls != null) _consolidatedClasses.Add(cls.Name, cls);
 				}
-
-				FFFunction func;
-				cls.UpdateFunction(funcDef, file, out func);
-
-				classOut = cls;
-				funcOut = func;
-			}
-			else
-			{
-				FFFunction func;
-				lock (_functions)
-				{
-					if (!_functions.TryGetValue(funcDef.Name, out func))
-					{
-						func = new FFFunction(this, file, null, funcDef);
-						_functions[funcDef.Name] = func;
-					}
-					else
-					{
-						func.UpdateFromDefinition(funcDef);
-					}
-				}
-
-				classOut = null;
-				funcOut = func;
-			}
-
-			lock (_definitionsLock)
-			{
-				_definitions = null;
 			}
 		}
 
-		public IEnumerable<FFFunction> GetFunctionSignatures()
+		public GroupedList<string, FFFunction> Functions
 		{
-			lock (_functions)
+			get
 			{
-				return _functions.Values.ToArray();
+				CheckConsolidatedLists();
+				return _consolidatedFunctions;
 			}
 		}
 
-		public FFFunction GetFunction(string funcName)
+		public GroupedList<string, FFClass> Classes
 		{
-			lock (_functions)
+			get
 			{
-				FFFunction func;
-				if (_functions.TryGetValue(funcName, out func)) return func;
-				return null;
+				CheckConsolidatedLists();
+				return _consolidatedClasses;
 			}
 		}
 
-		public FFFunction GetFunction(string className, string funcName)
+		public IEnumerable<FFClass> GetClasses(string name)
 		{
-			if (string.IsNullOrEmpty(className)) return GetFunction(funcName);
+			CheckConsolidatedLists();
 
-			var cls = TryGetClass(className);
-			if (cls == null) return null;
-
-			return cls.TryGetFunction(funcName);
+			return _consolidatedClasses[name];
 		}
+
+		// TODO: remove
+		//public IEnumerable<FFFunction> GetFunctionSignatures()
+		//{
+		//	lock (_functions)
+		//	{
+		//		return _functions.Values.ToArray();
+		//	}
+		//}
+
+		//public IEnumerable<FFFunction> GetVisibleFunctions(string funcName)
+		//{
+		//	lock (_functions)
+		//	{
+		//		var list = _functions[funcName].ToArray();
+		//		return list;
+		//	}
+		//}
+
+		//public IEnumerable<FFClass> GetClass(string className)
+		//{
+		//}
+
+		//public IEnumerable<FFFunction> GetVisibleFunctions(string className, string funcName)
+		//{
+		//	if (string.IsNullOrEmpty(className))
+		//	{
+		//		return GetVisibleFunctions(funcName);
+		//	}
+
+		//	lock (_classes)
+		//	{
+		//		var list = new List<FFFunction>();
+		//		foreach (var cls in _classes[className])
+		//		{
+		//			foreach (var func in cls.GetMethods(funcName))
+		//			{
+		//				list.Add(func);
+		//			}
+		//		}
+		//		return list;
+		//	}
+		//}
 
 		/// <summary>
 		/// Gets a list of definitions that are available at the global scope.
@@ -203,25 +327,15 @@ namespace DkTools.FunctionFileScanning
 		{
 			get
 			{
-				lock (_definitionsLock)
+				CheckConsolidatedLists();
+				foreach (var func in _consolidatedFunctions.Values)
 				{
-					if (_definitions == null)
-					{
-						var defList = new List<Definition>();
-						foreach (var func in _functions.Values)
-						{
-							if (func.Definition.Privacy == CodeModel.FunctionPrivacy.Public) defList.Add(func.Definition);
-						}
+					yield return func.Definition;
+				}
 
-						// Create a distinct list of filenames that contain classes.
-						foreach (var cls in _classes.Values)
-						{
-							defList.Add(cls.ClassDefinition);
-						}
-
-						_definitions = defList.ToArray();
-					}
-					return _definitions;
+				foreach (var cls in _consolidatedClasses.Values)
+				{
+					yield return cls.ClassDefinition;
 				}
 			}
 		}
@@ -235,67 +349,89 @@ namespace DkTools.FunctionFileScanning
 				return true;
 			}
 
+			if (_invisibleFiles.TryGetValue(fileName.ToLower(), out modified)) return true;
+
 			modified = DateTime.MinValue;
 			return false;
 		}
 
-		public void MarkAllFunctionsForFileUnused(string fileName)
+		// TODO: remove
+		//public void MarkAllFunctionsForFileUnused(string fileName)
+		//{
+		//	string className;
+		//	if (FFUtil.FileNameIsClass(fileName, out className))
+		//	{
+		//		lock (_classes)
+		//		{
+		//			foreach (var cls in _classes[className])
+		//			{
+		//				cls.MarkAllUnused();
+		//			}
+		//		}
+		//	}
+		//	else
+		//	{
+		//		lock (_functions)
+		//		{
+		//			var funcName = Path.GetFileNameWithoutExtension(fileName);
+
+		//			List<string> funcsToRemove = null;
+		//			foreach (var node in _functions)
+		//			{
+		//				if (node.Key.Equals(funcName, StringComparison.OrdinalIgnoreCase))
+		//				{
+		//					node.Value.Used = false;
+		//				}
+		//			}
+
+		//			if (funcsToRemove != null)
+		//			{
+		//				foreach (var func in funcsToRemove) _functions.Remove(func);
+		//			}
+		//		}
+		//	}
+		//}
+
+		//public FFClass TryGetClass(string className)
+		//{
+		//	lock (_classes)
+		//	{
+		//		FFClass cls;
+		//		if (_classes.TryGetValue(className, out cls)) return cls;
+		//		return null;
+		//	}
+		//}
+
+		public FFFile GetFileForScan(FFDatabase db, string fileName)
 		{
-			string className;
-			if (FFUtil.FileNameIsClass(fileName, out className))
-			{
-				lock (_classes)
-				{
-					FFClass cls;
-					if (_classes.TryGetValue(className, out cls)) cls.MarkAllUnused();
-				}
-			}
-			else
-			{
-				lock (_functions)
-				{
-					var funcName = Path.GetFileNameWithoutExtension(fileName);
+			FFFile file;
+			var fileNameLower = fileName.ToLower();
 
-					List<string> funcsToRemove = null;
-					foreach (var node in _functions)
-					{
-						if (node.Key.Equals(funcName, StringComparison.OrdinalIgnoreCase))
-						{
-							node.Value.Used = false;
-						}
-					}
-
-					if (funcsToRemove != null)
-					{
-						foreach (var func in funcsToRemove) _functions.Remove(func);
-					}
-				}
-			}
-		}
-
-		public FFClass TryGetClass(string className)
-		{
-			lock (_classes)
-			{
-				FFClass cls;
-				if (_classes.TryGetValue(className, out cls)) return cls;
-				return null;
-			}
-		}
-
-		public FFFile GetOrCreateFile(FFDatabase db, string fileName)
-		{
 			lock (_files)
 			{
-				var fileNameLower = fileName.ToLower();
-				FFFile file;
-				if (!_files.TryGetValue(fileNameLower, out file))
-				{
-					file = new FFFile(db, this, fileName);
-					_files[fileNameLower] = file;
-				}
-				return file;
+				if (_files.TryGetValue(fileNameLower, out file)) return file;
 			}
+
+			// Check if this is in the list of invisible files.
+			if (_invisibleFiles.ContainsKey(fileNameLower))
+			{
+				using (var cmd = db.CreateCommand("select * from file_ where app_id = @app_id and file_name = @file_name"))
+				{
+					cmd.Parameters.AddWithValue("@app_id", _id);
+					cmd.Parameters.AddWithValue("@file_name", fileName);
+					using (var rdr = cmd.ExecuteReader(CommandBehavior.SingleRow))
+					{
+						if (rdr.Read())
+						{
+							return new FFFile(this, db, rdr);
+						}
+					}
+				}
+			}
+
+			// New file
+			file = new FFFile(this, fileName);
+			return file;
 		}
 
 		public FFFile TryGetFile(string fileName)
@@ -308,15 +444,15 @@ namespace DkTools.FunctionFileScanning
 			}
 		}
 
-		public FFFunction TryGetFunction(string name)
-		{
-			lock (_functions)
-			{
-				FFFunction func;
-				if (_functions.TryGetValue(name, out func)) return func;
-				return null;
-			}
-		}
+		//public FFFunction TryGetFunction(string name)
+		//{
+		//	lock (_functions)
+		//	{
+		//		FFFunction func;
+		//		if (_functions.TryGetValue(name, out func)) return func;
+		//		return null;
+		//	}
+		//}
 
 		public int Id
 		{
@@ -325,252 +461,325 @@ namespace DkTools.FunctionFileScanning
 
 		public void PurgeData(FFDatabase db)
 		{
-			PurgeUnusedRecords(db);
-			PurgeMissingFilesFromMemory(db);
-			PurgeOrphanedRecords(db);
-		}
-
-		private void PurgeUnusedRecords(FFDatabase db)
-		{
-			// Remove entries in memory that are known to be unused.
-
-			List<FFClass> classesToRemove = new List<FFClass>();
-			List<FFFunction> methodsToRemove = new List<FFFunction>();
-			lock (_classes)
+			// Remove files in memory that don't exist on disk.
 			{
-				foreach (var cls in _classes.Values)
+				var removeFiles = new List<FFFile>();
+
+				foreach (var file in _files.Values)
 				{
-					if (!cls.Used) classesToRemove.Add(cls);
-					methodsToRemove.AddRange(cls.UnusedFunctions);
-				}
-			}
-			foreach (var cls in classesToRemove)
-			{
-				Log.WriteDebug("Removing class from database: {0}", cls.Name);
-				cls.Remove(db);
-				_classes.Remove(cls.Name);
-			}
-			foreach (var func in methodsToRemove)
-			{
-				Log.WriteDebug("Removing method from database: {0}.{1}", func.Class.Name, func.Name);
-				func.Class.RemoveFunction(db, func);
-			}
-
-			FFFunction[] functionsToRemove;
-			lock (_functions)
-			{
-				functionsToRemove = (from f in _functions.Values where !f.Used select f).ToArray();
-			}
-			foreach (var func in functionsToRemove)
-			{
-				Log.WriteDebug("Removing function from database: {0}", func.Name);
-				func.Remove(db);
-				_functions.Remove(func.Name);
-			}
-
-			FFFile[] filesToRemove;
-			lock (_files)
-			{
-				filesToRemove = (from f in _files.Values where !f.Used select f).ToArray();
-			}
-			foreach (var file in filesToRemove)
-			{
-				Log.WriteDebug("Removing file from database: {0}", file.FileName);
-				file.Remove(db);
-				_files.Remove(file.FileName.ToLower());
-			}
-		}
-
-		private void PurgeOrphanedRecords(FFDatabase db)
-		{
-			// Scan the database to find entries not in memory.
-
-			var removeList = new List<int>();
-			using (var cmd = db.CreateCommand("select id, name from class_ where app_id = @app_id"))
-			{
-				cmd.Parameters.AddWithValue("@app_id", _id);
-				using (var rdr = cmd.ExecuteReader())
-				{
-					var ordId = rdr.GetOrdinal("id");
-					var ordName = rdr.GetOrdinal("name");
-					while (rdr.Read())
+					if (!File.Exists(file.FileName))
 					{
-						var id = rdr.GetInt32(ordId);
-						var name = rdr.GetString(ordName);
-
-						var cls = TryGetClass(name);
-						if (cls == null || cls.Id != id) removeList.Add(id);
+						removeFiles.Add(file);
 					}
 				}
-			}
-			foreach (var id in removeList)
-			{
-				Log.WriteDebug("Remove orphaned class from database: {0}", id);
-				db.ExecuteNonQuery(string.Format("delete class_ where id = {0}", id));
-			}
-			removeList.Clear();
 
-
-			using (var cmd = db.CreateCommand("select id, name from func where app_id = @app_id and class_id is null"))
-			{
-				cmd.Parameters.AddWithValue("@app_id", _id);
-				using (var rdr = cmd.ExecuteReader())
+				foreach (var removeFile in removeFiles)
 				{
-					var ordId = rdr.GetOrdinal("id");
-					var ordName = rdr.GetOrdinal("name");
-					while (rdr.Read())
-					{
-						var id = rdr.GetInt32(ordId);
-						var name = rdr.GetString(ordName);
-
-						var func = TryGetFunction(name);
-						if (func == null || func.Id != id) removeList.Add(id);
-					}
+					_files.Remove(removeFile.FileName.ToLower());
+					removeFile.Remove(db);
 				}
 			}
-			using (var cmd = db.CreateCommand("select func.id, func.name, class_.name as class_name from func inner join class_ on class_.id = func.class_id where func.app_id = @app_id and func.class_id is not null"))
-			{
-				cmd.Parameters.AddWithValue("@app_id", _id);
-				using (var rdr = cmd.ExecuteReader())
-				{
-					var ordId = rdr.GetOrdinal("id");
-					var ordName = rdr.GetOrdinal("name");
-					var ordClassName = rdr.GetOrdinal("class_name");
-					while (rdr.Read())
-					{
-						var id = rdr.GetInt32(ordId);
-						var funcName = rdr.GetString(ordName);
-						var className = rdr.GetString(ordClassName);
 
-						var cls = TryGetClass(className);
-						if (cls == null) removeList.Add(id);
-						else
+			// Remove files in the database that aren't in memory.
+			{
+				var removeFiles = new List<int>();
+
+				using (var cmd = db.CreateCommand("select id, file_name from file_ where app_id = @app_id"))
+				{
+					cmd.Parameters.AddWithValue("@app_id", _id);
+					using (var rdr = cmd.ExecuteReader())
+					{
+						var ordId = rdr.GetOrdinal("id");
+						var ordFileName = rdr.GetOrdinal("file_name");
+
+						while (rdr.Read())
 						{
-							var func = cls.TryGetFunction(funcName);
-							if (func == null || func.Id != id) removeList.Add(id);
-						}
-					}
-				}
-			}
-			foreach (var id in removeList)
-			{
-				Log.WriteDebug("Remove orphaned function from database: {0}", id);
-				db.ExecuteNonQuery(string.Format("delete func where id = {0}", id));
-			}
-			removeList.Clear();
+							var id = rdr.GetInt32(ordId);
+							var fileName = rdr.GetString(ordFileName);
 
-
-			using (var cmd = db.CreateCommand("select id, file_name from file_ where app_id = @app_id"))
-			{
-				cmd.Parameters.AddWithValue("@app_id", _id);
-				using (var rdr = cmd.ExecuteReader())
-				{
-					var ordId = rdr.GetOrdinal("id");
-					var ordFileName = rdr.GetOrdinal("file_name");
-					while (rdr.Read())
-					{
-						var id = rdr.GetInt32(ordId);
-						var fileName = rdr.GetString(ordFileName);
-
-						var file = TryGetFile(fileName);
-						if (file == null || file.Id != id) removeList.Add(id);
-					}
-				}
-			}
-			foreach (var id in removeList)
-			{
-				Log.WriteDebug("Remove orphaned file from database: {0}", id);
-				db.ExecuteNonQuery(string.Format("delete file_ where id = {0}", id));
-			}
-		}
-
-		private void PurgeMissingFilesFromMemory(FFDatabase db)
-		{
-			using (var cmd = db.CreateCommand("select id, file_name from file_ where app_id = @app_id"))
-			{
-				cmd.Parameters.AddWithValue("@app_id", _id);
-				using (var rdr = cmd.ExecuteReader())
-				{
-					var ordId = rdr.GetOrdinal("id");
-					var ordFileName = rdr.GetOrdinal("file_name");
-					while (rdr.Read())
-					{
-						var fileId = rdr.GetInt32(ordId);
-						var fileName = rdr.GetString(ordFileName);
-
-						PurgeFileFromMemoryIfMissing(db, fileId, fileName);
-					}
-				}
-			}
-		}
-
-		private void PurgeFileFromMemoryIfMissing(FFDatabase db, int fileId, string fileName)
-		{
-			if (File.Exists(fileName)) return;
-
-			// Check if the drive exists. If the drive doesn't exist, then don't purge the file just yet because it might not be mounted.
-			var drivePath = Path.GetPathRoot(fileName);
-			if (!Directory.Exists(drivePath)) return;
-
-			// Purge the file
-			lock (_files)
-			{
-				var fileNameLower = fileName.ToLower();
-				if (_files.ContainsKey(fileNameLower))
-				{
-					Log.WriteDebug("Purging missing file from memory: {0}", fileName);
-					_files.Remove(fileNameLower);
-				}
-			}
-
-			using (var cmd = db.CreateCommand("select id, name from class_ where file_id = @file_id"))
-			{
-				cmd.Parameters.AddWithValue("@file_id", fileId);
-				using (var rdr = cmd.ExecuteReader())
-				{
-					var ordId = rdr.GetOrdinal("id");
-					var ordName = rdr.GetOrdinal("name");
-					while (rdr.Read())
-					{
-						var classId = rdr.GetInt32(ordId);
-						var className = rdr.GetString(ordName);
-
-						lock (_classes)
-						{
-							FFClass cls;
-							if (_classes.TryGetValue(className, out cls) && cls.Id == classId)
+							var fileNameLower = fileName.ToLower();
+							if (!_files.ContainsKey(fileNameLower) &&
+								!_invisibleFiles.ContainsKey(fileNameLower))
 							{
-								Log.WriteDebug("Purging class from missing file from memory: {0}", className);
-								_classes.Remove(className);
+								removeFiles.Add(id);
 							}
 						}
 					}
 				}
-			}
 
-			using (var cmd = db.CreateCommand("select id, name from func where file_id = @file_id"))
-			{
-				cmd.Parameters.AddWithValue("@file_id", fileId);
-				using (var rdr = cmd.ExecuteReader())
+				foreach (var id in removeFiles)
 				{
-					var ordId = rdr.GetOrdinal("id");
-					var ordName = rdr.GetOrdinal("name");
-					while (rdr.Read())
+					using (var cmd = db.CreateCommand("delete from file_ where id = @id"))
 					{
-						var funcId = rdr.GetInt32(ordId);
-						var funcName = rdr.GetString(ordName);
+						cmd.Parameters.AddWithValue("@id", id);
+						cmd.ExecuteNonQuery();
+					}
 
-						lock (_functions)
-						{
-							FFFunction func;
-							if (_functions.TryGetValue(funcName, out func) && func.Id == funcId)
-							{
-								Log.WriteDebug("Purging function from missing file from memory: {0}", funcName);
-								_functions.Remove(funcName);
-							}
-						}
+					using (var cmd = db.CreateCommand("delete from func where file_id = @id"))
+					{
+						cmd.Parameters.AddWithValue("@id", id);
+						cmd.ExecuteNonQuery();
 					}
 				}
+			}
+		}
+
+		//private void PurgeUnusedRecords(FFDatabase db)
+		//{
+		//	// TODO: remove
+		//	//// Remove entries in memory that are known to be unused.
+
+		//	//List<FFClass> classesToRemove = new List<FFClass>();
+		//	//List<FFFunction> methodsToRemove = new List<FFFunction>();
+		//	//lock (_classes)
+		//	//{
+		//	//	foreach (var cls in _classes.Values)
+		//	//	{
+		//	//		if (!cls.Used) classesToRemove.Add(cls);
+		//	//		methodsToRemove.AddRange(cls.UnusedFunctions);
+		//	//	}
+		//	//}
+		//	//foreach (var cls in classesToRemove)
+		//	//{
+		//	//	Log.WriteDebug("Removing class from database: {0}", cls.Name);
+		//	//	cls.Remove(db);
+		//	//	_classes.Remove(cls.Name);
+		//	//}
+		//	//foreach (var func in methodsToRemove)
+		//	//{
+		//	//	Log.WriteDebug("Removing method from database: {0}.{1}", func.Class.Name, func.Name);
+		//	//	func.Class.RemoveFunction(db, func);
+		//	//}
+
+		//	//FFFunction[] functionsToRemove;
+		//	//lock (_functions)
+		//	//{
+		//	//	functionsToRemove = (from f in _functions.Values where !f.Used select f).ToArray();
+		//	//}
+		//	//foreach (var func in functionsToRemove)
+		//	//{
+		//	//	Log.WriteDebug("Removing function from database: {0}", func.Name);
+		//	//	func.Remove(db);
+		//	//	_functions.Remove(func.Name);
+		//	//}
+
+		//	//FFFile[] filesToRemove;
+		//	//lock (_files)
+		//	//{
+		//	//	filesToRemove = (from f in _files.Values where !f.Used select f).ToArray();
+		//	//}
+		//	//foreach (var file in filesToRemove)
+		//	//{
+		//	//	Log.WriteDebug("Removing file from database: {0}", file.FileName);
+		//	//	file.Remove(db);
+		//	//	_files.Remove(file.FileName.ToLower());
+		//	//}
+		//}
+
+		// TODO: remove
+		//private void PurgeOrphanedRecords(FFDatabase db)
+		//{
+		//	// Scan the database to find entries not in memory.
+
+		//	var removeList = new List<int>();
+		//	using (var cmd = db.CreateCommand("select id, name from class_ where app_id = @app_id"))
+		//	{
+		//		cmd.Parameters.AddWithValue("@app_id", _id);
+		//		using (var rdr = cmd.ExecuteReader())
+		//		{
+		//			var ordId = rdr.GetOrdinal("id");
+		//			var ordName = rdr.GetOrdinal("name");
+		//			while (rdr.Read())
+		//			{
+		//				var id = rdr.GetInt32(ordId);
+		//				var name = rdr.GetString(ordName);
+
+		//				var cls = TryGetClass(name);
+		//				if (cls == null || cls.Id != id) removeList.Add(id);
+		//			}
+		//		}
+		//	}
+		//	foreach (var id in removeList)
+		//	{
+		//		Log.WriteDebug("Remove orphaned class from database: {0}", id);
+		//		db.ExecuteNonQuery(string.Format("delete class_ where id = {0}", id));
+		//	}
+		//	removeList.Clear();
+
+
+		//	using (var cmd = db.CreateCommand("select id, name from func where app_id = @app_id and class_id is null"))
+		//	{
+		//		cmd.Parameters.AddWithValue("@app_id", _id);
+		//		using (var rdr = cmd.ExecuteReader())
+		//		{
+		//			var ordId = rdr.GetOrdinal("id");
+		//			var ordName = rdr.GetOrdinal("name");
+		//			while (rdr.Read())
+		//			{
+		//				var id = rdr.GetInt32(ordId);
+		//				var name = rdr.GetString(ordName);
+
+		//				var func = TryGetFunction(name);
+		//				if (func == null || func.Id != id) removeList.Add(id);
+		//			}
+		//		}
+		//	}
+		//	using (var cmd = db.CreateCommand("select func.id, func.name, class_.name as class_name from func inner join class_ on class_.id = func.class_id where func.app_id = @app_id and func.class_id is not null"))
+		//	{
+		//		cmd.Parameters.AddWithValue("@app_id", _id);
+		//		using (var rdr = cmd.ExecuteReader())
+		//		{
+		//			var ordId = rdr.GetOrdinal("id");
+		//			var ordName = rdr.GetOrdinal("name");
+		//			var ordClassName = rdr.GetOrdinal("class_name");
+		//			while (rdr.Read())
+		//			{
+		//				var id = rdr.GetInt32(ordId);
+		//				var funcName = rdr.GetString(ordName);
+		//				var className = rdr.GetString(ordClassName);
+
+		//				var cls = TryGetClass(className);
+		//				if (cls == null) removeList.Add(id);
+		//				else
+		//				{
+		//					var func = cls.TryGetFunction(funcName);
+		//					if (func == null || func.Id != id) removeList.Add(id);
+		//				}
+		//			}
+		//		}
+		//	}
+		//	foreach (var id in removeList)
+		//	{
+		//		Log.WriteDebug("Remove orphaned function from database: {0}", id);
+		//		db.ExecuteNonQuery(string.Format("delete func where id = {0}", id));
+		//	}
+		//	removeList.Clear();
+
+
+		//	using (var cmd = db.CreateCommand("select id, file_name from file_ where app_id = @app_id"))
+		//	{
+		//		cmd.Parameters.AddWithValue("@app_id", _id);
+		//		using (var rdr = cmd.ExecuteReader())
+		//		{
+		//			var ordId = rdr.GetOrdinal("id");
+		//			var ordFileName = rdr.GetOrdinal("file_name");
+		//			while (rdr.Read())
+		//			{
+		//				var id = rdr.GetInt32(ordId);
+		//				var fileName = rdr.GetString(ordFileName);
+
+		//				var file = TryGetFile(fileName);
+		//				if (file == null || file.Id != id) removeList.Add(id);
+		//			}
+		//		}
+		//	}
+		//	foreach (var id in removeList)
+		//	{
+		//		Log.WriteDebug("Remove orphaned file from database: {0}", id);
+		//		db.ExecuteNonQuery(string.Format("delete file_ where id = {0}", id));
+		//	}
+		//}
+
+		//private void PurgeMissingFilesFromMemory(FFDatabase db)
+		//{
+		//	using (var cmd = db.CreateCommand("select id, file_name from file_ where app_id = @app_id"))
+		//	{
+		//		cmd.Parameters.AddWithValue("@app_id", _id);
+		//		using (var rdr = cmd.ExecuteReader())
+		//		{
+		//			var ordId = rdr.GetOrdinal("id");
+		//			var ordFileName = rdr.GetOrdinal("file_name");
+		//			while (rdr.Read())
+		//			{
+		//				var fileId = rdr.GetInt32(ordId);
+		//				var fileName = rdr.GetString(ordFileName);
+
+		//				PurgeFileFromMemoryIfMissing(db, fileId, fileName);
+		//			}
+		//		}
+		//	}
+		//}
+
+		//private void PurgeFileFromMemoryIfMissing(FFDatabase db, int fileId, string fileName)
+		//{
+		//	if (File.Exists(fileName)) return;
+
+		//	// Check if the drive exists. If the drive doesn't exist, then don't purge the file just yet because it might not be mounted.
+		//	var drivePath = Path.GetPathRoot(fileName);
+		//	if (!Directory.Exists(drivePath)) return;
+
+		//	// Purge the file
+		//	lock (_files)
+		//	{
+		//		var fileNameLower = fileName.ToLower();
+		//		if (_files.ContainsKey(fileNameLower))
+		//		{
+		//			Log.WriteDebug("Purging missing file from memory: {0}", fileName);
+		//			_files.Remove(fileNameLower);
+		//		}
+		//	}
+
+		//	using (var cmd = db.CreateCommand("select id, name from class_ where file_id = @file_id"))
+		//	{
+		//		cmd.Parameters.AddWithValue("@file_id", fileId);
+		//		using (var rdr = cmd.ExecuteReader())
+		//		{
+		//			var ordId = rdr.GetOrdinal("id");
+		//			var ordName = rdr.GetOrdinal("name");
+		//			while (rdr.Read())
+		//			{
+		//				var classId = rdr.GetInt32(ordId);
+		//				var className = rdr.GetString(ordName);
+
+		//				lock (_classes)
+		//				{
+		//					FFClass cls;
+		//					if (_classes.TryGetValue(className, out cls) && cls.Id == classId)
+		//					{
+		//						Log.WriteDebug("Purging class from missing file from memory: {0}", className);
+		//						_classes.Remove(className);
+		//					}
+		//				}
+		//			}
+		//		}
+		//	}
+
+		//	using (var cmd = db.CreateCommand("select id, name from func where file_id = @file_id"))
+		//	{
+		//		cmd.Parameters.AddWithValue("@file_id", fileId);
+		//		using (var rdr = cmd.ExecuteReader())
+		//		{
+		//			var ordId = rdr.GetOrdinal("id");
+		//			var ordName = rdr.GetOrdinal("name");
+		//			while (rdr.Read())
+		//			{
+		//				var funcId = rdr.GetInt32(ordId);
+		//				var funcName = rdr.GetString(ordName);
+
+		//				lock (_functions)
+		//				{
+		//					FFFunction func;
+		//					if (_functions.TryGetValue(funcName, out func) && func.Id == funcId)
+		//					{
+		//						Log.WriteDebug("Purging function from missing file from memory: {0}", funcName);
+		//						_functions.Remove(funcName);
+		//					}
+		//				}
+		//			}
+		//		}
+		//	}
+		//}
+
+		public FFSearcher CreateSearcher()
+		{
+			try
+			{
+				return new FFSearcher(this);
+			}
+			catch (Exception ex)
+			{
+				Log.WriteEx(ex);
+				return null;
 			}
 		}
 	}

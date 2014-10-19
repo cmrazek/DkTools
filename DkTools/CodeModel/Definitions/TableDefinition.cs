@@ -90,5 +90,10 @@ namespace DkTools.CodeModel.Definitions
 			_comment = comment;
 			_desc = null;
 		}
+
+		public override string PickText
+		{
+			get { return Name; }
+		}
 	}
 }

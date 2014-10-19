@@ -30,7 +30,7 @@ namespace DkTools.Navigation
 		private void Window_Loaded(object sender, RoutedEventArgs e)
 		{
 			c_defList.ItemsSource = _defs;
-
+			
 			if (c_defList.Items.Count > 0) c_defList.SelectedIndex = 0;
 			c_defList.Focus();
 		}

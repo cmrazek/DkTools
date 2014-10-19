@@ -99,9 +99,60 @@ namespace DkTools.Navigation
 				}
 				else Shell.SetStatusText("Table not found.");
 			}
+			else if (def is FunctionDefinition)
+			{
+				var funcDef = def as FunctionDefinition;
+
+				var funcList = new List<FunctionDefinition>();
+				funcList.Add(funcDef);
+
+				if (funcDef.Extern)
+				{
+					using (var searcher = ProbeToolsPackage.Instance.FunctionFileScanner.CurrentApp.CreateSearcher())
+					{
+						if (searcher != null)
+						{
+							foreach (var def2 in searcher.SearchForFunctionDefinitions(funcDef.Name))
+							{
+								if (def2 == def || (def2.SourceFileName == def.SourceFileName && def2.SourceStartPos == def.SourceStartPos))
+								{
+									continue;
+								}
+								funcList.Add(def2);
+							}
+						}
+					}
+				}
+
+				PromptDefinitions(funcList);
+			}
 			else if (!string.IsNullOrWhiteSpace(def.SourceFileName))
 			{
 				Shell.OpenDocument(def.SourceFileName, def.SourceStartPos);
+			}
+		}
+
+		private static void PromptDefinitions(IEnumerable<Definition> defs)
+		{
+			var defList = defs.ToArray();
+			if (defList.Length == 0) return;
+
+			if (defList.Length == 1)
+			{
+				Shell.OpenDocument(defList[0].SourceFileName, defList[0].SourceStartPos);
+				return;
+			}
+
+			var dlg = new DefinitionPickerWindow();
+			dlg.Owner = System.Windows.Application.Current.MainWindow;
+			dlg.Definitions = defList;
+			if (dlg.ShowDialog() == true)
+			{
+				var selDef = dlg.SelectedItem;
+				if (selDef != null)
+				{
+					Shell.OpenDocument(selDef.SourceFileName, selDef.SourceStartPos);
+				}
 			}
 		}
 	}

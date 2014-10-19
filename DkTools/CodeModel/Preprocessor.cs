@@ -530,6 +530,8 @@ namespace DkTools.CodeModel
 			Preprocess(parms);
 
 			p.writer.Append(includeSource);
+
+			_store.AddIncludeDependency(includeNode.FullPathName);
 		}
 
 		private void ProcessIfDef(PreprocessorParams p, bool activeIfDefined)

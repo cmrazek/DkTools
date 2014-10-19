@@ -82,5 +82,7 @@ namespace DkTools
 		public const int MaxTableNameLength = 8;
 
 		public const int KeyTimeout = 1000;	// milliseconds
+
+		public static readonly DateTime ZeroDate = new DateTime(1900, 1, 1);
 	}
 }

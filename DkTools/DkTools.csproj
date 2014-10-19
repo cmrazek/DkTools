@@ -390,11 +390,13 @@
     <Compile Include="FunctionFileScanning\FFFunction.cs" />
     <Compile Include="FunctionFileScanning\FFApp.cs" />
     <Compile Include="FunctionFileScanning\FFClass.cs" />
+    <Compile Include="FunctionFileScanning\FFSearcher.cs" />
     <Compile Include="FunctionFileScanning\FunctionFileDatabase.cs">
       <DependentUpon>FunctionFileDatabase.xsd</DependentUpon>
     </Compile>
     <Compile Include="FunctionFileScanning\FFUtil.cs" />
     <Compile Include="FunctionFileScanning\FFScanner.cs" />
+    <Compile Include="GroupedList.cs" />
     <Compile Include="Guids.cs" />
     <Compile Include="IniFile.cs" />
     <Compile Include="LockedValue.cs" />

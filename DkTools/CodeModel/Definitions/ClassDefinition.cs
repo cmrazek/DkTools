@@ -41,5 +41,10 @@ namespace DkTools.CodeModel.Definitions
 				return WpfAttribute("Class", Name);
 			}
 		}
+
+		public override string PickText
+		{
+			get { return QuickInfoTextStr; }
+		}
 	}
 }

@@ -112,5 +112,10 @@ namespace DkTools.CodeModel.Definitions
 		{
 			get { return _fieldName; }
 		}
+
+		public override string PickText
+		{
+			get { return string.Concat(_tableName, ".", _fieldName); }
+		}
 	}
 }

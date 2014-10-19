@@ -5,6 +5,7 @@ using System.Data.SqlServerCe;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using DkTools.CodeModel;
 
 namespace DkTools.FunctionFileScanning
 {
@@ -20,8 +21,9 @@ namespace DkTools.FunctionFileScanning
 		private CodeModel.DataType _dataType;
 		private CodeModel.FunctionPrivacy _privacy;
 		private CodeModel.Definitions.FunctionDefinition _def;
-		private bool _used = true;
+		//private bool _used = true;
 		private string _devDesc;
+		private bool _visible;
 
 		private FFFunction()
 		{ }
@@ -41,12 +43,15 @@ namespace DkTools.FunctionFileScanning
 			_sig = def.Signature;
 			_span = new CodeModel.Span(def.SourceStartPos, def.SourceStartPos);
 			_dataType = def.DataType;
+
 #if DEBUG
 			if (_dataType == null) throw new InvalidOperationException("Function data type is null.");
 #endif
 			_privacy = def.Privacy;
 			_devDesc = def.DevDescription;
 			_def = def;
+
+			UpdateVisibility();
 		}
 
 		public FFFunction(FFApp app, FFFile file, FFClass cls, SqlCeDataReader rdr)
@@ -87,6 +92,41 @@ namespace DkTools.FunctionFileScanning
 
 			_def = new CodeModel.Definitions.FunctionDefinition(_class != null ? _class.Name : null, _name, _file.FileName, _span.Start, _dataType, _sig,
 					0, 0, 0, CodeModel.Span.Empty, _privacy, true, _devDesc);
+
+			UpdateVisibility();
+		}
+
+		public static CodeModel.Definitions.FunctionDefinition CreateFunctionDefinitionFromSqlReader(SqlCeDataReader rdr, string fileName)
+		{
+			var className = FileContextUtil.GetClassNameFromFileName(fileName);
+
+			var funcName = rdr.GetString(rdr.GetOrdinal("name"));
+			var nameSpan = Span.FromSaveString(rdr.GetString(rdr.GetOrdinal("span")));
+
+			var dataTypeText = rdr.GetString(rdr.GetOrdinal("data_type"));
+			var optionsValue = rdr["completion_options"];
+			DataType dataType;
+			if (!Convert.IsDBNull(optionsValue))
+			{
+				var options = (from o in rdr.GetString(rdr.GetOrdinal("completion_options")).Split('|') select new CodeModel.Definitions.EnumOptionDefinition(o)).ToArray();
+				dataType = new CodeModel.DataType(dataTypeText, options, dataTypeText);
+			}
+			else
+			{
+				dataType = new CodeModel.DataType(dataTypeText);
+			}
+
+			var sig = rdr.GetString(rdr.GetOrdinal("sig"));
+
+			FunctionPrivacy privacy;
+			var str = rdr.GetString(rdr.GetOrdinal("privacy"));
+			if (!Enum.TryParse<CodeModel.FunctionPrivacy>(str, out privacy)) privacy = CodeModel.FunctionPrivacy.Public;
+
+			string devDesc = null;
+			var devDescValue = rdr["description"];
+			if (!Convert.IsDBNull(devDescValue)) devDesc = Convert.ToString(devDescValue);
+
+			return new CodeModel.Definitions.FunctionDefinition(className, funcName, fileName, nameSpan.Start, dataType, sig, 0, 0, 0, Span.Empty, privacy, true, devDesc);
 		}
 
 		public void UpdateFromDefinition(CodeModel.Definitions.FunctionDefinition def)
@@ -101,6 +141,24 @@ namespace DkTools.FunctionFileScanning
 			_privacy = def.Privacy;
 			_def = def;
 			_devDesc = def.DevDescription;
+
+			UpdateVisibility();
+		}
+
+		private void UpdateVisibility()
+		{
+			if (_file.FileContext.IsClass())
+			{
+				_visible = _def.Privacy == FunctionPrivacy.Public;
+			}
+			else if (_file.FileContext == FileContext.Function)
+			{
+				_visible = _name.Equals(System.IO.Path.GetFileNameWithoutExtension(_file.FileName), StringComparison.OrdinalIgnoreCase);
+			}
+			else
+			{
+				_visible = false;
+			}
 		}
 
 		public string Name
@@ -139,7 +197,8 @@ namespace DkTools.FunctionFileScanning
 
 			if (_id != 0)
 			{
-				using (var cmd = db.CreateCommand("update func set file_id = @file_id, name = @name, sig = @sig, span = @span, data_type = @data_type, completion_options = @completion_options, privacy = @privacy, description = @dev_desc where id = @id"))
+				using (var cmd = db.CreateCommand("update func set file_id = @file_id, name = @name, sig = @sig, span = @span, data_type = @data_type, " +
+					"completion_options = @completion_options, privacy = @privacy, description = @dev_desc, visible = @visible where id = @id"))
 				{
 					cmd.Parameters.AddWithValue("@id", _id);
 					cmd.Parameters.AddWithValue("@file_id", _file.Id);
@@ -152,16 +211,15 @@ namespace DkTools.FunctionFileScanning
 					cmd.Parameters.AddWithValue("@privacy", _privacy.ToString());
 					if (string.IsNullOrEmpty(_devDesc)) cmd.Parameters.AddWithValue("@dev_desc", DBNull.Value);
 					else cmd.Parameters.AddWithValue("@dev_desc", _devDesc);
+					cmd.Parameters.AddWithValue("@visible", _visible ? 1 : 0);
 					cmd.ExecuteNonQuery();
 				}
 			}
 			else
 			{
-				using (var cmd = db.CreateCommand(@"insert into func (class_id, name, app_id, file_id, sig, span, data_type, completion_options, privacy, description)
-													values (@class_id, @name, @app_id, @file_id, @sig, @span, @data_type, @completion_options, @privacy, @dev_desc)"))
+				using (var cmd = db.CreateCommand(@"insert into func (name, app_id, file_id, sig, span, data_type, completion_options, privacy, description, visible)
+													values (@name, @app_id, @file_id, @sig, @span, @data_type, @completion_options, @privacy, @dev_desc, @visible)"))
 				{
-					if (_class != null) cmd.Parameters.AddWithValue("@class_id", _class.Id);
-					else cmd.Parameters.AddWithValue("@class_id", DBNull.Value);
 					cmd.Parameters.AddWithValue("@name", _name);
 					cmd.Parameters.AddWithValue("@app_id", _app.Id);
 					cmd.Parameters.AddWithValue("@file_id", _file.Id);
@@ -173,24 +231,25 @@ namespace DkTools.FunctionFileScanning
 					cmd.Parameters.AddWithValue("@privacy", _privacy.ToString());
 					if (string.IsNullOrEmpty(_devDesc)) cmd.Parameters.AddWithValue("@dev_desc", DBNull.Value);
 					else cmd.Parameters.AddWithValue("@dev_desc", _devDesc);
+					cmd.Parameters.AddWithValue("@visible", _visible ? 1 : 0);
 					cmd.ExecuteNonQuery();
 					_id = db.QueryIdentityInt();
 				}
 			}
 		}
 
-		public bool Used
-		{
-			get { return _used; }
-			set { _used = value; }
-		}
+		//public bool Used
+		//{
+		//	get { return _used; }
+		//	set { _used = value; }
+		//}
 
-		public void MarkUsed()
-		{
-			_used = true;
-			_file.Used = true;
-			if (_class != null) _class.Used = true;
-		}
+		//public void MarkUsed()
+		//{
+		//	_used = true;
+		//	_file.Used = true;
+		//	if (_class != null) _class.Used = true;
+		//}
 
 		public void Remove(FFDatabase db)
 		{
@@ -207,6 +266,11 @@ namespace DkTools.FunctionFileScanning
 		public int Id
 		{
 			get { return _id; }
+		}
+
+		public bool Visible
+		{
+			get { return _visible; }
 		}
 	}
 }

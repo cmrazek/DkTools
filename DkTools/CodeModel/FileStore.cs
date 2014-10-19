@@ -14,6 +14,7 @@ namespace DkTools.CodeModel
 	{
 		private Dictionary<string, IncludeFile> _sameDirIncludeFiles = new Dictionary<string, IncludeFile>();
 		private Dictionary<string, IncludeFile> _globalIncludeFiles = new Dictionary<string, IncludeFile>();
+		private List<string> _includeDependencies = new List<string>();
 
 		private CodeModel _model;
 		private Guid _guid;
@@ -362,6 +363,16 @@ namespace DkTools.CodeModel
 				if (_stdLibModel == null) CreateStdLibModel();
 				return _stdLibModel;
 			}
+		}
+
+		public void AddIncludeDependency(string fullPathName)
+		{
+			_includeDependencies.Add(fullPathName);
+		}
+
+		public IEnumerable<string> IncludeDependencies
+		{
+			get { return _includeDependencies; }
 		}
 
 		public sealed class IncludeFile

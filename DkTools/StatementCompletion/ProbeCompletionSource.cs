@@ -279,8 +279,7 @@ namespace DkTools.StatementCompletion
 
 			// Class and method
 			var ffScanner = ProbeToolsPackage.Instance.FunctionFileScanner;
-			var cls = ffScanner.GetClass(word1);
-			if (cls != null)
+			foreach (var cls in ffScanner.CurrentApp.GetClasses(word1))
 			{
 				foreach (var def in cls.FunctionDefinitions)
 				{
@@ -647,7 +646,8 @@ namespace DkTools.StatementCompletion
 			// Don't show functions when on the root.
 			if (tokens.Any(t => !t.IsOnRoot))
 			{
-				foreach (var f in ProbeToolsPackage.Instance.FunctionFileScanner.GlobalDefinitions)
+				var ffApp = ProbeToolsPackage.Instance.FunctionFileScanner.CurrentApp;
+				foreach (var f in ffApp.GlobalDefinitions)
 				{
 					if (!f.CompletionVisible) continue;
 					yield return CreateCompletion(f);

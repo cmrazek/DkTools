@@ -21,6 +21,7 @@ namespace DkTools.CodeModel.Definitions
 		public abstract Classifier.ProbeClassifierType ClassifierType { get; }
 		public abstract string QuickInfoTextStr { get; }
 		public abstract UIElement QuickInfoTextWpf { get; }
+		public abstract string PickText { get; }
 
 		private const int k_maxWpfWidth = 600;
 
@@ -56,6 +57,18 @@ namespace DkTools.CodeModel.Definitions
 		public int SourceStartPos
 		{
 			get { return _sourceStartPos; }
+		}
+
+		public string LocationText
+		{
+			get
+			{
+				if (!string.IsNullOrEmpty(_sourceFileName))
+				{
+					return _sourceFileName;
+				}
+				return "(unknown)";
+			}
 		}
 
 		public void DumpTree(System.Xml.XmlWriter xml)

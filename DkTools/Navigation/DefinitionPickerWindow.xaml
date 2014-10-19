@@ -5,7 +5,7 @@
 	<Window.Resources>
 		<DataTemplate x:Key="listBoxTemplate">
 			<StackPanel Orientation="Vertical">
-				<TextBlock Text="{Binding CompletionDescription}"/>
+				<TextBlock Text="{Binding PickText}"/>
 				<TextBlock Text="{Binding LocationText}" Foreground="{x:Static SystemColors.GrayTextBrush}"/>
 			</StackPanel>
 		</DataTemplate>

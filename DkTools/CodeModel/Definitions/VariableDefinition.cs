@@ -105,5 +105,10 @@ namespace DkTools.CodeModel.Definitions
 			base.DumpTreeInner(xml);
 			_dataType.DumpTree(xml);
 		}
+
+		public override string PickText
+		{
+			get { return QuickInfoTextStr; }
+		}
 	}
 }

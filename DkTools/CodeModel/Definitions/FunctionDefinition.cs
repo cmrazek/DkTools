@@ -177,5 +177,10 @@ namespace DkTools.CodeModel.Definitions
 		{
 			get { return _devDesc; }
 		}
+
+		public override string PickText
+		{
+			get { return Signature; }
+		}
 	}
 }

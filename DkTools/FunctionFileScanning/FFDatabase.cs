@@ -16,32 +16,27 @@ namespace DkTools.FunctionFileScanning
 	internal class FFDatabase : IDisposable
 	{
 		private static readonly string[] k_databaseInitScript = {
+
 @"create table app
 (
 	id			int				identity not null primary key,
 	name		nvarchar(255)	not null
 );",
 "create unique index app_ix_name on app (name)",
+
 @"create table file_
 (
 	id			int				identity not null primary key,
 	app_id		int				not null,
 	file_name	nvarchar(260)	not null,
-	modified	datetime		not null
+	modified	datetime		not null,
+	visible		tinyint			not null
 );",
 "create unique index file_ix_appfilename on file_ (app_id, file_name)",
-@"create table class_
-(
-	id			int			identity not null primary key,
-	name		nvarchar(8)	not null,
-	app_id		int			not null,
-	file_id		int			not null
-);",
-"create unique index class_ix_name on class_ (app_id, name)",
+
 @"create table func
 (
 	id					int				identity not null primary key,
-	class_id			int,
 	name				nvarchar(100)	not null,
 	app_id				int				not null,
 	file_id				int				not null,
@@ -50,12 +45,31 @@ namespace DkTools.FunctionFileScanning
 	data_type			nvarchar(4000)	not null,
 	completion_options	nvarchar(4000),
 	privacy				nvarchar(10)	not null,
-	description			nvarchar(4000)
+	description			nvarchar(4000),
+	visible				tinyint			not null
 );",
-"create unique index func_ix_classfunc on func (app_id, class_id, name);" };
+"create index func_ix_appid on func (app_id, name)",
 
-		public const string DatabaseFileName = "DkScan_v4.sdf";
-		public static readonly string[] OldDatabaseFileNames = new string[] { "DkScan.sdf", "DkScan_v2.sdf", "DkScan_v3.sdf" };
+@"create table include_depends
+(
+	id					int				identity not null primary key,
+	app_id				int				not null,
+	file_id				int				not null,
+	include_file_name	nvarchar(260)	not null
+)",
+@"create unique index include_depends_ix_fileid on include_depends (file_id, include_file_name)",
+@"create index include_depends_ix_inclfile on include_depends (app_id, include_file_name)"
+
+};
+
+		public const string DatabaseFileName = "DkScan_v5.sdf";
+		public static readonly string[] OldDatabaseFileNames = new string[]
+		{
+			"DkScan.sdf",
+			"DkScan_v2.sdf",
+			"DkScan_v3.sdf",		// last used 1.2.10
+			"DkScan_v4.sdf",		// last used 1.2.11
+		};
 
 		private SqlCeConnection _conn;
 
