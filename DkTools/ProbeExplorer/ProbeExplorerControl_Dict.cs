@@ -560,5 +560,94 @@ namespace DkTools.ProbeExplorer
 				this.ShowError(ex);
 			}
 		}
+
+		#region Keyboard Input
+		private StringBuilder _keyBuf;
+		private DateTime _keyLastInput = DateTime.MinValue;
+		private TreeViewItem _keyStartSelItem;
+
+		private void DictTree_TextInput(object sender, TextCompositionEventArgs e)
+		{
+			try
+			{
+				var text = e.Text;
+				if (string.IsNullOrEmpty(text)) return;
+
+				// Check if the keyboard timeout has expired.
+				var now = DateTime.Now;
+				if (_keyBuf != null)
+				{
+					var elapsed = now.Subtract(_keyLastInput);
+					if (elapsed.TotalMilliseconds > Constants.KeyTimeout)
+					{
+						_keyBuf = null;
+					}
+				}
+
+				if (_keyBuf == null)
+				{
+					_keyBuf = new StringBuilder();
+					_keyStartSelItem = c_dictTree.SelectedItem as TreeViewItem;
+				}
+				_keyBuf.Append(text);
+
+				var tvi = FindKeySelectTvi(_keyBuf.ToString(), _keyStartSelItem);
+				if (tvi != null) tvi.IsSelected = true;
+
+				_keyLastInput = now;
+			}
+			catch (Exception ex)
+			{
+				this.ShowError(ex);
+			}
+		}
+
+		private TreeViewItem FindKeySelectTvi(string typedText, TreeViewItem selItem)
+		{
+			if (selItem != null)
+			{
+				IEnumerable<TreeViewItem> siblings;
+				var parentTvi = selItem.Parent.VisualUpwardsSearch<TreeViewItem>();
+				if (parentTvi != null) siblings = parentTvi.Items.OfType<TreeViewItem>();
+				else siblings = c_dictTree.Items.OfType<TreeViewItem>();
+
+				return FindSiblingKeySelectTvi(typedText, siblings);
+			}
+			else
+			{
+				return FindSiblingKeySelectTvi(typedText, c_dictTree.Items.OfType<TreeViewItem>().ToList());
+			}
+		}
+
+		private TreeViewItem FindSiblingKeySelectTvi(string typedText, IEnumerable<TreeViewItem> siblings)
+		{
+			foreach (var tvi in siblings)
+			{
+				if (tvi == null) continue;
+				var tag = tvi.Tag;
+				if (tag == null) continue;
+
+				if (tag is Dict.Table)
+				{
+					if ((tag as Dict.Table).Name.StartsWith(typedText, StringComparison.CurrentCultureIgnoreCase)) return tvi;
+				}
+				else if (tag is Dict.Field)
+				{
+					if ((tag as Dict.Field).Name.StartsWith(typedText, StringComparison.CurrentCultureIgnoreCase)) return tvi;
+				}
+				else if (tag is Dict.RelInd)
+				{
+					if ((tag as Dict.RelInd).Name.StartsWith(typedText, StringComparison.CurrentCultureIgnoreCase)) return tvi;
+				}
+
+				if (tvi.IsExpanded && tvi.Items.Count > 0)
+				{
+					FindSiblingKeySelectTvi(typedText, tvi.Items.OfType<TreeViewItem>());
+				}
+			}
+
+			return null;
+		}
+		#endregion
 	}
 }

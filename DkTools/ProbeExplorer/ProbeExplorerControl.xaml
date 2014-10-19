@@ -37,7 +37,7 @@
                     <Image Name="c_dictTreeFilterClear" Width="16" Height="16" VerticalAlignment="Top" HorizontalAlignment="Right"
                            Source="/DkTools2012;component/Images/Clear.png" Opacity="0.5" Margin="0,4,4,0"
                            MouseUp="DictTreeFilterClear_MouseUp_1" MouseEnter="DictTreeFilterClear_MouseEnter_1" MouseLeave="DictTreeFilterClear_MouseLeave_1"/>
-                    <TreeView Name="c_dictTree" Margin="0,25,0,0" TextSearch.TextPath="Title">
+                    <TreeView Name="c_dictTree" Margin="0,25,0,0" TextInput="DictTree_TextInput">
                     </TreeView>
                 </Grid>
             </TabItem>

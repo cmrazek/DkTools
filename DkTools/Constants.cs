@@ -77,5 +77,7 @@ namespace DkTools
 		public const int IncludeFileCheckFrequency = 30;	// seconds
 
 		public const int MaxTableNameLength = 8;
+
+		public const int KeyTimeout = 1000;	// milliseconds
 	}
 }
