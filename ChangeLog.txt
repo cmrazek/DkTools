@@ -1,6 +1,6 @@
 DkTools2012 ChangeLog
 ____________________________________________________________________________________________________
-Version 1.2.12 - (pending):
+Version 1.2.12 - Oct 20, 2014:
 
 Features:
 - Added a way to specify the diag level in Run dialog.
