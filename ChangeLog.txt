@@ -4,6 +4,7 @@ Version 1.2.13 - (pending):
 
 Bug Fixes:
 - Fixed custom diag level not being applied to CAMNet.
+- Fixed design mode check on Run form not being persisted.
 - Fixed tags on functions not being properly parsed.
 
 ____________________________________________________________________________________________________

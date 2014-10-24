@@ -59,6 +59,7 @@ namespace DkTools.Run
 				txtMaxChannels.Text = _options.MaxChannels.ToString();
 				txtLoadSamTime.Text = _options.LoadSamTime.ToString();
 				chkCamDevMode.Checked = _options.CamDevMode;
+				chkCamDesignMode.Checked = _options.CamDesignMode;
 				c_samExtraArgs.Text = _options.SamArgs;
 				c_camExtraArgs.Text = _options.CamArgs;
 				c_samCmdLine.Text = _options.CreateSamArgsString();
@@ -111,6 +112,7 @@ namespace DkTools.Run
 				_options.MaxChannels = maxChannels;
 				_options.LoadSamTime = loadSamTime;
 				_options.CamDevMode = chkCamDevMode.Checked;
+				_options.CamDesignMode = chkCamDesignMode.Checked;
 				_options.SamArgs = c_samExtraArgs.Text;
 				_options.CamArgs = c_camExtraArgs.Text;
 
