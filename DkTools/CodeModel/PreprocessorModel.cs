@@ -496,6 +496,22 @@ namespace DkTools.CodeModel
 						continue;
 					}
 
+					if (word == "tag")
+					{
+						var resetPos = _code.Position;
+
+						if (_code.ReadTagName())
+						{
+							if (_code.ReadStringLiteral())
+							{
+								continue;
+							}
+						}
+
+						_code.Position = resetPos;
+						return false;
+					}
+
 #if REPORT_ERRORS
 					ReportError(_code.TokenSpan, ErrorCode.Func_NoBodyStart);
 #endif
