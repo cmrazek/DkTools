@@ -72,7 +72,7 @@ namespace DkTools.Run
 			sb.Append("appname=" + ProbeEnvironment.CurrentApp);
 			sb.Append(" networkname=" + CleanSamName(System.Environment.UserName + "_" + System.Environment.MachineName));
 
-			if (Diags) sb.Append(" devmode=2");
+			if (Diags) sb.AppendFormat(" devmode={0}", this.DiagLevel);
 			else if (CamDevMode) sb.Append(" devmode");
 
 			if (CamDesignMode) sb.Append(" designmode=true");

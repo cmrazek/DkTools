@@ -1,6 +1,15 @@
 DkTools2012 ChangeLog
 ____________________________________________________________________________________________________
-Version 1.2.12 - (pending):
+Version 1.2.13 - (pending):
+
+Bug Fixes:
+- Fixed custom diag level not being applied to CAMNet.
+- Fixed design mode check on Run form not being persisted.
+- Fixed tags on functions not being properly parsed.
+- Fixed 'go to definition' not working on functions that were defined in an include file.
+
+____________________________________________________________________________________________________
+Version 1.2.12 - Oct 20, 2014:
 
 Features:
 - Added a way to specify the diag level in Run dialog.
