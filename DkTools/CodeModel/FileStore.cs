@@ -332,6 +332,9 @@ namespace DkTools.CodeModel
 
 			foreach (var def in model.PreprocessorModel.LocalFunctions)
 			{
+				if (def.EntireSpan.Length == 0) continue;
+				if (!def.SourceFileName.Equals(model.FileName, StringComparison.OrdinalIgnoreCase)) continue;
+
 				yield return new FunctionDropDownItem { Name = def.Name, Span = new Span(def.SourceStartPos, def.SourceStartPos), EntireFunctionSpan = def.EntireSpan };
 			}
 		}

@@ -38,7 +38,6 @@ namespace DkTools.LanguageSvc
 			var index = 0;
 
 			foreach (var func in (from f in fileStore.GetFunctionDropDownList(buf.CurrentSnapshot)
-								  where f.EntireFunctionSpan.Length > 0
 								  orderby f.Name.ToLower()
 								  select f))
 			{

@@ -326,13 +326,14 @@ namespace DkTools.CodeModel
 			var bodyEndPos = _code.Position;
 
 			var bodyStartLocalPos = _source.GetPrimaryFilePosition(bodyStartPos);
-			var nameLocalPos = _source.GetPrimaryFilePosition(nameSpan.Start);
+			//var nameLocalPos = _source.GetPrimaryFilePosition(nameSpan.Start);
+			var nameActualPos = _source.GetFilePosition(nameSpan.Start);
 			var argStartPrimaryPos = _source.GetPrimaryFilePosition(argStartPos);
 			var argEndPrimaryPos = _source.GetPrimaryFilePosition(argEndPos);
 			var entireSpan = _source.GetPrimaryFileSpan(new Span(allStartPos, bodyEndPos));
 
 			var funcSig = TokenParser.Parser.NormalizeText(_code.GetText(allStartPos, argEndPos - allStartPos));
-			var funcDef = new FunctionDefinition(_className, funcName, _fileName, nameLocalPos, returnDataType, funcSig, argStartPrimaryPos, argEndPrimaryPos, bodyStartLocalPos, entireSpan, privacy, isExtern, description);
+			var funcDef = new FunctionDefinition(_className, funcName, nameActualPos.FileName, nameActualPos.Position, returnDataType, funcSig, argStartPrimaryPos, argEndPrimaryPos, bodyStartLocalPos, entireSpan, privacy, isExtern, description);
 			_localFuncs.Add(funcDef);
 			AddGlobalDefinition(funcDef);
 
