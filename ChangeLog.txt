@@ -1,6 +1,6 @@
 DkTools2012 ChangeLog
 ____________________________________________________________________________________________________
-Version 1.2.13 - (pending):
+Version 1.2.13 - Oct 27, 2014:
 
 Bug Fixes:
 - Fixed custom diag level not being applied to CAMNet.
