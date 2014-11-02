@@ -256,7 +256,7 @@ namespace DkTools.ProbeExplorer
 
 			foreach (TreeViewItem tableNode in c_dictTree.Items)
 			{
-				var table = tableNode.Tag as Table;
+				var table = tableNode.Tag as Dict.Table;
 				if (table.Name == tableName)
 				{
 					tableNode.IsSelected = true;
@@ -277,7 +277,7 @@ namespace DkTools.ProbeExplorer
 
 			foreach (TreeViewItem tableNode in c_dictTree.Items)
 			{
-				var table = tableNode.Tag as Table;
+				var table = tableNode.Tag as Dict.Table;
 				if (table.Name == tableName)
 				{
 					tableNode.IsExpanded = true;
@@ -306,7 +306,7 @@ namespace DkTools.ProbeExplorer
 
 			foreach (TreeViewItem tableNode in c_dictTree.Items)
 			{
-				var table = tableNode.Tag as Table;
+				var table = tableNode.Tag as Dict.Table;
 				if (table.Name == tableName)
 				{
 					tableNode.IsExpanded = true;
