@@ -1,5 +1,11 @@
 DkTools2012 ChangeLog
 ____________________________________________________________________________________________________
+Version 1.2.14 - (pending):
+
+Bug Fixes:
+- Added support for string literals that carry down to next line using '\'.
+
+____________________________________________________________________________________________________
 Version 1.2.13 - Oct 27, 2014:
 
 Bug Fixes:

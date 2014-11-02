@@ -725,7 +725,19 @@ namespace DkTools.CodeModel.Tokens
 			{
 				ch = _src[_pos];
 				MoveNext();
-				if (ch == '\\') MoveNext();	// Move past escaped char
+				if (ch == '\\')
+				{
+					ch = _src[_pos];
+					MoveNext();	// Move past escaped char
+
+					if (ch == '\r')
+					{
+						if (_pos < _length && _src[_pos] == '\n')
+						{
+							MoveNext();
+						}
+					}
+				}
 				else if (ch == startCh || ch == '\n') return;
 				lastCh = ch;
 			}

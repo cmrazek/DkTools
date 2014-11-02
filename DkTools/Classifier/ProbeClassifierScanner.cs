@@ -60,9 +60,12 @@ namespace DkTools.Classifier
 		private static Regex _rxPreprocessor = new Regex(@"\G\#\w+");
 		private static Regex _rxIncludeString = new Regex(@"\G(?:<[^>]+>|""[^""]+"")");
 
-		private const int k_state_commentMask = 0xff;
-		public const int k_state_disabled = 0x100;
-		private const int k_state_afterInclude = 0x200;
+		public const int State_CommentMask = 0xff;
+		public const int State_Disabled = 0x100;
+		public const int State_AfterInclude = 0x200;
+		public const int State_StringLiteral_Single = 0x400;
+		public const int State_StringLiteral_Double = 0x800;
+		public const int State_StringLiteral_Mask = 0xC00;
 
 		private static readonly char[] k_commentEndKickOffChars = new char[] { '*', '/' };
 
@@ -76,33 +79,52 @@ namespace DkTools.Classifier
 			char ch = _source[_pos];
 			Token token;
 
-			if ((state & k_state_commentMask) != 0)
+			if ((state & State_CommentMask) != 0)
 			{
 				// Inside a multi-line comment.
 
-				if ((state & k_state_disabled) != 0) tokenInfo.Type = ProbeClassifierType.Inactive;
+				if ((state & State_Disabled) != 0) tokenInfo.Type = ProbeClassifierType.Inactive;
 				else tokenInfo.Type = ProbeClassifierType.Comment;
 
 				SkipComments(ref state);
 			}
+			else if ((state & State_StringLiteral_Mask) != 0)
+			{
+				if ((state & State_Disabled) != 0) tokenInfo.Type = ProbeClassifierType.Inactive;
+				else tokenInfo.Type = ProbeClassifierType.StringLiteral;
+
+				if ((state & State_StringLiteral_Single) != 0)
+				{
+					MatchStringLiteral(false, '\'', ref state);
+				}
+				else if ((state & State_StringLiteral_Double) != 0)
+				{
+					MatchStringLiteral(false, '\"', ref state);
+				}
+				else
+				{
+					// This should never happen.
+					_pos++;
+				}
+			}
 			else if (Char.IsWhiteSpace(ch))
 			{
-				if ((state & k_state_disabled) != 0) tokenInfo.Type = ProbeClassifierType.Inactive;
+				if ((state & State_Disabled) != 0) tokenInfo.Type = ProbeClassifierType.Inactive;
 				else tokenInfo.Type = ProbeClassifierType.Normal;
 
 				_pos++;
 				while (_pos < _length && Char.IsWhiteSpace(_source[_pos])) _pos++;
 			}
-			else if ((state & k_state_afterInclude) != 0 && (match = _rxIncludeString.Match(_source, _pos)).Success)
+			else if ((state & State_AfterInclude) != 0 && (match = _rxIncludeString.Match(_source, _pos)).Success)
 			{
-				if ((state & k_state_disabled) != 0) tokenInfo.Type = ProbeClassifierType.Inactive;
+				if ((state & State_Disabled) != 0) tokenInfo.Type = ProbeClassifierType.Inactive;
 				else tokenInfo.Type = ProbeClassifierType.StringLiteral;
 				_pos = match.Index + match.Length;
-				state &= ~k_state_afterInclude;
+				state &= ~State_AfterInclude;
 			}
 			else if (ch == '/' && _pos + 1 < _length && _source[_pos + 1] == '/')
 			{
-				if ((state & k_state_disabled) != 0) tokenInfo.Type = ProbeClassifierType.Inactive;
+				if ((state & State_Disabled) != 0) tokenInfo.Type = ProbeClassifierType.Inactive;
 				else tokenInfo.Type = ProbeClassifierType.Comment;
 
 				var index = _source.IndexOf('\n', _pos);
@@ -111,18 +133,18 @@ namespace DkTools.Classifier
 			}
 			else if (ch == '/' && _pos + 1 < _length && _source[_pos + 1] == '*')
 			{
-				if ((state & k_state_disabled) != 0) tokenInfo.Type = ProbeClassifierType.Inactive;
+				if ((state & State_Disabled) != 0) tokenInfo.Type = ProbeClassifierType.Inactive;
 				else tokenInfo.Type = ProbeClassifierType.Comment;
 
 				_pos += 2;
-				state = (state & ~k_state_commentMask) | 1;	// Set comment level to 1.
+				state = (state & ~State_CommentMask) | 1;	// Set comment level to 1.
 				SkipComments(ref state);
 			}
 			else if ((match = _rxWord.Match(_source, _pos)).Success)
 			{
 				var word = match.Value;
 
-				if ((state & k_state_disabled) != 0)
+				if ((state & State_Disabled) != 0)
 				{
 					tokenInfo.Type = ProbeClassifierType.Inactive;
 				}
@@ -143,25 +165,25 @@ namespace DkTools.Classifier
 			}
 			else if ((match = _rxNumber.Match(_source, _pos)).Success)
 			{
-				if ((state & k_state_disabled) != 0) tokenInfo.Type = ProbeClassifierType.Inactive;
+				if ((state & State_Disabled) != 0) tokenInfo.Type = ProbeClassifierType.Inactive;
 				else tokenInfo.Type = ProbeClassifierType.Number;
 				_pos = match.Index + match.Length;
 			}
-			else if ((ch == '\"' || ch == '\'') && MatchStringLiteral())
+			else if ((ch == '\"' || ch == '\'') && MatchStringLiteral(true, ch, ref state))
 			{
-				if ((state & k_state_disabled) != 0) tokenInfo.Type = ProbeClassifierType.Inactive;
+				if ((state & State_Disabled) != 0) tokenInfo.Type = ProbeClassifierType.Inactive;
 				else tokenInfo.Type = ProbeClassifierType.StringLiteral;
 				//_pos = match.Index + match.Length;
 			}
 			else if ((match = _rxPreprocessor.Match(_source, _pos)).Success)
 			{
-				if ((state & k_state_disabled) != 0) tokenInfo.Type = ProbeClassifierType.Inactive;
+				if ((state & State_Disabled) != 0) tokenInfo.Type = ProbeClassifierType.Inactive;
 				else tokenInfo.Type = ProbeClassifierType.Preprocessor;
 				_pos = match.Index + match.Length;
 
-				if (match.Value == "#include") state |= k_state_afterInclude;
+				if (match.Value == "#include") state |= State_AfterInclude;
 			}
-			else if ((state & k_state_disabled) != 0)	// Everything after this point is assumed to be single character
+			else if ((state & State_Disabled) != 0)	// Everything after this point is assumed to be single character
 			{
 				tokenInfo.Type = ProbeClassifierType.Inactive;
 				_pos++;
@@ -195,26 +217,95 @@ namespace DkTools.Classifier
 			return true;
 		}
 
-		private bool MatchStringLiteral()
+		private bool MatchStringLiteral(bool starting, char startCh, ref int state)
 		{
-			var startCh = _source[_pos];
-			if (startCh != '\"' && startCh != '\'') return false;
-
 			char ch;
+
+			if (starting)
+			{
+				ch = _source[_pos];
+#if DEBUG
+				if (ch != startCh) throw new InvalidOperationException("First char read does not match specified start char.");
+#endif
+				if (ch == '\'')
+				{
+					state |= State_StringLiteral_Single;
+				}
+				else if (ch == '\"')
+				{
+					state |= State_StringLiteral_Double;
+				}
+#if DEBUG
+				else
+				{
+					throw new InvalidOperationException("First char of string literal must be a quote.");
+				}
+#endif
+				_pos++;
+			}
+
+			var carryDown = false;	// Determines if the string will descend to the next line.
+			
 			for (_pos = _pos + 1; _pos < _length; _pos++)
 			{
 				ch = _source[_pos];
+				carryDown = false;
+
 				if (ch == startCh)
 				{
 					_pos++;
+					state &= ~State_StringLiteral_Mask;
 					break;
 				}
-				else if (ch == '\\' && _pos + 1 < _source.Length)
+				else if (ch == '\\')
 				{
 					_pos++;
+
+					if (_pos < _length)
+					{
+						// Check for escape sequences
+						ch = _source[_pos];
+
+						// If the '\' is the last character on the line, then the string decends down to the next line.
+						if (ch == '\r')
+						{
+							if (_pos + 1 < _source.Length && _source[_pos + 1] == '\n')
+							{
+								// '\' followed by '\r\n'
+								_pos += 2;
+								carryDown = true;
+								break;
+							}
+							else
+							{
+								// '\' followed by '\r' without '\n'
+								_pos++;
+								carryDown = true;
+								break;
+							}
+						}
+						else if (ch == '\n')
+						{
+							// '\' followed by '\n'
+							_pos++;
+							carryDown = true;
+							break;
+						}
+						else
+						{
+							// Another escape char
+							_pos++;
+						}
+					}
+					else
+					{
+						// '\' is the last character on the line, so the string decends down.
+						carryDown = true;
+					}
 				}
 			}
 
+			if (!carryDown) state &= ~State_StringLiteral_Mask;
 			return true;
 		}
 
@@ -259,7 +350,7 @@ namespace DkTools.Classifier
 		{
 			char ch;
 
-			while (_pos < _length & (state & k_state_commentMask) != 0)
+			while (_pos < _length & (state & State_CommentMask) != 0)
 			{
 				var index = _source.IndexOfAny(k_commentEndKickOffChars, _pos);
 				if (index < 0)
@@ -274,17 +365,17 @@ namespace DkTools.Classifier
 					{
 						if (index + 1 < _length && _source[index + 1] == '/')
 						{
-							var level = state & k_state_commentMask;
+							var level = state & State_CommentMask;
 							level--;
 							if (level <= 0)
 							{
 								// End of outer comment
-								state &= ~k_state_commentMask;
+								state &= ~State_CommentMask;
 							}
 							else
 							{
 								// End of inner comment. Not out of the woods yet...
-								state = (state & ~k_state_commentMask) | (level & k_state_commentMask);
+								state = (state & ~State_CommentMask) | (level & State_CommentMask);
 							}
 							_pos = index + 2;
 						}
@@ -299,9 +390,9 @@ namespace DkTools.Classifier
 						if (index + 1 < _length && _source[index + 1] == '*')
 						{
 							// Start of a nested comment
-							var level = state & k_state_commentMask;
-							if (level < k_state_commentMask) level++;
-							state = (state & ~k_state_commentMask) | (level & k_state_commentMask);
+							var level = state & State_CommentMask;
+							if (level < State_CommentMask) level++;
+							state = (state & ~State_CommentMask) | (level & State_CommentMask);
 							_pos = index + 2;
 						}
 						else
@@ -321,7 +412,7 @@ namespace DkTools.Classifier
 
 		public static bool StateInsideComment(int state)
 		{
-			return (state & k_state_commentMask) != 0;
+			return (state & State_CommentMask) != 0;
 		}
 	}
 }
