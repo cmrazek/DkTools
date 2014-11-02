@@ -124,9 +124,23 @@ namespace DkTools.TokenParser
 						ch = _source[_pos];
 						if (ch == '\\' && _pos + 1 < _length)
 						{
-							_tokenText.Append(ch);
-							_tokenText.Append(_source[_pos + 1]);
-							_pos += 2;
+							ch = _source[_pos + 1];
+							// If the '\' is the last char on the line, then the string decends down to the next line.
+							if (ch == '\r')
+							{
+								_pos += 2;
+								if (_pos < _length && _source[_pos] == '\n') _pos++;
+							}
+							else if (ch == '\n')
+							{
+								_pos += 2;
+							}
+							else
+							{
+								_tokenText.Append(ch);
+								_tokenText.Append(_source[_pos + 1]);
+								_pos += 2;
+							}
 						}
 						else if (ch == startCh)
 						{

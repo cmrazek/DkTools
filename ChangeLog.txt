@@ -1,6 +1,14 @@
 DkTools2012 ChangeLog
 ____________________________________________________________________________________________________
-Version 1.2.13 - (pending):
+Version 1.2.14 - (pending):
+
+Bug Fixes:
+- Added support for string literals that carry down to next line using '\'.
+- Fixed 'unspecified error' when using 'go to definitions' on an item that takes you to the
+  dictionary explorer.
+
+____________________________________________________________________________________________________
+Version 1.2.13 - Oct 27, 2014:
 
 Bug Fixes:
 - Fixed custom diag level not being applied to CAMNet.
