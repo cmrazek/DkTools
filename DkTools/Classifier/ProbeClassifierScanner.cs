@@ -246,7 +246,7 @@ namespace DkTools.Classifier
 
 			var carryDown = false;	// Determines if the string will descend to the next line.
 			
-			for (_pos = _pos + 1; _pos < _length; _pos++)
+			for (; _pos < _length; _pos++)
 			{
 				ch = _source[_pos];
 				carryDown = false;

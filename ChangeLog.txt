@@ -1,6 +1,12 @@
 DkTools2012 ChangeLog
 ____________________________________________________________________________________________________
-Version 1.2.14 - (pending):
+Version 1.2.14.1 - Nov 3, 2014:
+
+Bug Fixes:
+- Fixed syntax coloring error with empty strings ("")
+
+____________________________________________________________________________________________________
+Version 1.2.14 - Nov 3, 2014:
 
 Bug Fixes:
 - Added support for string literals that carry down to next line using '\'.
