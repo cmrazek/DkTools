@@ -318,8 +318,8 @@ namespace DkTools.CodeModel.Tokens
 						var ffClass = ProbeToolsPackage.Instance.FunctionFileScanner.GetClass(word);
 						if (ffClass != null)
 						{
-							var ffFunc = ffClass.GetFunctionDefinition(word2);
-							if (ffFunc != null)
+							var funcDef = ffClass.GetFunctionDefinition(word2);
+							if (funcDef != null)
 							{
 								SkipWhiteSpaceAndComments(scope);
 								if (PeekChar() == '(')
@@ -328,8 +328,8 @@ namespace DkTools.CodeModel.Tokens
 									var dotToken = new DotToken(parent, scope, dotSpan);
 									var nameToken = new IdentifierToken(parent, scope, word2Span, word2);
 									var argsToken = BracketsToken.Parse(parent, scope);
-									var funcToken = new FunctionCallToken(parent, scope, classToken, dotToken, nameToken, argsToken, ffFunc);
-									return new ClassAndFunctionToken(parent, scope, classToken, dotToken, funcToken);
+									var funcToken = new FunctionCallToken(parent, scope, classToken, dotToken, nameToken, argsToken, funcDef);
+									return new ClassAndFunctionToken(parent, scope, classToken, dotToken, funcToken, funcDef);
 								}
 							}
 						}
