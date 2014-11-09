@@ -327,8 +327,8 @@ namespace DkTools.CodeModel.Tokens
 									var dotToken = new DotToken(parent, scope, dotSpan);
 									var nameToken = new IdentifierToken(parent, scope, word2Span, word2);
 									var argsToken = BracketsToken.Parse(parent, scope);
-									var funcToken = new FunctionCallToken(parent, scope, classToken, dotToken, nameToken, argsToken, ffFunc);
-									return new ClassAndFunctionToken(parent, scope, classToken, dotToken, funcToken);
+									var funcToken = new FunctionCallToken(parent, scope, classToken, dotToken, nameToken, argsToken, funcDef);
+									return new ClassAndFunctionToken(parent, scope, classToken, dotToken, funcToken, funcDef);
 								}
 							}
 						}
