@@ -246,7 +246,7 @@ namespace DkTools.Classifier
 
 			var carryDown = false;	// Determines if the string will descend to the next line.
 			
-			for (; _pos < _length; _pos++)
+			while (_pos < _length)
 			{
 				ch = _source[_pos];
 				carryDown = false;
@@ -302,6 +302,16 @@ namespace DkTools.Classifier
 						// '\' is the last character on the line, so the string decends down.
 						carryDown = true;
 					}
+				}
+				else if (ch == '\r' || ch == '\n')
+				{
+					// String literal stops at end of line.
+					break;
+				}
+				else
+				{
+					// Normal character
+					_pos++;
 				}
 			}
 
