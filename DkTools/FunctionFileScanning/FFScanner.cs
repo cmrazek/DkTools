@@ -210,10 +210,7 @@ namespace DkTools.FunctionFileScanning
 				var classList = new List<FFClass>();
 				var funcList = new List<FFFunction>();
 
-				var modelFuncs = (from f in model.DefinitionProvider.GetGlobalFromFile<CodeModel.Definitions.FunctionDefinition>()
-								  where f.Extern == false
-								  select f).ToArray();
-				ffFile.UpdateFromModel(modelFuncs, db, fileStore, fileModified);
+				ffFile.UpdateFromModel(model, db, fileStore, fileModified);
 
 				if (ffFile.Visible)
 				{

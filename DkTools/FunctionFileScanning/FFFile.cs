@@ -127,7 +127,7 @@ namespace DkTools.FunctionFileScanning
 		{
 			if (_id != 0)
 			{
-				using (var cmd = db.CreateCommand("update file_ set modified = @modified where id = @id, visible = @visible"))
+				using (var cmd = db.CreateCommand("update file_ set modified = @modified, visible = @visible where id = @id"))
 				{
 					cmd.Parameters.AddWithValue("@id", _id);
 					cmd.Parameters.AddWithValue("@modified", _modified);
@@ -254,13 +254,18 @@ namespace DkTools.FunctionFileScanning
 			}
 		}
 
-		public void UpdateFromModel(IEnumerable<FunctionDefinition> modelDefs, FFDatabase db, FileStore store, DateTime fileModified)
+		public void UpdateFromModel(CodeModel.CodeModel model, FFDatabase db, FileStore store, DateTime fileModified)
 		{
 			_modified = fileModified;
 			InsertOrUpdate(db, store);
 
+			// Get the list of functions defined in the file.
+			var modelFuncs = (from f in model.DefinitionProvider.GetGlobalFromFile<CodeModel.Definitions.FunctionDefinition>()
+							  where f.Extern == false
+							  select f).ToArray();
+
 			// Insert/update the functions that exist in the model.
-			foreach (var modelFunc in modelDefs)
+			foreach (var modelFunc in modelFuncs)
 			{
 				var func = _functions.FirstOrDefault(f => f.Name == modelFunc.Name);
 				if (func != null)
@@ -277,12 +282,33 @@ namespace DkTools.FunctionFileScanning
 			}
 
 			// Purge functions that no longer exist in the model.
-			var removeFuncs = (from f in _functions where !modelDefs.Any(m => m.Name == f.Name) select f).ToArray();
+			var removeFuncs = (from f in _functions where !modelFuncs.Any(m => m.Name == f.Name) select f).ToArray();
 			foreach (var removeFunc in removeFuncs)
 			{
 				removeFunc.Remove(db);
 				_functions.Remove(removeFunc);
 			}
+
+			// Get all definitions defined in the file.
+			var refList = new List<Reference>();
+			foreach (var token in model.File.FindDownward(t => t.SourceDefinition != null))
+			{
+				//model.PreprocessorModel.Source.GetFilePosition(token.Span.Start);
+
+				var def = token.SourceDefinition;
+				var refId = def.ExternalRefId;
+				if (!string.IsNullOrEmpty(refId))
+				{
+					refList.Add(new Reference { ExternalRefId = refId, Position = token.Span.Start });
+				}
+			}
+		}
+
+		private class Reference
+		{
+			public string ExternalRefId { get; set; }
+			public string TrueFileName { get; set; }
+			public int Position { get; set; }
 		}
 
 		public IEnumerable<FFFunction> Functions

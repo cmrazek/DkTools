@@ -50,6 +50,11 @@ namespace DkTools.CodeModel
 			Parse();
 		}
 
+		public CodeSource Source
+		{
+			get { return _source; }
+		}
+
 		private void Parse()
 		{
 			DataType dataType;

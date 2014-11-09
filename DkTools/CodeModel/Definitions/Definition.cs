@@ -22,6 +22,7 @@ namespace DkTools.CodeModel.Definitions
 		public abstract string QuickInfoTextStr { get; }
 		public abstract UIElement QuickInfoTextWpf { get; }
 		public abstract string PickText { get; }
+		public abstract string ExternalRefId { get; }
 
 		private const int k_maxWpfWidth = 600;
 
