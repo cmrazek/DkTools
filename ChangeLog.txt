@@ -1,6 +1,6 @@
 DkTools2012 ChangeLog
 ____________________________________________________________________________________________________
-Version 1.2.15 - (pending):
+Version 1.2.15 - Nov 10, 2014:
 
 Bug Fixes:
 - More fixes around string literal parsing.
