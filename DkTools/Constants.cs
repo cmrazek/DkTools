@@ -39,8 +39,8 @@ namespace DkTools
 		public const string DefaultHiddenExtensions = ".c .dll .exe .h .hlp .lib .obj .pdb .res .ss";
 
 		public static readonly HashSet<string> DataTypeKeywords = Util.ParseWordList(
-			"alternate Boolean_t char currency date enum int LEADINGZEROS like local_currency long longform",
-			"nowarn numeric oleobject proto short shortform string time unsigned variant void");
+			"alternate Boolean_t char character currency date enum int LEADINGZEROS like local_currency long longform",
+			"nowarn numeric oleobject proto short shortform string time unsigned varchar variant void");
 
 		public static readonly HashSet<string> Keywords = Util.ParseWordList(
 			"after all and asc BEGINHLP before break button by comment case col colff cols continue create default display desc description",

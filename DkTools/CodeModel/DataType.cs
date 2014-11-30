@@ -365,8 +365,10 @@ namespace DkTools.CodeModel
 					return DataType.Ulong;
 				#endregion
 
-				#region char
+				#region char, character, varchar
 				case "char":
+				case "character":
+				case "varchar":
 					if (!code.ReadExact('(')) return DataType.Char;
 					if (code.ReadNumber())
 					{
