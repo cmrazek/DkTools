@@ -6,6 +6,8 @@ Bug Fixes:
 - Added support for the 'character' and 'varchar' data types.
 - Added tooltip to the refresh button to indicate that it refreshes *everything*.
 - FECing DICT no longer creates a file name with a bad file extension.
+- Fixed problem when selecting a class method, that the entire method calls (args and all) would be
+  highlighted.
 
 ____________________________________________________________________________________________________
 Version 1.2.15 - Nov 10, 2014:

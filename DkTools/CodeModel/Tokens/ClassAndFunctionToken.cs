@@ -15,7 +15,6 @@ namespace DkTools.CodeModel.Tokens
 			: base(parent, scope, new Token[] { classToken, dotToken, funcToken })
 		{
 			_funcToken = funcToken;
-			SourceDefinition = funcDef;
 		}
 
 		public override DataType ValueDataType
