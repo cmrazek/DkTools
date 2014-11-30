@@ -4,6 +4,8 @@ Version 1.2.16 - (pending):
 
 Bug Fixes:
 - Added support for the 'character' and 'varchar' data types.
+- Added tooltip to the refresh button to indicate that it refreshes *everything*.
+- FECing DICT no longer creates a file name with a bad file extension.
 
 ____________________________________________________________________________________________________
 Version 1.2.15 - Nov 10, 2014:
