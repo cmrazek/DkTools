@@ -34,6 +34,17 @@ namespace DkTools.StatementCompletion
 
             Func<ProbeCompletionCommandHandler> createCommandHandler = delegate() { return new ProbeCompletionCommandHandler(textViewAdapter, textView, this); };
             textView.Properties.GetOrCreateSingletonProperty(createCommandHandler);
+
+			textView.GotAggregateFocus += textView_GotAggregateFocus;
         }
+
+		void textView_GotAggregateFocus(object sender, EventArgs e)
+		{
+			var view = sender as IWpfTextView;
+			if (view != null)
+			{
+				Shell.OnTextViewActivated(view);
+			}
+		}
     }
 }

@@ -91,6 +91,7 @@ namespace DkTools
 		private static ProbeToolsPackage _instance;
 		private EnvDTE.Events _dteEvents;
 		private EnvDTE.DocumentEvents _dteDocumentEvents;
+		private EnvDTE.WindowEvents _dteWindowEvents;
 		private FunctionFileScanning.FFScanner _functionScanner;
 
 		/// <summary>
@@ -142,6 +143,7 @@ namespace DkTools
 
 			// Need to keep a reference to Events and DocumentEvents in order for DocumentSaved to be triggered.
 			_dteEvents = Shell.DTE.Events;
+
 			_dteDocumentEvents = _dteEvents.DocumentEvents;
 			_dteDocumentEvents.DocumentSaved += DocumentEvents_DocumentSaved;
 		}

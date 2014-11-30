@@ -43,7 +43,8 @@ namespace DkTools
 		ShowProbeNV = 0x0123,
 		ShowErrors = 0x0124,
 		GoToNextReference = 0x0125,
-		GoToPrevReference = 0x0126
+		GoToPrevReference = 0x0126,
+		ShowFunctions = 0x0127
 	}
 
 	internal static class Commands
@@ -79,6 +80,7 @@ namespace DkTools
 #endif
 			AddCommand(mcs, CommandId.GoToNextReference, GoToNextReference);
 			AddCommand(mcs, CommandId.GoToPrevReference, GoToPrevReference);
+			AddCommand(mcs, CommandId.ShowFunctions, ShowFunctions);
 		}
 
 		private class CommandInstance
@@ -623,6 +625,19 @@ namespace DkTools
 		private static bool DisableDeadCode_Checked(CommandId id)
 		{
 			return ProbeToolsPackage.Instance.EditorOptions.DisableDeadCode;
+		}
+
+		private static void ShowFunctions(object sender, EventArgs e)
+		{
+			try
+			{
+				var window = Shell.ShowProbeExplorerToolWindow();
+				window.FocusFunctionFilter();
+			}
+			catch (Exception ex)
+			{
+				Shell.ShowError(ex);
+			}
 		}
 
 #if REPORT_ERRORS

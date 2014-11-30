@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
 using System.Text;
 using System.Windows;
@@ -13,6 +14,8 @@ using System.Windows.Navigation;
 using System.Windows.Shapes;
 using IO = System.IO;
 using DkTools.Dict;
+using VsText=Microsoft.VisualStudio.Text;
+using VsTextEditor=Microsoft.VisualStudio.Text.Editor;
 
 namespace DkTools.ProbeExplorer
 {
@@ -33,6 +36,8 @@ namespace DkTools.ProbeExplorer
 		private BitmapImage _indexImg;
 		private BitmapImage _relationshipImg;
 		private BitmapImage _extendedImg;
+
+		private static BitmapImage _functionImg;
 		#endregion
 
 		#region Constants
@@ -64,6 +69,7 @@ namespace DkTools.ProbeExplorer
 			_indexImg = Res.IndexImg.ToBitmapImage();
 			_relationshipImg = Res.RelationshipImg.ToBitmapImage();
 			_extendedImg = Res.DataTypeImg.ToBitmapImage();
+			if (_functionImg == null) _functionImg = Res.FunctionImg.ToBitmapImage();
 
 			ProbeEnvironment.AppChanged += new EventHandler(Probe_AppChanged);
 			_dictTreeDeferrer.Idle += DictTreeDeferrer_Idle;
@@ -99,6 +105,11 @@ namespace DkTools.ProbeExplorer
 			{
 				this.ShowError(ex);
 			}
+		}
+
+		public void OnDocumentActivated(VsTextEditor.IWpfTextView view)
+		{
+			RefreshFunctionList(view);
 		}
 		#endregion
 
@@ -934,5 +945,276 @@ namespace DkTools.ProbeExplorer
 			RefreshFileTree();
 			SelectFileInTree(fileName);
 		}
+
+		#region Function List
+		private VsTextEditor.IWpfTextView _activeView;
+		private VsText.ITextSnapshot _activeSnapshot;
+		private FunctionListItem[] _activeFunctions;
+
+		private void RefreshFunctionList(VsTextEditor.IWpfTextView view)
+		{
+			if (!c_functionTab.IsSelected) return;
+
+			if (view != null)
+			{
+				var fileStore = CodeModel.FileStore.GetOrCreateForTextBuffer(view.TextBuffer);
+				if (fileStore != null)
+				{
+					var snapshot = view.TextSnapshot;
+					if (_activeView != view || _activeSnapshot != snapshot)
+					{
+						_activeView = view;
+						_activeSnapshot = snapshot;
+
+						_activeFunctions = (from f in fileStore.GetFunctionDropDownList(snapshot)
+											orderby f.Name.ToLower()
+											select new FunctionListItem(f)).ToArray();
+						ApplyFunctionFilter();
+						c_functionList.ItemsSource = _activeFunctions;
+					}
+					return;
+				}
+			}
+
+			_activeView = null;
+			_activeSnapshot = null;
+			_activeFunctions = null;
+			c_functionList.ItemsSource = null;
+		}
+
+		private void TabControl_SelectionChanged(object sender, SelectionChangedEventArgs e)
+		{
+			try
+			{
+				if (e.AddedItems.Count == 1 && e.AddedItems[0] == c_functionTab)
+				{
+					RefreshFunctionList(Shell.ActiveView);
+				}
+			}
+			catch (Exception ex)
+			{
+				this.ShowError(ex);
+			}
+		}
+
+		public class FunctionListItem : INotifyPropertyChanged
+		{
+			public string Name { get; private set; }
+			public CodeModel.Span Span { get; private set; }
+			private bool _visible = true;
+
+			public event PropertyChangedEventHandler PropertyChanged;
+
+			internal FunctionListItem(CodeModel.FileStore.FunctionDropDownItem func)
+			{
+				this.Name = func.Name;
+				this.Span = func.Span;
+			}
+
+			public bool Visible
+			{
+				get { return _visible; }
+				set
+				{
+					if (_visible != value)
+					{
+						_visible = value;
+
+						var ev = PropertyChanged;
+						if (ev != null) ev(this, new PropertyChangedEventArgs("Visible"));
+					}
+				}
+			}
+		}
+
+		public static BitmapImage FunctionImage
+		{
+			get
+			{
+				if (_functionImg == null) _functionImg = Res.FunctionImg.ToBitmapImage();
+				return _functionImg;
+			}
+		}
+
+		private void ApplyFunctionFilter()
+		{
+			if (_activeFunctions == null) return;
+
+			var filter = new TextFilter(c_functionFilter.Text);
+			foreach (var func in _activeFunctions)
+			{
+				func.Visible = filter.Match(func.Name);
+			}
+		}
+
+		private void ActivateFunction(FunctionListItem func, bool setDocFocus)
+		{
+			if (_activeView == null || _activeSnapshot == null || func == null) return;
+
+			if (setDocFocus)
+			{
+				_activeView.VisualElement.Focus();
+			}
+
+			var nav = Navigation.Navigator.TryGetForView(_activeView);
+			if (nav != null)
+			{
+				nav.MoveTo(new VsText.SnapshotPoint(_activeSnapshot, func.Span.Start));
+			}
+		}
+
+		public void FocusFunctionFilter()
+		{
+			RefreshFunctionList(Shell.ActiveView);
+
+			c_functionTab.IsSelected = true;
+			this.UpdateLayout();
+			c_functionFilter.Focus();
+			c_functionFilter.SelectAll();
+		}
+
+		private void FunctionList_KeyDown(object sender, KeyEventArgs e)
+		{
+			try
+			{
+				if (e.Key == Key.Up && c_functionList.SelectedIndex == 0)
+				{
+					e.Handled = true;
+					c_functionFilter.Focus();
+					c_functionFilter.SelectAll();
+				}
+			}
+			catch (Exception ex)
+			{
+				this.ShowError(ex);
+			}
+		}
+
+		private void FunctionListBoxItem_Selected(object sender, RoutedEventArgs e)
+		{
+			try
+			{
+				var lbi = sender as ListBoxItem;
+				if (lbi != null)
+				{
+					var func = lbi.Content as FunctionListItem;
+					if (func != null)
+					{
+						ActivateFunction(func, false);
+					}
+				}
+			}
+			catch (Exception ex)
+			{
+				this.ShowError(ex);
+			}
+		}
+
+		private void FunctionListBoxItem_KeyDown(object sender, KeyEventArgs e)
+		{
+			if (e.Key == Key.Enter)
+			{
+				var lbi = sender as ListBoxItem;
+				if (lbi != null)
+				{
+					var func = lbi.Content as FunctionListItem;
+					if (func != null)
+					{
+						ActivateFunction(func, true);
+					}
+				}
+			}
+		}
+
+		private void FunctionListBoxItem_MouseDoubleClick(object sender, MouseEventArgs e)
+		{
+			try
+			{
+				if (c_functionList.SelectedItem != null)
+				{
+					e.Handled = true;
+					ActivateFunction(c_functionList.SelectedItem as FunctionListItem, true);
+				}
+			}
+			catch (Exception ex)
+			{
+				this.ShowError(ex);
+			}
+		}
+
+		private void FunctionFilter_KeyDown(object sender, KeyEventArgs e)
+		{
+			try
+			{
+				
+			}
+			catch (Exception ex)
+			{
+				this.ShowError(ex);
+			}
+		}
+
+		private void FunctionFilter_PreviewKeyDown(object sender, KeyEventArgs e)
+		{
+			try
+			{
+				if (e.Key == Key.Escape)
+				{
+					e.Handled = true;
+					c_functionFilter.Text = string.Empty;
+				}
+				else if (e.Key == Key.Down)
+				{
+					var topFunc = c_functionList.Items.Cast<FunctionListItem>().FirstOrDefault(i => i.Visible);
+					if (topFunc != null)
+					{
+						var topItem = c_functionList.ItemContainerGenerator.ContainerFromItem(topFunc) as ListBoxItem;
+						if (topItem != null)
+						{
+							e.Handled = true;
+							topItem.IsSelected = true;
+							c_functionList.ScrollIntoView(topItem);
+							topItem.Focus();
+							return;
+						}
+					}
+
+					c_functionList.Focus();
+				}
+			}
+			catch (Exception ex)
+			{
+				this.ShowError(ex);
+			}
+		}
+
+		private void FunctionFilter_TextChanged(object sender, TextChangedEventArgs e)
+		{
+			try
+			{
+				ApplyFunctionFilter();
+			}
+			catch (Exception ex)
+			{
+				this.ShowError(ex);
+			}
+		}
+
+		private void FunctionFilterClear_MouseEnter(object sender, MouseEventArgs e)
+		{
+			c_functionFilterClear.Opacity = 1.0;
+		}
+
+		private void FunctionFilterClear_MouseLeave(object sender, MouseEventArgs e)
+		{
+			c_functionFilterClear.Opacity = 0.5;
+		}
+
+		private void FunctionFilterClear_MouseUp(object sender, MouseButtonEventArgs e)
+		{
+			c_functionFilter.Text = string.Empty;
+			c_functionFilter.Focus();
+		}
+		#endregion
 	}
 }

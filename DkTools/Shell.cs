@@ -199,7 +199,7 @@ namespace DkTools
 			dte.Find.FilesOfType = "";
 		}
 
-		internal static ProbeExplorer.ProbeExplorerToolWindow ShowProbeExplorerToolWindow()
+		internal static ProbeExplorer.ProbeExplorerToolWindow GetProbeExplorerToolWindow()
 		{
 			var window = ProbeToolsPackage.Instance.FindToolWindow(typeof(ProbeExplorer.ProbeExplorerToolWindow), 0, true) as ProbeExplorer.ProbeExplorerToolWindow;
 			if (window == null || window.Frame == null)
@@ -207,6 +207,12 @@ namespace DkTools
 				throw new NotSupportedException("Unable to create Probe Explorer tool window.");
 			}
 
+			return window;
+		}
+
+		internal static ProbeExplorer.ProbeExplorerToolWindow ShowProbeExplorerToolWindow()
+		{
+			var window = GetProbeExplorerToolWindow();
 			ErrorHandler.ThrowOnFailure((window.Frame as IVsWindowFrame).Show());
 			return window;
 		}
@@ -224,6 +230,12 @@ namespace DkTools
 		public class FileSavedEventArgs : EventArgs
 		{
 			public string FileName { get; set; }
+		}
+
+		public static void OnTextViewActivated(IWpfTextView view)
+		{
+			var window = GetProbeExplorerToolWindow();
+			window.OnDocumentActivated(view);
 		}
 	}
 }

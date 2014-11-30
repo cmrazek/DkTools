@@ -2,12 +2,16 @@ DkTools2012 ChangeLog
 ____________________________________________________________________________________________________
 Version 1.2.16 - (pending):
 
+Features:
+- Added a filterable function list on the DK Explorer
+  (function drop down list doesn't let you filter by substring)
+
 Bug Fixes:
-- Added support for the 'character' and 'varchar' data types.
-- Added tooltip to the refresh button to indicate that it refreshes *everything*.
-- FECing DICT no longer creates a file name with a bad file extension.
 - Fixed problem when selecting a class method, that the entire method calls (args and all) would be
   highlighted.
+- Added support for the 'character' and 'varchar' data types.
+- Added tooltip to the refresh button to indicate that it refreshes all WBDK environment data.
+- FECing DICT no longer creates a file name with a bad file extension.
 
 ____________________________________________________________________________________________________
 Version 1.2.15 - Nov 10, 2014:

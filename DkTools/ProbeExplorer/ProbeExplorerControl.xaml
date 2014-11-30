@@ -13,7 +13,7 @@
                 <Image Source="/DkTools2012;component/Images/ico_refresh.gif" />
             </Button.Content>
         </Button>
-        <TabControl HorizontalAlignment="Stretch" Margin="0,31,0,0" Name="c_tabControl" VerticalAlignment="Stretch">
+        <TabControl HorizontalAlignment="Stretch" Margin="0,31,0,0" Name="c_tabControl" VerticalAlignment="Stretch" SelectionChanged="TabControl_SelectionChanged">
             <TabItem Header="Files" Name="c_filesTab">
                 <Grid>
 					<TextBox Height="23" HorizontalAlignment="Stretch" Name="c_fileFilterTextBox" VerticalAlignment="Top" TextChanged="FileFilterTextBox_TextChanged" KeyDown="FileFilterTextBox_KeyDown" PreviewKeyDown="FileFilterTextBox_PreviewKeyDown" Margin="0">
@@ -41,6 +41,59 @@
                     </TreeView>
                 </Grid>
             </TabItem>
+			<TabItem Name="c_functionTab" Header="Functions">
+				<Grid>
+					<TextBox Name="c_functionFilter"
+							 Height="23"
+							 HorizontalAlignment="Stretch"
+							 VerticalAlignment="Top"
+							 KeyDown="FunctionFilter_KeyDown"
+							 PreviewKeyDown="FunctionFilter_PreviewKeyDown"
+							 TextChanged="FunctionFilter_TextChanged"
+							 />
+					<Image Name="c_functionFilterClear"
+						   Width="16"
+						   Height="16"
+						   VerticalAlignment="Top"
+						   HorizontalAlignment="Right"
+                           Source="/DkTools2012;component/Images/Clear.png"
+						   Opacity="0.5"
+						   Margin="0,4,4,0"
+                           MouseUp="FunctionFilterClear_MouseUp"
+						   MouseEnter="FunctionFilterClear_MouseEnter"
+						   MouseLeave="FunctionFilterClear_MouseLeave"/>
+					<ListBox Name="c_functionList"
+							 HorizontalAlignment="Stretch"
+							 VerticalAlignment="Stretch"
+							 Margin="0,25,0,0"
+							 KeyDown="FunctionList_KeyDown"
+							 >
+						<ListBox.ItemTemplate>
+							<DataTemplate>
+								<StackPanel Orientation="Horizontal">
+									<Image Source="{Binding Source={x:Static local:ProbeExplorerControl.FunctionImage}}" Width="16" Height="16" Margin="0,0,2,0"/>
+									<TextBlock Name="c_functionName" Text="{Binding Path=Name}" />
+								</StackPanel>
+							</DataTemplate>
+						</ListBox.ItemTemplate>
+						<ListBox.ItemContainerStyle>
+							<Style TargetType="ListBoxItem">
+								<EventSetter Event="Selected" Handler="FunctionListBoxItem_Selected"/>
+								<EventSetter Event="KeyDown" Handler="FunctionListBoxItem_KeyDown"/>
+								<EventSetter Event="MouseDoubleClick" Handler="FunctionListBoxItem_MouseDoubleClick"/>
+								<Style.Triggers>
+									<DataTrigger Binding="{Binding Path=Visible}" Value="True">
+										<Setter Property="Visibility" Value="Visible"/>
+									</DataTrigger>
+									<DataTrigger Binding="{Binding Path=Visible}" Value="False">
+										<Setter Property="Visibility" Value="Collapsed"/>
+									</DataTrigger>
+								</Style.Triggers>
+							</Style>
+						</ListBox.ItemContainerStyle>
+					</ListBox>
+				</Grid>
+			</TabItem>
         </TabControl>
     </Grid>
 </UserControl>

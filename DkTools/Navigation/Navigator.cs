@@ -41,9 +41,19 @@ namespace DkTools.Navigation
 				}
 			}
 
+			if (span.Snapshot != _view.TextSnapshot)
+			{
+				span = span.TranslateTo(_view.TextSnapshot, SpanTrackingMode.EdgeExclusive);
+			}
+
 			_view.Caret.MoveTo(span.Start);
 			_view.Selection.Select(span, false);
 			_view.ViewScroller.EnsureSpanVisible(span);
+		}
+
+		public void MoveTo(SnapshotPoint pt)
+		{
+			MoveTo(new SnapshotSpan(pt.Snapshot, new Span(pt.Position, 0)));
 		}
 
 		public void GoToNextOrPrevReference(bool next)
