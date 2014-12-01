@@ -1,6 +1,6 @@
 DkTools2012 ChangeLog
 ____________________________________________________________________________________________________
-Version 1.2.16 - (pending):
+Version 1.2.16 - Nov 30, 2014:
 
 Features:
 - Added a filterable function list on the DK Explorer
