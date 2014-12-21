@@ -1,5 +1,11 @@
 DkTools2012 ChangeLog
 ____________________________________________________________________________________________________
+Version 1.2.17 - (pending):
+
+Bug Fixes:
+- Fixed issues with text copied to the clipboard not properly highlighting string literals.
+
+____________________________________________________________________________________________________
 Version 1.2.16 - Nov 30, 2014:
 
 Features:
