@@ -39,6 +39,11 @@ namespace DkTools
 		{
 			base.SaveSettingsToStorage();
 
+			FireEditorRefresh();
+		}
+
+		public void FireEditorRefresh()
+		{
 			var ev = EditorRefreshRequired;
 			if (ev != null) ev(this, EventArgs.Empty);
 		}

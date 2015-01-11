@@ -21,10 +21,12 @@ namespace DkTools.CodeModel
 		private static CodeModel _stdLibModel;
 
 		public event EventHandler<ModelUpdatedEventArgs> ModelUpdated;
+		public static event EventHandler AllModelRebuildRequired;
 
 		public FileStore()
 		{
 			_guid = Guid.NewGuid();
+			AllModelRebuildRequired += FileStore_AllModelRebuildRequired;
 		}
 
 		public static FileStore GetOrCreateForTextBuffer(VsText.ITextBuffer buf)
@@ -370,6 +372,17 @@ namespace DkTools.CodeModel
 				if (_stdLibModel == null) CreateStdLibModel();
 				return _stdLibModel;
 			}
+		}
+
+		public static void FireAllModelRebuildRequired()
+		{
+			var ev = AllModelRebuildRequired;
+			if (ev != null) ev(null, EventArgs.Empty);
+		}
+
+		private void FileStore_AllModelRebuildRequired(object sender, EventArgs e)
+		{
+			_model = null;
 		}
 
 		public sealed class IncludeFile

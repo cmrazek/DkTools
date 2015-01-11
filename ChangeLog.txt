@@ -17,6 +17,7 @@ Bug Fixes:
 - Signature help is no longer triggered if typing inside a comment or string literal.
 - Fixed problems with interface data type parsing and added support for multiple methods with the
   same name.
+- Clicking the DK Explorer refresh button now refreshes the editor windows as well.
 
 ____________________________________________________________________________________________________
 Version 1.2.16 - Nov 30, 2014:

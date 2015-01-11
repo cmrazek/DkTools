@@ -189,6 +189,8 @@ namespace DkTools.ProbeExplorer
 			RefreshFileTree();
 			RefreshDictTree();
 			ProbeToolsPackage.Instance.FunctionFileScanner.RestartScanning();
+			CodeModel.FileStore.FireAllModelRebuildRequired();
+			ProbeToolsPackage.Instance.EditorOptions.FireEditorRefresh();
 		}
 		#endregion
 

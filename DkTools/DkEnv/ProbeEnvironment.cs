@@ -360,6 +360,7 @@ namespace DkTools
 				_tables.Clear();
 				_stringDefs.Clear();
 				_typeDefs.Clear();
+				_intTypes.Clear();
 
 				if (_currentApp != null)
 				{
