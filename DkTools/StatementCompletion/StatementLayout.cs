@@ -59,6 +59,10 @@ namespace DkTools.StatementCompletion
 		#region interface
 		Interface,
 		#endregion
+
+		#region onerror
+		Onerror,
+		#endregion
 	}
 
 	internal class StatementLayout
@@ -75,6 +79,7 @@ namespace DkTools.StatementCompletion
 						case "create": return StatementState.Create;
 						case "format": return StatementState.Format;
 						case "interface": return StatementState.Interface;
+						case "onerror": return StatementState.Onerror;
 						case "order": return StatementState.Order;
 						case "select": return StatementState.Select;
 					}
@@ -361,6 +366,13 @@ namespace DkTools.StatementCompletion
 
 				case StatementState.FormatGenpagesNumber:
 					yield return "outfile";
+					break;
+				#endregion
+
+				#region onerror
+				case StatementState.Onerror:
+					yield return "goto";
+					yield return "resume";
 					break;
 				#endregion
 			}
