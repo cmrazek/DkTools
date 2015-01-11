@@ -357,7 +357,7 @@ namespace DkTools.CodeModel.Tokens
 						if (varDef != null)
 						{
 							var dataType = varDef.DataType;
-							var methodDef = dataType.GetMethod(word2) as InterfaceMethodDefinition;
+							var methodDef = dataType.GetMethods(word2).FirstOrDefault() as InterfaceMethodDefinition;
 							if (methodDef != null)
 							{
 								SkipWhiteSpaceAndComments(scope);
@@ -368,10 +368,13 @@ namespace DkTools.CodeModel.Tokens
 									var nameToken = new IdentifierToken(parent, scope, word2Span, word2);
 									var argsToken = BracketsToken.Parse(parent, scope);
 									return new InterfaceMethodCallToken(parent, scope, varToken, dotToken, nameToken, argsToken, methodDef);
+
+									// TODO: There should be some attempt to match the proper method signature to this call.
+									// but this only affects interfaces.
 								}
 							}
 
-							var propDef = dataType.GetProperty(word2) as InterfacePropertyDefinition;
+							var propDef = dataType.GetProperties(word2).FirstOrDefault() as InterfacePropertyDefinition;
 							if (propDef != null)
 							{
 								var varToken = new VariableToken(parent, scope, span, word, varDef);

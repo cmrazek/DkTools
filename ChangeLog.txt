@@ -14,6 +14,8 @@ Bug Fixes:
 - Fixed issues with text copied to the clipboard not properly highlighting string literals.
 - Tables no longer show up twice in statement completion.
 - Signature help is no longer triggered if typing inside a comment or string literal.
+- Fixed problems with interface data type parsing and added support for multiple methods with the
+  same name.
 
 ____________________________________________________________________________________________________
 Version 1.2.16 - Nov 30, 2014:

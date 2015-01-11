@@ -39,13 +39,15 @@ namespace DkTools.Dict
 
 				var dataDef = repoIntType.MethodDataDef[m];
 				var typeText = dataDef.TypeText[0];
-				var returnDataType = DataType.Parse(new TokenParser.Parser(typeText), flags: DataType.ParseFlag.FromRepo);
+				var parser = new TokenParser.Parser(typeText);
+				var returnDataType = DataType.Parse(parser, flags: DataType.ParseFlag.FromRepo | DataType.ParseFlag.InterfaceType);
+#if DEBUG
+				DataType.CheckDataTypeParsing(typeText, parser, returnDataType);
+#endif
 				if (returnDataType == null) returnDataType = new DataType(typeText);
 				sb.Append(returnDataType.Name);
 				sb.Append(' ');
-#if DEBUG
-				DataType.CheckDataTypeParsing(typeText);
-#endif
+
 
 				var methodName = repoIntType.MethodName[m];
 				sb.Append(methodName);
@@ -57,13 +59,14 @@ namespace DkTools.Dict
 
 					var paramDataDef = repoIntType.MethodParamDataDef[m, p];
 					var paramTypeText = paramDataDef.TypeText[0];
-					var paramDataType = DataType.Parse(new TokenParser.Parser(paramTypeText), flags: DataType.ParseFlag.FromRepo);
+					parser = new TokenParser.Parser(paramTypeText);
+					var paramDataType = DataType.Parse(parser, flags: DataType.ParseFlag.FromRepo | DataType.ParseFlag.InterfaceType);
+#if DEBUG
+					DataType.CheckDataTypeParsing(paramTypeText, parser, paramDataType);
+#endif
 					if (paramDataType == null) paramDataType = new DataType(paramTypeText);
 					sb.Append(paramDataType.Name);
 					sb.Append(' ');
-#if DEBUG
-					DataType.CheckDataTypeParsing(paramTypeText);
-#endif
 
 					sb.Append(repoIntType.MethodParamName[m, p]);
 				}
@@ -81,13 +84,14 @@ namespace DkTools.Dict
 
 				var dataDef = repoIntType.PropertyDataDef[p];
 				var typeText = dataDef.TypeText[0];
-				var dataType = DataType.Parse(new TokenParser.Parser(typeText), flags: DataType.ParseFlag.FromRepo);
+				var parser = new TokenParser.Parser(typeText);
+				var dataType = DataType.Parse(parser, flags: DataType.ParseFlag.FromRepo | DataType.ParseFlag.InterfaceType);
+#if DEBUG
+				DataType.CheckDataTypeParsing(typeText, parser, dataType);
+#endif
 				if (dataType == null) dataType = new DataType(typeText);
 				sb.Append(dataType.Name);
 				sb.Append(' ');
-#if DEBUG
-				DataType.CheckDataTypeParsing(typeText);
-#endif
 
 				var propName = repoIntType.PropertyName[p];
 				sb.Append(propName);
