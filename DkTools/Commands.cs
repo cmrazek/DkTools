@@ -10,6 +10,7 @@ using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudio.OLE.Interop;
 using Microsoft.VisualStudio.Shell;
+using Microsoft.VisualStudio.Text.Editor;
 using DkTools.Compiler;
 
 namespace DkTools
@@ -783,6 +784,16 @@ namespace DkTools
 
 				//Shell.OpenTempContent(prepModel.File.CodeSource.Dump(), Path.GetFileName(model.FileName), ".ppsegs.txt");
 				Shell.OpenTempContent(prepModel.Dump(), Path.GetFileName(model.FileName), ".prep.txt");
+			}
+
+			public static void ShowStateAtCaret()
+			{
+				var view = Shell.ActiveView;
+				if (view == null) return;
+
+				var tracker = Classifier.TextBufferStateTracker.GetTrackerForTextBuffer(view.TextBuffer);
+				var state = tracker.GetStateForPosition(view.Caret.Position.BufferPosition, view.TextSnapshot);
+				Log.WriteDebug("State at caret: 0x{0:X8}", state);
 			}
 		}
 #endif

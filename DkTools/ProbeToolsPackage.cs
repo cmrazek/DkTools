@@ -91,7 +91,6 @@ namespace DkTools
 		private static ProbeToolsPackage _instance;
 		private EnvDTE.Events _dteEvents;
 		private EnvDTE.DocumentEvents _dteDocumentEvents;
-		private EnvDTE.WindowEvents _dteWindowEvents;
 		private FunctionFileScanning.FFScanner _functionScanner;
 
 		/// <summary>

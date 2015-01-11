@@ -496,6 +496,14 @@ namespace DkTools
 			if (_intTypes.TryGetValue(name, out intType)) return intType;
 			return null;
 		}
+
+		public static IEnumerable<Dict.InterfaceType> InterfaceTypes
+		{
+			get
+			{
+				return _intTypes.Values;
+			}
+		}
 		#endregion
 
 		#region RelInds
@@ -813,6 +821,16 @@ namespace DkTools
 			}
 
 			return true;
+		}
+
+		public static bool IsValidTableName(string name)
+		{
+			return name.IsWord() && name.Length <= 8;
+		}
+
+		public static bool IsValidFieldName(string name)
+		{
+			return name.IsWord();
 		}
 		#endregion
 

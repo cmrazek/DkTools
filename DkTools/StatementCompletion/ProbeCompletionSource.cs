@@ -13,6 +13,7 @@ using Microsoft.VisualStudio.Utilities;
 using DkTools.CodeModel;
 using DkTools.CodeModel.Definitions;
 using DkTools.CodeModel.Tokens;
+using DkTools.Classifier;
 
 namespace DkTools.StatementCompletion
 {
@@ -61,7 +62,7 @@ namespace DkTools.StatementCompletion
 			if (_interfaceImg == null) _interfaceImg = BitmapToBitmapSource(Res.InterfaceImg);
 		}
 
-		private ImageSource GetImageForCompletionType(CompletionType type)
+		private static ImageSource GetImageForCompletionType(CompletionType type)
 		{
 			switch (type)
 			{
@@ -86,25 +87,31 @@ namespace DkTools.StatementCompletion
 			}
 		}
 
-		private Completion CreateCompletion(string text, string description, CompletionType type)
+		public static Completion CreateCompletion(string text, CompletionType type)
+		{
+			var img = GetImageForCompletionType(type);
+			return new Completion(text, text, string.Empty, img, string.Empty);
+		}
+
+		public static Completion CreateCompletion(string text, string description, CompletionType type)
 		{
 			var img = GetImageForCompletionType(type);
 			return new Completion(text, text, description, img, string.Empty);
 		}
 
-		private Completion CreateCompletion(string text, string insertionText, string description, CompletionType type)
+		public static Completion CreateCompletion(string text, string insertionText, string description, CompletionType type)
 		{
 			var img = GetImageForCompletionType(type);
 			return new Completion(text, insertionText, description, img, string.Empty);
 		}
 
-		private Completion CreateCompletion(Definition def)
+		public static Completion CreateCompletion(Definition def)
 		{
 			if (!def.CompletionVisible) return null;
 			return CreateCompletion(def.Name, def.QuickInfoTextStr, def.CompletionType);
 		}
 
-		private IEnumerable<Completion> CreateCompletions(IEnumerable<string> strings, CompletionType complType)
+		public static IEnumerable<Completion> CreateCompletions(IEnumerable<string> strings, CompletionType complType)
 		{
 			foreach (var str in strings)
 			{
@@ -156,8 +163,9 @@ namespace DkTools.StatementCompletion
 			else if ((match = _rxTypingWord.Match(prefix)).Success)
 			{
 				// Typing a regular word.
-				completionSpan = new SnapshotSpan(snapshot, linePos + match.Index, match.Length);
-				completionList.AddRange(GetWordCompletions(curPos, snapshot));
+				var wordStartPos = linePos + match.Index;
+				completionSpan = new SnapshotSpan(snapshot, wordStartPos, match.Length);
+				completionList.AddRange(GetWordCompletions(curPos, wordStartPos, snapshot));
 			}
 			#endregion
 			#region Assignment or Comparison
@@ -208,6 +216,24 @@ namespace DkTools.StatementCompletion
 			else if ((match = _rxExtract.Match(prefix)).Success)
 			{
 				completionList.AddRange(HandleAfterExtract(completionSpan, match.Groups[1].Value));
+			}
+			#endregion
+			#region After Word
+			else if ((match = ProbeCompletionCommandHandler.RxAfterWord.Match(prefix)).Success)
+			{
+				completionList.AddRange(HandleAfterWord(match.Groups[1].Value, curPos, snapshot));
+			}
+			#endregion
+			#region After Symbol
+			else if ((match = ProbeCompletionCommandHandler.RxAfterSymbol.Match(prefix)).Success)
+			{
+				completionList.AddRange(HandleAfterSymbol(match.Groups[1].Value, curPos, snapshot));
+			}
+			#endregion
+			#region After Number
+			else if ((match = ProbeCompletionCommandHandler.RxAfterNumber.Match(prefix)).Success)
+			{
+				completionList.AddRange(HandleAfterSymbol(match.Groups[1].Value, curPos, snapshot));
 			}
 			#endregion
 			#region #include
@@ -504,6 +530,27 @@ namespace DkTools.StatementCompletion
 			}
 		}
 
+		private IEnumerable<Completion> HandleAfterWord(string word, int curPos, ITextSnapshot snapshot)
+		{
+			var tracker = TextBufferStateTracker.GetTrackerForTextBuffer(_textBuffer);
+			var stmt = ProbeClassifierScanner.GetStatementFromState(tracker.GetStateForPosition(curPos, snapshot));
+			return StatementLayout.GetCompletionsAfterToken(stmt);
+		}
+
+		private IEnumerable<Completion> HandleAfterSymbol(string word, int curPos, ITextSnapshot snapshot)
+		{
+			var tracker = TextBufferStateTracker.GetTrackerForTextBuffer(_textBuffer);
+			var stmt = ProbeClassifierScanner.GetStatementFromState(tracker.GetStateForPosition(curPos, snapshot));
+			return StatementLayout.GetCompletionsAfterToken(stmt);
+		}
+
+		private IEnumerable<Completion> HandleAfterNumber(string word, int curPos, ITextSnapshot snapshot)
+		{
+			var tracker = TextBufferStateTracker.GetTrackerForTextBuffer(_textBuffer);
+			var stmt = ProbeClassifierScanner.GetStatementFromState(tracker.GetStateForPosition(curPos, snapshot));
+			return StatementLayout.GetCompletionsAfterToken(stmt);
+		}
+
 		public void Dispose()
 		{
 			if (!_disposed)
@@ -612,7 +659,7 @@ namespace DkTools.StatementCompletion
 			return false;
 		}
 
-		private IEnumerable<Completion> GetWordCompletions(int curPos, ITextSnapshot snapshot)
+		private IEnumerable<Completion> GetWordCompletions(int curPos, int wordStartPos, ITextSnapshot snapshot)
 		{
 			var fileStore = CodeModel.FileStore.GetOrCreateForTextBuffer(_textBuffer);
 			if (fileStore == null) yield break;
@@ -633,15 +680,16 @@ namespace DkTools.StatementCompletion
 				yield return CreateCompletion(def);
 			}
 
-			foreach (var t in ProbeEnvironment.DictDefinitions)
-			{
-				if (!t.CompletionVisible) continue;
-				yield return CreateCompletion(t);
-			}
+			// Dictionary definitions are already provided by the DefinitionProvider.
+			//foreach (var t in ProbeEnvironment.DictDefinitions)
+			//{
+			//	if (!t.CompletionVisible) continue;
+			//	yield return CreateCompletion(t);
+			//}
 
 			foreach (var d in Constants.DataTypeKeywords)
 			{
-				yield return CreateCompletion(d, d, CompletionType.DataType);
+				yield return CreateCompletion(d, CompletionType.DataType);
 			}
 
 			// Don't show functions when on the root.
@@ -657,21 +705,15 @@ namespace DkTools.StatementCompletion
 			// Global keywords
 			foreach (var k in Constants.GlobalKeywords)
 			{
-				yield return CreateCompletion(k, k, CompletionType.Keyword);
+				yield return CreateCompletion(k, CompletionType.Keyword);
 			}
 
-			//foreach (var token in tokens)
-			//{
-			//	if (token is SwitchToken)
-			//	{
-			//		foreach (var k in Constants.SwitchKeywords) yield return CreateCompletion(k, k, CompletionType.Keyword);
-			//	}
-
-			//	if (token is FunctionToken)
-			//	{
-			//		foreach (var k in Constants.FunctionKeywords) yield return CreateCompletion(k, k, CompletionType.Keyword);
-			//	}
-			//}
+			var tracker = Classifier.TextBufferStateTracker.GetTrackerForTextBuffer(_textBuffer);
+			var state = Classifier.ProbeClassifierScanner.GetStatementFromState(tracker.GetStateForPosition(wordStartPos, snapshot));
+			foreach (var keyword in StatementLayout.GetNextPossibleKeywords(state))
+			{
+				yield return CreateCompletion(keyword, CompletionType.Keyword);
+			}
 		}
 
 		public string GetArgumentText(string sig, int argIndex)

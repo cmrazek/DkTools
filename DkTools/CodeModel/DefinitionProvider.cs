@@ -45,6 +45,8 @@ namespace DkTools.CodeModel
 						"Converts macro parameters to strings."),
 					new FunctionDefinition("UNREFERENCED_PARAMETER", DataType.Void, "UNREFERENCED_PARAMETER(parameter)",
 						"Prevents a compiler warning if a parameter passed to a function is not used."),
+					new FunctionDefinition("vstring", DataType.StringVarying, "string varying vstring( expression, ... );",
+						"Creates a string of varying length by concatenating a list of expressions. "),
 
 					new InterfaceTypeDefinition("oleobject")
 				};

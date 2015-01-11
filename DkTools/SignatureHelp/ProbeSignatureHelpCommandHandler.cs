@@ -49,27 +49,19 @@ namespace DkTools.SignatureHelp
 					typedChar = (char)(ushort)Marshal.GetObjectForNativeVariant(pvaIn);
 					if (typedChar == '(')
 					{
-						SnapshotPoint point = _textView.Caret.Position.BufferPosition;
-						//var source = point.Snapshot.GetText();
-						var pos = point.Position;
-						var lineText = point.Snapshot.GetLineTextUpToPosition(pos).TrimEnd();
-
-						if (lineText.Length > 0 && lineText[lineText.Length - 1].IsWordChar(false))
+						if (TriggerAllowedHere(_textView.TextSnapshot, _textView.Caret.Position.BufferPosition))
 						{
-							if (_session != null && !_session.IsDismissed) _session.Dismiss();
-							s_typedChar = typedChar;
-							_session = _broker.TriggerSignatureHelp(_textView);
+							SnapshotPoint point = _textView.Caret.Position.BufferPosition;
+							var pos = point.Position;
+							var lineText = point.Snapshot.GetLineTextUpToPosition(pos).TrimEnd();
+
+							if (lineText.Length > 0 && lineText[lineText.Length - 1].IsWordChar(false))
+							{
+								if (_session != null && !_session.IsDismissed) _session.Dismiss();
+								s_typedChar = typedChar;
+								_session = _broker.TriggerSignatureHelp(_textView);
+							}
 						}
-
-						//// Back up to before any whitespace before the '('
-						//while (pos > 0 && (pos >= source.Length || char.IsWhiteSpace(source[pos]))) pos--;
-
-						//if (pos >= 0 && pos < source.Length && source[pos].IsWordChar(false))
-						//{
-						//	if (_session != null && !_session.IsDismissed) _session.Dismiss();
-						//	s_typedChar = typedChar;
-						//	_session = _broker.TriggerSignatureHelp(_textView);
-						//}
 					}
 					else if (typedChar == ')' && _session != null)
 					{
@@ -78,18 +70,21 @@ namespace DkTools.SignatureHelp
 					}
 					else if (typedChar == ',' && (_session == null || _session.IsDismissed))
 					{
-						var fileStore = CodeModel.FileStore.GetOrCreateForTextBuffer(_textView.TextBuffer);
-						if (fileStore != null)
+						if (TriggerAllowedHere(_textView.TextSnapshot, _textView.Caret.Position.BufferPosition))
 						{
-							var model = fileStore.GetMostRecentModel(_textView.TextSnapshot, "Signature help command handler - after ','");
-							var caretPos = _textView.Caret.Position.BufferPosition.TranslateTo(model.Snapshot, PointTrackingMode.Positive).Position;
-
-							var tokens = model.FindTokens(caretPos);
-							var funcCallToken = tokens.LastOrDefault(t => t is FunctionCallToken || t is InterfaceMethodCallToken);
-							if (funcCallToken != null)
+							var fileStore = CodeModel.FileStore.GetOrCreateForTextBuffer(_textView.TextBuffer);
+							if (fileStore != null)
 							{
-								s_typedChar = typedChar;
-								_session = _broker.TriggerSignatureHelp(_textView);
+								var model = fileStore.GetMostRecentModel(_textView.TextSnapshot, "Signature help command handler - after ','");
+								var caretPos = _textView.Caret.Position.BufferPosition.TranslateTo(model.Snapshot, PointTrackingMode.Positive).Position;
+
+								var tokens = model.FindTokens(caretPos);
+								var funcCallToken = tokens.LastOrDefault(t => t is FunctionCallToken || t is InterfaceMethodCallToken);
+								if (funcCallToken != null)
+								{
+									s_typedChar = typedChar;
+									_session = _broker.TriggerSignatureHelp(_textView);
+								}
 							}
 						}
 					}
@@ -106,6 +101,19 @@ namespace DkTools.SignatureHelp
 		public int QueryStatus(ref Guid pguidCmdGroup, uint cCmds, OLECMD[] prgCmds, IntPtr pCmdText)
 		{
 			return _nextCommandHandler.QueryStatus(ref pguidCmdGroup, cCmds, prgCmds, pCmdText);
+		}
+
+		private bool TriggerAllowedHere(ITextSnapshot snapshot, int position)
+		{
+			var tracker = Classifier.TextBufferStateTracker.GetTrackerForTextBuffer(snapshot.TextBuffer);
+			if (tracker != null)
+			{
+				var state = tracker.GetStateForPosition(position, snapshot);
+				if ((state & Classifier.ProbeClassifierScanner.State_CommentMask) != 0) return false;
+				if ((state & Classifier.ProbeClassifierScanner.State_StringLiteral_Mask) != 0) return false;
+			}
+
+			return true;
 		}
 	}
 }

@@ -28,11 +28,13 @@ namespace DkTools.StatementCompletion
 
 		private static readonly Regex _rxAfterAssignOrCompare = new Regex(@"(?:==|=|!=)\s$");
 		private static readonly Regex _rxFunctionStartBracket = new Regex(@"\w+\s*\($");
-		private static readonly Regex _rxAutoCompleteKeyword = new Regex(@"\b(return|case|extract|permanent)\s$");
+		public static readonly Regex RxAfterWord = new Regex(@"\b(\w+)\s$");
 		private static readonly Regex _rxAfterIfDef = new Regex(@"\#ifn?def\s$");
 		private static readonly Regex _rxAfterInclude = new Regex(@"\#include\s+(?:\<|\"")$");
 		private static readonly Regex _rxOrderBy = new Regex(@"\border\s+by\s$");
 		private static readonly Regex _rxTag = new Regex(@"\btag\s$");
+		public static readonly Regex RxAfterSymbol = new Regex(@"(\*|,)\s$");
+		public static readonly Regex RxAfterNumber = new Regex(@"(\d+)\s$");
 
 		public ProbeCompletionCommandHandler(IVsTextView textViewAdapter, ITextView textView, ProbeCompletionCommandHandlerProvider provider)
 		{
@@ -146,10 +148,12 @@ namespace DkTools.StatementCompletion
 						var prefix = _textView.TextBuffer.CurrentSnapshot.GetLineTextUpToPosition(caretPos);
 
 						if (prefix.EndsWith(", ") ||
-							_rxAutoCompleteKeyword.IsMatch(prefix) ||
+							RxAfterWord.IsMatch(prefix) ||
 							_rxAfterIfDef.IsMatch(prefix) ||
 							_rxOrderBy.IsMatch(prefix) ||
-							_rxTag.IsMatch(prefix))
+							_rxTag.IsMatch(prefix) ||
+							RxAfterSymbol.IsMatch(prefix) ||
+							RxAfterNumber.IsMatch(prefix))
 						{
 							TriggerCompletionIfAllowed(false);
 						}

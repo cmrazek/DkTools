@@ -2,8 +2,18 @@ DkTools2012 ChangeLog
 ____________________________________________________________________________________________________
 Version 1.2.17 - (pending):
 
+Features:
+- In this dictionary explorer, fields can now be filtered by using 'table.field' syntax.
+  For example, if you enter 'cust.name', it'll show the field cust.name; whereas before you had to
+  enter 'name' and it would display every other field in the system containing 'name'.
+  (you can also just type 'name', if you want to)
+- Added built-in function 'vstring'.
+- Added better support for keywords on specific types of statements such as select, create, format.
+
 Bug Fixes:
 - Fixed issues with text copied to the clipboard not properly highlighting string literals.
+- Tables no longer show up twice in statement completion.
+- Signature help is no longer triggered if typing inside a comment or string literal.
 
 ____________________________________________________________________________________________________
 Version 1.2.16 - Nov 30, 2014:

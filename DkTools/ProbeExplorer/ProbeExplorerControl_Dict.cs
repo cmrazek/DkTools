@@ -113,7 +113,7 @@ namespace DkTools.ProbeExplorer
 
 						foreach (var field in table.Fields)
 						{
-							if (_dictFilter.Match(field.Name) || _dictFilter.Match(field.Prompt))
+							if (_dictFilter.Match(field.FullName))
 							{
 								tableNode.Items.Add(CreateFieldTvi(field));
 							}
@@ -360,7 +360,7 @@ namespace DkTools.ProbeExplorer
 
 					foreach (var field in table.Fields)
 					{
-						if (_dictFilter.Match(field.Name) || _dictFilter.Match(field.Prompt))
+						if (_dictFilter.Match(field.FullName))
 						{
 							showTable = true;
 							expandTable = true;

@@ -486,6 +486,7 @@
     <Compile Include="StatementCompletion\ProbeCompletionCommandHandlerProvider.cs" />
     <Compile Include="StatementCompletion\ProbeCompletionSource.cs" />
     <Compile Include="StatementCompletion\ProbeCompletionSourceProvider.cs" />
+    <Compile Include="StatementCompletion\StatementLayout.cs" />
     <Compile Include="Tagging\Tagger.cs" />
     <Compile Include="Tagging\TaggingOptions.cs">
       <SubType>Component</SubType>
