@@ -20,6 +20,8 @@ namespace DkTools.CodeModel
 				{
 					new FunctionDefinition("abs", DataType.Void, "abs(expression to be evaluated)",
 						"Calculates the absolute value of an expression."),
+					new FunctionDefinition("createobject", DataType.Void, "void createobject(iObj)",
+						"Instantiates a COM object. The parameter iObj becomes a handle to the instance. The interface type of iObj determines what methods and properties the handle can call."),
 					new FunctionDefinition("diag", DataType.Void, "void diag(expressions ...)",
 						"Outputs specified expressions to a diagnostic device."),
 					new FunctionDefinition("FormatString", DataType.Char255, "char(255) FormatString(FormatControlString, expression1, expression2, ... )",
@@ -38,6 +40,8 @@ namespace DkTools.CodeModel
 						"Returns the value of a column in the old row buffer."),
 					new FunctionDefinition("qcolsend", DataType.Void, "void qcolsend(TableName.ColumnName ...)",
 						"Sends columns of the client's current row buffer to SAM or from SAM to the client. Only the current row buffer (not the old buffer) of the recepient is overwritten."),
+					new FunctionDefinition("releaseobject", DataType.Void, "void releaseobject(iObj)",
+						"Releases the object identified by iObj, and automatically disconnects all events associated with iObj."),
 					new FunctionDefinition("SetMessage", DataType.Int, "int SetMessage(MessageControlString, expressions ...)",
 						"Writes to the error message buffer. CAM displays the contents of that buffer when a trigger encounters an error. In code, you can read that buffer using the getmsg function.\r\n\r\n" +
 						"Provides similar functionality to setmsg, but allows you to maintain one source code for all languages (with one set of resource files per language)."),

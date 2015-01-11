@@ -7,7 +7,7 @@ Features:
   For example, if you enter 'cust.name', it'll show the field cust.name; whereas before you had to
   enter 'name' and it would display every other field in the system containing 'name'.
   (you can also just type 'name', if you want to)
-- Added built-in function 'vstring'.
+- Added built-in functions 'createobject', 'releaseobject' and 'vstring'
 - Added better support for keywords on specific types of statements such as select, create, format.
 
 Bug Fixes:
