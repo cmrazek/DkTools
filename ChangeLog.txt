@@ -1,6 +1,6 @@
 DkTools2012 ChangeLog
 ____________________________________________________________________________________________________
-Version 1.2.17 - (pending):
+Version 1.2.17 - Jan 12, 2015:
 
 Features:
 - In this dictionary explorer, fields can now be filtered by using 'table.field' syntax.
