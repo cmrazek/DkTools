@@ -28,7 +28,7 @@ namespace DkTools.ProbeExplorer
 
 		[Category("Compile")]
 		[DisplayName("Run DCCMP after a successful compile.")]
-		[Description("When a compile completes successfully, the DCCMP process will be automatically run with /z. You may want to disable this if need to run dccmp in manual mode.")]
+		[Description("When a compile completes successfully, the DCCMP process will be automatically run. You may want to disable this if need to run dccmp in manual mode.")]
 		public bool RunDccmpAfterCompile { get; set; }
 
 		[Category("Compile")]

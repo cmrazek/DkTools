@@ -13,7 +13,7 @@ namespace DkTools
 	class EditorOptions : DialogPage
 	{
 		[Category("Editor Options")]
-		[DisplayName("Disable Dead Dode")]
+		[DisplayName("Disable Dead Code")]
 		[Description("Code that is excluded due to preprocessor commands will be colored gray.")]
 		public bool DisableDeadCode { get; set; }
 
