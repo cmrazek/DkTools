@@ -21,6 +21,11 @@ namespace DkTools.ProbeExplorer
 		[Description("List of extensions to be not displayed in DK Explorer, separated by spaces. If blank, default extensions hidden will be (" + Constants.DefaultHiddenExtensions + ")")]
 		public string HiddenExtensions { get; set; }
 
+		[Category("DK Explorer Options")]
+		[DisplayName("Auto-Scroll to Functions")]
+		[Description("When functions are selected, automatically scroll to them in the document.")]
+		public bool AutoScrollToFunctions { get; set; }
+
 		[Category("Compile")]
 		[DisplayName("Show Error List After Compile")]
 		[Description("When a compile is complete, if there are errors or warnings, then display Error List tool window.")]
@@ -54,6 +59,7 @@ namespace DkTools.ProbeExplorer
 			CompileArguments = "/w";
 			DccmpArguments = "/z /D";
 			CredelixArguments = "/p";
+			AutoScrollToFunctions = true;
 		}
 	}
 }

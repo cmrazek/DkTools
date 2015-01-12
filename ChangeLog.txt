@@ -2,6 +2,9 @@ DkTools2012 ChangeLog
 ____________________________________________________________________________________________________
 Version 1.2.18 - (pending):
 
+Features:
+- Added a setting to disable auto-scrolling of the function list when items are selected.
+
 Bug Fixes:
 - Fixed spelling mistake in options.
 

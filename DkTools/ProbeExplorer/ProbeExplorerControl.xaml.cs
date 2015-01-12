@@ -1069,6 +1069,7 @@ namespace DkTools.ProbeExplorer
 		private void ActivateFunction(FunctionListItem func, bool setDocFocus)
 		{
 			if (_activeView == null || _activeSnapshot == null || func == null) return;
+			if (!setDocFocus && !ProbeToolsPackage.Instance.ProbeExplorerOptions.AutoScrollToFunctions) return;
 
 			if (setDocFocus)
 			{
