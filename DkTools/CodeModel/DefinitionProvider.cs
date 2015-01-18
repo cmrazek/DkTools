@@ -52,7 +52,9 @@ namespace DkTools.CodeModel
 					new FunctionDefinition("vstring", DataType.StringVarying, "string varying vstring( expression, ... );",
 						"Creates a string of varying length by concatenating a list of expressions. "),
 
-					new InterfaceTypeDefinition("oleobject")
+					new InterfaceTypeDefinition("oleobject"),
+
+					new ConstantDefinition("_WINDOWS", null, 0, string.Empty)
 				};
 			}
 			AddGlobalFromAnywhere(_builtInDefs);
