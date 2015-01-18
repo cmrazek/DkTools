@@ -205,32 +205,6 @@ namespace DkTools.CodeModel.Tokens
 			return sb.ToString();
 		}
 
-		// TODO: remove
-		//public static string NormalizePlainText(string str)
-		//{
-		//	var sb = new StringBuilder(str.Length);
-		//	var lastWhiteSpace = true;
-
-		//	foreach (var ch in str)
-		//	{
-		//		if (char.IsWhiteSpace(ch))
-		//		{
-		//			if (!lastWhiteSpace)
-		//			{
-		//				sb.Append(" ");
-		//				lastWhiteSpace = true;
-		//			}
-		//		}
-		//		else
-		//		{
-		//			sb.Append(ch);
-		//			lastWhiteSpace = false;
-		//		}
-		//	}
-
-		//	return sb.ToString().TrimEnd();
-		//}
-
 		#region Find Operations
 		public IEnumerable<Token> FindDownward(int pos)
 		{

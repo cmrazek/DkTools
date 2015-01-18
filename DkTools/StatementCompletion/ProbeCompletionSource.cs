@@ -130,13 +130,9 @@ namespace DkTools.StatementCompletion
 		private static readonly Regex _rxAfterAssignOrCompare = new Regex(@"(==|=|!=)\s$");
 		private static readonly Regex _rxClassFunctionStartBracket = new Regex(@"(\w+)\s*\.\s*(\w+)\s*\($");
 		private static readonly Regex _rxFunctionStartBracket = new Regex(@"(\w+)\s*\($");
-		private static readonly Regex _rxReturn = new Regex(@"\breturn\s$");
-		private static readonly Regex _rxCase = new Regex(@"\bcase\s$");
 		private static readonly Regex _rxAfterIfDef = new Regex(@"\#ifn?def\s$");
-		private static readonly Regex _rxExtract = new Regex(@"\bextract\s(permanent\s)?$");
 		private static readonly Regex _rxAfterInclude = new Regex(@"\#include\s+(\<|\"")$");
 		private static readonly Regex _rxOrderBy = new Regex(@"\border\s+by\s$");
-		private static readonly Regex _rxTag = new Regex(@"\btag\s$");
 
 		void ICompletionSource.AugmentCompletionSession(ICompletionSession session, IList<CompletionSet> completionSets)
 		{
@@ -152,8 +148,79 @@ namespace DkTools.StatementCompletion
 			var completionSpan = new SnapshotSpan(snapshot, curPos, 0);
 			Match match;
 
+			var lastCh = prefix.Length > 0 ? prefix[prefix.Length - 1] : '\0';
+
+			if (lastCh == ' ')
+			{
+				#region Assignment or Comparison
+				if ((match = _rxAfterAssignOrCompare.Match(prefix)).Success)
+				{
+					var operatorText = match.Groups[1].Value;
+					AddCompletions(completionList, HandleAfterAssignOrCompare(completionSpan, operatorText));
+				}
+				#endregion
+				#region #ifdef
+				else if ((match = _rxAfterIfDef.Match(prefix)).Success)
+				{
+					AddCompletions(completionList, HandleAfterIfDef(completionSpan));
+				}
+				#endregion
+				#region Comma
+				else if (prefix.EndsWith(", "))
+				{
+					AddCompletions(completionList, HandleAfterComma(completionSpan));
+				}
+				#endregion
+				#region After Word
+				else if ((match = ProbeCompletionCommandHandler.RxAfterWord.Match(prefix)).Success)
+				{
+					switch (match.Groups[1].Value)
+					{
+						case "case":
+							AddCompletions(completionList, HandleAfterCase(completionSpan));
+							break;
+						case "extract":
+							AddCompletions(completionList, HandleAfterExtract(completionSpan, match.Groups[1].Value));
+							break;
+						case "return":
+							AddCompletions(completionList, HandleAfterReturn(completionSpan));
+							break;
+						case "tag":
+							AddCompletions(completionList, HandleAfterTag());
+							break;
+						default:
+							AddCompletions(completionList, HandleAfterWord(match.Groups[1].Value, curPos, snapshot));
+							break;
+					}
+				}
+				#endregion
+				#region After Symbol
+				else if ((match = ProbeCompletionCommandHandler.RxAfterSymbol.Match(prefix)).Success)
+				{
+					AddCompletions(completionList, HandleAfterSymbol(match.Groups[1].Value, curPos, snapshot));
+				}
+				#endregion
+				#region After Number
+				else if ((match = ProbeCompletionCommandHandler.RxAfterNumber.Match(prefix)).Success)
+				{
+					AddCompletions(completionList, HandleAfterSymbol(match.Groups[1].Value, curPos, snapshot));
+				}
+				#endregion
+				#region After String Literal
+				else if ((match = ProbeCompletionCommandHandler.RxAfterStringLiteral.Match(prefix)).Success)
+				{
+					AddCompletions(completionList, HandleAfterStringLiteral(curPos, snapshot));
+				}
+				#endregion
+				#region order by
+				else if ((match = _rxOrderBy.Match(prefix)).Success)
+				{
+					AddCompletions(completionList, HandleAfterOrderBy());
+				}
+				#endregion
+			}
 			#region Table.Field
-			if ((match = _rxTypingTable.Match(prefix)).Success)
+			else if ((match = _rxTypingTable.Match(prefix)).Success)
 			{
 				completionSpan = new SnapshotSpan(snapshot, linePos + match.Groups[2].Index, match.Groups[2].Length);
 				AddCompletions(completionList, HandleDotSeparatedWords(completionSpan, match.Groups[1].Value, match.Groups[2].Value));
@@ -166,19 +233,6 @@ namespace DkTools.StatementCompletion
 				var wordStartPos = linePos + match.Index;
 				completionSpan = new SnapshotSpan(snapshot, wordStartPos, match.Length);
 				AddCompletions(completionList, GetWordCompletions(curPos, wordStartPos, snapshot));
-			}
-			#endregion
-			#region Assignment or Comparison
-			else if ((match = _rxAfterAssignOrCompare.Match(prefix)).Success)
-			{
-				var operatorText = match.Groups[1].Value;
-				AddCompletions(completionList, HandleAfterAssignOrCompare(completionSpan, operatorText));
-			}
-			#endregion
-			#region #ifdef
-			else if ((match = _rxAfterIfDef.Match(prefix)).Success)
-			{
-				AddCompletions(completionList, HandleAfterIfDef(completionSpan));
 			}
 			#endregion
 			#region Class function bracket
@@ -194,65 +248,11 @@ namespace DkTools.StatementCompletion
 				AddCompletions(completionList, HandleAfterFunctionArgsStart(completionSpan, match.Groups[1].Value));
 			}
 			#endregion
-			#region Comma
-			else if (prefix.EndsWith(", "))
-			{
-				AddCompletions(completionList, HandleAfterComma(completionSpan));
-			}
-			#endregion
-			#region Return
-			else if ((match = _rxReturn.Match(prefix)).Success)
-			{
-				AddCompletions(completionList, HandleAfterReturn(completionSpan));
-			}
-			#endregion
-			#region Case
-			else if ((match = _rxCase.Match(prefix)).Success)
-			{
-				AddCompletions(completionList, HandleAfterCase(completionSpan));
-			}
-			#endregion
-			#region Extract
-			else if ((match = _rxExtract.Match(prefix)).Success)
-			{
-				AddCompletions(completionList, HandleAfterExtract(completionSpan, match.Groups[1].Value));
-			}
-			#endregion
-			#region After Word
-			else if ((match = ProbeCompletionCommandHandler.RxAfterWord.Match(prefix)).Success)
-			{
-				AddCompletions(completionList, HandleAfterWord(match.Groups[1].Value, curPos, snapshot));
-			}
-			#endregion
-			#region After Symbol
-			else if ((match = ProbeCompletionCommandHandler.RxAfterSymbol.Match(prefix)).Success)
-			{
-				AddCompletions(completionList, HandleAfterSymbol(match.Groups[1].Value, curPos, snapshot));
-			}
-			#endregion
-			#region After Number
-			else if ((match = ProbeCompletionCommandHandler.RxAfterNumber.Match(prefix)).Success)
-			{
-				AddCompletions(completionList, HandleAfterSymbol(match.Groups[1].Value, curPos, snapshot));
-			}
-			#endregion
 			#region #include
 			else if ((match = _rxAfterInclude.Match(prefix)).Success)
 			{
 				completionSpan = new SnapshotSpan(snapshot, linePos + match.Groups[1].Index, match.Groups[1].Length);
 				AddCompletions(completionList, HandleAfterInclude(completionSpan, match.Groups[1].Value));
-			}
-			#endregion
-			#region order by
-			else if ((match = _rxOrderBy.Match(prefix)).Success)
-			{
-				AddCompletions(completionList, HandleAfterOrderBy());
-			}
-			#endregion
-			#region tag
-			else if ((match = _rxTag.Match(prefix)).Success)
-			{
-				AddCompletions(completionList, HandleAfterTag());
 			}
 			#endregion
 
@@ -540,21 +540,28 @@ namespace DkTools.StatementCompletion
 		private IEnumerable<Completion> HandleAfterWord(string word, int curPos, ITextSnapshot snapshot)
 		{
 			var tracker = TextBufferStateTracker.GetTrackerForTextBuffer(_textBuffer);
-			var stmt = ProbeClassifierScanner.GetStatementFromState(tracker.GetStateForPosition(curPos, snapshot));
+			var stmt = State.ToStatement(tracker.GetStateForPosition(curPos, snapshot));
 			return StatementLayout.GetCompletionsAfterToken(stmt);
 		}
 
 		private IEnumerable<Completion> HandleAfterSymbol(string word, int curPos, ITextSnapshot snapshot)
 		{
 			var tracker = TextBufferStateTracker.GetTrackerForTextBuffer(_textBuffer);
-			var stmt = ProbeClassifierScanner.GetStatementFromState(tracker.GetStateForPosition(curPos, snapshot));
+			var stmt = State.ToStatement(tracker.GetStateForPosition(curPos, snapshot));
 			return StatementLayout.GetCompletionsAfterToken(stmt);
 		}
 
 		private IEnumerable<Completion> HandleAfterNumber(string word, int curPos, ITextSnapshot snapshot)
 		{
 			var tracker = TextBufferStateTracker.GetTrackerForTextBuffer(_textBuffer);
-			var stmt = ProbeClassifierScanner.GetStatementFromState(tracker.GetStateForPosition(curPos, snapshot));
+			var stmt = State.ToStatement(tracker.GetStateForPosition(curPos, snapshot));
+			return StatementLayout.GetCompletionsAfterToken(stmt);
+		}
+
+		private IEnumerable<Completion> HandleAfterStringLiteral(int curPos, ITextSnapshot snapshot)
+		{
+			var tracker = TextBufferStateTracker.GetTrackerForTextBuffer(_textBuffer);
+			var stmt = State.ToStatement(tracker.GetStateForPosition(curPos, snapshot));
 			return StatementLayout.GetCompletionsAfterToken(stmt);
 		}
 
@@ -716,7 +723,7 @@ namespace DkTools.StatementCompletion
 			}
 
 			var tracker = Classifier.TextBufferStateTracker.GetTrackerForTextBuffer(_textBuffer);
-			var state = Classifier.ProbeClassifierScanner.GetStatementFromState(tracker.GetStateForPosition(wordStartPos, snapshot));
+			var state = Classifier.State.ToStatement(tracker.GetStateForPosition(wordStartPos, snapshot));
 			foreach (var keyword in StatementLayout.GetNextPossibleKeywords(state))
 			{
 				yield return CreateCompletion(keyword, CompletionType.Keyword);

@@ -4,13 +4,15 @@ Version 1.2.18 - (pending):
 
 Features:
 - Added a setting to disable auto-scrolling of the function list when items are selected.
-- Added missing _WINDOWS constant.
+- Added missing _WINDOWS macro.
 - Added aggregate functions sum, count, avg, max and min.
+- Added better support for 'alter' statements.
 
 Bug Fixes:
 - Fixed spelling mistake in options.
 - Fixed the 'by' in a select's 'order by' not being highlighted when there's no where clause.
 - Fixed highlighting of 'from' in a select when a 'select name' is used.
+- Signature help no longer pops up when typing inside a '//' comment.
 
 ____________________________________________________________________________________________________
 Version 1.2.17 - Jan 12, 2015:

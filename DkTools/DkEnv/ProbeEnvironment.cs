@@ -505,6 +505,16 @@ namespace DkTools
 				return _intTypes.Values;
 			}
 		}
+
+		public static IEnumerable<Dict.StringDef> StringDefs
+		{
+			get { return _stringDefs.Values; }
+		}
+
+		public static IEnumerable<Dict.TypeDef> TypeDefs
+		{
+			get { return _typeDefs.Values; }
+		}
 		#endregion
 
 		#region RelInds

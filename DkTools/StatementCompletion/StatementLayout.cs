@@ -63,6 +63,30 @@ namespace DkTools.StatementCompletion
 		#region onerror
 		Onerror,
 		#endregion
+
+		#region alter
+		Alter,
+		AlterColumn,
+		AlterColumnName,
+		AlterTable,
+		AlterApplication,
+		AlterApplicationAppIID,
+		AlterApplicationAppIIDName,
+		AlterApplicationPrompt,
+		AlterApplicationPromptString,
+		AlterApplicationComment,
+		AlterApplicationCommentString,
+		AlterApplicationLangId,
+		AlterApplicationLangIdNumber,
+		AlterApplicationDescription,
+		AlterApplicationDescriptionString,
+		AlterApplicationBrackets,
+		AlterApplicationExtends,
+		AlterApplicationExtendsAppIID,
+		AlterApplicationExtendsAppIIDString,
+		AlterStringdef,
+		AlterTypedef,
+		#endregion
 	}
 
 	internal class StatementLayout
@@ -75,6 +99,7 @@ namespace DkTools.StatementCompletion
 					switch (word)
 					{
 						case "after": return StatementState.After;
+						case "alter": return StatementState.Alter;
 						case "before": return StatementState.Before;
 						case "create": return StatementState.Create;
 						case "format": return StatementState.Format;
@@ -193,6 +218,69 @@ namespace DkTools.StatementCompletion
 					if (word == "outfile") return StatementState.FormatOutfile;
 					break;
 				#endregion
+
+				#region alter
+				case StatementState.Alter:
+					switch (word)
+					{
+						case "application": return StatementState.AlterApplication;
+						case "column": return StatementState.AlterColumn;
+						case "table": return StatementState.AlterTable;
+						case "stringdef": return StatementState.AlterStringdef;
+						case "typedef": return StatementState.AlterTypedef;
+					}
+					break;
+
+				case StatementState.AlterColumn:
+					if (ProbeEnvironment.IsValidFieldName(word)) return StatementState.AlterColumnName;
+					break;
+
+				case StatementState.AlterApplication:
+					if (word == "AppIID") return StatementState.AlterApplicationAppIID;
+					break;
+
+				case StatementState.AlterApplicationAppIID:
+					if (word != "prompt") return StatementState.AlterApplicationAppIIDName;
+					break;
+
+				case StatementState.AlterApplicationAppIIDName:
+					if (word == "prompt") return StatementState.AlterApplicationPrompt;
+					break;
+
+				case StatementState.AlterApplicationPrompt:
+					return StatementState.AlterApplicationPromptString;
+
+				case StatementState.AlterApplicationPromptString:
+					if (word == "comment") return StatementState.AlterApplicationComment;
+					if (word == "langid") return StatementState.AlterApplicationLangId;
+					if (word == "description") return StatementState.AlterApplicationDescription;
+					break;
+
+				case StatementState.AlterApplicationComment:
+					return StatementState.AlterApplicationCommentString;
+
+				case StatementState.AlterApplicationCommentString:
+					if (word == "langid") return StatementState.AlterApplicationLangId;
+					if (word == "description") return StatementState.AlterApplicationDescription;
+					break;
+
+				case StatementState.AlterApplicationLangId:
+					return StatementState.AlterApplicationLangIdNumber;
+
+				case StatementState.AlterApplicationDescription:
+					return StatementState.AlterApplicationDescriptionString;
+
+				case StatementState.AlterApplicationBrackets:
+					if (word == "extends") return StatementState.AlterApplicationExtends;
+					break;
+
+				case StatementState.AlterApplicationExtends:
+					if (word == "AppIID") return StatementState.AlterApplicationExtendsAppIID;
+					break;
+
+				case StatementState.AlterApplicationExtendsAppIID:
+					return StatementState.AlterApplicationExtendsAppIIDString;
+				#endregion
 			}
 
 			return StatementState.None;
@@ -215,6 +303,11 @@ namespace DkTools.StatementCompletion
 				case StatementState.FormatGenpagesEquals:
 					return StatementState.FormatGenpagesNumber;
 				#endregion
+
+				#region alter
+				case StatementState.AlterApplicationLangId:
+					return StatementState.AlterApplicationLangIdNumber;
+				#endregion
 			}
 			return StatementState.None;
 		}
@@ -234,6 +327,24 @@ namespace DkTools.StatementCompletion
 				#region selects
 				case StatementState.Select:	// Optional name for select
 					return StatementState.Select;
+				#endregion
+
+				#region alter
+				case StatementState.AlterApplicationAppIID:
+					return StatementState.AlterApplicationAppIIDName;
+
+				case StatementState.AlterApplicationPrompt:
+					return StatementState.AlterApplicationPromptString;
+
+				case StatementState.AlterApplicationComment:
+					return StatementState.AlterApplicationCommentString;
+
+				case StatementState.AlterApplicationDescription:
+				case StatementState.AlterApplicationDescriptionString:
+					return StatementState.AlterApplicationDescriptionString;
+
+				case StatementState.AlterApplicationExtendsAppIID:
+					return StatementState.AlterApplicationExtendsAppIIDString;
 				#endregion
 			}
 
@@ -267,6 +378,17 @@ namespace DkTools.StatementCompletion
 					if (state == StatementState.FormatRows) return StatementState.FormatRowsEquals;
 					if (state == StatementState.FormatCols) return StatementState.FormatColsEquals;
 					if (state == StatementState.FormatGenpages) return StatementState.FormatGenpagesEquals;
+					break;
+
+				case '(':
+					switch (state)
+					{
+						case StatementState.AlterApplicationPromptString:
+						case StatementState.AlterApplicationCommentString:
+						case StatementState.AlterApplicationLangIdNumber:
+						case StatementState.AlterApplicationDescriptionString:
+							return StatementState.AlterApplicationBrackets;
+					}
 					break;
 			}
 
@@ -381,6 +503,64 @@ namespace DkTools.StatementCompletion
 					yield return "resume";
 					break;
 				#endregion
+
+				#region alter
+				case StatementState.Alter:
+					yield return "application";
+					yield return "column";
+					yield return "stringdef";
+					yield return "table";
+					yield return "typedef";
+					yield return "workspace";
+					break;
+
+				case StatementState.AlterColumnName:
+					yield return "sametype";
+					break;
+
+				case StatementState.AlterApplication:
+					yield return "AppIID";
+					break;
+
+				case StatementState.AlterApplicationAppIIDName:
+					yield return "prompt";
+					break;
+
+				case StatementState.AlterApplicationPromptString:
+					yield return "comment";
+					yield return "langid";
+					yield return "description";
+					yield return "(";
+					break;
+
+				case StatementState.AlterApplicationCommentString:
+					yield return "langid";
+					yield return "description";
+					yield return "(";
+					break;
+
+				case StatementState.AlterApplicationLangIdNumber:
+					yield return "langid";
+					yield return "description";
+					yield return "(";
+					break;
+
+				case StatementState.AlterApplicationDescriptionString:
+					yield return "(";
+					break;
+
+				case StatementState.AlterApplicationBrackets:
+					yield return "extends";
+					break;
+
+				case StatementState.AlterApplicationExtends:
+					yield return "AppIID";
+					break;
+
+				case StatementState.AlterApplicationExtendsAppIIDString:
+					yield return ")";
+					break;
+				#endregion
 			}
 		}
 
@@ -428,6 +608,29 @@ namespace DkTools.StatementCompletion
 					foreach (var intf in ProbeEnvironment.InterfaceTypes)
 					{
 						yield return ProbeCompletionSource.CreateCompletion(intf.Definition);
+					}
+					break;
+				#endregion
+
+				#region alter
+				case StatementState.AlterTable:
+					foreach (var table in ProbeEnvironment.Tables)
+					{
+						yield return ProbeCompletionSource.CreateCompletion(table.BaseDefinition);
+					}
+					break;
+
+				case StatementState.AlterStringdef:
+					foreach (var sd in ProbeEnvironment.StringDefs)
+					{
+						yield return ProbeCompletionSource.CreateCompletion(sd.Definition);
+					}
+					break;
+
+				case StatementState.AlterTypedef:
+					foreach (var td in ProbeEnvironment.TypeDefs)
+					{
+						yield return ProbeCompletionSource.CreateCompletion(td.Definition);
 					}
 					break;
 				#endregion

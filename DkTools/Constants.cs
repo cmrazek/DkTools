@@ -43,13 +43,13 @@ namespace DkTools
 			"nowarn numeric oleobject proto short shortform string time unsigned varchar variant void");
 
 		public static readonly HashSet<string> Keywords = Util.ParseWordList(
-			"after and BEGINHLP before break button comment case col colff cols continue create default display description",
+			"after alter and BEGINHLP before break button comment case col colff cols continue create default display description",
 			"each else endgroup ENDHLP extern extract for form formonly format group header if index interface many nomenu nopick of on one onerror or order outfile",
 			"permanent physical private prompt protected public",
 			"relationship return row rows select snapshot static switch table tag to tool typedef unique updates where while widthof zoom");
 
 		public static readonly HashSet<string> GlobalKeywords = Util.ParseWordList(
-			"after and BEGINHLP before break button comment col colff cols continue create display description each else endgroup ENDHLP extern extract",
+			"after alter and BEGINHLP before break button comment col colff cols continue create display description each else endgroup ENDHLP extern extract",
 			"for form formonly format group header index interface",
 			"many nomenu nopick on one onerror or order outfile permanent physical private prompt protected public relationship row rows select snapshot static",
 			"table tag to tool typedef unique updates where widthof zoom");

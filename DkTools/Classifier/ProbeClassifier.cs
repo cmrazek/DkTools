@@ -63,12 +63,12 @@ namespace DkTools.Classifier
 			if (disableDeadCode)
 			{
 				disabledSectionTracker = new DisabledSectionTracker(model.DisabledSections);
-				if (disabledSectionTracker.SetOffset(_scanner.PositionOffset)) state |= ProbeClassifierScanner.State_Disabled;
-				else state &= ~ProbeClassifierScanner.State_Disabled;
+				if (disabledSectionTracker.SetOffset(_scanner.PositionOffset)) state |= State.Disabled;
+				else state &= ~State.Disabled;
 			}
 			else
 			{
-				state &= ~ProbeClassifierScanner.State_Disabled;
+				state &= ~State.Disabled;
 			}
 
 			while (_scanner.ScanTokenAndProvideInfoAboutIt(tokenInfo, ref state))
@@ -81,12 +81,12 @@ namespace DkTools.Classifier
 
 				if (disableDeadCode)
 				{
-					if (disabledSectionTracker.Advance(_scanner.PositionOffset + _scanner.Position)) state |= ProbeClassifierScanner.State_Disabled;
-					else state &= ~ProbeClassifierScanner.State_Disabled;
+					if (disabledSectionTracker.Advance(_scanner.PositionOffset + _scanner.Position)) state |= State.Disabled;
+					else state &= ~State.Disabled;
 				}
 				else
 				{
-					state &= ~ProbeClassifierScanner.State_Disabled;
+					state &= ~State.Disabled;
 				}
 			}
 

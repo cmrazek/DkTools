@@ -49,7 +49,7 @@ namespace DkTools.SignatureHelp
 					typedChar = (char)(ushort)Marshal.GetObjectForNativeVariant(pvaIn);
 					if (typedChar == '(')
 					{
-						if (TriggerAllowedHere(_textView.TextSnapshot, _textView.Caret.Position.BufferPosition))
+						if (_textView.Caret.Position.BufferPosition.IsInLiveCode())
 						{
 							SnapshotPoint point = _textView.Caret.Position.BufferPosition;
 							var pos = point.Position;
@@ -70,7 +70,7 @@ namespace DkTools.SignatureHelp
 					}
 					else if (typedChar == ',' && (_session == null || _session.IsDismissed))
 					{
-						if (TriggerAllowedHere(_textView.TextSnapshot, _textView.Caret.Position.BufferPosition))
+						if (_textView.Caret.Position.BufferPosition.IsInLiveCode())
 						{
 							var fileStore = CodeModel.FileStore.GetOrCreateForTextBuffer(_textView.TextBuffer);
 							if (fileStore != null)
@@ -101,19 +101,6 @@ namespace DkTools.SignatureHelp
 		public int QueryStatus(ref Guid pguidCmdGroup, uint cCmds, OLECMD[] prgCmds, IntPtr pCmdText)
 		{
 			return _nextCommandHandler.QueryStatus(ref pguidCmdGroup, cCmds, prgCmds, pCmdText);
-		}
-
-		private bool TriggerAllowedHere(ITextSnapshot snapshot, int position)
-		{
-			var tracker = Classifier.TextBufferStateTracker.GetTrackerForTextBuffer(snapshot.TextBuffer);
-			if (tracker != null)
-			{
-				var state = tracker.GetStateForPosition(position, snapshot);
-				if ((state & Classifier.ProbeClassifierScanner.State_CommentMask) != 0) return false;
-				if ((state & Classifier.ProbeClassifierScanner.State_StringLiteral_Mask) != 0) return false;
-			}
-
-			return true;
 		}
 	}
 }

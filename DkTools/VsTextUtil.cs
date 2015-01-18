@@ -127,4 +127,33 @@ namespace DkTools
 			return !view.Options.GetOptionValue<bool>(DefaultOptions.ConvertTabsToSpacesOptionId);
 		}
 	}
+
+	internal static class SnapshotPointEx
+	{
+		/// <summary>
+		/// Returns true if the point is not inside a comment, string literal or disabled code.
+		/// </summary>
+		public static bool IsInLiveCode(this SnapshotPoint pt)
+		{
+			var tracker = Classifier.TextBufferStateTracker.GetTrackerForTextBuffer(pt.Snapshot.TextBuffer);
+			return Classifier.State.IsInLiveCode(tracker.GetStateForPosition(pt.Position, pt.Snapshot));
+		}
+
+		/// <summary>
+		/// Gets the text on the line up to this point.
+		/// </summary>
+		public static string GetPrecedingLineText(this SnapshotPoint pt)
+		{
+			return pt.Snapshot.GetLineTextUpToPosition(pt.Position);
+		}
+
+		/// <summary>
+		/// Gets the classifier state for this position.
+		/// </summary>
+		public static int GetState(this SnapshotPoint pt)
+		{
+			var tracker = Classifier.TextBufferStateTracker.GetTrackerForTextBuffer(pt.Snapshot.TextBuffer);
+			return tracker.GetStateForPosition(pt.Position, pt.Snapshot);
+		}
+	}
 }
