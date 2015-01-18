@@ -127,6 +127,7 @@ namespace DkTools.StatementCompletion
 
 				case StatementState.SelectFromTable:
 					if (word == "of") return StatementState.SelectFromTableOf;
+					if (word == "order") return StatementState.Order;
 					break;
 
 				case StatementState.SelectFromTableComma:
@@ -228,6 +229,11 @@ namespace DkTools.StatementCompletion
 				#region create
 				case StatementState.CreateInterfacetypeTypeliblocator:
 					return StatementState.CreateInterfacetypeTypeliblocatorName;
+				#endregion
+
+				#region selects
+				case StatementState.Select:	// Optional name for select
+					return StatementState.Select;
 				#endregion
 			}
 

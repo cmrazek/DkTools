@@ -7,7 +7,9 @@ Features:
 
 Bug Fixes:
 - Fixed spelling mistake in options.
-- Added support for _WINDOWS constant.
+- Added missing _WINDOWS constant.
+- Fixed the 'by' in a select's 'order by' not being highlighted when there's no where clause.
+- Fixed highlighting of 'from' in a select when a 'select name' is used.
 
 ____________________________________________________________________________________________________
 Version 1.2.17 - Jan 12, 2015:
