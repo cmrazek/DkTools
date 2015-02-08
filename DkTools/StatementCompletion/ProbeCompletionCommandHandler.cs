@@ -13,6 +13,7 @@ using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Editor;
 using Microsoft.VisualStudio.TextManager.Interop;
 using Microsoft.VisualStudio.Utilities;
+using DkTools.Classifier;
 
 namespace DkTools.StatementCompletion
 {
@@ -23,16 +24,16 @@ namespace DkTools.StatementCompletion
 		private IVsTextView _textViewAdapter;
 		private ProbeCompletionCommandHandlerProvider _provider;
 		private ICompletionSession _session;
-		private int _insideCommentLineStart = -1;
-		private bool _insideComment;
 
 		private static readonly Regex _rxAfterAssignOrCompare = new Regex(@"(?:==|=|!=)\s$");
 		private static readonly Regex _rxFunctionStartBracket = new Regex(@"\w+\s*\($");
-		private static readonly Regex _rxAutoCompleteKeyword = new Regex(@"\b(return|case|extract|permanent)\s$");
+		public static readonly Regex RxAfterWord = new Regex(@"\b(\w+)\s$");
 		private static readonly Regex _rxAfterIfDef = new Regex(@"\#ifn?def\s$");
 		private static readonly Regex _rxAfterInclude = new Regex(@"\#include\s+(?:\<|\"")$");
 		private static readonly Regex _rxOrderBy = new Regex(@"\border\s+by\s$");
-		private static readonly Regex _rxTag = new Regex(@"\btag\s$");
+		public static readonly Regex RxAfterSymbol = new Regex(@"(\*|,|\()\s$");
+		public static readonly Regex RxAfterNumber = new Regex(@"(\d+)\s$");
+		public static readonly Regex RxAfterStringLiteral = new Regex(@"""\s$");
 
 		public ProbeCompletionCommandHandler(IVsTextView textViewAdapter, ITextView textView, ProbeCompletionCommandHandlerProvider provider)
 		{
@@ -122,16 +123,20 @@ namespace DkTools.StatementCompletion
 				if (nCmdID == (uint)VSConstants.VSStd2KCmdID.COMPLETEWORD)
 				{
 					// User called Complete Word command.
-					if (_session == null || _session.IsDismissed) TriggerCompletionIfAllowed(false);
+					if (_session == null || _session.IsDismissed) TriggerCompletion(false);
 					if (_session != null) _session.Filter();
 					handled = true;
 				}
 				else if (typedChar != char.MinValue && (char.IsLetterOrDigit(typedChar) || typedChar == '_' || typedChar == '.'))
 				{
-					// User typed a char that should start a session.
-					if (_session == null || _session.IsDismissed) TriggerCompletionIfAllowed(false);
-					if (_session != null) _session.Filter();
-					handled = true;
+					var caretPos = _textView.Caret.Position.BufferPosition;
+					if (caretPos.IsInLiveCode())
+					{
+						// User typed a char that should start a session.
+						if (_session == null || _session.IsDismissed) TriggerCompletion(false);
+						if (_session != null) _session.Filter();
+						handled = true;
+					}
 				}
 				else if (commandId == (uint)VSConstants.VSStd2KCmdID.BACKSPACE || commandId == (uint)VSConstants.VSStd2KCmdID.DELETE)
 				{
@@ -142,20 +147,25 @@ namespace DkTools.StatementCompletion
 				{
 					if (_session == null || _session.IsDismissed)
 					{
-						var caretPos = _textView.Caret.Position.BufferPosition.Position;
-						var prefix = _textView.TextBuffer.CurrentSnapshot.GetLineTextUpToPosition(caretPos);
+						var caretPos = _textView.Caret.Position.BufferPosition;
+						if (caretPos.IsInLiveCode())
+						{
+							var prefix = caretPos.GetPrecedingLineText();
 
-						if (prefix.EndsWith(", ") ||
-							_rxAutoCompleteKeyword.IsMatch(prefix) ||
-							_rxAfterIfDef.IsMatch(prefix) ||
-							_rxOrderBy.IsMatch(prefix) ||
-							_rxTag.IsMatch(prefix))
-						{
-							TriggerCompletionIfAllowed(false);
-						}
-						else if (_rxAfterAssignOrCompare.IsMatch(prefix))
-						{
-							TriggerCompletionIfAllowed(true);	// Requires a model rebuild in order to tell what token is before the '='.
+							if (prefix.EndsWith(", ") ||
+								RxAfterWord.IsMatch(prefix) ||
+								_rxAfterIfDef.IsMatch(prefix) ||
+								_rxOrderBy.IsMatch(prefix) ||
+								RxAfterSymbol.IsMatch(prefix) ||
+								RxAfterNumber.IsMatch(prefix) ||
+								RxAfterStringLiteral.IsMatch(prefix))
+							{
+								TriggerCompletion(false);
+							}
+							else if (_rxAfterAssignOrCompare.IsMatch(prefix))
+							{
+								TriggerCompletion(true);	// Requires a model rebuild in order to tell what token is before the '='.
+							}
 						}
 					}
 				}
@@ -163,20 +173,29 @@ namespace DkTools.StatementCompletion
 				{
 					if (_session == null || _session.IsDismissed)
 					{
-						var caretPos = _textView.Caret.Position.BufferPosition.Position;
-						var prefix = _textView.TextBuffer.CurrentSnapshot.GetLineTextUpToPosition(caretPos);
-
-						if (_rxFunctionStartBracket.IsMatch(prefix)) TriggerCompletionIfAllowed(false);
+						var caretPos = _textView.Caret.Position.BufferPosition;
+						if (caretPos.IsInLiveCode())
+						{
+							var prefix = caretPos.GetPrecedingLineText();
+							if (_rxFunctionStartBracket.IsMatch(prefix)) TriggerCompletion(false);
+						}
 					}
 				}
 				else if (typedChar == '<' || typedChar == '\"')
 				{
 					if (_session == null || _session.IsDismissed)
 					{
-						var caretPos = _textView.Caret.Position.BufferPosition.Position;
-						var prefix = _textView.TextBuffer.CurrentSnapshot.GetLineTextUpToPosition(caretPos);
-
-						if (_rxAfterInclude.IsMatch(prefix)) TriggerCompletionIfAllowed(false, allowInsideString: true);
+						var caretPos = _textView.Caret.Position.BufferPosition;
+						var state = caretPos.GetState();
+						if (State.IsInLiveCode(state))
+						{
+							var prefix = caretPos.GetPrecedingLineText();
+							if (_rxAfterInclude.IsMatch(prefix) ||
+								StatementLayout.GetNextPossibleKeywords(State.ToStatement(state)).Any())
+							{
+								TriggerCompletion(false, allowInsideString: true);
+							}
+						}
 					}
 				}
 
@@ -190,66 +209,14 @@ namespace DkTools.StatementCompletion
 			}
 		}
 
-		private bool TriggerCompletionIfAllowed(bool modelRebuildRequired, bool allowInsideString = false)
+		private bool TriggerCompletion(bool modelRebuildRequired, bool allowInsideString = false)
 		{
-			// Get caret point
 			var caretPtTest = _textView.Caret.Position.Point.GetPoint(textBuffer => (!textBuffer.ContentType.IsOfType("projection")), PositionAffinity.Predecessor);
 			if (!caretPtTest.HasValue) return false;
 			var caretPt = caretPtTest.Value;
 
-			// Check if completion is allowed at this point.
-			// Read the line text up to this point to see what state the text is in.
-			var line = caretPt.GetContainingLine();
-			var prefixLength = caretPt.Position - line.Start.Position;
-			if (prefixLength > 0)
-			{
-				var prefixText = line.GetText().Substring(0, prefixLength);
-
-				var parser = new TokenParser.Parser(prefixText);
-				parser.ReturnComments = true;
-
-				var lastTokenType = TokenParser.TokenType.WhiteSpace;
-				var lastTokenTerminated = true;
-				while (parser.Read())
-				{
-					lastTokenType = parser.TokenType;
-					lastTokenTerminated = parser.TokenTerminated;
-				}
-
-				if (((lastTokenType == TokenParser.TokenType.StringLiteral && !allowInsideString) || lastTokenType == TokenParser.TokenType.Comment) && !lastTokenTerminated)
-				{
-					// User is in the middle of typing a string literal or comment
-					return false;
-				}
-			}
-
-			// Check if inside a multi-line comment.
-			if (line.Start.Position == _insideCommentLineStart)
-			{
-				if (_insideComment) return false;
-			}
-			else
-			{
-				// Check the comment state at the beginning of the line.  Remember this for typing subsequent chars later.
-				var commentTracker = new TokenParser.CommentTracker(caretPt.Snapshot.GetText());
-				_insideCommentLineStart = line.Start.Position;
-				_insideComment = commentTracker.PositionInsideComment(line.Start.Position);
-
-				// Check the comment state at the typing position.
-				commentTracker = new TokenParser.CommentTracker(line.GetText(), _insideComment);
-				if (commentTracker.PositionInsideComment(caretPt.Position - line.Start.Position))
-				{
-					return false;
-				}
-			}
-
 			if (!modelRebuildRequired)
 			{
-				// Start the new session
-				//_session = _provider.CompletionBroker.CreateCompletionSession(_textView, caretPt.Snapshot.CreateTrackingPoint(caretPt.Position, PointTrackingMode.Positive), true);
-				//_session.Dismissed += OnSessionDismissed;
-				//_session.Start();
-
 				ShowSession(caretPt);
 			}
 			else

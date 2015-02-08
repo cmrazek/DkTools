@@ -72,7 +72,7 @@ namespace DkTools.Classifier
 			if (fileStore == null) return 0;
 			var model = fileStore.GetMostRecentModel(snapshot, "GetStateForPosition");
 
-			if (lineStartPos < pos)
+			if (lineStartPos <= pos)
 			{
 				var lineText = line.GetTextIncludingLineBreak();
 				if (pos - lineStartPos < lineText.Length) lineText = lineText.Substring(0, pos - lineStartPos);
@@ -130,6 +130,14 @@ namespace DkTools.Classifier
 		public ITextSnapshot Snapshot
 		{
 			get { return _snapshot; }
+		}
+
+		/// <summary>
+		/// Returns true if the position is not inside a comment, string literal or disabled code.
+		/// </summary>
+		public bool IsPositionInLiveCode(int pos, ITextSnapshot snapshot)
+		{
+			return State.IsInLiveCode(GetStateForPosition(pos, snapshot));
 		}
 	}
 }

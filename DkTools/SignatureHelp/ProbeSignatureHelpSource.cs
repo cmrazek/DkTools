@@ -218,11 +218,10 @@ namespace DkTools.SignatureHelp
 					{
 						var varDef = def1 as CodeModel.Definitions.VariableDefinition;
 						var dataType = varDef.DataType;
-						var method = dataType.GetMethod(funcName) as CodeModel.Definitions.InterfaceMethodDefinition;
-						if (method != null)
+
+						foreach (var method in dataType.GetMethods(funcName).Cast<CodeModel.Definitions.InterfaceMethodDefinition>())
 						{
 							yield return new SignatureInfo(method.Signature, method.DevDescription);
-							yield break;
 						}
 					}
 				}

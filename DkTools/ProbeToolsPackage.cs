@@ -142,6 +142,7 @@ namespace DkTools
 
 			// Need to keep a reference to Events and DocumentEvents in order for DocumentSaved to be triggered.
 			_dteEvents = Shell.DTE.Events;
+
 			_dteDocumentEvents = _dteEvents.DocumentEvents;
 			_dteDocumentEvents.DocumentSaved += DocumentEvents_DocumentSaved;
 		}

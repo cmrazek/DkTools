@@ -64,5 +64,15 @@ namespace DkTools.ProbeExplorer
 		{
 			_exp.FocusTableRelInd(tableName, relIndName);
 		}
+
+		public void OnDocumentActivated(Microsoft.VisualStudio.Text.Editor.IWpfTextView view)
+		{
+			_exp.OnDocumentActivated(view);
+		}
+
+		public void FocusFunctionFilter()
+		{
+			_exp.FocusFunctionFilter();
+		}
 	}
 }

@@ -10,6 +10,7 @@ using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudio.OLE.Interop;
 using Microsoft.VisualStudio.Shell;
+using Microsoft.VisualStudio.Text.Editor;
 using DkTools.Compiler;
 
 namespace DkTools
@@ -43,7 +44,8 @@ namespace DkTools
 		ShowProbeNV = 0x0123,
 		ShowErrors = 0x0124,
 		GoToNextReference = 0x0125,
-		GoToPrevReference = 0x0126
+		GoToPrevReference = 0x0126,
+		ShowFunctions = 0x0127
 	}
 
 	internal static class Commands
@@ -79,6 +81,7 @@ namespace DkTools
 #endif
 			AddCommand(mcs, CommandId.GoToNextReference, GoToNextReference);
 			AddCommand(mcs, CommandId.GoToPrevReference, GoToPrevReference);
+			AddCommand(mcs, CommandId.ShowFunctions, ShowFunctions);
 		}
 
 		private class CommandInstance
@@ -625,6 +628,19 @@ namespace DkTools
 			return ProbeToolsPackage.Instance.EditorOptions.DisableDeadCode;
 		}
 
+		private static void ShowFunctions(object sender, EventArgs e)
+		{
+			try
+			{
+				var window = Shell.ShowProbeExplorerToolWindow();
+				window.FocusFunctionFilter();
+			}
+			catch (Exception ex)
+			{
+				Shell.ShowError(ex);
+			}
+		}
+
 #if REPORT_ERRORS
 		private static void ShowErrors(object sender, EventArgs e)
 		{
@@ -768,6 +784,16 @@ namespace DkTools
 
 				//Shell.OpenTempContent(prepModel.File.CodeSource.Dump(), Path.GetFileName(model.FileName), ".ppsegs.txt");
 				Shell.OpenTempContent(prepModel.Dump(), Path.GetFileName(model.FileName), ".prep.txt");
+			}
+
+			public static void ShowStateAtCaret()
+			{
+				var view = Shell.ActiveView;
+				if (view == null) return;
+
+				var tracker = Classifier.TextBufferStateTracker.GetTrackerForTextBuffer(view.TextBuffer);
+				var state = tracker.GetStateForPosition(view.Caret.Position.BufferPosition, view.TextSnapshot);
+				Log.WriteDebug("State at caret: 0x{0:X8}", state);
 			}
 		}
 #endif

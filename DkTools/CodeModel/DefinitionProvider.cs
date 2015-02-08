@@ -20,6 +20,12 @@ namespace DkTools.CodeModel
 				{
 					new FunctionDefinition("abs", DataType.Void, "abs(expression to be evaluated)",
 						"Calculates the absolute value of an expression."),
+					new FunctionDefinition("avg", DataType.Void, "avg( expression, where expression, group TableName.ColumnName | all, in SelectName )",
+						"Calculates the running average of an expression for a set of rows in a select statement."),
+					new FunctionDefinition("count", DataType.Void, "count( * , where expression, group TableName.ColumnName | all, in SelectName )",
+						"Keeps a running count of the number of rows selected in a select statement that satisfy a condition."),
+					new FunctionDefinition("createobject", DataType.Void, "void createobject(iObj)",
+						"Instantiates a COM object. The parameter iObj becomes a handle to the instance. The interface type of iObj determines what methods and properties the handle can call."),
 					new FunctionDefinition("diag", DataType.Void, "void diag(expressions ...)",
 						"Outputs specified expressions to a diagnostic device."),
 					new FunctionDefinition("FormatString", DataType.Char255, "char(255) FormatString(FormatControlString, expression1, expression2, ... )",
@@ -32,21 +38,33 @@ namespace DkTools.CodeModel
 						"Returns the text of the last error invoked on the object."),
 					new FunctionDefinition("isinstance", DataType.Int, "int isinstance(iObj);",
 						"Determines whether a variable points to a valid instance of the variable interface type. "),
-					new FunctionDefinition("makestring", DataType.FromString("char(255)"), "char(255) makestring(expressions ...)",
+					new FunctionDefinition("makestring", DataType.Char255, "char(255) makestring(expressions ...)",
 						"Creates a string by concatenating a list of expressions."),
+					new FunctionDefinition("max", DataType.Void, "max( expression, where expression, group TableName.ColumnName | all, in SelectName )",
+						"Determines the running maximum of an expression for a set of rows in a select statement."),
+					new FunctionDefinition("min", DataType.Void, "min( expression, where expression, group TableName.ColumnName | all, in SelectName )",
+						"Determines the running minimum of an expression for a set of rows in a select statement."),
 					new FunctionDefinition("oldvalue", DataType.Void, "oldvalue(TableName.ColumnName)",
 						"Returns the value of a column in the old row buffer."),
 					new FunctionDefinition("qcolsend", DataType.Void, "void qcolsend(TableName.ColumnName ...)",
 						"Sends columns of the client's current row buffer to SAM or from SAM to the client. Only the current row buffer (not the old buffer) of the recepient is overwritten."),
+					new FunctionDefinition("releaseobject", DataType.Void, "void releaseobject(iObj)",
+						"Releases the object identified by iObj, and automatically disconnects all events associated with iObj."),
 					new FunctionDefinition("SetMessage", DataType.Int, "int SetMessage(MessageControlString, expressions ...)",
 						"Writes to the error message buffer. CAM displays the contents of that buffer when a trigger encounters an error. In code, you can read that buffer using the getmsg function.\r\n\r\n" +
 						"Provides similar functionality to setmsg, but allows you to maintain one source code for all languages (with one set of resource files per language)."),
 					new FunctionDefinition("STRINGIZE", DataType.FromString("char(255)"), "STRINGIZE(x)",
 						"Converts macro parameters to strings."),
+					new FunctionDefinition("sum", DataType.Void, "sum( expression, where expression, group TableName.ColumnName | all, in SelectName )",
+						"Calculates the running total of an expression for a set of rows in a select statement."),
 					new FunctionDefinition("UNREFERENCED_PARAMETER", DataType.Void, "UNREFERENCED_PARAMETER(parameter)",
 						"Prevents a compiler warning if a parameter passed to a function is not used."),
+					new FunctionDefinition("vstring", DataType.StringVarying, "string varying vstring( expression, ... );",
+						"Creates a string of varying length by concatenating a list of expressions. "),
 
-					new InterfaceTypeDefinition("oleobject")
+					new InterfaceTypeDefinition("oleobject"),
+
+					new ConstantDefinition("_WINDOWS", null, 0, string.Empty)
 				};
 			}
 			AddGlobalFromAnywhere(_builtInDefs);

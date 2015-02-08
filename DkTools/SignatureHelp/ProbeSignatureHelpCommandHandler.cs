@@ -49,27 +49,19 @@ namespace DkTools.SignatureHelp
 					typedChar = (char)(ushort)Marshal.GetObjectForNativeVariant(pvaIn);
 					if (typedChar == '(')
 					{
-						SnapshotPoint point = _textView.Caret.Position.BufferPosition;
-						//var source = point.Snapshot.GetText();
-						var pos = point.Position;
-						var lineText = point.Snapshot.GetLineTextUpToPosition(pos).TrimEnd();
-
-						if (lineText.Length > 0 && lineText[lineText.Length - 1].IsWordChar(false))
+						if (_textView.Caret.Position.BufferPosition.IsInLiveCode())
 						{
-							if (_session != null && !_session.IsDismissed) _session.Dismiss();
-							s_typedChar = typedChar;
-							_session = _broker.TriggerSignatureHelp(_textView);
+							SnapshotPoint point = _textView.Caret.Position.BufferPosition;
+							var pos = point.Position;
+							var lineText = point.Snapshot.GetLineTextUpToPosition(pos).TrimEnd();
+
+							if (lineText.Length > 0 && lineText[lineText.Length - 1].IsWordChar(false))
+							{
+								if (_session != null && !_session.IsDismissed) _session.Dismiss();
+								s_typedChar = typedChar;
+								_session = _broker.TriggerSignatureHelp(_textView);
+							}
 						}
-
-						//// Back up to before any whitespace before the '('
-						//while (pos > 0 && (pos >= source.Length || char.IsWhiteSpace(source[pos]))) pos--;
-
-						//if (pos >= 0 && pos < source.Length && source[pos].IsWordChar(false))
-						//{
-						//	if (_session != null && !_session.IsDismissed) _session.Dismiss();
-						//	s_typedChar = typedChar;
-						//	_session = _broker.TriggerSignatureHelp(_textView);
-						//}
 					}
 					else if (typedChar == ')' && _session != null)
 					{
@@ -78,18 +70,21 @@ namespace DkTools.SignatureHelp
 					}
 					else if (typedChar == ',' && (_session == null || _session.IsDismissed))
 					{
-						var fileStore = CodeModel.FileStore.GetOrCreateForTextBuffer(_textView.TextBuffer);
-						if (fileStore != null)
+						if (_textView.Caret.Position.BufferPosition.IsInLiveCode())
 						{
-							var model = fileStore.GetMostRecentModel(_textView.TextSnapshot, "Signature help command handler - after ','");
-							var caretPos = _textView.Caret.Position.BufferPosition.TranslateTo(model.Snapshot, PointTrackingMode.Positive).Position;
-
-							var tokens = model.FindTokens(caretPos);
-							var funcCallToken = tokens.LastOrDefault(t => t is FunctionCallToken || t is InterfaceMethodCallToken);
-							if (funcCallToken != null)
+							var fileStore = CodeModel.FileStore.GetOrCreateForTextBuffer(_textView.TextBuffer);
+							if (fileStore != null)
 							{
-								s_typedChar = typedChar;
-								_session = _broker.TriggerSignatureHelp(_textView);
+								var model = fileStore.GetMostRecentModel(_textView.TextSnapshot, "Signature help command handler - after ','");
+								var caretPos = _textView.Caret.Position.BufferPosition.TranslateTo(model.Snapshot, PointTrackingMode.Positive).Position;
+
+								var tokens = model.FindTokens(caretPos);
+								var funcCallToken = tokens.LastOrDefault(t => t is FunctionCallToken || t is InterfaceMethodCallToken);
+								if (funcCallToken != null)
+								{
+									s_typedChar = typedChar;
+									_session = _broker.TriggerSignatureHelp(_textView);
+								}
 							}
 						}
 					}

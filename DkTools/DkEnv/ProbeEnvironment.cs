@@ -360,6 +360,7 @@ namespace DkTools
 				_tables.Clear();
 				_stringDefs.Clear();
 				_typeDefs.Clear();
+				_intTypes.Clear();
 
 				if (_currentApp != null)
 				{
@@ -495,6 +496,24 @@ namespace DkTools
 			Dict.InterfaceType intType;
 			if (_intTypes.TryGetValue(name, out intType)) return intType;
 			return null;
+		}
+
+		public static IEnumerable<Dict.InterfaceType> InterfaceTypes
+		{
+			get
+			{
+				return _intTypes.Values;
+			}
+		}
+
+		public static IEnumerable<Dict.StringDef> StringDefs
+		{
+			get { return _stringDefs.Values; }
+		}
+
+		public static IEnumerable<Dict.TypeDef> TypeDefs
+		{
+			get { return _typeDefs.Values; }
 		}
 		#endregion
 
@@ -813,6 +832,16 @@ namespace DkTools
 			}
 
 			return true;
+		}
+
+		public static bool IsValidTableName(string name)
+		{
+			return name.IsWord() && name.Length <= 8;
+		}
+
+		public static bool IsValidFieldName(string name)
+		{
+			return name.IsWord();
 		}
 		#endregion
 

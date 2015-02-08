@@ -252,6 +252,7 @@
     <Compile Include="Classifier\ProbeClassifierDefinition.cs" />
     <Compile Include="Classifier\ProbeClassifierProvider.cs" />
     <Compile Include="Classifier\ProbeClassifierType.cs" />
+    <Compile Include="Classifier\State.cs" />
     <Compile Include="Classifier\TextBufferStateTracker.cs" />
     <Compile Include="CodeModel\CodeSource.cs" />
     <Compile Include="CodeModel\DefinitionLocation.cs" />
@@ -488,6 +489,7 @@
     <Compile Include="StatementCompletion\ProbeCompletionCommandHandlerProvider.cs" />
     <Compile Include="StatementCompletion\ProbeCompletionSource.cs" />
     <Compile Include="StatementCompletion\ProbeCompletionSourceProvider.cs" />
+    <Compile Include="StatementCompletion\StatementLayout.cs" />
     <Compile Include="Tagging\Tagger.cs" />
     <Compile Include="Tagging\TaggingOptions.cs">
       <SubType>Component</SubType>

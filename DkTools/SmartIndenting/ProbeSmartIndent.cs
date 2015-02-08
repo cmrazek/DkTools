@@ -6,6 +6,7 @@ using System.Text.RegularExpressions;
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Editor;
 using Microsoft.VisualStudio.Utilities;
+using DkTools.Classifier;
 
 namespace DkTools.SmartIndenting
 {
@@ -94,7 +95,7 @@ namespace DkTools.SmartIndenting
 					{
 						var lineNumber = prevLine.LineNumber;
 						var prevState = tracker.GetStateForLine(lineNumber, tracker.Snapshot);
-						while (Classifier.ProbeClassifierScanner.StateInsideComment(prevState))
+						while (State.IsInsideMultiLineComment(prevState))
 						{
 							if (lineNumber == 0) break;	// At start of file. In theory, this should never happen as the state for the start of the file is always zero.
 							prevState = tracker.GetStateForLine(--lineNumber, tracker.Snapshot);

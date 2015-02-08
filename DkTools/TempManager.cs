@@ -49,7 +49,7 @@ namespace DkTools
 
 			if (string.IsNullOrWhiteSpace(fileTitle)) fileTitle = "Untitled";
 
-			if (!extension.StartsWith(".")) extension = "." + extension;
+			if (!string.IsNullOrEmpty(extension) && !extension.StartsWith(".")) extension = "." + extension;
 			string pathName = Path.Combine(_tempDir, fileTitle + extension);
 			int index = 0;
 			while (File.Exists(pathName))

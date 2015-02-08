@@ -14,9 +14,9 @@ namespace DkTools.Dict
 		public CodeModel.DataType DataType { get; private set; }
 
 		private CodeModel.Definitions.TableFieldDefinition _definition;
-		//private DICTSRVRLib.IPColumn _repoCol;
 		private FieldParentType _parentType;
 		private string _parentName;
+		private string _fullName;
 
 		public Field(FieldParentType parentType, string parentName, DICTSRVRLib.IPColumn repoCol)
 		{
@@ -54,6 +54,8 @@ namespace DkTools.Dict
 			}
 
 			_definition = new CodeModel.Definitions.TableFieldDefinition(parentName, Name, Prompt, Comment, DataType, description);
+
+			_fullName = string.Concat(_parentName, ".", Name);
 		}
 
 		public IEnumerable<Definition> CompletionOptions
@@ -97,6 +99,11 @@ namespace DkTools.Dict
 				default:
 					return null;
 			}
+		}
+
+		public string FullName
+		{
+			get { return _fullName; }
 		}
 	}
 

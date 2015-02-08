@@ -166,7 +166,8 @@ namespace DkTools.CodeModel
 		public enum ParseFlag
 		{
 			Strict,
-			FromRepo
+			FromRepo,
+			InterfaceType
 		}
 
 		/// <summary>
@@ -365,8 +366,10 @@ namespace DkTools.CodeModel
 					return DataType.Ulong;
 				#endregion
 
-				#region char
+				#region char, character, varchar
 				case "char":
+				case "character":
+				case "varchar":
 					if (!code.ReadExact('(')) return DataType.Char;
 					if (code.ReadNumber())
 					{
@@ -771,33 +774,67 @@ namespace DkTools.CodeModel
 						var sb = new StringBuilder();
 						sb.Append("interface");
 
-						if (code.ReadWord())
+						if ((flags & ParseFlag.InterfaceType) == 0)
 						{
-							sb.Append(' ');
-							sb.Append(code.TokenText);
-
-							var completionOptions = new List<Definition>();
-							Definition[] methods = null;
-							Definition[] properties = null;
-
-							var intType = ProbeEnvironment.GetInterfaceType(code.TokenText);
-							if (intType != null)
+							if (code.ReadWord())
 							{
-								methods = intType.MethodDefinitions.ToArray();
-								completionOptions.AddRange(methods);
-								properties = intType.PropertyDefinitions.ToArray();
-								completionOptions.AddRange(properties);
+								sb.Append(' ');
+								sb.Append(code.TokenText);
+
+								var completionOptions = new List<Definition>();
+								Definition[] methods = null;
+								Definition[] properties = null;
+
+								var intType = ProbeEnvironment.GetInterfaceType(code.TokenText);
+								if (intType != null)
+								{
+									methods = intType.MethodDefinitions.ToArray();
+									completionOptions.AddRange(methods);
+									properties = intType.PropertyDefinitions.ToArray();
+									completionOptions.AddRange(properties);
+								}
+
+								if ((flags & ParseFlag.FromRepo) != 0) IgnoreRepoWords(code, startWord);
+
+								return new DataType(typeName, sb.ToString())
+								{
+									_completionOptions = completionOptions.ToArray(),
+									_completionOptionsType = CompletionOptionsType.List,
+									_methods = methods,
+									_properties = properties
+								};
 							}
+						}
+						else
+						{
+							// Parsing the text from a WBDK interface, which could contain .NET or COM specific formatting.
 
-							if ((flags & ParseFlag.FromRepo) != 0) IgnoreRepoWords(code, startWord);
-
-							return new DataType(typeName, sb.ToString())
+							if (code.ReadWord())
 							{
-								_completionOptions = completionOptions.ToArray(),
-								_completionOptionsType = CompletionOptionsType.List,
-								_methods = methods,
-								_properties = properties
-							};
+								sb.Append(' ');
+								sb.Append(code.TokenText);
+
+								while (code.ReadExact('.'))
+								{
+									sb.Append('.');
+									if (code.ReadWord()) sb.Append(code.TokenText);
+									else break;
+								}
+
+								if (code.ReadExact('*'))
+								{
+									sb.Append('*');
+								}
+								else if (code.ReadExact('&'))
+								{
+									sb.Append('&');
+								}
+								else if (code.ReadExact('['))
+								{
+									sb.Append('[');
+									if (code.ReadExact(']')) sb.Append(']');
+								}
+							}
 						}
 
 						return new DataType(typeName, sb.ToString());
@@ -967,24 +1004,26 @@ namespace DkTools.CodeModel
 			get { return _methods != null || _properties != null; }
 		}
 
-		public Definition GetMethod(string name)
+		public IEnumerable<Definition> GetMethods(string name)
 		{
-			if (_methods == null) return null;
-			foreach (var method in _methods)
+			if (_methods != null)
 			{
-				if (method.Name == name) return method;
+				foreach (var method in _methods)
+				{
+					if (method.Name == name) yield return method;
+				}
 			}
-			return null;
 		}
 
-		public Definition GetProperty(string name)
+		public IEnumerable<Definition> GetProperties(string name)
 		{
-			if (_properties == null) return null;
-			foreach (var prop in _properties)
+			if (_properties != null)
 			{
-				if (prop.Name == name) return prop;
+				foreach (var prop in _properties)
+				{
+					if (prop.Name == name) yield return prop;
+				}
 			}
-			return null;
 		}
 
 		public IEnumerable<Definition> MethodsAndProperties
@@ -1004,15 +1043,13 @@ namespace DkTools.CodeModel
 		}
 
 #if DEBUG
-		public static void CheckDataTypeParsing(string dataTypeText)
+		public static void CheckDataTypeParsing(string dataTypeText, TokenParser.Parser usedParser, DataType dataType)
 		{
-			var parser = new TokenParser.Parser(dataTypeText);
-			var dataType = DataType.Parse(parser, flags: DataType.ParseFlag.FromRepo);
 			if (dataType == null)
 			{
 				Log.WriteDebug("WARNING: DataType.Parse was unable to parse [{0}]", dataTypeText);
 			}
-			else if (parser.Read())
+			else if (usedParser.Read())
 			{
 				Log.WriteDebug("WARNING: DataType.Parse stopped before end of text [{0}] got [{1}]", dataTypeText, dataType.Name);
 			}

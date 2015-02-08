@@ -11,7 +11,7 @@ namespace DkTools.CodeModel
 	internal class Preprocessor
 	{
 		private FileStore _store;
-		private Dictionary<string, Define> _defines = new Dictionary<string, Define>();
+		private Dictionary<string, Define> _defines;
 
 		public Preprocessor(FileStore store)
 		{
@@ -29,6 +29,12 @@ namespace DkTools.CodeModel
 		private void Preprocess(PreprocessorParams p)
 		{
 			// This function assumes the source has already been merged.
+
+			if (_defines == null)
+			{
+				_defines = new Dictionary<string, Define>();
+				_defines["_WINDOWS"] = new Define("_WINDOWS", string.Empty, null, null, 0);
+			}
 
 			string str;
 			var sb = new StringBuilder();
