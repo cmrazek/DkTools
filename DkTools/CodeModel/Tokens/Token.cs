@@ -93,12 +93,12 @@ namespace DkTools.CodeModel.Tokens
 			set { _span = value; }
 		}
 
-		public override string ToString()
-		{
-			var text = NormalizedText;
-			if (text.Length > 20) text = text.Substring(20);
-			return string.Format("\"{0}\" ({1})", text, this.GetType());
-		}
+		//public override string ToString()
+		//{
+		//	var text = NormalizedText;
+		//	if (text.Length > 20) text = text.Substring(20);
+		//	return string.Format("\"{0}\" ({1})", text, this.GetType());
+		//}
 
 		public Token FindTokenOfType(int pos, Type type)
 		{

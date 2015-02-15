@@ -69,8 +69,7 @@ namespace DkTools.FunctionFileScanning
 	true_file_name		nvarchar(260),
 	pos					int				not null
 )",
-// true_file_name		nvarchar(260)	not null,		TODO: remove
-@"create index ref_ix_extrefid on ref (ext_ref_id)"
+@"create index ref_ix_extrefid on ref (app_id, ext_ref_id)"
 
 };
 

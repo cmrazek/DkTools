@@ -169,67 +169,66 @@ namespace DkTools.Navigation
 		{
 			try
 			{
-				Log.WriteDebug("TriggerFindReferences");	// TODO: remove
-
-
 				var snapPt = textView.Caret.Position.BufferPosition;
 
 				var fileStore = CodeModel.FileStore.GetOrCreateForTextBuffer(snapPt.Snapshot.TextBuffer);
 				if (fileStore == null) return;
 
-				var model = fileStore.GetMostRecentModel(snapPt.Snapshot, "Find References");
-				var modelPos = model.AdjustPosition(snapPt);
-				var selTokens = model.File.FindDownwardTouching(modelPos).ToArray();
-				if (selTokens.Length == 0)
+				var fullModel = fileStore.CreatePreprocessedModel(snapPt.Snapshot, false, "Find Local References");
+				var fullModelPos = fullModel.PreprocessorModel.Source.PrimaryFilePositionToSource(fullModel.AdjustPosition(snapPt));
+
+				var fullToken = fullModel.File.FindDownward(fullModelPos, t => t.SourceDefinition != null).FirstOrDefault();
+				if (fullToken == null)
 				{
-					Log.WriteDebug("Nothing selected.");
+					Shell.SetStatusText("No reference found at cursor.");
 					return;
 				}
 
-				var defToken = selTokens.LastOrDefault(t => t.SourceDefinition != null);
-				if (defToken != null && defToken.SourceDefinition != null)
+				var def = fullToken.SourceDefinition;
+
+				var pane = Shell.CreateOutputPane(_findReferencesPaneGuid, Constants.FindReferencesOutputPaneTitle);
+				pane.Clear();
+				pane.Show();
+				pane.WriteLine(string.Format("Finding references of '{0}':", def.Name));
+
+				var refList = new List<Reference>();
+
+				foreach (var token in fullModel.File.FindDownward(t => t.SourceDefinition == fullToken.SourceDefinition))
 				{
-					Log.WriteDebug("Got token with SourceDefinition.");
-					var def = defToken.SourceDefinition;
+					var localFilePos = fullModel.PreprocessorModel.Source.GetFilePosition(token.Span.Start);
 
-					var pane = Shell.CreateOutputPane(_findReferencesPaneGuid, Constants.FindReferencesOutputPaneTitle);
-					pane.Clear();
-					pane.Show();
-					pane.WriteLine(string.Format("Finding references of '{0}':", def.Name));
-
-					var refList = new List<Reference>();
-
-					if (!string.IsNullOrEmpty(def.ExternalRefId))
-					{
-						refList.AddRange(FindGlobalReferences(def));
-					}
-
-					refList.AddRange(FindLocalReferences(fileStore, model, defToken, snapPt));
-					refList.Sort();
-					Reference.ResolveContext(refList);
-
-					string lastFileName = null;
-					int lastLineNumber = -1;
-					int lastLineOffset = -1;
-					var refCount = 0;
-
-					foreach (var r in refList)
-					{
-						if (!string.Equals(r.FileName, lastFileName, StringComparison.OrdinalIgnoreCase) ||
-							r.LineNumber != lastLineNumber ||
-							r.LineOffset != lastLineOffset)
-						{
-							pane.WriteLine(string.Format("  {0}({1},{2}): {3}", r.FileName, r.LineNumber + 1, r.LineOffset + 1, r.Context, r.Global ? "global" : "local"));
-							refCount++;
-
-							lastFileName = r.FileName;
-							lastLineNumber = r.LineNumber;
-							lastLineOffset = r.LineOffset;
-						}
-					}
-
-					pane.WriteLine(string.Format("{0} reference(s) found.", refCount));
+					refList.Add(new Reference(localFilePos.FileName, localFilePos.Position, false));
 				}
+
+				if (!string.IsNullOrEmpty(def.ExternalRefId))
+				{
+					refList.AddRange(FindGlobalReferences(def));
+				}
+
+				refList.Sort();
+				Reference.ResolveContext(refList);
+
+				string lastFileName = null;
+				int lastLineNumber = -1;
+				int lastLineOffset = -1;
+				var refCount = 0;
+
+				foreach (var r in refList)
+				{
+					if (!string.Equals(r.FileName, lastFileName, StringComparison.OrdinalIgnoreCase) ||
+						r.LineNumber != lastLineNumber ||
+						r.LineOffset != lastLineOffset)
+					{
+						pane.WriteLine(string.Format("  {0}({1},{2}): {3}", r.FileName, r.LineNumber + 1, r.LineOffset + 1, r.Context, r.Global ? "global" : "local"));
+						refCount++;
+
+						lastFileName = r.FileName;
+						lastLineNumber = r.LineNumber;
+						lastLineOffset = r.LineOffset;
+					}
+				}
+
+				pane.WriteLine(string.Format("{0} reference(s) found.", refCount));
 			}
 			catch (Exception ex)
 			{
@@ -263,26 +262,6 @@ namespace DkTools.Navigation
 
 						yield return new Reference(fileName, pos, true);
 					}
-				}
-			}
-		}
-
-		private static IEnumerable<Reference> FindLocalReferences(CodeModel.FileStore fileStore, CodeModel.CodeModel visModel, CodeModel.Tokens.Token visToken, SnapshotPoint snapPt)
-		{
-			var visModelPos = visModel.AdjustPosition(snapPt);
-			var visDef = visToken.SourceDefinition;
-
-			var fullModel = fileStore.CreatePreprocessedModel(snapPt.Snapshot, false, "Find Local References");
-			var fullModelPos = fullModel.PreprocessorModel.Source.PrimaryFilePositionToSource(visToken.Span.Start);
-
-			var fullToken = fullModel.File.FindDownward(fullModelPos, t => t.SourceDefinition != null && t.SourceDefinition.Name == visDef.Name).FirstOrDefault();
-			if (fullToken != null)
-			{
-				foreach (var token in fullModel.File.FindDownward(t => t.SourceDefinition == fullToken.SourceDefinition))
-				{
-					var localFilePos = fullModel.PreprocessorModel.Source.GetFilePosition(token.Span.Start);
-
-					yield return new Reference(localFilePos.FileName, localFilePos.Position, false);
 				}
 			}
 		}

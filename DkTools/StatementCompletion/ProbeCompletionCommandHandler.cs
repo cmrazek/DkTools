@@ -56,6 +56,11 @@ namespace DkTools.StatementCompletion
 					{
 						prgCmds[i].cmdf = (uint)(OLECMDF.OLECMDF_ENABLED | OLECMDF.OLECMDF_SUPPORTED);
 					}
+					else if (prgCmds[i].cmdID == (uint)VSConstants.VSStd97CmdID.GotoDecl ||
+						prgCmds[i].cmdID == (uint)VSConstants.VSStd97CmdID.GotoRef)
+					{
+						prgCmds[i].cmdf |= (uint)OLECMDF.OLECMDF_DEFHIDEONCTXTMENU;
+					}
 				}
 			}
 

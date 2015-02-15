@@ -786,6 +786,18 @@ namespace DkTools
 				Shell.OpenTempContent(prepModel.Dump(), Path.GetFileName(model.FileName), ".prep.txt");
 			}
 
+			public static void ShowPreprocessorFullModelDump()
+			{
+				var view = Shell.ActiveView;
+				if (view == null) return;
+
+				var fileStore = CodeModel.FileStore.GetOrCreateForTextBuffer(view.TextBuffer);
+				if (fileStore == null) return;
+				var model = fileStore.CreatePreprocessedModel(view.TextSnapshot, false, "Debug:ShowPreprocessorFullModelDump");
+
+				Shell.OpenTempContent(model.DumpTree(), Path.GetFileName(model.FileName), ".prepmodel.xml");
+			}
+
 			public static void ShowStateAtCaret()
 			{
 				var view = Shell.ActiveView;

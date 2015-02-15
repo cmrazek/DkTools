@@ -839,6 +839,11 @@ namespace DkTools.ProbeExplorer
 				menu.Items.Add(menuItem);
 
 				menuItem = new MenuItem();
+				menuItem.Header = "Show Preprocessor Model";
+				menuItem.Click += ShowPreprocessorModel_Click;
+				menu.Items.Add(menuItem);
+
+				menuItem = new MenuItem();
 				menuItem.Header = "Sample Error";
 				menuItem.Click += SampleError_Click;
 				menu.Items.Add(menuItem);
@@ -910,6 +915,18 @@ namespace DkTools.ProbeExplorer
 			try
 			{
 				Commands.DebugCommands.ShowPreprocessorDump();
+			}
+			catch (Exception ex)
+			{
+				this.ShowError(ex);
+			}
+		}
+
+		private void ShowPreprocessorModel_Click(object sender, RoutedEventArgs e)
+		{
+			try
+			{
+				Commands.DebugCommands.ShowPreprocessorFullModelDump();
 			}
 			catch (Exception ex)
 			{

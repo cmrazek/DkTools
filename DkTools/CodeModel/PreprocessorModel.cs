@@ -21,6 +21,7 @@ namespace DkTools.CodeModel
 		private Dictionary<string, FunctionDefinition> _externFuncs = new Dictionary<string, FunctionDefinition>();
 		private List<FunctionDefinition> _localFuncs = new List<FunctionDefinition>();
 		private FileContext _fileContext;
+		private bool _visible;
 #if DEBUG
 		private List<KeyValuePair<int, Definition>> _localDefs = new List<KeyValuePair<int, Definition>>();
 #endif
@@ -42,6 +43,7 @@ namespace DkTools.CodeModel
 			_fileName = fileName;
 			FunctionFileScanning.FFUtil.FileNameIsClass(_fileName, out _className);
 			_fileContext = FileContextUtil.GetFileContextFromFileName(fileName);
+			_visible = visible;
 
 #if REPORT_ERRORS
 			_reportErrors = visible && _fileContext != FileContext.Include && ProbeToolsPackage.Instance.EditorOptions.ShowErrors;
@@ -345,14 +347,20 @@ namespace DkTools.CodeModel
 			// Add the definitions for the argument list
 			if (argDefList != null)
 			{
-				var argEffect = new Span(localArgStartPos.Position, _source.GetPrimaryFilePosition(bodyEndPos));
+				Span argEffect;
+				if (_visible) argEffect = new Span(localArgStartPos.Position, _source.GetPrimaryFilePosition(bodyEndPos));
+				else argEffect = new Span(argStartPos, bodyEndPos);
+
 				_defProv.AddLocal(argEffect, argDefList);
 			}
 
 			// Add the definitions for the declared variables
 			if (varList != null)
 			{
-				var varEffect = new Span(bodyStartLocalPos, _source.GetPrimaryFilePosition(bodyEndPos));
+				Span varEffect;
+				if (_visible) varEffect = new Span(bodyStartLocalPos, _source.GetPrimaryFilePosition(bodyEndPos));
+				else varEffect = new Span(bodyStartPos, bodyEndPos);
+
 				_defProv.AddLocal(varEffect, varList);
 			}
 		}
