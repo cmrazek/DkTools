@@ -12,7 +12,7 @@ namespace DkTools.CodeModel.Definitions
 		private List<ExtractFieldDefinition> _fields = new List<ExtractFieldDefinition>();
 
 		public ExtractTableDefinition(string name, string sourceFileName, int sourceStartPos, bool permanent)
-			: base(name, sourceFileName, sourceStartPos)
+			: base(name, sourceFileName, sourceStartPos, permanent ? string.Concat("permx:", name) : null)
 		{
 			_permanent = permanent;
 		}

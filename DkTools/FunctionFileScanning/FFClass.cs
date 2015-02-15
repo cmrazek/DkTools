@@ -211,5 +211,10 @@ namespace DkTools.FunctionFileScanning
 		{
 			get { return _file; }
 		}
+
+		public static string GetExternalRefId(string className)
+		{
+			return string.Concat("class:", className);
+		}
 	}
 }

@@ -867,7 +867,7 @@ namespace DkTools.CodeModel
 				{
 					if (_dataType != null)
 					{
-						return new Definitions.DataTypeDefinition(_name, _dataType);
+						return new Definitions.DataTypeDefinition(_name, _dataType, global: false);
 					}
 					else
 					{

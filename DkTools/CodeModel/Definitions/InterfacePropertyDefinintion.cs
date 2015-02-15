@@ -12,7 +12,7 @@ namespace DkTools.CodeModel.Definitions
 		private DataType _dataType;
 
 		public InterfacePropertyDefinition(InterfaceTypeDefinition intTypeDef, string name, DataType dataType)
-			: base(name, null, -1)
+			: base(name, null, -1, GetExternalRefId(intTypeDef.Name, name))
 		{
 #if DEBUG
 			if (intTypeDef == null) throw new ArgumentNullException("intTypeDef");
@@ -75,6 +75,11 @@ namespace DkTools.CodeModel.Definitions
 		public override string PickText
 		{
 			get { return QuickInfoTextStr; }
+		}
+
+		public static string GetExternalRefId(string intfName, string propName)
+		{
+			return string.Concat("interface:", intfName, ".prop:", propName);
 		}
 	}
 }

@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Data;
+using System.Data.SqlServerCe;
 using System.Linq;
 using System.Text;
 using DkTools.CodeModel.Definitions;
@@ -49,6 +51,12 @@ namespace DkTools.FunctionFileScanning
 				default:
 					return false;
 			}
+		}
+
+		public static string GetStringOrNull(this SqlCeDataReader rdr, int ordinal)
+		{
+			if (rdr.IsDBNull(ordinal)) return null;
+			return rdr.GetString(ordinal);
 		}
 	}
 }

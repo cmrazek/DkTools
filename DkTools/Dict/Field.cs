@@ -105,6 +105,11 @@ namespace DkTools.Dict
 		{
 			get { return _fullName; }
 		}
+
+		public static string GetTableFieldExternalRefId(string tableName, string fieldName)
+		{
+			return string.Concat("tableField:", tableName, ".", fieldName);
+		}
 	}
 
 	internal enum FieldParentType

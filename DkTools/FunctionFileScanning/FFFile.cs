@@ -225,16 +225,82 @@ namespace DkTools.FunctionFileScanning
 			}
 		}
 
-		//public bool Used
-		//{
-		//	get { return _used; }
-		//	set { _used = value; }
-		//}
+		private void UpdateRefList(FFDatabase db, List<Reference> refList)
+		{
+			// Initialize the flags on each ref
+			var memRefs = new List<Reference>();
+			memRefs.AddRange(refList);
+			foreach (var r in memRefs)
+			{
+				r.Exists = false;
+			}
 
-		//public void MarkUsed()
-		//{
-		//	_used = true;
-		//}
+			List<int> dbRefsToRemove = null;
+
+			// Scan the refs in the database to find which ones should be updated or removed
+			using (var cmd = db.CreateCommand("select * from ref where file_id = @file_id"))
+			{
+				cmd.Parameters.AddWithValue("@file_id", _id);
+
+				using (var rdr = cmd.ExecuteReader())
+				{
+					var ordId = rdr.GetOrdinal("id");
+					var ordExtRefId = rdr.GetOrdinal("ext_ref_id");
+					var ordTrueFileName = rdr.GetOrdinal("true_file_name");
+					var ordPos = rdr.GetOrdinal("pos");
+
+					while (rdr.Read())
+					{
+						var id = rdr.GetInt32(ordId);
+						var extRefId = rdr.GetString(ordExtRefId);
+						var trueFileName = rdr.GetStringOrNull(ordTrueFileName);
+						var pos = rdr.GetInt32(ordPos);
+
+						var memRef = memRefs.FirstOrDefault(r => r.ExternalRefId == extRefId && r.TrueFileName == trueFileName && r.Position == pos);
+						if (memRef != null)
+						{
+							memRef.Exists = true;
+						}
+						else
+						{
+							if (dbRefsToRemove == null) dbRefsToRemove = new List<int>();
+							dbRefsToRemove.Add(id);
+						}
+					}
+				}
+			}
+
+			// Remove refs no longer used
+			if (dbRefsToRemove != null)
+			{
+				foreach (var id in dbRefsToRemove)
+				{
+					using (var cmd = db.CreateCommand("delete from ref where id = @id"))
+					{
+						cmd.Parameters.AddWithValue("@id", id);
+						cmd.ExecuteNonQuery();
+					}
+				}
+			}
+
+			// Insert new refs
+			if (memRefs.Any(r => !r.Exists))
+			{
+				using (var cmd = db.CreateCommand("insert into ref (app_id, file_id, ext_ref_id, true_file_name, pos) values (@app_id, @file_id, @ext_ref_id, @true_file_name, @pos)"))
+				{
+					foreach (var newRef in memRefs.Where(r => !r.Exists))
+					{
+						cmd.Parameters.Clear();
+						cmd.Parameters.AddWithValue("@app_id", _app.Id);
+						cmd.Parameters.AddWithValue("@file_id", _id);
+						cmd.Parameters.AddWithValue("@ext_ref_id", newRef.ExternalRefId);
+						cmd.Parameters.AddWithValue("@true_file_name", string.IsNullOrEmpty(newRef.TrueFileName) ? Convert.DBNull : newRef.TrueFileName);
+						cmd.Parameters.AddWithValue("@pos", newRef.Position);
+						cmd.ExecuteNonQuery();
+					}
+				}
+			}
+		}
 
 		public void Remove(FFDatabase db)
 		{
@@ -289,19 +355,26 @@ namespace DkTools.FunctionFileScanning
 				_functions.Remove(removeFunc);
 			}
 
-			// Get all definitions defined in the file.
+			// Get all references in the file.
 			var refList = new List<Reference>();
-			foreach (var token in model.File.FindDownward(t => t.SourceDefinition != null))
+			foreach (var token in model.File.FindDownward(t => t.SourceDefinition != null && !string.IsNullOrEmpty(t.SourceDefinition.ExternalRefId)))
 			{
-				//model.PreprocessorModel.Source.GetFilePosition(token.Span.Start);
+				var localPos = token.File.CodeSource.GetFilePosition(token.Span.Start);
 
 				var def = token.SourceDefinition;
 				var refId = def.ExternalRefId;
 				if (!string.IsNullOrEmpty(refId))
 				{
-					refList.Add(new Reference { ExternalRefId = refId, Position = token.Span.Start });
+					refList.Add(new Reference
+					{
+						ExternalRefId = refId,
+						TrueFileName = string.Equals(localPos.FileName, model.FileName, StringComparison.OrdinalIgnoreCase) ? null : localPos.FileName,
+						Position = localPos.Position
+					});
 				}
 			}
+
+			UpdateRefList(db, refList);
 		}
 
 		private class Reference
@@ -309,6 +382,9 @@ namespace DkTools.FunctionFileScanning
 			public string ExternalRefId { get; set; }
 			public string TrueFileName { get; set; }
 			public int Position { get; set; }
+
+			// Flags used for database management
+			public bool Exists { get; set; }
 		}
 
 		public IEnumerable<FFFunction> Functions

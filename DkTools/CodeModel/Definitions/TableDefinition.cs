@@ -15,7 +15,7 @@ namespace DkTools.CodeModel.Definitions
 		private bool _orig;
 
 		public TableDefinition(string name, Dict.Table table, bool orig)
-			: base(name, null, -1)
+			: base(name, null, -1, Dict.Table.GetExternalRefId(name))
 		{
 			_prompt = table.Prompt;
 			_comment = table.Comment;

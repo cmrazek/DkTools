@@ -12,7 +12,7 @@ namespace DkTools.CodeModel.Definitions
 		private string _devDesc;
 
 		public InterfaceTypeDefinition(Dict.InterfaceType intType)
-			: base(intType.Name, null, -1)
+			: base(intType.Name, null, -1, GetExternalRefId(intType.Name))
 		{
 #if DEBUG
 			if (intType == null) throw new ArgumentNullException("intType");
@@ -22,7 +22,7 @@ namespace DkTools.CodeModel.Definitions
 		}
 
 		public InterfaceTypeDefinition(string name)
-			: base(name, null, -1)
+			: base(name, null, -1, GetExternalRefId(name))
 		{
 		}
 
@@ -87,6 +87,11 @@ namespace DkTools.CodeModel.Definitions
 		public override string PickText
 		{
 			get { return QuickInfoTextStr; }
+		}
+
+		public static string GetExternalRefId(string name)
+		{
+			return string.Concat("interface:", name);
 		}
 	}
 }

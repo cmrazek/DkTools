@@ -220,46 +220,6 @@ namespace DkTools.FunctionFileScanning
 				{
 					app.OnInvisibleFileChanged(ffFile);
 				}
-
-				// TODO: remove
-				//foreach (var funcDef in model.DefinitionProvider.GetGlobalFromFile<CodeModel.Definitions.FunctionDefinition>())
-				//{
-				//	if (funcDef.Extern) continue;
-
-				//	if (fileContext.IsClass())
-				//	{
-				//		if (funcDef.Privacy != CodeModel.FunctionPrivacy.Public) continue;
-				//	}
-				//	else if (fileContext == FileContext.Function)
-				//	{
-				//		if (!funcDef.Name.Equals(fileTitle, StringComparison.OrdinalIgnoreCase)) continue;
-				//	}
-
-				//	var funcFileName = funcDef.SourceFileName;
-
-				//	if (string.IsNullOrEmpty(funcFileName) || !string.Equals(funcFileName, fileName, StringComparison.OrdinalIgnoreCase)) continue;
-
-				//	var saveDef = funcDef.CloneAsExtern();	// This should appear as extern when used in other files.
-
-				//	FFClass ffClass;
-				//	FFFunction ffFunc;
-				//	app.UpdateFunction(ffFile, className, saveDef, out ffClass, out ffFunc);
-				//	if (ffClass != null && !classList.Contains(ffClass))
-				//	{
-				//		classList.Add(ffClass);
-				//		ffClass.MarkUsed();
-				//	}
-				//	funcList.Add(ffFunc);
-				//	ffFunc.MarkUsed();
-				//}
-
-				//ffFile.Modified = fileModified;
-
-				//// Save the new info to the database
-				//ffFile.InsertOrUpdate(db, fileStore);
-				//ffFile.MarkUsed();
-				//foreach (var ffClass in classList) ffClass.InsertOrUpdate(db);
-				//foreach (var ffFunc in funcList) ffFunc.InsertOrUpdate(db);
 			}
 			catch (Exception ex)
 			{

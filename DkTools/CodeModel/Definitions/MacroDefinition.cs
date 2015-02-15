@@ -13,7 +13,7 @@ namespace DkTools.CodeModel.Definitions
 		private string _body;
 
 		public MacroDefinition(string name, string fileName, int startPos, string signature, string body)
-			: base(name, fileName, startPos)
+			: base(name, fileName, startPos, null)
 		{
 #if DEBUG
 			if (string.IsNullOrWhiteSpace(signature)) throw new ArgumentNullException("signature");

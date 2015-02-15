@@ -41,6 +41,15 @@ namespace DkTools.CodeModel
 			return model;
 		}
 
+		public static CodeModel CreateFullModelForPreprocessed(CodeSource source, FileStore store, PreprocessorModel prepModel)
+		{
+			var model = new CodeModel(store);
+			var codeFile = new CodeFile(model);
+
+			model.Init(source, codeFile, prepModel.FileName, false, prepModel.DefinitionProvider);
+			return model;
+		}
+
 		private void Init(CodeSource source, CodeFile file, string fileName, bool visible, DefinitionProvider defProvider)
 		{
 #if DEBUG

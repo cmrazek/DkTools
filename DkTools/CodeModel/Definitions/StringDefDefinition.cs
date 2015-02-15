@@ -11,7 +11,7 @@ namespace DkTools.CodeModel.Definitions
 		private Dict.StringDef _stringDef;
 
 		public StringDefDefinition(Dict.StringDef stringDef)
-			: base(stringDef.Name, null, -1)
+			: base(stringDef.Name, null, -1, GetExternalRefId(stringDef.Name))
 		{
 			_stringDef = stringDef;
 		}
@@ -47,6 +47,11 @@ namespace DkTools.CodeModel.Definitions
 		public override string PickText
 		{
 			get { return QuickInfoTextStr; }
+		}
+
+		public static string GetExternalRefId(string name)
+		{
+			return string.Concat("stringdef:", name);
 		}
 	}
 }

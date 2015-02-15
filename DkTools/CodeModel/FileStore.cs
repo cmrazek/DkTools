@@ -275,6 +275,13 @@ namespace DkTools.CodeModel
 			return model;
 		}
 
+		public CodeModel CreatePreprocessedModel(VsText.ITextSnapshot snapshot, bool visible, string reason)
+		{
+			var model = CreatePreprocessedModel(snapshot.GetText(), snapshot.TextBuffer.TryGetFileName(), visible, reason);
+			model.Snapshot = snapshot;
+			return model;
+		}
+
 		public CodeModel CreatePreprocessedModel(string content, string fileName, bool visible, string reason)
 		{
 #if DEBUG
@@ -305,9 +312,18 @@ namespace DkTools.CodeModel
 			var midTime2 = DateTime.Now;
 #endif
 
-			var visibleModel = CodeModel.CreateVisibleModelForPreprocessed(visibleSource, this, prepModel);
-			visibleModel.PreprocessorModel = prepModel;
-			visibleModel.DisabledSections = prepSource.GenerateDisabledSections().ToArray();
+			CodeModel modelToReturn;
+			if (visible)
+			{
+				modelToReturn = CodeModel.CreateVisibleModelForPreprocessed(visibleSource, this, prepModel);
+				modelToReturn.PreprocessorModel = prepModel;
+				modelToReturn.DisabledSections = prepSource.GenerateDisabledSections().ToArray();
+			}
+			else
+			{
+				modelToReturn = CodeModel.CreateFullModelForPreprocessed(prepSource, this, prepModel);
+				modelToReturn.PreprocessorModel = prepModel;
+			}
 
 #if DEBUG
 			var endTime = DateTime.Now;
@@ -318,7 +334,7 @@ namespace DkTools.CodeModel
 			Log.WriteDebug("Created model in {0} msecs ({1} preprocessor, {2} model, {3} visible)", elapsedTime, prepTime, modelTime, visTime);
 #endif
 
-			return visibleModel;
+			return modelToReturn;
 		}
 
 		public CodeModel Model

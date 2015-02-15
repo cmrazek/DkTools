@@ -18,7 +18,6 @@ namespace DkTools.CodeModel
 		private VsText.ITextSnapshot _snapshot;
 		private int _lastFindSegment = -1;
 		private int _length;
-		//private bool _isEmptyLine = true;
 
 		private class CodeSegment
 		{
@@ -253,6 +252,37 @@ namespace DkTools.CodeModel
 			if (segIndex < 0) return false;
 
 			return _segments[segIndex].primaryFile;
+		}
+
+		/// <summary>
+		/// This correlates a position in the primary file with the position in the expanded source.
+		/// </summary>
+		/// <param name="primaryFilePos">The position in the primary file.</param>
+		/// <returns>If found, the position is the expanded source; otherwise -1.</returns>
+		public int PrimaryFilePositionToSource(int primaryFilePos)
+		{
+			foreach (var seg in _segments)
+			{
+				if (seg.primaryFile && seg.startPos <= primaryFilePos)
+				{
+					if (seg.actualContent)
+					{
+						if (seg.startPos + seg.length >= primaryFilePos)
+						{
+							return seg.start + (primaryFilePos - seg.startPos);
+						}
+					}
+					else
+					{
+						if (seg.start == primaryFilePos)
+						{
+							return seg.start;
+						}
+					}
+				}
+			}
+
+			return -1;
 		}
 
 		public void GetFileSpan(Span sourceSpan, out string foundFileName, out Span foundSpan, out bool foundPrimaryFile)

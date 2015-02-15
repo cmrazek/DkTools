@@ -10,8 +10,8 @@ namespace DkTools.CodeModel.Definitions
 	{
 		private ExtractTableDefinition _ex;
 
-		public ExtractFieldDefinition(string name, string sourceFileName, int sourceStartPos)
-			: base(name, sourceFileName, sourceStartPos)
+		public ExtractFieldDefinition(string name, string sourceFileName, int sourceStartPos, ExtractTableDefinition tableDef)
+			: base(name, sourceFileName, sourceStartPos, tableDef.Permanent ? GetExternalRefId(tableDef.Name, name) : null)
 		{ }
 
 		public override bool CompletionVisible
@@ -56,6 +56,11 @@ namespace DkTools.CodeModel.Definitions
 		public override string PickText
 		{
 			get { return QuickInfoTextStr; }
+		}
+
+		public static string GetExternalRefId(string tableName, string fieldName)
+		{
+			return string.Concat("permx:", tableName, ".", fieldName);
 		}
 	}
 }

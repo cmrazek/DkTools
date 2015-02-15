@@ -693,7 +693,7 @@ namespace DkTools.CodeModel
 					if (exDef != null)
 					{
 						var localPos = _source.GetFilePosition(_code.TokenStartPostion);
-						var fieldDef = new ExtractFieldDefinition(lastToken, localPos.FileName, localPos.Position);
+						var fieldDef = new ExtractFieldDefinition(lastToken, localPos.FileName, localPos.Position, exDef);
 						exDef.AddField(fieldDef);
 					}
 					if (fields == null) fields = new List<string>();

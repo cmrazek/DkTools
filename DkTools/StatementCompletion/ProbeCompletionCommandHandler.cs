@@ -46,7 +46,20 @@ namespace DkTools.StatementCompletion
 
 		int IOleCommandTarget.QueryStatus(ref Guid pguidCmdGroup, uint cCmds, OLECMD[] prgCmds, IntPtr pCmdText)
 		{
-			return _nextCommandHandler.QueryStatus(ref pguidCmdGroup, cCmds, prgCmds, pCmdText);
+			var status = _nextCommandHandler.QueryStatus(ref pguidCmdGroup, cCmds, prgCmds, pCmdText);
+
+			if (pguidCmdGroup == typeof(VSConstants.VSStd97CmdID).GUID)
+			{
+				for (int i = 0; i < cCmds; i++)
+				{
+					if (prgCmds[i].cmdID == (uint)VSConstants.VSStd97CmdID.FindReferences)
+					{
+						prgCmds[i].cmdf = (uint)(OLECMDF.OLECMDF_ENABLED | OLECMDF.OLECMDF_SUPPORTED);
+					}
+				}
+			}
+
+			return status;
 		}
 
 		int IOleCommandTarget.Exec(ref Guid pguidCmdGroup, uint nCmdID, uint nCmdexecopt, IntPtr pvaIn, IntPtr pvaOut)
@@ -66,6 +79,11 @@ namespace DkTools.StatementCompletion
 					if (nCmdID == (uint)VSConstants.VSStd97CmdID.GotoDefn)
 					{
 						Navigation.GoToDefinitionHelper.TriggerGoToDefinition(_textView);
+						return VSConstants.S_OK;
+					}
+					else if (nCmdID == (uint)VSConstants.VSStd97CmdID.FindReferences)
+					{
+						Navigation.GoToDefinitionHelper.TriggerFindReferences(_textView);
 						return VSConstants.S_OK;
 					}
 				}

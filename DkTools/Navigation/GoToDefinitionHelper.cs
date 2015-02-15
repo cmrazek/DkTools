@@ -10,53 +10,62 @@ namespace DkTools.Navigation
 {
 	public static class GoToDefinitionHelper
 	{
+		private static readonly Guid _findReferencesPaneGuid = new Guid("18f484e0-b0c1-4c1e-b661-1c5f83ce8f5c");
+
 		public static void TriggerGoToDefinition(ITextView textView)
 		{
-			// Get caret point
-			var caretPtTest = textView.Caret.Position.Point.GetPoint(textBuffer => (!textBuffer.ContentType.IsOfType("projection")), PositionAffinity.Predecessor);
-			if (!caretPtTest.HasValue) return;
-			var caretPt = caretPtTest.Value;
-
-			var fileStore = CodeModel.FileStore.GetOrCreateForTextBuffer(textView.TextBuffer);
-			if (fileStore == null) return;
-
-			var model = fileStore.GetCurrentModel(caretPt.Snapshot, "Go to definition");
-			var modelPos = model.AdjustPosition(caretPt.Position, caretPt.Snapshot);
-			var selTokens = model.File.FindDownwardTouching(modelPos).ToArray();
-			if (selTokens.Length == 0)
+			try
 			{
-				Log.WriteDebug("Nothing selected.");
-				return;
-			}
+				// Get caret point
+				var caretPtTest = textView.Caret.Position.Point.GetPoint(textBuffer => (!textBuffer.ContentType.IsOfType("projection")), PositionAffinity.Predecessor);
+				if (!caretPtTest.HasValue) return;
+				var caretPt = caretPtTest.Value;
 
-			var defToken = selTokens.LastOrDefault(t => t.SourceDefinition != null);
-			if (defToken != null && defToken.SourceDefinition != null)
-			{
-				Log.WriteDebug("Got token with SourceDefinition.");
-				BrowseToDefinition(defToken.SourceDefinition);
-				return;
-			}
+				var fileStore = CodeModel.FileStore.GetOrCreateForTextBuffer(textView.TextBuffer);
+				if (fileStore == null) return;
 
-			var includeToken = selTokens.LastOrDefault(t => t is CodeModel.Tokens.IncludeToken) as CodeModel.Tokens.IncludeToken;
-			if (includeToken != null)
-			{
-				Log.WriteDebug("Found include token.");
-
-				var pathName = includeToken.FullPathName;
-				if (!string.IsNullOrEmpty(pathName))
+				var model = fileStore.GetCurrentModel(caretPt.Snapshot, "Go to definition");
+				var modelPos = model.AdjustPosition(caretPt.Position, caretPt.Snapshot);
+				var selTokens = model.File.FindDownwardTouching(modelPos).ToArray();
+				if (selTokens.Length == 0)
 				{
-					Shell.OpenDocument(pathName);
+					Log.WriteDebug("Nothing selected.");
 					return;
 				}
-				else
+
+				var defToken = selTokens.LastOrDefault(t => t.SourceDefinition != null);
+				if (defToken != null && defToken.SourceDefinition != null)
 				{
-					Shell.SetStatusText("Include file not found.");
+					Log.WriteDebug("Got token with SourceDefinition.");
+					BrowseToDefinition(defToken.SourceDefinition);
 					return;
 				}
-			}
 
-			Log.WriteDebug("Found no definitions.");
-			Shell.SetStatusText("Definition not found.");
+				var includeToken = selTokens.LastOrDefault(t => t is CodeModel.Tokens.IncludeToken) as CodeModel.Tokens.IncludeToken;
+				if (includeToken != null)
+				{
+					Log.WriteDebug("Found include token.");
+
+					var pathName = includeToken.FullPathName;
+					if (!string.IsNullOrEmpty(pathName))
+					{
+						Shell.OpenDocument(pathName);
+						return;
+					}
+					else
+					{
+						Shell.SetStatusText("Include file not found.");
+						return;
+					}
+				}
+
+				Log.WriteDebug("Found no definitions.");
+				Shell.SetStatusText("Definition not found.");
+			}
+			catch (Exception ex)
+			{
+				Shell.ShowError(ex);
+			}
 		}
 
 		private static void BrowseToDefinition(CodeModel.Definitions.Definition def)
@@ -153,6 +162,238 @@ namespace DkTools.Navigation
 				{
 					Shell.OpenDocument(selDef.SourceFileName, selDef.SourceStartPos);
 				}
+			}
+		}
+
+		public static void TriggerFindReferences(ITextView textView)
+		{
+			try
+			{
+				Log.WriteDebug("TriggerFindReferences");	// TODO: remove
+
+
+				var snapPt = textView.Caret.Position.BufferPosition;
+
+				var fileStore = CodeModel.FileStore.GetOrCreateForTextBuffer(snapPt.Snapshot.TextBuffer);
+				if (fileStore == null) return;
+
+				var model = fileStore.GetMostRecentModel(snapPt.Snapshot, "Find References");
+				var modelPos = model.AdjustPosition(snapPt);
+				var selTokens = model.File.FindDownwardTouching(modelPos).ToArray();
+				if (selTokens.Length == 0)
+				{
+					Log.WriteDebug("Nothing selected.");
+					return;
+				}
+
+				var defToken = selTokens.LastOrDefault(t => t.SourceDefinition != null);
+				if (defToken != null && defToken.SourceDefinition != null)
+				{
+					Log.WriteDebug("Got token with SourceDefinition.");
+					var def = defToken.SourceDefinition;
+
+					var pane = Shell.CreateOutputPane(_findReferencesPaneGuid, Constants.FindReferencesOutputPaneTitle);
+					pane.Clear();
+					pane.Show();
+					pane.WriteLine(string.Format("Finding references of '{0}':", def.Name));
+
+					var refList = new List<Reference>();
+
+					if (!string.IsNullOrEmpty(def.ExternalRefId))
+					{
+						refList.AddRange(FindGlobalReferences(def));
+					}
+
+					refList.AddRange(FindLocalReferences(fileStore, model, defToken, snapPt));
+					refList.Sort();
+					Reference.ResolveContext(refList);
+
+					string lastFileName = null;
+					int lastLineNumber = -1;
+					int lastLineOffset = -1;
+					var refCount = 0;
+
+					foreach (var r in refList)
+					{
+						if (!string.Equals(r.FileName, lastFileName, StringComparison.OrdinalIgnoreCase) ||
+							r.LineNumber != lastLineNumber ||
+							r.LineOffset != lastLineOffset)
+						{
+							pane.WriteLine(string.Format("  {0}({1},{2}): {3}", r.FileName, r.LineNumber + 1, r.LineOffset + 1, r.Context, r.Global ? "global" : "local"));
+							refCount++;
+
+							lastFileName = r.FileName;
+							lastLineNumber = r.LineNumber;
+							lastLineOffset = r.LineOffset;
+						}
+					}
+
+					pane.WriteLine(string.Format("{0} reference(s) found.", refCount));
+				}
+			}
+			catch (Exception ex)
+			{
+				Shell.ShowError(ex);
+			}
+		}
+
+		private static IEnumerable<Reference> FindGlobalReferences(Definition def)
+		{
+			if (string.IsNullOrEmpty(def.ExternalRefId)) throw new ArgumentException("Definition has no external ref ID.");
+
+			var db = new FunctionFileScanning.FFDatabase();
+			using (var cmd = db.CreateCommand("select file_.file_name, ref.pos, ref.true_file_name from ref inner join file_ on file_.id = ref.file_id where ref.ext_ref_id = @ext_ref_id and ref.app_id = @app_id"))
+			{
+				cmd.Parameters.AddWithValue("@ext_ref_id", def.ExternalRefId);
+				cmd.Parameters.AddWithValue("@app_id", ProbeToolsPackage.Instance.FunctionFileScanner.CurrentApp.Id);
+
+				using (var rdr = cmd.ExecuteReader())
+				{
+					var ordFileId = rdr.GetOrdinal("file_name");
+					var ordPos = rdr.GetOrdinal("pos");
+					var ordTrueFileName = rdr.GetOrdinal("true_file_name");
+
+					while (rdr.Read())
+					{
+						var fileName = rdr.GetString(ordFileId);
+						var pos = rdr.GetInt32(ordPos);
+						var trueFileName = FunctionFileScanning.FFUtil.GetStringOrNull(rdr, ordTrueFileName);
+
+						if (!string.IsNullOrEmpty(trueFileName)) fileName = trueFileName;
+
+						yield return new Reference(fileName, pos, true);
+					}
+				}
+			}
+		}
+
+		private static IEnumerable<Reference> FindLocalReferences(CodeModel.FileStore fileStore, CodeModel.CodeModel visModel, CodeModel.Tokens.Token visToken, SnapshotPoint snapPt)
+		{
+			var visModelPos = visModel.AdjustPosition(snapPt);
+			var visDef = visToken.SourceDefinition;
+
+			var fullModel = fileStore.CreatePreprocessedModel(snapPt.Snapshot, false, "Find Local References");
+			var fullModelPos = fullModel.PreprocessorModel.Source.PrimaryFilePositionToSource(visToken.Span.Start);
+
+			var fullToken = fullModel.File.FindDownward(fullModelPos, t => t.SourceDefinition != null && t.SourceDefinition.Name == visDef.Name).FirstOrDefault();
+			if (fullToken != null)
+			{
+				foreach (var token in fullModel.File.FindDownward(t => t.SourceDefinition == fullToken.SourceDefinition))
+				{
+					var localFilePos = fullModel.PreprocessorModel.Source.GetFilePosition(token.Span.Start);
+
+					yield return new Reference(localFilePos.FileName, localFilePos.Position, false);
+				}
+			}
+		}
+
+		private class Reference : IComparable<Reference>
+		{
+			private string _fileName;
+			private int _pos;
+			private int _lineNumber;
+			private int _lineOffset;
+			private string _context;
+			private bool _global;
+
+			public Reference(string fileName, int pos, bool global)
+			{
+				_fileName = fileName;
+				_pos = pos;
+				_global = global;
+			}
+
+			public static void ResolveContext(IEnumerable<Reference> refs)
+			{
+				var list = refs.OrderBy(x => x._fileName.ToLower()).ToArray();
+
+				var curFileName = string.Empty;
+				var content = string.Empty;
+
+				foreach (var item in list)
+				{
+					if (!string.Equals(item._fileName, curFileName))
+					{
+						curFileName = item._fileName;
+						if (System.IO.File.Exists(curFileName)) content = System.IO.File.ReadAllText(curFileName);
+						else content = string.Empty;
+					}
+
+					item._lineNumber = GetLineNumberForPos(content, item._pos, out item._context, out item._lineOffset);
+				}
+			}
+
+			private static int GetLineNumberForPos(string content, int filePos, out string context, out int lineOffset)
+			{
+				if (filePos < 0 || filePos > content.Length)
+				{
+					context = string.Empty;
+					lineOffset = 0;
+					return 0;
+				}
+
+				var lineNumber = 0;
+				var pos = 0;
+				var len = content.Length;
+				char ch;
+				var lineStartPos = 0;
+
+				while (pos < filePos && pos < len)
+				{
+					ch = content[pos];
+					if (ch == '\n')
+					{
+						lineNumber++;
+						lineStartPos = pos + 1;
+					}
+					pos++;
+				}
+
+				lineOffset = pos - lineStartPos;
+
+				var endLine = content.IndexOfAny(new char[] { '\r', '\n' }, lineStartPos);
+				if (endLine < 0) context = content.Substring(lineStartPos);
+				else context = content.Substring(lineStartPos, endLine - lineStartPos);
+
+				return lineNumber;
+			}
+
+			public string FileName
+			{
+				get { return _fileName; }
+			}
+
+			public int LineNumber
+			{
+				get { return _lineNumber; }
+			}
+
+			public string Context
+			{
+				get { return _context; }
+			}
+
+			public int Position
+			{
+				get { return _pos; }
+			}
+
+			public int LineOffset
+			{
+				get { return _lineOffset; }
+			}
+
+			public bool Global
+			{
+				get { return _global; }
+			}
+
+			public int CompareTo(Reference other)
+			{
+				var ret = string.Compare(_fileName, other._fileName);
+				if (ret != 0) return ret;
+
+				return _pos.CompareTo(other._pos);
 			}
 		}
 	}

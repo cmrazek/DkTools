@@ -15,6 +15,7 @@ namespace DkTools.CodeModel.Definitions
 		private string _name;
 		private string _sourceFileName;
 		private int _sourceStartPos;
+		private string _externalRefId;
 
 		public abstract bool CompletionVisible { get; }
 		public abstract StatementCompletion.CompletionType CompletionType { get; }
@@ -22,11 +23,10 @@ namespace DkTools.CodeModel.Definitions
 		public abstract string QuickInfoTextStr { get; }
 		public abstract UIElement QuickInfoTextWpf { get; }
 		public abstract string PickText { get; }
-		public abstract string ExternalRefId { get; }
 
 		private const int k_maxWpfWidth = 600;
 
-		public Definition(string name, string sourceFileName, int sourceStartPos)
+		public Definition(string name, string sourceFileName, int sourceStartPos, string externalRefId)
 		{
 #if DEBUG
 			if (string.IsNullOrWhiteSpace(name)) throw new ArgumentNullException("name");
@@ -34,6 +34,7 @@ namespace DkTools.CodeModel.Definitions
 			_name = name;
 			_sourceFileName = sourceFileName;
 			_sourceStartPos = sourceStartPos;
+			_externalRefId = externalRefId;
 		}
 
 		/// <summary>
@@ -208,6 +209,24 @@ namespace DkTools.CodeModel.Definitions
 			};
 			panel.Children.Add(child);
 			return panel;
+		}
+
+		public string ExternalRefId
+		{
+			get { return _externalRefId; }
+		}
+
+		public override bool Equals(object obj)
+		{
+			var def = obj as Definition;
+			if (def == null) return false;
+
+			return _name == def._name && _sourceFileName == def._sourceFileName && _sourceStartPos == def._sourceStartPos;
+		}
+
+		public override int GetHashCode()
+		{
+			return _name.GetHashCode() ^ _sourceFileName.GetHashCode() ^ _sourceStartPos.GetHashCode();
 		}
 	}
 }

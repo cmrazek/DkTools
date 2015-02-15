@@ -32,7 +32,7 @@ namespace DkTools.CodeModel.Definitions
 		/// <param name="bodyStartPos">Position of the function's body braces (if does not match, then will be ignored)</param>
 		public FunctionDefinition(string className, string funcName, string fileName, int nameStartPos, DataType dataType, string signature,
 			int argsStartPos, int argsEndPos, int bodyStartPos, Span entireSpan, FunctionPrivacy privacy, bool isExtern, string devDesc)
-			: base(funcName, fileName, nameStartPos)
+			: base(funcName, fileName, nameStartPos, !string.IsNullOrEmpty(className) ? string.Concat("class:", className, ".func:", funcName) : string.Concat("func:", funcName))
 		{
 #if DEBUG
 			if (string.IsNullOrWhiteSpace(signature)) throw new ArgumentNullException("signature");
@@ -57,7 +57,7 @@ namespace DkTools.CodeModel.Definitions
 		/// <param name="signature">Signature</param>
 		/// <param name="devDesc">Developer description</param>
 		public FunctionDefinition(string funcName, DataType dataType, string signature, string devDesc)
-			: base(funcName, null, 0)
+			: base(funcName, null, 0, string.Concat("func:", funcName))
 		{
 #if DEBUG
 			if (string.IsNullOrWhiteSpace(signature)) throw new ArgumentNullException("signature");

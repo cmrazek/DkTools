@@ -15,7 +15,7 @@ namespace DkTools.CodeModel.Definitions
 		private string _declText;
 
 		public VariableDefinition(string name, string fileName, int startPos, DataType dataType, bool arg, int[] arrayLengths)
-			: base(name, fileName, startPos)
+			: base(name, fileName, startPos, null)
 		{
 #if DEBUG
 			if (dataType == null) throw new ArgumentNullException("dataType");

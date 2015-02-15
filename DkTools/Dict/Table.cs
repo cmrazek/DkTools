@@ -138,5 +138,10 @@ namespace DkTools.Dict
 		{
 			return dict.GetTable(_name);
 		}
+
+		public static string GetExternalRefId(string tableName)
+		{
+			return string.Concat("table:", tableName);
+		}
 	}
 }

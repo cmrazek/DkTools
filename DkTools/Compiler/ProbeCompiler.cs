@@ -12,7 +12,7 @@ namespace DkTools.Compiler
 	internal class ProbeCompiler : IDisposable
 	{
 		private OutputPane _pane;
-		private Guid _paneGuid = new Guid("{BD87845A-95F6-4BEB-B9A8-CABE3B01E247}");
+		private static readonly Guid _paneGuid = new Guid("{BD87845A-95F6-4BEB-B9A8-CABE3B01E247}");
 
 		private Thread _compileThread = null;
 		private CompileMethod _method = CompileMethod.Compile;
