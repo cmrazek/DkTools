@@ -214,6 +214,7 @@ namespace DkTools.FunctionFileScanning
 			try
 			{
 				if (!File.Exists(scan.fileName)) return;
+				if (FileContextUtil.IsLocalizedFile(scan.fileName)) return;
 
 				DateTime modified;
 				if (!app.TryGetFileDate(scan.fileName, out modified)) modified = DateTime.MinValue;
@@ -234,7 +235,11 @@ namespace DkTools.FunctionFileScanning
 				var fileContext = CodeModel.FileContextUtil.GetFileContextFromFileName(scan.fileName);
 				var fileContent = File.ReadAllText(scan.fileName);
 				var fileStore = new CodeModel.FileStore();
-				var model = fileStore.CreatePreprocessedModel(fileContent, scan.fileName, false, string.Concat("Function file processing: ", scan.fileName));
+
+				var merger = new FileMerger();
+				merger.MergeFile(scan.fileName, null, false, true);
+
+				var model = fileStore.CreatePreprocessedModel(merger.MergedContent, scan.fileName, false, string.Concat("Function file processing: ", scan.fileName));
 
 				var className = fileContext.IsClass() ? Path.GetFileNameWithoutExtension(scan.fileName) : null;
 				var classList = new List<FFClass>();

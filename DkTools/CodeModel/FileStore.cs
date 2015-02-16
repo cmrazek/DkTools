@@ -75,7 +75,7 @@ namespace DkTools.CodeModel
 			if (searchSameDir && !string.IsNullOrEmpty(sourceFileName))
 			{
 				var pathName = Path.Combine(Path.GetDirectoryName(sourceFileName), fileName);
-				if (System.IO.File.Exists(pathName))
+				if (File.Exists(pathName))
 				{
 					if (CheckForCyclicalInclude(pathName, parentFiles)) return null;
 					file = new IncludeFile(this, pathName);
@@ -83,30 +83,30 @@ namespace DkTools.CodeModel
 					return file;
 				}
 
-				var ampersandFileName = pathName + "&";
-				if (System.IO.File.Exists(ampersandFileName))
-				{
-					if (CheckForCyclicalInclude(ampersandFileName, parentFiles)) return null;
-					file = new IncludeFile(this, ampersandFileName);
-					_sameDirIncludeFiles[fileNameLower] = file;
-					return file;
-				}
+				//var ampersandFileName = pathName + "&";
+				//if (File.Exists(ampersandFileName))
+				//{
+				//	if (CheckForCyclicalInclude(ampersandFileName, parentFiles)) return null;
+				//	file = new IncludeFile(this, ampersandFileName);
+				//	_sameDirIncludeFiles[fileNameLower] = file;
+				//	return file;
+				//}
 
-				var plusFileName = pathName = "+";
-				if (File.Exists(plusFileName))
-				{
-					if (CheckForCyclicalInclude(plusFileName, parentFiles)) return null;
-					file = new IncludeFile(this, plusFileName);
-					_sameDirIncludeFiles[fileNameLower] = file;
-					return file;
-				}
+				//var plusFileName = pathName = "+";
+				//if (File.Exists(plusFileName))
+				//{
+				//	if (CheckForCyclicalInclude(plusFileName, parentFiles)) return null;
+				//	file = new IncludeFile(this, plusFileName);
+				//	_sameDirIncludeFiles[fileNameLower] = file;
+				//	return file;
+				//}
 			}
 
 			// Search the disk in global include directories.
 			foreach (var includeDir in ProbeEnvironment.IncludeDirs)
 			{
 				var pathName = Path.Combine(includeDir, fileName);
-				if (System.IO.File.Exists(pathName))
+				if (File.Exists(pathName))
 				{
 					if (CheckForCyclicalInclude(pathName, parentFiles)) return null;
 					file = new IncludeFile(this, pathName);
@@ -114,23 +114,23 @@ namespace DkTools.CodeModel
 					return file;
 				}
 
-				var ampersandFileName = pathName + "&";
-				if (System.IO.File.Exists(ampersandFileName))
-				{
-					if (CheckForCyclicalInclude(ampersandFileName, parentFiles)) return null;
-					file = new IncludeFile(this, ampersandFileName);
-					_globalIncludeFiles[fileNameLower] = file;
-					return file;
-				}
+				//var ampersandFileName = pathName + "&";
+				//if (File.Exists(ampersandFileName))
+				//{
+				//	if (CheckForCyclicalInclude(ampersandFileName, parentFiles)) return null;
+				//	file = new IncludeFile(this, ampersandFileName);
+				//	_globalIncludeFiles[fileNameLower] = file;
+				//	return file;
+				//}
 
-				var plusFileName = pathName = "+";
-				if (System.IO.File.Exists(plusFileName))
-				{
-					if (CheckForCyclicalInclude(plusFileName, parentFiles)) return null;
-					file = new IncludeFile(this, plusFileName);
-					_globalIncludeFiles[fileNameLower] = file;
-					return file;
-				}
+				//var plusFileName = pathName = "+";
+				//if (File.Exists(plusFileName))
+				//{
+				//	if (CheckForCyclicalInclude(plusFileName, parentFiles)) return null;
+				//	file = new IncludeFile(this, plusFileName);
+				//	_globalIncludeFiles[fileNameLower] = file;
+				//	return file;
+				//}
 			}
 
 			return null;
@@ -160,17 +160,17 @@ namespace DkTools.CodeModel
 					return Path.GetFullPath(pathName);
 				}
 
-				var ampersandFileName = pathName + "&";
-				if (File.Exists(ampersandFileName))
-				{
-					return Path.GetFullPath(ampersandFileName);
-				}
+				//var ampersandFileName = pathName + "&";
+				//if (File.Exists(ampersandFileName))
+				//{
+				//	return Path.GetFullPath(ampersandFileName);
+				//}
 
-				var plusFileName = pathName = "+";
-				if (File.Exists(plusFileName))
-				{
-					return Path.GetFullPath(plusFileName);
-				}
+				//var plusFileName = pathName = "+";
+				//if (File.Exists(plusFileName))
+				//{
+				//	return Path.GetFullPath(plusFileName);
+				//}
 			}
 
 			// Search the disk in global include directories.
@@ -182,17 +182,17 @@ namespace DkTools.CodeModel
 					return Path.GetFullPath(pathName);
 				}
 
-				var ampersandFileName = pathName + "&";
-				if (System.IO.File.Exists(ampersandFileName))
-				{
-					return Path.GetFullPath(ampersandFileName);
-				}
+				//var ampersandFileName = pathName + "&";
+				//if (System.IO.File.Exists(ampersandFileName))
+				//{
+				//	return Path.GetFullPath(ampersandFileName);
+				//}
 
-				var plusFileName = pathName = "+";
-				if (System.IO.File.Exists(plusFileName))
-				{
-					return Path.GetFullPath(plusFileName);
-				}
+				//var plusFileName = pathName = "+";
+				//if (System.IO.File.Exists(plusFileName))
+				//{
+				//	return Path.GetFullPath(plusFileName);
+				//}
 			}
 
 			return null;
@@ -270,29 +270,48 @@ namespace DkTools.CodeModel
 
 		public CodeModel CreatePreprocessedModel(VsText.ITextSnapshot snapshot, string reason)
 		{
-			var model = CreatePreprocessedModel(snapshot.GetText(), snapshot.TextBuffer.TryGetFileName(), true, reason);
+			var fileName = snapshot.TextBuffer.TryGetFileName();
+
+			var source = new CodeSource();
+			source.Append(snapshot.GetText(), fileName, 0, snapshot.Length, true, true, false);
+			source.Flush();
+
+			var model = CreatePreprocessedModel(source, fileName, true, reason);
 			model.Snapshot = snapshot;
 			return model;
 		}
 
 		public CodeModel CreatePreprocessedModel(VsText.ITextSnapshot snapshot, bool visible, string reason)
 		{
-			var model = CreatePreprocessedModel(snapshot.GetText(), snapshot.TextBuffer.TryGetFileName(), visible, reason);
+			var fileName = snapshot.TextBuffer.TryGetFileName();
+
+			CodeSource source;
+			if (visible)
+			{
+				source = new CodeSource();
+				source.Append(snapshot.GetText(), fileName, 0, snapshot.Length, true, true, false);
+				source.Flush();
+			}
+			else
+			{
+				var merger = new FileMerger();
+				merger.MergeFile(fileName, snapshot.GetText(), false, true);
+				source = merger.MergedContent;
+			}
+
+			var model = CreatePreprocessedModel(source, fileName, visible, reason);
 			model.Snapshot = snapshot;
 			return model;
 		}
 
-		public CodeModel CreatePreprocessedModel(string content, string fileName, bool visible, string reason)
+		public CodeModel CreatePreprocessedModel(CodeSource source, string fileName, bool visible, string reason)
 		{
 #if DEBUG
 			Log.WriteDebug("Creating preprocessed model. Reason: {0}", reason);
 			var startTime = DateTime.Now;
 #endif
 
-			var visibleSource = new CodeSource();
-			visibleSource.Append(content, fileName, 0, content.Length, true, true, false);
-			visibleSource.Flush();
-			var reader = new CodeSource.CodeSourcePreprocessorReader(visibleSource);
+			var reader = new CodeSource.CodeSourcePreprocessorReader(source);
 			var prepSource = new CodeSource();
 
 			var defProvider = new DefinitionProvider(fileName);
@@ -315,7 +334,7 @@ namespace DkTools.CodeModel
 			CodeModel modelToReturn;
 			if (visible)
 			{
-				modelToReturn = CodeModel.CreateVisibleModelForPreprocessed(visibleSource, this, prepModel);
+				modelToReturn = CodeModel.CreateVisibleModelForPreprocessed(source, this, prepModel);
 				modelToReturn.PreprocessorModel = prepModel;
 				modelToReturn.DisabledSections = prepSource.GenerateDisabledSections().ToArray();
 			}
@@ -374,11 +393,14 @@ namespace DkTools.CodeModel
 			var includeFile = tempStore.GetIncludeFile(null, "stdlib.i", false, new string[0]);
 			if (includeFile != null)
 			{
-				_stdLibModel = tempStore.CreatePreprocessedModel(includeFile.Source.Text, includeFile.FullPathName, false, "stdlib.i model");
+				_stdLibModel = tempStore.CreatePreprocessedModel(includeFile.Source, includeFile.FullPathName, false, "stdlib.i model");
 			}
 			else
 			{
-				_stdLibModel = tempStore.CreatePreprocessedModel(string.Empty, "stdlib.i", false, "stdlib.i model (blank)");
+				var blankSource = new CodeSource();
+				blankSource.Flush();
+
+				_stdLibModel = tempStore.CreatePreprocessedModel(blankSource, "stdlib.i", false, "stdlib.i model (blank)");
 			}
 		}
 
@@ -445,10 +467,14 @@ namespace DkTools.CodeModel
 					{
 						try
 						{
-							var content = File.ReadAllText(_fullPathName);
-							_source = new CodeSource();
-							_source.Append(content, _fullPathName, 0, content.Length, true, false, false);
-							_source.Flush();
+							var merger = new FileMerger();
+							merger.MergeFile(_fullPathName, null, false, false);
+							_source = merger.MergedContent;
+
+							//var content = File.ReadAllText(_fullPathName);
+							//_source = new CodeSource();
+							//_source.Append(content, _fullPathName, 0, content.Length, true, false, false);
+							//_source.Flush();
 
 							var fileInfo = new FileInfo(_fullPathName);
 							_lastModifiedDate = fileInfo.LastWriteTime;

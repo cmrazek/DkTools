@@ -86,5 +86,11 @@ namespace DkTools.CodeModel
 			if (!context.IsClass()) return null;
 			return System.IO.Path.GetFileNameWithoutExtension(fileName).ToLower();
 		}
+
+		public static bool IsLocalizedFile(string fileName)
+		{
+			var ext = System.IO.Path.GetExtension(fileName);
+			return ext.EndsWith("+") || ext.EndsWith("&");
+		}
 	}
 }

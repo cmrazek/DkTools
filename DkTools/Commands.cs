@@ -737,11 +737,22 @@ namespace DkTools
 					fileName = VsTextUtil.TryGetFileName(view.TextBuffer);
 					var content = view.TextBuffer.CurrentSnapshot.GetText();
 
-					var codeSource = new CodeModel.CodeSource();
-					codeSource.Append(content, new CodeModel.CodeAttributes(fileName, 0, content.Length, true, true, false));
-					codeSource.Flush();
+					try
+					{
+						var merger = new CodeModel.FileMerger();
+						merger.MergeFile(fileName, content, true, true);
+						return merger.MergedContent;
+					}
+					catch (Exception ex)
+					{
+						Log.WriteEx(ex);
 
-					return codeSource;
+						var codeSource = new CodeModel.CodeSource();
+						codeSource.Append(content, new CodeModel.CodeAttributes(fileName, 0, content.Length, true, true, false));
+						codeSource.Flush();
+
+						return codeSource;
+					}
 				}
 
 				fileName = null;

@@ -51,7 +51,7 @@ namespace DkTools.CodeModel
 		{
 		}
 
-		public void MergeFile(string fileName, bool showMergeComments)
+		public void MergeFile(string fileName, string content, bool showMergeComments, bool fileIsPrimary)
 		{
 			// Locate all needed copies of files
 			_primaryFileName = fileName;
@@ -68,15 +68,25 @@ namespace DkTools.CodeModel
 			}
 
 			// Perform localization
-			CreateLineDataFromOrigFile();
-			foreach (string sLocalFile in _localFileNames) MergeFile(sLocalFile);
+			CreateLineDataFromOrigFile(content);
+			foreach (string localFileName in _localFileNames)
+			{
+				try
+				{
+					MergeFile(localFileName);
+				}
+				catch (Exception ex)
+				{
+					Log.WriteEx(ex, "Error when merging local file '{0}' into '{1}'.", localFileName, fileName);
+				}
+			}
 
 			// Generate the final source.
 			_mergedContent = new CodeSource();
 			int lineIndex = 0;
 			foreach (var line in _lines)
 			{
-				var primary = _primaryFileName.Equals(line.fileName, StringComparison.OrdinalIgnoreCase);
+				var primary = fileIsPrimary && _primaryFileName.Equals(line.fileName, StringComparison.OrdinalIgnoreCase);
 				var endPos = line.pos + line.text.Length;
 				_mergedContent.Append(line.text, new CodeAttributes(line.fileName, line.pos, endPos, true, primary, false));
 				if (!line.text.EndsWith("\n") && lineIndex + 1 < _lines.Count)
@@ -121,7 +131,7 @@ namespace DkTools.CodeModel
 			if (string.IsNullOrEmpty(fileName)) return;
 
 			// strip trailing '&' off the end of the filename, if it exists
-			if (fileName.EndsWith("&")) fileName = fileName.Substring(0, fileName.Length - 1);
+			if (fileName.EndsWith("&") || fileName.EndsWith("+")) fileName = fileName.Substring(0, fileName.Length - 1);
 			if (string.IsNullOrEmpty(fileName)) return;
 
 			foreach (string probeDir in ProbeEnvironment.SourceDirs)
@@ -153,6 +163,12 @@ namespace DkTools.CodeModel
 				var ampFileName = pathName + "&";
 				if (!_localFileNames.Any(x => string.Equals(x, ampFileName, StringComparison.OrdinalIgnoreCase))) _localFileNames.Add(ampFileName);
 			}
+			else if (File.Exists(pathName + "+"))
+			{
+				// this is a local file
+				var ampFileName = pathName + "+";
+				if (!_localFileNames.Any(x => string.Equals(x, ampFileName, StringComparison.OrdinalIgnoreCase))) _localFileNames.Add(ampFileName);
+			}
 
 			foreach (string subDir in Directory.GetDirectories(dir))
 			{
@@ -160,9 +176,10 @@ namespace DkTools.CodeModel
 			}
 		}
 
-		private void CreateLineDataFromOrigFile()
+		private void CreateLineDataFromOrigFile(string fileText)
 		{
-			var fileText = File.ReadAllText(_origFileName);
+			if (fileText == null) fileText = File.ReadAllText(_origFileName);
+
 			var pos = 0;
 			var linePos = pos;
 			var sb = new StringBuilder();
