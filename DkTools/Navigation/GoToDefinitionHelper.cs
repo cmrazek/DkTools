@@ -180,8 +180,18 @@ namespace DkTools.Navigation
 				var fullToken = fullModel.File.FindDownward(fullModelPos, t => t.SourceDefinition != null).FirstOrDefault();
 				if (fullToken == null)
 				{
-					Shell.SetStatusText("No reference found at cursor.");
-					return;
+					var model = fileStore.GetMostRecentModel(snapPt.Snapshot, "Find Local References (fallback)");
+					var modelPos = model.AdjustPosition(snapPt);
+					var token = model.File.FindDownward(modelPos, t => t.SourceDefinition != null).FirstOrDefault();
+					if (token == null)
+					{
+						Shell.SetStatusText("No reference found at cursor.");
+						return;
+					}
+					else
+					{
+						fullToken = token;
+					}
 				}
 
 				var def = fullToken.SourceDefinition;

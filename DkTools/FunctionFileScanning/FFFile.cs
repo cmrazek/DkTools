@@ -351,9 +351,16 @@ namespace DkTools.FunctionFileScanning
 			}
 		}
 
-		public void UpdateFromModel(CodeModel.CodeModel model, FFDatabase db, FileStore store, DateTime fileModified)
+		public void UpdateFromModel(CodeModel.CodeModel model, FFDatabase db, FileStore store, DateTime fileModified, FFScanMode scanMode)
 		{
-			_modified = fileModified;
+			if (scanMode == FFScanMode.Deep)
+			{
+				_modified = fileModified;
+			}
+			else
+			{
+				_modified = Constants.ZeroDate;
+			}
 			InsertOrUpdate(db, store);
 
 			// Get the list of functions defined in the file.
@@ -386,26 +393,29 @@ namespace DkTools.FunctionFileScanning
 				_functions.Remove(removeFunc);
 			}
 
-			// Get all references in the file.
-			var refList = new List<Reference>();
-			foreach (var token in model.File.FindDownward(t => t.SourceDefinition != null && !string.IsNullOrEmpty(t.SourceDefinition.ExternalRefId)))
+			if (scanMode == FFScanMode.Deep)
 			{
-				var localPos = token.File.CodeSource.GetFilePosition(token.Span.Start);
-
-				var def = token.SourceDefinition;
-				var refId = def.ExternalRefId;
-				if (!string.IsNullOrEmpty(refId))
+				// Get all references in the file.
+				var refList = new List<Reference>();
+				foreach (var token in model.File.FindDownward(t => t.SourceDefinition != null && !string.IsNullOrEmpty(t.SourceDefinition.ExternalRefId)))
 				{
-					refList.Add(new Reference
-					{
-						ExternalRefId = refId,
-						TrueFileName = string.Equals(localPos.FileName, model.FileName, StringComparison.OrdinalIgnoreCase) ? null : localPos.FileName,
-						Position = localPos.Position
-					});
-				}
-			}
+					var localPos = token.File.CodeSource.GetFilePosition(token.Span.Start);
 
-			UpdateRefList(db, refList);
+					var def = token.SourceDefinition;
+					var refId = def.ExternalRefId;
+					if (!string.IsNullOrEmpty(refId))
+					{
+						refList.Add(new Reference
+						{
+							ExternalRefId = refId,
+							TrueFileName = string.Equals(localPos.FileName, model.FileName, StringComparison.OrdinalIgnoreCase) ? null : localPos.FileName,
+							Position = localPos.Position
+						});
+					}
+				}
+
+				UpdateRefList(db, refList);
+			}
 		}
 
 		private class Reference

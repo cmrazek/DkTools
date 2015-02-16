@@ -16,18 +16,25 @@ namespace DkTools.FunctionFileScanning
 
 		private FFApp _currentApp;
 		private object _currentAppLock = new object();
-		private Queue<ProcessDir> _dirsToProcess = new Queue<ProcessDir>();
-		private Queue<string> _filesToProcess = new Queue<string>();
+		private Queue<ScanInfo> _scanQueue = new Queue<ScanInfo>();
 
 		private const int k_threadWaitIdle = 1000;
 		private const int k_threadWaitActive = 0;
 
 		private const string k_noProbeApp = "(none)";
 
-		private class ProcessDir
+		private struct ScanInfo : IComparable<ScanInfo>
 		{
-			public string dir;
-			public bool root;
+			public FFScanMode mode;
+			public string fileName;
+
+			public int CompareTo(ScanInfo other)
+			{
+				var ret = mode.CompareTo(other.mode);
+				if (ret != 0) return ret;
+
+				return string.Compare(fileName, other.fileName, true);
+			}
 		}
 
 		public FFScanner()
@@ -79,16 +86,9 @@ namespace DkTools.FunctionFileScanning
 				while (!_kill.WaitOne(k_threadWaitIdle))
 				{
 					var gotActivity = false;
-					lock (_filesToProcess)
+					lock (_scanQueue)
 					{
-						if (_filesToProcess.Count > 0) gotActivity = true;
-					}
-					if (!gotActivity)
-					{
-						lock (_dirsToProcess)
-						{
-							if (_dirsToProcess.Count > 0) gotActivity = true;
-						}
+						if (_scanQueue.Count > 0) gotActivity = true;
 					}
 
 					if (gotActivity)
@@ -113,63 +113,65 @@ namespace DkTools.FunctionFileScanning
 
 				while (!_kill.WaitOne(k_threadWaitActive))
 				{
-					string path = null;
-					lock (_filesToProcess)
+					ScanInfo? scanInfo = null;
+					lock (_scanQueue)
 					{
-						if (_filesToProcess.Count > 0) path = _filesToProcess.Dequeue();
+						if (_scanQueue.Count > 0)
+						{
+							scanInfo = _scanQueue.Dequeue();
+						}
 					}
-					if (path != null)
+
+					if (scanInfo.HasValue)
 					{
-						ProcessFile(db, CurrentApp, path);
+						ProcessFile(db, CurrentApp, scanInfo.Value);
 					}
 					else
 					{
-						ProcessDir processDir = null;
-						lock (_dirsToProcess)
-						{
-							if (_dirsToProcess.Count > 0) processDir = _dirsToProcess.Dequeue();
-						}
-						if (processDir != null)
-						{
-							ProcessSourceDir(CurrentApp, processDir.dir, processDir.root);
-						}
-						else
-						{
-							Shell.SetStatusText("DkTools background purging...");
-							_currentApp.PurgeData(db);
+						Shell.SetStatusText("DkTools background purging...");
+						_currentApp.PurgeData(db);
 
-							var scanElapsed = DateTime.Now.Subtract(scanStartTime);
+						var scanElapsed = DateTime.Now.Subtract(scanStartTime);
 
-							Shell.SetStatusText(string.Format("DkTools background scanning complete.  (elapsed: {0})", scanElapsed));
-							return;
-						}
+						Shell.SetStatusText(string.Format("DkTools background scanning complete.  (elapsed: {0})", scanElapsed));
+						return;
 					}
 				}
 			}
 		}
 
-		private void ProcessSourceDir(FFApp app, string dir, bool root)
+		private void ProcessSourceDir(FFApp app, string dir, List<ScanInfo> scanList)
 		{
 			try
 			{
 				foreach (var fileName in Directory.GetFiles(dir))
 				{
 					var fileContext = FileContextUtil.GetFileContextFromFileName(fileName);
-					if (fileContext != FileContext.Include)
+					switch (fileContext)
 					{
-						lock (_filesToProcess)
-						{
-							_filesToProcess.Enqueue(fileName);
-						}
+						case FileContext.Include:
+							// Ignore include files
+							break;
+
+						case FileContext.ClientClass:
+						case FileContext.Function:
+						case FileContext.NeutralClass:
+						case FileContext.ServerClass:
+							// Files that export global functions must be scanned twice:
+							// First for the exports before everything else, then again for the deep info.
+							scanList.Add(new ScanInfo { fileName = fileName, mode = FFScanMode.Exports });
+							scanList.Add(new ScanInfo { fileName = fileName, mode = FFScanMode.Deep });
+							break;
+
+						default:
+							scanList.Add(new ScanInfo { fileName = fileName, mode = FFScanMode.Deep });
+							break;
 					}
 				}
 
 				foreach (var subDir in Directory.GetDirectories(dir))
 				{
-					lock (_dirsToProcess)
-					{
-						_dirsToProcess.Enqueue(new ProcessDir { dir = subDir, root = false });
-					}
+					ProcessSourceDir(app, subDir, scanList);
 				}
 			}
 			catch (Exception ex)
@@ -178,39 +180,67 @@ namespace DkTools.FunctionFileScanning
 			}
 		}
 
-		private void ProcessFile(FFDatabase db, FFApp app, string fileName)
+		public void EnqueueFile(string fullPath)
+		{
+			var fileContext = FileContextUtil.GetFileContextFromFileName(fullPath);
+			switch (fileContext)
+			{
+				case FileContext.Include:
+					// Ignore include files
+					break;
+
+				case FileContext.ClientClass:
+				case FileContext.Function:
+				case FileContext.NeutralClass:
+				case FileContext.ServerClass:
+					lock (_scanQueue)
+					{
+						//_scanQueue.Enqueue(new ScanInfo { fileName = fullPath, mode = FFScanMode.Exports });	Not needed when scanning a file after a save
+						_scanQueue.Enqueue(new ScanInfo { fileName = fullPath, mode = FFScanMode.Deep });
+					}
+					break;
+
+				default:
+					lock (_scanQueue)
+					{
+						_scanQueue.Enqueue(new ScanInfo { fileName = fullPath, mode = FFScanMode.Deep });
+					}
+					break;
+			}
+		}
+
+		private void ProcessFile(FFDatabase db, FFApp app, ScanInfo scan)
 		{
 			try
 			{
-				if (!File.Exists(fileName)) return;
+				if (!File.Exists(scan.fileName)) return;
 
 				DateTime modified;
-				if (!app.TryGetFileDate(fileName, out modified)) modified = DateTime.MinValue;
+				if (!app.TryGetFileDate(scan.fileName, out modified)) modified = DateTime.MinValue;
 
-				var fileModified = File.GetLastWriteTime(fileName);
+				var fileModified = File.GetLastWriteTime(scan.fileName);
 				if (modified != DateTime.MinValue && fileModified.Subtract(modified).TotalSeconds < 1.0) return;
 
-				var ffFile = app.GetFileForScan(db, fileName);
+				var ffFile = app.GetFileForScan(db, scan.fileName);
 
-				Log.WriteDebug("Processing file: {0} (modified={1}, last modified={2})", fileName, fileModified, modified);
-				Shell.SetStatusText(string.Format("DkTools background scanning file: {0}", fileName));
+				Log.WriteDebug("Processing file: {0} (modified={1}, last modified={2})", scan.fileName, fileModified, modified);
+				if (scan.mode == FFScanMode.Exports) Shell.SetStatusText(string.Format("DkTools background scanning file: {0} (exports only)", scan.fileName));
+				else Shell.SetStatusText(string.Format("DkTools background scanning file: {0}", scan.fileName));
 
-				var fileTitle = Path.GetFileNameWithoutExtension(fileName);
+				var fileTitle = Path.GetFileNameWithoutExtension(scan.fileName);
 
-				var defProvider = new CodeModel.DefinitionProvider(fileName);
+				var defProvider = new CodeModel.DefinitionProvider(scan.fileName);
 
-				//app.MarkAllFunctionsForFileUnused(fileName);
-
-				var fileContext = CodeModel.FileContextUtil.GetFileContextFromFileName(fileName);
-				var fileContent = File.ReadAllText(fileName);
+				var fileContext = CodeModel.FileContextUtil.GetFileContextFromFileName(scan.fileName);
+				var fileContent = File.ReadAllText(scan.fileName);
 				var fileStore = new CodeModel.FileStore();
-				var model = fileStore.CreatePreprocessedModel(fileContent, fileName, false, string.Concat("Function file processing: ", fileName));
+				var model = fileStore.CreatePreprocessedModel(fileContent, scan.fileName, false, string.Concat("Function file processing: ", scan.fileName));
 
-				var className = fileContext.IsClass() ? Path.GetFileNameWithoutExtension(fileName) : null;
+				var className = fileContext.IsClass() ? Path.GetFileNameWithoutExtension(scan.fileName) : null;
 				var classList = new List<FFClass>();
 				var funcList = new List<FFFunction>();
 
-				ffFile.UpdateFromModel(model, db, fileStore, fileModified);
+				ffFile.UpdateFromModel(model, db, fileStore, fileModified, scan.mode);
 
 				if (ffFile.Visible)
 				{
@@ -223,7 +253,7 @@ namespace DkTools.FunctionFileScanning
 			}
 			catch (Exception ex)
 			{
-				Log.WriteEx(ex, "Exception when background processing function name: {0}", fileName);
+				Log.WriteEx(ex, "Exception when background processing function name: {0} (mode: {1})", scan.fileName, scan.mode);
 			}
 		}
 
@@ -240,14 +270,21 @@ namespace DkTools.FunctionFileScanning
 
 		public void RestartScanning()
 		{
-			lock (_filesToProcess)
+			lock (_scanQueue)
 			{
-				_filesToProcess.Clear();
+				_scanQueue.Clear();
 			}
-			lock (_dirsToProcess)
+
+			var scanList = new List<ScanInfo>();
+			foreach (var dir in ProbeEnvironment.SourceDirs)
 			{
-				_dirsToProcess.Clear();
-				foreach (var dir in ProbeEnvironment.SourceDirs) _dirsToProcess.Enqueue(new ProcessDir { dir = dir, root = true });
+				ProcessSourceDir(_currentApp, dir, scanList);
+			}
+
+			scanList.Sort();
+			lock (_scanQueue)
+			{
+				foreach (var scanItem in scanList) _scanQueue.Enqueue(scanItem);
 			}
 		}
 
@@ -269,17 +306,6 @@ namespace DkTools.FunctionFileScanning
 			}
 		}
 
-		public void EnqueueFile(string fullPath)
-		{
-			lock (_filesToProcess)
-			{
-				if (!_filesToProcess.Any(x => string.Equals(x, fullPath, StringComparison.OrdinalIgnoreCase)))
-				{
-					_filesToProcess.Enqueue(fullPath);
-				}
-			}
-		}
-
 		private void Shell_FileSaved(object sender, Shell.FileSavedEventArgs e)
 		{
 			var fileContext = FileContextUtil.GetFileContextFromFileName(e.FileName);
@@ -287,14 +313,14 @@ namespace DkTools.FunctionFileScanning
 			{
 				Log.WriteDebug("Function file scanner detected a saved file: {0}", e.FileName);
 
-				lock (_filesToProcess)
-				{
-					if (!_filesToProcess.Contains(e.FileName))
-					{
-						_filesToProcess.Enqueue(e.FileName);
-					}
-				}
+				EnqueueFile(e.FileName);
 			}
 		}
+	}
+
+	public enum FFScanMode
+	{
+		Exports,
+		Deep
 	}
 }

@@ -21,7 +21,6 @@ namespace DkTools.FunctionFileScanning
 		private CodeModel.DataType _dataType;
 		private CodeModel.FunctionPrivacy _privacy;
 		private CodeModel.Definitions.FunctionDefinition _def;
-		//private bool _used = true;
 		private string _devDesc;
 		private bool _visible;
 
