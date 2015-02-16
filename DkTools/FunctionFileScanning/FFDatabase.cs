@@ -69,7 +69,7 @@ namespace DkTools.FunctionFileScanning
 	true_file_id		int				not null,
 	pos					int				not null
 )",
-@"create index ref_ix_extrefid on ref (app_id, ext_ref_id)",
+@"create index ref_ix_extrefid on ref (ext_ref_id, app_id)",
 
 @"create table alt_file
 (

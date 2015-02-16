@@ -323,6 +323,12 @@ namespace DkTools.FunctionFileScanning
 						cmd.Parameters.AddWithValue("@id", id);
 						cmd.ExecuteNonQuery();
 					}
+
+					using (var cmd = db.CreateCommand("delete from include_depends where file_id = @id"))
+					{
+						cmd.Parameters.AddWithValue("@id", id);
+						cmd.ExecuteNonQuery();
+					}
 				}
 			}
 		}

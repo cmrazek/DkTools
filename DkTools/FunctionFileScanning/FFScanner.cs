@@ -138,9 +138,9 @@ namespace DkTools.FunctionFileScanning
 							Shell.SetStatusText("DkTools background purging...");
 							_currentApp.PurgeData(db);
 
-							var scanElapsed = DateTime.Now.Subtract(scanStartTime).TotalSeconds;
+							var scanElapsed = DateTime.Now.Subtract(scanStartTime);
 
-							Shell.SetStatusText(string.Format("DkTools background scanning complete.  (elapsed: {0:G3} seconds)", scanElapsed));
+							Shell.SetStatusText(string.Format("DkTools background scanning complete.  (elapsed: {0})", scanElapsed));
 							return;
 						}
 					}

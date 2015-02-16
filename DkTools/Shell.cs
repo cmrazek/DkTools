@@ -143,6 +143,7 @@ namespace DkTools
 
 		internal static void SetStatusText(string text)
 		{
+			Log.WriteDebug("Status: {0}", text);
 			ProbeToolsPackage.Instance.StatusBarService.SetText(text);
 		}
 
