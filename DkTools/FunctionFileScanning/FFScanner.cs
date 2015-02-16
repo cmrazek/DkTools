@@ -27,6 +27,7 @@ namespace DkTools.FunctionFileScanning
 		{
 			public FFScanMode mode;
 			public string fileName;
+			public bool forceScan;	// Ignore modified date?
 
 			public int CompareTo(ScanInfo other)
 			{
@@ -146,26 +147,29 @@ namespace DkTools.FunctionFileScanning
 			{
 				foreach (var fileName in Directory.GetFiles(dir))
 				{
-					var fileContext = FileContextUtil.GetFileContextFromFileName(fileName);
-					switch (fileContext)
+					if (!FileContextUtil.IsLocalizedFile(fileName))
 					{
-						case FileContext.Include:
-							// Ignore include files
-							break;
+						var fileContext = FileContextUtil.GetFileContextFromFileName(fileName);
+						switch (fileContext)
+						{
+							case FileContext.Include:
+								// Ignore include files
+								break;
 
-						case FileContext.ClientClass:
-						case FileContext.Function:
-						case FileContext.NeutralClass:
-						case FileContext.ServerClass:
-							// Files that export global functions must be scanned twice:
-							// First for the exports before everything else, then again for the deep info.
-							scanList.Add(new ScanInfo { fileName = fileName, mode = FFScanMode.Exports });
-							scanList.Add(new ScanInfo { fileName = fileName, mode = FFScanMode.Deep });
-							break;
+							case FileContext.ClientClass:
+							case FileContext.Function:
+							case FileContext.NeutralClass:
+							case FileContext.ServerClass:
+								// Files that export global functions must be scanned twice:
+								// First for the exports before everything else, then again for the deep info.
+								scanList.Add(new ScanInfo { fileName = fileName, mode = FFScanMode.Exports });
+								scanList.Add(new ScanInfo { fileName = fileName, mode = FFScanMode.Deep });
+								break;
 
-						default:
-							scanList.Add(new ScanInfo { fileName = fileName, mode = FFScanMode.Deep });
-							break;
+							default:
+								scanList.Add(new ScanInfo { fileName = fileName, mode = FFScanMode.Deep });
+								break;
+						}
 					}
 				}
 
@@ -180,32 +184,23 @@ namespace DkTools.FunctionFileScanning
 			}
 		}
 
-		public void EnqueueFile(string fullPath)
+		public void EnqueueChangedFile(string fullPath)
 		{
 			var fileContext = FileContextUtil.GetFileContextFromFileName(fullPath);
-			switch (fileContext)
+			if (fileContext != FileContext.Include)
 			{
-				case FileContext.Include:
-					// Ignore include files
-					break;
-
-				case FileContext.ClientClass:
-				case FileContext.Function:
-				case FileContext.NeutralClass:
-				case FileContext.ServerClass:
-					lock (_scanQueue)
+				lock (_scanQueue)
+				{
+					if (!_scanQueue.Any(s => string.Equals(s.fileName, fullPath, StringComparison.OrdinalIgnoreCase)))
 					{
-						//_scanQueue.Enqueue(new ScanInfo { fileName = fullPath, mode = FFScanMode.Exports });	Not needed when scanning a file after a save
-						_scanQueue.Enqueue(new ScanInfo { fileName = fullPath, mode = FFScanMode.Deep });
+						_scanQueue.Enqueue(new ScanInfo
+						{
+							fileName = fullPath,
+							mode = FFScanMode.Deep,
+							forceScan = true
+						});
 					}
-					break;
-
-				default:
-					lock (_scanQueue)
-					{
-						_scanQueue.Enqueue(new ScanInfo { fileName = fullPath, mode = FFScanMode.Deep });
-					}
-					break;
+				}
 			}
 		}
 
@@ -220,7 +215,10 @@ namespace DkTools.FunctionFileScanning
 				if (!app.TryGetFileDate(scan.fileName, out modified)) modified = DateTime.MinValue;
 
 				var fileModified = File.GetLastWriteTime(scan.fileName);
-				if (modified != DateTime.MinValue && fileModified.Subtract(modified).TotalSeconds < 1.0) return;
+				if (!scan.forceScan)
+				{
+					if (modified != DateTime.MinValue && fileModified.Subtract(modified).TotalSeconds < 1.0) return;
+				}
 
 				var ffFile = app.GetFileForScan(db, scan.fileName);
 
@@ -313,13 +311,81 @@ namespace DkTools.FunctionFileScanning
 
 		private void Shell_FileSaved(object sender, Shell.FileSavedEventArgs e)
 		{
-			var fileContext = FileContextUtil.GetFileContextFromFileName(e.FileName);
-			if (fileContext != FileContext.Include && ProbeEnvironment.FileExistsInApp(e.FileName))
+			try
 			{
-				Log.WriteDebug("Function file scanner detected a saved file: {0}", e.FileName);
+				var fileContext = FileContextUtil.GetFileContextFromFileName(e.FileName);
+				if (ProbeEnvironment.FileExistsInApp(e.FileName))
+				{
+					if (fileContext != FileContext.Include)
+					{
+						Log.WriteDebug("Scanner detected a saved file: {0}", e.FileName);
 
-				EnqueueFile(e.FileName);
+						EnqueueChangedFile(e.FileName);
+					}
+					else
+					{
+						Log.WriteDebug("Scanner detected an include file was saved: {0}", e.FileName);
+
+						EnqueueFilesDependentOnInclude(e.FileName);
+					}
+				}
 			}
+			catch (Exception ex)
+			{
+				Log.WriteEx(ex);
+			}
+		}
+
+		private void EnqueueFilesDependentOnInclude(string includeFileName)
+		{
+			if (_currentApp == null) return;
+
+			using (var db = new FFDatabase())
+			{
+				var fileIds = new Dictionary<int, string>();
+
+				using (var cmd = db.CreateCommand(
+					"select file_id, file_name from include_depends"
+					+ " inner join file_ on file_.id = include_depends.file_id"
+					+ " where include_depends.app_id = @app_id"
+					+ " and include_depends.include_file_name = @include_file_name"
+					))
+				{
+					cmd.Parameters.AddWithValue("@app_id", _currentApp.Id);
+					cmd.Parameters.AddWithValue("@include_file_name", includeFileName);
+
+					using (var rdr = cmd.ExecuteReader())
+					{
+						var ordId = rdr.GetOrdinal("file_id");
+						var ordFileName = rdr.GetOrdinal("file_name");
+
+						while (rdr.Read())
+						{
+							fileIds[rdr.GetInt32(ordId)] = rdr.GetString(ordFileName);
+						}
+					}
+
+				}
+
+				if (fileIds.Any())
+				{
+					Log.WriteDebug("Resetting modified date on {0} file(s).", fileIds.Count);
+
+					using (var cmd = db.CreateCommand("update file_ set modified = '1900-01-01' where id = @id"))
+					{
+						foreach (var item in fileIds)
+						{
+							cmd.Parameters.Clear();
+							cmd.Parameters.AddWithValue("@id", item.Key);
+							cmd.ExecuteNonQuery();
+
+							_currentApp.TrySetFileDate(item.Value, DateTime.MinValue);
+						}
+					}
+				}
+			}
+
+			RestartScanning();
 		}
 	}
 

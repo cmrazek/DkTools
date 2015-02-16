@@ -209,6 +209,25 @@ namespace DkTools.FunctionFileScanning
 			return false;
 		}
 
+		public bool TrySetFileDate(string fileName, DateTime modified)
+		{
+			var file = TryGetFile(fileName);
+			if (file != null)
+			{
+				file.Modified = modified;
+				return true;
+			}
+
+			var fileNameLower = fileName.ToLower();
+			if (_invisibleFiles.ContainsKey(fileNameLower))
+			{
+				_invisibleFiles[fileNameLower] = modified;
+				return true;
+			}
+
+			return false;
+		}
+
 		public FFFile GetFileForScan(FFDatabase db, string fileName)
 		{
 			FFFile file;

@@ -84,5 +84,7 @@ namespace DkTools
 		public const int KeyTimeout = 1000;	// milliseconds
 
 		public static readonly DateTime ZeroDate = new DateTime(1900, 1, 1);
+
+		public const int MaxIncludeRecursion = 8;	// The maximum number of levels deep #include files can nest.
 	}
 }

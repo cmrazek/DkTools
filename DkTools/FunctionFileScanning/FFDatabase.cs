@@ -57,8 +57,8 @@ namespace DkTools.FunctionFileScanning
 	file_id				int				not null,
 	include_file_name	nvarchar(260)	not null
 )",
-@"create unique index include_depends_ix_fileid on include_depends (file_id, include_file_name)",
-@"create index include_depends_ix_inclfile on include_depends (app_id, include_file_name)",
+@"create index include_depends_ix_fileid on include_depends (file_id)",
+@"create index include_depends_ix_inclfile on include_depends (include_file_name, app_id)",
 
 @"create table ref
 (
@@ -70,6 +70,7 @@ namespace DkTools.FunctionFileScanning
 	pos					int				not null
 )",
 @"create index ref_ix_extrefid on ref (ext_ref_id, app_id)",
+@"create index ref_ix_fileid on ref (file_id)",
 
 @"create table alt_file
 (
