@@ -136,6 +136,14 @@
   <data name="ExpandPlus" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>Resources\ExpandPlus.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
+  <data name="FFDatabaseCreationCaption" xml:space="preserve">
+    <value>Full Background Scan Required</value>
+  </data>
+  <data name="FFDatabaseCreationNotification" xml:space="preserve">
+    <value>DkTools needs to rebuild your Intellisense database. This will take a few minutes.
+
+You can still work while the scan is running in the background, but you may notice decreased performance, and some Intellisense information may not be available.</value>
+  </data>
   <data name="FieldImg" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>Resources\Field.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>

@@ -237,5 +237,13 @@ namespace DkTools
 			var window = GetProbeExplorerToolWindow();
 			window.OnDocumentActivated(view);
 		}
+
+		public static void ShowNotificationAsync(string message, string caption)
+		{
+			System.Threading.ThreadPool.QueueUserWorkItem((obj) =>
+				{
+					System.Windows.MessageBox.Show(message, caption, System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Information);
+				});
+		}
 	}
 }

@@ -89,11 +89,24 @@ namespace DkTools.ProbeExplorer
 			return tvi;
 		}
 
+		#region Table
 		private TreeViewItem CreateTableTvi(Dict.Table table)
 		{
 			var tvi = CreateStandardTvi(_tableImg, table.Name, table.Prompt, table.BaseDefinition.QuickInfoTextWpf, true);
 			tvi.Expanded += TableTvi_Expanded;
 			tvi.Tag = table;
+			tvi.MouseRightButtonDown += TableTvi_MouseRightButtonDown;
+
+			var menu = new ContextMenu();
+
+			var menuItem = new MenuItem();
+			menuItem.Header = "Find All References";
+			menuItem.Click += TableFindAllReferences_Click;
+			menuItem.Tag = table;
+			menu.Items.Add(menuItem);
+
+			tvi.ContextMenu = menu;
+
 			return tvi;
 		}
 
@@ -137,11 +150,56 @@ namespace DkTools.ProbeExplorer
 			}
 		}
 
+		private void TableTvi_MouseRightButtonDown(object sender, MouseButtonEventArgs e)
+		{
+			try
+			{
+				var tableNode = (sender as TreeViewItem);
+				if (tableNode != null)
+				{
+					tableNode.IsSelected = true;
+					e.Handled = true;
+				}
+			}
+			catch (Exception ex)
+			{
+				this.ShowError(ex);
+			}
+		}
+
+		private void TableFindAllReferences_Click(object sender, RoutedEventArgs e)
+		{
+			var menuItem = (sender as MenuItem);
+			if (menuItem != null)
+			{
+				var table = menuItem.Tag as Dict.Table;
+				if (table != null)
+				{
+					Navigation.GoToDefinitionHelper.TriggerFindReferences(Dict.Table.GetExternalRefId(table.Name), table.Name);
+					e.Handled = true;
+				}
+			}
+		}
+		#endregion
+
+		#region Field
 		private TreeViewItem CreateFieldTvi(Dict.Field field)
 		{
 			var tvi = CreateStandardTvi(_fieldImg, field.Name, field.Prompt, field.Definition.QuickInfoTextWpf, true);
 			tvi.Tag = field;
 			tvi.Expanded += FieldTvi_Expanded;
+			tvi.MouseRightButtonDown += FieldTvi_MouseRightButtonDown;
+
+			var menu = new ContextMenu();
+
+			var menuItem = new MenuItem();
+			menuItem.Header = "Find All References";
+			menuItem.Click += FieldFindAllReferences_Click;
+			menuItem.Tag = field;
+			menu.Items.Add(menuItem);
+
+			tvi.ContextMenu = menu;
+
 			return tvi;
 		}
 
@@ -176,11 +234,63 @@ namespace DkTools.ProbeExplorer
 			fieldItem.Items.Add(CreateInfoTvi("Data Type", field.DataType.Name));
 		}
 
+		private void FieldTvi_MouseRightButtonDown(object sender, MouseButtonEventArgs e)
+		{
+			try
+			{
+				var tvi = (sender as TreeViewItem);
+				if (tvi != null)
+				{
+					tvi.IsSelected = true;
+					e.Handled = true;
+				}
+			}
+			catch (Exception ex)
+			{
+				this.ShowError(ex);
+			}
+		}
+
+		private void FieldFindAllReferences_Click(object sender, RoutedEventArgs e)
+		{
+			try
+			{
+				var menuItem = (sender as MenuItem);
+				if (menuItem != null)
+				{
+					var field = menuItem.Tag as Dict.Field;
+					if (field != null)
+					{
+						Navigation.GoToDefinitionHelper.TriggerFindReferences(Dict.Field.GetTableFieldExternalRefId(field.ParentName, field.Name), field.Name);
+						e.Handled = true;
+					}
+				}
+			}
+			catch (Exception ex)
+			{
+				this.ShowError(ex);
+			}
+		}
+		#endregion
+
+		#region RelInd
 		private TreeViewItem CreateRelIndTreeViewItem(Dict.RelInd relind)
 		{
 			var tvi = CreateStandardTvi(relind.Type == Dict.RelIndType.Index ? _indexImg : _relationshipImg, relind.Name, relind.Prompt, relind.Definition.QuickInfoTextWpf, true);
 			tvi.Tag = relind;
 			tvi.Expanded += RelIndTvi_Expanded;
+			tvi.MouseRightButtonDown += RelIndTvi_MouseRightButtonDown;
+
+			var menu = new ContextMenu();
+
+			var menuItem = new MenuItem();
+			menuItem.Header = "Find All References";
+			menuItem.Click += RelIndFindAllReferences_Click;
+			menuItem.Tag = relind;
+			menu.Items.Add(menuItem);
+
+			tvi.ContextMenu = menu;
+
 			return tvi;
 		}
 
@@ -215,6 +325,45 @@ namespace DkTools.ProbeExplorer
 			if (!string.IsNullOrWhiteSpace(relind.Description)) item.Items.Add(CreateInfoTvi("Description", relind.Description));
 			if (!string.IsNullOrWhiteSpace(relind.Columns)) item.Items.Add(CreateInfoTvi("Columns", relind.Columns));
 		}
+
+		private void RelIndFindAllReferences_Click(object sender, RoutedEventArgs e)
+		{
+			try
+			{
+				var menuItem = (sender as MenuItem);
+				if (menuItem != null)
+				{
+					var relInd = menuItem.Tag as Dict.RelInd;
+					if (relInd != null)
+					{
+						Navigation.GoToDefinitionHelper.TriggerFindReferences(CodeModel.Definitions.RelIndDefinition.GetExternalRefId(relInd.TableName, relInd.Name), relInd.Name);
+						e.Handled = true;
+					}
+				}
+			}
+			catch (Exception ex)
+			{
+				this.ShowError(ex);
+			}
+		}
+
+		private void RelIndTvi_MouseRightButtonDown(object sender, MouseButtonEventArgs e)
+		{
+			try
+			{
+				var tvi = (sender as TreeViewItem);
+				if (tvi != null)
+				{
+					tvi.IsSelected = true;
+					e.Handled = true;
+				}
+			}
+			catch (Exception ex)
+			{
+				this.ShowError(ex);
+			}
+		}
+		#endregion
 
 		private TreeViewItem CreateInfoTvi(string label, string text)
 		{
@@ -328,6 +477,7 @@ namespace DkTools.ProbeExplorer
 			c_dictTree.Focus();
 		}
 
+		#region Filter
 		private void ApplyDictTreeFilter()
 		{
 			if (!c_dictTree.Dispatcher.CheckAccess())
@@ -463,6 +613,7 @@ namespace DkTools.ProbeExplorer
 				this.ShowError(ex);
 			}
 		}
+		#endregion
 
 		private class ExtendedItemInfo
 		{

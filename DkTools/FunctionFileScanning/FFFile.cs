@@ -16,7 +16,6 @@ namespace DkTools.FunctionFileScanning
 		private int _id;
 		private string _fileName;
 		private DateTime _modified;
-		//private bool _used = true;
 		private FileContext _context;
 		private List<FFFunction> _functions = new List<FFFunction>();
 		private FFClass _class = null;
@@ -76,31 +75,6 @@ namespace DkTools.FunctionFileScanning
 
 			UpdateVisibility();
 		}
-
-		// TODO: remove
-		//public FFFile(FFDatabase db, FFApp app, string fileName)
-		//{
-		//	if (app == null) throw new ArgumentNullException("app");
-		//	_app = app;
-
-		//	if (string.IsNullOrWhiteSpace(fileName)) throw new ArgumentNullException("fileName");
-		//	_fileName = fileName;
-		//	_context = FileContextUtil.GetFileContextFromFileName(fileName);
-
-		//	using (var cmd = db.CreateCommand("select * from file_ where file_name = @file_name and app_id = @app_id"))
-		//	{
-		//		cmd.Parameters.AddWithValue("@file_name", fileName);
-		//		cmd.Parameters.AddWithValue("@app_id", _app.Id);
-		//		using (var rdr = cmd.ExecuteReader(System.Data.CommandBehavior.SingleRow))
-		//		{
-		//			if (rdr.Read())
-		//			{
-		//				_id = rdr.GetInt32(rdr.GetOrdinal("id"));
-		//				_modified = rdr.GetDateTime(rdr.GetOrdinal("modified"));
-		//			}
-		//		}
-		//	}
-		//}
 
 		public string FileName
 		{
@@ -238,7 +212,9 @@ namespace DkTools.FunctionFileScanning
 			List<int> dbRefsToRemove = null;
 
 			// Scan the refs in the database to find which ones should be updated or removed
-			using (var cmd = db.CreateCommand("select * from ref where file_id = @file_id"))
+			using (var cmd = db.CreateCommand("select ref.*, alt_file.file_name as true_file_name from ref "
+				+ "left outer join alt_file on alt_file.id = ref.true_file_id "
+				+ "where file_id = @file_id"))
 			{
 				cmd.Parameters.AddWithValue("@file_id", _id);
 
@@ -256,7 +232,10 @@ namespace DkTools.FunctionFileScanning
 						var trueFileName = rdr.GetStringOrNull(ordTrueFileName);
 						var pos = rdr.GetInt32(ordPos);
 
-						var memRef = memRefs.FirstOrDefault(r => r.ExternalRefId == extRefId && r.TrueFileName == trueFileName && r.Position == pos);
+						var memRef = memRefs.FirstOrDefault(r => r.ExternalRefId == extRefId &&
+							(r.TrueFileName == null) == (trueFileName == null) &&
+							(r.TrueFileName == null || string.Equals(r.TrueFileName, trueFileName, StringComparison.OrdinalIgnoreCase)) &&
+							r.Position == pos);
 						if (memRef != null)
 						{
 							memRef.Exists = true;
@@ -286,15 +265,67 @@ namespace DkTools.FunctionFileScanning
 			// Insert new refs
 			if (memRefs.Any(r => !r.Exists))
 			{
-				using (var cmd = db.CreateCommand("insert into ref (app_id, file_id, ext_ref_id, true_file_name, pos) values (@app_id, @file_id, @ext_ref_id, @true_file_name, @pos)"))
+				// Get the list of alt file names used.
+				var altFileNames = new Dictionary<string, int>();
+				foreach (var altFileName in (from r in memRefs where !r.Exists && !string.IsNullOrEmpty(r.TrueFileName) select r.TrueFileName))
+				{
+					if (!altFileNames.Keys.Any(x => string.Equals(x, altFileName))) altFileNames[altFileName] = 0;
+				}
+
+				if (altFileNames.Any())
+				{
+					// Look up the IDs of any alt file names used.
+					using (var cmd = db.CreateCommand("select top 1 id from alt_file where file_name = @file_name"))
+					{
+						foreach (var altFileName in altFileNames.Keys.ToArray())	// Put into array early to avoid collection modified error
+						{
+							cmd.Parameters.Clear();
+							cmd.Parameters.AddWithValue("@file_name", altFileName);
+
+							using (var rdr = cmd.ExecuteReader(CommandBehavior.SingleRow))
+							{
+								if (rdr.Read())
+								{
+									var id = rdr.GetInt32OrNull(rdr.GetOrdinal("id"));
+									if (id.HasValue) altFileNames[altFileName] = id.Value;
+								}
+							}
+						}
+					}
+
+					// Insert new alt file names.
+					if (altFileNames.Any(x => x.Value == 0))
+					{
+						using (var cmd = db.CreateCommand("insert into alt_file (file_name) values (@file_name)"))
+						{
+							foreach (var altFileName in (from a in altFileNames where a.Value == 0 select a.Key).ToArray())	// Put into array early to avoid collection modified error
+							{
+								cmd.Parameters.Clear();
+								cmd.Parameters.AddWithValue("@file_name", altFileName);
+								cmd.ExecuteNonQuery();
+								altFileNames[altFileName] = db.QueryIdentityInt();
+							}
+						}
+					}
+				}
+
+				// Inserts the ref records
+				using (var cmd = db.CreateCommand("insert into ref (app_id, file_id, ext_ref_id, true_file_id, pos) values (@app_id, @file_id, @ext_ref_id, @true_file_id, @pos)"))
 				{
 					foreach (var newRef in memRefs.Where(r => !r.Exists))
 					{
+						var trueFileId = 0;
+						if (!string.IsNullOrEmpty(newRef.TrueFileName))
+						{
+							var altFileName = (from a in altFileNames where string.Equals(a.Key, newRef.TrueFileName, StringComparison.OrdinalIgnoreCase) select a.Key).FirstOrDefault();
+							if (altFileName != null) trueFileId = altFileNames[altFileName];
+						}
+
 						cmd.Parameters.Clear();
 						cmd.Parameters.AddWithValue("@app_id", _app.Id);
 						cmd.Parameters.AddWithValue("@file_id", _id);
 						cmd.Parameters.AddWithValue("@ext_ref_id", newRef.ExternalRefId);
-						cmd.Parameters.AddWithValue("@true_file_name", string.IsNullOrEmpty(newRef.TrueFileName) ? Convert.DBNull : newRef.TrueFileName);
+						cmd.Parameters.AddWithValue("@true_file_id", trueFileId);
 						cmd.Parameters.AddWithValue("@pos", newRef.Position);
 						cmd.ExecuteNonQuery();
 					}

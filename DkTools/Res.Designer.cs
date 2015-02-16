@@ -120,6 +120,26 @@ namespace DkTools {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Full Background Scan Required.
+        /// </summary>
+        internal static string FFDatabaseCreationCaption {
+            get {
+                return ResourceManager.GetString("FFDatabaseCreationCaption", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to DkTools needs to rebuild your Intellisense database. This will take a few minutes.
+        ///
+        ///You can still work while the scan is running in the background, but you may notice decreased performance, and some Intellisense information may not be available..
+        /// </summary>
+        internal static string FFDatabaseCreationNotification {
+            get {
+                return ResourceManager.GetString("FFDatabaseCreationNotification", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
         internal static System.Drawing.Bitmap FieldImg {

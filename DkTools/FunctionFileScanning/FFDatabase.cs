@@ -66,11 +66,17 @@ namespace DkTools.FunctionFileScanning
 	app_id				int				not null,
 	file_id				int				not null,
 	ext_ref_id			nvarchar(100)	not null,
-	true_file_name		nvarchar(260),
+	true_file_id		int				not null,
 	pos					int				not null
 )",
-@"create index ref_ix_extrefid on ref (app_id, ext_ref_id)"
+@"create index ref_ix_extrefid on ref (app_id, ext_ref_id)",
 
+@"create table alt_file
+(
+	id					int				identity not null primary key,
+	file_name			nvarchar(260)	not null
+)",
+@"create index alt_file_ix_filename on alt_file (file_name)"
 };
 
 		public const string DatabaseFileName = "DkScan_v5.sdf";

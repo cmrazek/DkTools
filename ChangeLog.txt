@@ -1,5 +1,12 @@
 DkTools2012 ChangeLog
 ____________________________________________________________________________________________________
+Version 1.2.19 - (pending):
+
+- Added support for the Find All References command (available in context menu).
+- Added Find All References context menu commands to all items in the Dictionary Explorer.
+- DK background scanner now scans all files and keeps track of references to external items.
+
+____________________________________________________________________________________________________
 Version 1.2.18 - Jan 19, 2015:
 
 Features:

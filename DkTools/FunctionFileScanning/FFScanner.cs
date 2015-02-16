@@ -238,33 +238,6 @@ namespace DkTools.FunctionFileScanning
 			}
 		}
 
-		// TODO: remove
-		//public FFFunction GetFunction(string funcName)
-		//{
-		//	if (_currentApp != null) return CurrentApp.GetVisibleFunction(funcName);
-		//	return null;
-		//}
-
-		//public FFFunction GetFunction(string className, string funcName)
-		//{
-		//	if (_currentApp != null) return CurrentApp.GetFunction(className, funcName);
-		//	return null;
-		//}
-
-		// TODO: remove
-		///// <summary>
-		///// Gets a list of definitions that are available at the global scope.
-		///// Only public definitions are returned.
-		///// </summary>
-		//public IEnumerable<CodeModel.Definitions.Definition> GlobalDefinitions
-		//{
-		//	get
-		//	{
-		//		if (_currentApp != null) return CurrentApp.GlobalDefinitions;
-		//		return new CodeModel.Definitions.Definition[0];
-		//	}
-		//}
-
 		public void RestartScanning()
 		{
 			lock (_filesToProcess)
@@ -306,13 +279,6 @@ namespace DkTools.FunctionFileScanning
 				}
 			}
 		}
-
-		// TODO: remove
-		//public FFClass GetClass(string className)
-		//{
-		//	if (_currentApp != null) return CurrentApp.TryGetClass(className);
-		//	return null;
-		//}
 
 		private void Shell_FileSaved(object sender, Shell.FileSavedEventArgs e)
 		{

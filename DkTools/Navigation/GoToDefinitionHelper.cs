@@ -186,10 +186,7 @@ namespace DkTools.Navigation
 
 				var def = fullToken.SourceDefinition;
 
-				var pane = Shell.CreateOutputPane(_findReferencesPaneGuid, Constants.FindReferencesOutputPaneTitle);
-				pane.Clear();
-				pane.Show();
-				pane.WriteLine(string.Format("Finding references of '{0}':", def.Name));
+				var pane = StartFindReferences(def.Name);
 
 				var refList = new List<Reference>();
 
@@ -202,33 +199,10 @@ namespace DkTools.Navigation
 
 				if (!string.IsNullOrEmpty(def.ExternalRefId))
 				{
-					refList.AddRange(FindGlobalReferences(def));
+					refList.AddRange(FindGlobalReferences(def.ExternalRefId));
 				}
 
-				refList.Sort();
-				Reference.ResolveContext(refList);
-
-				string lastFileName = null;
-				int lastLineNumber = -1;
-				int lastLineOffset = -1;
-				var refCount = 0;
-
-				foreach (var r in refList)
-				{
-					if (!string.Equals(r.FileName, lastFileName, StringComparison.OrdinalIgnoreCase) ||
-						r.LineNumber != lastLineNumber ||
-						r.LineOffset != lastLineOffset)
-					{
-						pane.WriteLine(string.Format("  {0}({1},{2}): {3}", r.FileName, r.LineNumber + 1, r.LineOffset + 1, r.Context, r.Global ? "global" : "local"));
-						refCount++;
-
-						lastFileName = r.FileName;
-						lastLineNumber = r.LineNumber;
-						lastLineOffset = r.LineOffset;
-					}
-				}
-
-				pane.WriteLine(string.Format("{0} reference(s) found.", refCount));
+				EndFindReferences(pane, refList);
 			}
 			catch (Exception ex)
 			{
@@ -236,14 +210,63 @@ namespace DkTools.Navigation
 			}
 		}
 
-		private static IEnumerable<Reference> FindGlobalReferences(Definition def)
+		public static void TriggerFindReferences(string extRefId, string refName)
 		{
-			if (string.IsNullOrEmpty(def.ExternalRefId)) throw new ArgumentException("Definition has no external ref ID.");
+			var pane = StartFindReferences(refName);
+			EndFindReferences(pane, FindGlobalReferences(extRefId));
+		}
+
+		private static OutputPane StartFindReferences(string refName)
+		{
+			var pane = Shell.CreateOutputPane(_findReferencesPaneGuid, Constants.FindReferencesOutputPaneTitle);
+			pane.Clear();
+			pane.Show();
+			pane.WriteLine(string.Format("Finding references of '{0}':", refName));
+			return pane;
+		}
+
+		private static void EndFindReferences(OutputPane pane, IEnumerable<Reference> refs)
+		{
+			var refList = refs.ToList();
+			refList.Sort();
+			Reference.ResolveContext(refList);
+
+			string lastFileName = null;
+			int lastLineNumber = -1;
+			int lastLineOffset = -1;
+			var refCount = 0;
+
+			foreach (var r in refList)
+			{
+				if (!string.Equals(r.FileName, lastFileName, StringComparison.OrdinalIgnoreCase) ||
+					r.LineNumber != lastLineNumber ||
+					r.LineOffset != lastLineOffset)
+				{
+					pane.WriteLine(string.Format("  {0}({1},{2}): {3}", r.FileName, r.LineNumber + 1, r.LineOffset + 1, r.Context, r.Global ? "global" : "local"));
+					refCount++;
+
+					lastFileName = r.FileName;
+					lastLineNumber = r.LineNumber;
+					lastLineOffset = r.LineOffset;
+				}
+			}
+
+			pane.WriteLine(string.Format("{0} reference(s) found.", refCount));
+		}
+
+		private static IEnumerable<Reference> FindGlobalReferences(string extRefId)
+		{
+			if (string.IsNullOrEmpty(extRefId)) throw new ArgumentException("Definition has no external ref ID.");
 
 			var db = new FunctionFileScanning.FFDatabase();
-			using (var cmd = db.CreateCommand("select file_.file_name, ref.pos, ref.true_file_name from ref inner join file_ on file_.id = ref.file_id where ref.ext_ref_id = @ext_ref_id and ref.app_id = @app_id"))
-			{
-				cmd.Parameters.AddWithValue("@ext_ref_id", def.ExternalRefId);
+			using (var cmd = db.CreateCommand(
+				"select file_.file_name, ref.pos, alt_file.file_name as true_file_name from ref"
+				+ " inner join file_ on file_.id = ref.file_id"
+				+ " left outer join alt_file on alt_file.id = ref.true_file_id"
+				+ " where ref.ext_ref_id = @ext_ref_id"
+				+ " and ref.app_id = @app_id"
+			)) {
+				cmd.Parameters.AddWithValue("@ext_ref_id", extRefId);
 				cmd.Parameters.AddWithValue("@app_id", ProbeToolsPackage.Instance.FunctionFileScanner.CurrentApp.Id);
 
 				using (var rdr = cmd.ExecuteReader())

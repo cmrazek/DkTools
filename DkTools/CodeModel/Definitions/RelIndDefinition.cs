@@ -15,7 +15,7 @@ namespace DkTools.CodeModel.Definitions
 		public static readonly RelIndDefinition Physical = new RelIndDefinition("physical", string.Empty, string.Empty, "Index on rowno");
 
 		public RelIndDefinition(string name, string baseTableName, string relText, string devDesc)
-			: base(name, null, -1, string.Concat("relind:", baseTableName, ".", name))
+			: base(name, null, -1, GetExternalRefId(baseTableName, name))
 		{
 			_relText = relText;
 			_devDesc = devDesc;
@@ -65,6 +65,11 @@ namespace DkTools.CodeModel.Definitions
 		public override string PickText
 		{
 			get { return QuickInfoTextStr; }
+		}
+
+		public static string GetExternalRefId(string baseTableName, string name)
+		{
+			return string.Concat("relind:", baseTableName, ".", name);
 		}
 	}
 }

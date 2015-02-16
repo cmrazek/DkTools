@@ -58,5 +58,11 @@ namespace DkTools.FunctionFileScanning
 			if (rdr.IsDBNull(ordinal)) return null;
 			return rdr.GetString(ordinal);
 		}
+
+		public static int? GetInt32OrNull(this SqlCeDataReader rdr, int ordinal)
+		{
+			if (rdr.IsDBNull(ordinal)) return null;
+			return rdr.GetInt32(ordinal);
+		}
 	}
 }

@@ -110,6 +110,16 @@ namespace DkTools.Dict
 		{
 			return string.Concat("tableField:", tableName, ".", fieldName);
 		}
+
+		public FieldParentType ParentType
+		{
+			get { return _parentType; }
+		}
+
+		public string ParentName
+		{
+			get { return _parentName; }
+		}
 	}
 
 	internal enum FieldParentType

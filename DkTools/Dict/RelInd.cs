@@ -136,6 +136,11 @@ namespace DkTools.Dict
 			get { return _name; }
 		}
 
+		public string TableName
+		{
+			get { return _tableName; }
+		}
+
 		public CodeModel.Definitions.RelIndDefinition Definition
 		{
 			get { return _def; }
