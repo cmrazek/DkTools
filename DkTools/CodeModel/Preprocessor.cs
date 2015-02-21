@@ -12,6 +12,7 @@ namespace DkTools.CodeModel
 	{
 		private FileStore _store;
 		private Dictionary<string, Define> _defines;
+		private List<IncludeDependency> _includeDependencies = new List<IncludeDependency>();
 
 		public Preprocessor(FileStore store)
 		{
@@ -537,7 +538,22 @@ namespace DkTools.CodeModel
 
 			p.writer.Append(includeSource);
 
-			_store.AddIncludeDependency(includeNode.FullPathName);
+			AddIncludeDependency(includeNode.FullPathName, true, false);
+		}
+
+		public void AddIncludeDependency(string fullPathName, bool include, bool localizedFile)
+		{
+			_includeDependencies.Add(new IncludeDependency(fullPathName, include, localizedFile));
+		}
+
+		public void AddIncludeDependencies(IEnumerable<IncludeDependency> includeDependencies)
+		{
+			_includeDependencies.AddRange(includeDependencies);
+		}
+
+		public IEnumerable<IncludeDependency> IncludeDependencies
+		{
+			get { return _includeDependencies; }
 		}
 
 		private void ProcessIfDef(PreprocessorParams p, bool activeIfDefined)
@@ -984,6 +1000,35 @@ namespace DkTools.CodeModel
 				ret = ConditionResult.Indeterminate;
 			}
 			return ret;
+		}
+
+		public struct IncludeDependency
+		{
+			private string _fileName;
+			private bool _include;
+			private bool _localizedFile;
+
+			public IncludeDependency(string fileName, bool include, bool localizedFile)
+			{
+				_fileName = fileName;
+				_include = include;
+				_localizedFile = localizedFile;
+			}
+
+			public string FileName
+			{
+				get { return _fileName; }
+			}
+
+			public bool Include
+			{
+				get { return _include; }
+			}
+
+			public bool LocalizedFile
+			{
+				get { return _localizedFile; }
+			}
 		}
 	}
 }

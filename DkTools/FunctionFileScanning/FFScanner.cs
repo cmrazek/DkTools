@@ -236,8 +236,9 @@ namespace DkTools.FunctionFileScanning
 
 				var merger = new FileMerger();
 				merger.MergeFile(scan.fileName, null, false, true);
+				var includeDependencies = (from f in merger.LocalFileNames select new Preprocessor.IncludeDependency(f, false, true)).ToArray();
 
-				var model = fileStore.CreatePreprocessedModel(merger.MergedContent, scan.fileName, false, string.Concat("Function file processing: ", scan.fileName));
+				var model = fileStore.CreatePreprocessedModel(merger.MergedContent, scan.fileName, false, string.Concat("Function file processing: ", scan.fileName), includeDependencies);
 
 				var className = fileContext.IsClass() ? Path.GetFileNameWithoutExtension(scan.fileName) : null;
 				var classList = new List<FFClass>();
@@ -316,7 +317,7 @@ namespace DkTools.FunctionFileScanning
 				var fileContext = FileContextUtil.GetFileContextFromFileName(e.FileName);
 				if (ProbeEnvironment.FileExistsInApp(e.FileName))
 				{
-					if (fileContext != FileContext.Include)
+					if (fileContext != FileContext.Include && !FileContextUtil.IsLocalizedFile(e.FileName))
 					{
 						Log.WriteDebug("Scanner detected a saved file: {0}", e.FileName);
 

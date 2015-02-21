@@ -97,7 +97,7 @@ namespace DkTools.FunctionFileScanning
 			get { return _context; }
 		}
 
-		public void InsertOrUpdate(FFDatabase db, CodeModel.FileStore store)
+		public void InsertOrUpdate(FFDatabase db, CodeModel.FileStore store, CodeModel.CodeModel model)
 		{
 			if (_id != 0)
 			{
@@ -122,29 +122,35 @@ namespace DkTools.FunctionFileScanning
 				}
 			}
 
-			UpdateIncludeDependencies(db, store);
+			UpdateIncludeDependencies(db, store, model);
 		}
 
-		private void UpdateIncludeDependencies(FFDatabase db, CodeModel.FileStore store)
+		private void UpdateIncludeDependencies(FFDatabase db, CodeModel.FileStore store, CodeModel.CodeModel model)
 		{
-			var inclList = store.IncludeDependencies.ToList();
+			var inclList = model.PreprocessorModel.IncludeDependencies.ToArray();
 
 			// Look for dependencies that are no longer there.
-			var removeList = new List<int>();
-			using (var cmd = db.CreateCommand("select id, include_file_name from include_depends where file_id = @file_id"))
+			List<int> removeList = null;
+			using (var cmd = db.CreateCommand("select id, include_file_name, include, localized_file from include_depends where file_id = @file_id"))
 			{
 				cmd.Parameters.AddWithValue("@file_id", _id);
 				using (var rdr = cmd.ExecuteReader())
 				{
 					var ordId = rdr.GetOrdinal("id");
 					var ordFileName = rdr.GetOrdinal("include_file_name");
+					var ordInclude = rdr.GetOrdinal("include");
+					var ordLocalizedFile = rdr.GetOrdinal("localized_file");
+
 					while (rdr.Read())
 					{
 						var id = rdr.GetInt32(ordId);
 						var includeFileName = rdr.GetString(ordFileName);
+						var include = rdr.GetTinyIntBoolean(ordInclude);
+						var localizedFile = rdr.GetTinyIntBoolean(ordLocalizedFile);
 
-						if (!inclList.Any(x => x.Equals(includeFileName, StringComparison.OrdinalIgnoreCase)))
+						if (!inclList.Any(x => x.FileName.Equals(includeFileName, StringComparison.OrdinalIgnoreCase) && x.Include == include && x.LocalizedFile == localizedFile))
 						{
+							if (removeList == null) removeList = new List<int>();
 							removeList.Add(id);
 						}
 					}
@@ -152,7 +158,7 @@ namespace DkTools.FunctionFileScanning
 			}
 
 			// Remove outdated dependencies.
-			if (removeList.Count > 0)
+			if (removeList != null && removeList.Count > 0)
 			{
 				var sb = new StringBuilder();
 				sb.Append("delete from include_depends where id in (");
@@ -176,23 +182,27 @@ namespace DkTools.FunctionFileScanning
 			}
 
 			// Add new dependencies.
-			foreach (var inclFileName in inclList)
+			foreach (var inclDepend in inclList)
 			{
 				int numFound;
-				using (var cmd = db.CreateCommand("select count(*) from include_depends where file_id = @file_id and include_file_name = @include_file_name"))
+				using (var cmd = db.CreateCommand("select count(*) from include_depends where file_id = @file_id and include_file_name = @include_file_name and include = @include and localized_file = @localized_file"))
 				{
 					cmd.Parameters.AddWithValue("@file_id", _id);
-					cmd.Parameters.AddWithValue("@include_file_name", inclFileName);
+					cmd.Parameters.AddWithValue("@include_file_name", inclDepend.FileName);
+					cmd.Parameters.AddWithValue("@include", inclDepend.Include);
+					cmd.Parameters.AddWithValue("@localized_file", inclDepend.LocalizedFile);
 					numFound = Convert.ToInt32(cmd.ExecuteScalar());
 				}
 
 				if (numFound == 0)
 				{
-					using (var cmd = db.CreateCommand(@"insert into include_depends (app_id, file_id, include_file_name) values (@app_id, @file_id, @include_file_name)"))
+					using (var cmd = db.CreateCommand(@"insert into include_depends (app_id, file_id, include_file_name, include, localized_file) values (@app_id, @file_id, @include_file_name, @include, @localized_file)"))
 					{
 						cmd.Parameters.AddWithValue("@app_id", _app.Id);
 						cmd.Parameters.AddWithValue("@file_id", _id);
-						cmd.Parameters.AddWithValue("@include_file_name", inclFileName);
+						cmd.Parameters.AddWithValue("@include_file_name", inclDepend.FileName);
+						cmd.Parameters.AddWithValue("@include", inclDepend.Include);
+						cmd.Parameters.AddWithValue("@localized_file", inclDepend.LocalizedFile);
 						cmd.ExecuteNonQuery();
 					}
 				}
@@ -361,7 +371,7 @@ namespace DkTools.FunctionFileScanning
 			{
 				_modified = Constants.ZeroDate;
 			}
-			InsertOrUpdate(db, store);
+			InsertOrUpdate(db, store, model);
 
 			// Get the list of functions defined in the file.
 			var modelFuncs = (from f in model.DefinitionProvider.GetGlobalFromFile<CodeModel.Definitions.FunctionDefinition>()

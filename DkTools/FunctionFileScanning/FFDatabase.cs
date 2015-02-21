@@ -55,7 +55,9 @@ namespace DkTools.FunctionFileScanning
 	id					int				identity not null primary key,
 	app_id				int				not null,
 	file_id				int				not null,
-	include_file_name	nvarchar(260)	not null
+	include_file_name	nvarchar(260)	not null,
+	include				tinyint			not null,
+	localized_file		tinyint			not null
 )",
 @"create index include_depends_ix_fileid on include_depends (file_id)",
 @"create index include_depends_ix_inclfile on include_depends (include_file_name, app_id)",

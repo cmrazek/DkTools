@@ -22,6 +22,7 @@ namespace DkTools.CodeModel
 		private List<FunctionDefinition> _localFuncs = new List<FunctionDefinition>();
 		private FileContext _fileContext;
 		private bool _visible;
+		private Preprocessor.IncludeDependency[] _includeDependencies;
 #if DEBUG
 		private List<KeyValuePair<int, Definition>> _localDefs = new List<KeyValuePair<int, Definition>>();
 #endif
@@ -31,7 +32,7 @@ namespace DkTools.CodeModel
 		ErrorTagging.ErrorProvider _errProv = new ErrorTagging.ErrorProvider();
 #endif
 
-		public PreprocessorModel(CodeSource source, DefinitionProvider defProv, string fileName, bool visible)
+		public PreprocessorModel(CodeSource source, DefinitionProvider defProv, string fileName, bool visible, IEnumerable<Preprocessor.IncludeDependency> includeDependencies)
 		{
 #if DEBUG
 			if (source == null) throw new ArgumentNullException("source");
@@ -48,6 +49,9 @@ namespace DkTools.CodeModel
 #if REPORT_ERRORS
 			_reportErrors = visible && _fileContext != FileContext.Include && ProbeToolsPackage.Instance.EditorOptions.ShowErrors;
 #endif
+
+			if (includeDependencies != null) _includeDependencies = includeDependencies.ToArray();
+			else _includeDependencies = new Preprocessor.IncludeDependency[0];
 
 			Parse();
 		}
@@ -762,6 +766,11 @@ namespace DkTools.CodeModel
 			}
 
 			return arrayLengths != null ? arrayLengths.ToArray() : null;
+		}
+
+		public IEnumerable<Preprocessor.IncludeDependency> IncludeDependencies
+		{
+			get { return _includeDependencies; }
 		}
 
 #if REPORT_ERRORS

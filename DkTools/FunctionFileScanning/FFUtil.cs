@@ -64,5 +64,10 @@ namespace DkTools.FunctionFileScanning
 			if (rdr.IsDBNull(ordinal)) return null;
 			return rdr.GetInt32(ordinal);
 		}
+
+		public static bool GetTinyIntBoolean(this SqlCeDataReader rdr, int ordinal)
+		{
+			return rdr.GetByte(ordinal) != 0;
+		}
 	}
 }

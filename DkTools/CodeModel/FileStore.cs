@@ -14,7 +14,6 @@ namespace DkTools.CodeModel
 	{
 		private Dictionary<string, IncludeFile> _sameDirIncludeFiles = new Dictionary<string, IncludeFile>();
 		private Dictionary<string, IncludeFile> _globalIncludeFiles = new Dictionary<string, IncludeFile>();
-		private List<string> _includeDependencies = new List<string>();
 
 		private CodeModel _model;
 		private Guid _guid;
@@ -276,7 +275,7 @@ namespace DkTools.CodeModel
 			source.Append(snapshot.GetText(), fileName, 0, snapshot.Length, true, true, false);
 			source.Flush();
 
-			var model = CreatePreprocessedModel(source, fileName, true, reason);
+			var model = CreatePreprocessedModel(source, fileName, true, reason, null);
 			model.Snapshot = snapshot;
 			return model;
 		}
@@ -286,6 +285,7 @@ namespace DkTools.CodeModel
 			var fileName = snapshot.TextBuffer.TryGetFileName();
 
 			CodeSource source;
+			IEnumerable<Preprocessor.IncludeDependency> includeDependencies = null;
 			if (visible)
 			{
 				source = new CodeSource();
@@ -297,14 +297,16 @@ namespace DkTools.CodeModel
 				var merger = new FileMerger();
 				merger.MergeFile(fileName, snapshot.GetText(), false, true);
 				source = merger.MergedContent;
+
+				includeDependencies = (from f in merger.LocalFileNames select new Preprocessor.IncludeDependency(f, false, true)).ToArray();
 			}
 
-			var model = CreatePreprocessedModel(source, fileName, visible, reason);
+			var model = CreatePreprocessedModel(source, fileName, visible, reason, includeDependencies);
 			model.Snapshot = snapshot;
 			return model;
 		}
 
-		public CodeModel CreatePreprocessedModel(CodeSource source, string fileName, bool visible, string reason)
+		public CodeModel CreatePreprocessedModel(CodeSource source, string fileName, bool visible, string reason, IEnumerable<Preprocessor.IncludeDependency> includeDependencies)
 		{
 #if DEBUG
 			Log.WriteDebug("Creating preprocessed model. Reason: {0}", reason);
@@ -316,16 +318,17 @@ namespace DkTools.CodeModel
 
 			var defProvider = new DefinitionProvider(fileName);
 
-			var serverContext = FileContextUtil.GetFileContextFromFileName(fileName);
+			var fileContext = FileContextUtil.GetFileContextFromFileName(fileName);
 			var prep = new Preprocessor(this);
-			prep.Preprocess(reader, prepSource, fileName, new string[0], serverContext);
+			if (includeDependencies != null) prep.AddIncludeDependencies(includeDependencies);
+			prep.Preprocess(reader, prepSource, fileName, new string[0], fileContext);
 			prep.AddDefinitionsToProvider(defProvider);
 
 #if DEBUG
 			var midTime1 = DateTime.Now;
 #endif
 
-			var prepModel = new PreprocessorModel(prepSource, defProvider, fileName, visible);
+			var prepModel = new PreprocessorModel(prepSource, defProvider, fileName, visible, prep.IncludeDependencies);
 
 #if DEBUG
 			var midTime2 = DateTime.Now;
@@ -393,14 +396,14 @@ namespace DkTools.CodeModel
 			var includeFile = tempStore.GetIncludeFile(null, "stdlib.i", false, new string[0]);
 			if (includeFile != null)
 			{
-				_stdLibModel = tempStore.CreatePreprocessedModel(includeFile.Source, includeFile.FullPathName, false, "stdlib.i model");
+				_stdLibModel = tempStore.CreatePreprocessedModel(includeFile.Source, includeFile.FullPathName, false, "stdlib.i model", null);
 			}
 			else
 			{
 				var blankSource = new CodeSource();
 				blankSource.Flush();
 
-				_stdLibModel = tempStore.CreatePreprocessedModel(blankSource, "stdlib.i", false, "stdlib.i model (blank)");
+				_stdLibModel = tempStore.CreatePreprocessedModel(blankSource, "stdlib.i", false, "stdlib.i model (blank)", null);
 			}
 		}
 
@@ -422,16 +425,6 @@ namespace DkTools.CodeModel
 		private void FileStore_AllModelRebuildRequired(object sender, EventArgs e)
 		{
 			_model = null;
-		}
-
-		public void AddIncludeDependency(string fullPathName)
-		{
-			_includeDependencies.Add(fullPathName);
-		}
-
-		public IEnumerable<string> IncludeDependencies
-		{
-			get { return _includeDependencies; }
 		}
 
 		public sealed class IncludeFile

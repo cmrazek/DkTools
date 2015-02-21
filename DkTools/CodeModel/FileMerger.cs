@@ -48,8 +48,7 @@ namespace DkTools.CodeModel
 		}
 
 		public FileMerger()
-		{
-		}
+		{ }
 
 		public void MergeFile(string fileName, string content, bool showMergeComments, bool fileIsPrimary)
 		{
@@ -455,6 +454,14 @@ namespace DkTools.CodeModel
 			{
 				yield return _origFileName;
 				foreach (var fn in _localFileNames) yield return fn;
+			}
+		}
+
+		public IEnumerable<string> LocalFileNames
+		{
+			get
+			{
+				return _localFileNames;
 			}
 		}
 
