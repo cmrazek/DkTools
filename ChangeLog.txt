@@ -1,6 +1,6 @@
 DkTools2012 ChangeLog
 ____________________________________________________________________________________________________
-Version 1.2.19 - (pending):
+Version 1.2.19 - Feb 23, 2015:
 
 - Added support for the Find All References command (available in context menu).
 - Added Find All References context menu commands to all items in the Dictionary Explorer.
