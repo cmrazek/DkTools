@@ -267,6 +267,7 @@ namespace DkTools.StatementCompletion
 		{
 			foreach (var completion in completions)
 			{
+				if (completion == null) continue;
 				if (!dict.ContainsKey(completion.DisplayText)) dict[completion.DisplayText] = completion;
 			}
 		}
