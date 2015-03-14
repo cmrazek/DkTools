@@ -40,7 +40,11 @@ namespace DkTools.Dict
 				var dataDef = repoIntType.MethodDataDef[m];
 				var typeText = dataDef.TypeText[0];
 				var parser = new TokenParser.Parser(typeText);
-				var returnDataType = DataType.Parse(parser, flags: DataType.ParseFlag.FromRepo | DataType.ParseFlag.InterfaceType);
+				var returnDataType = DataType.Parse(new DataType.ParseArgs
+				{
+					Code = parser,
+					Flags = DataType.ParseFlag.FromRepo | DataType.ParseFlag.InterfaceType
+				});
 #if DEBUG
 				DataType.CheckDataTypeParsing(typeText, parser, returnDataType);
 #endif
@@ -60,7 +64,11 @@ namespace DkTools.Dict
 					var paramDataDef = repoIntType.MethodParamDataDef[m, p];
 					var paramTypeText = paramDataDef.TypeText[0];
 					parser = new TokenParser.Parser(paramTypeText);
-					var paramDataType = DataType.Parse(parser, flags: DataType.ParseFlag.FromRepo | DataType.ParseFlag.InterfaceType);
+					var paramDataType = DataType.Parse(new DataType.ParseArgs
+					{
+						Code = parser,
+						Flags = DataType.ParseFlag.FromRepo | DataType.ParseFlag.InterfaceType
+					});
 #if DEBUG
 					DataType.CheckDataTypeParsing(paramTypeText, parser, paramDataType);
 #endif
@@ -85,7 +93,11 @@ namespace DkTools.Dict
 				var dataDef = repoIntType.PropertyDataDef[p];
 				var typeText = dataDef.TypeText[0];
 				var parser = new TokenParser.Parser(typeText);
-				var dataType = DataType.Parse(parser, flags: DataType.ParseFlag.FromRepo | DataType.ParseFlag.InterfaceType);
+				var dataType = DataType.Parse(new DataType.ParseArgs
+				{
+					Code = parser,
+					Flags = DataType.ParseFlag.FromRepo | DataType.ParseFlag.InterfaceType
+				});
 #if DEBUG
 				DataType.CheckDataTypeParsing(typeText, parser, dataType);
 #endif

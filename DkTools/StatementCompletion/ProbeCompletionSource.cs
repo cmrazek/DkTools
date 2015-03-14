@@ -592,21 +592,24 @@ namespace DkTools.StatementCompletion
 			var parentToken = model.FindTokens(editPos, t => t is GroupToken).LastOrDefault() as GroupToken;
 
 			var argParser = new TokenParser.Parser(argText);
-			var dataType = CodeModel.DataType.Parse(argParser, null,
-				dataTypeName =>
+			var dataType = CodeModel.DataType.Parse(new DataType.ParseArgs
+			{
+				Code = argParser,
+				DataTypeCallback = dataTypeName =>
 				{
 					var def = model.DefinitionProvider.GetLocal<DataTypeDefinition>(editPos, dataTypeName).FirstOrDefault();
 					if (def != null) return def;
 
 					return model.DefinitionProvider.GetGlobalFromAnywhere<DataTypeDefinition>(dataTypeName).FirstOrDefault();
 				},
-				varName =>
+				VariableCallback = varName =>
 				{
 					var def = model.DefinitionProvider.GetLocal<VariableDefinition>(editPos, varName).FirstOrDefault();
 					if (def != null) return def;
 
 					return model.DefinitionProvider.GetGlobalFromAnywhere<VariableDefinition>(varName).FirstOrDefault();
-				});
+				}
+			});
 			if (dataType != null)
 			{
 				foreach (var opt in dataType.CompletionOptions)

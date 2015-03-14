@@ -41,7 +41,7 @@ namespace DkTools
 
 		public static readonly HashSet<string> DataTypeKeywords = Util.ParseWordList(
 			"alternate Boolean_t char character currency date enum int LEADINGZEROS like local_currency long longform",
-			"nowarn numeric oleobject proto short shortform string time unsigned varchar variant void");
+			"nowarn numeric oleobject proto short shortform signed string time unsigned varchar variant void");
 
 		public static readonly HashSet<string> Keywords = Util.ParseWordList(
 			"after alter and BEGINHLP before break button comment case col colff cols continue create default display description",

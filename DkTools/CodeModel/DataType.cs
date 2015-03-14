@@ -124,7 +124,7 @@ namespace DkTools.CodeModel
 		public string Name
 		{
 			get { return _name; }
-			set { _name = value; }
+			//set { _name = value; }		TODO: remove
 		}
 
 		public bool HasCompletionOptions
@@ -170,28 +170,55 @@ namespace DkTools.CodeModel
 			InterfaceType
 		}
 
+		public class ParseArgs
+		{
+			/// <summary>
+			/// The token parser to read from.
+			/// </summary>
+			public TokenParser.Parser Code { get; set; }
+
+			/// <summary>
+			/// (optional) Flags to control the parsing behaviour.
+			/// </summary>
+			public ParseFlag Flags { get; set; }
+
+			/// <summary>
+			/// (optional) A callback function used to look up existing data types.
+			/// </summary>
+			public GetDataTypeDelegate DataTypeCallback { get; set; }
+
+			/// <summary>
+			/// (optional) A callback function used to look up existing variables.
+			/// </summary>
+			public GetVariableDelegate VariableCallback { get; set; }
+
+			/// <summary>
+			/// (optional) A name to be given to the data type. If null or blank, the actual text will be used as the name.
+			/// </summary>
+			public string TypeName { get; set; }
+
+#if REPORT_ERRORS
+			/// <summary>
+			/// (optional) An ErrorProvider to receive errors detected by this parsing function.
+			/// </summary>
+			ErrorTagging.ErrorProvider ErrorProvider { get; set; }
+#endif
+		}
+
 		/// <summary>
 		/// Parses a data type from a string.
 		/// </summary>
-		/// <param name="code">The token parser to read from.</param>
-		/// <param name="typeName">(optional) A name to be given to the data type. If null or blank, the actual text will be used as the name.</param>
-		/// <param name="dataTypeCallback">(optional) A callback function used to look up existing data types.</param>
-		/// <param name="varCallback">(optional) A callback function used to look up existing variables.</param>
-		/// <param name="flags">(optional) Flags to control the parsing behaviour.</param>
-		/// <param name="errorProv">(optional) An ErrorProvider to receive errors detected by this parsing function.</param>
+		/// <param name="args">Contains arguments that control the parsing.</param>
 		/// <returns>A data type object, if a data type could be parsed; otherwise null.</returns>
-		public static DataType Parse(TokenParser.Parser code, string typeName = null, GetDataTypeDelegate dataTypeCallback = null,
-			GetVariableDelegate varCallback = null, ParseFlag flags = 0
-#if REPORT_ERRORS
-			, ErrorTagging.ErrorProvider errorProv = null
-#endif
-			)
+		public static DataType Parse(ParseArgs args)
 		{
+			var code = args.Code;
+
 			var startPos = code.Position;
 			if (!code.ReadWord()) return null;
 			var startWord = code.TokenText;
 
-			if ((flags & ParseFlag.FromRepo) != 0 && code.TokenText == "__SYSTEM__")
+			if ((args.Flags & ParseFlag.FromRepo) != 0 && code.TokenText == "__SYSTEM__")
 			{
 				if (!code.ReadWord())
 				{
@@ -201,673 +228,682 @@ namespace DkTools.CodeModel
 				startWord = code.TokenText;
 			}
 
+			DataType dataType = null;
+
 			switch (code.TokenText)
 			{
-				#region void
 				case "void":
-					if ((flags & ParseFlag.FromRepo) != 0) IgnoreRepoWords(code, startWord);
-					return DataType.Void;
-				#endregion
+					dataType = DataType.Void;
+					break;
 
-				#region numeric
 				case "numeric":
-					{
-						var sb = new StringBuilder();
-						sb.Append("numeric");
+				case "decimal":
+					dataType = ProcessNumeric(args, code.TokenText);
+					break;
 
-						if (code.ReadExact('('))
-						{
-							sb.Append('(');
-							if (code.ReadNumber())
-							{
-								sb.Append(code.TokenText);
-								if (code.ReadExact(','))
-								{
-									sb.Append(',');
-									if (code.ReadNumber())
-									{
-										sb.Append(code.TokenText);
-									}
-								}
-							}
-							if (code.ReadExact(')')) sb.Append(')');
-							else return new DataType(typeName, sb.ToString());
-						}
-
-						var done = false;
-						var gotMask = false;
-						while (!done && !code.EndOfFile)
-						{
-							if (ReadAttribute(code, sb, "unsigned", "currency", "local_currency")) { }
-							else if (!gotMask && code.ReadStringLiteral())
-							{
-								sb.Append(' ');
-								sb.Append(code.TokenText);
-								gotMask = true;
-							}
-							else break;
-						}
-
-						if ((flags & ParseFlag.FromRepo) != 0) IgnoreRepoWords(code, startWord);
-
-						return new DataType(typeName, sb.ToString());
-					}
-				#endregion
-
-				#region unsigned
 				case "unsigned":
-					{
-						var sb = new StringBuilder();
-						sb.Append("unsigned");
+				case "signed":
+					dataType = ProcessSignedUnsigned(args, code.TokenText);
+					break;
 
-						if (code.ReadNumber())
-						{
-							// width
-							sb.Append(' ');
-							sb.Append(code.TokenType);
-						}
-						else if (code.ReadExact('('))
-						{
-							sb.Append('(');
-							if (code.ReadNumber())
-							{
-								sb.Append(code.TokenText);
-								if (code.ReadExact(','))
-								{
-									sb.Append(',');
-									if (code.ReadNumber())
-									{
-										sb.Append(code.TokenText);
-									}
-								}
-							}
-							if (code.ReadExact(')')) sb.Append(')');
-							else return new DataType(typeName, sb.ToString());
-						}
-
-						if (code.ReadExact("int")) sb.Append(" int");
-						else if (code.ReadExact("char")) sb.Append(" char");
-
-						var gotMask = false;
-						while (!code.EndOfFile)
-						{
-							if (ReadAttribute(code, sb)) { }
-							else if (!gotMask && code.ReadStringLiteral())
-							{
-								gotMask = true;
-								sb.Append(' ');
-								sb.Append(code.TokenText);
-							}
-							else break;
-						}
-
-						if ((flags & ParseFlag.FromRepo) != 0) IgnoreRepoWords(code, startWord);
-
-						return new DataType(typeName, sb.ToString());
-					}
-				#endregion
-
-				#region int, short
 				case "int":
 				case "short":
-					{
-						var sb = new StringBuilder();
-						sb.Append(code.TokenText);
-
-						if (code.ReadExact("unsigned")) sb.Append(" unsigned");
-
-						if (code.ReadNumber())
-						{
-							// width
-							sb.Append(' ');
-							sb.Append(code.TokenText);
-						}
-
-						while (!code.EndOfFile)
-						{
-							if (!ReadAttribute(code, sb)) break;
-						}
-
-						if ((flags & ParseFlag.FromRepo) != 0) IgnoreRepoWords(code, startWord);
-
-						return new DataType(typeName, sb.ToString());
-					}
-				#endregion
-
-				#region long
 				case "long":
-					{
-						var sb = new StringBuilder();
-						sb.Append("long");
-
-						if (code.ReadExact("unsigned")) sb.Append(" unsigned");
-
-						if (code.ReadNumber())
-						{
-							// width
-							sb.Append(' ');
-							sb.Append(code.TokenText);
-						}
-
-						while (!code.EndOfFile)
-						{
-							if (!ReadAttribute(code, sb)) break;
-						}
-
-						if ((flags & ParseFlag.FromRepo) != 0) IgnoreRepoWords(code, startWord);
-
-						return new DataType(typeName, sb.ToString());
-					}
-				#endregion
-
-				#region ulong
 				case "ulong":
-					if ((flags & ParseFlag.FromRepo) != 0) IgnoreRepoWords(code, startWord);
-					return DataType.Ulong;
-				#endregion
+				case "number":
+				case "unumber":
+					dataType = ProcessInt(args, code.TokenText);
+					break;
 
-				#region char, character, varchar
 				case "char":
 				case "character":
 				case "varchar":
-					if (!code.ReadExact('(')) return DataType.Char;
-					if (code.ReadNumber())
-					{
-						var sb = new StringBuilder();
-						sb.Append("char(");
-						sb.Append(code.TokenText);
-						if (code.ReadExact(')')) sb.Append(')');
-						else return new DataType(typeName, sb.ToString());
+				case "CHAR":
+					dataType = ProcessChar(args, code.TokenText);
+					break;
 
-						var done = false;
-						var gotMask = false;
-						while (!done && !code.EndOfFile)
-						{
-							if (ReadAttribute(code, sb)) { }
-							else if (!gotMask && code.ReadStringLiteral())
-							{
-								gotMask = true;
-								sb.Append(' ');
-								sb.Append(code.TokenText);
-							}
-							else break;
-						}
-
-						if ((flags & ParseFlag.FromRepo) != 0) IgnoreRepoWords(code, startWord);
-
-						return new DataType(typeName, sb.ToString());
-					}
-					else
-					{
-						if ((flags & ParseFlag.FromRepo) != 0) IgnoreRepoWords(code, startWord);
-
-						return new DataType(typeName, "char");
-					}
-				#endregion
-
-				#region string
 				case "string":
-					{
-						var sb = new StringBuilder();
-						sb.Append("string");
-						if (code.ReadExact("varying"))
-						{
-							sb.Append(" varying");
-						}
-						else if (code.ReadNumber())
-						{
-							sb.Append(' ');
-							sb.Append(code.TokenText);
-						}
+					dataType = ProcessString(args, code.TokenText);
+					break;
 
-						while (!code.EndOfFile)
-						{
-							if (ReadAttribute(code, sb)) { }
-							else if (code.ReadStringLiteral())
-							{
-								sb.Append(' ');
-								sb.Append(code.TokenText);
-							}
-							else break;
-						}
-
-						if ((flags & ParseFlag.FromRepo) != 0) IgnoreRepoWords(code, startWord);
-
-						return new DataType(typeName, sb.ToString());
-					}
-				#endregion
-
-				#region date
 				case "date":
-					{
-						var sb = new StringBuilder();
-						sb.Append("date");
+					dataType = ProcessDate(args, code.TokenText);
+					break;
 
+				case "time":
+					dataType = ProcessTime(args, code.TokenText);
+					break;
+
+				case "enum":
+					dataType = ProcessEnum(args);
+					break;
+
+				case "like":
+					dataType = ProcessLike(args);
+					break;
+
+				case "table":
+					dataType = DataType.Table;
+					break;
+
+				case "indrel":
+					dataType = DataType.IndRel;
+					break;
+
+				case "command":
+					dataType = DataType.Command;
+					break;
+
+				case "Section":
+					dataType = ProcessSection(args);
+					break;
+
+				case "scroll":
+					dataType = ProcessScroll(args);
+					break;
+
+				case "graphic":
+					dataType = ProcessGraphic(args);
+					break;
+
+				case "interface":
+					dataType = ProcessInterface(args);
+					break;
+
+				case "variant":
+					dataType = DataType.Variant;
+					break;
+
+				case "oleobject":
+					dataType = DataType.OleObject;
+					break;
+
+				case "Boolean_t":
+					dataType = DataType.Boolean_t;
+					break;
+
+				default:
+					if (args.DataTypeCallback != null)
+					{
+						var def = args.DataTypeCallback(code.TokenText);
+						if (def != null) dataType = def.DataType;
+					}
+					break;
+			}
+
+			if (dataType != null)
+			{
+				if ((args.Flags & ParseFlag.FromRepo) != 0) IgnoreRepoWords(code, startWord);
+
+				if (!string.IsNullOrEmpty(args.TypeName))
+				{
+					dataType = dataType.CloneWithNewName(args.TypeName);
+				}
+			}
+			else
+			{
+				code.Position = code.TokenStartPostion;
+			}
+
+			return dataType;
+		}
+
+		private static DataType ProcessNumeric(ParseArgs args, string tokenText)
+		{
+			var sb = new StringBuilder();
+			sb.Append(tokenText);
+
+			var code = args.Code;
+
+			if (code.ReadExact('('))
+			{
+				sb.Append('(');
+				if (code.ReadNumber())
+				{
+					sb.Append(code.TokenText);
+					if (code.ReadExact(','))
+					{
+						sb.Append(',');
 						if (code.ReadNumber())
 						{
-							// width
-							sb.Append(' ');
 							sb.Append(code.TokenText);
 						}
-
-						var gotMask = false;
-						var done = false;
-						while (!done && !code.EndOfFile)
-						{
-							if (ReadAttribute(code, sb, "shortform", "longform", "alternate")) { }
-							else if (!gotMask && code.ReadStringLiteral())
-							{
-								sb.Append(' ');
-								sb.Append(code.TokenText);
-							}
-							else break;
-						}
-
-						if ((flags & ParseFlag.FromRepo) != 0) IgnoreRepoWords(code, startWord);
-
-						return new DataType(typeName, sb.ToString());
 					}
-				#endregion
+				}
+				if (code.ReadExact(')')) sb.Append(')');
+				else return new DataType(sb.ToString());
+			}
 
-				#region time
-				case "time":
+			var done = false;
+			var gotMask = false;
+			while (!done && !code.EndOfFile)
+			{
+				if (ReadAttribute(code, sb, "unsigned", "currency", "local_currency")) { }
+				else if (!gotMask && code.ReadStringLiteral())
+				{
+					sb.Append(' ');
+					sb.Append(code.TokenText);
+					gotMask = true;
+				}
+				else break;
+			}
+
+			return new DataType(sb.ToString());
+		}
+
+		private static DataType ProcessSignedUnsigned(ParseArgs args, string tokenText)
+		{
+			var sb = new StringBuilder();
+			sb.Append(tokenText);
+
+			var code = args.Code;
+
+			if (code.ReadNumber())
+			{
+				// width
+				sb.Append(' ');
+				sb.Append(code.TokenType);
+			}
+			else if (code.ReadExact('('))
+			{
+				sb.Append('(');
+				if (code.ReadNumber())
+				{
+					sb.Append(code.TokenText);
+					if (code.ReadExact(','))
 					{
-						var sb = new StringBuilder();
-						sb.Append("time");
-
-						var gotMask = false;
-						while (!code.EndOfFile)
+						sb.Append(',');
+						if (code.ReadNumber())
 						{
-							if (ReadAttribute(code, sb)) { }
-							else if (!gotMask && code.ReadNumber())
-							{
-								gotMask = true;
-								sb.Append(' ');
-								sb.Append(code.TokenText);
-							}
-							else break;
+							sb.Append(code.TokenText);
 						}
-
-						if ((flags & ParseFlag.FromRepo) != 0) IgnoreRepoWords(code, startWord);
-
-						return new DataType(typeName, sb.ToString());
 					}
-				#endregion
+				}
+				if (code.ReadExact(')')) sb.Append(')');
+				else return new DataType(sb.ToString());
+			}
 
-				#region enum
-				case "enum":
+			if (code.ReadExact("int")) sb.Append(" int");
+			else if (code.ReadExact("short")) sb.Append(" short");
+			else if (code.ReadExact("long")) sb.Append(" long");
+			else if (code.ReadExact("char")) sb.Append(" char");
+
+			var gotMask = false;
+			while (!code.EndOfFile)
+			{
+				if (ReadAttribute(code, sb)) { }
+				else if (!gotMask && code.ReadStringLiteral())
+				{
+					gotMask = true;
+					sb.Append(' ');
+					sb.Append(code.TokenText);
+				}
+				else break;
+			}
+
+			return new DataType(sb.ToString());
+		}
+
+		private static DataType ProcessInt(ParseArgs args, string tokenText)
+		{
+			var sb = new StringBuilder();
+			sb.Append(tokenText);
+
+			var code = args.Code;
+
+			if (code.ReadExact("unsigned")) sb.Append(" unsigned");
+			else if (code.ReadExact("signed")) sb.Append(" signed");
+
+			if (code.ReadNumber())
+			{
+				// width
+				sb.Append(' ');
+				sb.Append(code.TokenText);
+			}
+
+			while (!code.EndOfFile)
+			{
+				if (!ReadAttribute(code, sb)) break;
+			}
+
+			return new DataType(sb.ToString());
+		}
+
+		private static DataType ProcessChar(ParseArgs args, string tokenText)
+		{
+			var code = args.Code;
+			if (!code.ReadExact('(')) return DataType.Char;
+			if (code.ReadNumber())
+			{
+				var sb = new StringBuilder();
+				sb.Append(tokenText);
+				sb.Append('(');
+				sb.Append(code.TokenText);
+				if (code.ReadExact(')')) sb.Append(')');
+				else return new DataType(sb.ToString());
+
+				var done = false;
+				var gotMask = false;
+				while (!done && !code.EndOfFile)
+				{
+					if (ReadAttribute(code, sb)) { }
+					else if (!gotMask && code.ReadStringLiteral())
 					{
-						var options = new List<Definition>();
-						var sb = new StringBuilder();
-						sb.Append("enum");
+						gotMask = true;
+						sb.Append(' ');
+						sb.Append(code.TokenText);
+					}
+					else break;
+				}
 
-						// Read tokens before the option list
-						var gotWidth = false;
-						while (!code.EndOfFile)
+				return new DataType(sb.ToString());
+			}
+			else
+			{
+				return new DataType(tokenText);
+			}
+		}
+
+		private static DataType ProcessString(ParseArgs args, string tokenText)
+		{
+			var sb = new StringBuilder();
+			sb.Append(tokenText);
+
+			var code = args.Code;
+
+			if (code.ReadExact("varying"))
+			{
+				sb.Append(" varying");
+			}
+			else if (code.ReadNumber())
+			{
+				sb.Append(' ');
+				sb.Append(code.TokenText);
+			}
+
+			while (!code.EndOfFile)
+			{
+				if (ReadAttribute(code, sb)) { }
+				else if (code.ReadStringLiteral())
+				{
+					sb.Append(' ');
+					sb.Append(code.TokenText);
+				}
+				else break;
+			}
+
+			return new DataType(sb.ToString());
+		}
+
+		private static DataType ProcessDate(ParseArgs args, string tokenText)
+		{
+			var sb = new StringBuilder();
+			sb.Append(tokenText);
+
+			var code = args.Code;
+
+			if (code.ReadNumber())
+			{
+				// width
+				sb.Append(' ');
+				sb.Append(code.TokenText);
+			}
+
+			var gotMask = false;
+			var done = false;
+			while (!done && !code.EndOfFile)
+			{
+				if (ReadAttribute(code, sb, "shortform", "longform", "alternate")) { }
+				else if (!gotMask && code.ReadStringLiteral())
+				{
+					sb.Append(' ');
+					sb.Append(code.TokenText);
+				}
+				else break;
+			}
+
+			return new DataType(sb.ToString());
+		}
+
+		private static DataType ProcessTime(ParseArgs args, string tokenText)
+		{
+			var sb = new StringBuilder();
+			sb.Append(tokenText);
+
+			var code = args.Code;
+
+			var gotMask = false;
+			while (!code.EndOfFile)
+			{
+				if (ReadAttribute(code, sb)) { }
+				else if (!gotMask && code.ReadNumber())
+				{
+					gotMask = true;
+					sb.Append(' ');
+					sb.Append(code.TokenText);
+				}
+				else break;
+			}
+
+			return new DataType(sb.ToString());
+		}
+
+		private static DataType ProcessEnum(ParseArgs args)
+		{
+			var options = new List<Definition>();
+			var sb = new StringBuilder();
+			sb.Append("enum");
+
+			var code = args.Code;
+
+			// Read tokens before the option list
+			var gotWidth = false;
+			while (!code.EndOfFile)
+			{
+				if (code.ReadExact('{')) break;
+				else if (ReadAttribute(code, sb, "alterable", "required", "nowarn", "numeric")) { }
+				else if (!gotWidth && code.ReadNumber())
+				{
+					sb.Append(' ');
+					sb.Append(code.TokenText);
+					gotWidth = true;
+				}
+				else return new DataType(sb.ToString());
+			}
+
+			// Read the option list
+			if ((args.Flags & ParseFlag.FromRepo) != 0)
+			{
+				// The WBDK repository doesn't put quotes around the strings that need them.
+				code.SkipWhiteSpaceAndCommentsIfAllowed();
+				var optionStartPos = code.Position;
+				var gotComma = false;
+
+				while (!code.EndOfFile)
+				{
+					if (!code.Read()) break;
+
+					if (code.TokenText == "}")
+					{
+						if (gotComma)
 						{
-							if (code.ReadExact('{')) break;
-							else if (ReadAttribute(code, sb, "alterable", "required", "nowarn", "numeric")) { }
-							else if (!gotWidth && code.ReadNumber())
-							{
-								sb.Append(' ');
-								sb.Append(code.TokenText);
-								gotWidth = true;
-							}
-							else return new DataType(typeName, sb.ToString());
+							var str = code.GetText(optionStartPos, code.TokenStartPostion - optionStartPos).Trim();
+							options.Add(new EnumOptionDefinition(DecorateEnumOptionIfRequired(str)));
+							optionStartPos = code.Position;
 						}
+						break;
+					}
 
-						// Read the option list
-						if ((flags & ParseFlag.FromRepo) != 0)
-						{
-							// The WBDK repository doesn't put quotes around the strings that need them.
-							code.SkipWhiteSpaceAndCommentsIfAllowed();
-							var optionStartPos = code.Position;
-							var gotComma = false;
-
-							while (!code.EndOfFile)
-							{
-								if (!code.Read()) break;
-
-								if (code.TokenText == "}")
-								{
-									if (gotComma)
-									{
-										var str = code.GetText(optionStartPos, code.TokenStartPostion - optionStartPos).Trim();
-										options.Add(new EnumOptionDefinition(DecorateEnumOptionIfRequired(str)));
-										optionStartPos = code.Position;
-									}
-									break;
-								}
-
-								if (code.TokenText == ",")
-								{
-									var str = code.GetText(optionStartPos, code.TokenStartPostion - optionStartPos).Trim();
-									options.Add(new EnumOptionDefinition(DecorateEnumOptionIfRequired(str)));
-									optionStartPos = code.Position;
-									gotComma = true;
-								}
-							}
-						}
-						else if ((flags & ParseFlag.Strict) != 0)
-						{
-							var expectingComma = false;
-							while (!code.EndOfFile)
-							{
-								if (!code.Read())
-								{
+					if (code.TokenText == ",")
+					{
+						var str = code.GetText(optionStartPos, code.TokenStartPostion - optionStartPos).Trim();
+						options.Add(new EnumOptionDefinition(DecorateEnumOptionIfRequired(str)));
+						optionStartPos = code.Position;
+						gotComma = true;
+					}
+				}
+			}
+			else if ((args.Flags & ParseFlag.Strict) != 0)
+			{
+				var expectingComma = false;
+				while (!code.EndOfFile)
+				{
+					if (!code.Read())
+					{
 #if REPORT_ERRORS
 									if (errorProv != null) errorProv.ReportError(code, code.TokenSpan, ErrorTagging.ErrorCode.Enum_UnexpectedEndOfFile);
 #endif
-									break;
-								}
+						break;
+					}
 
-								if (code.TokenType == TokenParser.TokenType.Operator)
-								{
-									if (code.TokenText == "}") break;
-									if (code.TokenText == ",")
-									{
-										if (!expectingComma)
-										{
+					if (code.TokenType == TokenParser.TokenType.Operator)
+					{
+						if (code.TokenText == "}") break;
+						if (code.TokenText == ",")
+						{
+							if (!expectingComma)
+							{
 #if REPORT_ERRORS
 											if (errorProv != null) errorProv.ReportError(code, code.TokenSpan, ErrorTagging.ErrorCode.Enum_UnexpectedComma);
 #endif
-										}
-										else
-										{
-											expectingComma = false;
-										}
-									}
-								}
-								else if (code.TokenType == TokenParser.TokenType.StringLiteral || code.TokenType == TokenParser.TokenType.Word)
-								{
-									var str = code.TokenText;
-									if (expectingComma)
-									{
+							}
+							else
+							{
+								expectingComma = false;
+							}
+						}
+					}
+					else if (code.TokenType == TokenParser.TokenType.StringLiteral || code.TokenType == TokenParser.TokenType.Word)
+					{
+						var str = code.TokenText;
+						if (expectingComma)
+						{
 #if REPORT_ERRORS
 										if (errorProv != null) errorProv.ReportError(code, code.TokenSpan, ErrorTagging.ErrorCode.Enum_NoComma);
 #endif
-									}
-									else if (options.Any(x => x.Name == str))
-									{
+						}
+						else if (options.Any(x => x.Name == str))
+						{
 #if REPORT_ERRORS
 										if (errorProv != null) errorProv.ReportError(code, code.TokenSpan, ErrorTagging.ErrorCode.Enum_DuplicateOption, str);
 #endif
-									}
-									else
-									{
-										options.Add(new EnumOptionDefinition(str));
-									}
-								}
-							}
 						}
 						else
 						{
-							while (!code.EndOfFile)
-							{
-								if (!code.Read()) break;
-								if (code.TokenText == "}") break;
-								if (code.TokenText == ",") continue;
-								switch (code.TokenType)
-								{
-									case TokenParser.TokenType.Word:
-									case TokenParser.TokenType.StringLiteral:
-										options.Add(new EnumOptionDefinition(code.TokenText));
-										break;
-								}
-							}
+							options.Add(new EnumOptionDefinition(str));
 						}
-
-						sb.Append(" {");
-						var first = true;
-						foreach (var option in options)
-						{
-							if (first)
-							{
-								first = false;
-								sb.Append(' ');
-							}
-							else
-							{
-								sb.Append(", ");
-							}
-							sb.Append(option.Name);
-						}
-						sb.Append(" }");
-
-						if ((flags & ParseFlag.FromRepo) != 0) IgnoreRepoWords(code, startWord);
-
-						return new DataType(typeName, sb.ToString())
-						{
-							_completionOptions = options.ToArray(),
-							_completionOptionsType = CompletionOptionsType.List
-						};
 					}
-				#endregion
+				}
+			}
+			else
+			{
+				while (!code.EndOfFile)
+				{
+					if (!code.Read()) break;
+					if (code.TokenText == "}") break;
+					if (code.TokenText == ",") continue;
+					switch (code.TokenType)
+					{
+						case TokenParser.TokenType.Word:
+						case TokenParser.TokenType.StringLiteral:
+							options.Add(new EnumOptionDefinition(code.TokenText));
+							break;
+					}
+				}
+			}
 
-				#region like
-				case "like":
+			sb.Append(" {");
+			var first = true;
+			foreach (var option in options)
+			{
+				if (first)
+				{
+					first = false;
+					sb.Append(' ');
+				}
+				else
+				{
+					sb.Append(", ");
+				}
+				sb.Append(option.Name);
+			}
+			sb.Append(" }");
+
+			return new DataType(sb.ToString())
+			{
+				_completionOptions = options.ToArray(),
+				_completionOptionsType = CompletionOptionsType.List
+			};
+		}
+
+		private static DataType ProcessLike(ParseArgs args)
+		{
+			var code = args.Code;
+			if (code.ReadWord())
+			{
+				var word1 = code.TokenText;
+				if (code.ReadExact('.'))
+				{
 					if (code.ReadWord())
 					{
-						var word1 = code.TokenText;
-						if (code.ReadExact('.'))
+						var word2 = code.TokenText;
+
+						// TODO: this should be able to handle more than just tables
+						var table = ProbeEnvironment.GetTable(word1);
+						if (table != null)
 						{
-							if (code.ReadWord())
-							{
-								var word2 = code.TokenText;
-
-								var table = ProbeEnvironment.GetTable(word1);
-								if (table != null)
-								{
-									var field = table.GetField(word2);
-									if (field != null) return !string.IsNullOrEmpty(typeName) ? field.DataType.CloneWithNewName(typeName) : field.DataType;
-								}
-
-								return new DataType(typeName, string.Concat("like ", word1, ".", word2));
-							}
-							else
-							{
-								return new DataType(typeName, string.Concat("like ", word1, "."));
-							}
+							var field = table.GetField(word2);
+							if (field != null) return field.DataType;
 						}
 
-						if (varCallback != null)
-						{
-							var def = varCallback(word1);
-							if (def != null) return !string.IsNullOrEmpty(typeName) ? def.DataType.CloneWithNewName(typeName) : def.DataType;
-						}
-
-						if ((flags & ParseFlag.FromRepo) != 0) IgnoreRepoWords(code, startWord);
-
-						return new DataType(typeName, string.Concat("like ", word1));
+						return new DataType(string.Concat("like ", word1, ".", word2));
 					}
-					else return null;
-				#endregion
-
-				#region table/indrel
-				case "table":
-					if ((flags & ParseFlag.FromRepo) != 0) IgnoreRepoWords(code, startWord);
-					return DataType.Table;
-
-				case "indrel":
-					if ((flags & ParseFlag.FromRepo) != 0) IgnoreRepoWords(code, startWord);
-					return DataType.IndRel;
-				#endregion
-
-				#region command
-				case "command":
-					if ((flags & ParseFlag.FromRepo) != 0) IgnoreRepoWords(code, startWord);
-					return DataType.Command;
-				#endregion
-
-				#region section
-				case "Section":
+					else
 					{
-						var sb = new StringBuilder();
-						sb.Append("Section");
-						if (code.ReadExact("Level"))
-						{
-							sb.Append(" Level");
-							if (code.ReadNumber())
-							{
-								sb.Append(' ');
-								sb.Append(code.TokenText);
-							}
-						}
-
-						if ((flags & ParseFlag.FromRepo) != 0) IgnoreRepoWords(code, startWord);
-
-						return new DataType(typeName, sb.ToString());
+						return new DataType(string.Concat("like ", word1, "."));
 					}
-				#endregion
+				}
 
-				#region scroll
-				case "scroll":
-					{
-						var sb = new StringBuilder();
-						sb.Append("scroll");
+				if (args.VariableCallback != null)
+				{
+					var def = args.VariableCallback(word1);
+					if (def != null) return def.DataType;
+				}
 
-						if (code.ReadNumber())
-						{
-							sb.Append(' ');
-							sb.Append(code.TokenText);
-						}
-
-						if ((flags & ParseFlag.FromRepo) != 0) IgnoreRepoWords(code, startWord);
-
-						return new DataType(typeName, sb.ToString());
-					}
-				#endregion
-
-				#region graphic
-				case "graphic":
-					{
-						var sb = new StringBuilder();
-						sb.Append("graphic");
-
-						if (code.ReadNumber())	// rows
-						{
-							sb.Append(' ');
-							sb.Append(code.TokenText);
-
-							if (code.ReadNumber())	// columns
-							{
-								sb.Append(' ');
-								sb.Append(code.TokenText);
-
-								if (code.ReadNumber())	// bytes
-								{
-									sb.Append(' ');
-									sb.Append(code.TokenText);
-								}
-							}
-						}
-
-						if ((flags & ParseFlag.FromRepo) != 0) IgnoreRepoWords(code, startWord);
-
-						return new DataType(typeName, sb.ToString());
-					}
-				#endregion
-
-				#region interface
-				case "interface":
-					{
-						var sb = new StringBuilder();
-						sb.Append("interface");
-
-						if ((flags & ParseFlag.InterfaceType) == 0)
-						{
-							if (code.ReadWord())
-							{
-								sb.Append(' ');
-								sb.Append(code.TokenText);
-
-								var completionOptions = new List<Definition>();
-								Definition[] methods = null;
-								Definition[] properties = null;
-
-								var intType = ProbeEnvironment.GetInterfaceType(code.TokenText);
-								if (intType != null)
-								{
-									methods = intType.MethodDefinitions.ToArray();
-									completionOptions.AddRange(methods);
-									properties = intType.PropertyDefinitions.ToArray();
-									completionOptions.AddRange(properties);
-								}
-
-								if ((flags & ParseFlag.FromRepo) != 0) IgnoreRepoWords(code, startWord);
-
-								return new DataType(typeName, sb.ToString())
-								{
-									_completionOptions = completionOptions.ToArray(),
-									_completionOptionsType = CompletionOptionsType.List,
-									_methods = methods,
-									_properties = properties
-								};
-							}
-						}
-						else
-						{
-							// Parsing the text from a WBDK interface, which could contain .NET or COM specific formatting.
-
-							if (code.ReadWord())
-							{
-								sb.Append(' ');
-								sb.Append(code.TokenText);
-
-								while (code.ReadExact('.'))
-								{
-									sb.Append('.');
-									if (code.ReadWord()) sb.Append(code.TokenText);
-									else break;
-								}
-
-								if (code.ReadExact('*'))
-								{
-									sb.Append('*');
-								}
-								else if (code.ReadExact('&'))
-								{
-									sb.Append('&');
-								}
-								else if (code.ReadExact('['))
-								{
-									sb.Append('[');
-									if (code.ReadExact(']')) sb.Append(']');
-								}
-							}
-						}
-
-						return new DataType(typeName, sb.ToString());
-					}
-				#endregion
-
-				#region variant
-				case "variant":
-					if ((flags & ParseFlag.FromRepo) != 0) IgnoreRepoWords(code, startWord);
-					return DataType.Variant;
-				#endregion
-
-				#region oleobject
-				case "oleobject":
-					if ((flags & ParseFlag.FromRepo) != 0) IgnoreRepoWords(code, startWord);
-					return DataType.OleObject;
-				#endregion
-
-				#region Boolean_t
-				case "Boolean_t":
-					if ((flags & ParseFlag.FromRepo) != 0) IgnoreRepoWords(code, startWord);
-					return DataType.Boolean_t;
-				#endregion
-
-				default:
-					if (dataTypeCallback != null)
-					{
-						var def = dataTypeCallback(code.TokenText);
-						if (def != null) return !string.IsNullOrEmpty(typeName) ? def.DataType.CloneWithNewName(typeName) : def.DataType;
-					}
-					code.Position = code.TokenStartPostion;
-					return null;
+				return new DataType(string.Concat("like ", word1));
 			}
+			else return null;
+		}
+
+		private static DataType ProcessSection(ParseArgs args)
+		{
+			var sb = new StringBuilder();
+			sb.Append("Section");
+
+			var code = args.Code;
+
+			if (code.ReadExact("Level"))
+			{
+				sb.Append(" Level");
+				if (code.ReadNumber())
+				{
+					sb.Append(' ');
+					sb.Append(code.TokenText);
+				}
+			}
+
+			return new DataType(sb.ToString());
+		}
+
+		private static DataType ProcessScroll(ParseArgs args)
+		{
+			var sb = new StringBuilder();
+			sb.Append("scroll");
+
+			if (args.Code.ReadNumber())
+			{
+				sb.Append(' ');
+				sb.Append(args.Code.TokenText);
+			}
+
+			return new DataType(sb.ToString());
+		}
+
+		private static DataType ProcessGraphic(ParseArgs args)
+		{
+			var sb = new StringBuilder();
+			sb.Append("graphic");
+
+			if (args.Code.ReadNumber())	// rows
+			{
+				sb.Append(' ');
+				sb.Append(args.Code.TokenText);
+
+				if (args.Code.ReadNumber())	// columns
+				{
+					sb.Append(' ');
+					sb.Append(args.Code.TokenText);
+
+					if (args.Code.ReadNumber())	// bytes
+					{
+						sb.Append(' ');
+						sb.Append(args.Code.TokenText);
+					}
+				}
+			}
+
+			return new DataType(sb.ToString());
+		}
+
+		private static DataType ProcessInterface(ParseArgs args)
+		{
+			var sb = new StringBuilder();
+			sb.Append("interface");
+
+			var code = args.Code;
+
+			if ((args.Flags & ParseFlag.InterfaceType) == 0)
+			{
+				if (code.ReadWord())
+				{
+					sb.Append(' ');
+					sb.Append(code.TokenText);
+
+					var completionOptions = new List<Definition>();
+					Definition[] methods = null;
+					Definition[] properties = null;
+
+					var intType = ProbeEnvironment.GetInterfaceType(code.TokenText);
+					if (intType != null)
+					{
+						methods = intType.MethodDefinitions.ToArray();
+						completionOptions.AddRange(methods);
+						properties = intType.PropertyDefinitions.ToArray();
+						completionOptions.AddRange(properties);
+					}
+
+					return new DataType(sb.ToString())
+					{
+						_completionOptions = completionOptions.ToArray(),
+						_completionOptionsType = CompletionOptionsType.List,
+						_methods = methods,
+						_properties = properties
+					};
+				}
+			}
+			else
+			{
+				// Parsing the text from a WBDK interface, which could contain .NET or COM specific formatting.
+
+				if (code.ReadWord())
+				{
+					sb.Append(' ');
+					sb.Append(code.TokenText);
+
+					while (code.ReadExact('.'))
+					{
+						sb.Append('.');
+						if (code.ReadWord()) sb.Append(code.TokenText);
+						else break;
+					}
+
+					if (code.ReadExact('*'))
+					{
+						sb.Append('*');
+					}
+					else if (code.ReadExact('&'))
+					{
+						sb.Append('&');
+					}
+					else if (code.ReadExact('['))
+					{
+						sb.Append('[');
+						if (code.ReadExact(']')) sb.Append(']');
+					}
+				}
+			}
+
+			return new DataType(sb.ToString());
 		}
 
 		private static bool ReadAttribute(TokenParser.Parser code, StringBuilder sb, params string[] extraTokens)

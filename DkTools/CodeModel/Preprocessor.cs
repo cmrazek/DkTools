@@ -835,7 +835,11 @@ namespace DkTools.CodeModel
 				if (_paramNames == null)
 				{
 					var parser = new TokenParser.Parser(_content);
-					var dataType = DataType.Parse(parser, _name, null, null);
+					var dataType = DataType.Parse(new DataType.ParseArgs
+					{
+						Code = parser,
+						TypeName = _name
+					});
 					if (dataType != null)
 					{
 						// If the data type does not consume the entire string, then this is not a data type definition.

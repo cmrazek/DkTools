@@ -167,7 +167,12 @@ namespace DkTools.CodeModel
 
 		private void AfterRootStatic(int startPos)
 		{
-			var dataType = DataType.Parse(_code, null, GlobalDataTypeCallback, GlobalVariableCallback);
+			var dataType = DataType.Parse(new DataType.ParseArgs
+			{
+				Code = _code,
+				DataTypeCallback = GlobalDataTypeCallback,
+				VariableCallback = GlobalVariableCallback
+			});
 			if (dataType != null)
 			{
 				AfterRootDataType(dataType, startPos, FunctionPrivacy.Public, false);
@@ -184,7 +189,12 @@ namespace DkTools.CodeModel
 		private void AfterRootExtern(int startPos)
 		{
 			var dataTypeStartPos = _code.Position;
-			var dataType = DataType.Parse(_code, null, GlobalDataTypeCallback, GlobalVariableCallback);
+			var dataType = DataType.Parse(new DataType.ParseArgs
+			{
+				Code = _code,
+				DataTypeCallback = GlobalDataTypeCallback,
+				VariableCallback = GlobalVariableCallback
+			});
 			if (dataType != null)
 			{
 				AfterRootDataType(dataType, dataTypeStartPos, FunctionPrivacy.Public, true);
@@ -221,7 +231,12 @@ namespace DkTools.CodeModel
 		{
 			_code.SkipWhiteSpaceAndCommentsIfAllowed();
 			var dataTypeStartPos = _code.Position;
-			var dataType = DataType.Parse(_code, null, GlobalDataTypeCallback, GlobalVariableCallback);
+			var dataType = DataType.Parse(new DataType.ParseArgs
+			{
+				Code = _code,
+				DataTypeCallback = GlobalDataTypeCallback,
+				VariableCallback = GlobalVariableCallback
+			});
 			if (dataType != null)
 			{
 				AfterRootDataType(dataType, dataTypeStartPos, privacy, false);
@@ -255,7 +270,12 @@ namespace DkTools.CodeModel
 		{
 			_code.SkipWhiteSpaceAndCommentsIfAllowed();
 			var pos = _code.Position;
-			var dataType = DataType.Parse(_code, null, GlobalDataTypeCallback, GlobalVariableCallback);
+			var dataType = DataType.Parse(new DataType.ParseArgs
+			{
+				Code = _code,
+				DataTypeCallback = GlobalDataTypeCallback,
+				VariableCallback = GlobalVariableCallback
+			});
 			if (dataType != null)
 			{
 				dataTypeOut = dataType;
@@ -546,7 +566,12 @@ namespace DkTools.CodeModel
 
 		private bool TryReadFunctionArgument(CodeScope scope, bool createDefinitions, List<Definition> newDefList)
 		{
-			var dataType = DataType.Parse(_code, null, GlobalDataTypeCallback, GlobalVariableCallback);
+			var dataType = DataType.Parse(new DataType.ParseArgs
+			{
+				Code = _code,
+				DataTypeCallback = GlobalDataTypeCallback,
+				VariableCallback = GlobalVariableCallback
+			});
 			if (dataType == null) return false;
 
 			_code.ReadExact("&");	// Optional reference
@@ -572,7 +597,12 @@ namespace DkTools.CodeModel
 
 		private bool TryReadVariableDeclaration(CodeScope scope, List<Definition> newDefList)
 		{
-			var dataType = DataType.Parse(_code, null, GlobalDataTypeCallback, GlobalVariableCallback);
+			var dataType = DataType.Parse(new DataType.ParseArgs
+			{
+				Code = _code,
+				DataTypeCallback = GlobalDataTypeCallback,
+				VariableCallback = GlobalVariableCallback
+			});
 			if (dataType == null) return false;
 
 			var gotVars = false;
