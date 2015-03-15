@@ -16,40 +16,42 @@ namespace DkTools.CodeModel
 		private CompletionOptionsType _completionOptionsType;
 		private Definition[] _methods;
 		private Definition[] _properties;
+		private ValType _valueType;
 
-		private enum CompletionOptionsType
+		public enum CompletionOptionsType
 		{
 			None,
-			List,
+			EnumOptionsList,
 			Tables,
-			RelInds
+			RelInds,
+			InterfaceMembers
 		}
 
-		public static readonly DataType Boolean_t = new DataType("Boolean_t")
+		public static readonly DataType Boolean_t = new DataType(ValType.Enum, "Boolean_t")
 		{
-			_completionOptionsType = CompletionOptionsType.List,
+			_completionOptionsType = CompletionOptionsType.EnumOptionsList,
 			_completionOptions = new Definition[]
 			{
 				new EnumOptionDefinition("TRUE"),
 				new EnumOptionDefinition("FALSE")
 			}
 		};
-		public static readonly DataType Char = new DataType("char");
-		public static readonly DataType Char255 = new DataType("char(255)");
-		public static readonly DataType Command = new DataType("command");
-		public static readonly DataType Date = new DataType("date");
-		public static readonly DataType Enum = new DataType("enum");
-		public static readonly DataType IndRel = new DataType("indrel") { _completionOptionsType = CompletionOptionsType.RelInds };
-		public static readonly DataType Int = new DataType("int");
-		public static readonly DataType Numeric = new DataType("numeric");
-		public static readonly DataType OleObject = new DataType("oleobject");
-		public static readonly DataType String = new DataType("string");
-		public static readonly DataType StringVarying = new DataType("string varying");
-		public static readonly DataType Table = new DataType("table") { _completionOptionsType = CompletionOptionsType.Tables };
-		public static readonly DataType Ulong = new DataType("ulong");
-		public static readonly DataType Unsigned = new DataType("unsigned");
-		public static readonly DataType Variant = new DataType("variant");
-		public static readonly DataType Void = new DataType("void");
+		public static readonly DataType Char = new DataType(ValType.Char, "char");
+		public static readonly DataType Char255 = new DataType(ValType.String, "char(255)");
+		public static readonly DataType Command = new DataType(ValType.Command, "command");
+		public static readonly DataType Date = new DataType(ValType.Date, "date");
+		public static readonly DataType Enum = new DataType(ValType.Enum, "enum");
+		public static readonly DataType IndRel = new DataType(ValType.IndRel, "indrel") { _completionOptionsType = CompletionOptionsType.RelInds };
+		public static readonly DataType Int = new DataType(ValType.Numeric, "int");
+		public static readonly DataType Numeric = new DataType(ValType.Numeric, "numeric");
+		public static readonly DataType OleObject = new DataType(ValType.Interface, "oleobject");
+		public static readonly DataType String = new DataType(ValType.String, "string");
+		public static readonly DataType StringVarying = new DataType(ValType.String, "string varying");
+		public static readonly DataType Table = new DataType(ValType.Table, "table") { _completionOptionsType = CompletionOptionsType.Tables };
+		public static readonly DataType Ulong = new DataType(ValType.Numeric, "ulong");
+		public static readonly DataType Unsigned = new DataType(ValType.Numeric, "unsigned");
+		public static readonly DataType Variant = new DataType(ValType.Interface, "variant");
+		public static readonly DataType Void = new DataType(ValType.Void, "void");
 
 		public delegate DataTypeDefinition GetDataTypeDelegate(string name);
 		public delegate VariableDefinition GetVariableDelegate(string name);
@@ -58,8 +60,9 @@ namespace DkTools.CodeModel
 		/// Creates a new data type object.
 		/// </summary>
 		/// <param name="name">The name or visible text of the data type. This will also be used as the info text.</param>
-		public DataType(string name)
+		public DataType(ValType valueType, string name)
 		{
+			_valueType = valueType;
 			_name = name;
 			_infoText = name;
 		}
@@ -70,8 +73,10 @@ namespace DkTools.CodeModel
 		/// <param name="name">(required) name of the data type</param>
 		/// <param name="infoText">(required) Help text to be displayed to the user.</param>
 		/// <param name="sourceToken">(optional) The token that created the data type.</param>
-		public DataType(string name, string infoText)
+		public DataType(ValType valueType, string name, string infoText)
 		{
+			_valueType = valueType;
+
 			if (!string.IsNullOrEmpty(name) && !string.IsNullOrEmpty(infoText))
 			{
 				_name = name;
@@ -95,26 +100,28 @@ namespace DkTools.CodeModel
 		/// <param name="completionOptions">(optional) A list of hardcoded options for this data type.</param>
 		/// <param name="infoText">(required) Help text to be displayed to the user.</param>
 		/// <param name="sourceToken">(optional) The token that created the data type.</param>
-		public DataType(string name, IEnumerable<Definition> completionOptions, string infoText)
+		public DataType(ValType valueType, string name, IEnumerable<Definition> completionOptions, CompletionOptionsType optionsType, string infoText)
 		{
+			_valueType = valueType;
 			_name = name;
 			_infoText = infoText;
 
 			if (completionOptions != null)
 			{
 				_completionOptions = completionOptions.ToArray();
-				if (_completionOptions.Length > 0) _completionOptionsType = CompletionOptionsType.List;
+				if (_completionOptions.Length > 0) _completionOptionsType = optionsType;
 			}
 		}
 
-		public static DataType FromString(string str)
-		{
-			return new DataType(str, str);
-		}
+		// TODO: remove
+		//public static DataType FromString(string str)
+		//{
+		//	return new DataType(str, str);
+		//}
 
 		public DataType CloneWithNewName(string newName)
 		{
-			return new DataType(newName, _infoText)
+			return new DataType(_valueType, newName, _infoText)
 			{
 				_completionOptions = _completionOptions,
 				_completionOptionsType = _completionOptionsType
@@ -138,7 +145,7 @@ namespace DkTools.CodeModel
 			{
 				switch (_completionOptionsType)
 				{
-					case CompletionOptionsType.List:
+					case CompletionOptionsType.EnumOptionsList:
 						if (_completionOptions != null)
 						{
 							foreach (var opt in _completionOptions) yield return opt;
@@ -201,7 +208,7 @@ namespace DkTools.CodeModel
 			/// <summary>
 			/// (optional) An ErrorProvider to receive errors detected by this parsing function.
 			/// </summary>
-			ErrorTagging.ErrorProvider ErrorProvider { get; set; }
+			public ErrorTagging.ErrorProvider ErrorProvider { get; set; }
 #endif
 		}
 
@@ -371,7 +378,7 @@ namespace DkTools.CodeModel
 					}
 				}
 				if (code.ReadExact(')')) sb.Append(')');
-				else return new DataType(sb.ToString());
+				else return new DataType(ValType.Numeric, sb.ToString());
 			}
 
 			var done = false;
@@ -388,7 +395,7 @@ namespace DkTools.CodeModel
 				else break;
 			}
 
-			return new DataType(sb.ToString());
+			return new DataType(ValType.Numeric, sb.ToString());
 		}
 
 		private static DataType ProcessSignedUnsigned(ParseArgs args, string tokenText)
@@ -420,7 +427,7 @@ namespace DkTools.CodeModel
 					}
 				}
 				if (code.ReadExact(')')) sb.Append(')');
-				else return new DataType(sb.ToString());
+				else return new DataType(ValType.Numeric, sb.ToString());
 			}
 
 			if (code.ReadExact("int")) sb.Append(" int");
@@ -441,7 +448,7 @@ namespace DkTools.CodeModel
 				else break;
 			}
 
-			return new DataType(sb.ToString());
+			return new DataType(ValType.Numeric, sb.ToString());
 		}
 
 		private static DataType ProcessInt(ParseArgs args, string tokenText)
@@ -466,7 +473,7 @@ namespace DkTools.CodeModel
 				if (!ReadAttribute(code, sb)) break;
 			}
 
-			return new DataType(sb.ToString());
+			return new DataType(ValType.Numeric, sb.ToString());
 		}
 
 		private static DataType ProcessChar(ParseArgs args, string tokenText)
@@ -480,7 +487,7 @@ namespace DkTools.CodeModel
 				sb.Append('(');
 				sb.Append(code.TokenText);
 				if (code.ReadExact(')')) sb.Append(')');
-				else return new DataType(sb.ToString());
+				else return new DataType(ValType.String, sb.ToString());
 
 				var done = false;
 				var gotMask = false;
@@ -496,11 +503,11 @@ namespace DkTools.CodeModel
 					else break;
 				}
 
-				return new DataType(sb.ToString());
+				return new DataType(ValType.String, sb.ToString());
 			}
 			else
 			{
-				return new DataType(tokenText);
+				return new DataType(ValType.String, tokenText);
 			}
 		}
 
@@ -532,7 +539,7 @@ namespace DkTools.CodeModel
 				else break;
 			}
 
-			return new DataType(sb.ToString());
+			return new DataType(ValType.String, sb.ToString());
 		}
 
 		private static DataType ProcessDate(ParseArgs args, string tokenText)
@@ -562,7 +569,7 @@ namespace DkTools.CodeModel
 				else break;
 			}
 
-			return new DataType(sb.ToString());
+			return new DataType(ValType.Date, sb.ToString());
 		}
 
 		private static DataType ProcessTime(ParseArgs args, string tokenText)
@@ -585,7 +592,7 @@ namespace DkTools.CodeModel
 				else break;
 			}
 
-			return new DataType(sb.ToString());
+			return new DataType(ValType.Time, sb.ToString());
 		}
 
 		private static DataType ProcessEnum(ParseArgs args)
@@ -608,7 +615,7 @@ namespace DkTools.CodeModel
 					sb.Append(code.TokenText);
 					gotWidth = true;
 				}
-				else return new DataType(sb.ToString());
+				else return new DataType(ValType.Enum, sb.ToString());
 			}
 
 			// Read the option list
@@ -651,7 +658,7 @@ namespace DkTools.CodeModel
 					if (!code.Read())
 					{
 #if REPORT_ERRORS
-									if (errorProv != null) errorProv.ReportError(code, code.TokenSpan, ErrorTagging.ErrorCode.Enum_UnexpectedEndOfFile);
+						if (args.ErrorProvider != null) args.ErrorProvider.ReportError(code, code.TokenSpan, ErrorTagging.ErrorCode.Enum_UnexpectedEndOfFile);
 #endif
 						break;
 					}
@@ -664,7 +671,7 @@ namespace DkTools.CodeModel
 							if (!expectingComma)
 							{
 #if REPORT_ERRORS
-											if (errorProv != null) errorProv.ReportError(code, code.TokenSpan, ErrorTagging.ErrorCode.Enum_UnexpectedComma);
+								if (args.ErrorProvider != null) args.ErrorProvider.ReportError(code, code.TokenSpan, ErrorTagging.ErrorCode.Enum_UnexpectedComma);
 #endif
 							}
 							else
@@ -679,13 +686,13 @@ namespace DkTools.CodeModel
 						if (expectingComma)
 						{
 #if REPORT_ERRORS
-										if (errorProv != null) errorProv.ReportError(code, code.TokenSpan, ErrorTagging.ErrorCode.Enum_NoComma);
+							if (args.ErrorProvider != null) args.ErrorProvider.ReportError(code, code.TokenSpan, ErrorTagging.ErrorCode.Enum_NoComma);
 #endif
 						}
 						else if (options.Any(x => x.Name == str))
 						{
 #if REPORT_ERRORS
-										if (errorProv != null) errorProv.ReportError(code, code.TokenSpan, ErrorTagging.ErrorCode.Enum_DuplicateOption, str);
+							if (args.ErrorProvider != null) args.ErrorProvider.ReportError(code, code.TokenSpan, ErrorTagging.ErrorCode.Enum_DuplicateOption, str);
 #endif
 						}
 						else
@@ -729,10 +736,10 @@ namespace DkTools.CodeModel
 			}
 			sb.Append(" }");
 
-			return new DataType(sb.ToString())
+			return new DataType(ValType.Enum, sb.ToString())
 			{
 				_completionOptions = options.ToArray(),
-				_completionOptionsType = CompletionOptionsType.List
+				_completionOptionsType = CompletionOptionsType.EnumOptionsList
 			};
 		}
 
@@ -756,11 +763,11 @@ namespace DkTools.CodeModel
 							if (field != null) return field.DataType;
 						}
 
-						return new DataType(string.Concat("like ", word1, ".", word2));
+						return new DataType(ValType.Unknown, string.Concat("like ", word1, ".", word2));
 					}
 					else
 					{
-						return new DataType(string.Concat("like ", word1, "."));
+						return new DataType(ValType.Unknown, string.Concat("like ", word1, "."));
 					}
 				}
 
@@ -770,7 +777,7 @@ namespace DkTools.CodeModel
 					if (def != null) return def.DataType;
 				}
 
-				return new DataType(string.Concat("like ", word1));
+				return new DataType(ValType.Unknown, string.Concat("like ", word1));
 			}
 			else return null;
 		}
@@ -792,7 +799,7 @@ namespace DkTools.CodeModel
 				}
 			}
 
-			return new DataType(sb.ToString());
+			return new DataType(ValType.Section, sb.ToString());
 		}
 
 		private static DataType ProcessScroll(ParseArgs args)
@@ -806,7 +813,7 @@ namespace DkTools.CodeModel
 				sb.Append(args.Code.TokenText);
 			}
 
-			return new DataType(sb.ToString());
+			return new DataType(ValType.Scroll, sb.ToString());
 		}
 
 		private static DataType ProcessGraphic(ParseArgs args)
@@ -832,7 +839,7 @@ namespace DkTools.CodeModel
 				}
 			}
 
-			return new DataType(sb.ToString());
+			return new DataType(ValType.Graphic, sb.ToString());
 		}
 
 		private static DataType ProcessInterface(ParseArgs args)
@@ -862,10 +869,10 @@ namespace DkTools.CodeModel
 						completionOptions.AddRange(properties);
 					}
 
-					return new DataType(sb.ToString())
+					return new DataType(ValType.Interface, sb.ToString())
 					{
 						_completionOptions = completionOptions.ToArray(),
-						_completionOptionsType = CompletionOptionsType.List,
+						_completionOptionsType = CompletionOptionsType.InterfaceMembers,
 						_methods = methods,
 						_properties = properties
 					};
@@ -903,7 +910,7 @@ namespace DkTools.CodeModel
 				}
 			}
 
-			return new DataType(sb.ToString());
+			return new DataType(ValType.Interface, sb.ToString());
 		}
 
 		private static bool ReadAttribute(TokenParser.Parser code, StringBuilder sb, params string[] extraTokens)
@@ -1091,5 +1098,28 @@ namespace DkTools.CodeModel
 			}
 		}
 #endif
+
+		public bool HasEnumOptions
+		{
+			get { return _completionOptionsType == CompletionOptionsType.EnumOptionsList; }
+		}
+
+		public bool IsValidEnumOption(string optionText)
+		{
+			if (_completionOptionsType != CompletionOptionsType.EnumOptionsList) return false;
+			if (_completionOptions == null) return false;
+
+			foreach (var opt in _completionOptions)
+			{
+				if (opt.Name == optionText) return true;
+			}
+
+			return false;
+		}
+
+		public ValType ValueType
+		{
+			get { return _valueType; }
+		}
 	}
 }

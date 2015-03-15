@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using DkTools.CodeModel;
 
 namespace DkTools.Dict
 {
@@ -29,11 +30,21 @@ namespace DkTools.Dict
 					completionList.Add(new CodeModel.Definitions.EnumOptionDefinition(opt));
 				}
 
-				_dataType = new CodeModel.DataType(_name, completionList.ToArray(), data.TypeText[0]);
+				_dataType = new CodeModel.DataType(CodeModel.ValType.Enum, _name, completionList.ToArray(), CodeModel.DataType.CompletionOptionsType.EnumOptionsList, data.TypeText[0]);
 			}
 			else
 			{
-				_dataType = new CodeModel.DataType(_name, data.TypeText[0]);
+				var dataTypeText = data.TypeText[0];
+				_dataType = DataType.Parse(new CodeModel.DataType.ParseArgs
+				{
+					Code = new TokenParser.Parser(dataTypeText),
+					Flags = CodeModel.DataType.ParseFlag.FromRepo
+				});
+				if (_dataType == null)
+				{
+					Log.WriteDebug("Failed to parse typedef data type: {0}", dataTypeText);
+					_dataType = new CodeModel.DataType(ValType.Unknown, _name, dataTypeText);
+				}
 			}
 
 			_def = new CodeModel.Definitions.DataTypeDefinition(_name, _dataType, global: true);

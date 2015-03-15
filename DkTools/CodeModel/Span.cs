@@ -19,6 +19,12 @@ namespace DkTools.CodeModel
 			_end = end;
 		}
 
+		public Span(Span startSpan, Span endSpan)
+		{
+			_start = startSpan._start;
+			_end = endSpan._end;
+		}
+
 		public int Start
 		{
 			get { return _start; }

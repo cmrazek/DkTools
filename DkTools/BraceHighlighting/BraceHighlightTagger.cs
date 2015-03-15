@@ -65,6 +65,15 @@ namespace DkTools.BraceHighlighting
 			Update(snapshotPoint.Value, null);
 
 			_wordSelectDeferrer.OnActivity(snapshotPoint.Value);
+
+#if REPORT_ERRORS
+			// Tell the error tagger not to perform analysis because the user is still moving around the document.
+			ErrorTagging.ErrorTagger errorTagger;
+			if (_view.Properties.TryGetProperty<ErrorTagging.ErrorTagger>(typeof(ErrorTagging.ErrorTagger), out errorTagger))
+			{
+				errorTagger.AnalysisDeferrer.OnActivity();
+			}
+#endif
 		}
 
 		public IEnumerable<ITagSpan<BraceHighlightTag>> GetTags(NormalizedSnapshotSpanCollection spans)

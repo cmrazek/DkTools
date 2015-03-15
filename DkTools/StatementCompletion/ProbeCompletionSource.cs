@@ -431,8 +431,8 @@ namespace DkTools.StatementCompletion
 				var model = fileStore.GetMostRecentModel(_textBuffer.CurrentSnapshot, "Auto-completion after return");
 				var modelPos = completionSpan.Start.TranslateTo(model.Snapshot, PointTrackingMode.Positive);
 
-				var funcDef = model.PreprocessorModel.LocalFunctions.FirstOrDefault(f => f.EntireSpan.Contains(modelPos));
-				var dataType = funcDef.DataType;
+				var funcDef = model.PreprocessorModel.LocalFunctions.FirstOrDefault(f => f.Definition.EntireSpan.Contains(modelPos));
+				var dataType = funcDef.Definition.DataType;
 				if (dataType != null)
 				{
 					foreach (var opt in dataType.CompletionOptions)

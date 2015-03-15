@@ -53,7 +53,7 @@ namespace DkTools.CodeModel
 					new FunctionDefinition("SetMessage", DataType.Int, "int SetMessage(MessageControlString, expressions ...)",
 						"Writes to the error message buffer. CAM displays the contents of that buffer when a trigger encounters an error. In code, you can read that buffer using the getmsg function.\r\n\r\n" +
 						"Provides similar functionality to setmsg, but allows you to maintain one source code for all languages (with one set of resource files per language)."),
-					new FunctionDefinition("STRINGIZE", DataType.FromString("char(255)"), "STRINGIZE(x)",
+					new FunctionDefinition("STRINGIZE", DataType.Char255, "STRINGIZE(x)",
 						"Converts macro parameters to strings."),
 					new FunctionDefinition("sum", DataType.Void, "sum( expression, where expression, group TableName.ColumnName | all, in SelectName )",
 						"Calculates the running total of an expression for a set of rows in a select statement."),

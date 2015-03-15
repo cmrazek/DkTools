@@ -75,11 +75,19 @@ namespace DkTools.FunctionFileScanning
 			if (!Convert.IsDBNull(optionsValue))
 			{
 				var options = (from o in rdr.GetString(rdr.GetOrdinal("completion_options")).Split('|') select new CodeModel.Definitions.EnumOptionDefinition(o)).ToArray();
-				_dataType = new CodeModel.DataType(dataTypeText, options, dataTypeText);
+				_dataType = new CodeModel.DataType(ValType.Enum, dataTypeText, options, CodeModel.DataType.CompletionOptionsType.EnumOptionsList, dataTypeText);
 			}
 			else
 			{
-				_dataType = new CodeModel.DataType(dataTypeText);
+				_dataType = DataType.Parse(new DataType.ParseArgs
+				{
+					Code = new TokenParser.Parser(dataTypeText)
+				});
+				if (_dataType == null)
+				{
+					Log.WriteDebug("Failed to parse data type from database: {0}", dataTypeText);
+					_dataType = new CodeModel.DataType(ValType.Unknown, dataTypeText);
+				}
 			}
 
 			var devDescValue = rdr["description"];
@@ -108,11 +116,19 @@ namespace DkTools.FunctionFileScanning
 			if (!Convert.IsDBNull(optionsValue))
 			{
 				var options = (from o in rdr.GetString(rdr.GetOrdinal("completion_options")).Split('|') select new CodeModel.Definitions.EnumOptionDefinition(o)).ToArray();
-				dataType = new CodeModel.DataType(dataTypeText, options, dataTypeText);
+				dataType = new CodeModel.DataType(ValType.Enum, dataTypeText, options, DataType.CompletionOptionsType.EnumOptionsList, dataTypeText);
 			}
 			else
 			{
-				dataType = new CodeModel.DataType(dataTypeText);
+				dataType = DataType.Parse(new DataType.ParseArgs
+				{
+					Code = new TokenParser.Parser(dataTypeText)
+				});
+				if (dataType == null)
+				{
+					Log.WriteDebug("Failed to parse data type from database: {0}", dataTypeText);
+					dataType = new CodeModel.DataType(ValType.Unknown, dataTypeText);
+				}
 			}
 
 			var sig = rdr.GetString(rdr.GetOrdinal("sig"));

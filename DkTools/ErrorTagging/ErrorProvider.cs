@@ -19,6 +19,16 @@ namespace DkTools.ErrorTagging
 
 		public void ReportError(TokenParser.Parser parser, CodeModel.Span span, ErrorCode code, params object[] args)
 		{
+			if (parser.DocumentOffset != 0)
+			{
+				span = new CodeModel.Span(span.Start + parser.DocumentOffset, span.End + parser.DocumentOffset);
+			}
+
+			ReportError(span, code, args);
+		}
+
+		public void ReportError(CodeModel.Span span, ErrorCode code, params object[] args)
+		{
 			var message = GetErrorCodeDescription(code);
 			if (!string.IsNullOrEmpty(message))
 			{
@@ -32,17 +42,12 @@ namespace DkTools.ErrorTagging
 				message = "(unknown)";
 			}
 
-			if (parser.DocumentOffset != 0)
-			{
-				span = new CodeModel.Span(span.Start + parser.DocumentOffset, span.End + parser.DocumentOffset);
-			}
-
 			var err = new ErrorInfo(code, message, span);
 
 			var ev = ErrorReported;
 			if (ev != null)
 			{
-				var evArgs = new ErrorReportedEventArgs(parser, span, code, message);
+				var evArgs = new ErrorReportedEventArgs(span, code, message);
 				ev(this, evArgs);
 				err.Code = evArgs.Code;
 				err.Message = evArgs.Message;
@@ -77,26 +82,24 @@ namespace DkTools.ErrorTagging
 		{
 			get { return _errors; }
 		}
+
+		public int ErrorCount
+		{
+			get { return _errors.Count; }
+		}
 	}
 
 	internal class ErrorReportedEventArgs : EventArgs
 	{
-		private TokenParser.Parser _parser;
 		private CodeModel.Span _span;
 		private ErrorCode _code;
 		private string _message;
 
-		public ErrorReportedEventArgs(TokenParser.Parser parser, CodeModel.Span span, ErrorCode code, string message)
+		public ErrorReportedEventArgs(CodeModel.Span span, ErrorCode code, string message)
 		{
-			_parser = parser;
 			_span = span;
 			_code = code;
 			_message = message;
-		}
-
-		public TokenParser.Parser Parser
-		{
-			get { return _parser; }
 		}
 
 		public CodeModel.Span Span

@@ -21,7 +21,8 @@ namespace DkTools.ErrorTagging
 		{
 			if (textView.TextBuffer != buffer) return null;
 
-			return new ErrorTagger(textView) as ITagger<T>;
+			Func<ErrorTagger> creator = () => { return new ErrorTagger(textView); };
+			return textView.Properties.GetOrCreateSingletonProperty<ErrorTagger>(creator) as ITagger<T>;
 		}
 	}
 }

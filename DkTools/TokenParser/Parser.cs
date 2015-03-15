@@ -263,7 +263,7 @@ namespace DkTools.TokenParser
 					return true;
 				}
 
-				if (ch == '?' || ch == ':' || ch == ',' || ch == '.' || ch == '(' || ch == ')' || ch == '{' || ch == '}' || ch == '[' || ch == ']' || ch == '^' || ch == '!')
+				if (ch == '?' || ch == ':' || ch == ',' || ch == '.' || ch == '(' || ch == ')' || ch == '{' || ch == '}' || ch == '[' || ch == ']' || ch == '^' || ch == '!' || ch == ';')
 				{
 					_tokenText.Append(ch);
 					_pos++;
@@ -519,6 +519,11 @@ namespace DkTools.TokenParser
 		{
 			if (startIndex < 0 || startIndex + length > _length) throw new ArgumentOutOfRangeException();
 			return _source.Substring(startIndex, length);
+		}
+
+		public string Text
+		{
+			get { return _source; }
 		}
 
 		public bool Peek()

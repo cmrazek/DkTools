@@ -1,4 +1,5 @@
-﻿using System;
+﻿#if REPORT_ERRORS
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
@@ -166,5 +167,104 @@ namespace DkTools.ErrorTagging
 		[Description("Unexpected '{0}'.")]
 		ColDef_UnknownAttribute,
 		#endregion
+
+		#region Dot Separated Words
+		[Description("'{0}.{1}' does not exist.")]
+		DotSepWords_NotFound,
+
+		[Description("Table '{0}' has no column '{1}'.")]
+		DotSepWords_TableFieldNotFound,
+
+		[Description("Expected identifier to follow '{0}.'")]
+		DotSepWords_NoWord2,
+		#endregion
+
+		#region Functions
+		[Description("Unable to continue analyzing due to a parsing error.")]
+		Func_InfiniteLoop,
+
+		[Description("Invalid '{0}'.")]
+		Func_InvalidToken,
+		#endregion
+
+		#region Statements
+		[Description("'{0}' does not exist.")]
+		Stmt_WordNotFound,
+
+		[Description("Function is not closed.")]
+		Stmt_UnclosedFunction,
+
+		[Description("Function '{0}' does not exist.")]
+		Stmt_FunctionNotFound,
+
+		[Description("Unknown '{0}'.")]
+		Stmt_UnknownToken,
+
+		//[Description("Expected '(' to follow function name '{0}'.")]
+		//Stmt_FunctionWithoutFollowingBracket,
+
+		[Description("Empty statement.")]
+		Stmt_Empty,
+
+		[Description("Statement not terminated with ';'.")]
+		Stmt_NotComplete,
+
+		//[Description("Unbalanced '{0}'.")]
+		//Stmt_UnbalancedClosedBracket,	// TODO: remove
+
+		[Description("'{' requires preceding control statement (e.g. 'if')")]
+		Stmt_OpenBraceAlone,
+
+		[Description("'{0}' is not valid here.")]
+		Stmt_InvalidOperator,
+
+		[Description("'{0}' is not closed.")]
+		Stmt_BracketNotClosed,
+		#endregion
+
+		#region If Statements
+		[Description("Expected '{' to follow 'if' and condition statements.")]
+		If_ConditionNotComplete,
+
+		[Description("'if' body is not complete.")]
+		If_MainBodyNotComplete,
+
+		[Description("'if-else' body is not complete.")]
+		If_ElseBodyNotComplete,
+
+		[Description("Expected '{' to follow 'else'.")]
+		If_ElseNotComplete,
+		#endregion
+
+		#region Function Calls
+		[Description("Argument list is not complete.")]
+		FuncCall_ArgsNotComplete,
+		#endregion
+
+		#region Switch Statements
+		[Description("Expected '{' to follow 'switch' and condition statements.")]
+		Switch_ConditionNotComplete,
+
+		[Description("Expected 'case' or 'default'.")]
+		Switch_NoCaseOrDefault,
+
+		[Description("'switch' body is not complete.")]
+		Switch_BodyNotComplete,
+
+		[Description("Expected ':' to follow '{0}'.")]
+		Switch_CaseValueNotComplete,
+
+		[Description("Duplicate 'default'.")]
+		Switch_DuplicateDefault,
+
+		[Description("Switch body must begin with 'case' or 'default'.")]
+		Switch_BodyDoesNotStartWithCaseOrDefault,
+		#endregion
+
+		#region Return Statements
+		[Description("'return' statement does not end with ';'.")]
+		Return_NotComplete,
+		#endregion
 	}
 }
+#endif

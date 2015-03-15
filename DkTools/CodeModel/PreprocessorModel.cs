@@ -5,8 +5,10 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using DkTools.CodeModel.Definitions;
-using DkTools.ErrorTagging;
 using DkTools.CodeModel.Tokens;
+#if REPORT_ERRORS
+using DkTools.ErrorTagging;
+#endif
 
 namespace DkTools.CodeModel
 {
@@ -19,7 +21,7 @@ namespace DkTools.CodeModel
 		private string _className;
 		private Dictionary<string, VariableDefinition> _globalVars = new Dictionary<string, VariableDefinition>();
 		private Dictionary<string, FunctionDefinition> _externFuncs = new Dictionary<string, FunctionDefinition>();
-		private List<FunctionDefinition> _localFuncs = new List<FunctionDefinition>();
+		private List<LocalFunction> _localFuncs = new List<LocalFunction>();
 		private FileContext _fileContext;
 		private bool _visible;
 		private Preprocessor.IncludeDependency[] _includeDependencies;
@@ -294,7 +296,7 @@ namespace DkTools.CodeModel
 			var localArgStartPos = _source.GetFilePosition(argStartPos);
 			var argScope = new CodeScope(localArgStartPos.Position);
 			int argEndPos = 0;
-			var argDefList = localArgStartPos.PrimaryFile ? new List<Definition>() : null;
+			var argDefList = new List<Definition>();
 
 			// Read the arguments
 			while (true)
@@ -336,11 +338,10 @@ namespace DkTools.CodeModel
 			// Read the variables at the start of the function.
 			var localBodyStartPos = _source.GetFilePosition(bodyStartPos);
 			CodeScope funcScope = null;
-			List<Definition> varList = null;
+			var varList = new List<Definition>();
 			if (localBodyStartPos.PrimaryFile)	// Don't worry about saving variables if this function isn't in this file anyway.
 			{
 				funcScope = new CodeScope(argScope, bodyStartPos);
-				varList = new List<Definition>();
 				while (!_code.EndOfFile)
 				{
 					if (!TryReadVariableDeclaration(funcScope, varList)) break;
@@ -353,11 +354,12 @@ namespace DkTools.CodeModel
 				//}
 			}
 
+			var statementsStartPos = _code.Position;
+
 			ReadFunctionBody();
 			var bodyEndPos = _code.Position;
 
 			var bodyStartLocalPos = _source.GetPrimaryFilePosition(bodyStartPos);
-			//var nameLocalPos = _source.GetPrimaryFilePosition(nameSpan.Start);
 			var nameActualPos = _source.GetFilePosition(nameSpan.Start);
 			var argStartPrimaryPos = _source.GetPrimaryFilePosition(argStartPos);
 			var argEndPrimaryPos = _source.GetPrimaryFilePosition(argEndPos);
@@ -365,18 +367,15 @@ namespace DkTools.CodeModel
 
 			var funcSig = TokenParser.Parser.NormalizeText(_code.GetText(allStartPos, argEndPos - allStartPos));
 			var funcDef = new FunctionDefinition(_className, funcName, nameActualPos.FileName, nameActualPos.Position, returnDataType, funcSig, argStartPrimaryPos, argEndPrimaryPos, bodyStartLocalPos, entireSpan, privacy, isExtern, description);
-			_localFuncs.Add(funcDef);
+			_localFuncs.Add(new LocalFunction(funcDef, nameSpan, statementsStartPos, bodyEndPos, argDefList, varList));
 			AddGlobalDefinition(funcDef);
 
 			// Add the definitions for the argument list
-			if (argDefList != null)
-			{
-				Span argEffect;
-				if (_visible) argEffect = new Span(localArgStartPos.Position, _source.GetPrimaryFilePosition(bodyEndPos));
-				else argEffect = new Span(argStartPos, bodyEndPos);
+			Span argEffect;
+			if (_visible) argEffect = new Span(localArgStartPos.Position, _source.GetPrimaryFilePosition(bodyEndPos));
+			else argEffect = new Span(argStartPos, bodyEndPos);
 
-				_defProv.AddLocal(argEffect, argDefList);
-			}
+			_defProv.AddLocal(argEffect, argDefList);
 
 			// Add the definitions for the declared variables
 			if (varList != null)
@@ -696,7 +695,7 @@ namespace DkTools.CodeModel
 			get { return _globalDefs; }
 		}
 
-		public IEnumerable<FunctionDefinition> LocalFunctions
+		public IEnumerable<LocalFunction> LocalFunctions
 		{
 			get { return _localFuncs; }
 		}
@@ -867,7 +866,7 @@ namespace DkTools.CodeModel
 			count = 0;
 			foreach (var def in _localFuncs)
 			{
-				sb.AppendLine(def.Dump());
+				sb.AppendLine(def.Definition.Dump());
 				count++;
 			}
 			sb.AppendFormat("{0} local func(s)", count);
@@ -1135,7 +1134,14 @@ namespace DkTools.CodeModel
 			var colName = _code.TokenText;
 			var colNameSpan = _code.TokenSpan;
 
-			var dataType = DataType.Parse(_code, dataTypeCallback: GlobalDataTypeCallback, flags: DataType.ParseFlag.Strict, errorProv: _errProv);
+			var dataType = DataType.Parse(new DataType.ParseArgs
+			{
+				Code = _code,
+				DataTypeCallback = GlobalDataTypeCallback,
+				Flags = DataType.ParseFlag.Strict,
+				ErrorProvider = _errProv
+			});
+				//_code, dataTypeCallback: GlobalDataTypeCallback, flags: DataType.ParseFlag.Strict, errorProv: _errProv);
 			if (dataType == null)
 			{
 				ReportError(colNameSpan, ErrorCode.ColDef_NoDataType, colName);
@@ -1299,5 +1305,64 @@ namespace DkTools.CodeModel
 			return gotItem;
 		}
 #endif
+
+		public class LocalFunction
+		{
+			private FunctionDefinition _def;
+			private int _startPos;
+			private int _endPos;
+			private Definition[] _args;
+			private Definition[] _vars;
+			private Span _nameSpan;
+
+			public LocalFunction(FunctionDefinition def, Span nameSpan, int startPos, int endPos, IEnumerable<Definition> args, IEnumerable<Definition> vars)
+			{
+				_def = def;
+				_startPos = startPos;
+				_endPos = endPos;
+				_args = args.ToArray();
+				_vars = vars.ToArray();
+				_nameSpan = nameSpan;
+			}
+
+			public FunctionDefinition Definition
+			{
+				get { return _def; }
+			}
+
+			/// <summary>
+			/// Starting position of the function body after all variable declarations, in preprocessor coordinates.
+			/// </summary>
+			public int StartPos
+			{
+				get { return _startPos; }
+			}
+
+			/// <summary>
+			/// Ending position of the function body, in preprocessor coordinates.
+			/// </summary>
+			public int EndPos
+			{
+				get { return _endPos; }
+			}
+
+			public Definition[] Arguments
+			{
+				get { return _args; }
+			}
+
+			public Definition[] Variables
+			{
+				get { return _vars; }
+			}
+
+			/// <summary>
+			/// Span of the function name, in preprocessor coordinates.
+			/// </summary>
+			public Span NameSpan
+			{
+				get { return _nameSpan; }
+			}
+		}
 	}
 }

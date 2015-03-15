@@ -22,6 +22,9 @@ namespace DkTools.CodeModel
 		private Span[] _disabledSections;
 		private ModelType _modelType;
 		private string _className;
+#if REPORT_ERRORS
+		private Analysis _analysis;
+#endif
 
 		private CodeModel()
 		{ }
@@ -219,6 +222,28 @@ namespace DkTools.CodeModel
 		{
 			get { return _className; }
 		}
+
+#if REPORT_ERRORS
+		public bool PerformCodeAnalysis()
+		{
+			if (_analysis == null)
+			{
+				var analyzer = new Analysis(this);
+				analyzer.Perform();
+				_analysis = analyzer;
+				return true;
+			}
+			else
+			{
+				return false;
+			}
+		}
+
+		public Analysis Analysis
+		{
+			get { return _analysis; }
+		}
+#endif
 	}
 
 	internal enum ModelType

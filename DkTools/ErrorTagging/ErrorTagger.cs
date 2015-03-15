@@ -16,6 +16,7 @@ namespace DkTools.ErrorTagging
 		private ITextView _view;
 		private FileStore _store;
 		private CodeModel.CodeModel _model;
+		private BackgroundDeferrer _analysisDeferrer;
 
 		public const string CodeError = "Code Error";
 
@@ -24,6 +25,10 @@ namespace DkTools.ErrorTagging
 			_view = view;
 			_store = FileStore.GetOrCreateForTextBuffer(_view.TextBuffer);
 			_store.ModelUpdated += OnModelUpdated;
+
+			_analysisDeferrer = new BackgroundDeferrer();
+			_analysisDeferrer.Idle += _analysisDeferrer_Idle;
+			_analysisDeferrer.OnActivity();
 
 			ProbeToolsPackage.Instance.EditorOptions.EditorRefreshRequired += EditorOptions_EditorRefreshRequired;
 		}
@@ -36,15 +41,46 @@ namespace DkTools.ErrorTagging
 
 			if (!ProbeToolsPackage.Instance.EditorOptions.ShowErrors) yield break;
 
-			foreach (var error in _model.PreprocessorModel.ErrorProvider.Errors)
+			// TODO: remove
+			//foreach (var error in _model.PreprocessorModel.ErrorProvider.Errors)
+			//{
+			//	foreach (var span in spans)
+			//	{
+			//		if (span.Contains(error.Span.Start) || span.Contains(error.Span.End))
+			//		{
+			//			var vsSpan = new SnapshotSpan(_model.Snapshot, error.Span.Start, error.Span.Length);
+			//			yield return new TagSpan<ErrorTag>(vsSpan, new ErrorTag(CodeError, error.Message));
+			//			break;
+			//		}
+			//	}
+			//}
+
+			// TODO: remove
+			//// TODO: debug start
+			//var sb = new StringBuilder();
+			//sb.AppendLine("ErrorTagger.GetTags(): Spans:");
+			//foreach (var span in spans) sb.AppendLine("  " + span.ToString());
+			//Log.WriteDebug(sb.ToString());
+			//// TODO: debug end
+
+			var viewSnapshot = _view.TextSnapshot;
+
+			var analysis = _model.Analysis;
+			if (analysis != null)
 			{
-				foreach (var span in spans)
+				foreach (var error in analysis.ErrorProvider.Errors)
 				{
-					if (span.Contains(error.Span.Start) || span.Contains(error.Span.End))
+					var vsSpan = new SnapshotSpan(_model.Snapshot, error.Span.Start, error.Span.Length);
+					if (_model.Snapshot != viewSnapshot) vsSpan = vsSpan.TranslateTo(viewSnapshot, SpanTrackingMode.EdgeExclusive);
+
+					foreach (var span in spans)
 					{
-						var vsSpan = new SnapshotSpan(_model.Snapshot, error.Span.Start, error.Span.Length);
-						yield return new TagSpan<ErrorTag>(vsSpan, new ErrorTag(CodeError, error.Message));
-						break;
+						if (span.OverlapsWith(vsSpan))
+						{
+							//Log.WriteDebug("Error at {0}: {1}", error.Span, error.Message);	// TODO: remove
+							yield return new TagSpan<ErrorTag>(vsSpan, new ErrorTag(CodeError, error.Message));
+							break;
+						}
 					}
 				}
 			}
@@ -52,11 +88,23 @@ namespace DkTools.ErrorTagging
 
 		private void OnModelUpdated(object sender, FileStore.ModelUpdatedEventArgs e)
 		{
-			var ev = TagsChanged;
-			if (ev != null) ev(this, new SnapshotSpanEventArgs(new SnapshotSpan(_view.TextSnapshot, 0, _view.TextSnapshot.Length)));
+			//var ev = TagsChanged;
+			//if (ev != null) ev(this, new SnapshotSpanEventArgs(new SnapshotSpan(_view.TextSnapshot, 0, _view.TextSnapshot.Length)));
+			_analysisDeferrer.OnActivity();
 		}
 
-		void EditorOptions_EditorRefreshRequired(object sender, EventArgs e)
+		private void _analysisDeferrer_Idle(object sender, BackgroundDeferrer.IdleEventArgs e)
+		{
+			_model = _store.GetMostRecentModel(_view.TextSnapshot, "ErrorTagger._analysisDeferrer_Idle()");
+
+			if (_model.PerformCodeAnalysis())
+			{
+				var ev = TagsChanged;
+				if (ev != null) ev(this, new SnapshotSpanEventArgs(new SnapshotSpan(_view.TextSnapshot, 0, _view.TextSnapshot.Length)));
+			}
+		}
+
+		private void EditorOptions_EditorRefreshRequired(object sender, EventArgs e)
 		{
 			if (ProbeToolsPackage.Instance.EditorOptions.ShowErrors &&
 				_model != null &&
@@ -67,6 +115,17 @@ namespace DkTools.ErrorTagging
 
 			var ev = TagsChanged;
 			if (ev != null) ev(this, new SnapshotSpanEventArgs(new SnapshotSpan(_view.TextSnapshot, 0, _view.TextSnapshot.Length)));
+		}
+
+		public void OnCodeAnalysisFinished(CodeModel.CodeModel model)
+		{
+			var ev = TagsChanged;
+			if (ev != null) ev(this, new SnapshotSpanEventArgs(new SnapshotSpan(_view.TextSnapshot, 0, _view.TextSnapshot.Length)));
+		}
+
+		public BackgroundDeferrer AnalysisDeferrer
+		{
+			get { return _analysisDeferrer; }
 		}
 	}
 }

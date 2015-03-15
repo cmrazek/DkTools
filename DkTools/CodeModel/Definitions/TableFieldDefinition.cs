@@ -117,5 +117,10 @@ namespace DkTools.CodeModel.Definitions
 		{
 			get { return string.Concat(_tableName, ".", _fieldName); }
 		}
+
+		public DataType DataType
+		{
+			get { return _dataType; }
+		}
 	}
 }

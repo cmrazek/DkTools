@@ -77,6 +77,7 @@ namespace DkTools
 		public const int OutliningMaxContextChars = 500;
 
 		public const int WordSelectDelay = 600;	// milliseconds
+		public const int CodeAnalysisDelay = 3000; // milliseconds
 		public const int IncludeFileCheckFrequency = 30;	// seconds
 
 		public const int MaxTableNameLength = 8;

@@ -40,13 +40,13 @@ namespace DkTools.Dict
 			});
 			if (DataType == null)
 			{
-				DataType = new CodeModel.DataType(dataTypeText);
 				Log.WriteDebug("DataType.Parse was unable to parse [{0}]", dataTypeText);
+				DataType = new CodeModel.DataType(CodeModel.ValType.Unknown, dataTypeText);
 			}
 			else if (parser.Read())
 			{
-				DataType = new CodeModel.DataType(dataTypeText);
 				Log.WriteDebug("DataType.Parse stopped before end of text [{0}] got [{1}]", dataTypeText, DataType.Name);
+				DataType = new CodeModel.DataType(CodeModel.ValType.Unknown, dataTypeText);
 			}
 
 			var dictObj = repoCol as DICTSRVRLib.IPDictObj;

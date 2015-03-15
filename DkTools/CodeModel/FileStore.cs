@@ -371,8 +371,9 @@ namespace DkTools.CodeModel
 			var prepModel = model.PreprocessorModel;
 			if (prepModel == null) yield break;
 
-			foreach (var def in model.PreprocessorModel.LocalFunctions)
+			foreach (var func in model.PreprocessorModel.LocalFunctions)
 			{
+				var def = func.Definition;
 				if (def.EntireSpan.Length == 0) continue;
 				if (!def.SourceFileName.Equals(model.FileName, StringComparison.OrdinalIgnoreCase)) continue;
 
