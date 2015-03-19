@@ -94,11 +94,11 @@ namespace DkTools.SmartIndenting
 					if (tracker != null)
 					{
 						var lineNumber = prevLine.LineNumber;
-						var prevState = tracker.GetStateForLine(lineNumber, tracker.Snapshot);
+						var prevState = tracker.GetStateForLineStart(lineNumber, tracker.Snapshot);
 						while (State.IsInsideMultiLineComment(prevState))
 						{
 							if (lineNumber == 0) break;	// At start of file. In theory, this should never happen as the state for the start of the file is always zero.
-							prevState = tracker.GetStateForLine(--lineNumber, tracker.Snapshot);
+							prevState = tracker.GetStateForLineStart(--lineNumber, tracker.Snapshot);
 						}
 
 						if (prevLine.LineNumber != lineNumber) prevLine = prevLine.Snapshot.GetLineFromLineNumber(lineNumber);

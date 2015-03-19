@@ -1,10 +1,11 @@
 DkTools2012 ChangeLog
 
 ____________________________________________________________________________________________________
-Version 1.2.20 - (pending):
+Version 1.2.20 - Mar 19, 2015:
 
 - Fixed unhandled exception while typing a select statement.
 - 'signed' is now recognized as a data type keyword.
+- Fixed issue with /*..*/ comments on the first line not tracking their state properly.
 
 ____________________________________________________________________________________________________
 Version 1.2.19 - Feb 23, 2015:

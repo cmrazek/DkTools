@@ -65,7 +65,7 @@ namespace DkTools.Classifier
 			_snapshot = snapshot;
 
 			var line = _snapshot.GetLineFromPosition(pos);
-			var state = GetStateForLine(line.LineNumber, snapshot);
+			var state = GetStateForLineStart(line.LineNumber, snapshot);
 			var lineStartPos = line.Start.Position;
 
 			var fileStore = CodeModel.FileStore.GetOrCreateForTextBuffer(snapshot.TextBuffer);
@@ -86,21 +86,18 @@ namespace DkTools.Classifier
 			return state;
 		}
 
-		public int GetStateForLine(int lineNum, ITextSnapshot snapshot)
+		public int GetStateForLineStart(int lineNum, ITextSnapshot snapshot)
 		{
-			var state = 0;
 			if (_states.Count <= lineNum)
 			{
+				if (_states.Count == 0)
+				{
+					_states.Add(0);
+					if (lineNum == 0) return 0;
+				}
+
 				var stateLineNum = _states.Count - 1;
-				if (stateLineNum < 0)
-				{
-					stateLineNum = 0;
-					state = 0;
-				}
-				else
-				{
-					state = _states[stateLineNum];
-				}
+				var state = _states[stateLineNum];
 
 				var fileStore = CodeModel.FileStore.GetOrCreateForTextBuffer(snapshot.TextBuffer);
 				if (fileStore == null) return 0;
