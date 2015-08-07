@@ -87,8 +87,28 @@ namespace DkTools
 				{
 					if (_currentApp != null)
 					{
-						_sourceDirs = new string[_currentApp.NumSourcePath];
-						for (int i = 1, ii = _currentApp.NumSourcePath; i <= ii; i++) _sourceDirs[i - 1] = _currentApp.SourcePath[i];
+						var sourceDirs = new List<string>();
+						for (int i = 1, ii = _currentApp.NumSourcePath; i <= ii; i++)
+						{
+							try
+							{
+								var path = _currentApp.SourcePath[i];
+								if (string.IsNullOrWhiteSpace(path))
+								{
+									Log.Write(LogLevel.Warning, "PROBE environment has returned a blank source path in slot {0}.", i);
+								}
+								else
+								{
+									sourceDirs.Add(path);
+								}
+							}
+							catch (Exception ex)
+							{
+								Log.WriteEx(ex, "Exception when attempting to retrieve source dir in slot{0}", i);
+							}
+							
+						}
+						_sourceDirs = sourceDirs.ToArray();
 					}
 					else
 					{
@@ -116,8 +136,28 @@ namespace DkTools
 				{
 					if (_currentApp != null)
 					{
-						_exeDirs = new string[_currentApp.NumExePath];
-						for (int i = 1, ii = _currentApp.NumExePath; i <= ii; i++) _exeDirs[i - 1] = _currentApp.ExePath[i];
+						var exeDirs = new List<string>();
+						for (int i = 1, ii = _currentApp.NumExePath; i <= ii; i++)
+						{
+							try
+							{
+								var path = _currentApp.ExePath[i];
+								if (string.IsNullOrWhiteSpace(path))
+								{
+									Log.Write(LogLevel.Warning, "PROBE has returned a blank exe path in slot {0}", i);
+								}
+								else
+								{
+									exeDirs.Add(path);
+								}
+							}
+							catch (Exception ex)
+							{
+								Log.WriteEx(ex, "Exception when attempting to retrieve exe path in slot {0}", i);
+							}
+						}
+
+						_exeDirs = exeDirs.ToArray();
 					}
 					else
 					{
@@ -172,9 +212,28 @@ namespace DkTools
 				{
 					if (_currentApp != null)
 					{
-						var list = new List<string>(_currentApp.NumIncludePath + 1);
+						var list = new List<string>();
 
-						for (int i = 1, ii = _currentApp.NumLibraryPath; i <= ii; i++) list.Add(_currentApp.LibraryPath[i]);
+						for (int i = 1, ii = _currentApp.NumLibraryPath; i <= ii; i++)
+						{
+							try
+							{
+								var path = _currentApp.LibraryPath[i];
+								if (string.IsNullOrWhiteSpace(path))
+								{
+									Log.Write(LogLevel.Warning, "PROBE returned blank lib path in slot {0}", i);
+								}
+								else
+								{
+									list.Add(path);
+								}
+							}
+							catch (Exception ex)
+							{
+								Log.WriteEx(ex, "Exception when attempting to retrieve lib path in slot {0}", i);
+							}
+							
+						}
 						if (!string.IsNullOrEmpty(_platformPath)) list.Add(_platformPath);
 
 						_libDirs = list.ToArray();
@@ -196,9 +255,27 @@ namespace DkTools
 				{
 					if (_currentApp != null)
 					{
-						var list = new List<string>(_currentApp.NumIncludePath + 1);
+						var list = new List<string>();
 
-						for (int i = 1, ii = _currentApp.NumIncludePath; i <= ii; i++) list.Add(_currentApp.IncludePath[i]);
+						for (int i = 1, ii = _currentApp.NumIncludePath; i <= ii; i++)
+						{
+							try
+							{
+								var path = _currentApp.IncludePath[i];
+								if (string.IsNullOrWhiteSpace(path))
+								{
+									Log.Write(LogLevel.Warning, "PROBE has returned blank include path in slot {0}", i);
+								}
+								else
+								{
+									list.Add(path);
+								}
+							}
+							catch (Exception ex)
+							{
+								Log.WriteEx(ex, "Exception when attempting to retrieve include path slot {0}", i);
+							}
+						}
 
 						if (!string.IsNullOrEmpty(_platformPath))
 						{

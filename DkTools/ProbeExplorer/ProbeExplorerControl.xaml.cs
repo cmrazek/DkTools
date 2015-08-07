@@ -247,8 +247,11 @@ namespace DkTools.ProbeExplorer
 		{
 			var tag = new FileTreeNode { path = dirPath, dir = true };
 
+			var displayText = root ? dirPath : IO.Path.GetFileName(dirPath);
+			if (string.IsNullOrEmpty(displayText)) Log.Write(LogLevel.Warning, "File tree display text is blank for path '{0}' (root: {1})", dirPath, root);
+
 			var node = new TreeViewItem();
-			node.Header = CreateFileTreeViewHeader(root ? dirPath : IO.Path.GetFileName(dirPath), _folderImg);
+			node.Header = CreateFileTreeViewHeader(displayText, _folderImg);
 			node.Tag = tag;
 			node.IsExpanded = false;
 			node.ContextMenu = new ContextMenu();
