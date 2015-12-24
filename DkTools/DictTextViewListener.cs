@@ -12,37 +12,37 @@ using Microsoft.VisualStudio.Utilities;
 
 namespace DkTools
 {
-	[Export(typeof(IVsTextViewCreationListener))]
-	[TextViewRole(PredefinedTextViewRoles.Editable)]
-	[ContentType("plaintext")]
-	internal sealed class DictTextViewListener : IVsTextViewCreationListener
-	{
-		[Import]
-		internal IVsEditorAdaptersFactoryService AdapterService { get; set; }
+	//[Export(typeof(IVsTextViewCreationListener))]
+	//[TextViewRole(PredefinedTextViewRoles.Editable)]
+	//[ContentType("plaintext")]
+	//internal sealed class DictTextViewListener : IVsTextViewCreationListener
+	//{
+	//	[Import]
+	//	internal IVsEditorAdaptersFactoryService AdapterService { get; set; }
 
-		[Import]
-		internal IContentTypeRegistryService ContentTypeRegistryService = null;
+	//	[Import]
+	//	internal IContentTypeRegistryService ContentTypeRegistryService = null;
 
-		public void VsTextViewCreated(IVsTextView textViewAdapter)
-		{
-			ITextView view = AdapterService.GetWpfTextView(textViewAdapter);
-			if (view == null) return;
+	//	public void VsTextViewCreated(IVsTextView textViewAdapter)
+	//	{
+	//		ITextView view = AdapterService.GetWpfTextView(textViewAdapter);
+	//		if (view == null) return;
 
-			var buf = view.TextBuffer;
-			var fileName = buf.TryGetFileName();
-			if (string.IsNullOrEmpty(fileName)) return;
+	//		var buf = view.TextBuffer;
+	//		var fileName = buf.TryGetFileName();
+	//		if (string.IsNullOrEmpty(fileName)) return;
 
-			var titleExt = System.IO.Path.GetFileName(fileName);
-			if (titleExt.Equals("dict", StringComparison.OrdinalIgnoreCase) ||
-				titleExt.Equals("dict+", StringComparison.OrdinalIgnoreCase) ||
-				titleExt.Equals("dict&", StringComparison.OrdinalIgnoreCase))
-			{
-				var contentType = ContentTypeRegistryService.GetContentType(Constants.DkContentType);
-				if (contentType == null) return;
+	//		var titleExt = System.IO.Path.GetFileName(fileName);
+	//		if (titleExt.Equals("dict", StringComparison.OrdinalIgnoreCase) ||
+	//			titleExt.Equals("dict+", StringComparison.OrdinalIgnoreCase) ||
+	//			titleExt.Equals("dict&", StringComparison.OrdinalIgnoreCase))
+	//		{
+	//			var contentType = ContentTypeRegistryService.GetContentType(Constants.DkContentType);
+	//			if (contentType == null) return;
 
-				Log.WriteDebug("Changing content type of DICT file to DK.");
-				buf.ChangeContentType(contentType, null);
-			}
-		}
-	}
+	//			Log.WriteDebug("Changing content type of DICT file to DK.");
+	//			buf.ChangeContentType(contentType, null);
+	//		}
+	//	}
+	//}
 }

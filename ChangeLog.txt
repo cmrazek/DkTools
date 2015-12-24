@@ -1,6 +1,12 @@
 DkTools2012 ChangeLog
 
 ____________________________________________________________________________________________________
+Version 1.2.22 - (WIP):
+
+- DICT no longer has syntax highlighting (was reaaaaly slow)
+- Added easyview tag
+
+____________________________________________________________________________________________________
 Version 1.2.20 - Mar 19, 2015:
 
 - Fixed unhandled exception while typing a select statement.
