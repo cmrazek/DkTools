@@ -1,4 +1,4 @@
-﻿#if REPORT_ERRORS
+﻿#if REPORT_ERRORS || BACKGROUND_FEC
 using System;
 using System.Collections.Generic;
 using System.Linq;

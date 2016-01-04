@@ -68,6 +68,15 @@ namespace DkTools.QuickInfo
 						}
 					}
 #endif
+
+					foreach (var task in ErrorTagging.ErrorTaskProvider.Instance.GetErrorMessagesAtPoint(model.FileName, snapshotPoint))
+					{
+						quickInfoContent.Add(task.Text);
+						if (applicableToSpan == null)
+						{
+							applicableToSpan = model.Snapshot.CreateTrackingSpan(task.GetSnapshotSpan(snapshotPoint.Snapshot), SpanTrackingMode.EdgeInclusive);
+						}
+					}
 				}
 			}
 		}

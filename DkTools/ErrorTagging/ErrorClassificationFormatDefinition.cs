@@ -1,5 +1,4 @@
-﻿#if REPORT_ERRORS
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.ComponentModel.Composition;
@@ -32,6 +31,24 @@ namespace DkTools.ErrorTagging
 			[Microsoft.VisualStudio.Utilities.DisplayName(ErrorTagger.CodeError)]
 			internal static ErrorTypeDefinition CodeErrorTypeDefinition = null;
 		}
+
+		[Export(typeof(EditorFormatDefinition))]
+		[Name(ErrorTagger.CodeWarning)]
+		[Order(After = Priority.High)]
+		[UserVisible(true)]
+		internal class WarningClassificationFormatDefinition : EditorFormatDefinition
+		{
+			public WarningClassificationFormatDefinition()
+			{
+				this.ForegroundColor = System.Windows.Media.Colors.Green;
+				this.BackgroundCustomizable = false;
+				this.DisplayName = ErrorTagger.CodeWarning;
+			}
+
+			[Export(typeof(ErrorTypeDefinition))]
+			[Name(ErrorTagger.CodeWarning)]
+			[Microsoft.VisualStudio.Utilities.DisplayName(ErrorTagger.CodeWarning)]
+			internal static ErrorTypeDefinition CodeWarningTypeDefinition = null;
+		}
 	}
 }
-#endif

@@ -87,5 +87,7 @@ namespace DkTools
 		public static readonly DateTime ZeroDate = new DateTime(1900, 1, 1);
 
 		public const int MaxIncludeRecursion = 8;	// The maximum number of levels deep #include files can nest.
+
+		public const int BackgroundFecDelay = 1500;
 	}
 }

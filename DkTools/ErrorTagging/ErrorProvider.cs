@@ -42,7 +42,9 @@ namespace DkTools.ErrorTagging
 				message = "(unknown)";
 			}
 
-			var err = new ErrorInfo(code, message, span);
+			var type = GetErrorType(code);
+
+			var err = new ErrorInfo(code, type, message, span);
 
 			var ev = ErrorReported;
 			if (ev != null)
@@ -68,6 +70,19 @@ namespace DkTools.ErrorTagging
 			}
 
 			return null;
+		}
+
+		public static ErrorType GetErrorType(ErrorCode code)
+		{
+			var memInfo = typeof(ErrorCode).GetMember(code.ToString()).FirstOrDefault();
+			if (memInfo == null) return ErrorType.Error;
+
+			foreach (ErrorTypeAttribute attrib in memInfo.GetCustomAttributes(typeof(ErrorType), false))
+			{
+				return attrib.Type;
+			}
+
+			return ErrorType.Error;
 		}
 
 		public IEnumerable<ErrorInfo> GetErrorsForPos(int pos)

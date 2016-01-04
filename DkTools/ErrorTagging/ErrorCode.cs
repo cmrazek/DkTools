@@ -1,5 +1,4 @@
-﻿#if REPORT_ERRORS
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
@@ -13,6 +12,7 @@ namespace DkTools.ErrorTagging
 		[Description("(none)")]
 		None,
 
+#if REPORT_ERRORS
 		#region Root
 		[Description("Expected function or variable name to follow data type on root.")]
 		Root_UnknownAfterDataType = 100,
@@ -265,6 +265,14 @@ namespace DkTools.ErrorTagging
 		[Description("'return' statement does not end with ';'.")]
 		Return_NotComplete,
 		#endregion
+#endif
+
+		[Description("FEC reported an error.")]
+		[ErrorType(ErrorType.Error)]
+		Fec_Error,
+
+		[Description("FEC reported a warning.")]
+		[ErrorType(ErrorType.Warning)]
+		Fec_Warning,
 	}
 }
-#endif

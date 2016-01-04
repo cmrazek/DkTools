@@ -68,6 +68,24 @@ namespace DkTools
 			}
 		}
 
+		internal static void OpenDocumentAndLine(string fileName, int lineNum)
+		{
+			try
+			{
+				IVsTextView view;
+				IVsWindowFrame windowFrame;
+				OpenDocument(fileName, out view, out windowFrame);
+				ErrorHandler.ThrowOnFailure(windowFrame.Show());
+
+				view.SetSelection(lineNum, 0, lineNum, 0);
+				view.CenterLines(lineNum, 1);
+			}
+			catch (Exception ex)
+			{
+				ShowError(ex);
+			}
+		}
+
 		internal static void OpenDocument(string fileName, int pos)
 		{
 			if (pos < 0) pos = 0;

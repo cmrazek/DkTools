@@ -76,9 +76,7 @@ namespace DkTools
 			AddCommand(mcs, CommandId.ShowDrv, ShowDrv);
 			AddCommand(mcs, CommandId.DisableDeadCode, DisableDeadCode, checkedCallback: DisableDeadCode_Checked);
 			AddCommand(mcs, CommandId.ShowProbeNV, ShowProbeNV);
-#if REPORT_ERRORS
 			AddCommand(mcs, CommandId.ShowErrors, ShowErrors, checkedCallback: ShowErrors_Checked);
-#endif
 			AddCommand(mcs, CommandId.GoToNextReference, GoToNextReference);
 			AddCommand(mcs, CommandId.GoToPrevReference, GoToPrevReference);
 			AddCommand(mcs, CommandId.ShowFunctions, ShowFunctions);
@@ -641,7 +639,6 @@ namespace DkTools
 			}
 		}
 
-#if REPORT_ERRORS
 		private static void ShowErrors(object sender, EventArgs e)
 		{
 			try
@@ -660,7 +657,6 @@ namespace DkTools
 		{
 			return ProbeToolsPackage.Instance.EditorOptions.ShowErrors;
 		}
-#endif
 
 		private static void GoToNextReference(object sender, EventArgs e)
 		{

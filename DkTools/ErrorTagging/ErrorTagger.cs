@@ -1,4 +1,4 @@
-﻿#if REPORT_ERRORS
+﻿#if REPORT_ERRORS || BACKGROUND_FEC
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -16,9 +16,13 @@ namespace DkTools.ErrorTagging
 		private ITextView _view;
 		private FileStore _store;
 		private CodeModel.CodeModel _model;
+#if REPORT_ERRORS
 		private BackgroundDeferrer _analysisDeferrer;
+#endif
+		private BackgroundDeferrer _backgroundFecDeferrer;
 
 		public const string CodeError = "Code Error";
+		public const string CodeWarning = "Code Warning";
 
 		public ErrorTagger(ITextView view)
 		{
@@ -26,11 +30,18 @@ namespace DkTools.ErrorTagging
 			_store = FileStore.GetOrCreateForTextBuffer(_view.TextBuffer);
 			_store.ModelUpdated += OnModelUpdated;
 
+#if REPORT_ERRORS
 			_analysisDeferrer = new BackgroundDeferrer();
 			_analysisDeferrer.Idle += _analysisDeferrer_Idle;
 			_analysisDeferrer.OnActivity();
+#endif
 
 			ProbeToolsPackage.Instance.EditorOptions.EditorRefreshRequired += EditorOptions_EditorRefreshRequired;
+			Shell.FileSaved += Shell_FileSaved;
+
+			_backgroundFecDeferrer = new BackgroundDeferrer(Constants.BackgroundFecDelay);
+			_backgroundFecDeferrer.Idle += _backgroundFecDeferrer_Idle;
+			_backgroundFecDeferrer.OnActivity();
 		}
 
 		public event EventHandler<SnapshotSpanEventArgs> TagsChanged;
@@ -55,14 +66,7 @@ namespace DkTools.ErrorTagging
 			//	}
 			//}
 
-			// TODO: remove
-			//// TODO: debug start
-			//var sb = new StringBuilder();
-			//sb.AppendLine("ErrorTagger.GetTags(): Spans:");
-			//foreach (var span in spans) sb.AppendLine("  " + span.ToString());
-			//Log.WriteDebug(sb.ToString());
-			//// TODO: debug end
-
+#if REPORT_ERRORS
 			var viewSnapshot = _view.TextSnapshot;
 
 			var analysis = _model.Analysis;
@@ -84,15 +88,24 @@ namespace DkTools.ErrorTagging
 					}
 				}
 			}
+#endif
+
+			foreach (var tagSpan in ErrorTaskProvider.Instance.GetErrorTagsForFile(_model.FileName, spans))
+			{
+				yield return tagSpan;
+			}
 		}
 
 		private void OnModelUpdated(object sender, FileStore.ModelUpdatedEventArgs e)
 		{
 			//var ev = TagsChanged;
 			//if (ev != null) ev(this, new SnapshotSpanEventArgs(new SnapshotSpan(_view.TextSnapshot, 0, _view.TextSnapshot.Length)));
+#if REPORT_ERRORS
 			_analysisDeferrer.OnActivity();
+#endif
 		}
 
+#if REPORT_ERRORS
 		private void _analysisDeferrer_Idle(object sender, BackgroundDeferrer.IdleEventArgs e)
 		{
 			_model = _store.GetMostRecentModel(_view.TextSnapshot, "ErrorTagger._analysisDeferrer_Idle()");
@@ -103,20 +116,31 @@ namespace DkTools.ErrorTagging
 				if (ev != null) ev(this, new SnapshotSpanEventArgs(new SnapshotSpan(_view.TextSnapshot, 0, _view.TextSnapshot.Length)));
 			}
 		}
+#endif
 
 		private void EditorOptions_EditorRefreshRequired(object sender, EventArgs e)
 		{
+#if REPORT_ERRORS
 			if (ProbeToolsPackage.Instance.EditorOptions.ShowErrors &&
 				_model != null &&
 				!_model.PreprocessorModel.ReportErrors)
 			{
 				_model.FileStore.RegenerateModel(_model.Snapshot.TextBuffer.CurrentSnapshot, "ErrorTagger detected ShowErrors switched on.");
 			}
+#endif
+
+			_backgroundFecDeferrer.OnActivity();
 
 			var ev = TagsChanged;
 			if (ev != null) ev(this, new SnapshotSpanEventArgs(new SnapshotSpan(_view.TextSnapshot, 0, _view.TextSnapshot.Length)));
 		}
 
+		void Shell_FileSaved(object sender, Shell.FileSavedEventArgs e)
+		{
+			_backgroundFecDeferrer.OnActivity();
+		}
+
+#if REPORT_ERRORS
 		public void OnCodeAnalysisFinished(CodeModel.CodeModel model)
 		{
 			var ev = TagsChanged;
@@ -126,6 +150,25 @@ namespace DkTools.ErrorTagging
 		public BackgroundDeferrer AnalysisDeferrer
 		{
 			get { return _analysisDeferrer; }
+		}
+#endif
+
+		private void _backgroundFecDeferrer_Idle(object sender, BackgroundDeferrer.IdleEventArgs e)
+		{
+			try
+			{
+				if (_model.FileContext != FileContext.Include && ProbeToolsPackage.Instance.EditorOptions.ShowErrors)
+				{
+					Compiler.BackgroundFec.Run(_model.FileName, _model.Snapshot.TextBuffer.CurrentSnapshot);
+
+					var ev = TagsChanged;
+					if (ev != null) ev(this, new SnapshotSpanEventArgs(new SnapshotSpan(_view.TextSnapshot, 0, _view.TextSnapshot.Length)));
+				}
+			}
+			catch (Exception ex)
+			{
+				Log.WriteEx(ex);
+			}
 		}
 	}
 }

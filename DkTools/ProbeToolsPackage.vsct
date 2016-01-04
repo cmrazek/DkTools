@@ -170,7 +170,6 @@
 
       <!-- DK Menu -> Editor -> Disable Dead Code -->
       <!-- TODO -->
-      <!--
 			<Button guid="guidProbeToolsCmdSet" id="cmdShowErrors" priority="0x0020" type="Button">
         <Parent guid="guidProbeToolsCmdSet" id="grpEditorOptionsMenu" />
         <Icon guid="guidImages" id="bmpShowErrors" />
@@ -179,7 +178,6 @@
           <ButtonText>Show &amp;Errors (WIP)</ButtonText>
         </Strings>
       </Button>
-      -->
 
       <!-- DK Menu -> Editor -> Go To Next Reference -->
       <Button guid="guidProbeToolsCmdSet" id="cmdGoToNextReference" priority="0x0030" type="Button">
@@ -486,7 +484,6 @@
 
       <!-- DK Toolbar -> Show Errors -->
       <!-- TODO -->
-      <!--
       <Button guid="guidProbeToolsCmdSet" id="cmdShowErrors" priority="0x0020" type="Button">
         <Parent guid="guidProbeToolsCmdSet" id="tbEditorOptionsGroup" />
         <Icon guid="guidImages" id="bmpShowErrors" />
@@ -495,7 +492,6 @@
           <ButtonText>Show Errors (WIP)</ButtonText>
         </Strings>
       </Button>
-      -->
 
       <!-- DK Toolbar -> Go To Previous Reference -->
       <Button guid="guidProbeToolsCmdSet" id="cmdGoToPrevReference" priority="0x0030" type="Button">

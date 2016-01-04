@@ -92,6 +92,8 @@ namespace DkTools
 		private EnvDTE.Events _dteEvents;
 		private EnvDTE.DocumentEvents _dteDocumentEvents;
 		private FunctionFileScanning.FFScanner _functionScanner;
+		private ErrorTagging.ErrorTaskProvider _errorTaskProvider;
+		private uint _errorTaskProviderCookie;
 
 		/// <summary>
 		/// Default constructor of the package.
@@ -134,6 +136,9 @@ namespace DkTools
 				crinfo[0].uIdleTimeInterval = 1000;
 				int hr = mgr.FRegisterComponent(this, crinfo, out _componentId);
 			}
+
+			_errorTaskProvider = new ErrorTagging.ErrorTaskProvider(this);
+			TaskListService.RegisterTaskProvider(_errorTaskProvider, out _errorTaskProviderCookie);
 
 			var mcs = GetService(typeof(IMenuCommandService)) as OleMenuCommandService;
 			if (mcs != null) Commands.InitCommands(mcs);
@@ -470,6 +475,20 @@ namespace DkTools
 					if (_errorListService == null) throw new InvalidOperationException("Unable to get service 'Microsoft.VisualStudio.Shell.Interop.IVsErrorList'.");
 				}
 				return _errorListService;
+			}
+		}
+
+		private Microsoft.VisualStudio.Shell.Interop.IVsTaskList _taskListService;
+		internal Microsoft.VisualStudio.Shell.Interop.IVsTaskList TaskListService
+		{
+			get
+			{
+				if (_taskListService == null)
+				{
+					_taskListService = this.GetService(typeof(SVsTaskList)) as IVsTaskList;
+					if (_taskListService == null) throw new InvalidOperationException("Unable to get service 'Microsoft.VisualStudio.Shell.Interop.IVsTaskList'.");
+				}
+				return _taskListService;
 			}
 		}
 

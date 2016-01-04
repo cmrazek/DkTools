@@ -186,6 +186,19 @@ namespace DkTools
 			return string.Empty;
 		}
 
+		public static int GetIndentOffset(this string str)
+		{
+			var pos = 0;
+			char ch;
+			while (pos < str.Length)
+			{
+				ch = str[pos];
+				if (ch != ' ' && ch != '\t') return pos;
+				pos++;
+			}
+			return 0;
+		}
+
 		public static int GetIndentCount(this string lineText, int tabSize)
 		{
 			var pos = 0;

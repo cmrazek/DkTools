@@ -22,6 +22,7 @@ namespace DkTools.CodeModel
 		private Span[] _disabledSections;
 		private ModelType _modelType;
 		private string _className;
+		private FileContext _fileContext;
 #if REPORT_ERRORS
 		private Analysis _analysis;
 #endif
@@ -62,6 +63,8 @@ namespace DkTools.CodeModel
 
 			_fileName = fileName;
 			if (!string.IsNullOrEmpty(_fileName)) _fileTitle = Path.GetFileNameWithoutExtension(_fileName);
+
+			_fileContext = FileContextUtil.GetFileContextFromFileName(_fileName);
 
 			if (FunctionFileScanning.FFUtil.FileNameIsFunction(fileName))
 			{
@@ -221,6 +224,11 @@ namespace DkTools.CodeModel
 		public string ClassName
 		{
 			get { return _className; }
+		}
+
+		public FileContext FileContext
+		{
+			get { return _fileContext; }
 		}
 
 #if REPORT_ERRORS

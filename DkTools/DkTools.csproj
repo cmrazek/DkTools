@@ -42,7 +42,7 @@
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
     <OutputPath>bin\Debug\</OutputPath>
-    <DefineConstants>TRACE;DEBUG;REPORT_ERRORS_NOPE</DefineConstants>
+    <DefineConstants>TRACE;DEBUG;REPORT_ERRORS_NOPE BACKGROUND_FEC</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <PlatformTarget>x86</PlatformTarget>
@@ -296,6 +296,7 @@
     <Compile Include="CodeModel\Tokens\InterfacePropertyToken.cs" />
     <Compile Include="CodeModel\Tokens\InterfaceTypeToken.cs" />
     <Compile Include="CodeModel\Tokens\TagToken.cs" />
+    <Compile Include="Compiler\BackgroundFec.cs" />
     <Compile Include="CsvWriter.cs" />
     <Compile Include="DictTextViewListener.cs" />
     <Compile Include="Dict\Dict.cs" />
@@ -399,6 +400,10 @@
     <Compile Include="ErrorTagging\ErrorTag.cs" />
     <Compile Include="ErrorTagging\ErrorTagger.cs" />
     <Compile Include="ErrorTagging\ErrorTaggerProvider.cs" />
+    <Compile Include="ErrorTagging\ErrorTask.cs" />
+    <Compile Include="ErrorTagging\ErrorTaskProvider.cs" />
+    <Compile Include="ErrorTagging\ErrorType.cs" />
+    <Compile Include="ErrorTagging\ErrorTypeAttribute.cs" />
     <Compile Include="FileMergeException.cs" />
     <Compile Include="CodeModel\FileMerger.cs" />
     <Compile Include="FileUtil.cs" />
