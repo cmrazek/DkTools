@@ -42,7 +42,7 @@
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
     <OutputPath>bin\Debug\</OutputPath>
-    <DefineConstants>TRACE;DEBUG;REPORT_ERRORS_NOPE BACKGROUND_FEC</DefineConstants>
+    <DefineConstants>TRACE;DEBUG;REPORT_ERRORS_NOPE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <PlatformTarget>x86</PlatformTarget>
@@ -650,6 +650,7 @@
   <ItemGroup>
     <VSCTCompile Include="ProbeToolsPackage.vsct">
       <ResourceName>Menus.ctmenu</ResourceName>
+      <SubType>Designer</SubType>
     </VSCTCompile>
   </ItemGroup>
   <ItemGroup>

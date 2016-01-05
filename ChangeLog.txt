@@ -1,8 +1,9 @@
 DkTools2012 ChangeLog
 
 ____________________________________________________________________________________________________
-Version 1.2.22 - (WIP):
+Version 1.2.22 - Jan 4, 2016:
 
+- Compile errors are now displayed in the code and task list.
 - DICT no longer has syntax highlighting (was reaaaaly slow)
 - Added easyview tag
 

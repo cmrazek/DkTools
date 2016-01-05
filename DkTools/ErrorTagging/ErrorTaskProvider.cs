@@ -14,6 +14,12 @@ namespace DkTools.ErrorTagging
 	{
 		public static ErrorTaskProvider Instance;
 
+		public event EventHandler<ErrorTaskEventArgs> ErrorTagsChangedForFile;
+		public class ErrorTaskEventArgs : EventArgs
+		{
+			public string FileName { get; set; }
+		}
+
 		public ErrorTaskProvider(IServiceProvider provider)
 			: base(provider)
 		{
@@ -25,33 +31,76 @@ namespace DkTools.ErrorTagging
 #if DEBUG
 			if (task == null) throw new ArgumentNullException("task");
 #endif
+
+			var taskLine = task.Line;
+			var taskDocument = task.Document;
+			var taskText = task.Text;
+			if (Tasks.Cast<ErrorTask>().Any(t => t.Line == taskLine &&
+				string.Equals(t.Document, taskDocument, StringComparison.OrdinalIgnoreCase) &&
+				t.Text == taskText))
+			{
+				return;
+			}
+
 			Tasks.Add(task);
+
+			var ev = ErrorTagsChangedForFile;
+			if (ev != null) ev(this, new ErrorTaskEventArgs { FileName = task.Document });
 		}
 
 		public void Clear()
 		{
+			var tasks = Tasks.Cast<ErrorTask>().ToArray();
+			
 			Tasks.Clear();
+
+			foreach (ErrorTask task in tasks)
+			{
+				var ev = ErrorTagsChangedForFile;
+				if (ev != null) ev(this, new ErrorTaskEventArgs { FileName = task.Document });
+			}
 		}
 
-		public void RemoveAllForSource(ErrorTaskSource source, string sourceArg)
+		public void RemoveTask(ErrorTask task)
 		{
-			var tasksToRemove = (from t in Tasks.Cast<ErrorTask>() where t.Source == source && t.SourceArg == sourceArg select t).ToArray();
-			foreach (var task in tasksToRemove) Tasks.Remove(task);
+			Tasks.Remove(task);
+
+			var ev = ErrorTagsChangedForFile;
+			if (ev != null) ev(this, new ErrorTaskEventArgs { FileName = task.Document });
+		}
+
+		public void RemoveAllForSource(ErrorTaskSource source, string sourceFileName)
+		{
+			var tasksToRemove = (from t in Tasks.Cast<ErrorTask>()
+								 where t.Source == source && string.Equals(t.SourceArg, sourceFileName, StringComparison.OrdinalIgnoreCase)
+								 select t).ToArray();
+			foreach (var task in tasksToRemove)
+			{
+				RemoveTask(task);
+			}
 		}
 
 		public void RemoveAllForFile(string fileName)
 		{
-			var tasksToRemove = (from t in Tasks.Cast<ErrorTask>() where string.Equals(t.Document, fileName, StringComparison.OrdinalIgnoreCase) select t).ToArray();
-			foreach (var task in tasksToRemove) Tasks.Remove(task);
+			var tasksToRemove = (from t in Tasks.Cast<ErrorTask>()
+								 where string.Equals(t.Document, fileName, StringComparison.OrdinalIgnoreCase)
+								 select t).ToArray();
+			foreach (var task in tasksToRemove)
+			{
+				RemoveTask(task);
+			}
 		}
 
-		public void RemoveAllForSourceAndFile(ErrorTaskSource source, string sourceArg, string fileName)
+		public void RemoveAllForSourceAndFile(ErrorTaskSource source, string sourceFileName, string fileName)
 		{
 			var tasksToRemove = (from t in Tasks.Cast<ErrorTask>()
-								 where t.Source == source && t.SourceArg == sourceArg &&
+								 where t.Source == source && string.Equals(t.SourceArg, sourceFileName, StringComparison.OrdinalIgnoreCase) &&
 									 string.Equals(t.Document, fileName, StringComparison.OrdinalIgnoreCase)
 								 select t).ToArray();
-			foreach (var task in tasksToRemove) Tasks.Remove(task);
+			foreach (var task in tasksToRemove)
+			{
+				RemoveTask(task);
+			}
 		}
 
 		public void OnDocumentClosed(ITextView textView)
@@ -60,7 +109,7 @@ namespace DkTools.ErrorTagging
 			if (fileStore != null)
 			{
 				var model = fileStore.GetMostRecentModel(textView.TextSnapshot, "ErrorTaskProvider.OnDocumentClosed()");
-				RemoveAllForSource(ErrorTaskSource.BackgroundFec, model.FileName.ToLower());
+				RemoveAllForSource(ErrorTaskSource.BackgroundFec, model.FileName);
 			}
 		}
 
@@ -108,6 +157,28 @@ namespace DkTools.ErrorTagging
 					yield return task;
 				}
 			}
+		}
+
+		public IEnumerable<string> GetFilesForInclude(string fileName)
+		{
+			var ret = new List<string>();
+
+			foreach (ErrorTask task in Tasks)
+			{
+				if (string.Equals(task.Document, fileName))
+				{
+					if (task.Source == ErrorTaskSource.BackgroundFec)
+					{
+						var sourceFileName = task.SourceArg;
+						if (!string.IsNullOrEmpty(sourceFileName))
+						{
+							if (!ret.Any(x => string.Equals(x, sourceFileName))) ret.Add(sourceFileName);
+						}
+					}
+				}
+			}
+
+			return ret;
 		}
 	}
 }

@@ -16,15 +16,26 @@ namespace DkTools.ErrorTagging
 		private ErrorType _type;
 		private VsText.ITextSnapshot _snapshot;
 
-		public ErrorTask(string fileName, int lineNum, string message, ErrorType type, ErrorTaskSource source, string sourceArg, VsText.ITextSnapshot snapshot)
+		public ErrorTask(string fileName, int lineNum, string message, ErrorType type, ErrorTaskSource source, string sourceFileName, VsText.ITextSnapshot snapshot)
 		{
 			this.Document = fileName;
 			this.Line = lineNum;
-			this.Text = message;
+
+			if (string.IsNullOrEmpty(sourceFileName) || string.Equals(sourceFileName, fileName, StringComparison.OrdinalIgnoreCase))
+			{
+				this.Text = message;
+			}
+			else
+			{
+				var ix = sourceFileName.LastIndexOf('\\');
+				var sourceFileTitle = ix >= 0 ? sourceFileName.Substring(ix + 1) : sourceFileName;
+				this.Text = string.Format("{0}: {1}", sourceFileTitle, message);
+			}
+			
 			this.Priority = type == ErrorType.Warning ? TaskPriority.Normal : TaskPriority.High;
 			this.Category = TaskCategory.BuildCompile;
 			_source = source;
-			_sourceArg = sourceArg;
+			_sourceArg = sourceFileName;
 			_type = type;
 			_snapshot = snapshot;
 

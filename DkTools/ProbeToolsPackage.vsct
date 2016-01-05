@@ -175,7 +175,7 @@
         <Icon guid="guidImages" id="bmpShowErrors" />
         <Strings>
           <CommandName>cmdShowErrors</CommandName>
-          <ButtonText>Show &amp;Errors (WIP)</ButtonText>
+          <ButtonText>Show &amp;Errors</ButtonText>
         </Strings>
       </Button>
 

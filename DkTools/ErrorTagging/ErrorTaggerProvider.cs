@@ -1,5 +1,4 @@
-﻿#if REPORT_ERRORS || BACKGROUND_FEC
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel.Composition;
 using System.Linq;
@@ -44,4 +43,3 @@ namespace DkTools.ErrorTagging
 		}
 	}
 }
-#endif

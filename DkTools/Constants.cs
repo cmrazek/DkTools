@@ -88,6 +88,6 @@ namespace DkTools
 
 		public const int MaxIncludeRecursion = 8;	// The maximum number of levels deep #include files can nest.
 
-		public const int BackgroundFecDelay = 1500;
+		public const int BackgroundFecDelay = 750;
 	}
 }

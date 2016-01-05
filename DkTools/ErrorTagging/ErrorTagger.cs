@@ -1,5 +1,4 @@
-﻿#if REPORT_ERRORS || BACKGROUND_FEC
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -38,6 +37,7 @@ namespace DkTools.ErrorTagging
 
 			ProbeToolsPackage.Instance.EditorOptions.EditorRefreshRequired += EditorOptions_EditorRefreshRequired;
 			Shell.FileSaved += Shell_FileSaved;
+			ErrorTaskProvider.Instance.ErrorTagsChangedForFile += Instance_ErrorTagsChangedForFile;
 
 			_backgroundFecDeferrer = new BackgroundDeferrer(Constants.BackgroundFecDelay);
 			_backgroundFecDeferrer.Idle += _backgroundFecDeferrer_Idle;
@@ -120,24 +120,67 @@ namespace DkTools.ErrorTagging
 
 		private void EditorOptions_EditorRefreshRequired(object sender, EventArgs e)
 		{
-#if REPORT_ERRORS
-			if (ProbeToolsPackage.Instance.EditorOptions.ShowErrors &&
-				_model != null &&
-				!_model.PreprocessorModel.ReportErrors)
+			try
 			{
-				_model.FileStore.RegenerateModel(_model.Snapshot.TextBuffer.CurrentSnapshot, "ErrorTagger detected ShowErrors switched on.");
-			}
+#if REPORT_ERRORS
+				if (ProbeToolsPackage.Instance.EditorOptions.ShowErrors &&
+					_model != null &&
+					!_model.PreprocessorModel.ReportErrors)
+				{
+					_model.FileStore.RegenerateModel(_model.Snapshot.TextBuffer.CurrentSnapshot, "ErrorTagger detected ShowErrors switched on.");
+				}
 #endif
 
-			_backgroundFecDeferrer.OnActivity();
+				_backgroundFecDeferrer.OnActivity();
 
-			var ev = TagsChanged;
-			if (ev != null) ev(this, new SnapshotSpanEventArgs(new SnapshotSpan(_view.TextSnapshot, 0, _view.TextSnapshot.Length)));
+				var ev = TagsChanged;
+				if (ev != null) ev(this, new SnapshotSpanEventArgs(new SnapshotSpan(_view.TextSnapshot, 0, _view.TextSnapshot.Length)));
+			}
+			catch (Exception ex)
+			{
+				Log.WriteEx(ex);
+			}
 		}
 
 		void Shell_FileSaved(object sender, Shell.FileSavedEventArgs e)
 		{
-			_backgroundFecDeferrer.OnActivity();
+			try
+			{
+				if (string.Equals(e.FileName, _model.FileName, StringComparison.OrdinalIgnoreCase))
+				{
+					if (_model.FileContext != FileContext.Include)
+					{
+						_backgroundFecDeferrer.OnActivity();
+					}
+					else
+					{
+						foreach (var sourceFileName in ErrorTaskProvider.Instance.GetFilesForInclude(_model.FileName))
+						{
+							Shell.OnFileSaved(sourceFileName);
+						}
+					}
+				}
+			}
+			catch (Exception ex)
+			{
+				Log.WriteEx(ex);
+			}
+		}
+
+		void Instance_ErrorTagsChangedForFile(object sender, ErrorTaskProvider.ErrorTaskEventArgs e)
+		{
+			try
+			{
+				if (string.Equals(e.FileName, _model.FileName, StringComparison.OrdinalIgnoreCase))
+				{
+					var ev = TagsChanged;
+					if (ev != null) ev(this, new SnapshotSpanEventArgs(new SnapshotSpan(_view.TextSnapshot, 0, _view.TextSnapshot.Length)));
+				}
+			}
+			catch (Exception ex)
+			{
+				Log.WriteEx(ex);
+			}
 		}
 
 #if REPORT_ERRORS
@@ -160,9 +203,6 @@ namespace DkTools.ErrorTagging
 				if (_model.FileContext != FileContext.Include && ProbeToolsPackage.Instance.EditorOptions.ShowErrors)
 				{
 					Compiler.BackgroundFec.Run(_model.FileName, _model.Snapshot.TextBuffer.CurrentSnapshot);
-
-					var ev = TagsChanged;
-					if (ev != null) ev(this, new SnapshotSpanEventArgs(new SnapshotSpan(_view.TextSnapshot, 0, _view.TextSnapshot.Length)));
 				}
 			}
 			catch (Exception ex)
@@ -172,4 +212,3 @@ namespace DkTools.ErrorTagging
 		}
 	}
 }
-#endif

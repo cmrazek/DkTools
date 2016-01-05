@@ -211,6 +211,7 @@ namespace DkTools
 					{
 						try
 						{
+							Log.WriteDebug("Saving document: {0}", doc.FullName);
 							doc.Save();
 						}
 						catch (Exception ex)

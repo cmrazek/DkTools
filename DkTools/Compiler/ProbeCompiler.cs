@@ -22,6 +22,7 @@ namespace DkTools.Compiler
 		private int _numErrors = 0;
 		private int _numWarnings = 0;
 		private bool _buildFailed = false;
+		private LockedValue<bool> _inProgress = new LockedValue<bool>();
 
 		private const int k_compileKillSleep = 10;
 		private const int k_compileSleep = 100;
@@ -100,8 +101,6 @@ namespace DkTools.Compiler
 
 			Commands.SaveProbeFiles();
 
-			_pane.Clear();
-			ErrorTaskProvider.Instance.Clear();
 			_kill = false;
 
 			_compileThread = new Thread(new ThreadStart(CompileThread));
@@ -131,45 +130,66 @@ namespace DkTools.Compiler
 		{
 			var startTime = DateTime.Now;
 
-			switch (_method)
+			while (_inProgress.Set(true) == true)
 			{
-				case CompileMethod.Compile:
-					WriteLine("Starting compile for application '{0}' at {1}.", ProbeEnvironment.CurrentApp, startTime.ToString(k_timeStampFormat));
+				if (_kill) break;
+				WriteLine("Waiting for background compile to complete...");
+				System.Threading.Thread.Sleep(1000);
+			}
 
-					if (DoCompile())
-					{
-						var endTime = DateTime.Now;
-						var elapsed = endTime - startTime;
-						WriteLine("Finished at {0} ({1:0}:{2:00} elapsed)", endTime.ToString(k_timeStampFormat), elapsed.TotalMinutes, elapsed.Seconds);
-					}
-					break;
+			try
+			{
+				_pane.Clear();
+				ErrorTaskProvider.Instance.Clear();
 
-				case CompileMethod.Dccmp:
-					WriteLine("Starting dccmp for application '{0}' at {1}.", ProbeEnvironment.CurrentApp, startTime.ToString(k_timeStampFormat));
-					Shell.SetStatusText("DK dccmp starting...");
+				switch (_method)
+				{
+					case CompileMethod.Compile:
+						WriteLine("Starting compile for application '{0}' at {1}.", ProbeEnvironment.CurrentApp, startTime.ToString(k_timeStampFormat));
 
-					if (DoDccmp())
-					{
-						var endTime = DateTime.Now;
-						var elapsed = endTime - startTime;
-						WriteLine("Finished at {0} ({1:0}:{2:00} elapsed)", endTime.ToString(k_timeStampFormat), elapsed.TotalMinutes, elapsed.Seconds);
-					}
-					break;
+						if (DoCompile())
+						{
+							var endTime = DateTime.Now;
+							var elapsed = endTime - startTime;
+							WriteLine("Finished at {0} ({1:0}:{2:00} elapsed)", endTime.ToString(k_timeStampFormat), elapsed.TotalMinutes, elapsed.Seconds);
+						}
+						break;
 
-				case CompileMethod.Credelix:
-					WriteLine("Starting credelix for application '{0}' at {1}.", ProbeEnvironment.CurrentApp, startTime.ToString(k_timeStampFormat));
-					Shell.SetStatusText("DK credelix starting...");
+					case CompileMethod.Dccmp:
+						WriteLine("Starting dccmp for application '{0}' at {1}.", ProbeEnvironment.CurrentApp, startTime.ToString(k_timeStampFormat));
+						Shell.SetStatusText("DK dccmp starting...");
 
-					if (DoCredelix())
-					{
-						var endTime = DateTime.Now;
-						var elapsed = endTime - startTime;
-						WriteLine("Finished at {0} ({1:0}:{2:00} elapsed)", endTime.ToString(k_timeStampFormat), elapsed.TotalMinutes, elapsed.Seconds);
-					}
-					break;
+						if (DoDccmp())
+						{
+							var endTime = DateTime.Now;
+							var elapsed = endTime - startTime;
+							WriteLine("Finished at {0} ({1:0}:{2:00} elapsed)", endTime.ToString(k_timeStampFormat), elapsed.TotalMinutes, elapsed.Seconds);
+						}
+						break;
 
-				default:
-					throw new InvalidOperationException("Invalid compile method.");
+					case CompileMethod.Credelix:
+						WriteLine("Starting credelix for application '{0}' at {1}.", ProbeEnvironment.CurrentApp, startTime.ToString(k_timeStampFormat));
+						Shell.SetStatusText("DK credelix starting...");
+
+						if (DoCredelix())
+						{
+							var endTime = DateTime.Now;
+							var elapsed = endTime - startTime;
+							WriteLine("Finished at {0} ({1:0}:{2:00} elapsed)", endTime.ToString(k_timeStampFormat), elapsed.TotalMinutes, elapsed.Seconds);
+						}
+						break;
+
+					default:
+						throw new InvalidOperationException("Invalid compile method.");
+				}
+			}
+			catch (Exception ex)
+			{
+				Log.WriteEx(ex);
+			}
+			finally
+			{
+				_inProgress.Value = false;
 			}
 		}
 
@@ -513,7 +533,7 @@ namespace DkTools.Compiler
 				if (ParseFileNameAndLine(line.Substring(0, index), out fileName, out lineNum))
 				{
 					var message = line.Substring(index + ": error :".Length).Trim();
-					var task = new ErrorTask(fileName, lineNum, message, ErrorType.Error, ErrorTaskSource.Compile, null, null);
+					var task = new ErrorTask(fileName, lineNum - 1, message, ErrorType.Error, ErrorTaskSource.Compile, null, null);
 					ErrorTaskProvider.Instance.Add(task);
 				}
 				_pane.WriteLine(line);
@@ -529,7 +549,7 @@ namespace DkTools.Compiler
 				if (ParseFileNameAndLine(line.Substring(0, index), out fileName, out lineNum))
 				{
 					var message = line.Substring(index + ": warning :".Length).Trim();
-					var task = new ErrorTask(fileName, lineNum, message, ErrorType.Warning, ErrorTaskSource.Compile, null, null);
+					var task = new ErrorTask(fileName, lineNum - 1, message, ErrorType.Warning, ErrorTaskSource.Compile, null, null);
 					ErrorTaskProvider.Instance.Add(task);
 				}
 				_pane.WriteLine(line);
@@ -630,6 +650,11 @@ namespace DkTools.Compiler
 			}
 
 			return sb.ToString();
+		}
+
+		public LockedValue<bool> InProgress
+		{
+			get { return _inProgress; }
 		}
 	}
 }

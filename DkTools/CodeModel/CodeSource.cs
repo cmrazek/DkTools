@@ -28,6 +28,7 @@ namespace DkTools.CodeModel
 			public int endPos;
 			public bool actualContent;
 			public bool primaryFile;
+			public int nextPrimaryStartPos;
 			public string text;
 			public bool disabled;
 
@@ -40,6 +41,7 @@ namespace DkTools.CodeModel
 				this.endPos = endPos;
 				this.actualContent = actualContent;
 				this.primaryFile = primaryFile;
+				this.nextPrimaryStartPos = -1;
 				this.text = string.Empty;
 				this.disabled = disabled;
 			}
@@ -81,6 +83,19 @@ namespace DkTools.CodeModel
 			{
 				Flush();
 				lastSeg = new CodeSegment(fileName, _length, fileStartPos, fileEndPos, actualContent, primaryFile, disabled);
+				
+				if (primaryFile)
+				{
+					var primaryStartPos = fileStartPos;
+					CodeSegment seg;
+					for (int segIndex = _segments.Count - 1; segIndex >= 0; segIndex--)
+					{
+						seg = _segments[segIndex];
+						if (seg.nextPrimaryStartPos == -1) seg.nextPrimaryStartPos = primaryStartPos;
+						else break;
+					}
+				}
+
 				_segments.Add(lastSeg);
 			}
 
@@ -139,7 +154,30 @@ namespace DkTools.CodeModel
 			if (_lastFindSegment >= 0)
 			{
 				var seg = _segments[_lastFindSegment];
-				if (seg.start <= offset && seg.start + seg.length > offset) return _lastFindSegment;
+				if (seg.start <= offset && seg.start + seg.length > offset)
+				{
+					return _lastFindSegment;
+				}
+				else if (offset < seg.start)
+				{
+					// work backwards until the segment is found
+					while (--_lastFindSegment >= 0)
+					{
+						seg = _segments[_lastFindSegment];
+						if (seg.start <= offset) return _lastFindSegment;
+					}
+					return -1;
+				}
+				else
+				{
+					// work forwards until the segment is found
+					while (++_lastFindSegment < _segments.Count)
+					{
+						seg = _segments[_lastFindSegment];
+						if (seg.start + seg.length > offset) return _lastFindSegment;
+					}
+					return _lastFindSegment = -1;
+				}
 			}
 
 			// Do a binary search for the segment index
@@ -222,14 +260,7 @@ namespace DkTools.CodeModel
 			}
 			else
 			{
-				segIndex++;
-				while (segIndex < _segments.Count)
-				{
-					if (seg.primaryFile) return seg.startPos;
-					segIndex++;
-				}
-
-				return -1;
+				return seg.nextPrimaryStartPos;
 			}
 		}
 
