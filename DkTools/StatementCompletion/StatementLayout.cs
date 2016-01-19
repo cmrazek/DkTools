@@ -176,6 +176,7 @@ namespace DkTools.StatementCompletion
 					if (ProbeEnvironment.IsValidFieldName(word)) return StatementState.OrderByTableField;
 					break;
 
+				case StatementState.OrderByTable:
 				case StatementState.OrderByTableField:
 					if (word == "asc" || word == "desc") return StatementState.OrderByTableFieldAscDesc;
 					break;
@@ -458,6 +459,7 @@ namespace DkTools.StatementCompletion
 					yield return "by";
 					break;
 
+				case StatementState.OrderByTable:
 				case StatementState.OrderByTableField:
 					yield return "asc";
 					yield return "desc";

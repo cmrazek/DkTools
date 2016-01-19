@@ -5,6 +5,7 @@ Version 1.2.23 - (WIP)
 
 - Fixed error during autocompletion of some return statements.
 - Fixed problem with function not being detected when the '}' is the last character in the file.
+- Fixed select 'desc' or 'asc' not highlighted when following index/relationship name.
 
 ____________________________________________________________________________________________________
 Version 1.2.22 - Jan 4, 2016:
