@@ -210,11 +210,19 @@ namespace DkTools.StatementCompletion
 					{
 						var caretPos = _textView.Caret.Position.BufferPosition;
 						var state = caretPos.GetState();
+						var prefix = caretPos.GetPrecedingLineText();
+
 						if (State.IsInLiveCode(state))
 						{
-							var prefix = caretPos.GetPrecedingLineText();
 							if (_rxAfterInclude.IsMatch(prefix) ||
 								StatementLayout.GetNextPossibleKeywords(State.ToStatement(state)).Any())
+							{
+								TriggerCompletion(false, allowInsideString: true);
+							}
+						}
+						else
+						{
+							if (_rxAfterInclude.IsMatch(prefix))
 							{
 								TriggerCompletion(false, allowInsideString: true);
 							}

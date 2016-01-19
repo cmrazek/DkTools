@@ -251,7 +251,7 @@ namespace DkTools.StatementCompletion
 			#region #include
 			else if ((match = _rxAfterInclude.Match(prefix)).Success)
 			{
-				completionSpan = new SnapshotSpan(snapshot, linePos + match.Groups[1].Index, match.Groups[1].Length);
+				completionSpan = new SnapshotSpan(snapshot, linePos + match.Groups[1].Index + match.Groups[1].Length, 0);
 				AddCompletions(completionList, HandleAfterInclude(completionSpan, match.Groups[1].Value));
 			}
 			#endregion
