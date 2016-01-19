@@ -144,10 +144,20 @@ namespace DkTools.TokenParser
 						}
 						else if (ch == startCh)
 						{
-							_tokenText.Append(ch);
-							_tokenTerminated = true;
-							_pos++;
-							break;
+							if (_pos + 1 < _length && _source[_pos + 1] == startCh)
+							{
+								// 2 strings side-by-side make a single concatenated string.
+								_tokenText.Append(startCh);
+								_tokenText.Append(startCh);
+								_pos += 2;
+							}
+							else
+							{
+								_tokenText.Append(ch);
+								_tokenTerminated = true;
+								_pos++;
+								break;
+							}
 						}
 						else if (ch == '\r' || ch == '\n')
 						{
@@ -540,9 +550,12 @@ namespace DkTools.TokenParser
 			if (str.EndsWith("\"") || str.EndsWith("\'")) str = str.Substring(0, str.Length - 1);
 
 			var sb = new StringBuilder(str.Length);
+			char ch;
 			for (int i = 0; i < str.Length; i++)
 			{
-				if (str[i] == '\\' && i + 1 < str.Length)
+				ch = str[i];
+
+				if (ch == '\\' && i + 1 < str.Length)
 				{
 					i++;
 					switch (str[i])
@@ -561,7 +574,12 @@ namespace DkTools.TokenParser
 							break;
 					}
 				}
-				else sb.Append(str[i]);
+				else if ((ch == '\"' || ch == '\'') && i + 1 < str.Length && str[i + 1] == ch)
+				{
+					// Concatenated strings
+					i++;
+				}
+				else sb.Append(ch);
 			}
 
 			return sb.ToString();
@@ -894,10 +912,20 @@ namespace DkTools.TokenParser
 				}
 				else if (ch == startCh)
 				{
-					_tokenText.Append(ch);
-					_tokenTerminated = true;
-					_pos++;
-					break;
+					if (_pos + 1 < _length && _source[_pos + 1] == startCh)
+					{
+						// 2 strings side-by-side make a single concatenated string.
+						_tokenText.Append(startCh);
+						_tokenText.Append(startCh);
+						_pos += 2;
+					}
+					else
+					{
+						_tokenText.Append(ch);
+						_tokenTerminated = true;
+						_pos++;
+						break;
+					}
 				}
 				else if (ch == '\r' || ch == '\n')
 				{
