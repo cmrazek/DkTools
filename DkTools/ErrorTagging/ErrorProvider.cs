@@ -5,17 +5,24 @@ using System.ComponentModel;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using VsText = Microsoft.VisualStudio.Text;
 
 namespace DkTools.ErrorTagging
 {
 	internal sealed class ErrorProvider
 	{
 		private List<ErrorInfo> _errors = new List<ErrorInfo>();
+		private VsText.ITextSnapshot _snapshot;
 
 		/// <summary>
 		/// Called when an error has been reported. The recipient of this event can modify the details of the error, if desired.
 		/// </summary>
 		public event EventHandler<ErrorReportedEventArgs> ErrorReported;
+
+		public ErrorProvider(VsText.ITextSnapshot snapshot)
+		{
+			_snapshot = snapshot;
+		}
 
 		public void ReportError(TokenParser.Parser parser, CodeModel.Span span, ErrorCode code, params object[] args)
 		{
@@ -44,7 +51,7 @@ namespace DkTools.ErrorTagging
 
 			var type = GetErrorType(code);
 
-			var err = new ErrorInfo(code, type, message, span);
+			var err = new ErrorInfo(code, type, message, span, _snapshot);
 
 			var ev = ErrorReported;
 			if (ev != null)

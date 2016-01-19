@@ -176,6 +176,10 @@ namespace DkTools.CodeModel
 						seg = _segments[_lastFindSegment];
 						if (seg.start + seg.length > offset) return _lastFindSegment;
 					}
+
+					// If at the end of the file, then return the last segment.
+					if (offset == _length) return _lastFindSegment = _segments.Count - 1;
+
 					return _lastFindSegment = -1;
 				}
 			}

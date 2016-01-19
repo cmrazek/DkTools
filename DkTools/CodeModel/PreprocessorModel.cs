@@ -31,7 +31,7 @@ namespace DkTools.CodeModel
 		private List<Definition> _globalDefs = new List<Definition>();
 #if REPORT_ERRORS
 		private bool _reportErrors;
-		ErrorTagging.ErrorProvider _errProv = new ErrorTagging.ErrorProvider();
+		ErrorTagging.ErrorProvider _errProv;
 #endif
 
 		public PreprocessorModel(CodeSource source, DefinitionProvider defProv, string fileName, bool visible, IEnumerable<Preprocessor.IncludeDependency> includeDependencies)
@@ -50,6 +50,7 @@ namespace DkTools.CodeModel
 
 #if REPORT_ERRORS
 			_reportErrors = visible && _fileContext != FileContext.Include && ProbeToolsPackage.Instance.EditorOptions.ShowErrors;
+			_errProv = new ErrorTagging.ErrorProvider(source.Snapshot);
 #endif
 
 			if (includeDependencies != null) _includeDependencies = includeDependencies.ToArray();

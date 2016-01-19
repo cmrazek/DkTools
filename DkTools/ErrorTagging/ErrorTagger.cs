@@ -52,20 +52,6 @@ namespace DkTools.ErrorTagging
 
 			if (!ProbeToolsPackage.Instance.EditorOptions.ShowErrors) yield break;
 
-			// TODO: remove
-			//foreach (var error in _model.PreprocessorModel.ErrorProvider.Errors)
-			//{
-			//	foreach (var span in spans)
-			//	{
-			//		if (span.Contains(error.Span.Start) || span.Contains(error.Span.End))
-			//		{
-			//			var vsSpan = new SnapshotSpan(_model.Snapshot, error.Span.Start, error.Span.Length);
-			//			yield return new TagSpan<ErrorTag>(vsSpan, new ErrorTag(CodeError, error.Message));
-			//			break;
-			//		}
-			//	}
-			//}
-
 #if REPORT_ERRORS
 			var viewSnapshot = _view.TextSnapshot;
 
@@ -200,7 +186,9 @@ namespace DkTools.ErrorTagging
 		{
 			try
 			{
-				if (_model.FileContext != FileContext.Include && ProbeToolsPackage.Instance.EditorOptions.ShowErrors)
+				if (_model != null &&
+					_model.FileContext != FileContext.Include &&
+					ProbeToolsPackage.Instance.EditorOptions.ShowErrors)
 				{
 					Compiler.BackgroundFec.Run(_model.FileName, _model.Snapshot.TextBuffer.CurrentSnapshot);
 				}

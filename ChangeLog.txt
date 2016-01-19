@@ -1,6 +1,12 @@
 DkTools2012 ChangeLog
 
 ____________________________________________________________________________________________________
+Version 1.2.23 - (WIP)
+
+- Fixed error during autocompletion of some return statements.
+- Fixed problem with function not being detected when the '}' is the last character in the file.
+
+____________________________________________________________________________________________________
 Version 1.2.22 - Jan 4, 2016:
 
 - Compile errors are now displayed in the code and task list.

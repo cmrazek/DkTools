@@ -433,7 +433,7 @@ namespace DkTools.StatementCompletion
 
 				var funcDef = model.PreprocessorModel.LocalFunctions.FirstOrDefault(f => f.Definition.EntireSpan.Contains(modelPos));
 				var dataType = funcDef.Definition.DataType;
-				if (dataType != null)
+				if (dataType != null && dataType.HasCompletionOptions)
 				{
 					foreach (var opt in dataType.CompletionOptions)
 					{
@@ -610,7 +610,7 @@ namespace DkTools.StatementCompletion
 					return model.DefinitionProvider.GetGlobalFromAnywhere<VariableDefinition>(varName).FirstOrDefault();
 				}
 			});
-			if (dataType != null)
+			if (dataType != null && dataType.HasCompletionOptions)
 			{
 				foreach (var opt in dataType.CompletionOptions)
 				{
