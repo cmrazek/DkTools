@@ -350,6 +350,67 @@ namespace DkTools.FunctionFileScanning
 					}
 				}
 			}
+
+			PurgeNonexistentApps(db);
+		}
+
+		private void PurgeNonexistentApps(FFDatabase db)
+		{
+			var appsToRemove = new Dictionary<int, string>();
+			var appNames = ProbeEnvironment.AppNames.ToArray();
+
+			using (var cmd = db.CreateCommand("select id, name from app"))
+			{
+				using (var rdr = cmd.ExecuteReader())
+				{
+					var ordId = rdr.GetOrdinal("id");
+					var ordName = rdr.GetOrdinal("name");
+
+					while (rdr.Read())
+					{
+						var name = rdr.GetString(ordName);
+						if (!appNames.Any(a => string.Equals(a, name, StringComparison.OrdinalIgnoreCase)))
+						{
+							appsToRemove[rdr.GetInt32(ordId)] = name;
+						}
+					}
+				}
+			}
+
+			foreach (var appId in appsToRemove.Keys)
+			{
+				Log.Write(LogLevel.Info, "Removing app {0} from database because it no longer exists in the DK environment.", appsToRemove[appId]);
+
+				using (var cmd = db.CreateCommand("delete from func where app_id = @app_id"))
+				{
+					cmd.Parameters.AddWithValue("@app_id", appId);
+					cmd.ExecuteNonQuery();
+				}
+
+				using (var cmd = db.CreateCommand("delete from include_depends where app_id = @app_id"))
+				{
+					cmd.Parameters.AddWithValue("@app_id", appId);
+					cmd.ExecuteNonQuery();
+				}
+
+				using (var cmd = db.CreateCommand("delete from ref where app_id = @app_id"))
+				{
+					cmd.Parameters.AddWithValue("@app_id", appId);
+					cmd.ExecuteNonQuery();
+				}
+
+				using (var cmd = db.CreateCommand("delete from file_ where app_id = @app_id"))
+				{
+					cmd.Parameters.AddWithValue("@app_id", appId);
+					cmd.ExecuteNonQuery();
+				}
+
+				using (var cmd = db.CreateCommand("delete from app where id = @app_id"))
+				{
+					cmd.Parameters.AddWithValue("@app_id", appId);
+					cmd.ExecuteNonQuery();
+				}
+			}
 		}
 
 		public FFSearcher CreateSearcher()

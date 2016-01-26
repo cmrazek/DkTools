@@ -175,7 +175,7 @@ namespace DkTools.FunctionFileScanning
 		{
 			get
 			{
-				return string.Concat("Data Source = ", FileName);
+				return string.Concat("Data Source = ", FileName, ";Max Database Size = 1000");
 			}
 		}
 

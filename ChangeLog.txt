@@ -1,13 +1,15 @@
 DkTools2012 ChangeLog
 
 ____________________________________________________________________________________________________
-Version 1.2.23 - (WIP)
+Version 1.2.23 - Jan 26, 2016:
 
 - Fixed error during autocompletion of some return statements.
 - Fixed problem with function not being detected when the '}' is the last character in the file.
 - Fixed select 'desc' or 'asc' not highlighted when following index/relationship name.
 - Preprocessor parsing now detects concatenated string literals.
 - Fixed autocompletion on #include's.
+- Background scan now purges nonexistent DK applications.
+- Expanded maximum size of background scan database.
 
 ____________________________________________________________________________________________________
 Version 1.2.22 - Jan 4, 2016:
