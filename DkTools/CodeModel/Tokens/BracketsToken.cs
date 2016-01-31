@@ -32,6 +32,8 @@ namespace DkTools.CodeModel.Tokens
 			return Parse(parent, scope);
 		}
 
+		private static readonly string[] _endTokens = new string[] { ")" };
+
 		public static BracketsToken Parse(GroupToken parent, Scope scope)
 		{
 			var file = scope.File;
@@ -46,22 +48,36 @@ namespace DkTools.CodeModel.Tokens
 			indentScope.Hint |= ScopeHint.SuppressFunctionDefinition | ScopeHint.SuppressControlStatements;
 
 			var ret = new BracketsToken(parent, scope, startPos);
-			ret._openToken = new OpenBracketToken(ret, scope, new Span(startPos, scope.File.Position), ret);
-			ret.AddToken(ret._openToken);
+			ret.AddToken(ret._openToken = new OpenBracketToken(ret, scope, new Span(startPos, scope.File.Position), ret));
 
-			ret.ParseScope(indentScope, t =>
+			while (file.SkipWhiteSpaceAndComments(indentScope))
+			{
+				if (file.IsMatch(')'))
 				{
-					if (t is CloseBracketToken)
-					{
-						ret._closeToken = t as CloseBracketToken;
-						return ParseScopeResult.StopAndKeep;
-					}
+					ret.AddToken(ret._closeToken = new CloseBracketToken(ret, scope, file.MoveNextSpan(), ret));
+					break;
+				}
 
-					ret._innerTokens.Add(t);
-					return ParseScopeResult.Continue;
-				});
+				var exp = ExpressionToken.TryParse(ret, indentScope, _endTokens);
+				if (exp != null) ret.AddToken(exp);
+			}
 
 			return ret;
+
+			// TODO: remove
+			//ret.ParseScope(indentScope, t =>
+			//	{
+			//		if (t is CloseBracketToken)
+			//		{
+			//			ret._closeToken = t as CloseBracketToken;
+			//			return ParseScopeResult.StopAndKeep;
+			//		}
+
+			//		ret._innerTokens.Add(t);
+			//		return ParseScopeResult.Continue;
+			//	});
+
+			//return ret;
 		}
 
 		public BracketToken OpenToken

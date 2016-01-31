@@ -36,425 +36,435 @@ namespace DkTools.CodeModel.Tokens
 			scope.ClassName = _className;
 			Scope = scope;
 
-			ParseScope(scope, t => ParseScopeResult.Continue);
+			while (SkipWhiteSpaceAndComments(scope))
+			{
+				var stmt = StatementToken.TryParse(this, scope);
+				if (stmt != null) AddToken(stmt);
+			}
+
+			// TODO: remove
+			//ParseScope(scope, t => ParseScopeResult.Continue);
 
 			Span = new Span(0, Position);
 		}
 
-		public Token ParseComplexToken(GroupToken parent, Scope scope)
-		{
-			if (!SkipWhiteSpaceAndComments(scope)) return null;
-			var ch = _src[_pos];
+		// TODO: remove
+		//public Token ParseComplexToken(GroupToken parent, Scope scope)
+		//{
+		//	if (!SkipWhiteSpaceAndComments(scope)) return null;
+		//	var ch = _src[_pos];
 
-			if (ch.IsWordChar(true))
-			{
-				var word = PeekWord();
-				return ParseWord(parent, scope, MoveNextSpan(word.Length), word);
-			}
+		//	if (ch.IsWordChar(true))
+		//	{
+		//		var word = PeekWord();
+		//		return ParseWord(parent, scope, MoveNextSpan(word.Length), word);
+		//	}
 
-			#region Literals
-			if (char.IsDigit(ch))
-			{
-				return NumberToken.Parse(parent, scope);
-			}
+		//	#region Literals
+		//	if (char.IsDigit(ch))
+		//	{
+		//		return NumberToken.Parse(parent, scope);
+		//	}
 
-			if (ch == '\"' || ch == '\'')
-			{
-				var startPos = Position;
-				ParseStringLiteral();
-				var span = new Span(startPos, Position);
-				return new StringLiteralToken(parent, scope, span, GetText(span));
-			}
-			#endregion
+		//	if (ch == '\"' || ch == '\'')
+		//	{
+		//		var startPos = Position;
+		//		ParseStringLiteral();
+		//		var span = new Span(startPos, Position);
+		//		return new StringLiteralToken(parent, scope, span, GetText(span));
+		//	}
+		//	#endregion
 
-			#region Operators
-			if (ch == '-')
-			{
-				if (_pos + 1 < _length && Char.IsDigit(_src[_pos + 1]))
-				{
-					// Number with leading minus sign
-					var startPos = Position;
-					ParseNumber();
-					var span = new Span(startPos, Position);
-					return new NumberToken(parent, scope, span, GetText(span));
-				}
-				if (_pos + 1 < _length && _src[_pos + 1] == '=') return new OperatorToken(parent, scope, MoveNextSpan(2), "-=");
-				return new OperatorToken(parent, scope, MoveNextSpan(), "-");
-			}
+		//	#region Operators
+		//	if (ch == '-')
+		//	{
+		//		if (_pos + 1 < _length && Char.IsDigit(_src[_pos + 1]))
+		//		{
+		//			// Number with leading minus sign
+		//			var startPos = Position;
+		//			ParseNumber();
+		//			var span = new Span(startPos, Position);
+		//			return new NumberToken(parent, scope, span, GetText(span));
+		//		}
+		//		if (_pos + 1 < _length && _src[_pos + 1] == '=') return new OperatorToken(parent, scope, MoveNextSpan(2), "-=");
+		//		return new OperatorToken(parent, scope, MoveNextSpan(), "-");
+		//	}
 
-			if (ch == '+')
-			{
-				if (_pos + 1 < _length && _src[_pos + 1] == '=') return new OperatorToken(parent, scope, MoveNextSpan(2), "+=");
-				else return new OperatorToken(parent, scope, MoveNextSpan(), "+");
-			}
+		//	if (ch == '+')
+		//	{
+		//		if (_pos + 1 < _length && _src[_pos + 1] == '=') return new OperatorToken(parent, scope, MoveNextSpan(2), "+=");
+		//		else return new OperatorToken(parent, scope, MoveNextSpan(), "+");
+		//	}
 
-			if (ch == '*')
-			{
-				if (_pos + 1 < _length && _src[_pos + 1] == '=') return new OperatorToken(parent, scope, MoveNextSpan(2), "*=");
-				else return new OperatorToken(parent, scope, MoveNextSpan(), "*");
-			}
+		//	if (ch == '*')
+		//	{
+		//		if (_pos + 1 < _length && _src[_pos + 1] == '=') return new OperatorToken(parent, scope, MoveNextSpan(2), "*=");
+		//		else return new OperatorToken(parent, scope, MoveNextSpan(), "*");
+		//	}
 
-			if (ch == '/')
-			{
-				if (_pos + 1 < _length && _src[_pos + 1] == '=') return new OperatorToken(parent, scope, MoveNextSpan(2), "/=");
-				else return new OperatorToken(parent, scope, MoveNextSpan(), "/");
-			}
+		//	if (ch == '/')
+		//	{
+		//		if (_pos + 1 < _length && _src[_pos + 1] == '=') return new OperatorToken(parent, scope, MoveNextSpan(2), "/=");
+		//		else return new OperatorToken(parent, scope, MoveNextSpan(), "/");
+		//	}
 
-			if (ch == '%')
-			{
-				if (_pos + 1 < _length && _src[_pos + 1] == '=') return new OperatorToken(parent, scope, MoveNextSpan(2), "%=");
-				else return new OperatorToken(parent, scope, MoveNextSpan(), "%");
-			}
+		//	if (ch == '%')
+		//	{
+		//		if (_pos + 1 < _length && _src[_pos + 1] == '=') return new OperatorToken(parent, scope, MoveNextSpan(2), "%=");
+		//		else return new OperatorToken(parent, scope, MoveNextSpan(), "%");
+		//	}
 
-			if (ch == '=')
-			{
-				if (_pos + 1 < _length && _src[_pos + 1] == '=') return new OperatorToken(parent, scope, MoveNextSpan(2), "==");
-				else return new OperatorToken(parent, scope, MoveNextSpan(), "=");
-			}
+		//	if (ch == '=')
+		//	{
+		//		if (_pos + 1 < _length && _src[_pos + 1] == '=') return new OperatorToken(parent, scope, MoveNextSpan(2), "==");
+		//		else return new OperatorToken(parent, scope, MoveNextSpan(), "=");
+		//	}
 
-			if (ch == '!')
-			{
-				if (_pos + 1 < _length && _src[_pos + 1] == '=') return new OperatorToken(parent, scope, MoveNextSpan(2), "!=");
-				else return new OperatorToken(parent, scope, MoveNextSpan(), "!");	// Not technically a probe operator...
-			}
-			#endregion
+		//	if (ch == '!')
+		//	{
+		//		if (_pos + 1 < _length && _src[_pos + 1] == '=') return new OperatorToken(parent, scope, MoveNextSpan(2), "!=");
+		//		else return new OperatorToken(parent, scope, MoveNextSpan(), "!");	// Not technically a probe operator...
+		//	}
+		//	#endregion
 
-			#region Nestable
-			if (ch == '(')
-			{
-				return BracketsToken.Parse(parent, scope);
-			}
+		//	#region Nestable
+		//	if (ch == '(')
+		//	{
+		//		return BracketsToken.Parse(parent, scope);
+		//	}
 
-			if (ch == ')')
-			{
-				return new CloseBracketToken(parent, scope, MoveNextSpan(), null);
-			}
+		//	if (ch == ')')
+		//	{
+		//		return new CloseBracketToken(parent, scope, MoveNextSpan(), null);
+		//	}
 
-			if (ch == '{')
-			{
-				return BracesToken.Parse(parent, scope);
-			}
+		//	if (ch == '{')
+		//	{
+		//		return BracesToken.Parse(parent, scope);
+		//	}
 
-			if (ch == '}')
-			{
-				return new BraceToken(parent, scope, MoveNextSpan(), null, false);
-			}
+		//	if (ch == '}')
+		//	{
+		//		return new BraceToken(parent, scope, MoveNextSpan(), null, false);
+		//	}
 
-			if (ch == '[')
-			{
-				return ArrayBracesToken.Parse(parent, scope);
-			}
+		//	if (ch == '[')
+		//	{
+		//		return ArrayBracesToken.Parse(parent, scope);
+		//	}
 
-			if (ch == ']')
-			{
-				return new ArrayBraceToken(parent, scope, MoveNextSpan(), null, false);
-			}
-			#endregion
+		//	if (ch == ']')
+		//	{
+		//		return new ArrayBraceToken(parent, scope, MoveNextSpan(), null, false);
+		//	}
+		//	#endregion
 
-			#region Special Operators
-			if (ch == ',')
-			{
-				return new DelimiterToken(parent, scope, MoveNextSpan());
-			}
+		//	#region Special Operators
+		//	if (ch == ',')
+		//	{
+		//		return new DelimiterToken(parent, scope, MoveNextSpan());
+		//	}
 
-			if (ch == '.')
-			{
-				return new DotToken(parent, scope, MoveNextSpan());
-			}
+		//	if (ch == '.')
+		//	{
+		//		return new DotToken(parent, scope, MoveNextSpan());
+		//	}
 
-			if (ch == ';')
-			{
-				return new StatementEndToken(parent, scope, MoveNextSpan());
-			}
+		//	if (ch == ';')
+		//	{
+		//		return new StatementEndToken(parent, scope, MoveNextSpan());
+		//	}
 
-			if (ch == ':')
-			{
-				return new OperatorToken(parent, scope, MoveNextSpan(), ":");
-			}
+		//	if (ch == ':')
+		//	{
+		//		return new OperatorToken(parent, scope, MoveNextSpan(), ":");
+		//	}
 
-			if (ch == '&')
-			{
-				return new ReferenceToken(parent, scope, MoveNextSpan());
-			}
-			#endregion
+		//	if (ch == '&')
+		//	{
+		//		return new ReferenceToken(parent, scope, MoveNextSpan());
+		//	}
+		//	#endregion
 
-			#region Preprocessor
-			if (ch == '#')
-			{
-				var startPos = Position;
-				MoveNext();	// Skip #
-				SeekNonWordChar();
-				var wordSpan = new Span(startPos, Position);
-				var word = GetText(wordSpan);
+		//	#region Preprocessor
+		//	if (ch == '#')
+		//	{
+		//		var startPos = Position;
+		//		MoveNext();	// Skip #
+		//		SeekNonWordChar();
+		//		var wordSpan = new Span(startPos, Position);
+		//		var word = GetText(wordSpan);
 
-				switch (word)
-				{
-					case "#insert":
-						return InsertToken.Parse(parent, scope, new InsertStartToken(parent, scope, wordSpan));
-					case "#endinsert":
-						return new InsertEndToken(parent, scope, wordSpan);
-					case "#replace":
-						return ReplaceToken.Parse(parent, scope, new ReplaceStartToken(parent, scope, wordSpan));
-					case "#with":
-						return new ReplaceWithToken(parent, scope, wordSpan);
-					case "#endreplace":
-						return new ReplaceEndToken(parent, scope, wordSpan);
-					case "#include":
-						return IncludeToken.Parse(parent, scope, new PreprocessorToken(parent, scope, wordSpan, word));
-					default:
-						return new PreprocessorToken(parent, scope, wordSpan, word);
-				}
-			}
-			#endregion
+		//		switch (word)
+		//		{
+		//			case "#insert":
+		//				return InsertToken.Parse(parent, scope, new InsertStartToken(parent, scope, wordSpan));
+		//			case "#endinsert":
+		//				return new InsertEndToken(parent, scope, wordSpan);
+		//			case "#replace":
+		//				return ReplaceToken.Parse(parent, scope, new ReplaceStartToken(parent, scope, wordSpan));
+		//			case "#with":
+		//				return new ReplaceWithToken(parent, scope, wordSpan);
+		//			case "#endreplace":
+		//				return new ReplaceEndToken(parent, scope, wordSpan);
+		//			case "#include":
+		//				return IncludeToken.Parse(parent, scope, new PreprocessorToken(parent, scope, wordSpan, word));
+		//			default:
+		//				return new PreprocessorToken(parent, scope, wordSpan, word);
+		//		}
+		//	}
+		//	#endregion
 
-			return new UnknownToken(parent, scope, MoveNextSpan(), ch.ToString());
-		}
+		//	return new UnknownToken(parent, scope, MoveNextSpan(), ch.ToString());
+		//}
 
-		private Token ParseTokenFromDefinitions(GroupToken parent, Scope scope, Span span, string word, Definition[] defs)
-		{
-			// Tokens that shouldn't be mixed up with other types of definitions.
-			foreach (var def in defs)
-			{
-				if (def is VariableDefinition)
-				{
-					var varDef = def as VariableDefinition;
-					if (varDef.DataType.HasMethodsOrProperties)
-					{
-						SkipWhiteSpaceAndComments(scope);
-						if (PeekChar() == '.')
-						{
-							// This will be handled below when processing the combination tokens.
-							continue;
-						}
-					}
+		// TODO: remove
+		//private Token ParseTokenFromDefinitions(GroupToken parent, Scope scope, Span span, string word, Definition[] defs)
+		//{
+		//	// Tokens that shouldn't be mixed up with other types of definitions.
+		//	foreach (var def in defs)
+		//	{
+		//		if (def is VariableDefinition)
+		//		{
+		//			var varDef = def as VariableDefinition;
+		//			if (varDef.DataType.HasMethodsOrProperties)
+		//			{
+		//				SkipWhiteSpaceAndComments(scope);
+		//				if (PeekChar() == '.')
+		//				{
+		//					// This will be handled below when processing the combination tokens.
+		//					continue;
+		//				}
+		//			}
 
-					return new VariableToken(parent, scope, span, word, varDef);
-				}
-				if (def is FunctionDefinition)
-				{
-					var argsToken = BracketsToken.TryParse(parent, scope);
-					if (argsToken != null)
-					{
-						var funcDef = def as FunctionDefinition;
-						if (string.Equals(funcDef.SourceFileName, _fileName, StringComparison.OrdinalIgnoreCase) &&
-							funcDef.ArgsStartPosition == argsToken.Span.Start)
-						{
-							var nameToken = new IdentifierToken(parent, scope, span, word);
-							return new FunctionPlaceholderToken(parent, scope, span, word, nameToken, argsToken, funcDef);
-						}
-						else
-						{
-							var nameToken = new IdentifierToken(parent, scope, span, word);
-							return new FunctionCallToken(parent, scope, null, null, nameToken, argsToken, funcDef);
-						}
-					}
-				}
-				if (def is ConstantDefinition)
-				{
-					return new ConstantToken(parent, scope, span, word, def as ConstantDefinition);
-				}
-				if (def is DataTypeDefinition)
-				{
-					return new DataTypeToken(parent, scope, new IdentifierToken(parent, scope, span, word), (def as DataTypeDefinition).DataType, def as DataTypeDefinition);
-				}
-				if (def is MacroDefinition)
-				{
-					return new MacroCallToken(parent, scope, new IdentifierToken(parent, scope, span, word), def as MacroDefinition);
-				}
-				if (def is InterfaceTypeDefinition)
-				{
-					return new InterfaceTypeToken(parent, scope, span, def as InterfaceTypeDefinition);
-				}
-			}
+		//			return new VariableToken(parent, scope, span, word, varDef);
+		//		}
+		//		if (def is FunctionDefinition)
+		//		{
+		//			var argsToken = BracketsToken.TryParse(parent, scope);
+		//			if (argsToken != null)
+		//			{
+		//				var funcDef = def as FunctionDefinition;
+		//				if (string.Equals(funcDef.SourceFileName, _fileName, StringComparison.OrdinalIgnoreCase) &&
+		//					funcDef.ArgsStartPosition == argsToken.Span.Start)
+		//				{
+		//					var nameToken = new IdentifierToken(parent, scope, span, word);
+		//					return new FunctionPlaceholderToken(parent, scope, span, word, nameToken, argsToken, funcDef);
+		//				}
+		//				else
+		//				{
+		//					var nameToken = new IdentifierToken(parent, scope, span, word);
+		//					return new FunctionCallToken(parent, scope, null, null, nameToken, argsToken, funcDef);
+		//				}
+		//			}
+		//		}
+		//		if (def is ConstantDefinition)
+		//		{
+		//			return new ConstantToken(parent, scope, span, word, def as ConstantDefinition);
+		//		}
+		//		if (def is DataTypeDefinition)
+		//		{
+		//			return new DataTypeToken(parent, scope, new IdentifierToken(parent, scope, span, word), (def as DataTypeDefinition).DataType, def as DataTypeDefinition);
+		//		}
+		//		if (def is MacroDefinition)
+		//		{
+		//			return new MacroCallToken(parent, scope, new IdentifierToken(parent, scope, span, word), def as MacroDefinition);
+		//		}
+		//		if (def is InterfaceTypeDefinition)
+		//		{
+		//			return new InterfaceTypeToken(parent, scope, span, def as InterfaceTypeDefinition);
+		//		}
+		//	}
 
-			// Tables/classes/extracts may be mixed up due to the ability to use the same name1.
-			var tokens = new List<Token>();
-			SkipWhiteSpaceAndComments(scope);
-			if (PeekChar() == '.')
-			{
-				var resetPos = Position;
-				var dotSpan = MoveNextSpan(1);
-				SkipWhiteSpaceAndComments(scope);
+		//	// Tables/classes/extracts may be mixed up due to the ability to use the same name1.
+		//	var tokens = new List<Token>();
+		//	SkipWhiteSpaceAndComments(scope);
+		//	if (PeekChar() == '.')
+		//	{
+		//		var resetPos = Position;
+		//		var dotSpan = MoveNextSpan(1);
+		//		SkipWhiteSpaceAndComments(scope);
 
-				var word2 = PeekWord();
-				if (!string.IsNullOrEmpty(word2))
-				{
-					var word2Span = MoveNextSpan(word2.Length);
+		//		var word2 = PeekWord();
+		//		if (!string.IsNullOrEmpty(word2))
+		//		{
+		//			var word2Span = MoveNextSpan(word2.Length);
 
-					if (defs.Any(d => d is TableDefinition))
-					{
-						var table = ProbeEnvironment.GetTable(word);
-						if (table != null)
-						{
-							var field = table.GetField(word2);
-							if (field != null)
-							{
-								var tableToken = new TableToken(parent, scope, span, word, table.BaseDefinition);
-								var dotToken = new DotToken(parent, scope, dotSpan);
-								var fieldToken = new TableFieldToken(parent, scope, word2Span, word2, field);
-								return new TableAndFieldToken(parent, scope, tableToken, dotToken, fieldToken);
-							}
-						}
-					}
+		//			if (defs.Any(d => d is TableDefinition))
+		//			{
+		//				var table = ProbeEnvironment.GetTable(word);
+		//				if (table != null)
+		//				{
+		//					var field = table.GetField(word2);
+		//					if (field != null)
+		//					{
+		//						var tableToken = new TableToken(parent, scope, span, word, table.BaseDefinition);
+		//						var dotToken = new DotToken(parent, scope, dotSpan);
+		//						var fieldToken = new TableFieldToken(parent, scope, word2Span, word2, field);
+		//						return new TableAndFieldToken(parent, scope, tableToken, dotToken, fieldToken);
+		//					}
+		//				}
+		//			}
 
-					if (defs.Any(d => d is RelIndDefinition))
-					{
-						var relInd = ProbeEnvironment.GetRelInd(word);
-						if (relInd != null)
-						{
-							var field = relInd.GetField(word2);
-							if (field != null)
-							{
-								var relIndToken = new RelIndToken(parent, scope, span, word, relInd.Definition);
-								var dotToken = new DotToken(parent, scope, dotSpan);
-								var fieldToken = new RelIndFieldToken(parent, scope, word2Span, word2, field);
-								return new RelIndAndFieldToken(parent, scope, relIndToken, dotToken, fieldToken);
-							}
-						}
-					}
+		//			if (defs.Any(d => d is RelIndDefinition))
+		//			{
+		//				var relInd = ProbeEnvironment.GetRelInd(word);
+		//				if (relInd != null)
+		//				{
+		//					var field = relInd.GetField(word2);
+		//					if (field != null)
+		//					{
+		//						var relIndToken = new RelIndToken(parent, scope, span, word, relInd.Definition);
+		//						var dotToken = new DotToken(parent, scope, dotSpan);
+		//						var fieldToken = new RelIndFieldToken(parent, scope, word2Span, word2, field);
+		//						return new RelIndAndFieldToken(parent, scope, relIndToken, dotToken, fieldToken);
+		//					}
+		//				}
+		//			}
 
-					if (defs.Any(d => d is ClassDefinition))
-					{
-						foreach (var ffClass in ProbeToolsPackage.Instance.FunctionFileScanner.CurrentApp.GetClasses(word))
-						{
-							var ffFunc = ffClass.GetFunctionDefinitions(word2).FirstOrDefault();
-							if (ffFunc != null)
-							{
-								SkipWhiteSpaceAndComments(scope);
-								if (PeekChar() == '(')
-								{
-									var classToken = new ClassToken(parent, scope, span, word, ffClass.ClassDefinition);
-									var dotToken = new DotToken(parent, scope, dotSpan);
-									var nameToken = new IdentifierToken(parent, scope, word2Span, word2);
-									var argsToken = BracketsToken.Parse(parent, scope);
-									var funcToken = new FunctionCallToken(parent, scope, classToken, dotToken, nameToken, argsToken, ffFunc);
-									return new ClassAndFunctionToken(parent, scope, classToken, dotToken, funcToken, ffFunc);
-								}
-							}
-						}
-					}
+		//			if (defs.Any(d => d is ClassDefinition))
+		//			{
+		//				foreach (var ffClass in ProbeToolsPackage.Instance.FunctionFileScanner.CurrentApp.GetClasses(word))
+		//				{
+		//					var ffFunc = ffClass.GetFunctionDefinitions(word2).FirstOrDefault();
+		//					if (ffFunc != null)
+		//					{
+		//						SkipWhiteSpaceAndComments(scope);
+		//						if (PeekChar() == '(')
+		//						{
+		//							var classToken = new ClassToken(parent, scope, span, word, ffClass.ClassDefinition);
+		//							var dotToken = new DotToken(parent, scope, dotSpan);
+		//							var nameToken = new IdentifierToken(parent, scope, word2Span, word2);
+		//							var argsToken = BracketsToken.Parse(parent, scope);
+		//							var funcToken = new FunctionCallToken(parent, scope, classToken, dotToken, nameToken, argsToken, ffFunc);
+		//							return new ClassAndFunctionToken(parent, scope, classToken, dotToken, funcToken, ffFunc);
+		//						}
+		//					}
+		//				}
+		//			}
 
-					if (defs.Any(d => d is ExtractTableDefinition))
-					{
-						var exDef = defs.FirstOrDefault(d => d is ExtractTableDefinition) as ExtractTableDefinition;
-						if (exDef != null)
-						{
-							var fieldDef = exDef.GetField(word2);
-							if (fieldDef != null)
-							{
-								var exToken = new ExtractTableToken(parent, scope, span, word, exDef);
-								var dotToken = new DotToken(parent, scope, dotSpan);
-								var fieldToken = new ExtractFieldToken(parent, scope, word2Span, word2, fieldDef);
-								return new ExtractTableAndFieldToken(parent, scope, exToken, dotToken, fieldToken);
-							}
-						}
-					}
+		//			if (defs.Any(d => d is ExtractTableDefinition))
+		//			{
+		//				var exDef = defs.FirstOrDefault(d => d is ExtractTableDefinition) as ExtractTableDefinition;
+		//				if (exDef != null)
+		//				{
+		//					var fieldDef = exDef.GetField(word2);
+		//					if (fieldDef != null)
+		//					{
+		//						var exToken = new ExtractTableToken(parent, scope, span, word, exDef);
+		//						var dotToken = new DotToken(parent, scope, dotSpan);
+		//						var fieldToken = new ExtractFieldToken(parent, scope, word2Span, word2, fieldDef);
+		//						return new ExtractTableAndFieldToken(parent, scope, exToken, dotToken, fieldToken);
+		//					}
+		//				}
+		//			}
 
-					if (defs.Any(d => d is VariableDefinition))
-					{
-						var varDef = defs.FirstOrDefault(d => d is VariableDefinition) as VariableDefinition;
-						if (varDef != null)
-						{
-							var dataType = varDef.DataType;
-							var methodDef = dataType.GetMethods(word2).FirstOrDefault() as InterfaceMethodDefinition;
-							if (methodDef != null)
-							{
-								SkipWhiteSpaceAndComments(scope);
-								if (PeekChar() == '(')
-								{
-									var varToken = new VariableToken(parent, scope, span, word, varDef);
-									var dotToken = new DotToken(parent, scope, dotSpan);
-									var nameToken = new IdentifierToken(parent, scope, word2Span, word2);
-									var argsToken = BracketsToken.Parse(parent, scope);
-									return new InterfaceMethodCallToken(parent, scope, varToken, dotToken, nameToken, argsToken, methodDef);
+		//			if (defs.Any(d => d is VariableDefinition))
+		//			{
+		//				var varDef = defs.FirstOrDefault(d => d is VariableDefinition) as VariableDefinition;
+		//				if (varDef != null)
+		//				{
+		//					var dataType = varDef.DataType;
+		//					var methodDef = dataType.GetMethods(word2).FirstOrDefault() as InterfaceMethodDefinition;
+		//					if (methodDef != null)
+		//					{
+		//						SkipWhiteSpaceAndComments(scope);
+		//						if (PeekChar() == '(')
+		//						{
+		//							var varToken = new VariableToken(parent, scope, span, word, varDef);
+		//							var dotToken = new DotToken(parent, scope, dotSpan);
+		//							var nameToken = new IdentifierToken(parent, scope, word2Span, word2);
+		//							var argsToken = BracketsToken.Parse(parent, scope);
+		//							return new InterfaceMethodCallToken(parent, scope, varToken, dotToken, nameToken, argsToken, methodDef);
 
-									// TODO: There should be some attempt to match the proper method signature to this call.
-									// but this only affects interfaces.
-								}
-							}
+		//							// TODO: There should be some attempt to match the proper method signature to this call.
+		//							// but this only affects interfaces.
+		//						}
+		//					}
 
-							var propDef = dataType.GetProperties(word2).FirstOrDefault() as InterfacePropertyDefinition;
-							if (propDef != null)
-							{
-								var varToken = new VariableToken(parent, scope, span, word, varDef);
-								var dotToken = new DotToken(parent, scope, dotSpan);
-								var nameToken = new IdentifierToken(parent, scope, word2Span, word2);
-								return new InterfacePropertyToken(parent, scope, varToken, dotToken, nameToken, propDef);
-							}
-						}
-					}
-				}
+		//					var propDef = dataType.GetProperties(word2).FirstOrDefault() as InterfacePropertyDefinition;
+		//					if (propDef != null)
+		//					{
+		//						var varToken = new VariableToken(parent, scope, span, word, varDef);
+		//						var dotToken = new DotToken(parent, scope, dotSpan);
+		//						var nameToken = new IdentifierToken(parent, scope, word2Span, word2);
+		//						return new InterfacePropertyToken(parent, scope, varToken, dotToken, nameToken, propDef);
+		//					}
+		//				}
+		//			}
+		//		}
 
-				Position = resetPos;
-			}
+		//		Position = resetPos;
+		//	}
 
-			// If we got here, then there is no 'dot' or field name following the next word, so it will be just name1 by itself.
+		//	// If we got here, then there is no 'dot' or field name following the next word, so it will be just name1 by itself.
 
-			// Table definition takes higher precedence, since it can contain prompt/comment info.
-			var tableDef = defs.FirstOrDefault(d => d is TableDefinition);
-			if (tableDef != null)
-			{
-				return new TableToken(parent, scope, span, word, tableDef as TableDefinition);
-			}
+		//	// Table definition takes higher precedence, since it can contain prompt/comment info.
+		//	var tableDef = defs.FirstOrDefault(d => d is TableDefinition);
+		//	if (tableDef != null)
+		//	{
+		//		return new TableToken(parent, scope, span, word, tableDef as TableDefinition);
+		//	}
 
-			foreach (var def in defs)
-			{
-				if (def is ClassDefinition)
-				{
-					return new ClassToken(parent, scope, span, word, def as ClassDefinition);
-				}
-				if (def is ExtractTableDefinition)
-				{
-					return new ExtractTableToken(parent, scope, span, word, def as ExtractTableDefinition);
-				}
-				if (def is RelIndDefinition)
-				{
-					return new RelIndToken(parent, scope, span, word, def as RelIndDefinition);
-				}
-			}
+		//	foreach (var def in defs)
+		//	{
+		//		if (def is ClassDefinition)
+		//		{
+		//			return new ClassToken(parent, scope, span, word, def as ClassDefinition);
+		//		}
+		//		if (def is ExtractTableDefinition)
+		//		{
+		//			return new ExtractTableToken(parent, scope, span, word, def as ExtractTableDefinition);
+		//		}
+		//		if (def is RelIndDefinition)
+		//		{
+		//			return new RelIndToken(parent, scope, span, word, def as RelIndDefinition);
+		//		}
+		//	}
 
-			return null;
-		}
+		//	return null;
+		//}
 
-		/// <summary>
-		/// Handles parsing a complex word token from the file.
-		/// </summary>
-		/// <param name="parent">Parent token</param>
-		/// <param name="scope">Current scope</param>
-		/// <param name="wordSpan">Span of the parsed word</param>
-		/// <param name="word">The word found by the parser function</param>
-		/// <returns>Always returns a new token for the word.</returns>
-		/// <remarks>This function assumes that the current position is after the word.</remarks>
-		private Token ParseWord(GroupToken parent, Scope scope, Span wordSpan, string word)
-		{
-			if (word == "extract") return ExtractStatement.Parse(parent, scope, new KeywordToken(parent, scope, wordSpan, "extract"));
-			if (word == "tag") return TagToken.Parse(parent, scope, new KeywordToken(parent, scope, wordSpan, word));
-			if (word == "alter" || word == "ALTER") return AlterToken.Parse(parent, scope, new KeywordToken(parent, scope, wordSpan, word));
+		// TODO: remove
+		///// <summary>
+		///// Handles parsing a complex word token from the file.
+		///// </summary>
+		///// <param name="parent">Parent token</param>
+		///// <param name="scope">Current scope</param>
+		///// <param name="wordSpan">Span of the parsed word</param>
+		///// <param name="word">The word found by the parser function</param>
+		///// <returns>Always returns a new token for the word.</returns>
+		///// <remarks>This function assumes that the current position is after the word.</remarks>
+		//private Token ParseWord(GroupToken parent, Scope scope, Span wordSpan, string word)
+		//{
+		//	if (word == "extract") return ExtractStatement.Parse(parent, scope, new KeywordToken(parent, scope, wordSpan, "extract"));
+		//	if (word == "tag") return TagToken.Parse(parent, scope, new KeywordToken(parent, scope, wordSpan, word));
+		//	if (word == "alter" || word == "ALTER") return AlterToken.Parse(parent, scope, new KeywordToken(parent, scope, wordSpan, word));
 
-			if (Constants.Keywords.Contains(word))
-			{
-				return new KeywordToken(parent, scope, wordSpan, word);
-			}
+		//	if (Constants.Keywords.Contains(word))
+		//	{
+		//		return new KeywordToken(parent, scope, wordSpan, word);
+		//	}
 
-			if (Constants.DataTypeKeywords.Contains(word))
-			{
-				return new DataTypeKeywordToken(parent, scope, wordSpan, word);
-			}
+		//	if (Constants.DataTypeKeywords.Contains(word))
+		//	{
+		//		return new DataTypeKeywordToken(parent, scope, wordSpan, word);
+		//	}
 
-			if ((scope.Hint & ScopeHint.InsideAlter) != 0)
-			{
-				if (Constants.AlterKeywords.Contains(word)) return new KeywordToken(parent, scope, wordSpan, word);
-			}
+		//	if ((scope.Hint & ScopeHint.InsideAlter) != 0)
+		//	{
+		//		if (Constants.AlterKeywords.Contains(word)) return new KeywordToken(parent, scope, wordSpan, word);
+		//	}
 
-			var defs = scope.DefinitionProvider.GetAny(wordSpan.Start, word).ToArray();
-			if (defs.Length > 0)
-			{
-				var token = ParseTokenFromDefinitions(parent, scope, wordSpan, word, defs);
-				if (token != null) return token;
-			}
+		//	var defs = scope.DefinitionProvider.GetAny(wordSpan.Start, word).ToArray();
+		//	if (defs.Length > 0)
+		//	{
+		//		var token = ParseTokenFromDefinitions(parent, scope, wordSpan, word, defs);
+		//		if (token != null) return token;
+		//	}
 
-			return new IdentifierToken(parent, scope, wordSpan, word);
-		}
+		//	return new IdentifierToken(parent, scope, wordSpan, word);
+		//}
 
 		private Regex _rxRegionStart = new Regex(@"\G//\s*#region\b\s*(.*)\s*$", RegexOptions.Multiline);
 		private Regex _rxRegionEnd = new Regex(@"\G//\s*#endregion\b");
@@ -750,9 +760,67 @@ namespace DkTools.CodeModel.Tokens
 			get { return _pos >= _length; }
 		}
 
+		public bool IsMatch(char ch)
+		{
+			return _pos < _length && _src[_pos] == ch;
+		}
+
 		public bool IsMatch(string text)
 		{
-			return _pos + text.Length <= _src.Length && _src.Substring(_pos, text.Length) == text;
+			return _pos + text.Length <= _length && _src.Substring(_pos, text.Length) == text;
+		}
+
+		public bool IsWholeMatch(string text)
+		{
+			if (_pos + text.Length <= _length && _src.Substring(_pos, text.Length) == text)
+			{
+				if (text.IsWord())
+				{
+					// Check for whole word
+					if (_pos + text.Length < _length && _src[_pos + text.Length].IsWordChar(false))
+					{
+						return false;
+					}
+					else
+					{
+						return true;
+					}
+				}
+				else
+				{
+					return true;
+				}
+			}
+
+			return false;
+		}
+
+		public bool IsWholeMatch(IEnumerable<string> matches)
+		{
+			foreach (var text in matches)
+			{
+				if (_pos + text.Length <= _length && _src.Substring(_pos, text.Length) == text)
+				{
+					if (text.IsWord())
+					{
+						// Check for whole word
+						if (_pos + text.Length < _length && _src[_pos + text.Length].IsWordChar(false))
+						{
+							return false;
+						}
+						else
+						{
+							return true;
+						}
+					}
+					else
+					{
+						return true;
+					}
+				}
+			}
+
+			return false;
 		}
 
 		public bool SkipMatch(string text)
@@ -793,7 +861,8 @@ namespace DkTools.CodeModel.Tokens
 
 		public char PeekChar(int offset)
 		{
-			if (offset >= 0 && offset < _length) return _src[offset];
+			var pos = _pos + offset;
+			if (pos >= 0 && pos < _length) return _src[pos];
 			return '\0';
 		}
 

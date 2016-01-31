@@ -44,5 +44,25 @@ namespace DkTools.CodeModel.Definitions
 		{
 			get { return QuickInfoTextStr; }
 		}
+
+		public override bool AllowsChild
+		{
+			get { return false; }
+		}
+
+		public override bool RequiresChild
+		{
+			get { return false; }
+		}
+
+		public override Definition GetChildDefinition(string name)
+		{
+			throw new NotSupportedException();
+		}
+
+		public override bool RequiresArguments
+		{
+			get { return false; }
+		}
 	}
 }

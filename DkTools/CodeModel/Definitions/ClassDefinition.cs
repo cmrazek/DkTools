@@ -46,5 +46,33 @@ namespace DkTools.CodeModel.Definitions
 		{
 			get { return QuickInfoTextStr; }
 		}
+
+		public override bool RequiresChild
+		{
+			get { return true; }
+		}
+
+		public override bool AllowsChild
+		{
+			get { return true; }
+		}
+
+		public override Definition GetChildDefinition(string name)
+		{
+			foreach (var cls in ProbeToolsPackage.Instance.FunctionFileScanner.CurrentApp.GetClasses(Name))
+			{
+				foreach (var func in cls.GetFunctionDefinitions(name))
+				{
+					return func;
+				}
+			}
+
+			return null;
+		}
+
+		public override bool RequiresArguments
+		{
+			get { return false; }
+		}
 	}
 }

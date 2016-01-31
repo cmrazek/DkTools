@@ -93,5 +93,31 @@ namespace DkTools.CodeModel.Definitions
 		{
 			return string.Concat("interface:", name);
 		}
+
+		public override bool RequiresChild
+		{
+			get { return false; }
+		}
+
+		public override bool AllowsChild
+		{
+			get { return true; }
+		}
+
+		public override Definition GetChildDefinition(string name)
+		{
+			Definition def = _intType.GetMethod(name);
+			if (def != null) return def;
+
+			def = _intType.GetProperty(name);
+			if (def != null) return def;
+
+			return null;
+		}
+
+		public override bool RequiresArguments
+		{
+			get { return false; }
+		}
 	}
 }

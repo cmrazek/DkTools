@@ -72,27 +72,28 @@ namespace DkTools.CodeModel.Tokens
 			}
 		}
 
-		public void ParseScope(Scope scope, Func<Token, ParseScopeResult> parseCallback)
-		{
-			while (true)
-			{
-				var token = scope.File.ParseComplexToken(this, scope);
-				if (token == null) return;
+		// TODO: remove
+		//public void ParseScope(Scope scope, Func<Token, ParseScopeResult> parseCallback)
+		//{
+		//	while (true)
+		//	{
+		//		var token = scope.File.ParseComplexToken(this, scope);
+		//		if (token == null) return;
 
-				switch (parseCallback(token))
-				{
-					case ParseScopeResult.Continue:
-						AddToken(token);
-						break;
-					case ParseScopeResult.StopAndKeep:
-						AddToken(token);
-						return;
-					case ParseScopeResult.StopAndReject:
-						scope.File.Position = token.Span.Start;
-						return;
-				}
-			}
-		}
+		//		switch (parseCallback(token))
+		//		{
+		//			case ParseScopeResult.Continue:
+		//				AddToken(token);
+		//				break;
+		//			case ParseScopeResult.StopAndKeep:
+		//				AddToken(token);
+		//				return;
+		//			case ParseScopeResult.StopAndReject:
+		//				scope.File.Position = token.Span.Start;
+		//				return;
+		//		}
+		//	}
+		//}
 
 		public Token FindLastChildBeforeOffset(int pos)
 		{

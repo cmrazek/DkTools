@@ -13,14 +13,19 @@ namespace DkTools.CodeModel.Definitions
 		private string _comment;
 		private string _description;
 		private bool _orig;
+		private Dict.Table _table;
 
 		public TableDefinition(string name, Dict.Table table, bool orig)
 			: base(name, null, -1, Dict.Table.GetExternalRefId(name))
 		{
+#if DEBUG
+			if (table == null) throw new ArgumentNullException("table");
+#endif
 			_prompt = table.Prompt;
 			_comment = table.Comment;
 			_description = table.Description;
 			_orig = orig;
+			_table = table;
 		}
 
 		public override StatementCompletion.CompletionType CompletionType
@@ -94,6 +99,28 @@ namespace DkTools.CodeModel.Definitions
 		public override string PickText
 		{
 			get { return Name; }
+		}
+
+		public override bool RequiresChild
+		{
+			get { return false; }
+		}
+
+		public override bool AllowsChild
+		{
+			get { return true; }
+		}
+
+		public override Definition GetChildDefinition(string name)
+		{
+			var field = _table.GetField(name);
+			if (field != null) return field.Definition;
+			return null;
+		}
+
+		public override bool RequiresArguments
+		{
+			get { return false; }
 		}
 	}
 }

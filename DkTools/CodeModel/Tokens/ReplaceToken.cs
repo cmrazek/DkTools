@@ -32,27 +32,60 @@ namespace DkTools.CodeModel.Tokens
 
 			var ret = new ReplaceToken(parent, scope, startToken);
 
-			ret.ParseScope(scopeIndent, t =>
+			var done = false;
+			while (!done && !file.EndOfFile)
+			{
+				var stmt = StatementToken.TryParse(ret, scopeIndent, t =>
 				{
-					if (t is ReplaceWithToken)
-					{
-						ret._withToken = t as ReplaceWithToken;
-						ret._withToken.ReplaceToken = ret;
-						return ParseScopeResult.Continue;
-					}
 					if (t is ReplaceEndToken)
 					{
 						ret._endToken = t as ReplaceEndToken;
 						ret._endToken.ReplaceToken = ret;
-						return ParseScopeResult.StopAndKeep;
+						done = true;
 					}
-
-					if (ret._withToken == null) ret._oldTokens.Add(t);
-					else ret._newTokens.Add(t);
-					return ParseScopeResult.Continue;
+					else if (ret._withToken == null)
+					{
+						if (t is ReplaceWithToken)
+						{
+							ret._withToken = t as ReplaceWithToken;
+							ret._withToken.ReplaceToken = ret;
+						}
+						else
+						{
+							ret._oldTokens.Add(t);
+						}
+					}
+					else
+					{
+						ret._newTokens.Add(t);
+					}
 				});
+			}
 
 			return ret;
+
+			// TODO: remove
+			//ret.ParseScope(scopeIndent, t =>
+			//	{
+			//		if (t is ReplaceWithToken)
+			//		{
+			//			ret._withToken = t as ReplaceWithToken;
+			//			ret._withToken.ReplaceToken = ret;
+			//			return ParseScopeResult.Continue;
+			//		}
+			//		if (t is ReplaceEndToken)
+			//		{
+			//			ret._endToken = t as ReplaceEndToken;
+			//			ret._endToken.ReplaceToken = ret;
+			//			return ParseScopeResult.StopAndKeep;
+			//		}
+
+			//		if (ret._withToken == null) ret._oldTokens.Add(t);
+			//		else ret._newTokens.Add(t);
+			//		return ParseScopeResult.Continue;
+			//	});
+
+			//return ret;
 		}
 
 		public override bool BreaksStatement

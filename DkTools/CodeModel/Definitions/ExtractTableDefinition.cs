@@ -79,5 +79,30 @@ namespace DkTools.CodeModel.Definitions
 		{
 			get { return QuickInfoTextStr; }
 		}
+
+		public override bool RequiresChild
+		{
+			get { return false; }
+		}
+
+		public override bool AllowsChild
+		{
+			get { return true; }
+		}
+
+		public override Definition GetChildDefinition(string name)
+		{
+			foreach (var field in _fields)
+			{
+				if (field.Name == name) return field;
+			}
+
+			return null;
+		}
+
+		public override bool RequiresArguments
+		{
+			get { return false; }
+		}
 	}
 }

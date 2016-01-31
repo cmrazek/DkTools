@@ -186,6 +186,9 @@ namespace DkTools.FunctionFileScanning
 
 		public void EnqueueChangedFile(string fullPath)
 		{
+			var options = ProbeToolsPackage.Instance.EditorOptions;
+			if (!options.BackgroundScan) return;
+
 			var fileContext = FileContextUtil.GetFileContextFromFileName(fullPath);
 			if (fileContext != FileContext.Include)
 			{
@@ -279,16 +282,20 @@ namespace DkTools.FunctionFileScanning
 				_scanQueue.Clear();
 			}
 
-			var scanList = new List<ScanInfo>();
-			foreach (var dir in ProbeEnvironment.SourceDirs)
+			var options = ProbeToolsPackage.Instance.EditorOptions;
+			if (options.BackgroundScan)
 			{
-				ProcessSourceDir(_currentApp, dir, scanList);
-			}
+				var scanList = new List<ScanInfo>();
+				foreach (var dir in ProbeEnvironment.SourceDirs)
+				{
+					ProcessSourceDir(_currentApp, dir, scanList);
+				}
 
-			scanList.Sort();
-			lock (_scanQueue)
-			{
-				foreach (var scanItem in scanList) _scanQueue.Enqueue(scanItem);
+				scanList.Sort();
+				lock (_scanQueue)
+				{
+					foreach (var scanItem in scanList) _scanQueue.Enqueue(scanItem);
+				}
 			}
 		}
 
@@ -314,20 +321,24 @@ namespace DkTools.FunctionFileScanning
 		{
 			try
 			{
-				var fileContext = FileContextUtil.GetFileContextFromFileName(e.FileName);
-				if (ProbeEnvironment.FileExistsInApp(e.FileName))
+				var options = ProbeToolsPackage.Instance.EditorOptions;
+				if (options.BackgroundScan)
 				{
-					if (fileContext != FileContext.Include && !FileContextUtil.IsLocalizedFile(e.FileName))
+					var fileContext = FileContextUtil.GetFileContextFromFileName(e.FileName);
+					if (ProbeEnvironment.FileExistsInApp(e.FileName))
 					{
-						Log.WriteDebug("Scanner detected a saved file: {0}", e.FileName);
+						if (fileContext != FileContext.Include && !FileContextUtil.IsLocalizedFile(e.FileName))
+						{
+							Log.WriteDebug("Scanner detected a saved file: {0}", e.FileName);
 
-						EnqueueChangedFile(e.FileName);
-					}
-					else
-					{
-						Log.WriteDebug("Scanner detected an include file was saved: {0}", e.FileName);
+							EnqueueChangedFile(e.FileName);
+						}
+						else
+						{
+							Log.WriteDebug("Scanner detected an include file was saved: {0}", e.FileName);
 
-						EnqueueFilesDependentOnInclude(e.FileName);
+							EnqueueFilesDependentOnInclude(e.FileName);
+						}
 					}
 				}
 			}
@@ -340,6 +351,9 @@ namespace DkTools.FunctionFileScanning
 		private void EnqueueFilesDependentOnInclude(string includeFileName)
 		{
 			if (_currentApp == null) return;
+
+			var options = ProbeToolsPackage.Instance.EditorOptions;
+			if (!options.BackgroundScan) return;
 
 			using (var db = new FFDatabase())
 			{

@@ -50,46 +50,75 @@ namespace DkTools.CodeModel.Tokens
 			var scope2 = scope.CloneIndent();
 			scope2.Hint |= ScopeHint.SuppressControlStatements | ScopeHint.SuppressFunctionDefinition | ScopeHint.SuppressVarDecl;
 
-			// Read all the tokens into a list that we can navigate later.
-			tokens.Clear();
-			var savePos = file.Position;
-			while (true)
+			while (file.SkipWhiteSpaceAndComments(scope2))
 			{
-				var tok = file.ParseComplexToken(ret, scope2);
-				if (tok == null) break;
-				if (tok is StatementEndToken)
+				if (file.IsMatch(';'))
 				{
-					tokens.Add(tok);
-					break;
-				}
-				if (tok.BreaksStatement)
-				{
-					file.Position = savePos;
-					break;
+					ret.AddToken(new StatementEndToken(ret, scope2, file.MoveNextSpan()));
+					return ret;
 				}
 
-				tokens.Add(tok);
-				savePos = file.Position;
-			}
-
-			// In the list, find tokens that occur before '=' and have a name matching an extract field.
-			// Replace the ones found with ExtractFieldTokens.
-			ExtractFieldDefinition fieldDef;
-			for (int i = 1, ii = tokens.Count; i < ii; i++)
-			{
-				var tok = tokens[i];
-				if (tok is OperatorToken && tok.Text == "=")
+				var exp = ExpressionToken.TryParse(ret, scope, null, (parseWord, parseWordSpan) =>
 				{
-					var prevTok = tokens[i - 1];
-					if (prevTok is WordToken && (fieldDef = exDef.GetField(prevTok.Text)) != null)
+					file.SkipWhiteSpaceAndComments(scope);
+					if (file.IsMatch('='))
 					{
-						tokens[i - 1] = new ExtractFieldToken(ret, scope2, prevTok.Span, fieldDef.Name, fieldDef);
+						var fieldDef = exDef.GetField(parseWord);
+						if (fieldDef != null)
+						{
+							return new ExtractFieldToken(ret, scope, parseWordSpan, parseWord, fieldDef);
+						}
 					}
-				}
+
+					return null;
+				});
+				if (exp != null) ret.AddToken(exp);
+				else break;
 			}
 
-			ret.AddTokens(tokens);
 			return ret;
+
+			// TODO: remove
+			//// Read all the tokens into a list that we can navigate later.
+			//tokens.Clear();
+			//var savePos = file.Position;
+			//while (true)
+			//{
+			//	var tok = file.ParseComplexToken(ret, scope2);
+			//	if (tok == null) break;
+			//	if (tok is StatementEndToken)
+			//	{
+			//		tokens.Add(tok);
+			//		break;
+			//	}
+			//	if (tok.BreaksStatement)
+			//	{
+			//		file.Position = savePos;
+			//		break;
+			//	}
+
+			//	tokens.Add(tok);
+			//	savePos = file.Position;
+			//}
+
+			//// In the list, find tokens that occur before '=' and have a name matching an extract field.
+			//// Replace the ones found with ExtractFieldTokens.
+			//ExtractFieldDefinition fieldDef;
+			//for (int i = 1, ii = tokens.Count; i < ii; i++)
+			//{
+			//	var tok = tokens[i];
+			//	if (tok is OperatorToken && tok.Text == "=")
+			//	{
+			//		var prevTok = tokens[i - 1];
+			//		if (prevTok is WordToken && (fieldDef = exDef.GetField(prevTok.Text)) != null)
+			//		{
+			//			tokens[i - 1] = new ExtractFieldToken(ret, scope2, prevTok.Span, fieldDef.Name, fieldDef);
+			//		}
+			//	}
+			//}
+
+			//ret.AddTokens(tokens);
+			//return ret;
 		}
 	}
 }

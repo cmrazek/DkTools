@@ -24,15 +24,30 @@ namespace DkTools.CodeModel.Tokens
 			var scopeIndent = scope.CloneIndent();
 			ret.AddToken(ret._startToken = insertToken);
 
-			ret.ParseScope(scope, t =>
+			var done = false;
+			while (!done && !file.EndOfFile)
+			{
+				var token = StatementToken.TryParse(ret, scopeIndent, t =>
 				{
 					if (t is InsertEndToken)
 					{
 						ret._endToken = t as InsertEndToken;
-						return ParseScopeResult.StopAndKeep;
+						done = true;
 					}
-					return ParseScopeResult.Continue;
 				});
+				if (token != null) ret.AddToken(token);
+			}
+
+			// TODO: remove
+			//ret.ParseScope(scope, t =>
+			//	{
+			//		if (t is InsertEndToken)
+			//		{
+			//			ret._endToken = t as InsertEndToken;
+			//			return ParseScopeResult.StopAndKeep;
+			//		}
+			//		return ParseScopeResult.Continue;
+			//	});
 
 			return ret;
 		}

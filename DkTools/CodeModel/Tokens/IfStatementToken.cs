@@ -7,7 +7,7 @@ namespace DkTools.CodeModel.Tokens
 {
 	internal sealed class IfStatementToken : GroupToken
 	{
-		private List<Token> _condition = new List<Token>();
+		private ExpressionToken _condition;
 		private BracesToken _trueBody = null;
 		private KeywordToken _elseToken = null;
 		private Token _falseBody = null;
@@ -27,39 +27,67 @@ namespace DkTools.CodeModel.Tokens
 			var scopeIndent = scope.Clone();
 			scopeIndent.Hint |= ScopeHint.NotOnRoot | ScopeHint.SuppressFunctionDefinition | ScopeHint.SuppressVarDecl;
 
-			// Condition
-			ret.ParseScope(scopeIndent, t =>
-				{
-					if (t.BreaksStatement) return ParseScopeResult.StopAndReject;
+			ret._condition = ExpressionToken.TryParse(ret, scopeIndent, null);
+			if (ret._condition != null) ret.AddToken(ret._condition);
 
-					if (t is BracesToken)
-					{
-						ret._trueBody = t as BracesToken;
-						return ParseScopeResult.StopAndKeep;
-					}
-
-					ret._condition.Add(t);
-					return ParseScopeResult.Continue;
-				});
-
-			if (ret._trueBody != null)
+			file.SkipWhiteSpaceAndComments(scopeIndent);
+			if (file.IsMatch('{'))
 			{
-				var elseToken = KeywordToken.TryParseMatching(ret, scopeIndent, "else");
-				if (elseToken != null)
-				{
-					ret.AddToken(ret._elseToken = elseToken);
+				ret.AddToken(ret._trueBody = BracesToken.Parse(ret, scopeIndent));
 
-					var falseBody = BracesToken.TryParse(ret, scopeIndent);
-					if (falseBody != null) ret.AddToken(ret._falseBody = falseBody);
-					else
+				file.SkipWhiteSpaceAndComments(scopeIndent);
+				if (file.IsWholeMatch("else"))
+				{
+					ret.AddToken(ret._elseToken = new KeywordToken(ret, scopeIndent, file.MoveNextSpan("else".Length), "else"));
+
+					file.SkipWhiteSpaceAndComments(scopeIndent);
+					if (file.IsMatch("{"))
 					{
-						var elseif = KeywordToken.TryParseMatching(ret, scope, "if");
-						if (elseif != null) ret.AddToken(ret._falseBody = IfStatementToken.Parse(parent, scope, elseif));
+						ret.AddToken(ret._falseBody = BracesToken.Parse(ret, scopeIndent));
+					}
+					else if (file.IsWholeMatch("if"))
+					{
+						ret.AddToken(ret._falseBody = IfStatementToken.Parse(ret, scopeIndent, new KeywordToken(ret, scopeIndent, file.MoveNextSpan("if".Length), "if")));
 					}
 				}
 			}
 
 			return ret;
+
+			// TODO: remove
+			//// Condition
+			//ret.ParseScope(scopeIndent, t =>
+			//	{
+			//		if (t.BreaksStatement) return ParseScopeResult.StopAndReject;
+
+			//		if (t is BracesToken)
+			//		{
+			//			ret._trueBody = t as BracesToken;
+			//			return ParseScopeResult.StopAndKeep;
+			//		}
+
+			//		ret._condition.Add(t);
+			//		return ParseScopeResult.Continue;
+			//	});
+
+			//if (ret._trueBody != null)
+			//{
+			//	var elseToken = KeywordToken.TryParseMatching(ret, scopeIndent, "else");
+			//	if (elseToken != null)
+			//	{
+			//		ret.AddToken(ret._elseToken = elseToken);
+
+			//		var falseBody = BracesToken.TryParse(ret, scopeIndent);
+			//		if (falseBody != null) ret.AddToken(ret._falseBody = falseBody);
+			//		else
+			//		{
+			//			var elseif = KeywordToken.TryParseMatching(ret, scope, "if");
+			//			if (elseif != null) ret.AddToken(ret._falseBody = IfStatementToken.Parse(parent, scope, elseif));
+			//		}
+			//	}
+			//}
+
+			//return ret;
 		}
 
 		public override bool BreaksStatement

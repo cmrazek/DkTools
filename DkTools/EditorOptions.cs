@@ -22,6 +22,11 @@ namespace DkTools
 		[Description("Show detected errors and warnings in the source code.")]
 		public bool ShowErrors { get; set; }
 
+		[Category("Editor Options")]
+		[DisplayName("Background Scanning")]
+		[Description("Scan files in the background to provide more info.")]
+		public bool BackgroundScan { get; set; }
+
 		public event EventHandler EditorRefreshRequired;
 
 		public EditorOptions()

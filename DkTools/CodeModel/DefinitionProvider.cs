@@ -18,6 +18,7 @@ namespace DkTools.CodeModel
 			{
 				_builtInDefs = new Definition[]
 				{
+					// Functions
 					new FunctionDefinition("abs", DataType.Void, "abs(expression to be evaluated)",
 						"Calculates the absolute value of an expression."),
 					new FunctionDefinition("avg", DataType.Void, "avg( expression, where expression, group TableName.ColumnName | all, in SelectName )",
@@ -62,8 +63,13 @@ namespace DkTools.CodeModel
 					new FunctionDefinition("vstring", DataType.StringVarying, "string varying vstring( expression, ... );",
 						"Creates a string of varying length by concatenating a list of expressions. "),
 
+					// Data types
+					new DataTypeDefinition("int", DataType.Int, true),
+
+					// Interfaces
 					new InterfaceTypeDefinition("oleobject"),
 
+					// Constants
 					new ConstantDefinition("_WINDOWS", null, 0, string.Empty)
 				};
 			}

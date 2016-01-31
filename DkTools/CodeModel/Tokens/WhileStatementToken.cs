@@ -7,7 +7,7 @@ namespace DkTools.CodeModel.Tokens
 {
 	internal class WhileStatementToken : GroupToken
 	{
-		private Token[] _expressionTokens;
+		private ExpressionToken _expressionToken;
 		private BracesToken _bodyToken;	// Could be null for unfinished code.
 
 		private WhileStatementToken(GroupToken parent, Scope scope, KeywordToken whileToken)
@@ -24,24 +24,39 @@ namespace DkTools.CodeModel.Tokens
 			var expressionScope = scope.Clone();
 			expressionScope.Hint |= ScopeHint.SuppressDataType | ScopeHint.SuppressFunctionDefinition | ScopeHint.SuppressVarDecl;
 
-			var expressionTokens = new List<Token>();
-			ret.ParseScope(expressionScope, t =>
-				{
-					if (t.BreaksStatement || t is BracesToken) return ParseScopeResult.StopAndReject;
-					expressionTokens.Add(t);
+			ret._expressionToken = ExpressionToken.TryParse(ret, scope, null);
+			if (ret._expressionToken != null) ret.AddToken(ret._expressionToken);
 
-					file.SkipWhiteSpaceAndComments(expressionScope);
-					return file.PeekChar() == '{' ? ParseScopeResult.StopAndKeep : ParseScopeResult.Continue;
-				});
-			ret._expressionTokens = expressionTokens.ToArray();
+			file.SkipWhiteSpaceAndComments(scope);
+			if (file.IsMatch('{'))
+			{
+				var bodyScope = scope.Clone();
+				bodyScope.Hint |= ScopeHint.SuppressFunctionDefinition;
 
-			// Body
-			var bodyScope = scope.Clone();
-			bodyScope.Hint |= ScopeHint.SuppressFunctionDefinition;
-
-			if ((ret._bodyToken = BracesToken.TryParse(parent, bodyScope)) != null) ret.AddToken(ret._bodyToken);
+				ret.AddToken(ret._bodyToken = BracesToken.Parse(ret, bodyScope));
+			}
 
 			return ret;
+
+			// TODO: remove
+			//var expressionTokens = new List<Token>();
+			//ret.ParseScope(expressionScope, t =>
+			//	{
+			//		if (t.BreaksStatement || t is BracesToken) return ParseScopeResult.StopAndReject;
+			//		expressionTokens.Add(t);
+
+			//		file.SkipWhiteSpaceAndComments(expressionScope);
+			//		return file.PeekChar() == '{' ? ParseScopeResult.StopAndKeep : ParseScopeResult.Continue;
+			//	});
+			//ret._expressionTokens = expressionTokens.ToArray();
+
+			//// Body
+			//var bodyScope = scope.Clone();
+			//bodyScope.Hint |= ScopeHint.SuppressFunctionDefinition;
+
+			//if ((ret._bodyToken = BracesToken.TryParse(parent, bodyScope)) != null) ret.AddToken(ret._bodyToken);
+
+			//return ret;
 		}
 	}
 }

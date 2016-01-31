@@ -20,21 +20,24 @@ namespace DkTools.CodeModel.Tokens
 			if (alterToken == null) throw new ArgumentNullException("alterToken");
 #endif
 			var ret = new AlterToken(parent, scope, alterToken);
-			var file = scope.File;
-
-			file.SkipWhiteSpaceAndComments(scope);
-			var word = file.PeekWord();
-
-			var alterScope = scope;
-			alterScope.Hint |= ScopeHint.InsideAlter;
-
-			ret.ParseScope(alterScope, t =>
-			{
-				if (t.BreaksStatement) return ParseScopeResult.StopAndReject;
-				return ParseScopeResult.Continue;
-			});
-
 			return ret;
+
+			// TODO: this should be replaced with some proper alter statement logic
+			//var file = scope.File;
+
+			//file.SkipWhiteSpaceAndComments(scope);
+			//var word = file.PeekWord();
+
+			//var alterScope = scope;
+			//alterScope.Hint |= ScopeHint.InsideAlter;
+
+			//ret.ParseScope(alterScope, t =>
+			//{
+			//	if (t.BreaksStatement) return ParseScopeResult.StopAndReject;
+			//	return ParseScopeResult.Continue;
+			//});
+
+			//return ret;
 		}
 	}
 }

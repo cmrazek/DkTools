@@ -267,6 +267,10 @@
     <Compile Include="CodeModel\AnalysisNodes\TableNode.cs" />
     <Compile Include="CodeModel\AnalysisNodes\TableAndFieldNode.cs" />
     <Compile Include="CodeModel\AnalysisNodes\UnknownNode.cs" />
+    <Compile Include="CodeModel\Tokens\ArgsToken.cs" />
+    <Compile Include="CodeModel\Tokens\CompositeToken.cs" />
+    <Compile Include="CodeModel\Tokens\ExpressionToken.cs" />
+    <Compile Include="CodeModel\Tokens\StatementToken.cs" />
     <Compile Include="CodeModel\Value.cs" />
     <Compile Include="CodeModel\AnalysisNodes\VariableNode.cs" />
     <Compile Include="CodeModel\CodeSource.cs" />

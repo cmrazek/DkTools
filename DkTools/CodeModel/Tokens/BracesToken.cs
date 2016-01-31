@@ -17,6 +17,13 @@ namespace DkTools.CodeModel.Tokens
 			IsLocalScope = true;
 		}
 
+		public BracesToken(GroupToken parent, Scope scope, Span openBraceSpan)
+			: base(parent, scope, openBraceSpan.Start)
+		{
+			_openToken = new BraceToken(this, scope, openBraceSpan, this, true);
+			AddToken(_openToken);
+		}
+
 		public static BracesToken TryParse(GroupToken parent, Scope scope)
 		{
 			var file = scope.File;
@@ -29,7 +36,7 @@ namespace DkTools.CodeModel.Tokens
 			var file = scope.File;
 			file.SkipWhiteSpaceAndComments(scope);
 #if DEBUG
-			if (file.PeekChar() != '{') throw new InvalidOperationException("BracesToken.Parse expected next char to be '('.");
+			if (file.PeekChar() != '{') throw new InvalidOperationException("BracesToken.Parse expected next char to be '{'.");
 #endif
 			var startPos = scope.File.Position;
 			scope.File.MoveNext();
@@ -41,19 +48,35 @@ namespace DkTools.CodeModel.Tokens
 			ret._openToken = new BraceToken(ret, scope, new Span(startPos, scope.File.Position), ret, true);
 			ret.AddToken(ret._openToken);
 
-			ret.ParseScope(indentScope, t =>
+			while (file.SkipWhiteSpaceAndComments(scope))
+			{
+				if (file.IsMatch('}'))
 				{
-					if (t is BraceToken && !(t as BraceToken).Open)
-					{
-						ret._closeToken = t as BraceToken;
-						return ParseScopeResult.StopAndKeep;
-					}
+					ret._closeToken = new BraceToken(ret, scope, file.MoveNextSpan(), ret, false);
+					ret.AddToken(ret._closeToken);
+					return ret;
+				}
 
-					ret._innerTokens.Add(t);
-					return ParseScopeResult.Continue;
-				});
+				var stmt = StatementToken.TryParse(ret, scope);
+				if (stmt != null) ret.AddToken(stmt);
+			}
 
 			return ret;
+
+			// TODO: remove
+			//ret.ParseScope(indentScope, t =>
+			//	{
+			//		if (t is BraceToken && !(t as BraceToken).Open)
+			//		{
+			//			ret._closeToken = t as BraceToken;
+			//			return ParseScopeResult.StopAndKeep;
+			//		}
+
+			//		ret._innerTokens.Add(t);
+			//		return ParseScopeResult.Continue;
+			//	});
+
+			//return ret;
 		}
 
 		public Token OpenToken
@@ -99,6 +122,15 @@ namespace DkTools.CodeModel.Tokens
 		public IEnumerable<Token> InnerTokens
 		{
 			get { return _innerTokens; }
+		}
+
+		public void AddCloseBrace(Scope scope, Span span)
+		{
+#if DEBUG
+			if (_closeToken != null) throw new InvalidOperationException("Close brace has already been added.");
+#endif
+			_closeToken = new BraceToken(this, scope, span, this, false);
+			AddToken(_closeToken);
 		}
 	}
 }

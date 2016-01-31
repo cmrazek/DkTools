@@ -25,6 +25,8 @@ namespace DkTools.CodeModel.Tokens
 			return Parse(parent, scope);
 		}
 
+		private static readonly string[] _endTokens = new string[] { "]", "," };
+
 		public static ArrayBracesToken Parse(GroupToken parent, Scope scope)
 		{
 			var file = scope.File;
@@ -39,22 +41,42 @@ namespace DkTools.CodeModel.Tokens
 			indentScope.Hint |= ScopeHint.SuppressFunctionDefinition;
 
 			var ret = new ArrayBracesToken(parent, scope, startPos);
-			ret._openToken = new ArrayBraceToken(ret, scope, new Span(startPos, scope.File.Position), ret, true);
-			ret.AddToken(ret._openToken);
+			ret.AddToken(ret._openToken = new ArrayBraceToken(ret, scope, new Span(startPos, scope.File.Position), ret, true));
 
-			ret.ParseScope(indentScope, t =>
+			while (file.SkipWhiteSpaceAndComments(indentScope))
+			{
+				if (file.IsMatch(']'))
 				{
-					if (t is ArrayBraceToken && !(t as ArrayBraceToken).Open)
-					{
-						ret._closeToken = t as ArrayBraceToken;
-						return ParseScopeResult.StopAndKeep;
-					}
+					ret.AddToken(ret._closeToken = new ArrayBraceToken(ret, scope, file.MoveNextSpan(), ret, false));
+					break;
+				}
 
-					ret._innerTokens.Add(t);
-					return ParseScopeResult.Continue;
-				});
+				if (file.IsMatch(','))
+				{
+					ret.AddToken(new DelimiterToken(ret, indentScope, file.MoveNextSpan()));
+					continue;
+				}
+
+				var exp = ExpressionToken.TryParse(ret, indentScope, _endTokens);
+				if (exp != null) ret.AddToken(exp);
+			}
 
 			return ret;
+
+			// TODO: remove
+			//ret.ParseScope(indentScope, t =>
+			//	{
+			//		if (t is ArrayBraceToken && !(t as ArrayBraceToken).Open)
+			//		{
+			//			ret._closeToken = t as ArrayBraceToken;
+			//			return ParseScopeResult.StopAndKeep;
+			//		}
+
+			//		ret._innerTokens.Add(t);
+			//		return ParseScopeResult.Continue;
+			//	});
+
+			//return ret;
 		}
 
 		public ArrayBraceToken OpenToken
