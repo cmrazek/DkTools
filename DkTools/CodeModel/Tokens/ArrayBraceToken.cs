@@ -10,8 +10,8 @@ namespace DkTools.CodeModel.Tokens
 		private ArrayBracesToken _braces;
 		private bool _open;
 
-		public ArrayBraceToken(GroupToken parent, Scope scope, Span span, ArrayBracesToken braces, bool open)
-			: base(parent, scope, span)
+		public ArrayBraceToken(Scope scope, Span span, ArrayBracesToken braces, bool open)
+			: base(scope, span)
 		{
 			_braces = braces;
 			_open = open;
@@ -38,15 +38,6 @@ namespace DkTools.CodeModel.Tokens
 		public bool Open
 		{
 			get { return _open; }
-		}
-
-		public static ArrayBraceToken TryParseClose(GroupToken parent, Scope scope, ArrayBracesToken bracesToken)
-		{
-			var file = scope.File;
-			if (!file.SkipWhiteSpaceAndComments(scope)) return null;
-			if (file.PeekChar() != ']') return null;
-
-			return new ArrayBraceToken(parent, scope, file.MoveNextSpan(1), bracesToken, false);
 		}
 	}
 }

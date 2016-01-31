@@ -7,7 +7,7 @@ using System.Text.RegularExpressions;
 
 namespace DkTools.TokenParser
 {
-	internal sealed class Parser : IEnumerable<Token>
+	internal sealed class Parser	// : IEnumerable<Token> TODO: remove commented out code
 	{
 		private int _pos;
 		private string _source;
@@ -21,7 +21,6 @@ namespace DkTools.TokenParser
 		private bool _tokenTerminated = true;
 		private bool _enumNestable = false;
 		private int _documentOffset;
-		private StringBuilder _peekSB = new StringBuilder();
 
 		public Parser(string source)
 		{
@@ -367,7 +366,7 @@ namespace DkTools.TokenParser
 			get { return _tokenStartPos; }
 		}
 
-		public CodeModel.Span TokenSpan
+		public CodeModel.Span Span
 		{
 			get { return new CodeModel.Span(_tokenStartPos, _tokenStartPos + _tokenText.Length); }
 		}
@@ -415,20 +414,21 @@ namespace DkTools.TokenParser
 			linePosOut = linePos;
 		}
 
-		public Token Token
-		{
-			get
-			{
-				return new Token(_tokenType, _tokenText.ToString(), _tokenStartPos, Position);
-			}
-		}
+		// TODO: remove
+		//public Token Token
+		//{
+		//	get
+		//	{
+		//		return new Token(_tokenType, _tokenText.ToString(), _tokenStartPos, Position);
+		//	}
+		//}
 
-		public TokenType TokenType
+		public TokenType Type
 		{
 			get { return _tokenType; }
 		}
 
-		public string TokenText
+		public string Text
 		{
 			get
 			{
@@ -531,16 +531,21 @@ namespace DkTools.TokenParser
 			return _source.Substring(startIndex, length);
 		}
 
-		public string Text
+		public string GetText(CodeModel.Span span)
+		{
+			return GetText(span.Start, span.Length);
+		}
+
+		public string DocumentText
 		{
 			get { return _source; }
 		}
 
 		public bool Peek()
 		{
-			var pos = Position;
+			var pos = _pos;
 			if (!Read()) return false;
-			Position = pos;
+			_pos = pos;
 			return true;
 		}
 
@@ -626,19 +631,20 @@ namespace DkTools.TokenParser
 			set { SetSource(value); }
 		}
 
-		public IEnumerator<Token> GetEnumerator()
-		{
-			return new ParserEnumerator(this, _enumNestable);
-		}
+		// TODO: remove
+		//public IEnumerator<Token> GetEnumerator()
+		//{
+		//	return new ParserEnumerator(this, _enumNestable);
+		//}
 
-		IEnumerator IEnumerable.GetEnumerator()
-		{
-			return new ParserEnumerator(this, _enumNestable);
-		}
+		//IEnumerator IEnumerable.GetEnumerator()
+		//{
+		//	return new ParserEnumerator(this, _enumNestable);
+		//}
 
 		public bool ReadWord()
 		{
-			if (!SkipWhiteSpaceAndCommentsIfAllowed()) return false;
+			if (!SkipWhiteSpace()) return false;
 
 			if (_pos >= _length || !_source[_pos].IsWordChar(true)) return false;
 
@@ -662,28 +668,22 @@ namespace DkTools.TokenParser
 
 		public string PeekWord()
 		{
-			if (!SkipWhiteSpaceAndCommentsIfAllowed()) return null;
-
-			if (_pos >= _length || !_source[_pos].IsWordChar(true)) return null;
-
-			_peekSB.Clear();
-
 			var pos = _pos;
-			char ch;
-			while (pos < _length)
+			if (ReadWord())
 			{
-				ch = _source[pos];
-				if (!ch.IsWordChar(false)) return _peekSB.ToString();
-				_peekSB.Append(ch);
-				pos++;
+				_pos = pos;
+				return _tokenText.ToString();
 			}
-
-			return _peekSB.ToString();
+			else
+			{
+				_pos = pos;
+				return string.Empty;
+			}
 		}
 
 		public bool ReadTagName()
 		{
-			if (!SkipWhiteSpaceAndCommentsIfAllowed()) return false;
+			if (!SkipWhiteSpace()) return false;
 
 			if (_pos >= _length || !_source[_pos].IsWordChar(true)) return false;
 
@@ -719,7 +719,7 @@ namespace DkTools.TokenParser
 
 		public bool ReadExact(string expecting)
 		{
-			if (!SkipWhiteSpaceAndCommentsIfAllowed()) return false;
+			if (!SkipWhiteSpace()) return false;
 
 			var expLength = expecting.Length;
 			if (_pos + expLength > _length) return false;
@@ -739,9 +739,46 @@ namespace DkTools.TokenParser
 			return true;
 		}
 
+		public bool ReadExactWholeWord(string expecting)
+		{
+			if (!SkipWhiteSpace()) return false;
+
+			var expLength = expecting.Length;
+			if (_pos + expLength > _length) return false;
+
+			for (int i = 0; i < expLength; i++)
+			{
+				if (_source[_pos + i] != expecting[i]) return false;
+			}
+
+			if (_pos + expLength < _length && _source[_pos + expLength].IsWordChar(false))
+			{
+				return false;
+			}
+
+			_tokenStartPos = _pos;
+			_pos += expLength;
+
+			_tokenText.Clear();
+			_tokenText.Append(expecting);
+			_tokenTextStr = null;
+			_tokenType = TokenParser.TokenType.Unknown;
+			return true;
+		}
+
+		public bool ReadExactWholeWord(IEnumerable<string> expectingList)
+		{
+			foreach (var expecting in expectingList)
+			{
+				if (ReadExactWholeWord(expecting)) return true;
+			}
+
+			return false;
+		}
+
 		public bool ReadExact(char expecting)
 		{
-			if (!SkipWhiteSpaceAndCommentsIfAllowed()) return false;
+			if (!SkipWhiteSpace()) return false;
 
 			if (_pos >= _length || _source[_pos] != expecting) return false;
 
@@ -757,7 +794,7 @@ namespace DkTools.TokenParser
 
 		public bool ReadPattern(Regex rx)
 		{
-			if (!SkipWhiteSpaceAndCommentsIfAllowed()) return false;
+			if (!SkipWhiteSpace()) return false;
 			if (_pos >= _length) return false;
 
 			var match = rx.Match(_source, _pos);
@@ -774,7 +811,7 @@ namespace DkTools.TokenParser
 			return true;
 		}
 
-		public bool SkipWhiteSpaceAndCommentsIfAllowed()
+		public bool SkipWhiteSpace()
 		{
 			char ch;
 			while (_pos < _length)
@@ -825,7 +862,7 @@ namespace DkTools.TokenParser
 
 		public bool ReadNumber()
 		{
-			if (!SkipWhiteSpaceAndCommentsIfAllowed()) return false;
+			if (!SkipWhiteSpace()) return false;
 
 			if (_pos >= _length) return false;
 
@@ -872,7 +909,7 @@ namespace DkTools.TokenParser
 
 		public bool ReadStringLiteral()
 		{
-			if (!SkipWhiteSpaceAndCommentsIfAllowed()) return false;
+			if (!SkipWhiteSpace()) return false;
 
 			if (_pos >= _length) return false;
 
@@ -943,28 +980,79 @@ namespace DkTools.TokenParser
 			return true;
 		}
 
-		public bool PeekExact(string expecting)
+		public bool ReadIncludeStringLiteral()
 		{
-			if (!SkipWhiteSpaceAndCommentsIfAllowed()) return false;
+			if (!SkipWhiteSpace()) return false;
 
-			var expLength = expecting.Length;
-			if (_pos + expLength > _length) return false;
+			var ch = _source[_pos];
+			var endCh = ch;
 
-			for (int i = 0; i < expLength; i++)
+			_tokenText.Clear();
+			_tokenTextStr = null;
+			_tokenStartPos = _pos;
+			_tokenTerminated = false;
+			
+			switch (endCh)
 			{
-				if (_source[_pos + i] != expecting[i]) return false;
+				case '\"':
+					_tokenText.Append(ch);
+					endCh = '\"';
+					break;
+				case '<':
+					_tokenText.Append(ch);
+					endCh = '>';
+					break;
+				default:
+					return false;
+			}
+			_pos++;
+
+			while (_pos < _length)
+			{
+				ch = _source[_pos];
+				if (ch == '\r' || ch == '\n') break;
+				_tokenText.Append(ch);
+				_pos++;
+				if (ch == endCh)
+				{
+					_tokenTerminated = true;
+					break;
+				}
 			}
 
 			return true;
 		}
 
+		public bool PeekExact(string expecting)
+		{
+			var pos = _pos;
+			var ret = ReadExact(expecting);
+			_pos = pos;
+			return ret;
+		}
+
+		public bool PeekExactWholeWord(string expecting)
+		{
+			var pos = _pos;
+			var ret = ReadExactWholeWord(expecting);
+			_pos = pos;
+			return ret;
+		}
+
+		public bool PeekExactWholeWord(IEnumerable<string> expectingList)
+		{
+			var pos = _pos;
+			var ret = ReadExactWholeWord(expectingList);
+			_pos = pos;
+			return ret;
+		}
+
 		public bool PeekExact(char expecting)
 		{
-			if (!SkipWhiteSpaceAndCommentsIfAllowed()) return false;
-
-			if (_pos >= _length || _source[_pos] != expecting) return false;
-
-			return true;
+			var pos = _pos;
+			var ret = ReadExact(expecting);
+			_pos = pos;
+			return ret;
 		}
 
 		public int DocumentOffset
@@ -985,8 +1073,8 @@ namespace DkTools.TokenParser
 
 			while (code.Read())
 			{
-				tokenType = code.TokenType;
-				tokenText = code.TokenText;
+				tokenType = code.Type;
+				tokenText = code.Text;
 
 				if (sb.Length == 0)
 				{
@@ -1069,6 +1157,83 @@ namespace DkTools.TokenParser
 			}
 
 			return sb.ToString();
+		}
+
+		public bool MoveNext()
+		{
+			if (_pos < _length) _pos++;
+			return _pos < _length;
+		}
+
+		public bool MoveNext(int length)
+		{
+			_pos += length;
+			if (_pos > _length) _pos = _length;
+			return _pos < _length;
+		}
+
+		public bool MovePeeked()
+		{
+			_pos += _tokenText.Length;
+			if (_pos > _length) _pos = _length;
+			return _pos < _length;
+		}
+
+		public CodeModel.Span MovePeekedSpan()
+		{
+			var span = Span;
+			_pos = span.End;
+			return span;
+		}
+
+		public int FindStartOfLine(int pos)
+		{
+			if (pos > _length) pos = _length;
+			while (pos > 0 && _source[pos - 1] != '\n') pos--;
+			return pos;
+		}
+
+		public int FindEndOfPreviousLine(int pos)
+		{
+			var offset = FindStartOfLine(pos);
+			if (offset <= 0) return 0;
+
+			offset--;
+			if (offset > 0 && _source[offset] == '\n' && _source[offset - 1] == '\r') offset--;
+			return offset;
+		}
+
+		public int FindEndOfLine(int pos)
+		{
+			while (pos < _length && !_source[pos].IsEndOfLineChar()) pos++;
+			return pos;
+		}
+
+		public int FindStartOfNextLine(int pos)
+		{
+			pos = FindEndOfLine(pos);
+			if (pos < _length && _source[pos] == '\r') pos++;
+			if (pos < _length && _source[pos] == '\n') pos++;
+			return pos;
+		}
+
+		/// <summary>
+		/// Moves to the end of the line, to just before the line-end chars.
+		/// </summary>
+		public void SeekEndOfLine()
+		{
+			while (_pos < _length)
+			{
+				switch (_source[_pos])
+				{
+					case '\r':
+					case '\n':
+						return;
+					default:
+						_pos++;
+						break;
+				}
+			}
 		}
 	}
 }

@@ -67,7 +67,7 @@ namespace DkTools.SignatureHelp
 			var commaCount = 0;
 			while (parser.ReadNestable())
 			{
-				if (parser.TokenText == ",") commaCount++;
+				if (parser.Text == ",") commaCount++;
 			}
 
             CurrentParameter = _params[commaCount < _params.Count ? commaCount : _params.Count - 1];

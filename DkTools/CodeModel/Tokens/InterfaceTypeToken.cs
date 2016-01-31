@@ -8,8 +8,8 @@ namespace DkTools.CodeModel.Tokens
 {
 	internal sealed class InterfaceTypeToken : WordToken
 	{
-		public InterfaceTypeToken(GroupToken parent, Scope scope, Span span, Definitions.InterfaceTypeDefinition def)
-			: base(parent, scope, span, def.Name)
+		public InterfaceTypeToken(Scope scope, Span span, Definitions.InterfaceTypeDefinition def)
+			: base(scope, span, def.Name)
 		{
 			SourceDefinition = def;
 		}

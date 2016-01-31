@@ -268,8 +268,14 @@
     <Compile Include="CodeModel\AnalysisNodes\TableAndFieldNode.cs" />
     <Compile Include="CodeModel\AnalysisNodes\UnknownNode.cs" />
     <Compile Include="CodeModel\Tokens\ArgsToken.cs" />
+    <Compile Include="CodeModel\Tokens\BreakStatement.cs" />
     <Compile Include="CodeModel\Tokens\CompositeToken.cs" />
+    <Compile Include="CodeModel\Tokens\ContinueStatement.cs" />
+    <Compile Include="CodeModel\Tokens\EnumOptionToken.cs" />
     <Compile Include="CodeModel\Tokens\ExpressionToken.cs" />
+    <Compile Include="CodeModel\Tokens\ExternStatement.cs" />
+    <Compile Include="CodeModel\Tokens\IBreakOwner.cs" />
+    <Compile Include="CodeModel\Tokens\IContinueOwner.cs" />
     <Compile Include="CodeModel\Tokens\StatementToken.cs" />
     <Compile Include="CodeModel\Value.cs" />
     <Compile Include="CodeModel\AnalysisNodes\VariableNode.cs" />
@@ -295,7 +301,6 @@
     <Compile Include="CodeModel\Definitions\VariableDefinition.cs" />
     <Compile Include="CodeModel\AnalysisNodes\Node.cs" />
     <Compile Include="CodeModel\Tokens\AlterToken.cs" />
-    <Compile Include="CodeModel\Tokens\CodeFile_Parsing.cs" />
     <Compile Include="CodeModel\Tokens\InterfaceMethodCallToken.cs" />
     <Compile Include="CodeModel\Tokens\InterfacePropertyToken.cs" />
     <Compile Include="CodeModel\Tokens\InterfaceTypeToken.cs" />
@@ -371,7 +376,7 @@
     <Compile Include="CodeModel\Tokens\PreprocessorToken.cs" />
     <Compile Include="CodeModel\Tokens\ReferenceToken.cs" />
     <Compile Include="CodeModel\Tokens\ReplaceToken.cs" />
-    <Compile Include="CodeModel\Tokens\SelectToken.cs" />
+    <Compile Include="CodeModel\Tokens\SelectStatement.cs" />
     <Compile Include="CodeModel\Span.cs" />
     <Compile Include="CodeModel\Tokens\StatementEndToken.cs" />
     <Compile Include="CodeModel\Tokens\StringLiteralToken.cs" />

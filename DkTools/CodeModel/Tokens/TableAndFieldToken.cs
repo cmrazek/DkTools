@@ -10,14 +10,15 @@ namespace DkTools.CodeModel.Tokens
 		private TableToken _tableToken;
 		private TableFieldToken _fieldToken;
 
-		public TableAndFieldToken(GroupToken parent, Scope scope, TableToken tableToken, DotToken dotToken, TableFieldToken fieldToken)
-			: base(parent, scope, new Token[] { tableToken, dotToken, fieldToken })
+		public TableAndFieldToken(Scope scope, TableToken tableToken, DotToken dotToken, TableFieldToken fieldToken)
+			: base(scope)
 		{
 #if DEBUG
 			if (tableToken == null || dotToken == null || fieldToken == null) throw new ArgumentNullException();
 #endif
-			_tableToken = tableToken;
-			_fieldToken = fieldToken;
+			AddToken(_tableToken = tableToken);
+			AddToken(dotToken);
+			AddToken(_fieldToken = fieldToken);
 		}
 
 		public override DataType ValueDataType

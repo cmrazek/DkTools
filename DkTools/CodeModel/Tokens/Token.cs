@@ -12,7 +12,7 @@ namespace DkTools.CodeModel.Tokens
 	/// </summary>
 	internal abstract class Token
 	{
-		private Token _parent;
+		private GroupToken _parent;
 		private Scope _scope;
 		private Span _span;
 		private Definition _sourceDefinition;
@@ -55,9 +55,13 @@ namespace DkTools.CodeModel.Tokens
 			return sb.ToString();
 		}
 
-		public Token(GroupToken parent, Scope scope, Span span)
+		public Token(Scope scope)
 		{
-			_parent = parent;
+			_scope = scope;
+		}
+
+		public Token(Scope scope, Span span)
+		{
 			_scope = scope;
 			_span = span;
 		}
@@ -65,15 +69,15 @@ namespace DkTools.CodeModel.Tokens
 		/// <summary>
 		/// Called when the token is being saved into the model, and is no longer considered temporary.
 		/// </summary>
-		public virtual void CommitToParentToken(Token parent)
+		public virtual void CommitToParentToken(GroupToken parent)
 		{
+			if (_parent != null && _parent != parent) _parent.RemoveToken(this);
 			_parent = parent;
 		}
 
-		public Token Parent
+		public GroupToken Parent
 		{
 			get { return _parent; }
-			//set { _parent = value; }
 		}
 
 		public Scope Scope
@@ -87,10 +91,26 @@ namespace DkTools.CodeModel.Tokens
 			get { return _scope.File; }
 		}
 
+		public TokenParser.Parser Code
+		{
+			get { return _scope.Code; }
+		}
+
 		public Span Span
 		{
 			get { return _span; }
-			set { _span = value; }
+			set
+			{
+				if (_span != value)
+				{
+					_span = value;
+					OnSpanChanged();
+				}
+			}
+		}
+
+		protected virtual void OnSpanChanged()
+		{
 		}
 
 		//public override string ToString()
@@ -164,7 +184,7 @@ namespace DkTools.CodeModel.Tokens
 
 		public virtual string Text
 		{
-			get { return _scope.File.GetText(_span); }
+			get { return Code.GetText(_span); }
 		}
 
 		public virtual bool BreaksStatement

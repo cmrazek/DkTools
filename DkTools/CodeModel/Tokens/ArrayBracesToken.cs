@@ -11,72 +11,51 @@ namespace DkTools.CodeModel.Tokens
 		private ArrayBraceToken _closeToken;
 		private List<Token> _innerTokens = new List<Token>();
 
-		private ArrayBracesToken(GroupToken parent, Scope scope, int startPos)
-			: base(parent, scope, startPos)
+		public ArrayBracesToken(Scope scope)
+			: base(scope)
 		{
 		}
 
-		public static ArrayBracesToken TryParse(GroupToken parent, Scope scope)
+		public static ArrayBracesToken TryParse(Scope scope)
 		{
-			var file = scope.File;
-			if (!file.SkipWhiteSpaceAndComments(scope)) return null;
-			if (file.PeekChar() != '[') return null;
-
-			return Parse(parent, scope);
+			if (!scope.Code.PeekExact('[')) return null;
+			return Parse(scope);
 		}
 
 		private static readonly string[] _endTokens = new string[] { "]", "," };
 
-		public static ArrayBracesToken Parse(GroupToken parent, Scope scope)
+		public static ArrayBracesToken Parse(Scope scope)
 		{
-			var file = scope.File;
-			file.SkipWhiteSpaceAndComments(scope);
-#if DEBUG
-			if (file.PeekChar() != '[') throw new InvalidOperationException("ArrayBracesToken.Parse expected next char to be '['.");
-#endif
-			var startPos = scope.File.Position;
-			scope.File.MoveNext();
+			var code = scope.Code;
+			if (!code.ReadExact('[')) throw new InvalidOperationException("ArrayBracesToken.Parse expected next char to be '['.");
+			var openBracketSpan = code.Span;
 
 			var indentScope = scope.CloneIndentNonRoot();
 			indentScope.Hint |= ScopeHint.SuppressFunctionDefinition;
 
-			var ret = new ArrayBracesToken(parent, scope, startPos);
-			ret.AddToken(ret._openToken = new ArrayBraceToken(ret, scope, new Span(startPos, scope.File.Position), ret, true));
+			var ret = new ArrayBracesToken(scope);
+			ret.AddToken(ret._openToken = new ArrayBraceToken(scope, openBracketSpan, ret, true));
 
-			while (file.SkipWhiteSpaceAndComments(indentScope))
+			while (!code.EndOfFile)
 			{
-				if (file.IsMatch(']'))
+				if (code.ReadExact(']'))
 				{
-					ret.AddToken(ret._closeToken = new ArrayBraceToken(ret, scope, file.MoveNextSpan(), ret, false));
+					ret.AddToken(ret._closeToken = new ArrayBraceToken(scope, code.Span, ret, false));
 					break;
 				}
 
-				if (file.IsMatch(','))
+				if (code.ReadExact(','))
 				{
-					ret.AddToken(new DelimiterToken(ret, indentScope, file.MoveNextSpan()));
+					ret.AddToken(new DelimiterToken(indentScope, code.Span));
 					continue;
 				}
 
-				var exp = ExpressionToken.TryParse(ret, indentScope, _endTokens);
+				var exp = ExpressionToken.TryParse(indentScope, _endTokens);
 				if (exp != null) ret.AddToken(exp);
+				else break;
 			}
 
 			return ret;
-
-			// TODO: remove
-			//ret.ParseScope(indentScope, t =>
-			//	{
-			//		if (t is ArrayBraceToken && !(t as ArrayBraceToken).Open)
-			//		{
-			//			ret._closeToken = t as ArrayBraceToken;
-			//			return ParseScopeResult.StopAndKeep;
-			//		}
-
-			//		ret._innerTokens.Add(t);
-			//		return ParseScopeResult.Continue;
-			//	});
-
-			//return ret;
 		}
 
 		public ArrayBraceToken OpenToken
@@ -92,6 +71,16 @@ namespace DkTools.CodeModel.Tokens
 		public IEnumerable<Token> InnerTokens
 		{
 			get { return _innerTokens; }
+		}
+
+		public void AddOpen(Span span)
+		{
+			AddToken(_openToken = new ArrayBraceToken(Scope, span, this, true));
+		}
+
+		public void AddClose(Span span)
+		{
+			AddToken(_openToken = new ArrayBraceToken(Scope, span, this, false));
 		}
 	}
 }

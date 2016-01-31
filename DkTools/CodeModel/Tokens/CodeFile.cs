@@ -23,7 +23,7 @@ namespace DkTools.CodeModel.Tokens
 
 		#region Construction
 		public CodeFile(CodeModel model)
-			: base(null, new Scope(model), 0)
+			: base(new Scope(model))
 		{
 			if (model == null) throw new ArgumentNullException("model");
 			_model = model;
@@ -55,48 +55,49 @@ namespace DkTools.CodeModel.Tokens
 		}
 		#endregion
 
-		#region Position calculations
-		public int Position
-		{
-			get { return _pos; }
-			set
-			{
-				if (value < 0 || value > _length) throw new ArgumentOutOfRangeException();
-				_pos = value;
-			}
-		}
+		// TODO: remove
+		//#region Position calculations
+		//public int Position
+		//{
+		//	get { return _pos; }
+		//	set
+		//	{
+		//		if (value < 0 || value > _length) throw new ArgumentOutOfRangeException();
+		//		_pos = value;
+		//	}
+		//}
 
-		public int FindStartOfLine(int pos)
-		{
-			if (pos > _length) pos = _length;
-			while (pos > 0 && _src[pos - 1] != '\n') pos--;
-			return pos;
-		}
+		//public int FindStartOfLine(int pos)
+		//{
+		//	if (pos > _length) pos = _length;
+		//	while (pos > 0 && _src[pos - 1] != '\n') pos--;
+		//	return pos;
+		//}
 
-		public int FindEndOfPreviousLine(int pos)
-		{
-			var offset = FindStartOfLine(pos);
-			if (offset <= 0) return 0;
+		//public int FindEndOfPreviousLine(int pos)
+		//{
+		//	var offset = FindStartOfLine(pos);
+		//	if (offset <= 0) return 0;
 
-			offset--;
-			if (offset > 0 && _src[offset] == '\n' && _src[offset - 1] == '\r') offset--;
-			return offset;
-		}
+		//	offset--;
+		//	if (offset > 0 && _src[offset] == '\n' && _src[offset - 1] == '\r') offset--;
+		//	return offset;
+		//}
 
-		public int FindEndOfLine(int pos)
-		{
-			while (pos < _length && !_src[pos].IsEndOfLineChar()) pos++;
-			return pos;
-		}
+		//public int FindEndOfLine(int pos)
+		//{
+		//	while (pos < _length && !_src[pos].IsEndOfLineChar()) pos++;
+		//	return pos;
+		//}
 
-		public int FindStartOfNextLine(int pos)
-		{
-			pos = FindEndOfLine(pos);
-			if (pos < _length && _src[pos] == '\r') pos++;
-			if (pos < _length && _src[pos] == '\n') pos++;
-			return pos;
-		}
-		#endregion
+		//public int FindStartOfNextLine(int pos)
+		//{
+		//	pos = FindEndOfLine(pos);
+		//	if (pos < _length && _src[pos] == '\r') pos++;
+		//	if (pos < _length && _src[pos] == '\n') pos++;
+		//	return pos;
+		//}
+		//#endregion
 
 		#region Regions
 		private Dictionary<int, Region> _regions = new Dictionary<int, Region>();
@@ -115,24 +116,25 @@ namespace DkTools.CodeModel.Tokens
 			public string title;
 		}
 
-		private void AddCommentRegion(Scope scope, Span span)
-		{
-			if (scope.Visible)
-			{
-				// Start and end must be on separate lines.
-				var startLineEnd = FindEndOfLine(span.Start);
-				if (span.End > startLineEnd)
-				{
-					_regions[span.Start] = new Region
-					{
-						scope = scope,
-						span = span,
-						type = RegionType.Comment,
-						title = GetText(span).GetFirstLine().Trim()
-					};
-				}
-			}
-		}
+		// TODO: remove
+		//private void AddCommentRegion(Scope scope, Span span)
+		//{
+		//	if (scope.Visible)
+		//	{
+		//		// Start and end must be on separate lines.
+		//		var startLineEnd = FindEndOfLine(span.Start);
+		//		if (span.End > startLineEnd)
+		//		{
+		//			_regions[span.Start] = new Region
+		//			{
+		//				scope = scope,
+		//				span = span,
+		//				type = RegionType.Comment,
+		//				title = GetText(span).GetFirstLine().Trim()
+		//			};
+		//		}
+		//	}
+		//}
 
 		public void StartUserRegion(Scope scope, int pos, string title)
 		{
@@ -172,6 +174,16 @@ namespace DkTools.CodeModel.Tokens
 				var reg = _regions[maxStart];
 				reg.span = new Span(reg.span.Start, pos);
 			}
+		}
+
+		public string GetRegionText(Span span)
+		{
+			var str = _code.GetText(span);
+			if (str.Length > Constants.OutliningMaxContextChars)
+			{
+				str = str.Substring(0, Constants.OutliningMaxContextChars) + "...";
+			}
+			return str;
 		}
 
 		public override IEnumerable<OutliningRegion> OutliningRegions
@@ -225,6 +237,40 @@ namespace DkTools.CodeModel.Tokens
 					}
 				}
 			}
+		}
+		#endregion
+
+		#region Parsing
+		private CodeSource _source;
+		private string _fileName;
+		private TokenParser.Parser _code;
+
+		public void Parse(CodeSource source, string fileName, IEnumerable<string> parentFiles, bool visible)
+		{
+			if (source == null) throw new ArgumentNullException("source");
+			_source = source;
+			_code = new TokenParser.Parser(_source.Text);
+			_fileName = fileName;
+			_parentFiles = parentFiles.ToArray();
+
+			FunctionFileScanning.FFUtil.FileNameIsClass(_fileName, out _className);
+
+			var scope = new Scope(this, 0, ScopeHint.None, visible, _model.DefinitionProvider);
+			scope.ClassName = _className;
+			Scope = scope;
+
+			while (_code.SkipWhiteSpace())
+			{
+				var stmt = StatementToken.TryParse(scope);
+				if (stmt != null) AddToken(stmt);
+			}
+
+			Span = new Span(0, _code.Length);
+		}
+
+		public TokenParser.Parser CodeParser
+		{
+			get { return _code; }
 		}
 		#endregion
 	}

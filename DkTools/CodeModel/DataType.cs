@@ -55,6 +55,7 @@ namespace DkTools.CodeModel
 
 		public delegate DataTypeDefinition GetDataTypeDelegate(string name);
 		public delegate VariableDefinition GetVariableDelegate(string name);
+		public delegate void TokenCreateDelegate(Token token);
 
 		/// <summary>
 		/// Creates a new data type object.
@@ -204,53 +205,104 @@ namespace DkTools.CodeModel
 			/// </summary>
 			public string TypeName { get; set; }
 
+			/// <summary>
+			/// (optional) A callback which triggers creation of tokens for use in a code model.
+			/// </summary>
+			public TokenCreateDelegate TokenCreateCallback { get; set; }
+
+			/// <summary>
+			/// (optional) The scope to use when creating tokens.
+			/// This is required if CreateTokens is true.
+			/// </summary>
+			public Scope Scope { get; set; }
+
 #if REPORT_ERRORS
 			/// <summary>
 			/// (optional) An ErrorProvider to receive errors detected by this parsing function.
 			/// </summary>
 			public ErrorTagging.ErrorProvider ErrorProvider { get; set; }
 #endif
+
+			public void OnKeyword(Span span, string text)
+			{
+				if (TokenCreateCallback != null) TokenCreateCallback(new KeywordToken(Scope, span, text));
+			}
+
+			public void OnDataTypeKeyword(Span span, string text)
+			{
+				if (TokenCreateCallback != null) TokenCreateCallback(new DataTypeKeywordToken(Scope, span, text));
+			}
+
+			public void OnIdentifier(Span span, string text, Definition def)
+			{
+				if (TokenCreateCallback != null) TokenCreateCallback(new IdentifierToken(Scope, span, text, def));
+			}
+
+			public void OnOperator(Span span, string text)
+			{
+				if (TokenCreateCallback != null) TokenCreateCallback(new OperatorToken(Scope, span, text));
+			}
+
+			public void OnStringLiteral(Span span, string text)
+			{
+				if (TokenCreateCallback != null) TokenCreateCallback(new StringLiteralToken(Scope, span, text));
+			}
+
+			public void OnNumber(Span span, string text)
+			{
+				if (TokenCreateCallback != null) TokenCreateCallback(new NumberToken(Scope, span, text));
+			}
+
+			public void OnUnknown(Span span, string text)
+			{
+				if (TokenCreateCallback != null) TokenCreateCallback(new UnknownToken(Scope, span, text));
+			}
 		}
 
 		/// <summary>
 		/// Parses a data type from a string.
 		/// </summary>
-		/// <param name="args">Contains arguments that control the parsing.</param>
+		/// <param name="a">Contains arguments that control the parsing.</param>
 		/// <returns>A data type object, if a data type could be parsed; otherwise null.</returns>
-		public static DataType Parse(ParseArgs args)
+		public static DataType TryParse(ParseArgs a)
 		{
-			var code = args.Code;
+			var code = a.Code;
 
 			var startPos = code.Position;
 			if (!code.ReadWord()) return null;
-			var startWord = code.TokenText;
+			var startWord = code.Text;
 
-			if ((args.Flags & ParseFlag.FromRepo) != 0 && code.TokenText == "__SYSTEM__")
+			if ((a.Flags & ParseFlag.FromRepo) != 0 && code.Text == "__SYSTEM__")
 			{
+				a.OnDataTypeKeyword(code.Span, code.Text);
+
 				if (!code.ReadWord())
 				{
 					code.Position = startPos;
 					return null;
 				}
-				startWord = code.TokenText;
+				startWord = code.Text;
 			}
 
 			DataType dataType = null;
 
-			switch (code.TokenText)
+			switch (code.Text)
 			{
 				case "void":
+					a.OnDataTypeKeyword(code.Span, code.Text);
 					dataType = DataType.Void;
 					break;
 
 				case "numeric":
 				case "decimal":
-					dataType = ProcessNumeric(args, code.TokenText);
+					a.OnDataTypeKeyword(code.Span, code.Text);
+					dataType = ProcessNumeric(a, code.Text);
 					break;
 
 				case "unsigned":
 				case "signed":
-					dataType = ProcessSignedUnsigned(args, code.TokenText);
+					a.OnDataTypeKeyword(code.Span, code.Text);
+					dataType = ProcessSignedUnsigned(a, code.Text);
 					break;
 
 				case "int":
@@ -259,92 +311,116 @@ namespace DkTools.CodeModel
 				case "ulong":
 				case "number":
 				case "unumber":
-					dataType = ProcessInt(args, code.TokenText);
+					a.OnDataTypeKeyword(code.Span, code.Text);
+					dataType = ProcessInt(a, code.Text);
 					break;
 
 				case "char":
 				case "character":
 				case "varchar":
 				case "CHAR":
-					dataType = ProcessChar(args, code.TokenText);
+					a.OnDataTypeKeyword(code.Span, code.Text);
+					dataType = ProcessChar(a, code.Text);
 					break;
 
 				case "string":
-					dataType = ProcessString(args, code.TokenText);
+					a.OnDataTypeKeyword(code.Span, code.Text);
+					dataType = ProcessString(a, code.Text);
 					break;
 
 				case "date":
-					dataType = ProcessDate(args, code.TokenText);
+					a.OnDataTypeKeyword(code.Span, code.Text);
+					dataType = ProcessDate(a, code.Text);
 					break;
 
 				case "time":
-					dataType = ProcessTime(args, code.TokenText);
+					a.OnDataTypeKeyword(code.Span, code.Text);
+					dataType = ProcessTime(a, code.Text);
 					break;
 
 				case "enum":
-					dataType = ProcessEnum(args);
+					a.OnDataTypeKeyword(code.Span, code.Text);
+					dataType = ProcessEnum(a);
 					break;
 
 				case "like":
-					dataType = ProcessLike(args);
+					a.OnDataTypeKeyword(code.Span, code.Text);
+					dataType = ProcessLike(a);
 					break;
 
 				case "table":
+					a.OnDataTypeKeyword(code.Span, code.Text);
 					dataType = DataType.Table;
 					break;
 
 				case "indrel":
+					a.OnDataTypeKeyword(code.Span, code.Text);
 					dataType = DataType.IndRel;
 					break;
 
 				case "command":
+					a.OnDataTypeKeyword(code.Span, code.Text);
 					dataType = DataType.Command;
 					break;
 
 				case "Section":
-					dataType = ProcessSection(args);
+					a.OnDataTypeKeyword(code.Span, code.Text);
+					dataType = ProcessSection(a);
 					break;
 
 				case "scroll":
-					dataType = ProcessScroll(args);
+					a.OnDataTypeKeyword(code.Span, code.Text);
+					dataType = ProcessScroll(a);
 					break;
 
 				case "graphic":
-					dataType = ProcessGraphic(args);
+					a.OnDataTypeKeyword(code.Span, code.Text);
+					dataType = ProcessGraphic(a);
 					break;
 
 				case "interface":
-					dataType = ProcessInterface(args);
+					a.OnDataTypeKeyword(code.Span, code.Text);
+					dataType = ProcessInterface(a);
 					break;
 
 				case "variant":
+					a.OnDataTypeKeyword(code.Span, code.Text);
 					dataType = DataType.Variant;
 					break;
 
 				case "oleobject":
+					a.OnDataTypeKeyword(code.Span, code.Text);
 					dataType = DataType.OleObject;
 					break;
 
 				case "Boolean_t":
+					a.OnDataTypeKeyword(code.Span, code.Text);
 					dataType = DataType.Boolean_t;
 					break;
 
 				default:
-					if (args.DataTypeCallback != null)
+					if (a.DataTypeCallback != null)
 					{
-						var def = args.DataTypeCallback(code.TokenText);
-						if (def != null) dataType = def.DataType;
+						var word = code.Text;
+						var wordSpan = code.Span;
+
+						var def = a.DataTypeCallback(word);
+						if (def != null)
+						{
+							a.OnDataTypeKeyword(wordSpan, word);
+							dataType = def.DataType;
+						}
 					}
 					break;
 			}
 
 			if (dataType != null)
 			{
-				if ((args.Flags & ParseFlag.FromRepo) != 0) IgnoreRepoWords(code, startWord);
+				if ((a.Flags & ParseFlag.FromRepo) != 0) IgnoreRepoWords(a, startWord);
 
-				if (!string.IsNullOrEmpty(args.TypeName))
+				if (!string.IsNullOrEmpty(a.TypeName))
 				{
-					dataType = dataType.CloneWithNewName(args.TypeName);
+					dataType = dataType.CloneWithNewName(a.TypeName);
 				}
 			}
 			else
@@ -355,29 +431,50 @@ namespace DkTools.CodeModel
 			return dataType;
 		}
 
-		private static DataType ProcessNumeric(ParseArgs args, string tokenText)
+		private static DataType ProcessNumeric(ParseArgs a, string tokenText)
 		{
 			var sb = new StringBuilder();
 			sb.Append(tokenText);
 
-			var code = args.Code;
+			var code = a.Code;
 
 			if (code.ReadExact('('))
 			{
 				sb.Append('(');
+
+				BracketsToken brackets = null;
+				if (a.TokenCreateCallback != null)
+				{
+					brackets = new BracketsToken(a.Scope);
+					brackets.AddOpen(code.Span);
+				}
+
 				if (code.ReadNumber())
 				{
-					sb.Append(code.TokenText);
+					sb.Append(code.Text);
+					if (brackets != null) brackets.AddToken(new NumberToken(a.Scope, code.Span, code.Text));
+					
 					if (code.ReadExact(','))
 					{
 						sb.Append(',');
+						if (brackets != null) brackets.AddToken(new DelimiterToken(a.Scope, code.Span));
+
 						if (code.ReadNumber())
 						{
-							sb.Append(code.TokenText);
+							sb.Append(code.Text);
+							if (brackets != null) brackets.AddToken(new NumberToken(a.Scope, code.Span, code.Text));
 						}
 					}
 				}
-				if (code.ReadExact(')')) sb.Append(')');
+				if (code.ReadExact(')'))
+				{
+					sb.Append(')');
+					if (brackets != null)
+					{
+						brackets.AddClose(code.Span);
+						a.TokenCreateCallback(brackets);
+					}
+				}
 				else return new DataType(ValType.Numeric, sb.ToString());
 			}
 
@@ -385,11 +482,12 @@ namespace DkTools.CodeModel
 			var gotMask = false;
 			while (!done && !code.EndOfFile)
 			{
-				if (ReadAttribute(code, sb, "unsigned", "currency", "local_currency")) { }
+				if (ReadAttribute(a, code, sb, "unsigned", "currency", "local_currency")) { }
 				else if (!gotMask && code.ReadStringLiteral())
 				{
 					sb.Append(' ');
-					sb.Append(code.TokenText);
+					sb.Append(code.Text);
+					a.OnStringLiteral(code.Span, code.Text);
 					gotMask = true;
 				}
 				else break;
@@ -398,52 +496,91 @@ namespace DkTools.CodeModel
 			return new DataType(ValType.Numeric, sb.ToString());
 		}
 
-		private static DataType ProcessSignedUnsigned(ParseArgs args, string tokenText)
+		private static DataType ProcessSignedUnsigned(ParseArgs a, string tokenText)
 		{
 			var sb = new StringBuilder();
 			sb.Append(tokenText);
 
-			var code = args.Code;
+			var code = a.Code;
 
 			if (code.ReadNumber())
 			{
 				// width
 				sb.Append(' ');
-				sb.Append(code.TokenType);
+				sb.Append(code.Type);
+				a.OnNumber(code.Span, code.Text);
 			}
 			else if (code.ReadExact('('))
 			{
 				sb.Append('(');
+
+				BracketsToken brackets = null;
+				if (a.TokenCreateCallback != null)
+				{
+					brackets = new BracketsToken(a.Scope);
+					brackets.AddOpen(code.Span);
+				}
+
 				if (code.ReadNumber())
 				{
-					sb.Append(code.TokenText);
+					sb.Append(code.Text);
+					if (brackets != null) brackets.AddToken(new NumberToken(a.Scope, code.Span, code.Text));
+
 					if (code.ReadExact(','))
 					{
 						sb.Append(',');
+						if (brackets != null) brackets.AddToken(new DelimiterToken(a.Scope, code.Span));
+
 						if (code.ReadNumber())
 						{
-							sb.Append(code.TokenText);
+							sb.Append(code.Text);
+							if (brackets != null) brackets.AddToken(new NumberToken(a.Scope, code.Span, code.Text));
 						}
 					}
 				}
-				if (code.ReadExact(')')) sb.Append(')');
+				if (code.ReadExact(')'))
+				{
+					sb.Append(')');
+					if (brackets != null)
+					{
+						brackets.AddClose(code.Span);
+						a.TokenCreateCallback(brackets);
+					}
+				}
 				else return new DataType(ValType.Numeric, sb.ToString());
 			}
 
-			if (code.ReadExact("int")) sb.Append(" int");
-			else if (code.ReadExact("short")) sb.Append(" short");
-			else if (code.ReadExact("long")) sb.Append(" long");
-			else if (code.ReadExact("char")) sb.Append(" char");
+			if (code.ReadExact("int"))
+			{
+				sb.Append(" int");
+				a.OnDataTypeKeyword(code.Span, code.Text);
+			}
+			else if (code.ReadExact("short"))
+			{
+				sb.Append(" short");
+				a.OnDataTypeKeyword(code.Span, code.Text);
+			}
+			else if (code.ReadExact("long"))
+			{
+				sb.Append(" long");
+				a.OnDataTypeKeyword(code.Span, code.Text);
+			}
+			else if (code.ReadExact("char"))
+			{
+				sb.Append(" char");
+				a.OnDataTypeKeyword(code.Span, code.Text);
+			}
 
 			var gotMask = false;
 			while (!code.EndOfFile)
 			{
-				if (ReadAttribute(code, sb)) { }
+				if (ReadAttribute(a, code, sb)) { }
 				else if (!gotMask && code.ReadStringLiteral())
 				{
 					gotMask = true;
 					sb.Append(' ');
-					sb.Append(code.TokenText);
+					sb.Append(code.Text);
+					a.OnStringLiteral(code.Span, code.Text);
 				}
 				else break;
 			}
@@ -451,54 +588,81 @@ namespace DkTools.CodeModel
 			return new DataType(ValType.Numeric, sb.ToString());
 		}
 
-		private static DataType ProcessInt(ParseArgs args, string tokenText)
+		private static DataType ProcessInt(ParseArgs a, string tokenText)
 		{
 			var sb = new StringBuilder();
 			sb.Append(tokenText);
 
-			var code = args.Code;
+			var code = a.Code;
 
-			if (code.ReadExact("unsigned")) sb.Append(" unsigned");
-			else if (code.ReadExact("signed")) sb.Append(" signed");
+			if (code.ReadExact("unsigned"))
+			{
+				sb.Append(" unsigned");
+				a.OnDataTypeKeyword(code.Span, code.Text);
+			}
+			else if (code.ReadExact("signed"))
+			{
+				sb.Append(" signed");
+				a.OnDataTypeKeyword(code.Span, code.Text);
+			}
 
 			if (code.ReadNumber())
 			{
 				// width
 				sb.Append(' ');
-				sb.Append(code.TokenText);
+				sb.Append(code.Text);
+				a.OnNumber(code.Span, code.Text);
 			}
 
 			while (!code.EndOfFile)
 			{
-				if (!ReadAttribute(code, sb)) break;
+				if (!ReadAttribute(a, code, sb)) break;
 			}
 
 			return new DataType(ValType.Numeric, sb.ToString());
 		}
 
-		private static DataType ProcessChar(ParseArgs args, string tokenText)
+		private static DataType ProcessChar(ParseArgs a, string tokenText)
 		{
-			var code = args.Code;
+			var code = a.Code;
 			if (!code.ReadExact('(')) return DataType.Char;
+
+			BracketsToken brackets = null;
+			if (a.TokenCreateCallback != null)
+			{
+				brackets = new BracketsToken(a.Scope);
+				brackets.AddOpen(code.Span);
+			}
+
 			if (code.ReadNumber())
 			{
 				var sb = new StringBuilder();
 				sb.Append(tokenText);
 				sb.Append('(');
-				sb.Append(code.TokenText);
-				if (code.ReadExact(')')) sb.Append(')');
+				sb.Append(code.Text);
+				if (brackets != null) brackets.AddToken(new NumberToken(a.Scope, code.Span, code.Text));
+				if (code.ReadExact(')'))
+				{
+					sb.Append(')');
+					if (brackets != null)
+					{
+						brackets.AddClose(code.Span);
+						a.TokenCreateCallback(brackets);
+					}
+				}
 				else return new DataType(ValType.String, sb.ToString());
 
 				var done = false;
 				var gotMask = false;
 				while (!done && !code.EndOfFile)
 				{
-					if (ReadAttribute(code, sb)) { }
+					if (ReadAttribute(a, code, sb)) { }
 					else if (!gotMask && code.ReadStringLiteral())
 					{
 						gotMask = true;
 						sb.Append(' ');
-						sb.Append(code.TokenText);
+						sb.Append(code.Text);
+						a.OnStringLiteral(code.Span, code.Text);
 					}
 					else break;
 				}
@@ -511,30 +675,33 @@ namespace DkTools.CodeModel
 			}
 		}
 
-		private static DataType ProcessString(ParseArgs args, string tokenText)
+		private static DataType ProcessString(ParseArgs a, string tokenText)
 		{
 			var sb = new StringBuilder();
 			sb.Append(tokenText);
 
-			var code = args.Code;
+			var code = a.Code;
 
 			if (code.ReadExact("varying"))
 			{
 				sb.Append(" varying");
+				a.OnDataTypeKeyword(code.Span, code.Text);
 			}
 			else if (code.ReadNumber())
 			{
 				sb.Append(' ');
-				sb.Append(code.TokenText);
+				sb.Append(code.Text);
+				a.OnNumber(code.Span, code.Text);
 			}
 
 			while (!code.EndOfFile)
 			{
-				if (ReadAttribute(code, sb)) { }
+				if (ReadAttribute(a, code, sb)) { }
 				else if (code.ReadStringLiteral())
 				{
 					sb.Append(' ');
-					sb.Append(code.TokenText);
+					sb.Append(code.Text);
+					a.OnStringLiteral(code.Span, code.Text);
 				}
 				else break;
 			}
@@ -542,29 +709,31 @@ namespace DkTools.CodeModel
 			return new DataType(ValType.String, sb.ToString());
 		}
 
-		private static DataType ProcessDate(ParseArgs args, string tokenText)
+		private static DataType ProcessDate(ParseArgs a, string tokenText)
 		{
 			var sb = new StringBuilder();
 			sb.Append(tokenText);
 
-			var code = args.Code;
+			var code = a.Code;
 
 			if (code.ReadNumber())
 			{
 				// width
 				sb.Append(' ');
-				sb.Append(code.TokenText);
+				sb.Append(code.Text);
+				a.OnNumber(code.Span, code.Text);
 			}
 
 			var gotMask = false;
 			var done = false;
 			while (!done && !code.EndOfFile)
 			{
-				if (ReadAttribute(code, sb, "shortform", "longform", "alternate")) { }
+				if (ReadAttribute(a, code, sb, "shortform", "longform", "alternate")) { }
 				else if (!gotMask && code.ReadStringLiteral())
 				{
 					sb.Append(' ');
-					sb.Append(code.TokenText);
+					sb.Append(code.Text);
+					a.OnStringLiteral(code.Span, code.Text);
 				}
 				else break;
 			}
@@ -572,22 +741,23 @@ namespace DkTools.CodeModel
 			return new DataType(ValType.Date, sb.ToString());
 		}
 
-		private static DataType ProcessTime(ParseArgs args, string tokenText)
+		private static DataType ProcessTime(ParseArgs a, string tokenText)
 		{
 			var sb = new StringBuilder();
 			sb.Append(tokenText);
 
-			var code = args.Code;
+			var code = a.Code;
 
 			var gotMask = false;
 			while (!code.EndOfFile)
 			{
-				if (ReadAttribute(code, sb)) { }
+				if (ReadAttribute(a, code, sb)) { }
 				else if (!gotMask && code.ReadNumber())
 				{
 					gotMask = true;
 					sb.Append(' ');
-					sb.Append(code.TokenText);
+					sb.Append(code.Text);
+					a.OnNumber(code.Span, code.Text);
 				}
 				else break;
 			}
@@ -595,34 +765,44 @@ namespace DkTools.CodeModel
 			return new DataType(ValType.Time, sb.ToString());
 		}
 
-		private static DataType ProcessEnum(ParseArgs args)
+		private static DataType ProcessEnum(ParseArgs a)
 		{
 			var options = new List<Definition>();
 			var sb = new StringBuilder();
 			sb.Append("enum");
 
-			var code = args.Code;
+			var code = a.Code;
+			BracesToken braces = null;
 
 			// Read tokens before the option list
 			var gotWidth = false;
 			while (!code.EndOfFile)
 			{
-				if (code.ReadExact('{')) break;
-				else if (ReadAttribute(code, sb, "alterable", "required", "nowarn", "numeric")) { }
+				if (code.ReadExact('{'))
+				{
+					if (a.TokenCreateCallback != null)
+					{
+						braces = new BracesToken(a.Scope);
+						braces.AddOpenBrace(code.Span);
+					}
+					break;
+				}
+				else if (ReadAttribute(a, code, sb, "alterable", "required", "nowarn", "numeric")) { }
 				else if (!gotWidth && code.ReadNumber())
 				{
 					sb.Append(' ');
-					sb.Append(code.TokenText);
+					sb.Append(code.Text);
+					a.OnNumber(code.Span, code.Text);
 					gotWidth = true;
 				}
 				else return new DataType(ValType.Enum, sb.ToString());
 			}
 
 			// Read the option list
-			if ((args.Flags & ParseFlag.FromRepo) != 0)
+			if ((a.Flags & ParseFlag.FromRepo) != 0)
 			{
 				// The WBDK repository doesn't put quotes around the strings that need them.
-				code.SkipWhiteSpaceAndCommentsIfAllowed();
+				code.SkipWhiteSpace();
 				var optionStartPos = code.Position;
 				var gotComma = false;
 
@@ -630,7 +810,7 @@ namespace DkTools.CodeModel
 				{
 					if (!code.Read()) break;
 
-					if (code.TokenText == "}")
+					if (code.Text == "}")
 					{
 						if (gotComma)
 						{
@@ -641,7 +821,7 @@ namespace DkTools.CodeModel
 						break;
 					}
 
-					if (code.TokenText == ",")
+					if (code.Text == ",")
 					{
 						var str = code.GetText(optionStartPos, code.TokenStartPostion - optionStartPos).Trim();
 						options.Add(new EnumOptionDefinition(DecorateEnumOptionIfRequired(str)));
@@ -650,7 +830,7 @@ namespace DkTools.CodeModel
 					}
 				}
 			}
-			else if ((args.Flags & ParseFlag.Strict) != 0)
+			else if ((a.Flags & ParseFlag.Strict) != 0)
 			{
 				var expectingComma = false;
 				while (!code.EndOfFile)
@@ -663,11 +843,17 @@ namespace DkTools.CodeModel
 						break;
 					}
 
-					if (code.TokenType == TokenParser.TokenType.Operator)
+					if (code.Type == TokenParser.TokenType.Operator)
 					{
-						if (code.TokenText == "}") break;
-						if (code.TokenText == ",")
+						if (code.Text == "}")
 						{
+							if (braces != null) braces.AddCloseBrace(code.Span);
+							break;
+						}
+						if (code.Text == ",")
+						{
+							if (braces != null) braces.AddToken(new DelimiterToken(a.Scope, code.Span));
+
 							if (!expectingComma)
 							{
 #if REPORT_ERRORS
@@ -680,9 +866,11 @@ namespace DkTools.CodeModel
 							}
 						}
 					}
-					else if (code.TokenType == TokenParser.TokenType.StringLiteral || code.TokenType == TokenParser.TokenType.Word)
+					else if (code.Type == TokenParser.TokenType.StringLiteral || code.Type == TokenParser.TokenType.Word)
 					{
-						var str = code.TokenText;
+						if (braces != null) braces.AddToken(new EnumOptionToken(a.Scope, code.Span, code.Text));
+
+						var str = code.Text;
 						if (expectingComma)
 						{
 #if REPORT_ERRORS
@@ -707,13 +895,26 @@ namespace DkTools.CodeModel
 				while (!code.EndOfFile)
 				{
 					if (!code.Read()) break;
-					if (code.TokenText == "}") break;
-					if (code.TokenText == ",") continue;
-					switch (code.TokenType)
+					if (code.Text == "}")
+					{
+						if (braces != null)
+						{
+							braces.AddCloseBrace(code.Span);
+							a.TokenCreateCallback(braces);
+						}
+						break;
+					}
+					if (code.Text == ",")
+					{
+						if (braces != null) braces.AddToken(new DelimiterToken(a.Scope, code.Span));
+						continue;
+					}
+					switch (code.Type)
 					{
 						case TokenParser.TokenType.Word:
 						case TokenParser.TokenType.StringLiteral:
-							options.Add(new EnumOptionDefinition(code.TokenText));
+							if (braces != null) braces.AddToken(new EnumOptionToken(a.Scope, code.Span, code.Text));
+							options.Add(new EnumOptionDefinition(code.Text));
 							break;
 					}
 				}
@@ -743,98 +944,142 @@ namespace DkTools.CodeModel
 			};
 		}
 
-		private static DataType ProcessLike(ParseArgs args)
+		private static DataType ProcessLike(ParseArgs a)
 		{
-			var code = args.Code;
+			var code = a.Code;
 			if (code.ReadWord())
 			{
-				var word1 = code.TokenText;
+				var word1 = code.Text;
+				var word1Span = code.Span;
+
 				if (code.ReadExact('.'))
 				{
+					var dotSpan = code.Span;
+
 					if (code.ReadWord())
 					{
-						var word2 = code.TokenText;
+						var word2 = code.Text;
+						var word2Span = code.Span;
 
-						// TODO: this should be able to handle more than just tables
 						var table = ProbeEnvironment.GetTable(word1);
 						if (table != null)
 						{
 							var field = table.GetField(word2);
-							if (field != null) return field.DataType;
+							if (field != null)
+							{
+								if (a.TokenCreateCallback != null)
+								{
+									var tableToken = new TableToken(a.Scope, word1Span, word1, table.BaseDefinition);
+									var dotToken = new DotToken(a.Scope, dotSpan);
+									var fieldToken = new TableFieldToken(a.Scope, word2Span, word2, field);
+									var tableAndFieldToken = new TableAndFieldToken(a.Scope, tableToken, dotToken, fieldToken);
+									a.TokenCreateCallback(tableAndFieldToken);
+								}
+								return field.DataType;
+							}
+						}
+
+						if (a.TokenCreateCallback != null)
+						{
+							a.TokenCreateCallback(new UnknownToken(a.Scope, word1Span, word1));
+							a.TokenCreateCallback(new UnknownToken(a.Scope, dotSpan, "."));
+							a.TokenCreateCallback(new UnknownToken(a.Scope, word2Span, word2));
 						}
 
 						return new DataType(ValType.Unknown, string.Concat("like ", word1, ".", word2));
 					}
 					else
 					{
+						if (a.TokenCreateCallback != null)
+						{
+							a.TokenCreateCallback(new UnknownToken(a.Scope, word1Span, word1));
+							a.TokenCreateCallback(new UnknownToken(a.Scope, dotSpan, "."));
+						}
+
 						return new DataType(ValType.Unknown, string.Concat("like ", word1, "."));
 					}
 				}
 
-				if (args.VariableCallback != null)
+				if (a.VariableCallback != null)
 				{
-					var def = args.VariableCallback(word1);
-					if (def != null) return def.DataType;
+					var def = a.VariableCallback(word1);
+					if (def != null)
+					{
+						a.OnIdentifier(code.Span, code.Text, def);
+						return def.DataType;
+					}
 				}
+
+				if (a.TokenCreateCallback != null) a.TokenCreateCallback(new UnknownToken(a.Scope, word1Span, word1));
 
 				return new DataType(ValType.Unknown, string.Concat("like ", word1));
 			}
 			else return null;
 		}
 
-		private static DataType ProcessSection(ParseArgs args)
+		private static DataType ProcessSection(ParseArgs a)
 		{
 			var sb = new StringBuilder();
 			sb.Append("Section");
 
-			var code = args.Code;
+			var code = a.Code;
 
 			if (code.ReadExact("Level"))
 			{
 				sb.Append(" Level");
+				a.OnKeyword(code.Span, code.Text);
 				if (code.ReadNumber())
 				{
 					sb.Append(' ');
-					sb.Append(code.TokenText);
+					sb.Append(code.Text);
+					a.OnNumber(code.Span, code.Text);
 				}
 			}
 
 			return new DataType(ValType.Section, sb.ToString());
 		}
 
-		private static DataType ProcessScroll(ParseArgs args)
+		private static DataType ProcessScroll(ParseArgs a)
 		{
 			var sb = new StringBuilder();
 			sb.Append("scroll");
 
-			if (args.Code.ReadNumber())
+			var code = a.Code;
+
+			if (code.ReadNumber())
 			{
 				sb.Append(' ');
-				sb.Append(args.Code.TokenText);
+				sb.Append(code.Text);
+				a.OnNumber(code.Span, code.Text);
 			}
 
 			return new DataType(ValType.Scroll, sb.ToString());
 		}
 
-		private static DataType ProcessGraphic(ParseArgs args)
+		private static DataType ProcessGraphic(ParseArgs a)
 		{
 			var sb = new StringBuilder();
 			sb.Append("graphic");
 
-			if (args.Code.ReadNumber())	// rows
+			var code = a.Code;
+
+			if (code.ReadNumber())	// rows
 			{
 				sb.Append(' ');
-				sb.Append(args.Code.TokenText);
+				sb.Append(code.Text);
+				a.OnNumber(code.Span, code.Text);
 
-				if (args.Code.ReadNumber())	// columns
+				if (code.ReadNumber())	// columns
 				{
 					sb.Append(' ');
-					sb.Append(args.Code.TokenText);
+					sb.Append(code.Text);
+					a.OnNumber(code.Span, code.Text);
 
-					if (args.Code.ReadNumber())	// bytes
+					if (code.ReadNumber())	// bytes
 					{
 						sb.Append(' ');
-						sb.Append(args.Code.TokenText);
+						sb.Append(code.Text);
+						a.OnNumber(code.Span, code.Text);
 					}
 				}
 			}
@@ -842,31 +1087,33 @@ namespace DkTools.CodeModel
 			return new DataType(ValType.Graphic, sb.ToString());
 		}
 
-		private static DataType ProcessInterface(ParseArgs args)
+		private static DataType ProcessInterface(ParseArgs a)
 		{
 			var sb = new StringBuilder();
 			sb.Append("interface");
 
-			var code = args.Code;
+			var code = a.Code;
 
-			if ((args.Flags & ParseFlag.InterfaceType) == 0)
+			if ((a.Flags & ParseFlag.InterfaceType) == 0)
 			{
 				if (code.ReadWord())
 				{
 					sb.Append(' ');
-					sb.Append(code.TokenText);
+					sb.Append(code.Text);
 
 					var completionOptions = new List<Definition>();
 					Definition[] methods = null;
 					Definition[] properties = null;
 
-					var intType = ProbeEnvironment.GetInterfaceType(code.TokenText);
+					var intType = ProbeEnvironment.GetInterfaceType(code.Text);
 					if (intType != null)
 					{
 						methods = intType.MethodDefinitions.ToArray();
 						completionOptions.AddRange(methods);
 						properties = intType.PropertyDefinitions.ToArray();
 						completionOptions.AddRange(properties);
+
+						if (a.TokenCreateCallback != null) a.TokenCreateCallback(new InterfaceTypeToken(a.Scope, code.Span, intType.Definition));
 					}
 
 					return new DataType(ValType.Interface, sb.ToString())
@@ -885,27 +1132,74 @@ namespace DkTools.CodeModel
 				if (code.ReadWord())
 				{
 					sb.Append(' ');
-					sb.Append(code.TokenText);
+					sb.Append(code.Text);
+
+					Dict.InterfaceType intType = null;
+					Definition parentDef = null;
+					if (a.TokenCreateCallback != null)
+					{
+						intType = ProbeEnvironment.GetInterfaceType(code.Text);
+						if (intType != null)
+						{
+							a.TokenCreateCallback(new InterfaceTypeToken(a.Scope, code.Span, intType.Definition));
+							parentDef = intType.Definition;
+						}
+						else a.OnUnknown(code.Span, code.Text);
+					}
 
 					while (code.ReadExact('.'))
 					{
 						sb.Append('.');
-						if (code.ReadWord()) sb.Append(code.TokenText);
+						if (a.TokenCreateCallback != null) a.TokenCreateCallback(new DotToken(a.Scope, code.Span));
+
+						if (code.ReadWord())
+						{
+							sb.Append(code.Text);
+							if (a.TokenCreateCallback != null && parentDef != null && parentDef.AllowsChild)
+							{
+								var def = parentDef.GetChildDefinition(code.Text);
+								if (def != null)
+								{
+									a.OnIdentifier(code.Span, code.Text, def);
+									parentDef = def;
+								}
+								else
+								{
+									a.OnUnknown(code.Span, code.Text);
+								}
+							}
+						}
 						else break;
 					}
 
 					if (code.ReadExact('*'))
 					{
 						sb.Append('*');
+						a.OnOperator(code.Span, code.Text);
 					}
 					else if (code.ReadExact('&'))
 					{
 						sb.Append('&');
+						a.OnOperator(code.Span, code.Text);
 					}
 					else if (code.ReadExact('['))
 					{
 						sb.Append('[');
-						if (code.ReadExact(']')) sb.Append(']');
+
+						ArrayBracesToken arrayBraces = null;
+						if (a.TokenCreateCallback != null)
+						{
+							arrayBraces = new ArrayBracesToken(a.Scope);
+							arrayBraces.AddOpen(code.Span);
+						}
+
+						if (code.ReadExact(']'))
+						{
+							sb.Append(']');
+							if (arrayBraces != null) arrayBraces.AddClose(code.Span);
+						}
+
+						if (arrayBraces != null) a.TokenCreateCallback(arrayBraces);
 					}
 				}
 			}
@@ -913,13 +1207,13 @@ namespace DkTools.CodeModel
 			return new DataType(ValType.Interface, sb.ToString());
 		}
 
-		private static bool ReadAttribute(TokenParser.Parser code, StringBuilder sb, params string[] extraTokens)
+		private static bool ReadAttribute(ParseArgs a, TokenParser.Parser code, StringBuilder sb, params string[] extraTokens)
 		{
 			var startPos = code.Position;
 			if (code.ReadWord())
 			{
-				var word = code.TokenText;
-				switch (code.TokenText)
+				var word = code.Text;
+				switch (code.Text)
 				{
 					case "ALLCAPS":
 					case "AUTOCAPS":
@@ -932,20 +1226,30 @@ namespace DkTools.CodeModel
 					case "NOUSE":
 					case "REQUIRED":
 					case "PROBE":
+						a.OnKeyword(code.Span, code.Text);
 						sb.Append(' ');
 						sb.Append(word);
 						return true;
 
 					case "tag":
 						sb.Append(" tag");
+						a.OnKeyword(code.Span, code.Text);
 						if (code.ReadWord())
 						{
 							sb.Append(' ');
-							sb.Append(code.TokenText);
-							if (code.ReadStringLiteral() || code.ReadWord())
+							sb.Append(code.Text);
+							a.OnKeyword(code.Span, code.Text);
+							if (code.ReadStringLiteral())
 							{
 								sb.Append(' ');
-								sb.Append(code.TokenText);
+								sb.Append(code.Text);
+								a.OnStringLiteral(code.Span, code.Text);
+							}
+							else if (code.ReadWord())
+							{
+								sb.Append(' ');
+								sb.Append(code.Text);
+								a.OnKeyword(code.Span, code.Text);
 							}
 						}
 						return true;
@@ -955,6 +1259,7 @@ namespace DkTools.CodeModel
 						{
 							sb.Append(' ');
 							sb.Append(word);
+							a.OnKeyword(code.Span, code.Text);
 							return true;
 						}
 						else
@@ -967,6 +1272,7 @@ namespace DkTools.CodeModel
 			else if (code.ReadExact("@neutral"))
 			{
 				sb.Append(" @neutral");
+				a.OnKeyword(code.Span, code.Text);
 				return true;
 			}
 
@@ -975,15 +1281,25 @@ namespace DkTools.CodeModel
 
 		private static readonly Regex _rxRepoWords = new Regex(@"\G((nomask|(NO)?PROBE|[%@]undefined|@neutral|(NO)?PICK)\b|&)");
 
-		private static void IgnoreRepoWords(TokenParser.Parser code, string type)
+		private static void IgnoreRepoWords(ParseArgs a, string type)
 		{
+			var code = a.Code;
+
 			while (!code.EndOfFile)
 			{
-				code.SkipWhiteSpaceAndCommentsIfAllowed();
+				code.SkipWhiteSpace();
 
-				if (code.ReadPattern(_rxRepoWords)) continue;
+				if (code.ReadPattern(_rxRepoWords))
+				{
+					a.OnKeyword(code.Span, code.Text);
+					continue;
+				}
 
-				if (type == "enum" && code.ReadStringLiteral()) continue;
+				if (type == "enum" && code.ReadStringLiteral())
+				{
+					a.OnStringLiteral(code.Span, code.Text);
+					continue;
+				}
 
 				break;
 			}

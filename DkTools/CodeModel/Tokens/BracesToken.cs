@@ -11,72 +11,45 @@ namespace DkTools.CodeModel.Tokens
 		private Token _closeToken;
 		private List<Token> _innerTokens = new List<Token>();
 
-		private BracesToken(GroupToken parent, Scope scope, int startPos)
-			: base(parent, scope, startPos)
+		public BracesToken(Scope scope)
+			: base(scope)
 		{
-			IsLocalScope = true;
 		}
 
-		public BracesToken(GroupToken parent, Scope scope, Span openBraceSpan)
-			: base(parent, scope, openBraceSpan.Start)
+		public BracesToken(Scope scope, Span openBraceSpan)
+			: base(scope)
 		{
-			_openToken = new BraceToken(this, scope, openBraceSpan, this, true);
+			_openToken = new BraceToken(scope, openBraceSpan, this, true);
 			AddToken(_openToken);
 		}
 
-		public static BracesToken TryParse(GroupToken parent, Scope scope)
+		public static BracesToken Parse(Scope scope)
 		{
-			var file = scope.File;
-			if (!file.SkipWhiteSpaceAndComments(scope) || file.PeekChar() != '{') return null;
-			return Parse(parent, scope);
-		}
-
-		public static BracesToken Parse(GroupToken parent, Scope scope)
-		{
-			var file = scope.File;
-			file.SkipWhiteSpaceAndComments(scope);
-#if DEBUG
-			if (file.PeekChar() != '{') throw new InvalidOperationException("BracesToken.Parse expected next char to be '{'.");
-#endif
-			var startPos = scope.File.Position;
-			scope.File.MoveNext();
+			var code = scope.Code;
+			if (!code.ReadExact('{')) throw new InvalidOperationException("BracesToken.Parse expected next char to be '{'.");
+			var openBraceSpan = code.Span;
 
 			var indentScope = scope.CloneIndentNonRoot();
 			indentScope.Hint |= ScopeHint.SuppressFunctionDefinition;
 
-			var ret = new BracesToken(parent, scope, startPos);
-			ret._openToken = new BraceToken(ret, scope, new Span(startPos, scope.File.Position), ret, true);
+			var ret = new BracesToken(scope);
+			ret._openToken = new BraceToken(scope, openBraceSpan, ret, true);
 			ret.AddToken(ret._openToken);
 
-			while (file.SkipWhiteSpaceAndComments(scope))
+			while (!code.EndOfFile)
 			{
-				if (file.IsMatch('}'))
+				if (code.ReadExact('}'))
 				{
-					ret._closeToken = new BraceToken(ret, scope, file.MoveNextSpan(), ret, false);
+					ret._closeToken = new BraceToken(scope, code.Span, ret, false);
 					ret.AddToken(ret._closeToken);
 					return ret;
 				}
 
-				var stmt = StatementToken.TryParse(ret, scope);
+				var stmt = StatementToken.TryParse(scope);
 				if (stmt != null) ret.AddToken(stmt);
 			}
 
 			return ret;
-
-			// TODO: remove
-			//ret.ParseScope(indentScope, t =>
-			//	{
-			//		if (t is BraceToken && !(t as BraceToken).Open)
-			//		{
-			//			ret._closeToken = t as BraceToken;
-			//			return ParseScopeResult.StopAndKeep;
-			//		}
-
-			//		ret._innerTokens.Add(t);
-			//		return ParseScopeResult.Continue;
-			//	});
-
-			//return ret;
 		}
 
 		public Token OpenToken
@@ -95,21 +68,24 @@ namespace DkTools.CodeModel.Tokens
 			{
 				if (_openToken != null && _closeToken != null)
 				{
-					var startLineEnd = File.FindEndOfLine(_openToken.Span.End);
+					var startLineEnd = Code.FindEndOfLine(_openToken.Span.End);
 					if (_closeToken.Span.Start > startLineEnd)
 					{
 						foreach (var region in base.OutliningRegions) yield return region;
 
-						//if (!(Parent is FunctionToken) && !(Parent is DefineToken))
-						//{
-							yield return new OutliningRegion
-							{
-								Span = Span,
-								CollapseToDefinition = false,
-								Text = Constants.DefaultOutliningText,
-								TooltipText = File.GetRegionText(Span)
-							};
-						//}
+						var regionText = Code.GetText(Span);
+						if (regionText.Length > Constants.OutliningMaxContextChars)
+						{
+							regionText = regionText.Substring(0, Constants.OutliningMaxContextChars) + "...";
+						}
+
+						yield return new OutliningRegion
+						{
+							Span = Span,
+							CollapseToDefinition = false,
+							Text = Constants.DefaultOutliningText,
+							TooltipText = regionText
+						};
 
 						yield break;
 					}
@@ -124,13 +100,20 @@ namespace DkTools.CodeModel.Tokens
 			get { return _innerTokens; }
 		}
 
-		public void AddCloseBrace(Scope scope, Span span)
+		public void AddOpenBrace(Span span)
+		{
+#if DEBUG
+			if (_openToken != null) throw new InvalidOperationException("Opening brace has already been added.");
+#endif
+			AddToken(_openToken = new BraceToken(Scope, span, this, true));
+		}
+
+		public void AddCloseBrace(Span span)
 		{
 #if DEBUG
 			if (_closeToken != null) throw new InvalidOperationException("Close brace has already been added.");
 #endif
-			_closeToken = new BraceToken(this, scope, span, this, false);
-			AddToken(_closeToken);
+			AddToken(_closeToken = new BraceToken(Scope, span, this, false));
 		}
 	}
 }

@@ -10,24 +10,24 @@ namespace DkTools.CodeModel.Tokens
 		private InsertStartToken _startToken;
 		private InsertEndToken _endToken;  // Optional
 
-		private InsertToken(GroupToken parent, Scope scope, int startPos)
-			: base(parent, scope, startPos)
+		private InsertToken(Scope scope)
+			: base(scope)
 		{
 		}
 
-		public static Token Parse(GroupToken parent, Scope scope, InsertStartToken insertToken)
+		public static Token Parse(Scope scope, InsertStartToken insertToken)
 		{
-			var file = scope.File;
+			var code = scope.Code;
 
-			var ret = new InsertToken(parent, scope, file.Position);
+			var ret = new InsertToken(scope);
 
 			var scopeIndent = scope.CloneIndent();
 			ret.AddToken(ret._startToken = insertToken);
 
 			var done = false;
-			while (!done && !file.EndOfFile)
+			while (!done && !code.EndOfFile)
 			{
-				var token = StatementToken.TryParse(ret, scopeIndent, t =>
+				var token = StatementToken.TryParse(scopeIndent, t =>
 				{
 					if (t is InsertEndToken)
 					{
@@ -38,17 +38,6 @@ namespace DkTools.CodeModel.Tokens
 				if (token != null) ret.AddToken(token);
 			}
 
-			// TODO: remove
-			//ret.ParseScope(scope, t =>
-			//	{
-			//		if (t is InsertEndToken)
-			//		{
-			//			ret._endToken = t as InsertEndToken;
-			//			return ParseScopeResult.StopAndKeep;
-			//		}
-			//		return ParseScopeResult.Continue;
-			//	});
-
 			return ret;
 		}
 
@@ -58,17 +47,24 @@ namespace DkTools.CodeModel.Tokens
 			{
 				if (_startToken != null && _endToken != null)
 				{
-					var startLineEnd = File.FindEndOfLine(_startToken.Span.End);
-					var endPrevLine = File.FindEndOfPreviousLine(_endToken.Span.Start);
+					var startLineEnd = Scope.Code.FindEndOfLine(_startToken.Span.End);
+					var endPrevLine = Scope.Code.FindEndOfPreviousLine(_endToken.Span.Start);
 					if (endPrevLine > startLineEnd)
 					{
 						var span = new Span(startLineEnd, endPrevLine);
+						
+						var regionText = Code.GetText(span);
+						if (regionText.Length > Constants.OutliningMaxContextChars)
+						{
+							regionText = regionText.Substring(0, Constants.OutliningMaxContextChars) + "...";
+						}
+
 						return new OutliningRegion[]
 						{
 							new OutliningRegion
 							{
 								Span = span,
-								TooltipText = File.GetRegionText(span)
+								TooltipText = regionText
 							}
 						};
 					}
@@ -91,8 +87,8 @@ namespace DkTools.CodeModel.Tokens
 
 	internal class InsertStartToken : Token, IBraceMatchingToken
 	{
-		public InsertStartToken(GroupToken parent, Scope scope, Span span)
-			: base(parent, scope, span)
+		public InsertStartToken(Scope scope, Span span)
+			: base(scope, span)
 		{
 			ClassifierType = Classifier.ProbeClassifierType.Preprocessor;
 		}
@@ -110,8 +106,8 @@ namespace DkTools.CodeModel.Tokens
 
 	internal class InsertEndToken : Token, IBraceMatchingToken
 	{
-		public InsertEndToken(GroupToken parent, Scope scope, Span span)
-			: base(parent, scope, span)
+		public InsertEndToken(Scope scope, Span span)
+			: base(scope, span)
 		{
 			ClassifierType = Classifier.ProbeClassifierType.Preprocessor;
 		}
@@ -126,15 +122,14 @@ namespace DkTools.CodeModel.Tokens
 			}
 		}
 
-		public static InsertEndToken TryParse(GroupToken parent, Scope scope)
+		public static InsertEndToken TryParse(Scope scope)
 		{
-			var file = scope.File;
-			if (!file.SkipWhiteSpaceAndComments(scope)) return null;
+			var code = scope.Code;
 
-			var startPos = file.Position;
-			if (!file.SkipMatch("#endinsert")) return null;
+			var startPos = code.Position;
+			if (!code.ReadExactWholeWord("#endinsert")) return null;
 
-			return new InsertEndToken(parent, scope, new Span(startPos, file.Position));
+			return new InsertEndToken(scope, code.Span);
 		}
 	}
 }

@@ -9,8 +9,8 @@ namespace DkTools.CodeModel.Tokens
 	{
 		private Dict.Field _field;
 
-		public TableFieldToken(GroupToken parent, Scope scope, Span span, string text, Dict.Field field)
-			: base(parent, scope, span, text)
+		public TableFieldToken(Scope scope, Span span, string text, Dict.Field field)
+			: base(scope, span, text)
 		{
 #if DEBUG
 			if (field == null) throw new ArgumentNullException("field");

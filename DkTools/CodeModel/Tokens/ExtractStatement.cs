@@ -9,64 +9,62 @@ namespace DkTools.CodeModel.Tokens
 {
 	internal class ExtractStatement : GroupToken
 	{
-		private ExtractStatement(GroupToken parent, Scope scope, IEnumerable<Token> tokens)
-			: base(parent, scope, tokens)
-		{ }
-
-		public static ExtractStatement Parse(GroupToken parent, Scope scope, KeywordToken extractKeywordToken)
+		private ExtractStatement(Scope scope, IEnumerable<Token> tokens)
+			: base(scope)
 		{
-			var file = scope.File;
+			foreach (var token in tokens) AddToken(token);
+		}
+
+		public static ExtractStatement Parse(Scope scope, KeywordToken extractKeywordToken)
+		{
+			var code = scope.Code;
 
 			var tokens = new List<Token>();
 			tokens.Add(extractKeywordToken);
 
-			ExtractTableToken exToken = null;
-			ExtractTableDefinition exDef = null;
-
-			file.SkipWhiteSpaceAndComments(scope);
-			var word = file.PeekWord();
-			if (word == "permanent")
+			if (code.ReadExactWholeWord("permanent"))
 			{
-				var permToken = new KeywordToken(parent, scope, file.MoveNextSpan("permanent".Length), "permanent");
+				var permToken = new KeywordToken(scope, code.Span, "permanent");
 				tokens.Add(permToken);
-				file.SkipWhiteSpaceAndComments(scope);
-				word = file.PeekWord();
 			}
 
-			if (!string.IsNullOrEmpty(word) &&
-				(exDef = scope.DefinitionProvider.GetGlobalFromFile<ExtractTableDefinition>(word).FirstOrDefault()) != null)
+			ExtractTableDefinition exDef = null;
+
+			if (!code.ReadWord())
 			{
-				exToken = new ExtractTableToken(parent, scope, file.MoveNextSpan(word.Length), word, exDef);
-				tokens.Add(exToken);
-				file.SkipWhiteSpaceAndComments(scope);
+				// Not correct syntax; exit here.
+				return new ExtractStatement(scope, tokens);
+			}
+			else if ((exDef = scope.DefinitionProvider.GetGlobalFromFile<ExtractTableDefinition>(code.Text).FirstOrDefault()) == null)
+			{
+				// The extract definition would have been added by the preprocessor. If it's not recognized here, then it's incorrect syntax.
+				return new ExtractStatement(scope, tokens);
 			}
 			else
 			{
-				// Not correct syntax; exit here.
-				return new ExtractStatement(parent, scope, tokens);
+				tokens.Add(new ExtractTableToken(scope, code.Span, code.Text, exDef));
 			}
 
-			var ret = new ExtractStatement(parent, scope, tokens);
+			var ret = new ExtractStatement(scope, tokens);
 			var scope2 = scope.CloneIndent();
 			scope2.Hint |= ScopeHint.SuppressControlStatements | ScopeHint.SuppressFunctionDefinition | ScopeHint.SuppressVarDecl;
 
-			while (file.SkipWhiteSpaceAndComments(scope2))
+			while (!code.EndOfFile)
 			{
-				if (file.IsMatch(';'))
+				if (code.ReadExact(';'))
 				{
-					ret.AddToken(new StatementEndToken(ret, scope2, file.MoveNextSpan()));
+					ret.AddToken(new StatementEndToken(scope2, code.Span));
 					return ret;
 				}
 
-				var exp = ExpressionToken.TryParse(ret, scope, null, (parseWord, parseWordSpan) =>
+				var exp = ExpressionToken.TryParse(scope, null, (parseWord, parseWordSpan) =>
 				{
-					file.SkipWhiteSpaceAndComments(scope);
-					if (file.IsMatch('='))
+					if (code.PeekExact('='))
 					{
 						var fieldDef = exDef.GetField(parseWord);
 						if (fieldDef != null)
 						{
-							return new ExtractFieldToken(ret, scope, parseWordSpan, parseWord, fieldDef);
+							return new ExtractFieldToken(scope, parseWordSpan, parseWord, fieldDef);
 						}
 					}
 
@@ -77,48 +75,6 @@ namespace DkTools.CodeModel.Tokens
 			}
 
 			return ret;
-
-			// TODO: remove
-			//// Read all the tokens into a list that we can navigate later.
-			//tokens.Clear();
-			//var savePos = file.Position;
-			//while (true)
-			//{
-			//	var tok = file.ParseComplexToken(ret, scope2);
-			//	if (tok == null) break;
-			//	if (tok is StatementEndToken)
-			//	{
-			//		tokens.Add(tok);
-			//		break;
-			//	}
-			//	if (tok.BreaksStatement)
-			//	{
-			//		file.Position = savePos;
-			//		break;
-			//	}
-
-			//	tokens.Add(tok);
-			//	savePos = file.Position;
-			//}
-
-			//// In the list, find tokens that occur before '=' and have a name matching an extract field.
-			//// Replace the ones found with ExtractFieldTokens.
-			//ExtractFieldDefinition fieldDef;
-			//for (int i = 1, ii = tokens.Count; i < ii; i++)
-			//{
-			//	var tok = tokens[i];
-			//	if (tok is OperatorToken && tok.Text == "=")
-			//	{
-			//		var prevTok = tokens[i - 1];
-			//		if (prevTok is WordToken && (fieldDef = exDef.GetField(prevTok.Text)) != null)
-			//		{
-			//			tokens[i - 1] = new ExtractFieldToken(ret, scope2, prevTok.Span, fieldDef.Name, fieldDef);
-			//		}
-			//	}
-			//}
-
-			//ret.AddTokens(tokens);
-			//return ret;
 		}
 	}
 }

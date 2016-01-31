@@ -221,9 +221,9 @@ namespace DkTools.SmartIndenting
 
 			while (code.Read())
 			{
-				if (code.TokenType == TokenParser.TokenType.Operator)
+				if (code.Type == TokenParser.TokenType.Operator)
 				{
-					switch (code.TokenText)
+					switch (code.Text)
 					{
 						case "{":
 						case "(":

@@ -21,10 +21,10 @@ namespace DkTools.CodeModel.Tokens
 			public bool SearchFileDir { get; set; }
 		}
 
-		private IncludeToken(GroupToken parent, Scope scope, Span span, PreprocessorToken prepToken, string fileName, bool searchFileDir)
-			: base(parent, scope, new Token[] { prepToken })
+		private IncludeToken(Scope scope, Span span, PreprocessorToken prepToken, string fileName, bool searchFileDir)
+			: base(scope)
 		{
-			_prepToken = prepToken;
+			AddToken(_prepToken = prepToken);
 			_fileName = fileName;
 			_searchFileDir = searchFileDir;
 		}
@@ -32,40 +32,27 @@ namespace DkTools.CodeModel.Tokens
 		private static Regex _rxAngleBrackets = new Regex(@"^\<([^>]+)\>");
 		private static Regex _rxQuotes = new Regex(@"^""([^""]+)""");
 
-		public static IncludeToken Parse(GroupToken parent, Scope scope, PreprocessorToken prepToken)
+		public static IncludeToken Parse(Scope scope, PreprocessorToken prepToken)
 		{
-			var file = scope.File;
+			var code = scope.Code;
+			code.SkipWhiteSpace();
+			var fileNameStartPos = code.Position;
 
-			file.SkipWhiteSpaceAndComments(scope);
-
-			var fileNameStartPos = file.Position;
-
-			file.SeekEndOfLine();
-			var lineText = file.GetText(new Span(fileNameStartPos, file.Position)).Trim();
-
-			var fileName = "";
+			var fileName = string.Empty;
 			var searchFileDir = false;
-			StringLiteralToken stringLitToken = null;
+			StringLiteralToken fileNameToken = null;
+			Span includeSpan = prepToken.Span;
 
-			var match = _rxAngleBrackets.Match(lineText);
-			if (match.Success)
+			if (code.ReadIncludeStringLiteral())
 			{
-				fileName = match.Groups[1].Value.Trim();
-
-				var rawFileName = lineText.Substring(0, match.Groups[1].Index + match.Groups[1].Length + 1);
-				stringLitToken = new StringLiteralToken(parent, scope, new Span(fileNameStartPos, fileNameStartPos + rawFileName.Length), rawFileName);
-			}
-			else if ((match = _rxQuotes.Match(lineText)).Success)
-			{
-				fileName = match.Groups[1].Value.Trim();
-				searchFileDir = true;
-
-				var rawFileName = lineText.Substring(0, match.Groups[1].Index + match.Groups[1].Length + 1);
-				stringLitToken = new StringLiteralToken(parent, scope, new Span(fileNameStartPos, fileNameStartPos + rawFileName.Length), rawFileName);
+				fileName = code.Text;
+				searchFileDir = fileName.StartsWith("\"");
+				fileNameToken = new StringLiteralToken(scope, code.Span, code.Text);
+				includeSpan = new Span(prepToken.Span.Start, fileNameToken.Span.End);
 			}
 
-			var ret = new IncludeToken(parent, scope, new Span(prepToken.Span.Start, file.Position), prepToken, fileName, searchFileDir);
-			if (stringLitToken != null) ret.AddToken(stringLitToken);
+			var ret = new IncludeToken(scope, includeSpan, prepToken, fileName, searchFileDir);
+			if (fileNameToken != null) ret.AddToken(fileNameToken);
 			return ret;
 		}
 

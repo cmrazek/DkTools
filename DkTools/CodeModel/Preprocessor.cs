@@ -642,10 +642,17 @@ namespace DkTools.CodeModel
 			var conditionPosition = rdr.Position;
 			var parser = new TokenParser.Parser(conditionStr);
 			parser.ReturnComments = true;
-			var tokens = parser.ToArray();
-			if (tokens.Length > 0 && tokens[tokens.Length - 1].Type == TokenParser.TokenType.Comment)
+
+			var lastStartPos = -1;
+			var lastType = TokenParser.TokenType.Unknown;
+			while (parser.Read())
 			{
-				conditionStr = conditionStr.Substring(0, tokens[tokens.Length - 1].StartPosition);
+				lastStartPos = parser.TokenStartPostion;
+				lastType = parser.Type;
+			}
+			if (lastStartPos != -1 && lastType == TokenParser.TokenType.Comment)
+			{
+				conditionStr = conditionStr.Substring(0, lastStartPos);
 			}
 
 			if (elif)
@@ -835,7 +842,7 @@ namespace DkTools.CodeModel
 				if (_paramNames == null)
 				{
 					var parser = new TokenParser.Parser(_content);
-					var dataType = DataType.Parse(new DataType.ParseArgs
+					var dataType = DataType.TryParse(new DataType.ParseArgs
 					{
 						Code = parser,
 						TypeName = _name

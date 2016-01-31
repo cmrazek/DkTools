@@ -8,16 +8,16 @@ namespace DkTools.CodeModel.Tokens
 {
 	internal sealed class TagToken : GroupToken
 	{
-		private TagToken(GroupToken parent, Scope scope, IEnumerable<Token> tokens)
-			: base(parent, scope, tokens)
+		private TagToken(Scope scope)
+			: base(scope)
 		{ }
 
-		public static Token Parse(GroupToken parent, Scope scope, KeywordToken tagToken)
+		public static Token Parse(Scope scope, KeywordToken tagToken)
 		{
-			var file = scope.File;
-			file.SkipWhiteSpaceAndComments(scope);
+			var code = scope.Code;
+			code.SkipWhiteSpace();
 
-			var word = file.PeekWord();
+			var word = code.PeekWord();
 			if (string.IsNullOrEmpty(word))
 			{
 				return tagToken;
@@ -28,8 +28,12 @@ namespace DkTools.CodeModel.Tokens
 				return tagToken;
 			}
 
-			var nameToken = new KeywordToken(parent, scope, file.MoveNextSpan(word.Length), word);
-			return new TagToken(parent, scope, new Token[] { tagToken, nameToken });
+			var nameToken = new KeywordToken(scope, code.MovePeekedSpan(), word);
+
+			var ret = new TagToken(scope);
+			ret.AddToken(tagToken);
+			ret.AddToken(nameToken);
+			return ret;
 		}
 	}
 }

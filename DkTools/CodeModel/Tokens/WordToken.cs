@@ -12,8 +12,8 @@ namespace DkTools.CodeModel.Tokens
 	{
 		private string _text;
 
-		public WordToken(GroupToken parent, Scope scope, Span span, string text)
-			: base(parent, scope, span)
+		public WordToken(Scope scope, Span span, string text)
+			: base(scope, span)
 		{
 #if DEBUG
 			if (string.IsNullOrWhiteSpace(text)) throw new ArgumentNullException("text");

@@ -39,21 +39,26 @@ namespace DkTools
 		public static readonly HashSet<string> IncludeExtensions = Util.ParseWordList("i i& i+ id id& id+ ie ie& ie+ il il& il+");
 		public const string DefaultHiddenExtensions = ".c .dll .exe .h .hlp .lib .obj .pdb .res .ss";
 
-		public static readonly HashSet<string> DataTypeKeywords = Util.ParseWordList(
-			"alternate Boolean_t char character currency date enum int LEADINGZEROS like local_currency long longform",
-			"nowarn numeric oleobject proto short shortform signed string time unsigned varchar variant void");
+		// TODO: remove references to these
+		public static readonly HashSet<string> DataTypeKeywords = Util.ParseWordList("");
+		public static readonly HashSet<string> Keywords = Util.ParseWordList("");
+		public static readonly HashSet<string> GlobalKeywords = Util.ParseWordList("");
 
-		public static readonly HashSet<string> Keywords = Util.ParseWordList(
-			"after alter and BEGINHLP before break button comment case col colff cols continue create default display description",
-			"each else endgroup ENDHLP extern extract for form formonly format group header if index interface many nomenu nopick of on one onerror or order outfile",
-			"permanent physical private prompt protected public",
-			"relationship return row rows select snapshot static switch table tag to tool typedef unique updates where while widthof zoom");
+		//public static readonly HashSet<string> DataTypeKeywords = Util.ParseWordList(
+		//	"alternate Boolean_t char character currency date enum int LEADINGZEROS like local_currency long longform",
+		//	"nowarn numeric oleobject proto short shortform signed string time unsigned varchar variant void");
 
-		public static readonly HashSet<string> GlobalKeywords = Util.ParseWordList(
-			"after alter and BEGINHLP before break button comment col colff cols continue create display description each else endgroup ENDHLP extern extract",
-			"for form formonly format group header index interface",
-			"many nomenu nopick on one onerror or order outfile permanent physical private prompt protected public relationship row rows select snapshot static",
-			"table tag to tool typedef unique updates where widthof zoom");
+		//public static readonly HashSet<string> Keywords = Util.ParseWordList(
+		//	"after alter and BEGINHLP before break button comment case col colff cols continue create default display description",
+		//	"each else endgroup ENDHLP extern extract for form formonly format group header if index interface many nomenu nopick of on one onerror or order outfile",
+		//	"permanent physical private prompt protected public",
+		//	"relationship return row rows select snapshot static switch table tag to tool typedef unique updates where while widthof zoom");
+
+		//public static readonly HashSet<string> GlobalKeywords = Util.ParseWordList(
+		//	"after alter and BEGINHLP before break button comment col colff cols continue create display description each else endgroup ENDHLP extern extract",
+		//	"for form formonly format group header index interface",
+		//	"many nomenu nopick on one onerror or order outfile permanent physical private prompt protected public relationship row rows select snapshot static",
+		//	"table tag to tool typedef unique updates where widthof zoom");
 
 		public static readonly HashSet<string> SwitchKeywords = Util.ParseWordList("case default");
 		public static readonly HashSet<string> FunctionKeywords = Util.ParseWordList("if return switch while");
@@ -66,6 +71,7 @@ namespace DkTools
 			"probeform:tabkeycapture probeformgroup:folder probeformgroup:folderorder probeformgroup:homeform probeformgroup:LogicalCascadeClearParent",
 			"probeformgroup:nextform probeformgroup:stayloaded probeformgroup:tooln probegroupmenu:alltables rows scrollbars wordwrap");
 
+		// TODO: remove this
 		public static readonly HashSet<string> AlterKeywords = Util.ParseWordList(
 			"add ADD after AFTER alter ALTER AppIID application APPLICATION before BEFORE column COLUMN drop DROP extends EXTENDS move MOVE sametype SAMETYPE stringdef STRINGDEF table TABLE typedef TYPEDEF workspace WORKSPACE");
 

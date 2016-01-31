@@ -7,8 +7,8 @@ namespace DkTools.CodeModel.Tokens
 {
 	internal class ReferenceToken : Token
 	{
-		public ReferenceToken(GroupToken parent, Scope scope, Span span)
-			: base(parent, scope, span)
+		public ReferenceToken(Scope scope, Span span)
+			: base(scope, span)
 		{
 			ClassifierType = Classifier.ProbeClassifierType.Operator;
 		}
@@ -16,14 +16,6 @@ namespace DkTools.CodeModel.Tokens
 		public override string Text
 		{
 			get { return "&"; }
-		}
-
-		public static ReferenceToken TryParse(GroupToken parent, Scope scope)
-		{
-			var file = scope.File;
-			if (!file.SkipWhiteSpaceAndComments(scope)) return null;
-			if (file.PeekChar() != '&') return null;
-			return new ReferenceToken(parent, scope, file.MoveNextSpan());
 		}
 	}
 }

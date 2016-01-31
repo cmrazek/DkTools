@@ -10,11 +10,12 @@ namespace DkTools.CodeModel.Tokens
 	{
 		private FunctionCallToken _funcToken;
 
-		public ClassAndFunctionToken(GroupToken parent, Scope scope, ClassToken classToken, DotToken dotToken,
-			FunctionCallToken funcToken, Definitions.FunctionDefinition funcDef)
-			: base(parent, scope, new Token[] { classToken, dotToken, funcToken })
+		public ClassAndFunctionToken(Scope scope, ClassToken classToken, DotToken dotToken, FunctionCallToken funcToken, Definitions.FunctionDefinition funcDef)
+			: base(scope)
 		{
-			_funcToken = funcToken;
+			AddToken(classToken);
+			AddToken(dotToken);
+			AddToken(_funcToken = funcToken);
 		}
 
 		public override DataType ValueDataType

@@ -8,33 +8,36 @@ namespace DkTools.CodeModel.Tokens
 {
 	class ArgsToken : GroupToken
 	{
-		private ArgsToken(GroupToken parent, Scope scope, OperatorToken openBracketToken)
-			: base(parent, scope, new Token[] { openBracketToken })
+		private ArgsToken(Scope scope, OperatorToken openBracketToken)
+			: base(scope)
 		{
+			AddToken(openBracketToken);
 		}
 
 		private static string[] _endTokens = new string[] { ",", ")" };
 
-		public static ArgsToken Parse(GroupToken parent, Scope scope, OperatorToken openBracketToken)
+		public static ArgsToken Parse(Scope scope, OperatorToken openBracketToken)
 		{
-			var file = scope.File;
-			var ret = new ArgsToken(parent, scope, openBracketToken);
+			var code = scope.Code;
+			var ret = new ArgsToken(scope, openBracketToken);
 
-			while (file.SkipWhiteSpaceAndComments(scope))
+			while (code.SkipWhiteSpace())
 			{
-				if (file.IsMatch(')'))
+				code.Peek();
+				if (code.Text == ")")
 				{
-					ret.AddToken(new OperatorToken(ret, scope, file.MoveNextSpan(), ")"));
+					ret.AddToken(new OperatorToken(scope, code.MovePeekedSpan(), ")"));
 					return ret;
 				}
 
-				if (file.IsMatch(','))
+				if (code.Text == ",")
 				{
-					ret.AddToken(new OperatorToken(ret, scope, file.MoveNextSpan(), ","));
+					code.MovePeeked();
+					ret.AddToken(new OperatorToken(scope, code.MovePeekedSpan(), ","));
 					continue;
 				}
 
-				var exp = ExpressionToken.TryParse(ret, scope, _endTokens);
+				var exp = ExpressionToken.TryParse(scope, _endTokens);
 				if (exp != null) ret.AddToken(exp);
 				else break;
 			}

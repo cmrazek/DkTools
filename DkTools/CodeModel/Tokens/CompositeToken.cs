@@ -8,8 +8,10 @@ namespace DkTools.CodeModel.Tokens
 {
 	class CompositeToken : GroupToken
 	{
-		public CompositeToken(GroupToken parent, Scope scope, IEnumerable<Token> tokens)
-			: base(parent, scope, tokens)
-		{ }
+		public CompositeToken(Scope scope, params Token[] tokens)
+			: base(scope)
+		{
+			foreach (var token in tokens) AddToken(token);
+		}
 	}
 }

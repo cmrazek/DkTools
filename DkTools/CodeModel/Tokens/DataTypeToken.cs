@@ -14,17 +14,17 @@ namespace DkTools.CodeModel.Tokens
 		/// <summary>
 		/// Creates a data type token.
 		/// </summary>
-		/// <param name="parent">(required) Parent token</param>
 		/// <param name="scope">(required) Current scope</param>
 		/// <param name="token">(required) Token that contains the data type text.</param>
 		/// <param name="dataType">(required) Assigned data type</param>
 		/// <param name="def">(optional) Definition point of the data type.  Can be null for built-in data types.</param>
-		public DataTypeToken(GroupToken parent, Scope scope, IdentifierToken token, DataType dataType, Definition def)
-			: base(parent, scope, new Token[] { token })
+		public DataTypeToken(Scope scope, IdentifierToken token, DataType dataType, Definition def)
+			: base(scope)
 		{
-			_dataType = dataType;
-
+			AddToken(token);
 			if (def != null) token.SourceDefinition = def;
+
+			_dataType = dataType;
 
 			ClassifierType = Classifier.ProbeClassifierType.DataType;
 		}

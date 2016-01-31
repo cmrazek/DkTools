@@ -11,73 +11,52 @@ namespace DkTools.CodeModel.Tokens
 		private BracketToken _openToken;
 		private BracketToken _closeToken;
 
-		private BracketsToken(GroupToken parent, Scope scope, int startPos)
-			: base(parent, scope, startPos)
+		public BracketsToken(Scope scope)
+			: base(scope)
 		{
 		}
 
-		/// <summary>
-		/// Attempts to parse a set of brackets from the file.
-		/// </summary>
-		/// <param name="parent">Parent token</param>
-		/// <param name="scope">Current scope</param>
-		/// <returns>If the next token is a set of brackets, the new token; otherwise null.</returns>
-		public static BracketsToken TryParse(GroupToken parent, Scope scope)
+		public BracketsToken(Scope scope, OpenBracketToken openToken, CloseBracketToken closeToken)
+			: base(scope)
 		{
-			var file = scope.File;
-			file.SkipWhiteSpaceAndComments(scope);
+			AddToken(openToken);
+			AddToken(closeToken);
+		}
 
-			if (file.PeekChar() != '(') return null;
-
-			return Parse(parent, scope);
+		public BracketsToken(Scope scope, OpenBracketToken openToken)
+			: base(scope)
+		{
+			AddToken(openToken);
 		}
 
 		private static readonly string[] _endTokens = new string[] { ")" };
 
-		public static BracketsToken Parse(GroupToken parent, Scope scope)
+		public static BracketsToken Parse(Scope scope)
 		{
-			var file = scope.File;
-			file.SkipWhiteSpaceAndComments(scope);
-#if DEBUG
-			if (file.PeekChar() != '(') throw new InvalidOperationException("BracketsToken.Parse expected next char to be '('.");
-#endif
-			var startPos = scope.File.Position;
-			scope.File.MoveNext();
+			var code = scope.Code;
+			if (!code.ReadExact('(')) throw new InvalidOperationException("BracketsToken.Parse expected next char to be '('.");
+			var openBracketSpan = code.Span;
 
 			var indentScope = scope.CloneIndentNonRoot();
 			indentScope.Hint |= ScopeHint.SuppressFunctionDefinition | ScopeHint.SuppressControlStatements;
 
-			var ret = new BracketsToken(parent, scope, startPos);
-			ret.AddToken(ret._openToken = new OpenBracketToken(ret, scope, new Span(startPos, scope.File.Position), ret));
+			var ret = new BracketsToken(scope);
+			ret.AddToken(ret._openToken = new OpenBracketToken(scope, openBracketSpan, ret));
 
-			while (file.SkipWhiteSpaceAndComments(indentScope))
+			while (!code.EndOfFile)
 			{
-				if (file.IsMatch(')'))
+				if (code.ReadExact(')'))
 				{
-					ret.AddToken(ret._closeToken = new CloseBracketToken(ret, scope, file.MoveNextSpan(), ret));
+					ret.AddToken(ret._closeToken = new CloseBracketToken(scope, code.Span, ret));
 					break;
 				}
 
-				var exp = ExpressionToken.TryParse(ret, indentScope, _endTokens);
+				var exp = ExpressionToken.TryParse(indentScope, _endTokens);
 				if (exp != null) ret.AddToken(exp);
+				else break;
 			}
 
 			return ret;
-
-			// TODO: remove
-			//ret.ParseScope(indentScope, t =>
-			//	{
-			//		if (t is CloseBracketToken)
-			//		{
-			//			ret._closeToken = t as CloseBracketToken;
-			//			return ParseScopeResult.StopAndKeep;
-			//		}
-
-			//		ret._innerTokens.Add(t);
-			//		return ParseScopeResult.Continue;
-			//	});
-
-			//return ret;
 		}
 
 		public BracketToken OpenToken
@@ -111,14 +90,30 @@ namespace DkTools.CodeModel.Tokens
 		{
 			get { return _innerTokens; }
 		}
+
+		public void AddOpen(Span span)
+		{
+#if DEBUG
+			if (_openToken != null) throw new InvalidOperationException("These brackets already have a opening token.");
+#endif
+			AddToken(_openToken = new OpenBracketToken(Scope, span, this));
+		}
+
+		public void AddClose(Span span)
+		{
+#if DEBUG
+			if (_closeToken != null) throw new InvalidOperationException("These brackets already have a close token.");
+#endif
+			AddToken(_closeToken = new CloseBracketToken(Scope, span, this));
+		}
 	}
 
 	internal abstract class BracketToken : Token, IBraceMatchingToken
 	{
 		private BracketsToken _bracketsToken = null;
 
-		public BracketToken(GroupToken parent, Scope scope, Span span, BracketsToken bracketsToken)
-			: base(parent, scope, span)
+		public BracketToken(Scope scope, Span span, BracketsToken bracketsToken)
+			: base(scope, span)
 		{
 			_bracketsToken = bracketsToken;
 			ClassifierType = Classifier.ProbeClassifierType.Operator;
@@ -136,26 +131,17 @@ namespace DkTools.CodeModel.Tokens
 
 	internal class OpenBracketToken : BracketToken
 	{
-		public OpenBracketToken(GroupToken parent, Scope scope, Span span, BracketsToken bracketsToken)
-			: base(parent, scope, span, bracketsToken)
+		public OpenBracketToken(Scope scope, Span span, BracketsToken bracketsToken)
+			: base(scope, span, bracketsToken)
 		{
 		}
 	}
 
 	internal class CloseBracketToken : BracketToken
 	{
-		public CloseBracketToken(GroupToken parent, Scope scope, Span span, BracketsToken bracketsToken)
-			: base(parent, scope, span, bracketsToken)
+		public CloseBracketToken(Scope scope, Span span, BracketsToken bracketsToken)
+			: base(scope, span, bracketsToken)
 		{
-		}
-
-		public static CloseBracketToken TryParse(GroupToken parent, Scope scope, BracketsToken bracketsToken)
-		{
-			var file = scope.File;
-			if (!file.SkipWhiteSpaceAndComments(scope)) return null;
-			if (file.PeekChar() != '}') return null;
-
-			return new CloseBracketToken(parent, scope, file.MoveNextSpan(), bracketsToken);
 		}
 	}
 }

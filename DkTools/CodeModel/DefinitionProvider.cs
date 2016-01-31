@@ -252,6 +252,12 @@ namespace DkTools.CodeModel
 			foreach (var def in GetLocal(pos, name)) yield return def;
 			foreach (var def in GetGlobalFromAnywhere(name)) yield return def;
 		}
+
+		public IEnumerable<T> GetAny<T>(int pos, string name) where T : Definition
+		{
+			foreach (var def in GetLocal<T>(pos, name)) yield return def;
+			foreach (var def in GetGlobalFromAnywhere<T>(name)) yield return def;
+		}
 		#endregion
 
 #if DEBUG

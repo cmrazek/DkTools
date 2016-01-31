@@ -133,5 +133,25 @@ namespace DkTools.CodeModel
 			}
 			else return Span.Empty;
 		}
+
+		public bool IsEmpty
+		{
+			get { return _end <= _start; }
+		}
+
+		public Span Include(Span other)
+		{
+			return new Span(_start < other._start ? _start : other._start, _end > other._end ? _end : other._end);
+		}
+
+		public static bool operator == (Span a, Span b)
+		{
+			return a._start == b._start && a._end == b._end;
+		}
+
+		public static bool operator != (Span a, Span b)
+		{
+			return a._start != b._start || a._end != b._end;
+		}
 	}
 }

@@ -79,22 +79,22 @@ namespace DkTools.CodeModel
 
 				if (!_code.Read()) break;
 
-				switch (_code.TokenType)
+				switch (_code.Type)
 				{
 					case TokenParser.TokenType.Word:
-						switch (_code.TokenText)
+						switch (_code.Text)
 						{
 							case "static":
 								AfterRootStatic(_code.TokenStartPostion);
 								break;
 							case "public":
-								AfterRootPrivacy(_code.TokenText, _code.TokenStartPostion, FunctionPrivacy.Public);
+								AfterRootPrivacy(_code.Text, _code.TokenStartPostion, FunctionPrivacy.Public);
 								break;
 							case "private":
-								AfterRootPrivacy(_code.TokenText, _code.TokenStartPostion, FunctionPrivacy.Private);
+								AfterRootPrivacy(_code.Text, _code.TokenStartPostion, FunctionPrivacy.Private);
 								break;
 							case "protected":
-								AfterRootPrivacy(_code.TokenText, _code.TokenStartPostion, FunctionPrivacy.Protected);
+								AfterRootPrivacy(_code.Text, _code.TokenStartPostion, FunctionPrivacy.Protected);
 								break;
 							case "extern":
 								AfterRootExtern(_code.TokenStartPostion);
@@ -105,7 +105,7 @@ namespace DkTools.CodeModel
 								break;
 #endif
 							default:
-								AfterRootIdentifier(_code.TokenText, _code.TokenStartPostion, _code.TokenSpan, false);
+								AfterRootIdentifier(_code.Text, _code.TokenStartPostion, _code.Span, false);
 								break;
 						}
 						break;
@@ -134,8 +134,8 @@ namespace DkTools.CodeModel
 #endif
 			if (_code.ReadWord())
 			{
-				var name = _code.TokenText;
-				var nameSpan = _code.TokenSpan;
+				var name = _code.Text;
+				var nameSpan = _code.Span;
 
 				var arrayLength = TryReadArrayDecl();
 
@@ -170,7 +170,7 @@ namespace DkTools.CodeModel
 
 		private void AfterRootStatic(int startPos)
 		{
-			var dataType = DataType.Parse(new DataType.ParseArgs
+			var dataType = DataType.TryParse(new DataType.ParseArgs
 			{
 				Code = _code,
 				DataTypeCallback = GlobalDataTypeCallback,
@@ -192,7 +192,7 @@ namespace DkTools.CodeModel
 		private void AfterRootExtern(int startPos)
 		{
 			var dataTypeStartPos = _code.Position;
-			var dataType = DataType.Parse(new DataType.ParseArgs
+			var dataType = DataType.TryParse(new DataType.ParseArgs
 			{
 				Code = _code,
 				DataTypeCallback = GlobalDataTypeCallback,
@@ -204,7 +204,7 @@ namespace DkTools.CodeModel
 			}
 			else if (_code.ReadWord())
 			{
-				AfterRootIdentifier(_code.TokenText, _code.TokenStartPostion, _code.TokenSpan, true);
+				AfterRootIdentifier(_code.Text, _code.TokenStartPostion, _code.Span, true);
 			}
 			else
 			{
@@ -232,9 +232,9 @@ namespace DkTools.CodeModel
 
 		private void AfterRootPrivacy(string word, int startPos, FunctionPrivacy privacy)
 		{
-			_code.SkipWhiteSpaceAndCommentsIfAllowed();
+			_code.SkipWhiteSpace();
 			var dataTypeStartPos = _code.Position;
-			var dataType = DataType.Parse(new DataType.ParseArgs
+			var dataType = DataType.TryParse(new DataType.ParseArgs
 			{
 				Code = _code,
 				DataTypeCallback = GlobalDataTypeCallback,
@@ -246,8 +246,8 @@ namespace DkTools.CodeModel
 			}
 			else if (_code.ReadWord())
 			{
-				var funcName = _code.TokenText;
-				var funcNameSpan = _code.TokenSpan;
+				var funcName = _code.Text;
+				var funcNameSpan = _code.Span;
 				if (_code.ReadExact('('))
 				{
 					StartFunctionArgs(funcName, startPos, _code.TokenStartPostion, funcNameSpan, DataType.Int, privacy, false);
@@ -271,9 +271,9 @@ namespace DkTools.CodeModel
 
 		private bool TryReadDataType(out DataType dataTypeOut, out int startPosOut)
 		{
-			_code.SkipWhiteSpaceAndCommentsIfAllowed();
+			_code.SkipWhiteSpace();
 			var pos = _code.Position;
-			var dataType = DataType.Parse(new DataType.ParseArgs
+			var dataType = DataType.TryParse(new DataType.ParseArgs
 			{
 				Code = _code,
 				DataTypeCallback = GlobalDataTypeCallback,
@@ -403,10 +403,10 @@ namespace DkTools.CodeModel
 
 				if (_code.ReadWord())
 				{
-					switch (_code.TokenText)
+					switch (_code.Text)
 					{
 						case "extract":
-							ReadExtract(_code.TokenSpan);
+							ReadExtract(_code.Span);
 							break;
 						default:
 							// unknown word
@@ -448,14 +448,14 @@ namespace DkTools.CodeModel
 				if (_code.ReadWord())
 				{
 					// TODO: report an error if the first token is not a string literal
-					var word = _code.TokenText;
+					var word = _code.Text;
 					if (word == "description")
 					{
 						var sb = new StringBuilder();
 						while (_code.ReadStringLiteral())
 						{
 							if (sb.Length > 0) sb.AppendLine();
-							sb.Append(TokenParser.Parser.StringLiteralToString(_code.TokenText));
+							sb.Append(TokenParser.Parser.StringLiteralToString(_code.Text));
 						}
 						devDesc = sb.ToString();
 						continue;
@@ -494,7 +494,7 @@ namespace DkTools.CodeModel
 							if (_code.ReadExact('+')) { }
 							else if (_code.ReadWord())
 							{
-								if (!_rxAccelWord.IsMatch(_code.TokenText))
+								if (!_rxAccelWord.IsMatch(_code.Text))
 								{
 									// TODO: report error
 									_code.Position = resetPos;
@@ -503,7 +503,7 @@ namespace DkTools.CodeModel
 							}
 							else if (_code.ReadNumber())
 							{
-								if (_code.TokenText.Length != 1 || !char.IsDigit(_code.TokenText[0]))
+								if (_code.Text.Length != 1 || !char.IsDigit(_code.Text[0]))
 								{
 									// TODO: report error
 									_code.Position = resetPos;
@@ -521,7 +521,7 @@ namespace DkTools.CodeModel
 						while (_code.ReadStringLiteral())
 						{
 							if (sb.Length > 0) sb.AppendLine();
-							sb.Append(TokenParser.Parser.StringLiteralToString(_code.TokenText));
+							sb.Append(TokenParser.Parser.StringLiteralToString(_code.Text));
 						}
 						devDesc = sb.ToString();
 
@@ -566,7 +566,7 @@ namespace DkTools.CodeModel
 
 		private bool TryReadFunctionArgument(CodeScope scope, bool createDefinitions, List<Definition> newDefList)
 		{
-			var dataType = DataType.Parse(new DataType.ParseArgs
+			var dataType = DataType.TryParse(new DataType.ParseArgs
 			{
 				Code = _code,
 				DataTypeCallback = GlobalDataTypeCallback,
@@ -581,7 +581,7 @@ namespace DkTools.CodeModel
 				var arrayLength = TryReadArrayDecl();
 
 				var localPos = _source.GetFilePosition(_code.TokenStartPostion);
-				var def = new VariableDefinition(_code.TokenText, localPos.FileName, localPos.Position, dataType, true, arrayLength);
+				var def = new VariableDefinition(_code.Text, localPos.FileName, localPos.Position, dataType, true, arrayLength);
 				scope.AddDefinition(def);
 				if (localPos.PrimaryFile)
 				{
@@ -597,7 +597,7 @@ namespace DkTools.CodeModel
 
 		private bool TryReadVariableDeclaration(CodeScope scope, List<Definition> newDefList)
 		{
-			var dataType = DataType.Parse(new DataType.ParseArgs
+			var dataType = DataType.TryParse(new DataType.ParseArgs
 			{
 				Code = _code,
 				DataTypeCallback = GlobalDataTypeCallback,
@@ -611,7 +611,7 @@ namespace DkTools.CodeModel
 			{
 				if (!_code.ReadWord()) break;
 
-				var varName = _code.TokenText;
+				var varName = _code.Text;
 				var localPos = _source.GetFilePosition(_code.TokenStartPostion);
 
 				var arrayLength = TryReadArrayDecl();
@@ -667,7 +667,7 @@ namespace DkTools.CodeModel
 			string str;
 			while (_code.Read())
 			{
-				str = _code.TokenText;
+				str = _code.Text;
 				if (str == endToken) return;
 				else if (str == "{") ReadBraceScope();
 				else if (str == "(") ReadNestable(")");
@@ -705,7 +705,7 @@ namespace DkTools.CodeModel
 		{
 			var errorSpan = extractWordSpan;
 			var permanent = _code.ReadExact("permanent");
-			if (permanent) errorSpan = _code.TokenSpan;
+			if (permanent) errorSpan = _code.Span;
 
 			// Table name
 			if (!_code.ReadWord())
@@ -716,7 +716,7 @@ namespace DkTools.CodeModel
 #endif
 				return;
 			}
-			var name = _code.TokenText;
+			var name = _code.Text;
 			ExtractTableDefinition exDef = null;
 			if (!_defProv.GetGlobalFromFile<ExtractTableDefinition>(name).Any())	// Don't add a definition if it's already there (extracts can be called multiple times)
 			{
@@ -744,12 +744,12 @@ namespace DkTools.CodeModel
 				}
 				else if (_code.ReadWord())
 				{
-					lastToken = _code.TokenText;
+					lastToken = _code.Text;
 				}
 				else
 				{
 					_code.Read();
-					switch (_code.TokenText)
+					switch (_code.Text)
 					{
 						case ";":
 							done = true;
@@ -781,7 +781,7 @@ namespace DkTools.CodeModel
 			{
 				if (_code.ReadExact('[') &&
 					_code.ReadNumber() &&
-					int.TryParse(_code.TokenText, out len) &&
+					int.TryParse(_code.Text, out len) &&
 					_code.ReadExact(']'))
 				{
 					if (arrayLengths == null) arrayLengths = new List<int>();

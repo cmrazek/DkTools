@@ -236,9 +236,9 @@ namespace DkTools.SignatureHelp
 			var argsParser = new TokenParser.Parser(sig);
 			while (argsParser.ReadNestable())
 			{
-				if (argsParser.TokenType == TokenParser.TokenType.Nested)
+				if (argsParser.Type == TokenParser.TokenType.Nested)
 				{
-					argsText = argsParser.TokenText;
+					argsText = argsParser.Text;
 					argsOffset = argsParser.TokenStartPostion + 1;
 				}
 			}
@@ -259,7 +259,7 @@ namespace DkTools.SignatureHelp
 			while (!parser.EndOfFile)
 			{
 				if (!parser.ReadNestable()) yield break;
-				str = parser.TokenText;
+				str = parser.Text;
 				switch (str)
 				{
 					case ",":
@@ -275,7 +275,7 @@ namespace DkTools.SignatureHelp
 					//	yield break;
 					default:
 						sb.Append(str);
-						if (parser.TokenType == TokenParser.TokenType.Word) argName = parser.TokenText;
+						if (parser.Type == TokenParser.TokenType.Word) argName = parser.Text;
 						break;
 				}
 			}

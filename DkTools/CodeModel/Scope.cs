@@ -14,6 +14,9 @@ namespace DkTools.CodeModel
 		private bool _visible;	// Is this file directly visible to the user?
 		private DefinitionProvider _defProvider;
 		private string _className;
+		private TokenParser.Parser _code;
+		private IBreakOwner _breakOwner;
+		private IContinueOwner _continueOwner;
 
 		public Scope(CodeModel model)
 		{
@@ -23,6 +26,9 @@ namespace DkTools.CodeModel
 			_visible = false;
 			_defProvider = model.DefinitionProvider;
 			_className = null;
+			_code = null;
+			_breakOwner = null;
+			_continueOwner = null;
 		}
 
 		public Scope(CodeFile file, int depth, ScopeHint hint, bool visible, DefinitionProvider defProvider)
@@ -36,22 +42,26 @@ namespace DkTools.CodeModel
 			_visible = visible;
 			_defProvider = defProvider;
 			_className = null;
+			_code = file.CodeParser;
+			_breakOwner = null;
+			_continueOwner = null;
 		}
 
 		public Scope Clone()
 		{
 			return new Scope(_file, _depth, _hint, _visible, _defProvider)
 			{
-				_className = _className
+				_className = _className,
+				_breakOwner = _breakOwner,
+				_continueOwner = _continueOwner
 			};
 		}
 
 		public Scope CloneIndent()
 		{
-			return new Scope(_file, _depth + 1, _hint, _visible, _defProvider)
-			{
-				_className = _className
-			};
+			var ret = Clone();
+			ret._depth++;
+			return ret;
 		}
 
 		public Scope CloneIndentNonRoot()
@@ -122,6 +132,23 @@ namespace DkTools.CodeModel
 		{
 			get { return _className; }
 			set { _className = value; }
+		}
+
+		public TokenParser.Parser Code
+		{
+			get { return _code; }
+		}
+
+		public IBreakOwner BreakOwner
+		{
+			get { return _breakOwner; }
+			set { _breakOwner = value; }
+		}
+
+		public IContinueOwner ContinueOwner
+		{
+			get { return _continueOwner; }
+			set { _continueOwner = value; }
 		}
 	}
 

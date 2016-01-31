@@ -13,8 +13,8 @@ namespace DkTools.CodeModel.Tokens
 	{
 		private DataType _dataType;
 
-		public VariableToken(GroupToken parent, Scope scope, Span span, string text, VariableDefinition def)
-			: base(parent, scope, span, text)
+		public VariableToken(Scope scope, Span span, string text, VariableDefinition def)
+			: base(scope, span, text)
 		{
 #if DEBUG
 			if (def == null) throw new ArgumentNullException();

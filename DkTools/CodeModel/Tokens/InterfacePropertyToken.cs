@@ -11,8 +11,8 @@ namespace DkTools.CodeModel.Tokens
 	{
 		private InterfacePropertyDefinition _propDef;
 
-		public InterfacePropertyToken(GroupToken parent, Scope scope, VariableToken intVarToken, DotToken dotToken, IdentifierToken nameToken, InterfacePropertyDefinition propDef)
-			: base(parent, scope, new Token[] { intVarToken, dotToken, nameToken })
+		public InterfacePropertyToken(Scope scope, VariableToken intVarToken, DotToken dotToken, IdentifierToken nameToken, InterfacePropertyDefinition propDef)
+			: base(scope)
 		{
 #if DEBUG
 			if (intVarToken == null) throw new ArgumentNullException("intVarToken");
@@ -22,6 +22,10 @@ namespace DkTools.CodeModel.Tokens
 #endif
 			nameToken.SourceDefinition = propDef;
 			_propDef = propDef;
+
+			AddToken(intVarToken);
+			AddToken(dotToken);
+			AddToken(nameToken);
 		}
 
 		public override DataType ValueDataType

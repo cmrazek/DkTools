@@ -8,17 +8,10 @@ namespace DkTools.CodeModel.Tokens
 	internal abstract class GroupToken : Token
 	{
 		private List<Token> _tokens = new List<Token>();
-		private bool _isLocalScope;
 
-		public GroupToken(GroupToken parent, Scope scope, int startPos)
-			: base(parent, scope, new Span(startPos, startPos))
+		public GroupToken(Scope scope)
+			: base(scope)
 		{
-		}
-
-		public GroupToken(GroupToken parent, Scope scope, IEnumerable<Token> tokens)
-			: base(parent, scope, new Span(tokens.First().Span.Start, tokens.Last().Span.End))
-		{
-			_tokens = tokens.ToList();
 		}
 
 		public override void DumpTreeInner(System.Xml.XmlWriter xml)
@@ -39,7 +32,13 @@ namespace DkTools.CodeModel.Tokens
 #endif
 			_tokens.Add(child);
 			child.CommitToParentToken(this);
-			Span = new Span(_tokens.First().Span.Start, _tokens.Last().Span.End);
+
+			if (!child.Span.IsEmpty)
+			{
+				if (Span.IsEmpty) Span = child.Span;
+				else Span = Span.Include(child.Span);
+			}
+
 			OnChildTokenAdded(child);
 			return child;
 		}
@@ -47,6 +46,15 @@ namespace DkTools.CodeModel.Tokens
 		public bool RemoveToken(Token child)
 		{
 			return _tokens.Remove(child);
+		}
+
+		protected override void OnSpanChanged()
+		{
+			if (Parent != null && !Span.IsEmpty)
+			{
+				if (Parent.Span.IsEmpty) Parent.Span = Span;
+				else Parent.Span = Parent.Span.Include(Span);
+			}
 		}
 
 		protected virtual void OnChildTokenAdded(Token child)
@@ -58,12 +66,6 @@ namespace DkTools.CodeModel.Tokens
 			foreach (var token in tokens) AddToken(token);
 		}
 
-		public bool IsLocalScope
-		{
-			get { return _isLocalScope; }
-			protected set { _isLocalScope = value; }
-		}
-
 		public override string NormalizedText
 		{
 			get
@@ -71,29 +73,6 @@ namespace DkTools.CodeModel.Tokens
 				return Token.GetNormalizedText(_tokens);
 			}
 		}
-
-		// TODO: remove
-		//public void ParseScope(Scope scope, Func<Token, ParseScopeResult> parseCallback)
-		//{
-		//	while (true)
-		//	{
-		//		var token = scope.File.ParseComplexToken(this, scope);
-		//		if (token == null) return;
-
-		//		switch (parseCallback(token))
-		//		{
-		//			case ParseScopeResult.Continue:
-		//				AddToken(token);
-		//				break;
-		//			case ParseScopeResult.StopAndKeep:
-		//				AddToken(token);
-		//				return;
-		//			case ParseScopeResult.StopAndReject:
-		//				scope.File.Position = token.Span.Start;
-		//				return;
-		//		}
-		//	}
-		//}
 
 		public Token FindLastChildBeforeOffset(int pos)
 		{

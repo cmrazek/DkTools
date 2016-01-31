@@ -13,29 +13,27 @@ namespace DkTools.CodeModel.Tokens
 		private List<Token> _oldTokens = new List<Token>();
 		private List<Token> _newTokens = new List<Token>();
 
-		private ReplaceToken(GroupToken parent, Scope scope, ReplaceStartToken startToken)
-			: base(parent, scope, new Token[] { startToken })
+		private ReplaceToken(Scope scope, ReplaceStartToken startToken)
+			: base(scope)
 		{
 			_startToken = startToken;
 			_startToken.ReplaceToken = this;
+			AddToken(startToken);
 		}
 
-		public static ReplaceToken Parse(GroupToken parent, Scope scope, ReplaceStartToken startToken)
+		public static ReplaceToken Parse(Scope scope, ReplaceStartToken startToken)
 		{
 #if DEBUG
 			if (startToken == null) throw new ArgumentNullException("replaceToken");
 #endif
-
-			var file = scope.File;
-
 			var scopeIndent = scope.CloneIndent();
 
-			var ret = new ReplaceToken(parent, scope, startToken);
+			var ret = new ReplaceToken(scope, startToken);
 
 			var done = false;
-			while (!done && !file.EndOfFile)
+			while (!done && !scope.Code.EndOfFile)
 			{
-				var stmt = StatementToken.TryParse(ret, scopeIndent, t =>
+				var stmt = StatementToken.TryParse(scopeIndent, t =>
 				{
 					if (t is ReplaceEndToken)
 					{
@@ -63,29 +61,6 @@ namespace DkTools.CodeModel.Tokens
 			}
 
 			return ret;
-
-			// TODO: remove
-			//ret.ParseScope(scopeIndent, t =>
-			//	{
-			//		if (t is ReplaceWithToken)
-			//		{
-			//			ret._withToken = t as ReplaceWithToken;
-			//			ret._withToken.ReplaceToken = ret;
-			//			return ParseScopeResult.Continue;
-			//		}
-			//		if (t is ReplaceEndToken)
-			//		{
-			//			ret._endToken = t as ReplaceEndToken;
-			//			ret._endToken.ReplaceToken = ret;
-			//			return ParseScopeResult.StopAndKeep;
-			//		}
-
-			//		if (ret._withToken == null) ret._oldTokens.Add(t);
-			//		else ret._newTokens.Add(t);
-			//		return ParseScopeResult.Continue;
-			//	});
-
-			//return ret;
 		}
 
 		public override bool BreaksStatement
@@ -113,8 +88,8 @@ namespace DkTools.CodeModel.Tokens
 	{
 		private ReplaceToken _replaceToken;
 
-		public ReplaceBoundaryToken(GroupToken parent, Scope scope, Span span)
-			: base(parent, scope, span)
+		public ReplaceBoundaryToken(Scope scope, Span span)
+			: base(scope, span)
 		{
 			ClassifierType = Classifier.ProbeClassifierType.Preprocessor;
 		}
@@ -146,24 +121,24 @@ namespace DkTools.CodeModel.Tokens
 
 	internal class ReplaceStartToken : ReplaceBoundaryToken
 	{
-		public ReplaceStartToken(GroupToken parent, Scope scope, Span span)
-			: base(parent, scope, span)
+		public ReplaceStartToken(Scope scope, Span span)
+			: base(scope, span)
 		{
 		}
 	}
 
 	internal class ReplaceWithToken : ReplaceBoundaryToken
 	{
-		public ReplaceWithToken(GroupToken parent, Scope scope, Span span)
-			: base(parent, scope, span)
+		public ReplaceWithToken(Scope scope, Span span)
+			: base(scope, span)
 		{
 		}
 	}
 
 	internal class ReplaceEndToken : ReplaceBoundaryToken
 	{
-		public ReplaceEndToken(GroupToken parent, Scope scope, Span span)
-			: base(parent, scope, span)
+		public ReplaceEndToken(Scope scope, Span span)
+			: base(scope, span)
 		{
 		}
 	}

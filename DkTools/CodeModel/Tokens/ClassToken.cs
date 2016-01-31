@@ -9,14 +9,14 @@ namespace DkTools.CodeModel.Tokens
 {
 	internal class ClassToken : WordToken
 	{
-		public ClassToken(GroupToken parent, Scope scope, Span span, string text, ClassDefinition classDef)
-			: base(parent, scope, span, text)
+		public ClassToken(Scope scope, Span span, string text, ClassDefinition classDef)
+			: base(scope, span, text)
 		{
 			SourceDefinition = classDef;
 		}
 
-		public ClassToken(GroupToken parent, Scope scope, Span span, string text, FunctionFileScanning.FFClass ffClass)
-			: base(parent, scope, span, text)
+		public ClassToken(Scope scope, Span span, string text, FunctionFileScanning.FFClass ffClass)
+			: base(scope, span, text)
 		{
 			SourceDefinition = ffClass.ClassDefinition;
 		}

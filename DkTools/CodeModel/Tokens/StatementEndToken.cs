@@ -7,8 +7,8 @@ namespace DkTools.CodeModel.Tokens
 {
 	internal class StatementEndToken : Token
 	{
-		public StatementEndToken(GroupToken parent, Scope scope, Span span)
-			: base(parent, scope, span)
+		public StatementEndToken(Scope scope, Span span)
+			: base(scope, span)
 		{
 			ClassifierType = Classifier.ProbeClassifierType.Operator;
 		}
@@ -18,24 +18,25 @@ namespace DkTools.CodeModel.Tokens
 			get { return true; }
 		}
 
-		/// <summary>
-		/// Attempts to parse a ';' from the file.
-		/// </summary>
-		/// <param name="parent">Parent token</param>
-		/// <param name="scope">Current scope</param>
-		/// <returns>If the next token is a ';', then a new StatementEndToken; otherwise null.</returns>
-		public static StatementEndToken TryParse(GroupToken parent, Scope scope)
-		{
-			var file = scope.File;
-			file.SkipWhiteSpaceAndComments(scope);
+		// TODO: remove
+		///// <summary>
+		///// Attempts to parse a ';' from the file.
+		///// </summary>
+		///// <param name="parent">Parent token</param>
+		///// <param name="scope">Current scope</param>
+		///// <returns>If the next token is a ';', then a new StatementEndToken; otherwise null.</returns>
+		//public static StatementEndToken TryParse(GroupToken parent, Scope scope)
+		//{
+		//	var file = scope.File;
+		//	file.SkipWhiteSpaceAndComments(scope);
 
-			if (file.PeekChar() != ';') return null;
+		//	if (file.PeekChar() != ';') return null;
 
-			var startPos = file.Position;
-			file.MoveNext();
+		//	var startPos = file.Position;
+		//	file.MoveNext();
 
-			return new StatementEndToken(parent, scope, new Span(startPos, file.Position));
-		}
+		//	return new StatementEndToken(parent, scope, new Span(startPos, file.Position));
+		//}
 
 		public override string Text
 		{

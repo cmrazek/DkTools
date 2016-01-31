@@ -13,7 +13,7 @@ namespace DkTools.CodeModel.Tokens
 		private string _fileName;
 
 		public ExternalToken(string fileName, Span span)
-			: base(null, new Scope(), span)
+			: base(new Scope(), span)
 		{
 #if DEBUG
 			if (string.IsNullOrWhiteSpace(fileName)) throw new ArgumentNullException("fileName");

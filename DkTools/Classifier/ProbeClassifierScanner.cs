@@ -172,8 +172,9 @@ namespace DkTools.Classifier
 							if (def != null) tokenInfo.Type = def.ClassifierType;
 							else tokenInfo.Type = token.ClassifierType;
 						}
-						else if (Constants.Keywords.Contains(word)) tokenInfo.Type = ProbeClassifierType.Keyword;
-						else if (Constants.DataTypeKeywords.Contains(word)) tokenInfo.Type = ProbeClassifierType.DataType;
+						// TODO: remove
+						//else if (Constants.Keywords.Contains(word)) tokenInfo.Type = ProbeClassifierType.Keyword;
+						//else if (Constants.DataTypeKeywords.Contains(word)) tokenInfo.Type = ProbeClassifierType.DataType;
 						else tokenInfo.Type = ProbeClassifierType.Normal;
 					}
 

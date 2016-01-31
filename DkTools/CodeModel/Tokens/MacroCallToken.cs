@@ -16,18 +16,17 @@ namespace DkTools.CodeModel.Tokens
 		/// <summary>
 		/// Creates a macro call token.
 		/// </summary>
-		/// <param name="parent">(required) Parent token</param>
 		/// <param name="scope">(required) Current scope</param>
 		/// <param name="nameToken">(required) Function name</param>
 		/// <param name="def">(required) Definition of this macro in file</param>
-		public MacroCallToken(GroupToken parent, Scope scope, IdentifierToken nameToken, MacroDefinition def)
-			: base(parent, scope, new Token[] { nameToken })
+		public MacroCallToken(Scope scope, IdentifierToken nameToken, MacroDefinition def)
+			: base(scope)
 		{
 #if DEBUG
 			if (nameToken == null) throw new ArgumentNullException("nameToken");
 			if (def == null) throw new ArgumentNullException("def");
 #endif
-			_nameToken = nameToken;
+			AddToken(_nameToken = nameToken);
 			_nameToken.SourceDefinition = def;
 		}
 	}

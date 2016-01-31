@@ -10,10 +10,12 @@ namespace DkTools.CodeModel.Tokens
 	{
 		private RelIndFieldToken _fieldToken;
 
-		public RelIndAndFieldToken(GroupToken parent, Scope scope, RelIndToken relIndToken, DotToken dotToken, RelIndFieldToken fieldToken)
-			: base(parent, scope, new Token[] { relIndToken, dotToken, fieldToken })
+		public RelIndAndFieldToken(Scope scope, RelIndToken relIndToken, DotToken dotToken, RelIndFieldToken fieldToken)
+			: base(scope)
 		{
-			_fieldToken = fieldToken;
+			AddToken(relIndToken);
+			AddToken(dotToken);
+			AddToken(_fieldToken = fieldToken);
 		}
 
 		public override DataType ValueDataType

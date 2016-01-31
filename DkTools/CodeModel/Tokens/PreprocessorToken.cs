@@ -10,8 +10,8 @@ namespace DkTools.CodeModel.Tokens
 		private string _text;
 		private string _instructions;
 
-		public PreprocessorToken(GroupToken parent, Scope scope, Span span, string text)
-			: base(parent, scope, span)
+		public PreprocessorToken(Scope scope, Span span, string text)
+			: base(scope, span)
 		{
 			_text = text;
 

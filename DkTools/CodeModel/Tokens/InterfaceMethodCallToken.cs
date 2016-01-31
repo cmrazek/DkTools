@@ -12,8 +12,8 @@ namespace DkTools.CodeModel.Tokens
 		private InterfaceMethodDefinition _methodDef;
 		private IdentifierToken _nameToken;
 
-		public InterfaceMethodCallToken(GroupToken parent, Scope scope, VariableToken intVarToken, DotToken dotToken, IdentifierToken nameToken, BracketsToken argsToken, InterfaceMethodDefinition def)
-			: base(parent, scope, new Token[] { intVarToken, dotToken, nameToken, argsToken })
+		public InterfaceMethodCallToken(Scope scope, VariableToken intVarToken, DotToken dotToken, IdentifierToken nameToken, BracketsToken argsToken, InterfaceMethodDefinition def)
+			: base(scope)
 		{
 #if DEBUG
 			if (intVarToken == null) throw new ArgumentNullException("intVarToken");
@@ -22,9 +22,13 @@ namespace DkTools.CodeModel.Tokens
 			if (argsToken == null) throw new ArgumentNullException("argsToken");
 			if (def == null) throw new ArgumentNullException("def");
 #endif
-			nameToken.SourceDefinition = def;
+			AddToken(intVarToken);
+			AddToken(dotToken);
+			AddToken(_nameToken = nameToken);
+			AddToken(argsToken);
+
 			_methodDef = def;
-			_nameToken = nameToken;
+			_nameToken.SourceDefinition = def;
 		}
 
 		public InterfaceMethodDefinition MethodDefinition

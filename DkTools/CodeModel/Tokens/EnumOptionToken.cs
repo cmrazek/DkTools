@@ -2,15 +2,15 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Threading.Tasks;
 
 namespace DkTools.CodeModel.Tokens
 {
-	internal class KeywordToken : WordToken
+	class EnumOptionToken : WordToken
 	{
-		public KeywordToken(Scope scope, Span span, string text)
+		public EnumOptionToken(Scope scope, Span span, string text)
 			: base(scope, span, text)
 		{
-			ClassifierType = Classifier.ProbeClassifierType.Keyword;
 		}
 	}
 }

@@ -19,24 +19,24 @@ namespace DkTools.CodeModel.Tokens
 		/// <summary>
 		/// Creates a function call token.
 		/// </summary>
-		/// <param name="parent">(required) Parent token</param>
 		/// <param name="scope">(required) Current scope</param>
 		/// <param name="classToken">(optional) Class name token</param>
 		/// <param name="dotToken">(optional) Dot delimiter between class and function name</param>
 		/// <param name="nameToken">(required) Function name</param>
 		/// <param name="argsToken">(required) Function args</param>
 		/// <param name="def">(optional) Existing function definition</param>
-		public FunctionCallToken(GroupToken parent, Scope scope, ClassToken classToken, DotToken dotToken, IdentifierToken nameToken, BracketsToken argsToken, FunctionDefinition def)
-			: base(parent, scope, Token.SafeTokenList(classToken, dotToken, nameToken, argsToken))
+		public FunctionCallToken(Scope scope, ClassToken classToken, DotToken dotToken, IdentifierToken nameToken, BracketsToken argsToken, FunctionDefinition def)
+			: base(scope)
 		{
 #if DEBUG
 			if (nameToken == null) throw new ArgumentNullException("nameToken");
 			if (argsToken == null) throw new ArgumentNullException("argsToken");
 #endif
-			_nameToken = nameToken;
+			AddToken(_classToken = classToken);
+			AddToken(dotToken);
+			AddToken(_nameToken = nameToken);
 			_nameToken.SourceDefinition = def;
-			_classToken = classToken;
-			_argsToken = argsToken;
+			AddToken(_argsToken = argsToken);
 
 			_dataType = def.DataType;
 		}

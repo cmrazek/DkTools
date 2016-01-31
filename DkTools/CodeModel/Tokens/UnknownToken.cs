@@ -9,8 +9,8 @@ namespace DkTools.CodeModel.Tokens
 	{
 		string _text;
 
-		public UnknownToken(GroupToken parent, Scope scope, Span span, string text)
-			: base(parent, scope, span)
+		public UnknownToken(Scope scope, Span span, string text)
+			: base(scope, span)
 		{
 			_text = text;
 		}

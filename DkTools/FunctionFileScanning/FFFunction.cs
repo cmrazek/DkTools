@@ -79,7 +79,7 @@ namespace DkTools.FunctionFileScanning
 			}
 			else
 			{
-				_dataType = DataType.Parse(new DataType.ParseArgs
+				_dataType = DataType.TryParse(new DataType.ParseArgs
 				{
 					Code = new TokenParser.Parser(dataTypeText)
 				});
@@ -120,7 +120,7 @@ namespace DkTools.FunctionFileScanning
 			}
 			else
 			{
-				dataType = DataType.Parse(new DataType.ParseArgs
+				dataType = DataType.TryParse(new DataType.ParseArgs
 				{
 					Code = new TokenParser.Parser(dataTypeText)
 				});

@@ -35,7 +35,7 @@ namespace DkTools.Dict
 			else
 			{
 				var dataTypeText = data.TypeText[0];
-				_dataType = DataType.Parse(new CodeModel.DataType.ParseArgs
+				_dataType = DataType.TryParse(new CodeModel.DataType.ParseArgs
 				{
 					Code = new TokenParser.Parser(dataTypeText),
 					Flags = CodeModel.DataType.ParseFlag.FromRepo

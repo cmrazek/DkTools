@@ -9,146 +9,121 @@ namespace DkTools.CodeModel.Tokens
 {
 	class ExpressionToken : GroupToken
 	{
-		private ExpressionToken(GroupToken parent, Scope scope, int startPos)
-			: base(parent, scope, startPos)
+		private ExpressionToken(Scope scope)
+			: base(scope)
 		{
 		}
 
 		public delegate Token WordTokenCallback(string word, Span wordSpan);
 
-		public static ExpressionToken TryParse(GroupToken parent, Scope scope, IEnumerable<string> endTokens, WordTokenCallback wordCallback = null)
+		public static ExpressionToken TryParse(Scope scope, IEnumerable<string> endTokens, WordTokenCallback wordCallback = null)
 		{
-			var file = scope.File;
-			file.SkipWhiteSpaceAndComments(scope);
-			var startPos = file.Position;
+			var code = scope.Code;
+			code.SkipWhiteSpace();
+			var startPos = code.Position;
 
 			// Statement breaking tokens
-			if (file.IsMatch(';')) return null;
-			if (file.IsMatch('{')) return null;
-			if (file.IsMatch('}')) return null;
+			if (code.PeekExact(';') || code.PeekExact('{') || code.PeekExact('}')) return null;
 
 			// Caller-specific end tokens
-			if (endTokens != null && file.IsWholeMatch(endTokens)) return null;
+			if (endTokens != null)
+			{
+				code.Peek();
+				if (endTokens.Contains(code.Text)) return null;
+			}
 
-			var exp = new ExpressionToken(parent, scope, startPos);
+			var exp = new ExpressionToken(scope);
 
-			while (file.SkipWhiteSpaceAndComments(scope))
+			var dataTypeArgs = new DataType.ParseArgs
+			{
+				Code = code,
+				DataTypeCallback = (name) =>
+				{
+					return scope.DefinitionProvider.GetAny<DataTypeDefinition>(code.Position, name).FirstOrDefault();
+				},
+				VariableCallback = (name) =>
+				{
+					return scope.DefinitionProvider.GetLocal<VariableDefinition>(code.Position, name).FirstOrDefault();
+				},
+				Scope = scope,
+				TokenCreateCallback = (token) =>
+				{
+					exp.AddToken(token);
+				}
+			};
+
+			while (!code.EndOfFile)
 			{
 				// Statement breaking tokens
-				var ch = file.PeekChar();
-				if (ch == ';' || ch == '{' || ch == '}') return exp;
+				if (code.PeekExact(';') || code.PeekExact('{') || code.PeekExact('}')) return exp;
+				if (endTokens != null)
+				{
+					if (code.Peek() && endTokens.Contains(code.Text)) return exp;
+				}
 
-				// Caller-specific end tokens
-				if (endTokens != null && file.IsWholeMatch(endTokens)) return exp;
+				var dt = DataType.TryParse(dataTypeArgs);
+				if (dt != null) continue;
 
-				if (ch.IsWordChar(true))
-				{
-					var word = file.PeekWord();
-					var wordSpan = file.MoveNextSpan(word.Length);
+				if (!code.Read()) break;
 
-					Token token;
-					if (wordCallback != null && (token = wordCallback(word, wordSpan)) != null) exp.AddToken(token);
-					else exp.AddToken(ProcessWord(exp, scope, word, wordSpan));
-				}
-				else if (char.IsDigit(ch))
+				switch (code.Type)
 				{
-					exp.AddToken(NumberToken.Parse(exp, scope));
-				}
-				else if (ch == '\"' || ch == '\'')
-				{
-					file.ParseStringLiteral();
-					var span = new Span(startPos, file.Position);
-					exp.AddToken(new StringLiteralToken(exp, scope, span, file.GetText(span)));
-				}
-				else if (ch == '-')
-				{
-					if (char.IsDigit(file.PeekChar(1)))
-					{
-						// Number with leading minus sign
-						file.ParseNumber();
-						var span = new Span(startPos, file.Position);
-						exp.AddToken(new NumberToken(exp, scope, span, file.GetText(span)));
-					}
-					else if (file.PeekChar(1) == '=') exp.AddToken(new OperatorToken(exp, scope, file.MoveNextSpan(2), "-="));
-					else exp.AddToken(new OperatorToken(exp, scope, file.MoveNextSpan(), "-"));
-				}
-				else if (ch == '+')
-				{
-					if (file.PeekChar(1) == '=') exp.AddToken(new OperatorToken(exp, scope, file.MoveNextSpan(2), "+="));
-					else exp.AddToken(new OperatorToken(exp, scope, file.MoveNextSpan(), "+"));
-				}
-				else if (ch == '*')
-				{
-					if (file.PeekChar(1) == '=') exp.AddToken(new OperatorToken(exp, scope, file.MoveNextSpan(2), "*="));
-					else exp.AddToken(new OperatorToken(exp, scope, file.MoveNextSpan(), "*"));
-				}
-				else if (ch == '/')
-				{
-					if (file.PeekChar(1) == '=') exp.AddToken(new OperatorToken(exp, scope, file.MoveNextSpan(2), "/="));
-					else exp.AddToken(new OperatorToken(exp, scope, file.MoveNextSpan(), "/"));
-				}
-				else if (ch == '%')
-				{
-					if (file.PeekChar(1) == '=') exp.AddToken(new OperatorToken(exp, scope, file.MoveNextSpan(2), "%="));
-					else exp.AddToken(new OperatorToken(exp, scope, file.MoveNextSpan(), "%"));
-				}
-				else if (ch == '=')
-				{
-					if (file.PeekChar(1) == '=') exp.AddToken(new OperatorToken(exp, scope, file.MoveNextSpan(2), "=="));
-					else exp.AddToken(new OperatorToken(exp, scope, file.MoveNextSpan(), "="));
-				}
-				else if (ch == '!')
-				{
-					if (file.PeekChar(1) == '=') exp.AddToken(new OperatorToken(exp, scope, file.MoveNextSpan(2), "!="));
-					else exp.AddToken(new OperatorToken(exp, scope, file.MoveNextSpan(), "!"));	// Not technically a probe operator...
-				}
-				else if (ch == '(')
-				{
-					exp.AddToken(BracketsToken.Parse(exp, scope));
-				}
-				else if (ch == ')')
-				{
-					exp.AddToken(new CloseBracketToken(exp, scope, file.MoveNextSpan(), null));
-				}
-				else if (ch == '{')
-				{
-					exp.AddToken(BracesToken.Parse(exp, scope));
-				}
-				else if (ch == '}')
-				{
-					exp.AddToken(new BraceToken(exp, scope, file.MoveNextSpan(), null, false));
-				}
-				else if (ch == '[')
-				{
-					exp.AddToken(ArrayBracesToken.Parse(exp, scope));
-				}
-				else if (ch == ']')
-				{
-					exp.AddToken(new ArrayBraceToken(exp, scope, file.MoveNextSpan(), null, false));
-				}
-				else if (ch == ',')
-				{
-					exp.AddToken(new DelimiterToken(exp, scope, file.MoveNextSpan()));
-				}
-				else if (ch == '.')
-				{
-					exp.AddToken(new DotToken(exp, scope, file.MoveNextSpan()));
-				}
-				else if (ch == ';')
-				{
-					exp.AddToken(new StatementEndToken(exp, scope, file.MoveNextSpan()));
-				}
-				else if (ch == ':')
-				{
-					exp.AddToken(new OperatorToken(exp, scope, file.MoveNextSpan(), ":"));
-				}
-				else if (ch == '&')
-				{
-					exp.AddToken(new ReferenceToken(exp, scope, file.MoveNextSpan()));
-				}
-				else
-				{
-					exp.AddToken(new UnknownToken(exp, scope, file.MoveNextSpan(), ch.ToString()));
+					case TokenParser.TokenType.Word:
+						{
+							var word = code.Text;
+							var wordSpan = code.Span;
+
+							Token token;
+							if (wordCallback != null && (token = wordCallback(word, wordSpan)) != null) exp.AddToken(token);
+							else exp.AddToken(ProcessWord(exp, scope, word, wordSpan));
+						}
+						break;
+
+					case TokenParser.TokenType.Number:
+						exp.AddToken(new NumberToken(scope, code.Span, code.Text));
+						break;
+
+					case TokenParser.TokenType.StringLiteral:
+						exp.AddToken(new StringLiteralToken(scope, code.Span, code.Text));
+						break;
+
+					case TokenParser.TokenType.Operator:
+						switch (code.Text)
+						{
+							case "(":
+								code.Position = code.Span.Start;
+								exp.AddToken(BracketsToken.Parse(scope));
+								break;
+							case "{":
+								code.Position = code.Span.Start;
+								exp.AddToken(BracesToken.Parse(scope));
+								break;
+							case "[":
+								code.Position = code.Span.Start;
+								exp.AddToken(ArrayBracesToken.Parse(scope));
+								break;
+							case ",":
+								exp.AddToken(new DelimiterToken(scope, code.Span));
+								break;
+							case ".":
+								exp.AddToken(new DotToken(scope, code.Span));
+								break;
+							case "&":
+								exp.AddToken(new ReferenceToken(scope, code.Span));
+								break;
+							default:
+								exp.AddToken(new OperatorToken(scope, code.Span, code.Text));
+								break;
+						}
+						break;
+
+					case TokenParser.TokenType.Preprocessor:
+						exp.AddToken(new PreprocessorToken(scope, code.Span, code.Text));
+						break;
+
+					default:
+						exp.AddToken(new UnknownToken(scope, code.Span, code.Text));
+						break;
 				}
 			}
 
@@ -157,22 +132,19 @@ namespace DkTools.CodeModel.Tokens
 
 		private static Token ProcessWord(ExpressionToken exp, Scope scope, string word, Span wordSpan)
 		{
-			var file = scope.File;
-			file.SkipWhiteSpaceAndComments(scope);
+			var code = scope.Code;
 
-			if (file.IsMatch('.'))
+			if (code.PeekExact('.'))
 			{
-				var dotSpan = file.MoveNextSpan();
-				file.SkipWhiteSpaceAndComments(scope);
-				var word2 = file.PeekWord();
+				var dotSpan = code.MovePeekedSpan();
+				var word2 = code.PeekWord();
 				if (!string.IsNullOrEmpty(word2))
 				{
-					var word2Span = file.MoveNextSpan(word2.Length);
-					file.SkipWhiteSpaceAndComments(scope);
-					var argsPresent = file.IsMatch('(');
-					var argsOpenBracketSpan = argsPresent ? file.MoveNextSpan() : Span.Empty;
+					var word2Span = code.MovePeekedSpan();
+					var argsPresent = code.PeekExact('(');
+					var argsOpenBracketSpan = argsPresent ? code.MovePeekedSpan() : Span.Empty;
 
-					foreach (var def in scope.DefinitionProvider.GetAny(file.Position, word))
+					foreach (var def in scope.DefinitionProvider.GetAny(wordSpan.Start, word))
 					{
 						if (def.AllowsChild)
 						{
@@ -181,19 +153,19 @@ namespace DkTools.CodeModel.Tokens
 							{
 								if (!argsPresent || childDef.RequiresArguments)
 								{
-									var word1Token = new IdentifierToken(exp, scope, wordSpan, word, def);
-									var dotToken = new DotToken(exp, scope, dotSpan);
-									var word2Token = new IdentifierToken(exp, scope, word2Span, word2, childDef);
-									if (argsPresent)
-									{
-										var openBracketToken = new OperatorToken(exp, scope, argsOpenBracketSpan, "(");
-										var argsToken = ArgsToken.Parse(exp, scope, openBracketToken);
-										return new CompositeToken(exp, scope, new Token[] { word1Token, dotToken, word2Token, argsToken });
-									}
-									else
-									{
-										return new CompositeToken(exp, scope, new Token[] { word1Token, dotToken, word2Token });
-									}
+									var word1Token = new IdentifierToken(scope, wordSpan, word, def);
+									var dotToken = new DotToken(scope, dotSpan);
+									var word2Token = new IdentifierToken(scope, word2Span, word2, childDef);
+									var openBracketToken = new OperatorToken(scope, argsOpenBracketSpan, "(");
+									var argsToken = ArgsToken.Parse(scope, openBracketToken);
+
+									var compToken = new CompositeToken(scope);
+									compToken.AddToken(word1Token);
+									compToken.AddToken(dotToken);
+									compToken.AddToken(word2Token);
+									if (argsPresent) compToken.AddToken(argsToken);
+
+									return compToken;
 								}
 							}
 						}
@@ -201,35 +173,39 @@ namespace DkTools.CodeModel.Tokens
 				}
 				else
 				{
-					file.Position = dotSpan.Start;
-					return new UnknownToken(exp, scope, wordSpan, word);
+					code.Position = dotSpan.Start;
+					return new UnknownToken(scope, wordSpan, word);
 				}
 			}
 
-			if (file.IsMatch('('))
+			if (code.PeekExact('('))
 			{
-				var argsOpenBracketSpan = file.MoveNextSpan();
+				var argsOpenBracketSpan = code.MovePeekedSpan();
 
-				foreach (var def in scope.DefinitionProvider.GetAny(file.Position, word))
+				foreach (var def in scope.DefinitionProvider.GetAny(wordSpan.Start, word))
 				{
 					if (def.RequiresArguments)
 					{
-						var wordToken = new IdentifierToken(exp, scope, wordSpan, word, def);
-						var openBracketToken = new OperatorToken(exp, scope, argsOpenBracketSpan, "(");
-						var argsToken = ArgsToken.Parse(exp, scope, openBracketToken);
-						return new CompositeToken(exp, scope, new Token[] { wordToken, argsToken });
+						var wordToken = new IdentifierToken(scope, wordSpan, word, def);
+						var openBracketToken = new OperatorToken(scope, argsOpenBracketSpan, "(");
+						var argsToken = ArgsToken.Parse(scope, openBracketToken);
+
+						var compToken = new CompositeToken(scope);
+						compToken.AddToken(wordToken);
+						compToken.AddToken(argsToken);
+						return compToken;
 					}
 				}
 			}
 
-			foreach (var def in scope.DefinitionProvider.GetAny(file.Position, word))
+			foreach (var def in scope.DefinitionProvider.GetAny(wordSpan.Start, word))
 			{
 				if (def.RequiresArguments || def.RequiresChild) continue;
 
-				return new IdentifierToken(exp, scope, wordSpan, word, def);
+				return new IdentifierToken(scope, wordSpan, word, def);
 			}
 
-			return new UnknownToken(exp, scope, wordSpan, word);
+			return new UnknownToken(scope, wordSpan, word);
 		}
 	}
 }

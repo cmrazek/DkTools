@@ -23,23 +23,23 @@ namespace DkTools.CodeModel.PreprocessorTokens
 
 			while (parser.Read())
 			{
-				if (endToken != null && parser.TokenText == endToken) break;
+				if (endToken != null && parser.Text == endToken) break;
 
-				var type = parser.TokenType;
+				var type = parser.Type;
 				if (type == TokenParser.TokenType.Operator)
 				{
-					if (parser.TokenText == "(")
+					if (parser.Text == "(")
 					{
 						token.Add(GroupToken.Parse(token, parser, ")"));
 					}
 					else
 					{
-						token.Add(new OperatorToken(token, parser.TokenText));
+						token.Add(new OperatorToken(token, parser.Text));
 					}
 				}
 				else if (type == TokenParser.TokenType.Number)
 				{
-					token.Add(new NumberToken(token, parser.TokenText));
+					token.Add(new NumberToken(token, parser.Text));
 				}
 				else
 				{

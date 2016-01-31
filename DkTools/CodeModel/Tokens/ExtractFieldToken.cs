@@ -9,8 +9,8 @@ namespace DkTools.CodeModel.Tokens
 {
 	internal class ExtractFieldToken : WordToken
 	{
-		public ExtractFieldToken(GroupToken parent, Scope scope, Span span, string name, ExtractFieldDefinition def)
-			: base(parent, scope, span, name)
+		public ExtractFieldToken(Scope scope, Span span, string name, ExtractFieldDefinition def)
+			: base(scope, span, name)
 		{
 			SourceDefinition = def;
 		}

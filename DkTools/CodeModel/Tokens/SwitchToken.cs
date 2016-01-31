@@ -11,97 +11,58 @@ namespace DkTools.CodeModel.Tokens
 		private OperatorToken _compareOpToken;	// Could be null if not used
 		private BracesToken _bodyToken;	// Could be null for unfinished code.
 
-		private SwitchToken(GroupToken parent, Scope scope, KeywordToken switchToken)
-			: base(parent, scope, new Token[] { switchToken })
+		private SwitchToken(Scope scope, KeywordToken switchToken)
+			: base(scope)
 		{
+#if DEBUG
+			if (switchToken == null) throw new ArgumentNullException("switchToken");
+#endif
+			AddToken(switchToken);
 		}
 
-		public static SwitchToken Parse(GroupToken parent, Scope scope, KeywordToken switchToken)
+		public static SwitchToken Parse(Scope scope, KeywordToken switchToken)
 		{
-			var file = scope.File;
+			var code = scope.Code;
 
-			var ret = new SwitchToken(parent, scope, switchToken);
+			var ret = new SwitchToken(scope, switchToken);
 
 			var expressionScope = scope.Clone();
 			expressionScope.Hint |= ScopeHint.SuppressDataType | ScopeHint.SuppressFunctionDefinition | ScopeHint.SuppressVarDecl;
 
-			ret._expressionToken = ExpressionToken.TryParse(ret, expressionScope, null);
+			ret._expressionToken = ExpressionToken.TryParse(expressionScope, null);
 			if (ret._expressionToken != null) ret.AddToken(ret._expressionToken);
 
-			file.SkipWhiteSpaceAndComments(scope);
-			if (file.IsMatch('{'))
+			if (code.ReadExact('{'))
 			{
 				var bodyScope = scope.Clone();
 				bodyScope.Hint |= ScopeHint.SuppressFunctionDefinition;
 
-				ret._bodyToken = new BracesToken(ret, bodyScope, file.MoveNextSpan());
+				ret._bodyToken = new BracesToken(bodyScope, code.Span);
 				ret.AddToken(ret._bodyToken);
 
-				while (file.SkipWhiteSpaceAndComments(bodyScope))
+				while (!code.EndOfFile)
 				{
-					if (file.IsMatch('}'))
+					if (code.ReadExact('}'))
 					{
-						ret._bodyToken.AddCloseBrace(bodyScope, file.MoveNextSpan());
+						ret._bodyToken.AddCloseBrace(code.Span);
 						return ret;
 					}
 
-					var stmt = StatementToken.TryParse(ret._bodyToken, bodyScope);
+					var stmt = StatementToken.TryParse(bodyScope);
 					if (stmt != null) ret._bodyToken.AddToken(stmt);
 					else break;
 				}
 			}
 
 			return ret;
-
-			// TODO: remove
-			//var expressionTokens = new List<Token>();
-			//ret.ParseScope(expressionScope, t =>
-			//	{
-			//		if (t.BreaksStatement || t is BracesToken) return ParseScopeResult.StopAndReject;
-			//		expressionTokens.Add(t);
-
-			//		file.SkipWhiteSpaceAndComments(expressionScope);
-			//		return file.PeekChar() == '{' ? ParseScopeResult.StopAndKeep : ParseScopeResult.Continue;
-			//	});
-
-			//// If the last token is an operator, then it's the compare-op.
-			//if (expressionTokens.Count > 1 && expressionTokens.Last() is OperatorToken)
-			//{
-			//	ret._compareOpToken = expressionTokens.Last() as OperatorToken;
-			//	expressionTokens.RemoveAt(expressionTokens.Count - 1);
-			//}
-
-			//ret._expressionTokens = expressionTokens.ToArray();
-
-			//// Body
-			//var bodyScope = scope.Clone();
-			//bodyScope.Hint |= ScopeHint.SuppressFunctionDefinition;
-			//if ((ret._bodyToken = BracesToken.TryParse(ret, bodyScope)) != null) ret.AddToken(ret._bodyToken);
-
-			//return ret;
 		}
 
-		// TODO: remove
-		//public DataType ExpressionDataType
-		//{
-		//	get
-		//	{
-		//		if (_expressionTokens.Length == 1)
-		//		{
-		//			var expToken = _expressionTokens[0];
-		//			var dt = expToken.ValueDataType;
-		//			if (dt != null) return dt;
-		//		}
-
-		//		return null;
-		//	}
-		//}
-
-		public override DataType ValueDataType
+		public DataType ExpressionDataType
 		{
 			get
 			{
-				return _expressionToken != null ? _expressionToken.ValueDataType : null;
+				if (_expressionToken != null) return _expressionToken.ValueDataType;
+				return null;
 			}
 		}
 	}

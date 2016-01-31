@@ -8,8 +8,12 @@ namespace DkTools.CodeModel.Tokens
 {
 	internal class ExtractTableAndFieldToken : GroupToken
 	{
-		public ExtractTableAndFieldToken(GroupToken parent, Scope scope, ExtractTableToken exToken, DotToken dotToken, ExtractFieldToken fieldToken)
-			: base(parent, scope, new Token[] { exToken, dotToken, fieldToken })
-		{ }
+		public ExtractTableAndFieldToken(Scope scope, ExtractTableToken exToken, DotToken dotToken, ExtractFieldToken fieldToken)
+			: base(scope)
+		{
+			AddToken(exToken);
+			AddToken(dotToken);
+			AddToken(fieldToken);
+		}
 	}
 }

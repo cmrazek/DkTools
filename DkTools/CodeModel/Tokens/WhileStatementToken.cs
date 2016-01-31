@@ -10,53 +10,36 @@ namespace DkTools.CodeModel.Tokens
 		private ExpressionToken _expressionToken;
 		private BracesToken _bodyToken;	// Could be null for unfinished code.
 
-		private WhileStatementToken(GroupToken parent, Scope scope, KeywordToken whileToken)
-			: base(parent, scope, new Token[] { whileToken })
+		private WhileStatementToken(Scope scope, KeywordToken whileToken)
+			: base(scope)
 		{
+			AddToken(whileToken);
 		}
 
-		public static WhileStatementToken Parse(GroupToken parent, Scope scope, KeywordToken whileToken)
+		public static WhileStatementToken Parse(Scope scope, KeywordToken whileToken)
 		{
-			var file = scope.File;
-			var ret = new WhileStatementToken(parent, scope, whileToken);
+			var code = scope.Code;
+			var ret = new WhileStatementToken(scope, whileToken);
 
 			// Expression
 			var expressionScope = scope.Clone();
 			expressionScope.Hint |= ScopeHint.SuppressDataType | ScopeHint.SuppressFunctionDefinition | ScopeHint.SuppressVarDecl;
 
-			ret._expressionToken = ExpressionToken.TryParse(ret, scope, null);
-			if (ret._expressionToken != null) ret.AddToken(ret._expressionToken);
-
-			file.SkipWhiteSpaceAndComments(scope);
-			if (file.IsMatch('{'))
+			ret._expressionToken = ExpressionToken.TryParse(scope, null);
+			if (ret._expressionToken != null)
 			{
-				var bodyScope = scope.Clone();
-				bodyScope.Hint |= ScopeHint.SuppressFunctionDefinition;
+				ret.AddToken(ret._expressionToken);
 
-				ret.AddToken(ret._bodyToken = BracesToken.Parse(ret, bodyScope));
+				if (code.PeekExact('{'))
+				{
+					var bodyScope = scope.Clone();
+					bodyScope.Hint |= ScopeHint.SuppressFunctionDefinition;
+
+					ret.AddToken(ret._bodyToken = BracesToken.Parse(bodyScope));
+				}
 			}
 
 			return ret;
-
-			// TODO: remove
-			//var expressionTokens = new List<Token>();
-			//ret.ParseScope(expressionScope, t =>
-			//	{
-			//		if (t.BreaksStatement || t is BracesToken) return ParseScopeResult.StopAndReject;
-			//		expressionTokens.Add(t);
-
-			//		file.SkipWhiteSpaceAndComments(expressionScope);
-			//		return file.PeekChar() == '{' ? ParseScopeResult.StopAndKeep : ParseScopeResult.Continue;
-			//	});
-			//ret._expressionTokens = expressionTokens.ToArray();
-
-			//// Body
-			//var bodyScope = scope.Clone();
-			//bodyScope.Hint |= ScopeHint.SuppressFunctionDefinition;
-
-			//if ((ret._bodyToken = BracesToken.TryParse(parent, bodyScope)) != null) ret.AddToken(ret._bodyToken);
-
-			//return ret;
 		}
 	}
 }
