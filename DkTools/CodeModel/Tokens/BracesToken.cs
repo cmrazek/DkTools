@@ -10,6 +10,7 @@ namespace DkTools.CodeModel.Tokens
 		private Token _openToken;
 		private Token _closeToken;
 		private List<Token> _innerTokens = new List<Token>();
+		private int _funcOutliningStart = -1;
 
 		public BracesToken(Scope scope)
 			: base(scope)
@@ -23,7 +24,7 @@ namespace DkTools.CodeModel.Tokens
 			AddToken(_openToken);
 		}
 
-		public static BracesToken Parse(Scope scope)
+		public static BracesToken Parse(Scope scope, int funcOutliningStart = -1)
 		{
 			var code = scope.Code;
 			if (!code.ReadExact('{')) throw new InvalidOperationException("BracesToken.Parse expected next char to be '{'.");
@@ -33,6 +34,7 @@ namespace DkTools.CodeModel.Tokens
 			indentScope.Hint |= ScopeHint.SuppressFunctionDefinition;
 
 			var ret = new BracesToken(scope);
+			ret._funcOutliningStart = funcOutliningStart;
 			ret._openToken = new BraceToken(scope, openBraceSpan, ret, true);
 			ret.AddToken(ret._openToken);
 
@@ -79,10 +81,18 @@ namespace DkTools.CodeModel.Tokens
 							regionText = regionText.Substring(0, Constants.OutliningMaxContextChars) + "...";
 						}
 
+						var span = Span;
+						var collapse = false;
+						if (_funcOutliningStart >= 0)
+						{
+							span = new Span(_funcOutliningStart, Span.End);
+							collapse = true;
+						}
+
 						yield return new OutliningRegion
 						{
-							Span = Span,
-							CollapseToDefinition = false,
+							Span = span,
+							CollapseToDefinition = collapse,
 							Text = Constants.DefaultOutliningText,
 							TooltipText = regionText
 						};

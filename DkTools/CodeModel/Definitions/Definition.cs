@@ -232,5 +232,10 @@ namespace DkTools.CodeModel.Definitions
 		{
 			return _name.GetHashCode() ^ _sourceFileName.GetHashCode() ^ _sourceStartPos.GetHashCode();
 		}
+
+		public virtual bool AllowsFunctionBody
+		{
+			get { return false; }
+		}
 	}
 }

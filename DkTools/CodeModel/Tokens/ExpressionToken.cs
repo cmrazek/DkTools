@@ -151,19 +151,21 @@ namespace DkTools.CodeModel.Tokens
 							var childDef = def.GetChildDefinition(word2);
 							if (childDef != null)
 							{
-								if (!argsPresent || childDef.RequiresArguments)
+								if (argsPresent == childDef.RequiresArguments)
 								{
 									var word1Token = new IdentifierToken(scope, wordSpan, word, def);
 									var dotToken = new DotToken(scope, dotSpan);
 									var word2Token = new IdentifierToken(scope, word2Span, word2, childDef);
-									var openBracketToken = new OperatorToken(scope, argsOpenBracketSpan, "(");
-									var argsToken = ArgsToken.Parse(scope, openBracketToken);
-
 									var compToken = new CompositeToken(scope);
 									compToken.AddToken(word1Token);
 									compToken.AddToken(dotToken);
 									compToken.AddToken(word2Token);
-									if (argsPresent) compToken.AddToken(argsToken);
+
+									if (argsPresent)
+									{
+										var openBracketToken = new OperatorToken(scope, argsOpenBracketSpan, "(");
+										compToken.AddToken(ArgsToken.Parse(scope, openBracketToken));
+									}
 
 									return compToken;
 								}
@@ -193,6 +195,13 @@ namespace DkTools.CodeModel.Tokens
 						var compToken = new CompositeToken(scope);
 						compToken.AddToken(wordToken);
 						compToken.AddToken(argsToken);
+
+						if (def.AllowsFunctionBody)
+						{
+							ParseFunctionAttributes(exp, scope, compToken);
+							if (code.PeekExact('{')) compToken.AddToken(BracesToken.Parse(scope, argsToken.Span.End + 1));
+						}
+
 						return compToken;
 					}
 				}
@@ -206,6 +215,52 @@ namespace DkTools.CodeModel.Tokens
 			}
 
 			return new UnknownToken(scope, wordSpan, word);
+		}
+
+		private static readonly string[] _functionAttribsEndTokens = new string[] { "description", "prompt", "comment", "nomenu", "BEGINHLP", "ENDHLP", "tag" };
+
+		private static void ParseFunctionAttributes(ExpressionToken exp, Scope scope, CompositeToken funcToken)
+		{
+			var code = scope.Code;
+			string word;
+			ExpressionToken exp2;
+
+			while (true)
+			{
+				word = code.PeekWord();
+				switch (word)
+				{
+					case "description":
+					case "prompt":
+					case "comment":
+					case "accel":
+						funcToken.AddToken(new KeywordToken(scope, code.MovePeekedSpan(), code.Text));
+						exp2 = ExpressionToken.TryParse(scope, _functionAttribsEndTokens);
+						if (exp2 != null) funcToken.AddToken(exp2);
+						break;
+
+					case "nomenu":
+						funcToken.AddToken(new KeywordToken(scope, code.MovePeekedSpan(), code.Text));
+						break;
+
+					case "BEGINHLP":
+						while (code.ReadStringLiteral())
+						{
+							funcToken.AddToken(new StringLiteralToken(scope, code.Span, code.Text));
+						}
+						if (code.ReadExactWholeWord("ENDHLP")) funcToken.AddToken(new KeywordToken(scope, code.Span, code.Text));
+						break;
+
+					case "tag":
+						if (code.ReadTagName()) funcToken.AddToken(new KeywordToken(scope, code.Span, code.Text));
+						exp2 = ExpressionToken.TryParse(scope, _functionAttribsEndTokens);
+						if (exp2 != null) funcToken.AddToken(exp2);
+						break;
+
+					default:
+						return;
+				}
+			}
 		}
 	}
 }

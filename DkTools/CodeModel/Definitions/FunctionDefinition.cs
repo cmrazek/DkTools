@@ -202,5 +202,13 @@ namespace DkTools.CodeModel.Definitions
 		{
 			get { return true; }
 		}
+
+		public override bool AllowsFunctionBody
+		{
+			get
+			{
+				return true;
+			}
+		}
 	}
 }

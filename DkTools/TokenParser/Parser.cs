@@ -1217,6 +1217,19 @@ namespace DkTools.TokenParser
 			return pos;
 		}
 
+		public int FindPreviousNonWhiteSpace(int pos)
+		{
+			if (pos < 0 || pos > _length) throw new ArgumentOutOfRangeException();
+
+			while (pos > 0)
+			{
+				pos--;
+				if (!char.IsWhiteSpace(_source[pos])) break;
+			}
+
+			return pos;
+		}
+
 		/// <summary>
 		/// Moves to the end of the line, to just before the line-end chars.
 		/// </summary>
