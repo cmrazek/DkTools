@@ -28,11 +28,13 @@ namespace DkTools.CodeModel
 		public int Start
 		{
 			get { return _start; }
+			set { _start = value; }
 		}
 
 		public int End
 		{
 			get { return _end; }
+			set { _end = value; }
 		}
 
 		public int Length

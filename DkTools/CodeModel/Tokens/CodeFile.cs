@@ -55,52 +55,9 @@ namespace DkTools.CodeModel.Tokens
 		}
 		#endregion
 
-		// TODO: remove
-		//#region Position calculations
-		//public int Position
-		//{
-		//	get { return _pos; }
-		//	set
-		//	{
-		//		if (value < 0 || value > _length) throw new ArgumentOutOfRangeException();
-		//		_pos = value;
-		//	}
-		//}
-
-		//public int FindStartOfLine(int pos)
-		//{
-		//	if (pos > _length) pos = _length;
-		//	while (pos > 0 && _src[pos - 1] != '\n') pos--;
-		//	return pos;
-		//}
-
-		//public int FindEndOfPreviousLine(int pos)
-		//{
-		//	var offset = FindStartOfLine(pos);
-		//	if (offset <= 0) return 0;
-
-		//	offset--;
-		//	if (offset > 0 && _src[offset] == '\n' && _src[offset - 1] == '\r') offset--;
-		//	return offset;
-		//}
-
-		//public int FindEndOfLine(int pos)
-		//{
-		//	while (pos < _length && !_src[pos].IsEndOfLineChar()) pos++;
-		//	return pos;
-		//}
-
-		//public int FindStartOfNextLine(int pos)
-		//{
-		//	pos = FindEndOfLine(pos);
-		//	if (pos < _length && _src[pos] == '\r') pos++;
-		//	if (pos < _length && _src[pos] == '\n') pos++;
-		//	return pos;
-		//}
-		//#endregion
-
 		#region Regions
 		private Dictionary<int, Region> _regions = new Dictionary<int, Region>();
+		private bool _commentRegionsFound;
 
 		private enum RegionType
 		{
@@ -110,37 +67,31 @@ namespace DkTools.CodeModel.Tokens
 
 		private class Region
 		{
-			public Scope scope;
 			public Span span;
 			public RegionType type;
 			public string title;
 		}
 
-		// TODO: remove
-		//private void AddCommentRegion(Scope scope, Span span)
-		//{
-		//	if (scope.Visible)
-		//	{
-		//		// Start and end must be on separate lines.
-		//		var startLineEnd = FindEndOfLine(span.Start);
-		//		if (span.End > startLineEnd)
-		//		{
-		//			_regions[span.Start] = new Region
-		//			{
-		//				scope = scope,
-		//				span = span,
-		//				type = RegionType.Comment,
-		//				title = GetText(span).GetFirstLine().Trim()
-		//			};
-		//		}
-		//	}
-		//}
+		private void AddCommentRegion(Span span)
+		{
+			// Start and end must be on separate lines.
+			var startLineEnd = Code.FindEndOfLine(span.Start);
+			if (span.End > startLineEnd)
+			{
+				_regions[span.Start] = new Region
+				{
+					//scope = scope,
+					span = span,
+					type = RegionType.Comment,
+					title = Code.GetText(span).GetFirstLine().Trim()
+				};
+			}
+		}
 
-		public void StartUserRegion(Scope scope, int pos, string title)
+		public void StartUserRegion(int pos, string title)
 		{
 			_regions[pos] = new Region
 			{
-				scope = scope,
 				span = new Span(pos, pos),
 				type = RegionType.User,
 				title = title.Trim()
@@ -190,6 +141,12 @@ namespace DkTools.CodeModel.Tokens
 		{
 			get
 			{
+				if (!_commentRegionsFound)
+				{
+					FindCommentRegions();
+					_commentRegionsFound = true;
+				}
+
 				foreach (var reg in base.OutliningRegions) yield return reg;
 
 				foreach (var reg in _regions.Values)
@@ -200,7 +157,7 @@ namespace DkTools.CodeModel.Tokens
 							yield return new OutliningRegion
 							{
 								Span = reg.span,
-								CollapseToDefinition = (reg.scope.Hint & ScopeHint.NotOnRoot) == 0,	// Auto-hide comments on the root
+								CollapseToDefinition = true,
 								Text = reg.title,
 								TooltipText = GetRegionText(reg.span)
 							};
@@ -235,6 +192,58 @@ namespace DkTools.CodeModel.Tokens
 							TooltipText = GetRegionText(span)
 						};
 					}
+				}
+			}
+		}
+
+		private static readonly Regex _rxUserRegion = new Regex(@"^(?://|/*)\s*\#(region|endregion)\b(.*)$");
+
+		private void FindCommentRegions()
+		{
+			var parser = new TokenParser.Parser(_source.Text);
+			parser.ReturnComments = true;
+
+			var insideComment = false;
+			var commentSpan = Span.Empty;
+			Match match;
+
+			while (parser.Read())
+			{
+				if (parser.Type == TokenParser.TokenType.Comment)
+				{
+					if ((match = _rxUserRegion.Match(parser.Text)).Success)
+					{
+						if (insideComment)
+						{
+							// Finish the comment region here so that it doesn't break the region
+							AddCommentRegion(commentSpan);
+							insideComment = false;
+						}
+
+						if (match.Groups[1].Value == "region")
+						{
+							StartUserRegion(parser.Span.Start, match.Groups[2].Value.Trim());
+						}
+						else
+						{
+							EndUserRegion(parser.Span.End);
+						}
+					}
+
+					if (insideComment)
+					{
+						commentSpan.End = parser.Span.End;
+					}
+					else
+					{
+						insideComment = true;
+						commentSpan = parser.Span;
+					}
+				}
+				else
+				{
+					if (insideComment) AddCommentRegion(commentSpan);
+					insideComment = false;
 				}
 			}
 		}

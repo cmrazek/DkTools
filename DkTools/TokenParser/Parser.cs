@@ -22,6 +22,8 @@ namespace DkTools.TokenParser
 		private bool _enumNestable = false;
 		private int _documentOffset;
 
+		private static readonly char[] _lineEndChars = new char[] { '\r', '\n' };
+
 		public Parser(string source)
 		{
 			SetSource(source);
@@ -178,7 +180,7 @@ namespace DkTools.TokenParser
 				{
 					if (_pos + 1 < _length && _source[_pos + 1] == '/')
 					{
-						var index = _source.IndexOf('\n', _pos);
+						var index = _source.IndexOfAny(_lineEndChars, _pos);
 						if (index < 0)
 						{
 							index = _length;
@@ -186,7 +188,7 @@ namespace DkTools.TokenParser
 						}
 						else
 						{
-							index++;
+							//index++;
 							_tokenTerminated = true;
 						}
 
