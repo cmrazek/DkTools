@@ -5,21 +5,21 @@ using System.Text;
 
 namespace DkTools.CodeModel.Tokens
 {
-	internal class WhileStatementToken : GroupToken
+	internal class WhileStatement : GroupToken
 	{
 		private ExpressionToken _expressionToken;
 		private BracesToken _bodyToken;	// Could be null for unfinished code.
 
-		private WhileStatementToken(Scope scope, KeywordToken whileToken)
+		private WhileStatement(Scope scope, KeywordToken whileToken)
 			: base(scope)
 		{
 			AddToken(whileToken);
 		}
 
-		public static WhileStatementToken Parse(Scope scope, KeywordToken whileToken)
+		public static WhileStatement Parse(Scope scope, KeywordToken whileToken)
 		{
 			var code = scope.Code;
-			var ret = new WhileStatementToken(scope, whileToken);
+			var ret = new WhileStatement(scope, whileToken);
 
 			// Expression
 			var expressionScope = scope.Clone();
@@ -35,7 +35,7 @@ namespace DkTools.CodeModel.Tokens
 					var bodyScope = scope.Clone();
 					bodyScope.Hint |= ScopeHint.SuppressFunctionDefinition;
 
-					ret.AddToken(ret._bodyToken = BracesToken.Parse(bodyScope));
+					ret.AddToken(ret._bodyToken = BracesToken.Parse(bodyScope, null));
 				}
 			}
 

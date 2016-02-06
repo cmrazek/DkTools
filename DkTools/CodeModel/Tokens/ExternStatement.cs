@@ -50,7 +50,7 @@ namespace DkTools.CodeModel.Tokens
 
 			// Arguments
 			if (!code.ReadExact('(')) return ret;
-			ret.AddToken(ArgsToken.Parse(scope, new OperatorToken(scope, code.Span, "(")));
+			ret.AddToken(ArgsToken.Parse(scope, new OperatorToken(scope, code.Span, "("), funcDef.ArgumentDataTypes));
 
 			ParseFunctionAttributes(scope, ret);
 			return ret;

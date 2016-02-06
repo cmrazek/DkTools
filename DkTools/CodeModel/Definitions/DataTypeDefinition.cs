@@ -26,7 +26,7 @@ namespace DkTools.CodeModel.Definitions
 			_dataType = dataType;
 		}
 
-		public DataType DataType
+		public override DataType DataType
 		{
 			get { return _dataType; }
 		}

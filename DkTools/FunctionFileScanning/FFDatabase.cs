@@ -43,7 +43,7 @@ namespace DkTools.FunctionFileScanning
 	sig					nvarchar(4000)	not null,
 	span				nvarchar(100)	not null,
 	data_type			nvarchar(4000)	not null,
-	completion_options	nvarchar(4000),
+	arg_data_types		nvarchar(4000)	not null,
 	privacy				nvarchar(10)	not null,
 	description			nvarchar(4000),
 	visible				tinyint			not null
@@ -82,13 +82,14 @@ namespace DkTools.FunctionFileScanning
 @"create index alt_file_ix_filename on alt_file (file_name)"
 };
 
-		public const string DatabaseFileName = "DkScan_v5.sdf";
+		public const string DatabaseFileName = "DkScan_v6.sdf";
 		public static readonly string[] OldDatabaseFileNames = new string[]
 		{
 			"DkScan.sdf",
 			"DkScan_v2.sdf",
 			"DkScan_v3.sdf",		// last used 1.2.10
 			"DkScan_v4.sdf",		// last used 1.2.11
+			"DkScan_v5.sdf",		// last used 1.2.23
 		};
 
 		private SqlCeConnection _conn;

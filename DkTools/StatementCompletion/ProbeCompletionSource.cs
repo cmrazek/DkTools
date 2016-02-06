@@ -127,7 +127,7 @@ namespace DkTools.StatementCompletion
 
 		private static readonly Regex _rxTypingTable = new Regex(@"(\w+)\.(\w*)$");
 		private static readonly Regex _rxTypingWord = new Regex(@"\w+$");
-		private static readonly Regex _rxAfterAssignOrCompare = new Regex(@"(==|=|!=)\s$");
+		public static readonly Regex RxAfterAssignOrCompare = new Regex(@"(==|=|!=|<|<=|>|>=)\s$");
 		private static readonly Regex _rxClassFunctionStartBracket = new Regex(@"(\w+)\s*\.\s*(\w+)\s*\($");
 		private static readonly Regex _rxFunctionStartBracket = new Regex(@"(\w+)\s*\($");
 		private static readonly Regex _rxAfterIfDef = new Regex(@"\#ifn?def\s$");
@@ -143,7 +143,7 @@ namespace DkTools.StatementCompletion
 			var curPos = snapPt.Position;
 			var snapshot = session.TextView.TextBuffer.CurrentSnapshot;
 			var prefix = snapshot.GetLineTextUpToPosition(curPos);
-			var linePos = snapshot.GetLineFromPosition(curPos).Start.Position;
+			var linePos = snapshot.GetLineFromPosition(curPos).Start;
 
 			var completionSpan = new SnapshotSpan(snapshot, curPos, 0);
 			Match match;
@@ -153,10 +153,11 @@ namespace DkTools.StatementCompletion
 			if (lastCh == ' ')
 			{
 				#region Assignment or Comparison
-				if ((match = _rxAfterAssignOrCompare.Match(prefix)).Success)
+				if ((match = RxAfterAssignOrCompare.Match(prefix)).Success)
 				{
 					var operatorText = match.Groups[1].Value;
-					AddCompletions(completionList, HandleAfterAssignOrCompare(completionSpan, operatorText));
+					var opPt = linePos + match.Groups[1].Index;
+					AddCompletions(completionList, HandleAfterAssignOrCompare(completionSpan, operatorText, opPt));
 				}
 				#endregion
 				#region #ifdef
@@ -342,33 +343,22 @@ namespace DkTools.StatementCompletion
 			}
 		}
 
-		private IEnumerable<Completion> HandleAfterAssignOrCompare(SnapshotSpan completionSpan, string operatorText)
+		private IEnumerable<Completion> HandleAfterAssignOrCompare(SnapshotSpan completionSpan, string operatorText, SnapshotPoint operatorPt)
 		{
 			var store = CodeModel.FileStore.GetOrCreateForTextBuffer(_textBuffer);
 			if (store != null)
 			{
 				var model = store.GetCurrentModel(completionSpan.Snapshot, "Auto-completion after assign or compare");
-				var modelPos = completionSpan.Start.TranslateTo(model.Snapshot, PointTrackingMode.Positive).Position;
-				var parentToken = (from t in model.FindTokens(modelPos)
-								   where t is GroupToken && t.Span.Start < modelPos
-								   select t as GroupToken).LastOrDefault();
-				if (parentToken != null)
+				var modelPos = operatorPt.TranslateTo(model.Snapshot, PointTrackingMode.Negative);
+				var opToken = model.File.FindDownward<CompletionOperator>(modelPos.Position).LastOrDefault();
+				if (opToken != null)
 				{
-					var opToken = parentToken.FindLastChildBeforeOffset(modelPos);
-					if (opToken != null && opToken is OperatorToken && opToken.Text == operatorText)
+					var dataType = opToken.CompletionDataType;
+					if (dataType != null && dataType.HasCompletionOptions)
 					{
-						var prevToken = parentToken.FindPreviousSibling(opToken);
-
-						if (prevToken != null)
+						foreach (var opt in dataType.CompletionOptions)
 						{
-							var dt = prevToken.ValueDataType;
-							if (dt != null && dt.HasCompletionOptions)
-							{
-								foreach (var opt in dt.CompletionOptions)
-								{
-									yield return CreateCompletion(opt);
-								}
-							}
+							yield return CreateCompletion(opt);
 						}
 					}
 				}
@@ -449,7 +439,7 @@ namespace DkTools.StatementCompletion
 			var model = store.GetMostRecentModel(_textBuffer.CurrentSnapshot, "Auto-completion after case");
 			var modelPos = completionSpan.Start.TranslateTo(model.Snapshot, PointTrackingMode.Positive);
 
-			var switchToken = (from t in model.FindTokens(modelPos) where t is SwitchToken select t as SwitchToken).LastOrDefault();
+			var switchToken = (from t in model.FindTokens(modelPos) where t is SwitchStatement select t as SwitchStatement).LastOrDefault();
 			if (switchToken != null)
 			{
 				var dt = switchToken.ValueDataType;

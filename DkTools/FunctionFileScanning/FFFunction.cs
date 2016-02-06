@@ -71,24 +71,14 @@ namespace DkTools.FunctionFileScanning
 
 			var dataTypeText = rdr.GetString(rdr.GetOrdinal("data_type"));
 
-			var optionsValue = rdr["completion_options"];
-			if (!Convert.IsDBNull(optionsValue))
+			_dataType = DataType.TryParse(new DataType.ParseArgs { Code = new CodeParser(dataTypeText) });
+			if (_dataType == null)
 			{
-				var options = (from o in rdr.GetString(rdr.GetOrdinal("completion_options")).Split('|') select new CodeModel.Definitions.EnumOptionDefinition(o)).ToArray();
-				_dataType = new CodeModel.DataType(ValType.Enum, dataTypeText, options, CodeModel.DataType.CompletionOptionsType.EnumOptionsList, dataTypeText);
+				Log.WriteDebug("Failed to parse data type from database: {0}", dataTypeText);
+				_dataType = new CodeModel.DataType(ValType.Unknown, null, dataTypeText);
 			}
-			else
-			{
-				_dataType = DataType.TryParse(new DataType.ParseArgs
-				{
-					Code = new CodeParser(dataTypeText)
-				});
-				if (_dataType == null)
-				{
-					Log.WriteDebug("Failed to parse data type from database: {0}", dataTypeText);
-					_dataType = new CodeModel.DataType(ValType.Unknown, dataTypeText);
-				}
-			}
+
+			var argDataTypes = ParseDataTypeList(rdr.GetString(rdr.GetOrdinal("arg_data_types"))).ToArray();
 
 			var devDescValue = rdr["description"];
 			if (!Convert.IsDBNull(devDescValue)) _devDesc = Convert.ToString(devDescValue);
@@ -98,7 +88,7 @@ namespace DkTools.FunctionFileScanning
 			if (!Enum.TryParse<CodeModel.FunctionPrivacy>(str, out _privacy)) _privacy = CodeModel.FunctionPrivacy.Public;
 
 			_def = new CodeModel.Definitions.FunctionDefinition(_class != null ? _class.Name : null, _name, _file.FileName, _span.Start, _dataType, _sig,
-					0, 0, 0, CodeModel.Span.Empty, _privacy, true, _devDesc);
+					0, 0, 0, CodeModel.Span.Empty, _privacy, true, _devDesc, argDataTypes);
 
 			UpdateVisibility();
 		}
@@ -111,25 +101,17 @@ namespace DkTools.FunctionFileScanning
 			var nameSpan = Span.FromSaveString(rdr.GetString(rdr.GetOrdinal("span")));
 
 			var dataTypeText = rdr.GetString(rdr.GetOrdinal("data_type"));
-			var optionsValue = rdr["completion_options"];
-			DataType dataType;
-			if (!Convert.IsDBNull(optionsValue))
+			var dataType = DataType.TryParse(new DataType.ParseArgs
 			{
-				var options = (from o in rdr.GetString(rdr.GetOrdinal("completion_options")).Split('|') select new CodeModel.Definitions.EnumOptionDefinition(o)).ToArray();
-				dataType = new CodeModel.DataType(ValType.Enum, dataTypeText, options, DataType.CompletionOptionsType.EnumOptionsList, dataTypeText);
-			}
-			else
+				Code = new CodeParser(dataTypeText)
+			});
+			if (dataType == null)
 			{
-				dataType = DataType.TryParse(new DataType.ParseArgs
-				{
-					Code = new CodeParser(dataTypeText)
-				});
-				if (dataType == null)
-				{
-					Log.WriteDebug("Failed to parse data type from database: {0}", dataTypeText);
-					dataType = new CodeModel.DataType(ValType.Unknown, dataTypeText);
-				}
+				Log.WriteDebug("Failed to parse data type from database: {0}", dataTypeText);
+				dataType = new CodeModel.DataType(ValType.Unknown, null, dataTypeText);
 			}
+
+			var argDataTypes = ParseDataTypeList(rdr.GetString(rdr.GetOrdinal("arg_data_types"))).ToArray();
 
 			var sig = rdr.GetString(rdr.GetOrdinal("sig"));
 
@@ -141,7 +123,33 @@ namespace DkTools.FunctionFileScanning
 			var devDescValue = rdr["description"];
 			if (!Convert.IsDBNull(devDescValue)) devDesc = Convert.ToString(devDescValue);
 
-			return new CodeModel.Definitions.FunctionDefinition(className, funcName, fileName, nameSpan.Start, dataType, sig, 0, 0, 0, Span.Empty, privacy, true, devDesc);
+			return new CodeModel.Definitions.FunctionDefinition(className, funcName, fileName, nameSpan.Start, dataType, sig, 0, 0, 0, Span.Empty,
+				privacy, true, devDesc, argDataTypes);
+		}
+
+		private static IEnumerable<DataType> ParseDataTypeList(string argDataTypesString)
+		{
+			if (!string.IsNullOrWhiteSpace(argDataTypesString))
+			{
+				var code = new CodeParser(argDataTypesString);
+				if (code.ReadExact('('))
+				{
+					while (true)
+					{
+						yield return DataType.TryParse(new DataType.ParseArgs { Code = code });
+
+						if (code.ReadExact(',')) continue;
+						if (code.ReadExact(')')) break;
+
+						Log.WriteDebug("Failed to parse delimiter in arg data type list: {0}", argDataTypesString);
+						break;
+					}
+				}
+				else
+				{
+					Log.WriteDebug("Failed to parse starting '(' from arg data type list: {0}", argDataTypesString);
+				}
+			}
 		}
 
 		public void UpdateFromDefinition(CodeModel.Definitions.FunctionDefinition def)
@@ -198,31 +206,36 @@ namespace DkTools.FunctionFileScanning
 
 		public void InsertOrUpdate(FFDatabase db)
 		{
-			string completionOptions = null;
-			if (_dataType != null && _dataType.HasCompletionOptions)
+			var sb = new StringBuilder();
+			var first = true;
+			foreach (var argDataType in _def.ArgumentDataTypes)
 			{
-				var sb = new StringBuilder();
-				foreach (var opt in _dataType.CompletionOptions)
+				if (first)
 				{
-					if (sb.Length > 0) sb.Append('|');
-					sb.Append(opt.Name);
+					sb.Append('(');
+					first = false;
 				}
-				completionOptions = sb.ToString();
+				else
+				{
+					sb.Append(',');
+				}
+				sb.Append(argDataType.ToCodeString());
 			}
+			if (!first) sb.Append(')');
+			var argDataTypes = sb.ToString();
 
 			if (_id != 0)
 			{
 				using (var cmd = db.CreateCommand("update func set file_id = @file_id, name = @name, sig = @sig, span = @span, data_type = @data_type, " +
-					"completion_options = @completion_options, privacy = @privacy, description = @dev_desc, visible = @visible where id = @id"))
+					"arg_data_types = @arg_data_types, privacy = @privacy, description = @dev_desc, visible = @visible where id = @id"))
 				{
 					cmd.Parameters.AddWithValue("@id", _id);
 					cmd.Parameters.AddWithValue("@file_id", _file.Id);
 					cmd.Parameters.AddWithValue("@name", _name);
 					cmd.Parameters.AddWithValue("@sig", _sig);
 					cmd.Parameters.AddWithValue("@span", _span.SaveString);
-					cmd.Parameters.AddWithValue("@data_type", _dataType.Name);
-					if (completionOptions != null) cmd.Parameters.AddWithValue("@completion_options", completionOptions);
-					else cmd.Parameters.AddWithValue("@completion_options", DBNull.Value);
+					cmd.Parameters.AddWithValue("@data_type", _dataType.ToCodeString());
+					cmd.Parameters.AddWithValue("@arg_data_types", argDataTypes);
 					cmd.Parameters.AddWithValue("@privacy", _privacy.ToString());
 					if (string.IsNullOrEmpty(_devDesc)) cmd.Parameters.AddWithValue("@dev_desc", DBNull.Value);
 					else cmd.Parameters.AddWithValue("@dev_desc", _devDesc);
@@ -232,17 +245,16 @@ namespace DkTools.FunctionFileScanning
 			}
 			else
 			{
-				using (var cmd = db.CreateCommand(@"insert into func (name, app_id, file_id, sig, span, data_type, completion_options, privacy, description, visible)
-													values (@name, @app_id, @file_id, @sig, @span, @data_type, @completion_options, @privacy, @dev_desc, @visible)"))
+				using (var cmd = db.CreateCommand(@"insert into func (name, app_id, file_id, sig, span, data_type, arg_data_types, privacy, description, visible)
+													values (@name, @app_id, @file_id, @sig, @span, @data_type, @arg_data_types, @privacy, @dev_desc, @visible)"))
 				{
 					cmd.Parameters.AddWithValue("@name", _name);
 					cmd.Parameters.AddWithValue("@app_id", _app.Id);
 					cmd.Parameters.AddWithValue("@file_id", _file.Id);
 					cmd.Parameters.AddWithValue("@sig", _sig);
 					cmd.Parameters.AddWithValue("@span", _span.SaveString);
-					cmd.Parameters.AddWithValue("@data_type", _dataType.Name);
-					if (completionOptions != null) cmd.Parameters.AddWithValue("@completion_options", completionOptions);
-					else cmd.Parameters.AddWithValue("@completion_options", DBNull.Value);
+					cmd.Parameters.AddWithValue("@data_type", _dataType.ToCodeString());
+					cmd.Parameters.AddWithValue("@arg_data_types", argDataTypes);
 					cmd.Parameters.AddWithValue("@privacy", _privacy.ToString());
 					if (string.IsNullOrEmpty(_devDesc)) cmd.Parameters.AddWithValue("@dev_desc", DBNull.Value);
 					else cmd.Parameters.AddWithValue("@dev_desc", _devDesc);
@@ -252,19 +264,6 @@ namespace DkTools.FunctionFileScanning
 				}
 			}
 		}
-
-		//public bool Used
-		//{
-		//	get { return _used; }
-		//	set { _used = value; }
-		//}
-
-		//public void MarkUsed()
-		//{
-		//	_used = true;
-		//	_file.Used = true;
-		//	if (_class != null) _class.Used = true;
-		//}
 
 		public void Remove(FFDatabase db)
 		{

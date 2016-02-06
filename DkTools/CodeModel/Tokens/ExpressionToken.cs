@@ -16,7 +16,7 @@ namespace DkTools.CodeModel.Tokens
 
 		public delegate Token WordTokenCallback(string word, Span wordSpan);
 
-		public static ExpressionToken TryParse(Scope scope, IEnumerable<string> endTokens, WordTokenCallback wordCallback = null)
+		public static ExpressionToken TryParse(Scope scope, IEnumerable<string> endTokens, WordTokenCallback wordCallback = null, DataType expectedDataType = null)
 		{
 			var code = scope.Code;
 			code.SkipWhiteSpace();
@@ -61,7 +61,7 @@ namespace DkTools.CodeModel.Tokens
 					if (code.Peek() && endTokens.Contains(code.Text)) return exp;
 				}
 
-				var dt = DataType.TryParse(dataTypeArgs);
+				var dt = DataType.TryParse(dataTypeArgs);	// TODO: this could interfere with enum options
 				if (dt != null) continue;
 
 				if (!code.Read()) break;
@@ -74,8 +74,18 @@ namespace DkTools.CodeModel.Tokens
 							var wordSpan = code.Span;
 
 							Token token;
-							if (wordCallback != null && (token = wordCallback(word, wordSpan)) != null) exp.AddToken(token);
-							else exp.AddToken(ProcessWord(exp, scope, word, wordSpan));
+							if (wordCallback != null && (token = wordCallback(word, wordSpan)) != null)
+							{
+								exp.AddToken(token);
+							}
+							else if (expectedDataType != null && expectedDataType.HasCompletionOptions && expectedDataType.IsValidEnumOption(word))
+							{
+								exp.AddToken(new EnumOptionToken(scope, wordSpan, word, expectedDataType));
+							}
+							else
+							{
+								exp.AddToken(ProcessWord(exp, scope, word, wordSpan));
+							}
 						}
 						break;
 
@@ -84,7 +94,14 @@ namespace DkTools.CodeModel.Tokens
 						break;
 
 					case CodeType.StringLiteral:
-						exp.AddToken(new StringLiteralToken(scope, code.Span, code.Text));
+						if (expectedDataType != null && expectedDataType.HasCompletionOptions && expectedDataType.IsValidEnumOption(code.Text))
+						{
+							exp.AddToken(new EnumOptionToken(scope, code.Span, code.Text, expectedDataType));
+						}
+						else
+						{
+							exp.AddToken(new StringLiteralToken(scope, code.Span, code.Text));
+						}
 						break;
 
 					case CodeType.Operator:
@@ -96,7 +113,7 @@ namespace DkTools.CodeModel.Tokens
 								break;
 							case "{":
 								code.Position = code.Span.Start;
-								exp.AddToken(BracesToken.Parse(scope));
+								exp.AddToken(BracesToken.Parse(scope, null));
 								break;
 							case "[":
 								code.Position = code.Span.Start;
@@ -110,6 +127,14 @@ namespace DkTools.CodeModel.Tokens
 								break;
 							case "&":
 								exp.AddToken(new ReferenceToken(scope, code.Span));
+								break;
+							case "==":
+							case "!=":
+							case "<":
+							case "<=":
+							case ">":
+							case ">=":
+								exp.AddToken(ComparisonOperatorToken.Parse(scope, exp.LastChild, new OperatorToken(scope, code.Span, code.Text), endTokens));
 								break;
 							default:
 								exp.AddToken(new OperatorToken(scope, code.Span, code.Text));
@@ -163,7 +188,7 @@ namespace DkTools.CodeModel.Tokens
 									var word1Token = new IdentifierToken(scope, wordSpan, word, def);
 									var dotToken = new DotToken(scope, dotSpan);
 									var word2Token = new IdentifierToken(scope, word2Span, word2, childDef);
-									var compToken = new CompositeToken(scope);
+									var compToken = new CompositeToken(scope, childDef.DataType);
 									compToken.AddToken(word1Token);
 									compToken.AddToken(dotToken);
 									compToken.AddToken(word2Token);
@@ -171,7 +196,7 @@ namespace DkTools.CodeModel.Tokens
 									if (argsPresent)
 									{
 										var openBracketToken = new OperatorToken(scope, argsOpenBracketSpan, "(");
-										compToken.AddToken(ArgsToken.Parse(scope, openBracketToken));
+										compToken.AddToken(ArgsToken.Parse(scope, openBracketToken, childDef.ArgumentDataTypes));
 									}
 
 									return compToken;
@@ -197,16 +222,16 @@ namespace DkTools.CodeModel.Tokens
 					{
 						var wordToken = new IdentifierToken(scope, wordSpan, word, def);
 						var openBracketToken = new OperatorToken(scope, argsOpenBracketSpan, "(");
-						var argsToken = ArgsToken.Parse(scope, openBracketToken);
+						var argsToken = ArgsToken.Parse(scope, openBracketToken, def.ArgumentDataTypes);
 
-						var compToken = new CompositeToken(scope);
+						var compToken = new CompositeToken(scope, def.DataType);
 						compToken.AddToken(wordToken);
 						compToken.AddToken(argsToken);
 
 						if (def.AllowsFunctionBody)
 						{
 							ParseFunctionAttributes(exp, scope, compToken);
-							if (code.PeekExact('{')) compToken.AddToken(BracesToken.Parse(scope, argsToken.Span.End + 1));
+							if (code.PeekExact('{')) compToken.AddToken(BracesToken.Parse(scope, def, argsToken.Span.End + 1));
 						}
 
 						return compToken;

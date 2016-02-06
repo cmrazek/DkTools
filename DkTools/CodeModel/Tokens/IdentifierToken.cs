@@ -16,5 +16,15 @@ namespace DkTools.CodeModel.Tokens
 #endif
 			SourceDefinition = def;
 		}
+
+		public override DataType ValueDataType
+		{
+			get
+			{
+				var def = SourceDefinition;
+				if (def != null) return def.DataType;
+				return null;
+			}
+		}
 	}
 }

@@ -11,7 +11,7 @@ namespace DkTools.CodeModel
 	internal class DataType
 	{
 		private string _name;
-		private string _infoText;
+		private string _source;
 		private Definition[] _completionOptions;
 		private CompletionOptionsType _completionOptionsType;
 		private Definition[] _methods;
@@ -27,107 +27,90 @@ namespace DkTools.CodeModel
 			InterfaceMembers
 		}
 
-		public static readonly DataType Boolean_t = new DataType(ValType.Enum, "Boolean_t")
+		public static readonly DataType Boolean_t = new DataType(ValType.Enum, null, "Boolean_t")
 		{
 			_completionOptionsType = CompletionOptionsType.EnumOptionsList,
 			_completionOptions = new Definition[]
 			{
-				new EnumOptionDefinition("TRUE"),
-				new EnumOptionDefinition("FALSE")
+				new EnumOptionDefinition("TRUE", null),	// TODO: need to bind these to the Boolean_t data type
+				new EnumOptionDefinition("FALSE", null)
 			}
 		};
-		public static readonly DataType Char = new DataType(ValType.Char, "char");
-		public static readonly DataType Char255 = new DataType(ValType.String, "char(255)");
-		public static readonly DataType Command = new DataType(ValType.Command, "command");
-		public static readonly DataType Date = new DataType(ValType.Date, "date");
-		public static readonly DataType Enum = new DataType(ValType.Enum, "enum");
-		public static readonly DataType IndRel = new DataType(ValType.IndRel, "indrel") { _completionOptionsType = CompletionOptionsType.RelInds };
-		public static readonly DataType Int = new DataType(ValType.Numeric, "int");
-		public static readonly DataType Numeric = new DataType(ValType.Numeric, "numeric");
-		public static readonly DataType OleObject = new DataType(ValType.Interface, "oleobject");
-		public static readonly DataType String = new DataType(ValType.String, "string");
-		public static readonly DataType StringVarying = new DataType(ValType.String, "string varying");
-		public static readonly DataType Table = new DataType(ValType.Table, "table") { _completionOptionsType = CompletionOptionsType.Tables };
-		public static readonly DataType Ulong = new DataType(ValType.Numeric, "ulong");
-		public static readonly DataType Unsigned = new DataType(ValType.Numeric, "unsigned");
-		public static readonly DataType Variant = new DataType(ValType.Interface, "variant");
-		public static readonly DataType Void = new DataType(ValType.Void, "void");
+		public static readonly DataType Char = new DataType(ValType.Char, null, "char");
+		public static readonly DataType Char255 = new DataType(ValType.String, null, "char(255)");
+		public static readonly DataType Command = new DataType(ValType.Command, null, "command");
+		public static readonly DataType Date = new DataType(ValType.Date, null, "date");
+		public static readonly DataType Enum = new DataType(ValType.Enum, null, "enum");
+		public static readonly DataType IndRel = new DataType(ValType.IndRel, null, "indrel") { _completionOptionsType = CompletionOptionsType.RelInds };
+		public static readonly DataType Int = new DataType(ValType.Numeric, null, "int");
+		public static readonly DataType Numeric = new DataType(ValType.Numeric, null, "numeric");
+		public static readonly DataType OleObject = new DataType(ValType.Interface, null, "oleobject");
+		public static readonly DataType String = new DataType(ValType.String, null, "string");
+		public static readonly DataType StringVarying = new DataType(ValType.String, null, "string varying");
+		public static readonly DataType Table = new DataType(ValType.Table, null, "table") { _completionOptionsType = CompletionOptionsType.Tables };
+		public static readonly DataType Ulong = new DataType(ValType.Numeric, null, "ulong");
+		public static readonly DataType Unsigned = new DataType(ValType.Numeric, null, "unsigned");
+		public static readonly DataType Variant = new DataType(ValType.Interface, null, "variant");
+		public static readonly DataType Void = new DataType(ValType.Void, null, "void");
 
 		public delegate DataTypeDefinition GetDataTypeDelegate(string name);
 		public delegate VariableDefinition GetVariableDelegate(string name);
 		public delegate void TokenCreateDelegate(Token token);
 
-		/// <summary>
-		/// Creates a new data type object.
-		/// </summary>
-		/// <param name="name">The name or visible text of the data type. This will also be used as the info text.</param>
-		public DataType(ValType valueType, string name)
-		{
-			_valueType = valueType;
-			_name = name;
-			_infoText = name;
-		}
-
-		/// <summary>
-		/// Creates a new data type object.
-		/// </summary>
-		/// <param name="name">(required) name of the data type</param>
-		/// <param name="infoText">(required) Help text to be displayed to the user.</param>
-		/// <param name="sourceToken">(optional) The token that created the data type.</param>
-		public DataType(ValType valueType, string name, string infoText)
-		{
-			_valueType = valueType;
-
-			if (!string.IsNullOrEmpty(name) && !string.IsNullOrEmpty(infoText))
-			{
-				_name = name;
-				_infoText = infoText;
-			}
-			else if (!string.IsNullOrEmpty(name))
-			{
-				_name = name;
-			}
-			else if (!string.IsNullOrEmpty(infoText))
-			{
-				_name = infoText;
-			}
-			else throw new ArgumentNullException("name and infoText");
-		}
-
-		/// <summary>
-		/// Creates a new data type object.
-		/// </summary>
-		/// <param name="name">(required) Name of the data type</param>
-		/// <param name="completionOptions">(optional) A list of hardcoded options for this data type.</param>
-		/// <param name="infoText">(required) Help text to be displayed to the user.</param>
-		/// <param name="sourceToken">(optional) The token that created the data type.</param>
-		public DataType(ValType valueType, string name, IEnumerable<Definition> completionOptions, CompletionOptionsType optionsType, string infoText)
-		{
-			_valueType = valueType;
-			_name = name;
-			_infoText = infoText;
-
-			if (completionOptions != null)
-			{
-				_completionOptions = completionOptions.ToArray();
-				if (_completionOptions.Length > 0) _completionOptionsType = optionsType;
-			}
-		}
-
 		// TODO: remove
-		//public static DataType FromString(string str)
+		///// <summary>
+		///// Creates a new data type object.
+		///// </summary>
+		///// <param name="name">The name or visible text of the data type. This will also be used as the info text.</param>
+		//public DataType(ValType valueType, string name)
 		//{
-		//	return new DataType(str, str);
+		//	_valueType = valueType;
+		//	_name = name;
+		//	_infoText = name;
 		//}
 
-		public DataType CloneWithNewName(string newName)
+		/// <summary>
+		/// Creates a new data type object.
+		/// </summary>
+		/// <param name="name">(optional) name of the data type</param>
+		/// <param name="source">(required) source code that defines the data type.</param>
+		public DataType(ValType valueType, string name, string source)
 		{
-			return new DataType(_valueType, newName, _infoText)
-			{
-				_completionOptions = _completionOptions,
-				_completionOptionsType = _completionOptionsType
-			};
+			if (string.IsNullOrWhiteSpace(source)) throw new ArgumentNullException("source");
+
+			_valueType = valueType;
+			_name = name;
+			_source = source;
 		}
+
+		/// <summary>
+		/// Creates a new data type object.
+		/// </summary>
+		/// <param name="name">(optional) Name of the data type</param>
+		/// <param name="source">(required) Source code that defines the data type</param>
+		/// <param name="completionOptions">(optional) A list of hardcoded options for this data type.</param>
+		/// <param name="optionsType">(required) The type of completion options</param>
+		public DataType(ValType valueType, string name, string source, IEnumerable<Definition> completionOptions, CompletionOptionsType optionsType)
+		{
+			if (string.IsNullOrWhiteSpace(source)) throw new ArgumentNullException("source");
+			if (completionOptions == null) throw new ArgumentNullException("completionOptions");
+
+			_valueType = valueType;
+			_name = name;
+			_source = source;
+			if (completionOptions != null) _completionOptions = completionOptions.ToArray();
+			_completionOptionsType = optionsType;
+		}
+
+		// TODO: remove if not needed
+		//public DataType CloneWithNewName(string newName)
+		//{
+		//	return new DataType(_valueType, newName, _infoText)
+		//	{
+		//		_completionOptions = _completionOptions,
+		//		_completionOptionsType = _completionOptionsType
+		//	};
+		//}
 
 		public string Name
 		{
@@ -228,9 +211,9 @@ namespace DkTools.CodeModel
 				if (TokenCreateCallback != null) TokenCreateCallback(new KeywordToken(Scope, span, text));
 			}
 
-			public void OnDataTypeKeyword(Span span, string text)
+			public void OnDataTypeKeyword(Span span, string text, Definition def)
 			{
-				if (TokenCreateCallback != null) TokenCreateCallback(new DataTypeKeywordToken(Scope, span, text));
+				if (TokenCreateCallback != null) TokenCreateCallback(new DataTypeKeywordToken(Scope, span, text, def));
 			}
 
 			public void OnIdentifier(Span span, string text, Definition def)
@@ -269,12 +252,28 @@ namespace DkTools.CodeModel
 			var code = a.Code;
 
 			var startPos = code.Position;
+
+			// Check if there is a data-type name embedded before the source.
+			string name = null;
+			if (code.ReadExact('@'))
+			{
+				var tildeSpan = code.Span;
+				if (code.ReadWord()) name = code.Text;
+				else if (code.ReadStringLiteral()) name = CodeParser.StringLiteralToString(code.Text);
+				else
+				{
+					code.Position = startPos;
+					return null;
+				}
+			}
+			if (!string.IsNullOrWhiteSpace(name) && string.IsNullOrWhiteSpace(a.TypeName)) a.TypeName = name;
+
 			if (!code.ReadWord()) return null;
 			var startWord = code.Text;
 
 			if ((a.Flags & ParseFlag.FromRepo) != 0 && code.Text == "__SYSTEM__")
 			{
-				a.OnDataTypeKeyword(code.Span, code.Text);
+				a.OnDataTypeKeyword(code.Span, code.Text, null);
 
 				if (!code.ReadWord())
 				{
@@ -289,19 +288,19 @@ namespace DkTools.CodeModel
 			switch (code.Text)
 			{
 				case "void":
-					a.OnDataTypeKeyword(code.Span, code.Text);
+					a.OnDataTypeKeyword(code.Span, code.Text, null);
 					dataType = DataType.Void;
 					break;
 
 				case "numeric":
 				case "decimal":
-					a.OnDataTypeKeyword(code.Span, code.Text);
+					a.OnDataTypeKeyword(code.Span, code.Text, null);
 					dataType = ProcessNumeric(a, code.Text);
 					break;
 
 				case "unsigned":
 				case "signed":
-					a.OnDataTypeKeyword(code.Span, code.Text);
+					a.OnDataTypeKeyword(code.Span, code.Text, null);
 					dataType = ProcessSignedUnsigned(a, code.Text);
 					break;
 
@@ -311,7 +310,7 @@ namespace DkTools.CodeModel
 				case "ulong":
 				case "number":
 				case "unumber":
-					a.OnDataTypeKeyword(code.Span, code.Text);
+					a.OnDataTypeKeyword(code.Span, code.Text, null);
 					dataType = ProcessInt(a, code.Text);
 					break;
 
@@ -319,82 +318,82 @@ namespace DkTools.CodeModel
 				case "character":
 				case "varchar":
 				case "CHAR":
-					a.OnDataTypeKeyword(code.Span, code.Text);
+					a.OnDataTypeKeyword(code.Span, code.Text, null);
 					dataType = ProcessChar(a, code.Text);
 					break;
 
 				case "string":
-					a.OnDataTypeKeyword(code.Span, code.Text);
+					a.OnDataTypeKeyword(code.Span, code.Text, null);
 					dataType = ProcessString(a, code.Text);
 					break;
 
 				case "date":
-					a.OnDataTypeKeyword(code.Span, code.Text);
+					a.OnDataTypeKeyword(code.Span, code.Text, null);
 					dataType = ProcessDate(a, code.Text);
 					break;
 
 				case "time":
-					a.OnDataTypeKeyword(code.Span, code.Text);
+					a.OnDataTypeKeyword(code.Span, code.Text, null);
 					dataType = ProcessTime(a, code.Text);
 					break;
 
 				case "enum":
-					a.OnDataTypeKeyword(code.Span, code.Text);
+					a.OnDataTypeKeyword(code.Span, code.Text, null);
 					dataType = ProcessEnum(a);
 					break;
 
 				case "like":
-					a.OnDataTypeKeyword(code.Span, code.Text);
+					a.OnDataTypeKeyword(code.Span, code.Text, null);
 					dataType = ProcessLike(a);
 					break;
 
 				case "table":
-					a.OnDataTypeKeyword(code.Span, code.Text);
+					a.OnDataTypeKeyword(code.Span, code.Text, null);
 					dataType = DataType.Table;
 					break;
 
 				case "indrel":
-					a.OnDataTypeKeyword(code.Span, code.Text);
+					a.OnDataTypeKeyword(code.Span, code.Text, null);
 					dataType = DataType.IndRel;
 					break;
 
 				case "command":
-					a.OnDataTypeKeyword(code.Span, code.Text);
+					a.OnDataTypeKeyword(code.Span, code.Text, null);
 					dataType = DataType.Command;
 					break;
 
 				case "Section":
-					a.OnDataTypeKeyword(code.Span, code.Text);
+					a.OnDataTypeKeyword(code.Span, code.Text, null);
 					dataType = ProcessSection(a);
 					break;
 
 				case "scroll":
-					a.OnDataTypeKeyword(code.Span, code.Text);
+					a.OnDataTypeKeyword(code.Span, code.Text, null);
 					dataType = ProcessScroll(a);
 					break;
 
 				case "graphic":
-					a.OnDataTypeKeyword(code.Span, code.Text);
+					a.OnDataTypeKeyword(code.Span, code.Text, null);
 					dataType = ProcessGraphic(a);
 					break;
 
 				case "interface":
-					a.OnDataTypeKeyword(code.Span, code.Text);
+					a.OnDataTypeKeyword(code.Span, code.Text, null);
 					dataType = ProcessInterface(a);
 					break;
 
 				case "variant":
-					a.OnDataTypeKeyword(code.Span, code.Text);
+					a.OnDataTypeKeyword(code.Span, code.Text, null);
 					dataType = DataType.Variant;
 					break;
 
 				case "oleobject":
-					a.OnDataTypeKeyword(code.Span, code.Text);
+					a.OnDataTypeKeyword(code.Span, code.Text, null);
 					dataType = DataType.OleObject;
 					break;
 
 				case "Boolean_t":
-					a.OnDataTypeKeyword(code.Span, code.Text);
+					a.OnDataTypeKeyword(code.Span, code.Text, null);
 					dataType = DataType.Boolean_t;
 					break;
 
@@ -407,7 +406,7 @@ namespace DkTools.CodeModel
 						var def = a.DataTypeCallback(word);
 						if (def != null)
 						{
-							a.OnDataTypeKeyword(wordSpan, word);
+							a.OnDataTypeKeyword(wordSpan, word, def);
 							dataType = def.DataType;
 						}
 					}
@@ -418,10 +417,11 @@ namespace DkTools.CodeModel
 			{
 				if ((a.Flags & ParseFlag.FromRepo) != 0) IgnoreRepoWords(a, startWord);
 
-				if (!string.IsNullOrEmpty(a.TypeName))
-				{
-					dataType = dataType.CloneWithNewName(a.TypeName);
-				}
+				// TODO: remove
+				//if (!string.IsNullOrEmpty(a.TypeName))
+				//{
+				//	dataType = dataType.CloneWithNewName(a.TypeName);
+				//}
 			}
 			else
 			{
@@ -475,7 +475,7 @@ namespace DkTools.CodeModel
 						a.TokenCreateCallback(brackets);
 					}
 				}
-				else return new DataType(ValType.Numeric, sb.ToString());
+				else return new DataType(ValType.Numeric, a.TypeName, sb.ToString());
 			}
 
 			var done = false;
@@ -493,7 +493,7 @@ namespace DkTools.CodeModel
 				else break;
 			}
 
-			return new DataType(ValType.Numeric, sb.ToString());
+			return new DataType(ValType.Numeric, a.TypeName, sb.ToString());
 		}
 
 		private static DataType ProcessSignedUnsigned(ParseArgs a, string tokenText)
@@ -547,28 +547,28 @@ namespace DkTools.CodeModel
 						a.TokenCreateCallback(brackets);
 					}
 				}
-				else return new DataType(ValType.Numeric, sb.ToString());
+				else return new DataType(ValType.Numeric, a.TypeName, sb.ToString());
 			}
 
 			if (code.ReadExact("int"))
 			{
 				sb.Append(" int");
-				a.OnDataTypeKeyword(code.Span, code.Text);
+				a.OnDataTypeKeyword(code.Span, code.Text, null);
 			}
 			else if (code.ReadExact("short"))
 			{
 				sb.Append(" short");
-				a.OnDataTypeKeyword(code.Span, code.Text);
+				a.OnDataTypeKeyword(code.Span, code.Text, null);
 			}
 			else if (code.ReadExact("long"))
 			{
 				sb.Append(" long");
-				a.OnDataTypeKeyword(code.Span, code.Text);
+				a.OnDataTypeKeyword(code.Span, code.Text, null);
 			}
 			else if (code.ReadExact("char"))
 			{
 				sb.Append(" char");
-				a.OnDataTypeKeyword(code.Span, code.Text);
+				a.OnDataTypeKeyword(code.Span, code.Text, null);
 			}
 
 			var gotMask = false;
@@ -585,7 +585,7 @@ namespace DkTools.CodeModel
 				else break;
 			}
 
-			return new DataType(ValType.Numeric, sb.ToString());
+			return new DataType(ValType.Numeric, a.TypeName, sb.ToString());
 		}
 
 		private static DataType ProcessInt(ParseArgs a, string tokenText)
@@ -598,12 +598,12 @@ namespace DkTools.CodeModel
 			if (code.ReadExact("unsigned"))
 			{
 				sb.Append(" unsigned");
-				a.OnDataTypeKeyword(code.Span, code.Text);
+				a.OnDataTypeKeyword(code.Span, code.Text, null);
 			}
 			else if (code.ReadExact("signed"))
 			{
 				sb.Append(" signed");
-				a.OnDataTypeKeyword(code.Span, code.Text);
+				a.OnDataTypeKeyword(code.Span, code.Text, null);
 			}
 
 			if (code.ReadNumber())
@@ -619,7 +619,7 @@ namespace DkTools.CodeModel
 				if (!ReadAttribute(a, code, sb)) break;
 			}
 
-			return new DataType(ValType.Numeric, sb.ToString());
+			return new DataType(ValType.Numeric, a.TypeName, sb.ToString());
 		}
 
 		private static DataType ProcessChar(ParseArgs a, string tokenText)
@@ -650,7 +650,7 @@ namespace DkTools.CodeModel
 						a.TokenCreateCallback(brackets);
 					}
 				}
-				else return new DataType(ValType.String, sb.ToString());
+				else return new DataType(ValType.String, a.TypeName, sb.ToString());
 
 				var done = false;
 				var gotMask = false;
@@ -667,11 +667,11 @@ namespace DkTools.CodeModel
 					else break;
 				}
 
-				return new DataType(ValType.String, sb.ToString());
+				return new DataType(ValType.String, a.TypeName, sb.ToString());
 			}
 			else
 			{
-				return new DataType(ValType.String, tokenText);
+				return new DataType(ValType.String, a.TypeName, tokenText);
 			}
 		}
 
@@ -685,7 +685,7 @@ namespace DkTools.CodeModel
 			if (code.ReadExact("varying"))
 			{
 				sb.Append(" varying");
-				a.OnDataTypeKeyword(code.Span, code.Text);
+				a.OnDataTypeKeyword(code.Span, code.Text, null);
 			}
 			else if (code.ReadNumber())
 			{
@@ -706,7 +706,7 @@ namespace DkTools.CodeModel
 				else break;
 			}
 
-			return new DataType(ValType.String, sb.ToString());
+			return new DataType(ValType.String, a.TypeName, sb.ToString());
 		}
 
 		private static DataType ProcessDate(ParseArgs a, string tokenText)
@@ -738,7 +738,7 @@ namespace DkTools.CodeModel
 				else break;
 			}
 
-			return new DataType(ValType.Date, sb.ToString());
+			return new DataType(ValType.Date, a.TypeName, sb.ToString());
 		}
 
 		private static DataType ProcessTime(ParseArgs a, string tokenText)
@@ -762,7 +762,7 @@ namespace DkTools.CodeModel
 				else break;
 			}
 
-			return new DataType(ValType.Time, sb.ToString());
+			return new DataType(ValType.Time, a.TypeName, sb.ToString());
 		}
 
 		private static DataType ProcessEnum(ParseArgs a)
@@ -795,7 +795,7 @@ namespace DkTools.CodeModel
 					a.OnNumber(code.Span, code.Text);
 					gotWidth = true;
 				}
-				else return new DataType(ValType.Enum, sb.ToString());
+				else return new DataType(ValType.Enum, a.TypeName, sb.ToString());
 			}
 
 			// Read the option list
@@ -815,7 +815,7 @@ namespace DkTools.CodeModel
 						if (gotComma)
 						{
 							var str = code.GetText(optionStartPos, code.TokenStartPostion - optionStartPos).Trim();
-							options.Add(new EnumOptionDefinition(DecorateEnumOptionIfRequired(str)));
+							options.Add(new EnumOptionDefinition(DecorateEnumOptionIfRequired(str), null));
 							optionStartPos = code.Position;
 						}
 						break;
@@ -824,7 +824,7 @@ namespace DkTools.CodeModel
 					if (code.Text == ",")
 					{
 						var str = code.GetText(optionStartPos, code.TokenStartPostion - optionStartPos).Trim();
-						options.Add(new EnumOptionDefinition(DecorateEnumOptionIfRequired(str)));
+						options.Add(new EnumOptionDefinition(DecorateEnumOptionIfRequired(str), null));
 						optionStartPos = code.Position;
 						gotComma = true;
 					}
@@ -868,7 +868,7 @@ namespace DkTools.CodeModel
 					}
 					else if (code.Type == CodeType.StringLiteral || code.Type == CodeType.Word)
 					{
-						if (braces != null) braces.AddToken(new EnumOptionToken(a.Scope, code.Span, code.Text));
+						if (braces != null) braces.AddToken(new EnumOptionToken(a.Scope, code.Span, code.Text, null));
 
 						var str = code.Text;
 						if (expectingComma)
@@ -885,7 +885,7 @@ namespace DkTools.CodeModel
 						}
 						else
 						{
-							options.Add(new EnumOptionDefinition(str));
+							options.Add(new EnumOptionDefinition(str, null));
 						}
 					}
 				}
@@ -913,8 +913,8 @@ namespace DkTools.CodeModel
 					{
 						case CodeType.Word:
 						case CodeType.StringLiteral:
-							if (braces != null) braces.AddToken(new EnumOptionToken(a.Scope, code.Span, code.Text));
-							options.Add(new EnumOptionDefinition(code.Text));
+							if (braces != null) braces.AddToken(new EnumOptionToken(a.Scope, code.Span, code.Text, null));
+							options.Add(new EnumOptionDefinition(code.Text, null));
 							break;
 					}
 				}
@@ -937,11 +937,23 @@ namespace DkTools.CodeModel
 			}
 			sb.Append(" }");
 
-			return new DataType(ValType.Enum, sb.ToString())
+			var dataType = new DataType(ValType.Enum, a.TypeName, sb.ToString())
 			{
 				_completionOptions = options.ToArray(),
 				_completionOptionsType = CompletionOptionsType.EnumOptionsList
 			};
+
+			foreach (EnumOptionDefinition opt in options) opt.SetEnumDataType(dataType);
+
+			if (braces != null)
+			{
+				foreach (var token in braces.FindDownward<EnumOptionToken>())
+				{
+					token.SetEnumDataType(dataType);
+				}
+			}
+
+			return dataType;
 		}
 
 		private static DataType ProcessLike(ParseArgs a)
@@ -986,7 +998,7 @@ namespace DkTools.CodeModel
 							a.TokenCreateCallback(new UnknownToken(a.Scope, word2Span, word2));
 						}
 
-						return new DataType(ValType.Unknown, string.Concat("like ", word1, ".", word2));
+						return new DataType(ValType.Unknown, a.TypeName, string.Concat("like ", word1, ".", word2));
 					}
 					else
 					{
@@ -996,7 +1008,7 @@ namespace DkTools.CodeModel
 							a.TokenCreateCallback(new UnknownToken(a.Scope, dotSpan, "."));
 						}
 
-						return new DataType(ValType.Unknown, string.Concat("like ", word1, "."));
+						return new DataType(ValType.Unknown, a.TypeName, string.Concat("like ", word1, "."));
 					}
 				}
 
@@ -1012,7 +1024,7 @@ namespace DkTools.CodeModel
 
 				if (a.TokenCreateCallback != null) a.TokenCreateCallback(new UnknownToken(a.Scope, word1Span, word1));
 
-				return new DataType(ValType.Unknown, string.Concat("like ", word1));
+				return new DataType(ValType.Unknown, a.TypeName, string.Concat("like ", word1));
 			}
 			else return null;
 		}
@@ -1036,7 +1048,7 @@ namespace DkTools.CodeModel
 				}
 			}
 
-			return new DataType(ValType.Section, sb.ToString());
+			return new DataType(ValType.Section, a.TypeName, sb.ToString());
 		}
 
 		private static DataType ProcessScroll(ParseArgs a)
@@ -1053,7 +1065,7 @@ namespace DkTools.CodeModel
 				a.OnNumber(code.Span, code.Text);
 			}
 
-			return new DataType(ValType.Scroll, sb.ToString());
+			return new DataType(ValType.Scroll, a.TypeName, sb.ToString());
 		}
 
 		private static DataType ProcessGraphic(ParseArgs a)
@@ -1084,7 +1096,7 @@ namespace DkTools.CodeModel
 				}
 			}
 
-			return new DataType(ValType.Graphic, sb.ToString());
+			return new DataType(ValType.Graphic, a.TypeName, sb.ToString());
 		}
 
 		private static DataType ProcessInterface(ParseArgs a)
@@ -1116,7 +1128,7 @@ namespace DkTools.CodeModel
 						if (a.TokenCreateCallback != null) a.TokenCreateCallback(new InterfaceTypeToken(a.Scope, code.Span, intType.Definition));
 					}
 
-					return new DataType(ValType.Interface, sb.ToString())
+					return new DataType(ValType.Interface, a.TypeName, sb.ToString())
 					{
 						_completionOptions = completionOptions.ToArray(),
 						_completionOptionsType = CompletionOptionsType.InterfaceMembers,
@@ -1204,7 +1216,7 @@ namespace DkTools.CodeModel
 				}
 			}
 
-			return new DataType(ValType.Interface, sb.ToString());
+			return new DataType(ValType.Interface, a.TypeName, sb.ToString());
 		}
 
 		private static bool ReadAttribute(ParseArgs a, CodeParser code, StringBuilder sb, params string[] extraTokens)
@@ -1324,22 +1336,32 @@ namespace DkTools.CodeModel
 
 		public string InfoText
 		{
-			get { return _infoText; }
+			get
+			{
+				if (!string.IsNullOrEmpty(_name))
+				{
+					return string.Concat(_name, ": ", _source);
+				}
+				else
+				{
+					return _source;
+				}
+			}
 		}
 
 		public System.Windows.UIElement QuickInfoWpf
 		{
 			get
 			{
-				if (!string.IsNullOrEmpty(_infoText) && _infoText != _name)
+				if (!string.IsNullOrEmpty(_name))
 				{
 					return Definition.WpfDivs(
 						Definition.WpfMainLine(_name),
-						Definition.WpfInfoLine(_infoText));
+						Definition.WpfInfoLine(_source));
 				}
 				else
 				{
-					return Definition.WpfMainLine(_name);
+					return Definition.WpfMainLine(_source);
 				}
 			}
 		}
@@ -1352,7 +1374,7 @@ namespace DkTools.CodeModel
 
 			if (!option.IsWord())
 			{
-				return string.Concat("\"", option, "\"");
+				return CodeParser.StringToStringLiteral(option);
 			}
 
 			return option;
@@ -1436,6 +1458,18 @@ namespace DkTools.CodeModel
 		public ValType ValueType
 		{
 			get { return _valueType; }
+		}
+
+		public string ToCodeString()
+		{
+			if (!string.IsNullOrEmpty(_name))
+			{
+				return string.Concat("@", DecorateEnumOptionIfRequired(_name), " ", _source);
+			}
+			else
+			{
+				return _source;
+			}
 		}
 	}
 }

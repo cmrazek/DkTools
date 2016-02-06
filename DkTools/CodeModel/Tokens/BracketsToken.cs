@@ -73,7 +73,7 @@ namespace DkTools.CodeModel.Tokens
 		{
 			get
 			{
-				if (SubTokens.Count() == 1) return SubTokens.First().ValueDataType;
+				if (Children.Count() == 1) return Children.First().ValueDataType;
 				return base.ValueDataType;
 			}
 		}

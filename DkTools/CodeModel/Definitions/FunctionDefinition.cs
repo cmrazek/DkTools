@@ -19,6 +19,7 @@ namespace DkTools.CodeModel.Definitions
 		private string _className;
 		private Span _entireSpan;
 		private string _devDesc;
+		private DataType[] _argDataTypes;
 
 		/// <summary>
 		/// Creates a function definition object.
@@ -31,7 +32,7 @@ namespace DkTools.CodeModel.Definitions
 		/// <param name="argsEndPos">Ending position of the argument brackets</param>
 		/// <param name="bodyStartPos">Position of the function's body braces (if does not match, then will be ignored)</param>
 		public FunctionDefinition(string className, string funcName, string fileName, int nameStartPos, DataType dataType, string signature,
-			int argsStartPos, int argsEndPos, int bodyStartPos, Span entireSpan, FunctionPrivacy privacy, bool isExtern, string devDesc)
+			int argsStartPos, int argsEndPos, int bodyStartPos, Span entireSpan, FunctionPrivacy privacy, bool isExtern, string devDesc, IEnumerable<DataType> argDataTypes)
 			: base(funcName, fileName, nameStartPos, !string.IsNullOrEmpty(className) ? string.Concat("class:", className, ".func:", funcName) : string.Concat("func:", funcName))
 		{
 #if DEBUG
@@ -47,6 +48,7 @@ namespace DkTools.CodeModel.Definitions
 			_className = className;
 			_entireSpan = entireSpan;
 			_devDesc = devDesc;
+			if (argDataTypes != null) _argDataTypes = argDataTypes.ToArray();
 		}
 
 		/// <summary>
@@ -56,7 +58,7 @@ namespace DkTools.CodeModel.Definitions
 		/// <param name="dataType">Data type</param>
 		/// <param name="signature">Signature</param>
 		/// <param name="devDesc">Developer description</param>
-		public FunctionDefinition(string funcName, DataType dataType, string signature, string devDesc)
+		public FunctionDefinition(string funcName, DataType dataType, string signature, string devDesc, IEnumerable<DataType> argDataTypes)
 			: base(funcName, null, 0, string.Concat("func:", funcName))
 		{
 #if DEBUG
@@ -70,16 +72,26 @@ namespace DkTools.CodeModel.Definitions
 			_className = null;
 			_entireSpan = Span.Empty;
 			_devDesc = devDesc;
+			if (argDataTypes != null) _argDataTypes = argDataTypes.ToArray();
 		}
 
 		public FunctionDefinition CloneAsExtern()
 		{
-			return new FunctionDefinition(_className, Name, SourceFileName, SourceStartPos, _dataType, _signature, _argsStartPos, _argsEndPos, _bodyStartPos, _entireSpan, _privacy, true, _devDesc);
+			return new FunctionDefinition(_className, Name, SourceFileName, SourceStartPos, _dataType, _signature, _argsStartPos, _argsEndPos, _bodyStartPos, _entireSpan, _privacy, true, _devDesc, _argDataTypes);
 		}
 
-		public DataType DataType
+		public override DataType DataType
 		{
 			get { return _dataType; }
+		}
+
+		public override IEnumerable<DataType> ArgumentDataTypes
+		{
+			get
+			{
+				if (_argDataTypes != null) return _argDataTypes;
+				return new DataType[0];
+			}
 		}
 
 		public string Signature

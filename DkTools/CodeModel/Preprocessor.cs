@@ -334,9 +334,13 @@ namespace DkTools.CodeModel
 
 			if (define.IsDataType)
 			{
-				// Keep data types as-is.
-				rdr.Use(name.Length);
-				return;
+				// Insert the data type name before the data type, so that it's available in the quick info and database.
+				rdr.Insert(string.Format("@{0} ", DataType.DecorateEnumOptionIfRequired(name)));
+				rdr.Ignore(name.Length);
+
+				//// Keep data types as-is.
+				//rdr.Use(name.Length);
+				//return;
 			}
 			else
 			{
@@ -894,7 +898,7 @@ namespace DkTools.CodeModel
 				{
 					if (_dataType != null)
 					{
-						return new Definitions.DataTypeDefinition(_name, _dataType, global: false);
+						return new Definitions.DataTypeDefinition(_name, _fileName, _pos, _dataType);
 					}
 					else
 					{

@@ -20,7 +20,7 @@ namespace DkTools.CodeModel.Tokens
 			foreach (var token in _tokens) token.DumpTree(xml);
 		}
 
-		public IEnumerable<Token> SubTokens
+		public IEnumerable<Token> Children
 		{
 			get { return _tokens; }
 		}
@@ -89,6 +89,22 @@ namespace DkTools.CodeModel.Tokens
 		{
 			var endOffset = token.Span.End;
 			return (from t in _tokens where t.Span.Start >= endOffset select t).FirstOrDefault();
+		}
+
+		public Token LastChild
+		{
+			get
+			{
+				return _tokens.Count > 0 ? _tokens[_tokens.Count - 1] : null;
+			}
+		}
+
+		public Token FirstChild
+		{
+			get
+			{
+				return _tokens.Count > 0 ? _tokens[0] : null;
+			}
 		}
 	}
 

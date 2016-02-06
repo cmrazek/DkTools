@@ -5,13 +5,13 @@ using System.Text;
 
 namespace DkTools.CodeModel.Tokens
 {
-	internal class SwitchToken : GroupToken
+	internal class SwitchStatement : GroupToken
 	{
 		private ExpressionToken _expressionToken;
 		private OperatorToken _compareOpToken;	// Could be null if not used
 		private BracesToken _bodyToken;	// Could be null for unfinished code.
 
-		private SwitchToken(Scope scope, KeywordToken switchToken)
+		private SwitchStatement(Scope scope, KeywordToken switchToken)
 			: base(scope)
 		{
 #if DEBUG
@@ -20,11 +20,11 @@ namespace DkTools.CodeModel.Tokens
 			AddToken(switchToken);
 		}
 
-		public static SwitchToken Parse(Scope scope, KeywordToken switchToken)
+		public static SwitchStatement Parse(Scope scope, KeywordToken switchToken)
 		{
 			var code = scope.Code;
 
-			var ret = new SwitchToken(scope, switchToken);
+			var ret = new SwitchStatement(scope, switchToken);
 
 			var expressionScope = scope.Clone();
 			expressionScope.Hint |= ScopeHint.SuppressDataType | ScopeHint.SuppressFunctionDefinition | ScopeHint.SuppressVarDecl;

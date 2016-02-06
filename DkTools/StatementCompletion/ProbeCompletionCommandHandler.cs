@@ -25,7 +25,7 @@ namespace DkTools.StatementCompletion
 		private ProbeCompletionCommandHandlerProvider _provider;
 		private ICompletionSession _session;
 
-		private static readonly Regex _rxAfterAssignOrCompare = new Regex(@"(?:==|=|!=)\s$");
+		//private static readonly Regex _rxAfterAssignOrCompare = new Regex(@"(?:==|=|!=)\s$");		TODO: remove
 		private static readonly Regex _rxFunctionStartBracket = new Regex(@"\w+\s*\($");
 		public static readonly Regex RxAfterWord = new Regex(@"\b(\w+)\s$");
 		private static readonly Regex _rxAfterIfDef = new Regex(@"\#ifn?def\s$");
@@ -185,7 +185,7 @@ namespace DkTools.StatementCompletion
 							{
 								TriggerCompletion(false);
 							}
-							else if (_rxAfterAssignOrCompare.IsMatch(prefix))
+							else if (ProbeCompletionSource.RxAfterAssignOrCompare.IsMatch(prefix))
 							{
 								TriggerCompletion(true);	// Requires a model rebuild in order to tell what token is before the '='.
 							}

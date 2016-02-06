@@ -96,5 +96,13 @@ namespace DkTools.CodeModel.Definitions
 		{
 			get { return true; }
 		}
+
+		public override DataType DataType
+		{
+			get
+			{
+				return _returnDataType;
+			}
+		}
 	}
 }

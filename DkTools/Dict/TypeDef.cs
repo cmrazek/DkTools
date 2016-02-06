@@ -27,10 +27,15 @@ namespace DkTools.Dict
 					var opt = data.Enumitem[0, e];
 					if (opt == null) opt = "\" \"";
 					else if (opt.IsWhiteSpace()) opt = string.Concat("\"", opt, "\"");
-					completionList.Add(new CodeModel.Definitions.EnumOptionDefinition(opt));
+					completionList.Add(new CodeModel.Definitions.EnumOptionDefinition(opt, null));
 				}
 
-				_dataType = new CodeModel.DataType(CodeModel.ValType.Enum, _name, completionList.ToArray(), CodeModel.DataType.CompletionOptionsType.EnumOptionsList, data.TypeText[0]);
+				_dataType = new CodeModel.DataType(CodeModel.ValType.Enum, _name, data.TypeText[0], completionList.ToArray(), CodeModel.DataType.CompletionOptionsType.EnumOptionsList);
+
+				foreach (var opt in completionList)
+				{
+					(opt as CodeModel.Definitions.EnumOptionDefinition).SetEnumDataType(_dataType);
+				}
 			}
 			else
 			{

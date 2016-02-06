@@ -633,17 +633,6 @@ namespace DkTools
 			set { SetSource(value); }
 		}
 
-		// TODO: remove
-		//public IEnumerator<Token> GetEnumerator()
-		//{
-		//	return new ParserEnumerator(this, _enumNestable);
-		//}
-
-		//IEnumerator IEnumerable.GetEnumerator()
-		//{
-		//	return new ParserEnumerator(this, _enumNestable);
-		//}
-
 		public bool ReadWord()
 		{
 			if (!SkipWhiteSpace()) return false;

@@ -17,6 +17,7 @@ namespace DkTools.CodeModel
 		private CodeParser _code;
 		private IBreakOwner _breakOwner;
 		private IContinueOwner _continueOwner;
+		private DataType _returnDataType;
 
 		public Scope(CodeModel model)
 		{
@@ -29,6 +30,7 @@ namespace DkTools.CodeModel
 			_code = null;
 			_breakOwner = null;
 			_continueOwner = null;
+			_returnDataType = null;
 		}
 
 		public Scope(CodeFile file, int depth, ScopeHint hint, bool visible, DefinitionProvider defProvider)
@@ -45,6 +47,7 @@ namespace DkTools.CodeModel
 			_code = file.CodeParser;
 			_breakOwner = null;
 			_continueOwner = null;
+			_returnDataType = null;
 		}
 
 		public Scope Clone()
@@ -53,7 +56,8 @@ namespace DkTools.CodeModel
 			{
 				_className = _className,
 				_breakOwner = _breakOwner,
-				_continueOwner = _continueOwner
+				_continueOwner = _continueOwner,
+				_returnDataType = _returnDataType
 			};
 		}
 
@@ -149,6 +153,12 @@ namespace DkTools.CodeModel
 		{
 			get { return _continueOwner; }
 			set { _continueOwner = value; }
+		}
+
+		public DataType ReturnDataType
+		{
+			get { return _returnDataType; }
+			set { _returnDataType = value; }
 		}
 	}
 

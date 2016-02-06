@@ -48,7 +48,7 @@ namespace DkTools.Dict
 #if DEBUG
 				DataType.CheckDataTypeParsing(typeText, parser, returnDataType);
 #endif
-				if (returnDataType == null) returnDataType = new DataType(ValType.Unknown, typeText);
+				if (returnDataType == null) returnDataType = new DataType(ValType.Unknown, null, typeText);
 				sb.Append(returnDataType.Name);
 				sb.Append(' ');
 
@@ -72,7 +72,7 @@ namespace DkTools.Dict
 #if DEBUG
 					DataType.CheckDataTypeParsing(paramTypeText, parser, paramDataType);
 #endif
-					if (paramDataType == null) paramDataType = new DataType(ValType.Unknown, paramTypeText);
+					if (paramDataType == null) paramDataType = new DataType(ValType.Unknown, null, paramTypeText);
 					sb.Append(paramDataType.Name);
 					sb.Append(' ');
 
@@ -101,7 +101,7 @@ namespace DkTools.Dict
 #if DEBUG
 				DataType.CheckDataTypeParsing(typeText, parser, dataType);
 #endif
-				if (dataType == null) dataType = new DataType(ValType.Unknown, typeText);
+				if (dataType == null) dataType = new DataType(ValType.Unknown, null, typeText);
 				sb.Append(dataType.Name);
 				sb.Append(' ');
 

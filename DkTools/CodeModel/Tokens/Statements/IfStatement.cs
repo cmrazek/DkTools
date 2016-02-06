@@ -5,23 +5,23 @@ using System.Text;
 
 namespace DkTools.CodeModel.Tokens
 {
-	internal sealed class IfStatementToken : GroupToken
+	internal sealed class IfStatement : GroupToken
 	{
 		private ExpressionToken _condition;
 		private BracesToken _trueBody = null;
 		private KeywordToken _elseToken = null;
 		private Token _falseBody = null;
 
-		private IfStatementToken(Scope scope)
+		private IfStatement(Scope scope)
 			: base(scope)
 		{
 		}
 
-		public static IfStatementToken Parse(Scope scope, KeywordToken ifToken)
+		public static IfStatement Parse(Scope scope, KeywordToken ifToken)
 		{
 			var code = scope.Code;
 
-			var ret = new IfStatementToken(scope);
+			var ret = new IfStatement(scope);
 			ret.AddToken(ifToken);
 
 			var scopeIndent = scope.Clone();
@@ -32,7 +32,7 @@ namespace DkTools.CodeModel.Tokens
 
 			if (code.PeekExact('{'))
 			{
-				ret.AddToken(ret._trueBody = BracesToken.Parse(scopeIndent));
+				ret.AddToken(ret._trueBody = BracesToken.Parse(scopeIndent, null));
 
 				if (code.ReadExactWholeWord("else"))
 				{
@@ -40,12 +40,12 @@ namespace DkTools.CodeModel.Tokens
 
 					if (code.PeekExact('{'))
 					{
-						ret.AddToken(ret._falseBody = BracesToken.Parse(scopeIndent));
+						ret.AddToken(ret._falseBody = BracesToken.Parse(scopeIndent, null));
 					}
 					else if (code.ReadExactWholeWord("if"))
 					{
 						var ifToken2 = new KeywordToken(scopeIndent, code.Span, "if");
-						ret.AddToken(ret._falseBody = IfStatementToken.Parse(scopeIndent, ifToken2));
+						ret.AddToken(ret._falseBody = IfStatement.Parse(scopeIndent, ifToken2));
 					}
 				}
 			}

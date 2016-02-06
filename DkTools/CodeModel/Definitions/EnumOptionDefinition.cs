@@ -8,9 +8,13 @@ namespace DkTools.CodeModel.Definitions
 {
 	internal class EnumOptionDefinition : Definition
 	{
-		public EnumOptionDefinition(string text)
+		private DataType _dataType;
+
+		public EnumOptionDefinition(string text, DataType dataType)
 			: base(text, null, -1, null)
-		{ }
+		{
+			_dataType = dataType;
+		}
 
 		public override bool CompletionVisible
 		{
@@ -63,6 +67,22 @@ namespace DkTools.CodeModel.Definitions
 		public override bool RequiresArguments
 		{
 			get { return false; }
+		}
+
+		public override DataType DataType
+		{
+			get
+			{
+				return _dataType;
+			}
+		}
+
+		public void SetEnumDataType(DataType dataType)
+		{
+#if DEBUG
+			if (dataType == null) throw new ArgumentNullException("dataType");
+#endif
+			_dataType = dataType;
 		}
 	}
 }

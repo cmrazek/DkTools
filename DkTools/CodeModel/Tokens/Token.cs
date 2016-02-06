@@ -126,7 +126,7 @@ namespace DkTools.CodeModel.Tokens
 			if (this is GroupToken)
 			{
 				var group = this as GroupToken;
-				foreach (var token in group.SubTokens)
+				foreach (var token in group.Children)
 				{
 					var t = token.FindTokenOfType(pos, type);
 					if (t != null) return t;
@@ -148,7 +148,7 @@ namespace DkTools.CodeModel.Tokens
 			if (!_span.Touching(pos)) return null;
 			if (this is GroupToken)
 			{
-				foreach (var token in (this as GroupToken).SubTokens)
+				foreach (var token in (this as GroupToken).Children)
 				{
 					var t = token.FindNearbyTokenOfType(pos, type);
 					if (t != null) return t;
@@ -171,7 +171,7 @@ namespace DkTools.CodeModel.Tokens
 			{
 				if (this is GroupToken)
 				{
-					foreach (var token in (this as GroupToken).SubTokens)
+					foreach (var token in (this as GroupToken).Children)
 					{
 						foreach (var region in token.OutliningRegions)
 						{
@@ -196,7 +196,7 @@ namespace DkTools.CodeModel.Tokens
 		{
 			get
 			{
-				if (this is GroupToken) return Token.GetNormalizedText((this as GroupToken).SubTokens);
+				if (this is GroupToken) return Token.GetNormalizedText((this as GroupToken).Children);
 				return CodeParser.NormalizeText(Text);
 			}
 		}
@@ -234,7 +234,7 @@ namespace DkTools.CodeModel.Tokens
 			{
 				yield return this;
 
-				foreach (var token in (this as GroupToken).SubTokens)
+				foreach (var token in (this as GroupToken).Children)
 				{
 					foreach (var token2 in token.FindDownward(pos))
 					{
@@ -256,7 +256,7 @@ namespace DkTools.CodeModel.Tokens
 
 			if (this is GroupToken)
 			{
-				foreach (var token in (this as GroupToken).SubTokens)
+				foreach (var token in (this as GroupToken).Children)
 				{
 					foreach (var token2 in token.FindDownward(span)) yield return token2;
 				}
@@ -267,11 +267,11 @@ namespace DkTools.CodeModel.Tokens
 		{
 			if (!_span.Touching(offset)) yield break;
 
-			if (typeof(GroupToken).IsAssignableFrom(GetType()))
+			if (this is GroupToken)
 			{
 				yield return this;
 
-				foreach (var token in (this as GroupToken).SubTokens)
+				foreach (var token in (this as GroupToken).Children)
 				{
 					foreach (var token2 in token.FindDownwardTouching(offset))
 					{
@@ -291,7 +291,7 @@ namespace DkTools.CodeModel.Tokens
 
 			if (this is GroupToken)
 			{
-				foreach (var subToken in (this as GroupToken).SubTokens)
+				foreach (var subToken in (this as GroupToken).Children)
 				{
 					foreach (var subTokenFound in subToken.FindDownward(pred))
 					{
@@ -308,7 +308,7 @@ namespace DkTools.CodeModel.Tokens
 
 			if (this is GroupToken)
 			{
-				foreach (var token in (this as GroupToken).SubTokens)
+				foreach (var token in (this as GroupToken).Children)
 				{
 					foreach (var token2 in token.FindDownward(pos, pred))
 					{
@@ -325,7 +325,7 @@ namespace DkTools.CodeModel.Tokens
 
 			if (this is GroupToken)
 			{
-				foreach (var token in (this as GroupToken).SubTokens)
+				foreach (var token in (this as GroupToken).Children)
 				{
 					foreach (var token2 in token.FindDownwardTouching(pos, pred))
 					{
@@ -343,7 +343,7 @@ namespace DkTools.CodeModel.Tokens
 
 			if (this is GroupToken)
 			{
-				foreach (var token in (this as GroupToken).SubTokens)
+				foreach (var token in (this as GroupToken).Children)
 				{
 					foreach (var token2 in token.FindDownward(start, length)) yield return token2;
 				}
@@ -357,7 +357,7 @@ namespace DkTools.CodeModel.Tokens
 
 			if (this is GroupToken)
 			{
-				foreach (var token in (this as GroupToken).SubTokens)
+				foreach (var token in (this as GroupToken).Children)
 				{
 					foreach (var token2 in token.FindDownward(start, length, pred))
 					{
@@ -377,9 +377,43 @@ namespace DkTools.CodeModel.Tokens
 
 				if (tok is GroupToken)
 				{
-					foreach (var subTok in (tok as GroupToken).SubTokens)
+					foreach (var subTok in (tok as GroupToken).Children)
 					{
 						if (pred(subTok)) yield return subTok;
+					}
+				}
+			}
+		}
+
+		public IEnumerable<T> FindDownward<T>() where T : Token
+		{
+			if (this is T) yield return this as T;
+
+			if (this is GroupToken)
+			{
+				var grp = this as GroupToken;
+				foreach (var child in grp.Children)
+				{
+					foreach (var tok in child.FindDownward<T>())
+					{
+						yield return tok;
+					}
+				}
+			}
+		}
+
+		public IEnumerable<T> FindDownward<T>(int pos) where T : Token
+		{
+			if (!_span.Touching(pos)) yield break;
+			if (this is T) yield return this as T;
+
+			if (this is GroupToken)
+			{
+				foreach (var child in (this as GroupToken).Children)
+				{
+					foreach (var token in child.FindDownward<T>(pos))
+					{
+						yield return token;
 					}
 				}
 			}
@@ -390,7 +424,7 @@ namespace DkTools.CodeModel.Tokens
 		{
 			if (typeof(GroupToken).IsAssignableFrom(GetType()))
 			{
-				foreach (var token in (this as GroupToken).SubTokens)
+				foreach (var token in (this as GroupToken).Children)
 				{
 					foreach (var includeDef in token.GetUnprocessedIncludes())
 					{

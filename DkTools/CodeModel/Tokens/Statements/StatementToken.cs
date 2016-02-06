@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using DkTools.CodeModel.Tokens.Statements;
 
 namespace DkTools.CodeModel.Tokens
 {
@@ -70,7 +71,15 @@ namespace DkTools.CodeModel.Tokens
 						case "if":
 							{
 								var keywordToken = new KeywordToken(scope, code.MovePeekedSpan(), code.Text);
-								var token = IfStatementToken.Parse(scope, keywordToken);
+								var token = IfStatement.Parse(scope, keywordToken);
+								ret.AddToken(token);
+								if (callback != null) callback(token);
+								return ret;
+							}
+						case "return":
+							{
+								var keywordToken = new KeywordToken(scope, code.MovePeekedSpan(), code.Text);
+								var token = ReturnStatement.Parse(scope, keywordToken);
 								ret.AddToken(token);
 								if (callback != null) callback(token);
 								return ret;
@@ -86,7 +95,7 @@ namespace DkTools.CodeModel.Tokens
 						case "switch":
 							{
 								var keywordToken = new KeywordToken(scope, code.MovePeekedSpan(), code.Text);
-								var token = SwitchToken.Parse(scope, keywordToken);
+								var token = SwitchStatement.Parse(scope, keywordToken);
 								ret.AddToken(token);
 								if (callback != null) callback(token);
 								return ret;
@@ -94,7 +103,7 @@ namespace DkTools.CodeModel.Tokens
 						case "while":
 							{
 								var keywordToken = new KeywordToken(scope, code.MovePeekedSpan(), code.Text);
-								var token = WhileStatementToken.Parse(scope, keywordToken);
+								var token = WhileStatement.Parse(scope, keywordToken);
 								if (callback != null) callback(token);
 								return ret;
 							}
@@ -161,7 +170,7 @@ namespace DkTools.CodeModel.Tokens
 						case "{":
 							{
 								// Start of a 'scope'. This is not allowed in PROBE/WBDK but allow it here anyway.
-								var token = BracesToken.Parse(scope);
+								var token = BracesToken.Parse(scope, null);
 								ret.AddToken(token);
 								if (callback != null) callback(token);
 								return ret;

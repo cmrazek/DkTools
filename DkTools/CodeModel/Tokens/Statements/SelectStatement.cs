@@ -134,9 +134,9 @@ namespace DkTools.CodeModel.Tokens
 											var fieldToken = new TableFieldToken(scope, fieldSpan, fieldName, field);
 											ret.AddToken(new TableAndFieldToken(scope, tableToken, dotToken, fieldToken));
 										}
-										else ret.AddToken(new CompositeToken(scope, tableToken, dotToken, new UnknownToken(scope, code.Span, code.Text)));
+										else ret.AddToken(new CompositeToken(scope, null, tableToken, dotToken, new UnknownToken(scope, code.Span, code.Text)));
 									}
-									else ret.AddToken(new CompositeToken(scope, tableToken, dotToken));
+									else ret.AddToken(new CompositeToken(scope, null, tableToken, dotToken));
 								}
 								else ret.AddToken(tableToken);
 							}
@@ -208,9 +208,9 @@ namespace DkTools.CodeModel.Tokens
 											var fieldToken = new TableFieldToken(scope, code.Span, code.Text, field);
 											braces.AddToken(new TableAndFieldToken(scope, tableToken, dotToken, fieldToken));
 										}
-										else braces.AddToken(new CompositeToken(scope, tableToken, dotToken, new UnknownToken(scope, code.Span, code.Text)));
+										else braces.AddToken(new CompositeToken(scope, null, tableToken, dotToken, new UnknownToken(scope, code.Span, code.Text)));
 									}
-									else braces.AddToken(new CompositeToken(scope, tableToken, dotToken));
+									else braces.AddToken(new CompositeToken(scope, null, tableToken, dotToken));
 								}
 								else braces.AddToken(tableToken);
 							}

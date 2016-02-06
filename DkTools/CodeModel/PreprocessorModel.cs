@@ -297,6 +297,7 @@ namespace DkTools.CodeModel
 			var localArgStartPos = _source.GetFilePosition(argStartPos);
 			var argScope = new CodeScope(localArgStartPos.Position);
 			int argEndPos = 0;
+			var argDataTypeList = new List<DataType>();
 			var argDefList = new List<Definition>();
 
 			// Read the arguments
@@ -311,7 +312,7 @@ namespace DkTools.CodeModel
 				{
 					continue;
 				}
-				if (TryReadFunctionArgument(argScope, localArgStartPos.PrimaryFile, argDefList)) continue;
+				if (TryReadFunctionArgument(argScope, localArgStartPos.PrimaryFile, argDataTypeList, argDefList)) continue;
 
 #if REPORT_ERRORS
 				_code.Peek();
@@ -330,7 +331,7 @@ namespace DkTools.CodeModel
 				var sig = CodeParser.NormalizeText(_code.GetText(allStartPos, argEndPos - allStartPos));
 
 				var def = new FunctionDefinition(_className, funcName, localPos.FileName, localPos.Position,
-					returnDataType, sig, 0, 0, 0, Span.Empty, privacy, true, description);
+					returnDataType, sig, 0, 0, 0, Span.Empty, privacy, true, description, argDataTypeList);
 				_externFuncs[funcName] = def;
 				AddGlobalDefinition(def);
 				return;
@@ -367,7 +368,8 @@ namespace DkTools.CodeModel
 			var entireSpan = _source.GetPrimaryFileSpan(new Span(allStartPos, bodyEndPos));
 
 			var funcSig = CodeParser.NormalizeText(_code.GetText(allStartPos, argEndPos - allStartPos));
-			var funcDef = new FunctionDefinition(_className, funcName, nameActualPos.FileName, nameActualPos.Position, returnDataType, funcSig, argStartPrimaryPos, argEndPrimaryPos, bodyStartLocalPos, entireSpan, privacy, isExtern, description);
+			var funcDef = new FunctionDefinition(_className, funcName, nameActualPos.FileName, nameActualPos.Position, returnDataType, funcSig,
+				argStartPrimaryPos, argEndPrimaryPos, bodyStartLocalPos, entireSpan, privacy, isExtern, description, argDataTypeList);
 			_localFuncs.Add(new LocalFunction(funcDef, nameSpan, statementsStartPos, bodyEndPos, argDefList, varList));
 			AddGlobalDefinition(funcDef);
 
@@ -564,7 +566,7 @@ namespace DkTools.CodeModel
 			}
 		}
 
-		private bool TryReadFunctionArgument(CodeScope scope, bool createDefinitions, List<Definition> newDefList)
+		private bool TryReadFunctionArgument(CodeScope scope, bool createDefinitions, List<DataType> argDataTypes, List<Definition> newDefList)
 		{
 			var dataType = DataType.TryParse(new DataType.ParseArgs
 			{
@@ -573,6 +575,8 @@ namespace DkTools.CodeModel
 				VariableCallback = GlobalVariableCallback
 			});
 			if (dataType == null) return false;
+
+			argDataTypes.Add(dataType);
 
 			_code.ReadExact("&");	// Optional reference
 			_code.ReadExact("+");	// Optional &+

@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using DkTools.CodeModel.Definitions;
 
 namespace DkTools.CodeModel.Tokens
 {
@@ -24,8 +25,21 @@ namespace DkTools.CodeModel.Tokens
 			AddToken(_openToken);
 		}
 
-		public static BracesToken Parse(Scope scope, int funcOutliningStart = -1)
+		/// <summary>
+		/// Parses a set of braces from the file.
+		/// </summary>
+		/// <param name="scope">The current scope.</param>
+		/// <param name="ownerDef">(optional) A definition of an object (e.g. function) that owns these braces.</param>
+		/// <param name="funcOutliningStart">(optional) To specify a custom outlining region start position. Function use this to get the outlining to appear at the end of the previous line.</param>
+		/// <returns>The braces token.</returns>
+		public static BracesToken Parse(Scope scope, Definition ownerDef, int funcOutliningStart = -1)
 		{
+			if (ownerDef != null)
+			{
+				scope = scope.CloneIndent();
+				scope.ReturnDataType = ownerDef.DataType;
+			}
+
 			var code = scope.Code;
 			if (!code.ReadExact('{')) throw new InvalidOperationException("BracesToken.Parse expected next char to be '{'.");
 			var openBraceSpan = code.Span;

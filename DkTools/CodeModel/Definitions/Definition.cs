@@ -26,7 +26,6 @@ namespace DkTools.CodeModel.Definitions
 		public abstract bool AllowsChild { get; }
 		public abstract bool RequiresChild { get; }
 		public abstract Definition GetChildDefinition(string name);
-		public abstract bool RequiresArguments { get; }
 
 		private const int k_maxWpfWidth = 600;
 
@@ -236,6 +235,21 @@ namespace DkTools.CodeModel.Definitions
 		public virtual bool AllowsFunctionBody
 		{
 			get { return false; }
+		}
+
+		public virtual bool RequiresArguments
+		{
+			get { return false; }
+		}
+
+		public virtual IEnumerable<DataType> ArgumentDataTypes
+		{
+			get { return new DataType[0]; }
+		}
+
+		public virtual DataType DataType
+		{
+			get { return null; }
 		}
 	}
 }
