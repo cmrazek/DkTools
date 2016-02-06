@@ -15,7 +15,7 @@ namespace DkTools.CodeModel
 	internal class PreprocessorModel
 	{
 		private CodeSource _source;
-		private TokenParser.Parser _code;
+		private CodeParser _code;
 		private DefinitionProvider _defProv;
 		private string _fileName;
 		private string _className;
@@ -41,7 +41,7 @@ namespace DkTools.CodeModel
 			if (defProv == null) throw new ArgumentNullException("defProv");
 #endif
 			_source = source;
-			_code = new TokenParser.Parser(source.Text);
+			_code = new CodeParser(source.Text);
 			_defProv = defProv;
 			_fileName = fileName;
 			FunctionFileScanning.FFUtil.FileNameIsClass(_fileName, out _className);
@@ -81,7 +81,7 @@ namespace DkTools.CodeModel
 
 				switch (_code.Type)
 				{
-					case TokenParser.TokenType.Word:
+					case CodeType.Word:
 						switch (_code.Text)
 						{
 							case "static":
@@ -327,7 +327,7 @@ namespace DkTools.CodeModel
 			if (isExtern)
 			{
 				var localPos = _source.GetFilePosition(nameSpan.Start);
-				var sig = TokenParser.Parser.NormalizeText(_code.GetText(allStartPos, argEndPos - allStartPos));
+				var sig = CodeParser.NormalizeText(_code.GetText(allStartPos, argEndPos - allStartPos));
 
 				var def = new FunctionDefinition(_className, funcName, localPos.FileName, localPos.Position,
 					returnDataType, sig, 0, 0, 0, Span.Empty, privacy, true, description);
@@ -366,7 +366,7 @@ namespace DkTools.CodeModel
 			var argEndPrimaryPos = _source.GetPrimaryFilePosition(argEndPos);
 			var entireSpan = _source.GetPrimaryFileSpan(new Span(allStartPos, bodyEndPos));
 
-			var funcSig = TokenParser.Parser.NormalizeText(_code.GetText(allStartPos, argEndPos - allStartPos));
+			var funcSig = CodeParser.NormalizeText(_code.GetText(allStartPos, argEndPos - allStartPos));
 			var funcDef = new FunctionDefinition(_className, funcName, nameActualPos.FileName, nameActualPos.Position, returnDataType, funcSig, argStartPrimaryPos, argEndPrimaryPos, bodyStartLocalPos, entireSpan, privacy, isExtern, description);
 			_localFuncs.Add(new LocalFunction(funcDef, nameSpan, statementsStartPos, bodyEndPos, argDefList, varList));
 			AddGlobalDefinition(funcDef);
@@ -455,7 +455,7 @@ namespace DkTools.CodeModel
 						while (_code.ReadStringLiteral())
 						{
 							if (sb.Length > 0) sb.AppendLine();
-							sb.Append(TokenParser.Parser.StringLiteralToString(_code.Text));
+							sb.Append(CodeParser.StringLiteralToString(_code.Text));
 						}
 						devDesc = sb.ToString();
 						continue;
@@ -521,7 +521,7 @@ namespace DkTools.CodeModel
 						while (_code.ReadStringLiteral())
 						{
 							if (sb.Length > 0) sb.AppendLine();
-							sb.Append(TokenParser.Parser.StringLiteralToString(_code.Text));
+							sb.Append(CodeParser.StringLiteralToString(_code.Text));
 						}
 						devDesc = sb.ToString();
 
@@ -979,7 +979,7 @@ namespace DkTools.CodeModel
 			{
 				if (!_code.Read()) break;
 
-				if (_code.TokenType == TokenParser.TokenType.Operator)
+				if (_code.TokenType == CodeType.Operator)
 				{
 					if (_code.TokenText == "(")
 					{
@@ -996,7 +996,7 @@ namespace DkTools.CodeModel
 						break;
 					}
 				}
-				else if (_code.TokenType == TokenParser.TokenType.Word)
+				else if (_code.TokenType == CodeType.Word)
 				{
 					var word = _code.TokenText;
 					var wordSpan = _code.TokenSpan;

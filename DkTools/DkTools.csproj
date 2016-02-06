@@ -526,11 +526,8 @@
     </Compile>
     <Compile Include="TempManager.cs" />
     <Compile Include="TextFilter.cs" />
-    <Compile Include="TokenParser\CommentTracker.cs" />
-    <Compile Include="TokenParser\Parser.cs" />
-    <Compile Include="TokenParser\ParserEnumerator.cs" />
-    <Compile Include="TokenParser\Token.cs" />
-    <Compile Include="TokenParser\TokenType.cs" />
+    <Compile Include="CodeParser.cs" />
+    <Compile Include="CodeType.cs" />
     <Compile Include="TypeUtil.cs" />
     <Compile Include="Util.cs" />
     <Compile Include="VsTextUtil.cs" />

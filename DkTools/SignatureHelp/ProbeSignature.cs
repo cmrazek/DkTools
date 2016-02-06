@@ -63,7 +63,7 @@ namespace DkTools.SignatureHelp
 
             var source = _applicableToSpan.GetText(_subjectBuffer.CurrentSnapshot);
 
-			var parser = new TokenParser.Parser(source);
+			var parser = new CodeParser(source);
 			var commaCount = 0;
 			while (parser.ReadNestable())
 			{

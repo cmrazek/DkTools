@@ -81,7 +81,7 @@ namespace DkTools.FunctionFileScanning
 			{
 				_dataType = DataType.TryParse(new DataType.ParseArgs
 				{
-					Code = new TokenParser.Parser(dataTypeText)
+					Code = new CodeParser(dataTypeText)
 				});
 				if (_dataType == null)
 				{
@@ -122,7 +122,7 @@ namespace DkTools.FunctionFileScanning
 			{
 				dataType = DataType.TryParse(new DataType.ParseArgs
 				{
-					Code = new TokenParser.Parser(dataTypeText)
+					Code = new CodeParser(dataTypeText)
 				});
 				if (dataType == null)
 				{

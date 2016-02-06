@@ -24,7 +24,7 @@ namespace DkTools.ErrorTagging
 			_snapshot = snapshot;
 		}
 
-		public void ReportError(TokenParser.Parser parser, CodeModel.Span span, ErrorCode code, params object[] args)
+		public void ReportError(CodeParser parser, CodeModel.Span span, ErrorCode code, params object[] args)
 		{
 			if (parser.DocumentOffset != 0)
 			{

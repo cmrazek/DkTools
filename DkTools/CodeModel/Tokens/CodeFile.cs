@@ -200,7 +200,7 @@ namespace DkTools.CodeModel.Tokens
 
 		private void FindCommentRegions()
 		{
-			var parser = new TokenParser.Parser(_source.Text);
+			var parser = new CodeParser(_source.Text);
 			parser.ReturnComments = true;
 
 			var insideComment = false;
@@ -209,7 +209,7 @@ namespace DkTools.CodeModel.Tokens
 
 			while (parser.Read())
 			{
-				if (parser.Type == TokenParser.TokenType.Comment)
+				if (parser.Type == CodeType.Comment)
 				{
 					if ((match = _rxUserRegion.Match(parser.Text)).Success)
 					{
@@ -252,13 +252,13 @@ namespace DkTools.CodeModel.Tokens
 		#region Parsing
 		private CodeSource _source;
 		private string _fileName;
-		private TokenParser.Parser _code;
+		private CodeParser _code;
 
 		public void Parse(CodeSource source, string fileName, IEnumerable<string> parentFiles, bool visible)
 		{
 			if (source == null) throw new ArgumentNullException("source");
 			_source = source;
-			_code = new TokenParser.Parser(_source.Text);
+			_code = new CodeParser(_source.Text);
 			_fileName = fileName;
 			_parentFiles = parentFiles.ToArray();
 
@@ -277,7 +277,7 @@ namespace DkTools.CodeModel.Tokens
 			Span = new Span(0, _code.Length);
 		}
 
-		public TokenParser.Parser CodeParser
+		public CodeParser CodeParser
 		{
 			get { return _code; }
 		}

@@ -183,7 +183,7 @@ namespace DkTools.CodeModel
 			/// <summary>
 			/// The token parser to read from.
 			/// </summary>
-			public TokenParser.Parser Code { get; set; }
+			public CodeParser Code { get; set; }
 
 			/// <summary>
 			/// (optional) Flags to control the parsing behaviour.
@@ -843,7 +843,7 @@ namespace DkTools.CodeModel
 						break;
 					}
 
-					if (code.Type == TokenParser.TokenType.Operator)
+					if (code.Type == CodeType.Operator)
 					{
 						if (code.Text == "}")
 						{
@@ -866,7 +866,7 @@ namespace DkTools.CodeModel
 							}
 						}
 					}
-					else if (code.Type == TokenParser.TokenType.StringLiteral || code.Type == TokenParser.TokenType.Word)
+					else if (code.Type == CodeType.StringLiteral || code.Type == CodeType.Word)
 					{
 						if (braces != null) braces.AddToken(new EnumOptionToken(a.Scope, code.Span, code.Text));
 
@@ -911,8 +911,8 @@ namespace DkTools.CodeModel
 					}
 					switch (code.Type)
 					{
-						case TokenParser.TokenType.Word:
-						case TokenParser.TokenType.StringLiteral:
+						case CodeType.Word:
+						case CodeType.StringLiteral:
 							if (braces != null) braces.AddToken(new EnumOptionToken(a.Scope, code.Span, code.Text));
 							options.Add(new EnumOptionDefinition(code.Text));
 							break;
@@ -1207,7 +1207,7 @@ namespace DkTools.CodeModel
 			return new DataType(ValType.Interface, sb.ToString());
 		}
 
-		private static bool ReadAttribute(ParseArgs a, TokenParser.Parser code, StringBuilder sb, params string[] extraTokens)
+		private static bool ReadAttribute(ParseArgs a, CodeParser code, StringBuilder sb, params string[] extraTokens)
 		{
 			var startPos = code.Position;
 			if (code.ReadWord())
@@ -1402,7 +1402,7 @@ namespace DkTools.CodeModel
 		}
 
 #if DEBUG
-		public static void CheckDataTypeParsing(string dataTypeText, TokenParser.Parser usedParser, DataType dataType)
+		public static void CheckDataTypeParsing(string dataTypeText, CodeParser usedParser, DataType dataType)
 		{
 			if (dataType == null)
 			{

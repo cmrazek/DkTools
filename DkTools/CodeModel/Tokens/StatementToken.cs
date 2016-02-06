@@ -26,7 +26,7 @@ namespace DkTools.CodeModel.Tokens
 
 			switch (code.Type)
 			{
-				case TokenParser.TokenType.Word:
+				case CodeType.Word:
 					switch (code.Text)
 					{
 						case "break":
@@ -101,7 +101,7 @@ namespace DkTools.CodeModel.Tokens
 					}
 					break;
 
-				case TokenParser.TokenType.Preprocessor:
+				case CodeType.Preprocessor:
 					switch (code.Text)
 					{
 						case "#insert":
@@ -155,7 +155,7 @@ namespace DkTools.CodeModel.Tokens
 							}
 					}
 
-				case TokenParser.TokenType.Operator:
+				case CodeType.Operator:
 					switch (code.Text)
 					{
 						case "{":

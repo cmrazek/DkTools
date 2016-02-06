@@ -17,7 +17,7 @@ namespace DkTools.CodeModel.PreprocessorTokens
 		{
 		}
 
-		public static Token Parse(GroupToken parent, TokenParser.Parser parser, string endToken)
+		public static Token Parse(GroupToken parent, CodeParser parser, string endToken)
 		{
 			var token = new GroupToken(parent);
 
@@ -26,7 +26,7 @@ namespace DkTools.CodeModel.PreprocessorTokens
 				if (endToken != null && parser.Text == endToken) break;
 
 				var type = parser.Type;
-				if (type == TokenParser.TokenType.Operator)
+				if (type == CodeType.Operator)
 				{
 					if (parser.Text == "(")
 					{
@@ -37,7 +37,7 @@ namespace DkTools.CodeModel.PreprocessorTokens
 						token.Add(new OperatorToken(token, parser.Text));
 					}
 				}
-				else if (type == TokenParser.TokenType.Number)
+				else if (type == CodeType.Number)
 				{
 					token.Add(new NumberToken(token, parser.Text));
 				}

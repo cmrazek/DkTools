@@ -640,17 +640,17 @@ namespace DkTools.CodeModel
 			// Ignore up to the last comment on the line (just in case it's a multi-line comment)
 			var conditionFileName = rdr.FileName;
 			var conditionPosition = rdr.Position;
-			var parser = new TokenParser.Parser(conditionStr);
+			var parser = new CodeParser(conditionStr);
 			parser.ReturnComments = true;
 
 			var lastStartPos = -1;
-			var lastType = TokenParser.TokenType.Unknown;
+			var lastType = CodeType.Unknown;
 			while (parser.Read())
 			{
 				lastStartPos = parser.TokenStartPostion;
 				lastType = parser.Type;
 			}
-			if (lastStartPos != -1 && lastType == TokenParser.TokenType.Comment)
+			if (lastStartPos != -1 && lastType == CodeType.Comment)
 			{
 				conditionStr = conditionStr.Substring(0, lastStartPos);
 			}
@@ -841,7 +841,7 @@ namespace DkTools.CodeModel
 
 				if (_paramNames == null)
 				{
-					var parser = new TokenParser.Parser(_content);
+					var parser = new CodeParser(_content);
 					var dataType = DataType.TryParse(new DataType.ParseArgs
 					{
 						Code = parser,
@@ -898,7 +898,7 @@ namespace DkTools.CodeModel
 					}
 					else
 					{
-						return new Definitions.ConstantDefinition(_name, _fileName, _pos, TokenParser.Parser.NormalizeText(_content));
+						return new Definitions.ConstantDefinition(_name, _fileName, _pos, CodeParser.NormalizeText(_content));
 					}
 				}
 				else
@@ -915,7 +915,7 @@ namespace DkTools.CodeModel
 					}
 					sig.Append(')');
 
-					return new Definitions.MacroDefinition(_name, _fileName, _pos, sig.ToString(), TokenParser.Parser.NormalizeText(_content));
+					return new Definitions.MacroDefinition(_name, _fileName, _pos, sig.ToString(), CodeParser.NormalizeText(_content));
 				}
 			}
 
@@ -993,7 +993,7 @@ namespace DkTools.CodeModel
 			Preprocess(parms);
 
 			// Evaluate the condition string
-			var parser = new TokenParser.Parser(writer.Text);
+			var parser = new CodeParser(writer.Text);
 			var tokenGroup = PreprocessorTokens.GroupToken.Parse(null, parser, null);
 			var finalValue = tokenGroup.Value;
 

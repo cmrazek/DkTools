@@ -233,10 +233,10 @@ namespace DkTools.SignatureHelp
 			// Find the arguments token
 			string argsText = null;
 			int argsOffset = 0;
-			var argsParser = new TokenParser.Parser(sig);
+			var argsParser = new CodeParser(sig);
 			while (argsParser.ReadNestable())
 			{
-				if (argsParser.Type == TokenParser.TokenType.Nested)
+				if (argsParser.Type == CodeType.Nested)
 				{
 					argsText = argsParser.Text;
 					argsOffset = argsParser.TokenStartPostion + 1;
@@ -248,7 +248,7 @@ namespace DkTools.SignatureHelp
 			if (argsText.EndsWith(")")) argsText = argsText.Substring(0, argsText.Length - 1);
 
 			// Parse the arguments
-			var parser = new TokenParser.Parser(argsText);
+			var parser = new CodeParser(argsText);
 			parser.ReturnWhiteSpace = true;
 
 			var sb = new StringBuilder();
@@ -275,7 +275,7 @@ namespace DkTools.SignatureHelp
 					//	yield break;
 					default:
 						sb.Append(str);
-						if (parser.Type == TokenParser.TokenType.Word) argName = parser.Text;
+						if (parser.Type == CodeType.Word) argName = parser.Text;
 						break;
 				}
 			}

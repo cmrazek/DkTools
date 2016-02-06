@@ -39,7 +39,7 @@ namespace DkTools.Dict
 
 				var dataDef = repoIntType.MethodDataDef[m];
 				var typeText = dataDef.TypeText[0];
-				var parser = new TokenParser.Parser(typeText);
+				var parser = new CodeParser(typeText);
 				var returnDataType = DataType.TryParse(new DataType.ParseArgs
 				{
 					Code = parser,
@@ -63,7 +63,7 @@ namespace DkTools.Dict
 
 					var paramDataDef = repoIntType.MethodParamDataDef[m, p];
 					var paramTypeText = paramDataDef.TypeText[0];
-					parser = new TokenParser.Parser(paramTypeText);
+					parser = new CodeParser(paramTypeText);
 					var paramDataType = DataType.TryParse(new DataType.ParseArgs
 					{
 						Code = parser,
@@ -92,7 +92,7 @@ namespace DkTools.Dict
 
 				var dataDef = repoIntType.PropertyDataDef[p];
 				var typeText = dataDef.TypeText[0];
-				var parser = new TokenParser.Parser(typeText);
+				var parser = new CodeParser(typeText);
 				var dataType = DataType.TryParse(new DataType.ParseArgs
 				{
 					Code = parser,

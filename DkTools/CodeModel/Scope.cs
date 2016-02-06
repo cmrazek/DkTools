@@ -14,7 +14,7 @@ namespace DkTools.CodeModel
 		private bool _visible;	// Is this file directly visible to the user?
 		private DefinitionProvider _defProvider;
 		private string _className;
-		private TokenParser.Parser _code;
+		private CodeParser _code;
 		private IBreakOwner _breakOwner;
 		private IContinueOwner _continueOwner;
 
@@ -134,7 +134,7 @@ namespace DkTools.CodeModel
 			set { _className = value; }
 		}
 
-		public TokenParser.Parser Code
+		public CodeParser Code
 		{
 			get { return _code; }
 		}

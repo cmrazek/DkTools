@@ -5,16 +5,16 @@ using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 
-namespace DkTools.TokenParser
+namespace DkTools
 {
-	internal sealed class Parser	// : IEnumerable<Token> TODO: remove commented out code
+	internal sealed class CodeParser
 	{
 		private int _pos;
 		private string _source;
 		private int _length;
 		private StringBuilder _tokenText = new StringBuilder();
 		private string _tokenTextStr;
-		private TokenType _tokenType = TokenType.Unknown;
+		private CodeType _tokenType = CodeType.Unknown;
 		private bool _returnWhiteSpace = false;
 		private bool _returnComments = false;
 		private int _tokenStartPos;
@@ -24,12 +24,12 @@ namespace DkTools.TokenParser
 
 		private static readonly char[] _lineEndChars = new char[] { '\r', '\n' };
 
-		public Parser(string source)
+		public CodeParser(string source)
 		{
 			SetSource(source);
 		}
 
-		public Parser(string source, bool enumerateNestable)
+		public CodeParser(string source, bool enumerateNestable)
 		{
 			SetSource(source);
 			_enumNestable = enumerateNestable;
@@ -64,7 +64,7 @@ namespace DkTools.TokenParser
 
 					if (_returnWhiteSpace)
 					{
-						_tokenType = TokenType.WhiteSpace;
+						_tokenType = CodeType.WhiteSpace;
 						return true;
 					}
 					else continue;
@@ -80,11 +80,11 @@ namespace DkTools.TokenParser
 					if ((_tokenText.Length == 3 && _tokenText.ToString() == "and") ||
 						(_tokenText.Length == 2 && _tokenText.ToString() == "or"))
 					{
-						_tokenType = TokenParser.TokenType.Operator;
+						_tokenType = CodeType.Operator;
 					}
 					else
 					{
-						_tokenType = TokenType.Word;
+						_tokenType = CodeType.Word;
 					}
 					return true;
 				}
@@ -109,7 +109,7 @@ namespace DkTools.TokenParser
 						else break;
 					}
 
-					_tokenType = TokenType.Number;
+					_tokenType = CodeType.Number;
 					return true;
 				}
 
@@ -172,7 +172,7 @@ namespace DkTools.TokenParser
 						}
 					}
 
-					_tokenType = TokenType.StringLiteral;
+					_tokenType = CodeType.StringLiteral;
 					return true;
 				}
 
@@ -199,7 +199,7 @@ namespace DkTools.TokenParser
 								_tokenText.Append(_source[_pos++]);
 							}
 
-							_tokenType = TokenType.Comment;
+							_tokenType = CodeType.Comment;
 							return true;
 						}
 						else
@@ -239,7 +239,7 @@ namespace DkTools.TokenParser
 						if (_returnComments)
 						{
 							_tokenTerminated = level == 0;
-							_tokenType = TokenType.Comment;
+							_tokenType = CodeType.Comment;
 							return true;
 						}
 						else continue;
@@ -249,13 +249,13 @@ namespace DkTools.TokenParser
 					{
 						_tokenText.Append("/=");
 						_pos += 2;
-						_tokenType = TokenParser.TokenType.Operator;
+						_tokenType = CodeType.Operator;
 						return true;
 					}
 
 					_tokenText.Append("/");
 					_pos++;
-					_tokenType = TokenParser.TokenType.Operator;
+					_tokenType = CodeType.Operator;
 					return true;
 				}
 
@@ -263,7 +263,7 @@ namespace DkTools.TokenParser
 				{
 					_tokenText.Append(ch);
 					_pos++;
-					_tokenType = TokenParser.TokenType.Operator;
+					_tokenType = CodeType.Operator;
 
 					if (_pos < _length && _source[_pos] == '=')
 					{
@@ -278,7 +278,7 @@ namespace DkTools.TokenParser
 				{
 					_tokenText.Append(ch);
 					_pos++;
-					_tokenType = TokenParser.TokenType.Operator;
+					_tokenType = CodeType.Operator;
 					return true;
 				}
 
@@ -286,7 +286,7 @@ namespace DkTools.TokenParser
 				{
 					_tokenText.Append('&');
 					_pos++;
-					_tokenType = TokenParser.TokenType.Operator;
+					_tokenType = CodeType.Operator;
 
 					if (_pos < _length)
 					{
@@ -309,7 +309,7 @@ namespace DkTools.TokenParser
 				{
 					_tokenText.Append('|');
 					_pos++;
-					_tokenType = TokenParser.TokenType.Operator;
+					_tokenType = CodeType.Operator;
 
 					if (_pos < _length && _source[_pos] == '|')
 					{
@@ -331,24 +331,24 @@ namespace DkTools.TokenParser
 							_tokenText.Append(_source[_pos++]);
 						}
 
-						_tokenType = TokenType.Preprocessor;
+						_tokenType = CodeType.Preprocessor;
 						return true;
 					}
 					else
 					{
-						_tokenType = TokenType.Operator;
+						_tokenType = CodeType.Operator;
 						return true;
 					}
 				}
 
 				_tokenText.Append(ch);
 				_pos++;
-				_tokenType = TokenType.Unknown;
+				_tokenType = CodeType.Unknown;
 				return true;
 			}
 
 			// End of file
-			_tokenType = TokenType.WhiteSpace;
+			_tokenType = CodeType.WhiteSpace;
 			_tokenText.Clear();
 			return false;
 		}
@@ -425,7 +425,7 @@ namespace DkTools.TokenParser
 		//	}
 		//}
 
-		public TokenType Type
+		public CodeType Type
 		{
 			get { return _tokenType; }
 		}
@@ -457,7 +457,7 @@ namespace DkTools.TokenParser
 
 			var firstTokenType = _tokenType;
 
-			if (_tokenType == TokenParser.TokenType.Operator)
+			if (_tokenType == CodeType.Operator)
 			{
 				switch (_tokenText.ToString())
 				{
@@ -467,7 +467,7 @@ namespace DkTools.TokenParser
 							_tokenStartPos = startPos;
 							_tokenText.Clear();
 							_tokenText.Append(_source.Substring(_tokenStartPos, _pos - _tokenStartPos));
-							_tokenType = TokenParser.TokenType.Nested;
+							_tokenType = CodeType.Nested;
 							return true;
 						}
 						break;
@@ -477,7 +477,7 @@ namespace DkTools.TokenParser
 							_tokenStartPos = startPos;
 							_tokenText.Clear();
 							_tokenText.Append(_source.Substring(_tokenStartPos, _pos - _tokenStartPos));
-							_tokenType = TokenParser.TokenType.Nested;
+							_tokenType = CodeType.Nested;
 							return true;
 						}
 						break;
@@ -487,7 +487,7 @@ namespace DkTools.TokenParser
 							_tokenStartPos = startPos;
 							_tokenText.Clear();
 							_tokenText.Append(_source.Substring(_tokenStartPos, _pos - _tokenStartPos));
-							_tokenType = TokenParser.TokenType.Nested;
+							_tokenType = CodeType.Nested;
 							return true;
 						}
 						break;
@@ -505,7 +505,7 @@ namespace DkTools.TokenParser
 
 			while (Read())
 			{
-				if (_tokenType == TokenParser.TokenType.Operator)
+				if (_tokenType == CodeType.Operator)
 				{
 					if (_tokenText.ToString() == endText) return true;
 					switch (_tokenText.ToString())
@@ -652,7 +652,7 @@ namespace DkTools.TokenParser
 
 			_tokenText.Clear();
 			_tokenTextStr = null;
-			_tokenType = TokenParser.TokenType.Word;
+			_tokenType = CodeType.Word;
 			_tokenStartPos = _pos;
 			_tokenTerminated = true;
 
@@ -691,7 +691,7 @@ namespace DkTools.TokenParser
 
 			_tokenText.Clear();
 			_tokenTextStr = null;
-			_tokenType = TokenParser.TokenType.Word;
+			_tokenType = CodeType.Word;
 			_tokenStartPos = _pos;
 			_tokenTerminated = true;
 
@@ -737,7 +737,7 @@ namespace DkTools.TokenParser
 			_tokenText.Clear();
 			_tokenText.Append(expecting);
 			_tokenTextStr = null;
-			_tokenType = TokenParser.TokenType.Unknown;
+			_tokenType = CodeType.Unknown;
 			return true;
 		}
 
@@ -764,7 +764,7 @@ namespace DkTools.TokenParser
 			_tokenText.Clear();
 			_tokenText.Append(expecting);
 			_tokenTextStr = null;
-			_tokenType = TokenParser.TokenType.Unknown;
+			_tokenType = CodeType.Unknown;
 			return true;
 		}
 
@@ -790,7 +790,7 @@ namespace DkTools.TokenParser
 			_tokenText.Clear();
 			_tokenText.Append(expecting);
 			_tokenTextStr = null;
-			_tokenType = TokenParser.TokenType.Unknown;
+			_tokenType = CodeType.Unknown;
 			return true;
 		}
 
@@ -809,7 +809,7 @@ namespace DkTools.TokenParser
 			_tokenText.Clear();
 			_tokenText.Append(match.Value);
 			_tokenTextStr = null;
-			_tokenType = TokenParser.TokenType.Unknown;
+			_tokenType = CodeType.Unknown;
 			return true;
 		}
 
@@ -886,7 +886,7 @@ namespace DkTools.TokenParser
 			_tokenText.Clear();
 			_tokenTextStr = null;
 			_tokenStartPos = Position;
-			_tokenType = TokenParser.TokenType.Number;
+			_tokenType = CodeType.Number;
 
 			var gotDot = false;
 			while (_pos < _length)
@@ -978,7 +978,7 @@ namespace DkTools.TokenParser
 				}
 			}
 
-			_tokenType = TokenType.StringLiteral;
+			_tokenType = CodeType.StringLiteral;
 			return true;
 		}
 
@@ -1065,11 +1065,11 @@ namespace DkTools.TokenParser
 
 		public static string NormalizeText(string text)
 		{
-			var code = new Parser(text);
+			var code = new CodeParser(text);
 			var needSpace = false;
-			TokenType lastTokenType = TokenType.Unknown;
+			CodeType lastTokenType = CodeType.Unknown;
 			string lastTokenText = null;
-			TokenType tokenType;
+			CodeType tokenType;
 			string tokenText;
 			var sb = new StringBuilder(text.Length);
 
@@ -1090,7 +1090,7 @@ namespace DkTools.TokenParser
 				{
 					needSpace = false;
 				}
-				else if (tokenType == TokenType.Operator)
+				else if (tokenType == CodeType.Operator)
 				{
 					switch (tokenText)
 					{
@@ -1104,24 +1104,24 @@ namespace DkTools.TokenParser
 							needSpace = false;
 							break;
 						case "(":
-							if (lastTokenText == "(" || lastTokenText == "[" || lastTokenType == TokenType.Word) needSpace = false;
+							if (lastTokenText == "(" || lastTokenText == "[" || lastTokenType == CodeType.Word) needSpace = false;
 							else needSpace = true;
 							break;
 						case ")":
 							if (lastTokenText == "(" || lastTokenText == ")" || lastTokenText == "]" ||
-								lastTokenType == TokenType.Word || lastTokenType == TokenType.Number || lastTokenType == TokenType.StringLiteral)
+								lastTokenType == CodeType.Word || lastTokenType == CodeType.Number || lastTokenType == CodeType.StringLiteral)
 							{
 								needSpace = false;
 							}
 							else needSpace = true;
 							break;
 						case "[":
-							if (lastTokenText == "(" || lastTokenText == "[" || lastTokenType == TokenType.Word) needSpace = false;
+							if (lastTokenText == "(" || lastTokenText == "[" || lastTokenType == CodeType.Word) needSpace = false;
 							else needSpace = true;
 							break;
 						case "]":
-							if (lastTokenText == ")" || lastTokenText == "]" || lastTokenType == TokenType.Word || lastTokenType == TokenType.Number ||
-								lastTokenType == TokenType.StringLiteral)
+							if (lastTokenText == ")" || lastTokenText == "]" || lastTokenType == CodeType.Word || lastTokenType == CodeType.Number ||
+								lastTokenType == CodeType.StringLiteral)
 							{
 								needSpace = false;
 							}
@@ -1132,17 +1132,17 @@ namespace DkTools.TokenParser
 							break;
 					}
 				}
-				else if (tokenType == TokenType.Word)
+				else if (tokenType == CodeType.Word)
 				{
 					if (lastTokenText == "&") needSpace = false;
 					else needSpace = true;
 				}
-				else if (tokenType == TokenType.Number || tokenType == TokenType.StringLiteral)
+				else if (tokenType == CodeType.Number || tokenType == CodeType.StringLiteral)
 				{
 					if (lastTokenText == "(" || lastTokenText == "[") needSpace = false;
 					else needSpace = true;
 				}
-				else if (tokenType == TokenType.Preprocessor)
+				else if (tokenType == CodeType.Preprocessor)
 				{
 					needSpace = true;
 				}

@@ -32,7 +32,7 @@ namespace DkTools.Dict
 			var data = repoCol as DICTSRVRLib.IPDataDef;
 
 			var dataTypeText = data.TypeText[0];
-			var parser = new TokenParser.Parser(dataTypeText);
+			var parser = new CodeParser(dataTypeText);
 			DataType = CodeModel.DataType.TryParse(new CodeModel.DataType.ParseArgs
 			{
 				Code = parser,

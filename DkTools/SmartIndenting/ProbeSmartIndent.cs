@@ -214,14 +214,14 @@ namespace DkTools.SmartIndenting
 
 		public static bool PrevLineTextWarrantsIndent(string lineText)
 		{
-			var code = new TokenParser.Parser(lineText);
+			var code = new CodeParser(lineText);
 			var indent = 0;
 
 			if (_rxCaseLine.IsMatch(lineText)) return true;
 
 			while (code.Read())
 			{
-				if (code.Type == TokenParser.TokenType.Operator)
+				if (code.Type == CodeType.Operator)
 				{
 					switch (code.Text)
 					{

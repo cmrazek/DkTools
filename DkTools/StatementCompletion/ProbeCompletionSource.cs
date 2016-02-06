@@ -591,7 +591,7 @@ namespace DkTools.StatementCompletion
 			var editPos = model.AdjustPosition(snapPt);
 			var parentToken = model.FindTokens(editPos, t => t is GroupToken).LastOrDefault() as GroupToken;
 
-			var argParser = new TokenParser.Parser(argText);
+			var argParser = new CodeParser(argText);
 			var dataType = CodeModel.DataType.TryParse(new DataType.ParseArgs
 			{
 				Code = argParser,
@@ -629,7 +629,7 @@ namespace DkTools.StatementCompletion
 
 			while (true)
 			{
-				var parser = new TokenParser.Parser(sb.ToString());
+				var parser = new CodeParser(sb.ToString());
 
 				foreach (var match in rxFuncCall.Matches(parser.Source).Cast<Match>().Reverse())
 				{
@@ -645,7 +645,7 @@ namespace DkTools.StatementCompletion
 					{
 						parser.Position = match.Groups[3].Index;	// position of start bracket
 						var startPos = parser.Position;
-						if (parser.ReadNestable() && parser.Type != TokenParser.TokenType.Nested)
+						if (parser.ReadNestable() && parser.Type != CodeType.Nested)
 						{
 							className = match.Groups[1].Value;
 							funcName = match.Groups[2].Value;

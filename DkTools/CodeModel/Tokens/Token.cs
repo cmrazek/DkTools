@@ -91,7 +91,7 @@ namespace DkTools.CodeModel.Tokens
 			get { return _scope.File; }
 		}
 
-		public TokenParser.Parser Code
+		public CodeParser Code
 		{
 			get { return _scope.Code; }
 		}
@@ -197,7 +197,7 @@ namespace DkTools.CodeModel.Tokens
 			get
 			{
 				if (this is GroupToken) return Token.GetNormalizedText((this as GroupToken).SubTokens);
-				return TokenParser.Parser.NormalizeText(Text);
+				return CodeParser.NormalizeText(Text);
 			}
 		}
 

@@ -68,7 +68,7 @@ namespace DkTools.CodeModel.Tokens
 
 				switch (code.Type)
 				{
-					case TokenParser.TokenType.Word:
+					case CodeType.Word:
 						{
 							var word = code.Text;
 							var wordSpan = code.Span;
@@ -79,15 +79,15 @@ namespace DkTools.CodeModel.Tokens
 						}
 						break;
 
-					case TokenParser.TokenType.Number:
+					case CodeType.Number:
 						exp.AddToken(new NumberToken(scope, code.Span, code.Text));
 						break;
 
-					case TokenParser.TokenType.StringLiteral:
+					case CodeType.StringLiteral:
 						exp.AddToken(new StringLiteralToken(scope, code.Span, code.Text));
 						break;
 
-					case TokenParser.TokenType.Operator:
+					case CodeType.Operator:
 						switch (code.Text)
 						{
 							case "(":
@@ -117,7 +117,7 @@ namespace DkTools.CodeModel.Tokens
 						}
 						break;
 
-					case TokenParser.TokenType.Preprocessor:
+					case CodeType.Preprocessor:
 						exp.AddToken(new PreprocessorToken(scope, code.Span, code.Text));
 						break;
 
@@ -132,6 +132,13 @@ namespace DkTools.CodeModel.Tokens
 
 		private static Token ProcessWord(ExpressionToken exp, Scope scope, string word, Span wordSpan)
 		{
+			// Global keyword that take effect anywhere.
+			switch (word)
+			{
+				case "static":
+					return new KeywordToken(scope, wordSpan, word);
+			}
+
 			var code = scope.Code;
 
 			if (code.PeekExact('.'))

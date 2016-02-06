@@ -3,9 +3,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
-namespace DkTools.TokenParser
+namespace DkTools
 {
-	internal enum TokenType
+	internal enum CodeType
 	{
 		Unknown,
 		WhiteSpace,

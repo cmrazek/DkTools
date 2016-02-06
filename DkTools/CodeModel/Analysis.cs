@@ -15,7 +15,7 @@ namespace DkTools.CodeModel
 		private CodeModel _model;
 		private ErrorProvider _errProv;
 		private CodeSource _source;
-		private TokenParser.Parser _code;
+		private CodeParser _code;
 		private DefinitionProvider _defProv;
 		private PreprocessorModel.LocalFunction _func;
 
@@ -58,7 +58,7 @@ namespace DkTools.CodeModel
 			_func = func;
 
 			var funcBodySource = _source.Text.Substring(_func.StartPos, _func.EndPos - _func.StartPos);
-			_code = new TokenParser.Parser(funcBodySource);
+			_code = new CodeParser(funcBodySource);
 			_code.DocumentOffset = _func.StartPos;
 
 			var pos = _code.Position;
@@ -393,7 +393,7 @@ namespace DkTools.CodeModel
 
 			switch (_code.TokenType)
 			{
-				case TokenParser.TokenType.Word:
+				case CodeType.Word:
 					{
 						var word1 = _code.TokenText;
 						var word1Span = _code.TokenSpan;
@@ -481,27 +481,27 @@ namespace DkTools.CodeModel
 						}
 					}
 
-				case TokenParser.TokenType.StringLiteral:
+				case CodeType.StringLiteral:
 					{
 						var text = _code.TokenText;
 						var textSpan = _code.TokenSpan;
 
 						if (prevNode != null && prevNode.RequiresRValueEnumOption)
 						{
-							var optionText = TokenParser.Parser.StringLiteralToString(text);
+							var optionText = CodeParser.StringLiteralToString(text);
 							if (prevNode.IsValidRValueEnumOption(text))
 							{
 								return new EnumOptionNode(textSpan, optionText);
 							}
 						}
 
-						return new StringLiteralNode(textSpan, TokenParser.Parser.StringLiteralToString(text));
+						return new StringLiteralNode(textSpan, CodeParser.StringLiteralToString(text));
 					}
 
-				case TokenParser.TokenType.Number:
+				case CodeType.Number:
 					return new NumberNode(_code.TokenSpan, _code.TokenText);
 
-				case TokenParser.TokenType.Operator:
+				case CodeType.Operator:
 					{
 						var op = _code.TokenText;
 						var opSpan = _code.TokenSpan;
