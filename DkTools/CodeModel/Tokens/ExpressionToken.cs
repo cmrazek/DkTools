@@ -52,7 +52,9 @@ namespace DkTools.CodeModel.Tokens
 				}
 			};
 
-			while (!code.EndOfFile)
+			var abortParsing = false;
+
+			while (!code.EndOfFile && !abortParsing)
 			{
 				// Statement breaking tokens
 				if (code.PeekExact(';') || code.PeekExact('{') || code.PeekExact('}')) return exp;
@@ -84,7 +86,13 @@ namespace DkTools.CodeModel.Tokens
 							}
 							else
 							{
-								exp.AddToken(ProcessWord(exp, scope, word, wordSpan));
+								var wordToken = ProcessWord(exp, scope, word, wordSpan);
+								if (wordToken != null) exp.AddToken(wordToken);
+								else
+								{
+									code.Position = wordSpan.Start;
+									abortParsing = true;
+								}
 							}
 						}
 						break;
@@ -244,6 +252,13 @@ namespace DkTools.CodeModel.Tokens
 				if (def.RequiresArguments || def.RequiresChild) continue;
 
 				return new IdentifierToken(scope, wordSpan, word, def);
+			}
+
+			if (StatementToken.StatementStartingWords.Contains(word))
+			{
+				// There could be a statement without a terminating ';' before this.
+				// This can happen if it's a macro that already includes the ';'.
+				return null;
 			}
 
 			return new UnknownToken(scope, wordSpan, word);

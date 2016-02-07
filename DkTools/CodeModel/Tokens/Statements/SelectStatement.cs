@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using DkTools.CodeModel.Definitions;
 
 namespace DkTools.CodeModel.Tokens
 {
@@ -30,10 +31,14 @@ namespace DkTools.CodeModel.Tokens
 			if (!code.ReadExactWholeWord("from")) return ret;
 			ret.AddToken(new KeywordToken(scope, code.Span, "from"));
 
+			ExtractTableDefinition extractDef = null;
+			Dict.Table table = null;
+
 			if (code.ReadWord())
 			{
-				var table = ProbeEnvironment.GetTable(code.Text);
-				if (table != null) ret.AddToken(new TableToken(scope, code.Span, code.Text, table.BaseDefinition));
+				if ((table = ProbeEnvironment.GetTable(code.Text)) != null) ret.AddToken(new TableToken(scope, code.Span, code.Text, table.BaseDefinition));
+				else if ((extractDef = scope.DefinitionProvider.GetAny<ExtractTableDefinition>(code.TokenStartPostion, code.Text).FirstOrDefault()) != null)
+					ret.AddToken(new IdentifierToken(scope, code.Span, code.Text, extractDef));
 				else ret.AddToken(new UnknownToken(scope, code.Span, code.Text));
 			}
 
@@ -43,8 +48,7 @@ namespace DkTools.CodeModel.Tokens
 
 				if (code.ReadWord())
 				{
-					var table = ProbeEnvironment.GetTable(code.Text);
-					if (table != null) ret.AddToken(new TableToken(scope, code.Span, code.Text, table.BaseDefinition));
+					if ((table = ProbeEnvironment.GetTable(code.Text)) != null) ret.AddToken(new TableToken(scope, code.Span, code.Text, table.BaseDefinition));
 					else ret.AddToken(new UnknownToken(scope, code.Span, code.Text));
 				}
 			}
@@ -68,8 +72,7 @@ namespace DkTools.CodeModel.Tokens
 					}
 					else if (code.ReadWord())
 					{
-						var table = ProbeEnvironment.GetTable(code.Text);
-						if (table != null) ret.AddToken(new TableToken(scope, code.Span, code.Text, table.BaseDefinition));
+						if ((table = ProbeEnvironment.GetTable(code.Text)) != null) ret.AddToken(new TableToken(scope, code.Span, code.Text, table.BaseDefinition));
 						else ret.AddToken(new UnknownToken(scope, code.Span, code.Text));
 						expectingComma = true;
 					}
@@ -78,15 +81,16 @@ namespace DkTools.CodeModel.Tokens
 			}
 
 			// WHILE and ORDER BY
-			var gotWhile = false;
+			var gotWhere = false;
 			var gotOrderBy = false;
+
 			while (!code.EndOfFile)
 			{
 				if (code.PeekExact('{')) break;
-				if (!gotWhile && code.ReadExactWholeWord("while"))
+				if (!gotWhere && code.ReadExactWholeWord("where"))
 				{
 					ret.AddToken(new KeywordToken(scope, code.Span, code.Text));
-					gotWhile = true;
+					gotWhere = true;
 
 					var exp = ExpressionToken.TryParse(scope, _whereEndTokens);
 					if (exp != null) ret.AddToken(exp);
@@ -100,53 +104,28 @@ namespace DkTools.CodeModel.Tokens
 					if (!code.ReadExactWholeWord("by")) break;
 					ret.AddToken(new KeywordToken(scope, code.Span, code.Text));
 
-					var expectingComma = false;
-
 					while (!code.EndOfFile)
 					{
 						if (code.PeekExact('{')) break;
-						if (expectingComma)
+
+						if (code.ReadExact(','))
 						{
-							if (code.ReadExact(','))
-							{
-								ret.AddToken(new DelimiterToken(scope, code.Span));
-								expectingComma = false;
-							}
-							else break;
+							ret.AddToken(new DelimiterToken(scope, code.Span));
+							continue;
 						}
-						else if (code.ReadWord())
+
+						if (code.ReadExactWholeWord("asc") || code.ReadExactWholeWord("desc"))
 						{
-							var table = ProbeEnvironment.GetTable(code.Text);
-							if (table != null)
-							{
-								var tableToken = new TableToken(scope, code.Span, code.Text, table.BaseDefinition);
-								if (code.ReadExact('.'))
-								{
-									var dotToken = new DotToken(scope, code.Span);
-									if (code.ReadWord())
-									{
-										var field = table.GetField(code.Text);
-										if (field != null)
-										{
-											var fieldName = code.Text;
-											var fieldSpan = code.Span;
-
-											var fieldToken = new TableFieldToken(scope, fieldSpan, fieldName, field);
-											ret.AddToken(new TableAndFieldToken(scope, tableToken, dotToken, fieldToken));
-										}
-										else ret.AddToken(new CompositeToken(scope, null, tableToken, dotToken, new UnknownToken(scope, code.Span, code.Text)));
-									}
-									else ret.AddToken(new CompositeToken(scope, null, tableToken, dotToken));
-								}
-								else ret.AddToken(tableToken);
-							}
-							else ret.AddToken(new UnknownToken(scope, code.Span, code.Text));
-
-							if (code.ReadExactWholeWord("asc") || code.ReadExactWholeWord("desc")) ret.AddToken(new KeywordToken(scope, code.Span, code.Text));
-
-							expectingComma = true;
+							ret.AddToken(new KeywordToken(scope, code.Span, code.Text));
+							continue;
 						}
-						else break;
+
+						if (TryParseColumn(scope, ret, true, extractDef))
+						{
+							continue;
+						}
+
+						break;
 					}
 				}
 				else break;
@@ -179,7 +158,7 @@ namespace DkTools.CodeModel.Tokens
 					}
 					else if (code.ReadExactWholeWord("before") || code.ReadExactWholeWord("after"))
 					{
-						braces.AddToken(new KeywordToken(scope, code.Span, "before"));
+						braces.AddToken(new KeywordToken(scope, code.Span, code.Text));
 
 						if (!code.ReadExactWholeWord("group")) continue;
 						braces.AddToken(new KeywordToken(scope, code.Span, "group"));
@@ -191,30 +170,10 @@ namespace DkTools.CodeModel.Tokens
 							if (!code.ReadExact(':')) continue;
 							braces.AddToken(new OperatorToken(scope, code.Span, ":"));
 						}
-						else if (code.ReadWord())
+						else if (TryParseColumn(scope, braces, false, extractDef))
 						{
-							var table = ProbeEnvironment.GetTable(code.Text);
-							if (table != null)
-							{
-								var tableToken = new TableToken(scope, code.Span, code.Text, table.BaseDefinition);
-								if (code.ReadExact('.'))
-								{
-									var dotToken = new DotToken(scope, code.Span);
-									if (code.ReadWord())
-									{
-										var field = table.GetField(code.Text);
-										if (field != null)
-										{
-											var fieldToken = new TableFieldToken(scope, code.Span, code.Text, field);
-											braces.AddToken(new TableAndFieldToken(scope, tableToken, dotToken, fieldToken));
-										}
-										else braces.AddToken(new CompositeToken(scope, null, tableToken, dotToken, new UnknownToken(scope, code.Span, code.Text)));
-									}
-									else braces.AddToken(new CompositeToken(scope, null, tableToken, dotToken));
-								}
-								else braces.AddToken(tableToken);
-							}
-							else braces.AddToken(new UnknownToken(scope, code.Span, code.Text));
+							if (!code.ReadExact(':')) continue;
+							braces.AddToken(new OperatorToken(scope, code.Span, ":"));
 						}
 					}
 					else if (code.ReadExactWholeWord("default"))
@@ -233,6 +192,70 @@ namespace DkTools.CodeModel.Tokens
 			}
 
 			return ret;
+		}
+
+		private static bool TryParseColumn(Scope scope, GroupToken parent, bool allowRelInd, ExtractTableDefinition extractDef)
+		{
+			var code = scope.Code;
+			if (code.ReadWord())
+			{
+				var table = ProbeEnvironment.GetTable(code.Text);
+				if (table != null)
+				{
+					var tableToken = new TableToken(scope, code.Span, code.Text, table.BaseDefinition);
+					if (code.ReadExact('.'))
+					{
+						var dotToken = new DotToken(scope, code.Span);
+						if (code.ReadWord())
+						{
+							var field = table.GetField(code.Text);
+							if (field != null)
+							{
+								var fieldName = code.Text;
+								var fieldSpan = code.Span;
+
+								var fieldToken = new TableFieldToken(scope, fieldSpan, fieldName, field);
+								parent.AddToken(new TableAndFieldToken(scope, tableToken, dotToken, fieldToken));
+							}
+							else parent.AddToken(new CompositeToken(scope, null, tableToken, dotToken, new UnknownToken(scope, code.Span, code.Text)));
+						}
+						else parent.AddToken(new CompositeToken(scope, null, tableToken, dotToken));
+					}
+					else parent.AddToken(tableToken);
+					return true;
+				}
+
+				if (allowRelInd)
+				{
+					var relind = ProbeEnvironment.GetRelInd(code.Text);
+					if (relind != null)
+					{
+						parent.AddToken(new RelIndToken(scope, code.Span, code.Text, relind.Definition));
+						return true;
+					}
+				}
+
+				if (extractDef != null && code.Text == extractDef.Name)
+				{
+					parent.AddToken(new IdentifierToken(scope, code.Span, code.Text, extractDef));
+					if (code.ReadExact('.'))
+					{
+						parent.AddToken(new DotToken(scope, code.Span));
+						var word = code.PeekWord();
+						if (!string.IsNullOrEmpty(word))
+						{
+							var childDef = extractDef.GetChildDefinition(word);
+							if (childDef != null)
+							{
+								parent.AddToken(new IdentifierToken(scope, code.MovePeekedSpan(), word, childDef));
+							}
+						}
+					}
+					return true;
+				}
+			}
+
+			return false;
 		}
 
 		public void OnBreakAttached(BreakStatement breakToken)

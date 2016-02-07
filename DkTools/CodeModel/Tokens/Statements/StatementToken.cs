@@ -16,6 +16,8 @@ namespace DkTools.CodeModel.Tokens
 
 		public delegate void StatementParseCallback(Token token);
 
+		public static readonly string[] StatementStartingWords = new string[] { "break", "continue", "extern", "extract", "for", "if", "return", "select", "switch", "while" };
+
 		public static StatementToken TryParse(Scope scope, StatementParseCallback callback = null)
 		{
 			var code = scope.Code;
