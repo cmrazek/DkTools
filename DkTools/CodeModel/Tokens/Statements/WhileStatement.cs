@@ -5,7 +5,7 @@ using System.Text;
 
 namespace DkTools.CodeModel.Tokens
 {
-	internal class WhileStatement : GroupToken
+	internal class WhileStatement : GroupToken, IBreakOwner, IContinueOwner
 	{
 		private ExpressionToken _expressionToken;
 		private BracesToken _bodyToken;	// Could be null for unfinished code.
@@ -20,6 +20,10 @@ namespace DkTools.CodeModel.Tokens
 		{
 			var code = scope.Code;
 			var ret = new WhileStatement(scope, whileToken);
+
+			scope = scope.Clone();
+			scope.BreakOwner = ret;
+			scope.ContinueOwner = ret;
 
 			// Expression
 			var expressionScope = scope.Clone();
@@ -40,6 +44,14 @@ namespace DkTools.CodeModel.Tokens
 			}
 
 			return ret;
+		}
+
+		public void OnBreakAttached(BreakStatement breakToken)
+		{
+		}
+
+		public void OnContinueAttached(ContinueStatement continueToken)
+		{
 		}
 	}
 }

@@ -710,6 +710,13 @@ namespace DkTools.StatementCompletion
 				}
 			}
 
+			var bottomToken = tokens.LastOrDefault();
+			if (bottomToken != null)
+			{
+				if (bottomToken.Scope.BreakOwner != null) yield return CreateCompletion("break", CompletionType.Keyword);
+				if (bottomToken.Scope.ContinueOwner != null) yield return CreateCompletion("continue", CompletionType.Keyword);
+			}
+
 			// Global keywords
 			foreach (var k in Constants.GlobalKeywords)
 			{

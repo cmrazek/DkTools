@@ -277,6 +277,7 @@
     <Compile Include="CodeModel\Tokens\ExternStatement.cs" />
     <Compile Include="CodeModel\Tokens\IBreakOwner.cs" />
     <Compile Include="CodeModel\Tokens\IContinueOwner.cs" />
+    <Compile Include="CodeModel\Tokens\Statements\ForStatement.cs" />
     <Compile Include="CodeModel\Tokens\Statements\ReturnStatement.cs" />
     <Compile Include="CodeModel\Tokens\Statements\StatementToken.cs" />
     <Compile Include="CodeModel\Tokens\Operators\CompletionOperator.cs" />

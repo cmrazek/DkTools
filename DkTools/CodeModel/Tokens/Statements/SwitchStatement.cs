@@ -8,7 +8,6 @@ namespace DkTools.CodeModel.Tokens
 	internal class SwitchStatement : GroupToken, IBreakOwner
 	{
 		private ExpressionToken _expressionToken;
-		private OperatorToken _compareOpToken;	// Could be null if not used
 		private BracesToken _bodyToken;	// Could be null for unfinished code.
 
 		private SwitchStatement(Scope scope, KeywordToken switchToken)

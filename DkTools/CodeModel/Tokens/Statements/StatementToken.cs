@@ -68,6 +68,14 @@ namespace DkTools.CodeModel.Tokens
 								if (callback != null) callback(token);
 								return ret;
 							}
+						case "for":
+							{
+								var keywordToken = new KeywordToken(scope, code.MovePeekedSpan(), code.Text);
+								var token = ForStatement.Parse(scope, keywordToken);
+								ret.AddToken(token);
+								if (callback != null) callback(token);
+								return ret;
+							}
 						case "if":
 							{
 								var keywordToken = new KeywordToken(scope, code.MovePeekedSpan(), code.Text);
@@ -104,6 +112,7 @@ namespace DkTools.CodeModel.Tokens
 							{
 								var keywordToken = new KeywordToken(scope, code.MovePeekedSpan(), code.Text);
 								var token = WhileStatement.Parse(scope, keywordToken);
+								ret.AddToken(token);
 								if (callback != null) callback(token);
 								return ret;
 							}
