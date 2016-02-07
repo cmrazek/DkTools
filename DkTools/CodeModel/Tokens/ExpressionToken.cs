@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using DkTools.CodeModel.Definitions;
+using DkTools.CodeModel.Tokens.Operators;
 
 namespace DkTools.CodeModel.Tokens
 {
@@ -142,7 +143,15 @@ namespace DkTools.CodeModel.Tokens
 							case "<=":
 							case ">":
 							case ">=":
-								exp.AddToken(ComparisonOperatorToken.Parse(scope, exp.LastChild, new OperatorToken(scope, code.Span, code.Text), endTokens));
+								exp.AddToken(ComparisonOperator.Parse(scope, exp.LastChild, new OperatorToken(scope, code.Span, code.Text), endTokens));
+								break;
+							case "=":
+							case "+=":
+							case "-=":
+							case "*=":
+							case "/=":
+							case "%=":
+								exp.AddToken(AssignmentOperator.Parse(scope, exp.LastChild, new OperatorToken(scope, code.Span, code.Text), endTokens));
 								break;
 							default:
 								exp.AddToken(new OperatorToken(scope, code.Span, code.Text));
@@ -236,7 +245,7 @@ namespace DkTools.CodeModel.Tokens
 						compToken.AddToken(wordToken);
 						compToken.AddToken(argsToken);
 
-						if (def.AllowsFunctionBody)
+						if (def.AllowsFunctionBody && (scope.Hint & ScopeHint.SuppressFunctionDefinition) == 0)
 						{
 							ParseFunctionAttributes(exp, scope, compToken);
 							if (code.PeekExact('{')) compToken.AddToken(BracesToken.Parse(scope, def, argsToken.Span.End + 1));
@@ -254,7 +263,7 @@ namespace DkTools.CodeModel.Tokens
 				return new IdentifierToken(scope, wordSpan, word, def);
 			}
 
-			if (StatementToken.StatementStartingWords.Contains(word))
+			if (StatementToken.IsStatementBreakingWord(scope, word))
 			{
 				// There could be a statement without a terminating ';' before this.
 				// This can happen if it's a macro that already includes the ';'.

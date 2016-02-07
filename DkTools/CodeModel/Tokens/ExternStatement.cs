@@ -45,14 +45,18 @@ namespace DkTools.CodeModel.Tokens
 			var funcName = code.Text;
 			var funcNameSpan = code.Span;
 			var funcDef = scope.DefinitionProvider.GetAny<FunctionDefinition>(funcNameSpan.Start, funcName).FirstOrDefault();
-			if (funcDef != null) ret.AddToken(new IdentifierToken(scope, funcNameSpan, funcName, funcDef));
+			if (funcDef != null)
+			{
+				ret.AddToken(new IdentifierToken(scope, funcNameSpan, funcName, funcDef));
+
+				// Arguments
+				if (!code.ReadExact('(')) return ret;
+				ret.AddToken(ArgsToken.Parse(scope, new OperatorToken(scope, code.Span, "("), funcDef.ArgumentDataTypes));
+
+				ParseFunctionAttributes(scope, ret);
+			}
 			else ret.AddToken(new UnknownToken(scope, funcNameSpan, funcName));
 
-			// Arguments
-			if (!code.ReadExact('(')) return ret;
-			ret.AddToken(ArgsToken.Parse(scope, new OperatorToken(scope, code.Span, "("), funcDef.ArgumentDataTypes));
-
-			ParseFunctionAttributes(scope, ret);
 			return ret;
 		}
 

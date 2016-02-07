@@ -6,20 +6,20 @@ using System.Threading.Tasks;
 
 namespace DkTools.CodeModel.Tokens
 {
-	class ComparisonOperatorToken : CompletionOperator
+	class ComparisonOperator : CompletionOperator
 	{
 		private DataType _expectedDataType;
 
-		public ComparisonOperatorToken(Scope scope)
+		public ComparisonOperator(Scope scope)
 			: base(scope)
 		{
 		}
 
 		private static readonly string[] _endTokens = new string[] { "and", "or", "?", ":", "=", "+=", "-=", "*=", "/=", "%=" };
 
-		public static ComparisonOperatorToken Parse(Scope scope, Token lastToken, OperatorToken opToken, IEnumerable<string> endTokens)
+		public static ComparisonOperator Parse(Scope scope, Token lastToken, OperatorToken opToken, IEnumerable<string> endTokens)
 		{
-			var ret = new ComparisonOperatorToken(scope);
+			var ret = new ComparisonOperator(scope);
 
 			if (lastToken != null)
 			{

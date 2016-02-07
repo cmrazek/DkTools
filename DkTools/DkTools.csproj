@@ -268,8 +268,9 @@
     <Compile Include="CodeModel\AnalysisNodes\TableAndFieldNode.cs" />
     <Compile Include="CodeModel\AnalysisNodes\UnknownNode.cs" />
     <Compile Include="CodeModel\Tokens\ArgsToken.cs" />
+    <Compile Include="CodeModel\Tokens\Operators\AssignmentOperator.cs" />
     <Compile Include="CodeModel\Tokens\Statements\BreakStatement.cs" />
-    <Compile Include="CodeModel\Tokens\Operators\ComparisonOperatorToken.cs" />
+    <Compile Include="CodeModel\Tokens\Operators\ComparisonOperator.cs" />
     <Compile Include="CodeModel\Tokens\CompositeToken.cs" />
     <Compile Include="CodeModel\Tokens\Statements\ContinueStatement.cs" />
     <Compile Include="CodeModel\Tokens\EnumOptionToken.cs" />

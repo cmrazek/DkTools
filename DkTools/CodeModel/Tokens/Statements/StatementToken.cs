@@ -16,7 +16,30 @@ namespace DkTools.CodeModel.Tokens
 
 		public delegate void StatementParseCallback(Token token);
 
-		public static readonly string[] StatementStartingWords = new string[] { "break", "col", "continue", "extern", "extract", "for", "header", "if", "return", "row", "select", "switch", "while" };
+		public static bool IsStatementBreakingWord(Scope scope, string word)
+		{
+			switch (word)
+			{
+				case "col":
+				case "extern":
+				case "extract":
+				case "for":
+				case "header":
+				case "if":
+				case "return":
+				case "row":
+				case "select":
+				case "switch":
+				case "while":
+					return true;
+				case "continue":
+					return scope.ContinueOwner != null;
+				case "break":
+					return scope.BreakOwner != null;
+				default:
+					return false;
+			}
+		}
 
 		public static StatementToken TryParse(Scope scope, StatementParseCallback callback = null)
 		{
