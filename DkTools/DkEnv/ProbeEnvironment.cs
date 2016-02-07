@@ -1043,5 +1043,43 @@ namespace DkTools
 			}
 		}
 		#endregion
+
+		#region Tags
+		public static bool IsValidTagName(string name)
+		{
+			switch (name)
+			{
+				case "accesstype":
+				case "checkbox":
+				case "cols":
+				case "defaultenumcontrolstyle":
+				case "disabledborder":
+				case "formatstring":
+				case "hideModalMenus":
+				case "probeform:col":
+				case "probeform:expressentry":
+				case "probeform:nobuttonbar":
+				case "probeform:row":
+				case "probeform:SelectedHighLight":
+				case "probeform:ShowChildForm":
+				case "probeform:tabkeycapture":
+				case "probeformgroup:folder":
+				case "probeformgroup:folderorder":
+				case "probeformgroup:homeform":
+				case "probeformgroup:LogicalCascadeClearParent":
+				case "probeformgroup:nextform":
+				case "probeformgroup:stayloaded":
+				case "probeformgroup:tooln":
+				case "probegroupmenu:alltables":
+				case "rows":
+				case "scrollbars":
+				case "wordwrap":
+					return true;
+
+				default:
+					return false;
+			}
+		}
+		#endregion
 	}
 }

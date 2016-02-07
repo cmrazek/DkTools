@@ -1039,7 +1039,7 @@ namespace DkTools.CodeModel
 			if (code.ReadExact("Level"))
 			{
 				sb.Append(" Level");
-				a.OnKeyword(code.Span, code.Text);
+				a.OnDataTypeKeyword(code.Span, code.Text, null);
 				if (code.ReadNumber())
 				{
 					sb.Append(' ');
@@ -1238,30 +1238,41 @@ namespace DkTools.CodeModel
 					case "NOUSE":
 					case "REQUIRED":
 					case "PROBE":
-						a.OnKeyword(code.Span, code.Text);
+						a.OnDataTypeKeyword(code.Span, code.Text, null);
 						sb.Append(' ');
 						sb.Append(word);
 						return true;
 
 					case "tag":
-						sb.Append(" tag");
-						a.OnKeyword(code.Span, code.Text);
-						if (code.ReadWord())
 						{
-							sb.Append(' ');
-							sb.Append(code.Text);
-							a.OnKeyword(code.Span, code.Text);
-							if (code.ReadStringLiteral())
+							sb.Append(" tag");
+							a.OnDataTypeKeyword(code.Span, code.Text, null);
+
+							var resetPos = code.Position;
+							if (code.ReadTagName())
 							{
-								sb.Append(' ');
-								sb.Append(code.Text);
-								a.OnStringLiteral(code.Span, code.Text);
-							}
-							else if (code.ReadWord())
-							{
-								sb.Append(' ');
-								sb.Append(code.Text);
-								a.OnKeyword(code.Span, code.Text);
+								if (ProbeEnvironment.IsValidTagName(code.Text))
+								{
+									sb.Append(' ');
+									sb.Append(code.Text);
+									a.OnKeyword(code.Span, code.Text);
+									if (code.ReadStringLiteral())
+									{
+										sb.Append(' ');
+										sb.Append(code.Text);
+										a.OnStringLiteral(code.Span, code.Text);
+									}
+									else if (code.ReadWord())
+									{
+										sb.Append(' ');
+										sb.Append(code.Text);
+										a.OnDataTypeKeyword(code.Span, code.Text, null);
+									}
+								}
+								else
+								{
+									code.Position = resetPos;
+								}
 							}
 						}
 						return true;
@@ -1271,7 +1282,7 @@ namespace DkTools.CodeModel
 						{
 							sb.Append(' ');
 							sb.Append(word);
-							a.OnKeyword(code.Span, code.Text);
+							a.OnDataTypeKeyword(code.Span, code.Text, null);
 							return true;
 						}
 						else
@@ -1284,7 +1295,7 @@ namespace DkTools.CodeModel
 			else if (code.ReadExact("@neutral"))
 			{
 				sb.Append(" @neutral");
-				a.OnKeyword(code.Span, code.Text);
+				a.OnDataTypeKeyword(code.Span, code.Text, null);
 				return true;
 			}
 
@@ -1303,7 +1314,7 @@ namespace DkTools.CodeModel
 
 				if (code.ReadPattern(_rxRepoWords))
 				{
-					a.OnKeyword(code.Span, code.Text);
+					a.OnDataTypeKeyword(code.Span, code.Text, null);
 					continue;
 				}
 

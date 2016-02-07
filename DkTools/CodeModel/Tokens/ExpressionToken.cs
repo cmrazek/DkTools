@@ -294,5 +294,14 @@ namespace DkTools.CodeModel.Tokens
 				}
 			}
 		}
+
+		public override DataType ValueDataType
+		{
+			get
+			{
+				if (ChildrenCount > 0) return Children.First().ValueDataType;
+				return base.ValueDataType;
+			}
+		}
 	}
 }

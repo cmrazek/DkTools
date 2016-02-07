@@ -442,7 +442,7 @@ namespace DkTools.StatementCompletion
 			var switchToken = (from t in model.FindTokens(modelPos) where t is SwitchStatement select t as SwitchStatement).LastOrDefault();
 			if (switchToken != null)
 			{
-				var dt = switchToken.ValueDataType;
+				var dt = switchToken.ExpressionDataType;
 				if (dt != null && dt.HasCompletionOptions)
 				{
 					foreach (var opt in dt.CompletionOptions)

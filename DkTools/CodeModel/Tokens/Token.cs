@@ -33,12 +33,12 @@ namespace DkTools.CodeModel.Tokens
 
 		public virtual void DumpTreeInner(System.Xml.XmlWriter xml)
 		{
-			if (_sourceDefinition != null)
-			{
-				xml.WriteStartElement("SourceDefinition");
-				_sourceDefinition.DumpTree(xml);
-				xml.WriteEndElement();	// SourceDefinition
-			}
+			//if (_sourceDefinition != null)
+			//{
+			//	xml.WriteStartElement("SourceDefinition");
+			//	_sourceDefinition.DumpTree(xml);
+			//	xml.WriteEndElement();	// SourceDefinition
+			//}
 		}
 
 		public string DumpTreeText()

@@ -5,7 +5,7 @@ using System.Text;
 
 namespace DkTools.CodeModel.Tokens
 {
-	internal class SwitchStatement : GroupToken
+	internal class SwitchStatement : GroupToken, IBreakOwner
 	{
 		private ExpressionToken _expressionToken;
 		private OperatorToken _compareOpToken;	// Could be null if not used
@@ -20,11 +20,16 @@ namespace DkTools.CodeModel.Tokens
 			AddToken(switchToken);
 		}
 
+		private static readonly string[] _caseEndTokens = new string[] { ":" };
+
 		public static SwitchStatement Parse(Scope scope, KeywordToken switchToken)
 		{
-			var code = scope.Code;
-
 			var ret = new SwitchStatement(scope, switchToken);
+
+			scope = scope.Clone();
+			scope.BreakOwner = ret;
+
+			var code = scope.Code;
 
 			var expressionScope = scope.Clone();
 			expressionScope.Hint |= ScopeHint.SuppressDataType | ScopeHint.SuppressFunctionDefinition | ScopeHint.SuppressVarDecl;
@@ -40,12 +45,32 @@ namespace DkTools.CodeModel.Tokens
 				ret._bodyToken = new BracesToken(bodyScope, code.Span);
 				ret.AddToken(ret._bodyToken);
 
-				while (!code.EndOfFile)
+				var switchDataType = ret.ExpressionDataType;
+
+				while (true)
 				{
 					if (code.ReadExact('}'))
 					{
 						ret._bodyToken.AddCloseBrace(code.Span);
 						return ret;
+					}
+
+					if (code.ReadExactWholeWord("case"))
+					{
+						ret.AddToken(new KeywordToken(scope, code.Span, "case"));
+
+						var caseExp = ExpressionToken.TryParse(scope, _caseEndTokens, expectedDataType: switchDataType);
+						if (caseExp != null) ret.AddToken(caseExp);
+
+						if (code.ReadExact(':')) ret.AddToken(new OperatorToken(scope, code.Span, ":"));
+						continue;
+					}
+
+					if (code.ReadExactWholeWord("default"))
+					{
+						ret.AddToken(new KeywordToken(scope, code.Span, "default"));
+						if (code.ReadExact(':')) ret.AddToken(new OperatorToken(scope, code.Span, ":"));
+						continue;
 					}
 
 					var stmt = StatementToken.TryParse(bodyScope);
@@ -61,9 +86,18 @@ namespace DkTools.CodeModel.Tokens
 		{
 			get
 			{
-				if (_expressionToken != null) return _expressionToken.ValueDataType;
+				var lastChild = _expressionToken.Children.LastOrDefault();
+				if (lastChild != null)
+				{
+					if (lastChild is CompletionOperator) return (lastChild as CompletionOperator).CompletionDataType;
+					return lastChild.ValueDataType;
+				}
 				return null;
 			}
+		}
+
+		public void OnBreakAttached(BreakStatement breakToken)
+		{
 		}
 	}
 }

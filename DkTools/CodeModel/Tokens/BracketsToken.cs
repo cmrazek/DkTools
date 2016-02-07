@@ -52,7 +52,11 @@ namespace DkTools.CodeModel.Tokens
 				}
 
 				var exp = ExpressionToken.TryParse(indentScope, _endTokens);
-				if (exp != null) ret.AddToken(exp);
+				if (exp != null)
+				{
+					ret._innerTokens.Add(exp);
+					ret.AddToken(exp);
+				}
 				else break;
 			}
 
@@ -73,7 +77,7 @@ namespace DkTools.CodeModel.Tokens
 		{
 			get
 			{
-				if (Children.Count() == 1) return Children.First().ValueDataType;
+				if (_innerTokens.Count > 0) return _innerTokens[0].ValueDataType;
 				return base.ValueDataType;
 			}
 		}

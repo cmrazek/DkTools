@@ -25,6 +25,11 @@ namespace DkTools.CodeModel.Tokens
 			get { return _tokens; }
 		}
 
+		public int ChildrenCount
+		{
+			get { return _tokens.Count; }
+		}
+
 		public Token AddToken(Token child)
 		{
 #if DEBUG
