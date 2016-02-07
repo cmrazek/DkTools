@@ -24,6 +24,7 @@ namespace DkTools.CodeModel.Tokens
 				case "extern":
 				case "extract":
 				case "for":
+				case "format":
 				case "header":
 				case "if":
 				case "return":
@@ -106,6 +107,14 @@ namespace DkTools.CodeModel.Tokens
 							{
 								var keywordToken = new KeywordToken(scope, code.MovePeekedSpan(), code.Text);
 								var token = ForStatement.Parse(scope, keywordToken);
+								ret.AddToken(token);
+								if (callback != null) callback(token);
+								return ret;
+							}
+						case "format":
+							{
+								var keywordToken = new KeywordToken(scope, code.MovePeekedSpan(), code.Text);
+								var token = FormatStatement.Parse(scope, keywordToken);
 								ret.AddToken(token);
 								if (callback != null) callback(token);
 								return ret;
