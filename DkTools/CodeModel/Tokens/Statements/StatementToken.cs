@@ -16,7 +16,7 @@ namespace DkTools.CodeModel.Tokens
 
 		public delegate void StatementParseCallback(Token token);
 
-		public static readonly string[] StatementStartingWords = new string[] { "break", "continue", "extern", "extract", "for", "if", "return", "select", "switch", "while" };
+		public static readonly string[] StatementStartingWords = new string[] { "break", "col", "continue", "extern", "extract", "for", "header", "if", "return", "row", "select", "switch", "while" };
 
 		public static StatementToken TryParse(Scope scope, StatementParseCallback callback = null)
 		{
@@ -43,6 +43,15 @@ namespace DkTools.CodeModel.Tokens
 								return ret;
 							}
 							break;
+						case "col":
+						case "row":
+							{
+								var keywordToken = new KeywordToken(scope, code.MovePeekedSpan(), code.Text);
+								var token = RowColStatement.Parse(scope, keywordToken);
+								ret.AddToken(token);
+								if (callback != null) callback(token);
+								return ret;
+							}
 						case "continue":
 							if (scope.ContinueOwner != null)
 							{
@@ -74,6 +83,14 @@ namespace DkTools.CodeModel.Tokens
 							{
 								var keywordToken = new KeywordToken(scope, code.MovePeekedSpan(), code.Text);
 								var token = ForStatement.Parse(scope, keywordToken);
+								ret.AddToken(token);
+								if (callback != null) callback(token);
+								return ret;
+							}
+						case "header":
+							{
+								var keywordToken = new KeywordToken(scope, code.MovePeekedSpan(), code.Text);
+								var token = HeaderStatement.Parse(scope, keywordToken);
 								ret.AddToken(token);
 								if (callback != null) callback(token);
 								return ret;

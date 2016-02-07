@@ -278,7 +278,9 @@
     <Compile Include="CodeModel\Tokens\IBreakOwner.cs" />
     <Compile Include="CodeModel\Tokens\IContinueOwner.cs" />
     <Compile Include="CodeModel\Tokens\Statements\ForStatement.cs" />
+    <Compile Include="CodeModel\Tokens\Statements\HeaderStatement.cs" />
     <Compile Include="CodeModel\Tokens\Statements\ReturnStatement.cs" />
+    <Compile Include="CodeModel\Tokens\Statements\RowColStatement.cs" />
     <Compile Include="CodeModel\Tokens\Statements\StatementToken.cs" />
     <Compile Include="CodeModel\Tokens\Operators\CompletionOperator.cs" />
     <Compile Include="CodeModel\Value.cs" />
