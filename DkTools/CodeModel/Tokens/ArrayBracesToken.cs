@@ -31,7 +31,7 @@ namespace DkTools.CodeModel.Tokens
 			var openBracketSpan = code.Span;
 
 			var indentScope = scope.CloneIndentNonRoot();
-			indentScope.Hint |= ScopeHint.SuppressFunctionDefinition;
+			indentScope.Hint |= ScopeHint.SuppressFunctionDefinition | ScopeHint.SuppressStatementStarts;
 
 			var ret = new ArrayBracesToken(scope);
 			ret.AddToken(ret._openToken = new ArrayBraceToken(scope, openBracketSpan, ret, true));

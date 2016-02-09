@@ -33,6 +33,9 @@ namespace DkTools.CodeModel.Tokens
 			var argIndex = 0;
 			DataType dataType;
 
+			scope = scope.Clone();
+			scope.Hint |= ScopeHint.SuppressStatementStarts;
+
 			if (argDataTypes != null) ret._argDataTypes = argDataTypes.ToArray();
 
 			while (code.SkipWhiteSpace())

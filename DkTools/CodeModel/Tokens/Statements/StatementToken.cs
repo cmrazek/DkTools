@@ -18,6 +18,8 @@ namespace DkTools.CodeModel.Tokens
 
 		public static bool IsStatementBreakingWord(Scope scope, string word)
 		{
+			if ((scope.Hint & ScopeHint.SuppressStatementStarts) != 0) return false;
+
 			switch (word)
 			{
 				case "col":

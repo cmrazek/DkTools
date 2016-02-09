@@ -143,6 +143,7 @@ namespace DkTools.FunctionFileScanning
 					}
 				}
 
+#if !DEBUG
 				// Purge old databases
 				foreach (var oldTitleExt in OldDatabaseFileNames)
 				{
@@ -161,6 +162,7 @@ namespace DkTools.FunctionFileScanning
 						}
 					}
 				}
+#endif
 
 				return true;
 			}

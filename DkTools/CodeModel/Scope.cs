@@ -234,5 +234,10 @@ namespace DkTools.CodeModel
 		/// Currently parsing inside an alter statement.
 		/// </summary>
 		InsideAlter = 0x1000,
+
+		/// <summary>
+		/// Spontaneous statement starts not allowed here.
+		/// </summary>
+		SuppressStatementStarts = 0x2000,
 	}
 }

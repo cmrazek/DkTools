@@ -1,4 +1,8 @@
 DkTools2012 ChangeLog
+____________________________________________________________________________________________________
+Version 1.2.24 - (WIP):
+
+- Enhanced code modeling to provide better statement completion and enum option detection.
 
 ____________________________________________________________________________________________________
 Version 1.2.23 - Jan 26, 2016:

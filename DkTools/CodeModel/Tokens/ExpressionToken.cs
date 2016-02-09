@@ -58,11 +58,8 @@ namespace DkTools.CodeModel.Tokens
 			while (!code.EndOfFile && !abortParsing)
 			{
 				// Statement breaking tokens
-				if (code.PeekExact(';') || code.PeekExact('{') || code.PeekExact('}')) return exp;
-				if (endTokens != null)
-				{
-					if (code.Peek() && endTokens.Contains(code.Text)) return exp;
-				}
+				if (code.PeekExact(';') || code.PeekExact('{') || code.PeekExact('}')) break;
+				if (endTokens != null && code.Peek() && endTokens.Contains(code.Text)) break;
 
 				var dt = DataType.TryParse(dataTypeArgs);	// TODO: this could interfere with enum options
 				if (dt != null) continue;
@@ -169,6 +166,7 @@ namespace DkTools.CodeModel.Tokens
 				}
 			}
 
+			if (exp.ChildrenCount == 0) return null;
 			return exp;
 		}
 
