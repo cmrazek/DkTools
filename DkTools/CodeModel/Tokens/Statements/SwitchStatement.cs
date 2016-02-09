@@ -50,7 +50,7 @@ namespace DkTools.CodeModel.Tokens
 				{
 					if (code.ReadExact('}'))
 					{
-						ret._bodyToken.AddCloseBrace(code.Span);
+						ret._bodyToken.AddClose(code.Span);
 						return ret;
 					}
 

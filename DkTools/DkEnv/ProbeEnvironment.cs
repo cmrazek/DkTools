@@ -1054,6 +1054,7 @@ namespace DkTools
 				case "cols":
 				case "defaultenumcontrolstyle":
 				case "disabledborder":
+				case "easyview":
 				case "formatstring":
 				case "hideModalMenus":
 				case "probeform:col":

@@ -135,14 +135,14 @@ namespace DkTools.CodeModel.Tokens
 			if (code.ReadExact('{'))
 			{
 				var braces = new BracesToken(scope);
-				braces.AddOpenBrace(code.Span);
+				braces.AddOpen(code.Span);
 				ret.AddToken(braces);
 
 				while (!code.EndOfFile)
 				{
 					if (code.ReadExact('}'))
 					{
-						braces.AddCloseBrace(code.Span);
+						braces.AddClose(code.Span);
 						break;
 					}
 

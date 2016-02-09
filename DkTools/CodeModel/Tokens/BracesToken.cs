@@ -124,7 +124,7 @@ namespace DkTools.CodeModel.Tokens
 			get { return _innerTokens; }
 		}
 
-		public void AddOpenBrace(Span span)
+		public void AddOpen(Span span)
 		{
 #if DEBUG
 			if (_openToken != null) throw new InvalidOperationException("Opening brace has already been added.");
@@ -132,7 +132,7 @@ namespace DkTools.CodeModel.Tokens
 			AddToken(_openToken = new BraceToken(Scope, span, this, true));
 		}
 
-		public void AddCloseBrace(Span span)
+		public void AddClose(Span span)
 		{
 #if DEBUG
 			if (_closeToken != null) throw new InvalidOperationException("Close brace has already been added.");

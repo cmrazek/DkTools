@@ -783,7 +783,7 @@ namespace DkTools.CodeModel
 					if (a.TokenCreateCallback != null)
 					{
 						braces = new BracesToken(a.Scope);
-						braces.AddOpenBrace(code.Span);
+						braces.AddOpen(code.Span);
 					}
 					break;
 				}
@@ -847,7 +847,7 @@ namespace DkTools.CodeModel
 					{
 						if (code.Text == "}")
 						{
-							if (braces != null) braces.AddCloseBrace(code.Span);
+							if (braces != null) braces.AddClose(code.Span);
 							break;
 						}
 						if (code.Text == ",")
@@ -899,7 +899,7 @@ namespace DkTools.CodeModel
 					{
 						if (braces != null)
 						{
-							braces.AddCloseBrace(code.Span);
+							braces.AddClose(code.Span);
 							a.TokenCreateCallback(braces);
 						}
 						break;

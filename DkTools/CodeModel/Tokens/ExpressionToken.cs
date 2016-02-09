@@ -140,7 +140,14 @@ namespace DkTools.CodeModel.Tokens
 							case "<=":
 							case ">":
 							case ">=":
-								exp.AddToken(ComparisonOperator.Parse(scope, exp.LastChild, new OperatorToken(scope, code.Span, code.Text), endTokens));
+								if ((scope.Hint & ScopeHint.SuppressLogic) == 0)
+								{
+									exp.AddToken(ComparisonOperator.Parse(scope, exp.LastChild, new OperatorToken(scope, code.Span, code.Text), endTokens));
+								}
+								else
+								{
+									exp.AddToken(new OperatorToken(scope, code.Span, code.Text));
+								}
 								break;
 							case "=":
 							case "+=":
@@ -148,7 +155,14 @@ namespace DkTools.CodeModel.Tokens
 							case "*=":
 							case "/=":
 							case "%=":
-								exp.AddToken(AssignmentOperator.Parse(scope, exp.LastChild, new OperatorToken(scope, code.Span, code.Text), endTokens));
+								if ((scope.Hint & ScopeHint.SuppressLogic) == 0)
+								{
+									exp.AddToken(AssignmentOperator.Parse(scope, exp.LastChild, new OperatorToken(scope, code.Span, code.Text), endTokens));
+								}
+								else
+								{
+									exp.AddToken(new OperatorToken(scope, code.Span, code.Text));
+								}
 								break;
 							default:
 								exp.AddToken(new OperatorToken(scope, code.Span, code.Text));
@@ -198,7 +212,10 @@ namespace DkTools.CodeModel.Tokens
 							var childDef = def.GetChildDefinition(word2);
 							if (childDef != null)
 							{
-								if (argsPresent == childDef.RequiresArguments)
+								var childRequiresArgs = childDef.RequiresArguments;
+								if (childRequiresArgs && (scope.Hint & ScopeHint.SuppressFunctionCall) != 0) childRequiresArgs = false;
+
+								if (argsPresent == childRequiresArgs)
 								{
 									var word1Token = new IdentifierToken(scope, wordSpan, word, def);
 									var dotToken = new DotToken(scope, dotSpan);
@@ -227,7 +244,7 @@ namespace DkTools.CodeModel.Tokens
 				}
 			}
 
-			if (code.PeekExact('('))
+			if ((scope.Hint & ScopeHint.SuppressFunctionCall) == 0 && code.PeekExact('('))
 			{
 				var argsOpenBracketSpan = code.MovePeekedSpan();
 

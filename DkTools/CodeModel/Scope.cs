@@ -239,5 +239,10 @@ namespace DkTools.CodeModel
 		/// Spontaneous statement starts not allowed here.
 		/// </summary>
 		SuppressStatementStarts = 0x2000,
+
+		/// <summary>
+		/// No logical statements or expressions allowed.
+		/// </summary>
+		SuppressLogic = 0x4000,
 	}
 }

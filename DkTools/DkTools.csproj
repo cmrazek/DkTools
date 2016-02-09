@@ -278,6 +278,7 @@
     <Compile Include="CodeModel\Tokens\ExternStatement.cs" />
     <Compile Include="CodeModel\Tokens\IBreakOwner.cs" />
     <Compile Include="CodeModel\Tokens\IContinueOwner.cs" />
+    <Compile Include="CodeModel\Tokens\Statements\CreateStatement.cs" />
     <Compile Include="CodeModel\Tokens\Statements\FormatStatement.cs" />
     <Compile Include="CodeModel\Tokens\Statements\ForStatement.cs" />
     <Compile Include="CodeModel\Tokens\Statements\HeaderStatement.cs" />

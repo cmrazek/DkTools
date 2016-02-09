@@ -22,6 +22,7 @@ namespace DkTools.CodeModel.Tokens
 
 			switch (word)
 			{
+				case "create":
 				case "col":
 				case "extern":
 				case "extract":
@@ -69,6 +70,14 @@ namespace DkTools.CodeModel.Tokens
 								return ret;
 							}
 							break;
+						case "create":
+							{
+								var keywordToken = new KeywordToken(scope, code.MovePeekedSpan(), code.Text);
+								var token = CreateStatement.Parse(scope, keywordToken);
+								ret.AddToken(token);
+								if (callback != null) callback(token);
+								return ret;
+							}
 						case "col":
 						case "row":
 							{
