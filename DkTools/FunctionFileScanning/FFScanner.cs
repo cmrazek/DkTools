@@ -153,7 +153,8 @@ namespace DkTools.FunctionFileScanning
 						switch (fileContext)
 						{
 							case FileContext.Include:
-								// Ignore include files
+							case FileContext.Dictionary:
+								// Ignore dictionary and include files
 								break;
 
 							case FileContext.ClientClass:
@@ -190,7 +191,7 @@ namespace DkTools.FunctionFileScanning
 			if (!options.BackgroundScan) return;
 
 			var fileContext = FileContextUtil.GetFileContextFromFileName(fullPath);
-			if (fileContext != FileContext.Include)
+			if (fileContext != FileContext.Include && fileContext != FileContext.Dictionary)
 			{
 				lock (_scanQueue)
 				{
@@ -214,6 +215,9 @@ namespace DkTools.FunctionFileScanning
 				if (!File.Exists(scan.fileName)) return;
 				if (FileContextUtil.IsLocalizedFile(scan.fileName)) return;
 
+				var fileContext = CodeModel.FileContextUtil.GetFileContextFromFileName(scan.fileName);
+				if (fileContext == FileContext.Include || fileContext == FileContext.Dictionary) return;
+
 				DateTime modified;
 				if (!app.TryGetFileDate(scan.fileName, out modified)) modified = DateTime.MinValue;
 
@@ -233,7 +237,6 @@ namespace DkTools.FunctionFileScanning
 
 				var defProvider = new CodeModel.DefinitionProvider(scan.fileName);
 
-				var fileContext = CodeModel.FileContextUtil.GetFileContextFromFileName(scan.fileName);
 				var fileContent = File.ReadAllText(scan.fileName);
 				var fileStore = new CodeModel.FileStore();
 
@@ -376,7 +379,12 @@ namespace DkTools.FunctionFileScanning
 
 						while (rdr.Read())
 						{
-							fileIds[rdr.GetInt32(ordId)] = rdr.GetString(ordFileName);
+							var fileName = rdr.GetString(ordFileName);
+							var context = FileContextUtil.GetFileContextFromFileName(fileName);
+							if (context != FileContext.Include && context != FileContext.Dictionary)
+							{
+								fileIds[rdr.GetInt32(ordId)] = fileName;
+							}
 						}
 					}
 

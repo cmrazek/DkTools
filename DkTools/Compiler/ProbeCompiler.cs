@@ -575,6 +575,15 @@ namespace DkTools.Compiler
 				return;
 			}
 
+			if (line.IndexOf("Compile failed", StringComparison.OrdinalIgnoreCase) >= 0)
+			{
+				var task = new ErrorTask(string.Empty, 0, line, ErrorType.Error, ErrorTaskSource.Compile, null, null);
+				ErrorTaskProvider.Instance.Add(task);
+				_buildFailed = true;
+				_pane.WriteLine(line);
+				return;
+			}
+
 			Match match;
 			if ((match = _rxLinkError.Match(line)).Success)
 			{
