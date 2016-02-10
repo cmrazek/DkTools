@@ -22,6 +22,7 @@ namespace DkTools.CodeModel.Tokens
 
 			switch (word)
 			{
+				case "alter":
 				case "create":
 				case "col":
 				case "extern":
@@ -59,6 +60,14 @@ namespace DkTools.CodeModel.Tokens
 				case CodeType.Word:
 					switch (code.Text)
 					{
+						case "alter":
+							{
+								var keywordToken = new KeywordToken(scope, code.MovePeekedSpan(), code.Text);
+								var token = CreateStatement.ParseAlter(scope, keywordToken);
+								ret.AddToken(token);
+								if (callback != null) callback(token);
+								return ret;
+							}
 						case "break":
 							if (scope.BreakOwner != null)
 							{
@@ -73,7 +82,7 @@ namespace DkTools.CodeModel.Tokens
 						case "create":
 							{
 								var keywordToken = new KeywordToken(scope, code.MovePeekedSpan(), code.Text);
-								var token = CreateStatement.Parse(scope, keywordToken);
+								var token = CreateStatement.ParseCreate(scope, keywordToken);
 								ret.AddToken(token);
 								if (callback != null) callback(token);
 								return ret;

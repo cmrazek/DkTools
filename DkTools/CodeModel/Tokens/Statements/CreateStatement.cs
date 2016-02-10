@@ -14,7 +14,7 @@ namespace DkTools.CodeModel.Tokens.Statements
 		{
 		}
 
-		public static CreateStatement Parse(Scope scope, KeywordToken createToken)
+		public static CreateStatement ParseCreate(Scope scope, KeywordToken createToken)
 		{
 			scope = scope.Clone();
 			scope.Hint |= ScopeHint.SuppressStatementStarts | ScopeHint.SuppressFunctionDefinition | ScopeHint.SuppressFunctionCall | ScopeHint.SuppressLogic;
@@ -49,6 +49,7 @@ namespace DkTools.CodeModel.Tokens.Statements
 						break;
 
 					case "primary":
+					case "nopick":
 					case "NOPICK":
 						ret.AddToken(new KeywordToken(scope, code.MovePeekedSpan(), word));
 						if (code.PeekWord() == "index")
@@ -59,7 +60,7 @@ namespace DkTools.CodeModel.Tokens.Statements
 						break;
 				}
 			}
-			else if (word == "primary" || word == "NOPICK")
+			else if (word == "primary" || word == "NOPICK" || word == "nopick")
 			{
 				ret.AddToken(new KeywordToken(scope, code.MovePeekedSpan(), word));
 				if (code.PeekWord() == "index")
@@ -96,6 +97,26 @@ namespace DkTools.CodeModel.Tokens.Statements
 			return ret;
 		}
 
+		public static CreateStatement ParseAlter(Scope scope, KeywordToken alterToken)
+		{
+			scope = scope.Clone();
+			scope.Hint |= ScopeHint.SuppressStatementStarts | ScopeHint.SuppressFunctionDefinition | ScopeHint.SuppressFunctionCall | ScopeHint.SuppressLogic;
+
+			var ret = new CreateStatement(scope);
+			ret.AddToken(alterToken);
+
+			var code = scope.Code;
+
+			var word = code.PeekWord();
+			if (word == "table")
+			{
+				ret.AddToken(new KeywordToken(scope, code.MovePeekedSpan(), "table"));
+				ret.ParseAlterTable();
+			}
+
+			return ret;
+		}
+
 		private static readonly string[] _createTableEndTokens = new string[] { "(", "updates", "database", "display", "modal",
 			"nopick", "pick", "snapshot", "prompt", "comment", "image", "description", "tag" };
 
@@ -125,37 +146,7 @@ namespace DkTools.CodeModel.Tokens.Statements
 			ExpressionToken exp;
 
 			// Attributes
-			while (true)
-			{
-				if (code.PeekExact('(') || code.PeekExact('{')) break;
-				if (!code.Peek()) break;
-
-				if (!string.IsNullOrEmpty(word = code.PeekWord()))
-				{
-					if (word == "updates" || word == "display" || word == "modal" || word == "nopick" || word == "pick")
-					{
-						AddToken(new KeywordToken(Scope, code.MovePeekedSpan(), code.Text));
-						continue;
-					}
-
-					if (word == "database" || word == "snapshot" || word == "prompt" || word == "comment" || word == "image" ||
-						word == "description" || word == "updates")
-					{
-						AddToken(new KeywordToken(Scope, code.MovePeekedSpan(), code.Text));
-						if ((exp = ExpressionToken.TryParse(Scope, _createTableEndTokens)) != null) AddToken(exp);
-						continue;
-					}
-
-					if (word == "tag")
-					{
-						ParseTag(Scope, this, new KeywordToken(Scope, code.MovePeekedSpan(), "tag"), _createTableEndTokens);
-						continue;
-					}
-
-					break;
-				}
-				else break;
-			}
+			ParseTableAttributes(_createTableEndTokens);
 
 			BracketsToken brackets = null;
 			BracesToken braces = null;
@@ -192,36 +183,159 @@ namespace DkTools.CodeModel.Tokens.Statements
 					continue;
 				}
 
-				if (!TryParseColumnDefinition(Scope, parent, table != null ? table.BaseDefinition : null))
+				if (!TryParseColumnDefinition(Scope, parent, table != null ? table.BaseDefinition : null, true))
 				{
 					if ((exp = ExpressionToken.TryParse(Scope, _columnEndTokens)) != null) parent.AddToken(exp);
 				}
 			}
 		}
 
-		private static bool TryParseColumnDefinition(Scope scope, GroupToken parent, Definition parentDef)
+		private void ParseTableAttributes(string[] endTokens)
+		{
+			var code = Code;
+			string word;
+			ExpressionToken exp;
+
+			while (true)
+			{
+				if (code.PeekExact('(') || code.PeekExact('{')) break;
+				if (!code.Peek()) break;
+
+				if (!string.IsNullOrEmpty(word = code.PeekWord()))
+				{
+					if (word == "updates" || word == "display" || word == "modal" || word == "nopick" || word == "pick")
+					{
+						AddToken(new KeywordToken(Scope, code.MovePeekedSpan(), code.Text));
+						continue;
+					}
+
+					if (word == "database" || word == "snapshot" || word == "prompt" || word == "comment" || word == "image" ||
+						word == "description" || word == "updates")
+					{
+						AddToken(new KeywordToken(Scope, code.MovePeekedSpan(), code.Text));
+						if ((exp = ExpressionToken.TryParse(Scope, endTokens)) != null) AddToken(exp);
+						continue;
+					}
+
+					if (word == "tag")
+					{
+						ParseTag(Scope, this, new KeywordToken(Scope, code.MovePeekedSpan(), "tag"), endTokens);
+						continue;
+					}
+
+					break;
+				}
+				else break;
+			}
+		}
+
+		private static readonly string[] _alterTableEndTokens = new string[] { "before", "after", "column",
+			"add", "alter", "drop", "move", "samtype", "updates", "database", "display", "modal",
+			"nopick", "pick", "snapshot", "prompt", "comment", "image", "description", "tag" };
+
+		private void ParseAlterTable()
+		{
+			var code = Code;
+			Dict.Table table = null;
+			ExpressionToken exp;
+			
+			var word = code.PeekWord();
+			if (!string.IsNullOrEmpty(word) && (table = ProbeEnvironment.GetTable(word)) != null)
+			{
+				AddToken(new IdentifierToken(Scope, code.MovePeekedSpan(), word, table.BaseDefinition));
+			}
+			else
+			{
+				if ((exp = ExpressionToken.TryParse(Scope, _alterTableEndTokens)) != null) AddToken(exp);
+			}
+
+			ParseTableAttributes(_alterTableEndTokens);
+
+			if (code.ReadExact(';'))
+			{
+				AddToken(new StatementEndToken(Scope, code.Span));
+				return;
+			}
+
+			if (code.ReadExactWholeWord("before") ||
+				code.ReadExactWholeWord("after"))
+			{
+				AddToken(new KeywordToken(Scope, code.Span, code.Text));
+			}
+
+			if (code.ReadExactWholeWord("column")) AddToken(new KeywordToken(Scope, code.Span, code.Text));
+
+			if (table != null)
+			{
+				var field = table.GetField(code.PeekWord());
+				if (field != null)
+				{
+					AddToken(new IdentifierToken(Scope, code.MovePeekedSpan(), code.Text, field.Definition));
+				}
+				else
+				{
+					if ((exp = ExpressionToken.TryParse(Scope, _alterTableEndTokens)) != null) AddToken(exp);
+				}
+			}
+
+			if (code.ReadExactWholeWord("add") ||
+				code.ReadExactWholeWord("alter") ||
+				code.ReadExactWholeWord("drop") ||
+				code.ReadExactWholeWord("move"))
+			{
+				AddToken(new KeywordToken(Scope, code.Span, code.Text));
+			}
+
+			if (code.ReadExactWholeWord("column")) AddToken(new KeywordToken(Scope, code.Span, code.Text));
+
+			if (code.ReadExactWholeWord("sametype"))
+			{
+				AddToken(new KeywordToken(Scope, code.Span, code.Text));
+			}
+			else
+			{
+				var dataType = DataType.TryParse(new DataType.ParseArgs
+				{
+					Code = code,
+					Scope = Scope,
+					TokenCreateCallback = token =>
+					{
+						AddToken(token);
+					}
+				});
+			}
+
+			TryParseColumnDefinition(Scope, this, table != null ? table.BaseDefinition : null, false);
+
+			if (code.ReadExact(';')) AddToken(new StatementEndToken(Scope, code.Span));
+		}
+
+		private static bool TryParseColumnDefinition(Scope scope, GroupToken parent, Definition parentDef, bool includeNameAndDataType)
 		{
 			string word;
 			var code = scope.Code;
+			ExpressionToken exp;
 
-			// Column name
-			if (parentDef != null && parentDef.AllowsChild)
+			if (includeNameAndDataType)
 			{
-				if (!string.IsNullOrEmpty(word = code.PeekWord()))
+				// Column name
+				if (parentDef != null && parentDef.AllowsChild)
 				{
-					var childDef = parentDef.GetChildDefinition(word);
-					if (childDef != null)
+					if (!string.IsNullOrEmpty(word = code.PeekWord()))
 					{
-						parent.AddToken(new IdentifierToken(scope, code.MovePeekedSpan(), code.Text, childDef));
+						var childDef = parentDef.GetChildDefinition(word);
+						if (childDef != null)
+						{
+							parent.AddToken(new IdentifierToken(scope, code.MovePeekedSpan(), code.Text, childDef));
+						}
 					}
+					else return false;
 				}
 				else return false;
-			}
-			else return false;
 
-			// Data type
-			var exp = ExpressionToken.TryParse(scope, _columnEndTokens);
-			if (exp != null) parent.AddToken(exp);
+				// Data type
+				if ((exp = ExpressionToken.TryParse(scope, _columnEndTokens)) != null) parent.AddToken(exp);
+			}
 
 			// Column attributes
 			while (!code.EndOfFile)
@@ -288,7 +402,7 @@ namespace DkTools.CodeModel.Tokens.Statements
 			if (exp != null) parent.AddToken(exp);
 		}
 
-		private static readonly string[] _createRelationshipEndTokens = new string[] { "updates", "prompt", "comment",
+		private static readonly string[] _createRelationshipEndTokens = new string[] { "(", ")", "updates", "prompt", "comment",
 			"image", "description", "one", "many", "to", "order", "tag" };
 
 		private void ParseCreateRelationship(KeywordToken relationshipToken)
@@ -421,7 +535,7 @@ namespace DkTools.CodeModel.Tokens.Statements
 							break;
 						}
 
-						if (!TryParseColumnDefinition(Scope, brackets, relind != null ? relind.Definition : null))
+						if (!TryParseColumnDefinition(Scope, brackets, relind != null ? relind.Definition : null, true))
 						{
 							var exp = ExpressionToken.TryParse(Scope, _createRelationshipEndTokens);
 							if (exp != null) AddToken(exp);
@@ -445,6 +559,7 @@ namespace DkTools.CodeModel.Tokens.Statements
 			string word;
 
 			if (code.ReadExactWholeWord("primary")) AddToken(new KeywordToken(Scope, code.Span, "primary"));
+			if (code.ReadExactWholeWord("nopick")) AddToken(new KeywordToken(Scope, code.Span, "nopick"));
 			if (code.ReadExactWholeWord("NOPICK")) AddToken(new KeywordToken(Scope, code.Span, "NOPICK"));
 
 			if (!string.IsNullOrEmpty(word = code.PeekWord()))
