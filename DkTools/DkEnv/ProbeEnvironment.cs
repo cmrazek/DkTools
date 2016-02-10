@@ -1045,6 +1045,7 @@ namespace DkTools
 		#endregion
 
 		#region Tags
+		private static readonly Regex _rxNextFormTag = new Regex(@"^probeformgroup:nextform\d+");
 		public static bool IsValidTagName(string name)
 		{
 			switch (name)
@@ -1078,6 +1079,7 @@ namespace DkTools
 					return true;
 
 				default:
+					if (_rxNextFormTag.IsMatch(name)) return true;
 					return false;
 			}
 		}

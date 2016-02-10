@@ -27,7 +27,70 @@ namespace DkTools.CodeModel.Tokens.Statements
 			var word = code.PeekWord();
 			if (word == "table")
 			{
-				ret.ParseCreateTable(new KeywordToken(scope, code.MovePeekedSpan(), code.Text));
+				ret.ParseCreateTable(new KeywordToken(scope, code.MovePeekedSpan(), "table"));
+			}
+			else if (word == "relationship")
+			{
+				ret.ParseCreateRelationship(new KeywordToken(scope, code.MovePeekedSpan(), "relationship"));
+			}
+			else if (word == "index")
+			{
+				ret.AddToken(new KeywordToken(scope, code.MovePeekedSpan(), "index"));
+				ret.ParseCreateIndex();
+			}
+			else if (word == "unique")
+			{
+				ret.AddToken(new KeywordToken(scope, code.MovePeekedSpan(), "unique"));
+				switch (code.PeekWord())
+				{
+					case "index":
+						ret.AddToken(new KeywordToken(scope, code.MovePeekedSpan(), "index"));
+						ret.ParseCreateIndex();
+						break;
+
+					case "primary":
+					case "NOPICK":
+						ret.AddToken(new KeywordToken(scope, code.MovePeekedSpan(), word));
+						if (code.PeekWord() == "index")
+						{
+							ret.AddToken(new KeywordToken(scope, code.MovePeekedSpan(), "index"));
+							ret.ParseCreateIndex();
+						}
+						break;
+				}
+			}
+			else if (word == "primary" || word == "NOPICK")
+			{
+				ret.AddToken(new KeywordToken(scope, code.MovePeekedSpan(), word));
+				if (code.PeekWord() == "index")
+				{
+					ret.AddToken(new KeywordToken(scope, code.MovePeekedSpan(), "index"));
+					ret.ParseCreateIndex();
+				}
+			}
+			else if (word == "stringdef")
+			{
+				ret.AddToken(new KeywordToken(scope, code.MovePeekedSpan(), "stringdef"));
+				ret.ParseCreateStringdef();
+			}
+			else if (word == "typedef")
+			{
+				ret.AddToken(new KeywordToken(scope, code.MovePeekedSpan(), "typedef"));
+				ret.ParseCreateTypedef();
+			}
+			else if (word == "time")
+			{
+				ret.AddToken(new KeywordToken(scope, code.MovePeekedSpan(), "time"));
+				if (code.ReadExactWholeWord("relationship"))
+				{
+					ret.AddToken(new KeywordToken(scope, code.MovePeekedSpan(), "relationship"));
+					ret.ParseCreateTimeRelationship();
+				}
+			}
+			else if (word == "workspace")
+			{
+				ret.AddToken(new KeywordToken(scope, code.MovePeekedSpan(), "workspace"));
+				ret.ParseCreateWorkspace();
 			}
 
 			return ret;
@@ -85,24 +148,7 @@ namespace DkTools.CodeModel.Tokens.Statements
 
 					if (word == "tag")
 					{
-						AddToken(new KeywordToken(Scope, code.MovePeekedSpan(), code.Text));
-
-						var resetPos = code.Position;
-						if (code.ReadTagName() && ProbeEnvironment.IsValidTagName(code.Text))
-						{
-							AddToken(new KeywordToken(Scope, code.Span, code.Text));
-							if (code.ReadStringLiteral())
-							{
-								AddToken(new StringLiteralToken(Scope, code.Span, code.Text));
-								continue;
-							}
-						}
-						else
-						{
-							code.Position = resetPos;
-						}
-
-						if ((exp = ExpressionToken.TryParse(Scope, _createTableEndTokens)) != null) AddToken(exp);
+						ParseTag(Scope, this, new KeywordToken(Scope, code.MovePeekedSpan(), "tag"), _createTableEndTokens);
 						continue;
 					}
 
@@ -146,69 +192,631 @@ namespace DkTools.CodeModel.Tokens.Statements
 					continue;
 				}
 
-				// Column name
-				if (table != null)
+				if (!TryParseColumnDefinition(Scope, parent, table != null ? table.BaseDefinition : null))
 				{
-					if (!string.IsNullOrEmpty(word = code.PeekWord()))
+					if ((exp = ExpressionToken.TryParse(Scope, _columnEndTokens)) != null) parent.AddToken(exp);
+				}
+			}
+		}
+
+		private static bool TryParseColumnDefinition(Scope scope, GroupToken parent, Definition parentDef)
+		{
+			string word;
+			var code = scope.Code;
+
+			// Column name
+			if (parentDef != null && parentDef.AllowsChild)
+			{
+				if (!string.IsNullOrEmpty(word = code.PeekWord()))
+				{
+					var childDef = parentDef.GetChildDefinition(word);
+					if (childDef != null)
 					{
-						var field = table.GetField(word);
-						if (field != null)
-						{
-							parent.AddToken(new IdentifierToken(Scope, code.MovePeekedSpan(), code.Text, field.Definition));
-						}
+						parent.AddToken(new IdentifierToken(scope, code.MovePeekedSpan(), code.Text, childDef));
 					}
 				}
+				else return false;
+			}
+			else return false;
 
-				// Data type
-				if ((exp = ExpressionToken.TryParse(Scope, _columnEndTokens)) != null) parent.AddToken(exp);
+			// Data type
+			var exp = ExpressionToken.TryParse(scope, _columnEndTokens);
+			if (exp != null) parent.AddToken(exp);
 
-				// Column attributes
-				while (!code.EndOfFile)
+			// Column attributes
+			while (!code.EndOfFile)
+			{
+				if (code.PeekExact(')') || code.PeekExact('}') || code.PeekExact(',')) break;
+
+				if (!string.IsNullOrEmpty(word = code.PeekWord()))
 				{
-					if (code.PeekExact(')') || code.PeekExact('}')) break;
-
-					if (!string.IsNullOrEmpty(word = code.PeekWord()))
+					if (word == "prompt" || word == "comment" || word == "group" || word == "row" || word == "col" ||
+						word == "rows" || word == "cols")
 					{
-						if (word == "prompt" || word == "comment" || word == "group" || word == "row" || word == "col" ||
-							word == "rows" || word == "cols")
-						{
-							parent.AddToken(new KeywordToken(Scope, code.MovePeekedSpan(), code.Text));
-							if ((exp = ExpressionToken.TryParse(Scope, _columnEndTokens)) != null) parent.AddToken(exp);
-							continue;
-						}
+						parent.AddToken(new KeywordToken(scope, code.MovePeekedSpan(), code.Text));
+						if ((exp = ExpressionToken.TryParse(scope, _columnEndTokens)) != null) parent.AddToken(exp);
+						continue;
+					}
 
-						if (word == "endgroup" || word == "form" || word == "formonly" || word == "zoom")
-						{
-							parent.AddToken(new KeywordToken(Scope, code.MovePeekedSpan(), code.Text));
-							continue;
-						}
+					if (word == "endgroup" || word == "form" || word == "formonly" || word == "zoom")
+					{
+						parent.AddToken(new KeywordToken(scope, code.MovePeekedSpan(), code.Text));
+						continue;
+					}
 
-						if (word == "tag")
-						{
-							parent.AddToken(new KeywordToken(Scope, code.MovePeekedSpan(), code.Text));
+					if (word == "tag")
+					{
+						ParseTag(scope, parent, new KeywordToken(scope, code.MovePeekedSpan(), "tag"), _columnEndTokens);
+						continue;
+					}
 
-							var resetPos = code.Position;
-							if (code.ReadTagName() && ProbeEnvironment.IsValidTagName(code.Text))
+					break;
+				}
+				else break;
+			}
+
+			if (code.ReadExact(','))
+			{
+				parent.AddToken(new DelimiterToken(scope, code.Span));
+			}
+
+			return true;
+		}
+
+		private static void ParseTag(Scope scope, GroupToken parent, KeywordToken tagToken, string[] endTokens)
+		{
+			var code = scope.Code;
+
+			parent.AddToken(tagToken);
+
+			var resetPos = code.Position;
+			if (code.ReadTagName() && ProbeEnvironment.IsValidTagName(code.Text))
+			{
+				parent.AddToken(new KeywordToken(scope, code.Span, code.Text));
+				if (code.ReadStringLiteral())
+				{
+					parent.AddToken(new StringLiteralToken(scope, code.Span, code.Text));
+					return;
+				}
+			}
+			else
+			{
+				code.Position = resetPos;
+			}
+
+			var exp = ExpressionToken.TryParse(scope, endTokens);
+			if (exp != null) parent.AddToken(exp);
+		}
+
+		private static readonly string[] _createRelationshipEndTokens = new string[] { "updates", "prompt", "comment",
+			"image", "description", "one", "many", "to", "order", "tag" };
+
+		private void ParseCreateRelationship(KeywordToken relationshipToken)
+		{
+			AddToken(relationshipToken);
+
+			var code = Code;
+			var word = code.PeekWord();
+			var relind = ProbeEnvironment.GetRelInd(word);
+			if (relind != null)
+			{
+				AddToken(new IdentifierToken(Scope, code.MovePeekedSpan(), word, relind.Definition));
+
+				if (code.ReadNumber()) AddToken(new NumberToken(Scope, code.Span, code.Text));
+			}
+			else
+			{
+				var exp = ExpressionToken.TryParse(Scope, _createRelationshipEndTokens);
+				if (exp != null) AddToken(exp);
+			}
+
+			Dict.Table table = null;
+
+			while (!code.EndOfFile)
+			{
+				if (!string.IsNullOrEmpty(word = code.PeekWord()))
+				{
+					if (word == "updates")
+					{
+						AddToken(new KeywordToken(Scope, code.MovePeekedSpan(), word));
+					}
+					else if (word == "prompt" || word == "comment" || word == "image" || word == "description")
+					{
+						AddToken(new KeywordToken(Scope, code.MovePeekedSpan(), word));
+						var exp = ExpressionToken.TryParse(Scope, _createRelationshipEndTokens);
+						if (exp != null) AddToken(exp);
+					}
+					else if (word == "one" || word == "many")
+					{
+						AddToken(new KeywordToken(Scope, code.MovePeekedSpan(), word));
+						word = code.PeekWord();
+						if (!string.IsNullOrEmpty(word))
+						{
+							table = ProbeEnvironment.GetTable(word);
+							if (table != null)
 							{
-								parent.AddToken(new KeywordToken(Scope, code.Span, code.Text));
-								if (code.ReadStringLiteral())
+								AddToken(new IdentifierToken(Scope, code.MovePeekedSpan(), word, table.BaseDefinition));
+							}
+							else
+							{
+								var exp = ExpressionToken.TryParse(Scope, _createRelationshipEndTokens);
+								if (exp != null) AddToken(exp);
+							}
+						}
+						else
+						{
+							var exp = ExpressionToken.TryParse(Scope, _createRelationshipEndTokens);
+							if (exp != null) AddToken(exp);
+						}
+					}
+					else if (word == "to")
+					{
+						AddToken(new KeywordToken(Scope, code.MovePeekedSpan(), "to"));
+						if (code.ReadExactWholeWord("one") || code.ReadExactWholeWord("many"))
+						{
+							AddToken(new KeywordToken(Scope, code.Span, code.Text));
+
+							word = code.PeekWord();
+							if (!string.IsNullOrEmpty(word))
+							{
+								table = ProbeEnvironment.GetTable(word);
+								if (table != null)
 								{
-									parent.AddToken(new StringLiteralToken(Scope, code.Span, code.Text));
-									continue;
+									AddToken(new IdentifierToken(Scope, code.MovePeekedSpan(), word, table.BaseDefinition));
+								}
+								else
+								{
+									var exp = ExpressionToken.TryParse(Scope, _createRelationshipEndTokens);
+									if (exp != null) AddToken(exp);
 								}
 							}
 							else
 							{
-								code.Position = resetPos;
+								var exp = ExpressionToken.TryParse(Scope, _createRelationshipEndTokens);
+								if (exp != null) AddToken(exp);
 							}
-
-							if ((exp = ExpressionToken.TryParse(Scope, _columnEndTokens)) != null) parent.AddToken(exp);
-							continue;
 						}
+					}
+					else if (word == "order")
+					{
+						AddToken(new KeywordToken(Scope, code.MovePeekedSpan(), "order"));
 
-						break;
+						if (code.ReadExactWholeWord("by"))
+						{
+							AddToken(new KeywordToken(Scope, code.Span, "by"));
+
+							if (code.ReadExactWholeWord("unique")) AddToken(new KeywordToken(Scope, code.Span, "unique"));
+
+							while (!code.EndOfFile)
+							{
+								if (code.PeekExact('(') || code.PeekExact('{')) break;
+
+								if (table != null && !string.IsNullOrEmpty(word = code.PeekWord()))
+								{
+									var field = table.GetField(word);
+									if (field != null) AddToken(new IdentifierToken(Scope, code.MovePeekedSpan(), word, field.Definition));
+									else break;
+								}
+								else break;
+							}
+						}
+					}
+					else if (word == "tag")
+					{
+						ParseTag(Scope, this, new KeywordToken(Scope, code.MovePeekedSpan(), "tag"), _createRelationshipEndTokens);
 					}
 					else break;
+				}
+				else if (code.ReadExact('(') || code.ReadExact('{'))
+				{
+					var brackets = new BracketsToken(Scope);
+					brackets.AddOpen(code.Span);
+					AddToken(brackets);
+
+					while (!code.EndOfFile)
+					{
+						if (code.ReadExact(')') || code.ReadExact('}'))
+						{
+							brackets.AddClose(code.Span);
+							break;
+						}
+
+						if (!TryParseColumnDefinition(Scope, brackets, relind != null ? relind.Definition : null))
+						{
+							var exp = ExpressionToken.TryParse(Scope, _createRelationshipEndTokens);
+							if (exp != null) AddToken(exp);
+							else break;
+						}
+					}
+				}
+				else break;
+			}
+		}
+
+		private static readonly string[] _createIndexEndTokens = new string[] { "on", "description", "tag" };
+
+		private static readonly string[] _createIndexColumnEndTokens = new string[] { ")", "}", "," };
+
+		private void ParseCreateIndex()
+		{
+			var code = Code;
+			Dict.RelInd relind = null;
+			Dict.Table table = null;
+			string word;
+
+			if (code.ReadExactWholeWord("primary")) AddToken(new KeywordToken(Scope, code.Span, "primary"));
+			if (code.ReadExactWholeWord("NOPICK")) AddToken(new KeywordToken(Scope, code.Span, "NOPICK"));
+
+			if (!string.IsNullOrEmpty(word = code.PeekWord()))
+			{
+				if ((relind = ProbeEnvironment.GetRelInd(word)) != null)
+				{
+					AddToken(new IdentifierToken(Scope, code.MovePeekedSpan(), word, relind.Definition));
+				}
+				else
+				{
+					var exp = ExpressionToken.TryParse(Scope, _createIndexEndTokens);
+					if (exp != null) AddToken(exp);
+				}
+			}
+			else
+			{
+				var exp = ExpressionToken.TryParse(Scope, _createIndexEndTokens);
+				if (exp != null) AddToken(exp);
+			}
+
+			if (code.ReadExactWholeWord("on"))
+			{
+				AddToken(new KeywordToken(Scope, code.Span, "on"));
+
+				if (!string.IsNullOrEmpty(word = code.PeekWord()) &&
+					(table = ProbeEnvironment.GetTable(word)) != null)
+				{
+					AddToken(new IdentifierToken(Scope, code.MovePeekedSpan(), word, table.BaseDefinition));
+				}
+				else
+				{
+					var exp = ExpressionToken.TryParse(Scope, _createIndexEndTokens);
+					if (exp != null) AddToken(exp);
+				}
+			}
+
+			while (!code.EndOfFile)
+			{
+				if (code.PeekExact('(') || code.PeekExact('{')) break;
+
+				if (!string.IsNullOrEmpty(word = code.PeekWord()))
+				{
+					if (word == "description")
+					{
+						AddToken(new KeywordToken(Scope, code.MovePeekedSpan(), "description"));
+						var exp = ExpressionToken.TryParse(Scope, _createIndexEndTokens);
+						if (exp != null) AddToken(exp);
+					}
+					else if (word == "tag")
+					{
+						ParseTag(Scope, this, new KeywordToken(Scope, code.MovePeekedSpan(), "tag"), _createIndexEndTokens);
+					}
+				}
+			}
+
+			if (code.ReadExact('(') || code.ReadExact('{'))
+			{
+				var brackets = new BracketsToken(Scope);
+				brackets.AddOpen(code.Span);
+				AddToken(brackets);
+
+				Dict.Field field = null;
+
+				while (!code.EndOfFile)
+				{
+					if (code.ReadExact(')') || code.ReadExact('}'))
+					{
+						brackets.AddClose(code.Span);
+						break;
+					}
+
+					if (code.ReadExact(','))
+					{
+						brackets.AddToken(new DelimiterToken(Scope, code.Span));
+					}
+
+					if (table != null &&
+						!string.IsNullOrEmpty(word = code.PeekWord()) &&
+						(field = table.GetField(word)) != null)
+					{
+						brackets.AddToken(new IdentifierToken(Scope, code.MovePeekedSpan(), word, field.Definition));
+					}
+					else
+					{
+						var exp = ExpressionToken.TryParse(Scope, _createIndexColumnEndTokens);
+						if (exp != null) brackets.AddToken(exp);
+						else break;
+					}
+				}
+			}
+		}
+
+		private static readonly string[] _createStringdefEndTokens = new string[] { ";", "description" };
+
+		private void ParseCreateStringdef()
+		{
+			var code = Code;
+
+			var word = code.PeekWord();
+			var sd = ProbeEnvironment.GetStringDef(word);
+			if (sd != null)
+			{
+				AddToken(new IdentifierToken(Scope, code.Span, word, sd.Definition));
+			}
+			else
+			{
+				var exp = ExpressionToken.TryParse(Scope, _createStringdefEndTokens);
+				if (exp != null) AddToken(exp);
+			}
+
+			while (!code.EndOfFile)
+			{
+				if (code.ReadExact(';'))
+				{
+					AddToken(new StatementEndToken(Scope, code.Span));
+					break;
+				}
+
+				if (code.ReadStringLiteral())
+				{
+					AddToken(new StringLiteralToken(Scope, code.Span, code.Text));
+					if (code.ReadNumber()) AddToken(new NumberToken(Scope, code.Span, code.Text));
+					continue;
+				}
+				else if (code.ReadExactWholeWord("description"))
+				{
+					AddToken(new KeywordToken(Scope, code.Span, "description"));
+					while (code.ReadStringLiteral()) AddToken(new StringLiteralToken(Scope, code.Span, code.Text));
+				}
+				else break;
+			}
+		}
+
+		private static readonly string[] _createTypedefEndTokens = new string[] { ";", "description" };
+
+		private void ParseCreateTypedef()
+		{
+			var code = Code;
+
+			var word = code.PeekWord();
+			if (!string.IsNullOrEmpty(word))
+			{
+				var td = ProbeEnvironment.GetTypeDef(word);
+				if (td != null)
+				{
+					AddToken(new IdentifierToken(Scope, code.Span, word, td.Definition));
+				}
+				else
+				{
+					var exp = ExpressionToken.TryParse(Scope, _createTypedefEndTokens);
+					if (exp != null) AddToken(exp);
+				}
+
+				var dt = DataType.TryParse(new DataType.ParseArgs
+				{
+					Code = code,
+					Scope = Scope,
+					TokenCreateCallback = token =>
+					{
+						AddToken(token);
+					}
+				});
+				if (dt != null)
+				{
+					if (code.PeekWord() == "description")
+					{
+						AddToken(new KeywordToken(Scope, code.Span, "description"));
+						while (code.ReadStringLiteral()) AddToken(new StringLiteralToken(Scope, code.Span, code.Text));
+					}
+
+					if (code.ReadExact(';')) AddToken(new StatementEndToken(Scope, code.Span));
+				}
+			}
+		}
+
+		private static readonly string[] _createTimeRelationshipEndTokens = new string[] { "prompt", "comment", "description", "order", "tag", "to" };
+
+		private void ParseCreateTimeRelationship()
+		{
+			var code = Code;
+			var word = code.PeekWord();
+			var relind = ProbeEnvironment.GetRelInd(word);
+			if (relind != null)
+			{
+				AddToken(new IdentifierToken(Scope, code.MovePeekedSpan(), word, relind.Definition));
+			}
+			else return;
+
+			if (code.ReadNumber()) AddToken(new NumberToken(Scope, code.Span, code.Text));
+			else return;
+
+			Dict.Table table = null;
+
+			while (!code.EndOfFile)
+			{
+				if (code.PeekExact('(') || code.PeekExact('{')) break;
+
+				if (!string.IsNullOrEmpty(word = code.PeekWord()))
+				{
+					if (word == "prompt" || word == "comment" || word == "description")
+					{
+						AddToken(new KeywordToken(Scope, code.MovePeekedSpan(), word));
+						var exp = ExpressionToken.TryParse(Scope, _createTimeRelationshipEndTokens);
+						if (exp != null) AddToken(exp);
+					}
+					else if (word == "tag")
+					{
+						ParseTag(Scope, this, new KeywordToken(Scope, code.MovePeekedSpan(), word), _createTimeRelationshipEndTokens);
+					}
+					else if (word == "order")
+					{
+						AddToken(new KeywordToken(Scope, code.MovePeekedSpan(), "order"));
+						if (code.ReadExactWholeWord("by"))
+						{
+							AddToken(new KeywordToken(Scope, code.Span, "by"));
+
+							while (!code.EndOfFile)
+							{
+								if (code.PeekExact('(') || code.PeekExact('{')) break;
+
+								if (!string.IsNullOrEmpty(word = code.PeekWord()))
+								{
+									var field = table.GetField(word);
+									if (field != null) AddToken(new IdentifierToken(Scope, code.MovePeekedSpan(), word, field.Definition));
+									else
+									{
+										var exp = ExpressionToken.TryParse(Scope, _createTimeRelationshipEndTokens);
+										if (exp != null) AddToken(exp);
+									}
+								}
+							}
+						}
+					}
+					else if (word == "to")
+					{
+						AddToken(new KeywordToken(Scope, code.MovePeekedSpan(), "to"));
+
+						if ((table = ProbeEnvironment.GetTable(word)) != null)
+						{
+							AddToken(new IdentifierToken(Scope, code.Span, word, table.BaseDefinition));
+						}
+						else
+						{
+							var exp = ExpressionToken.TryParse(Scope, _createTimeRelationshipEndTokens);
+							if (exp != null) AddToken(exp);
+						}
+					}
+					else if ((table = ProbeEnvironment.GetTable(word)) != null)
+					{
+						AddToken(new IdentifierToken(Scope, code.MovePeekedSpan(), word, table.BaseDefinition));
+
+						if (code.ReadExactWholeWord("to"))
+						{
+							AddToken(new KeywordToken(Scope, code.Span, "to"));
+
+							if ((table = ProbeEnvironment.GetTable(word)) != null)
+							{
+								AddToken(new IdentifierToken(Scope, code.Span, word, table.BaseDefinition));
+							}
+							else
+							{
+								var exp = ExpressionToken.TryParse(Scope, _createTimeRelationshipEndTokens);
+								if (exp != null) AddToken(exp);
+							}
+						}
+					}
+					else break;
+				}
+				else break;
+			}
+
+			if (code.PeekExact('('))
+			{
+				AddToken(BracketsToken.Parse(Scope));
+			}
+		}
+
+		private static readonly string[] _createWorkspaceEndTokens = new string[] { "(", "tag", "prompt", "comment", "image", "description" };
+		private static readonly string[] _createWorkspaceColumnEndTokens = new string[] { ",", ")", "prompt", "comment", "tag", "preload" };
+
+		private void ParseCreateWorkspace()
+		{
+			var code = Code;
+			var word = code.PeekWord();
+			if (!string.IsNullOrEmpty(word)) AddToken(new UnknownToken(Scope, code.MovePeekedSpan(), word));
+			else return;
+
+			while (true)
+			{
+				if (code.PeekExact('(')) break;
+
+				if (!string.IsNullOrEmpty(word = code.PeekWord()))
+				{
+					if (word == "prompt" || word == "comment" || word == "description" || word == "image")
+					{
+						AddToken(new KeywordToken(Scope, code.MovePeekedSpan(), word));
+						var exp = ExpressionToken.TryParse(Scope, _createWorkspaceEndTokens);
+						if (exp != null) AddToken(exp);
+					}
+					else if (word == "tag")
+					{
+						ParseTag(Scope, this, new KeywordToken(Scope, code.MovePeekedSpan(), "tag"), _createWorkspaceEndTokens);
+					}
+					else break;
+				}
+				else break;
+			}
+
+			if (code.ReadExact('('))
+			{
+				var brackets = new BracketsToken(Scope);
+				brackets.AddOpen(code.Span);
+				AddToken(brackets);
+
+				while (true)
+				{
+					if (code.ReadExact(')'))
+					{
+						brackets.AddClose(code.Span);
+						break;
+					}
+
+					if (code.ReadExact(','))
+					{
+						brackets.AddToken(new DelimiterToken(Scope, code.Span));
+					}
+
+					if (code.ReadWord())
+					{
+						brackets.AddToken(new UnknownToken(Scope, code.Span, code.Text));
+
+						Dict.Table table = null;
+						do
+						{
+							table = ProbeEnvironment.GetTable(code.PeekWord());
+							if (table != null)
+							{
+								brackets.AddToken(new IdentifierToken(Scope, code.MovePeekedSpan(), code.Text, table.BaseDefinition));
+								if (code.ReadExact('\\')) brackets.AddToken(new OperatorToken(Scope, code.Span, code.Text));
+							}
+						}
+						while (table != null);
+
+						while (true)
+						{
+							if (code.ReadExact(','))
+							{
+								brackets.AddToken(new DelimiterToken(Scope, code.Span));
+								break;
+							}
+
+							if (!string.IsNullOrEmpty(word = code.PeekWord()))
+							{
+								if (word == "prompt" || word == "comment")
+								{
+									brackets.AddToken(new KeywordToken(Scope, code.MovePeekedSpan(), word));
+									var exp = ExpressionToken.TryParse(Scope, _createWorkspaceColumnEndTokens);
+									if (exp != null) brackets.AddToken(exp);
+								}
+								else if (word == "preload")
+								{
+									brackets.AddToken(new KeywordToken(Scope, code.MovePeekedSpan(), word));
+								}
+								else if (word == "tag")
+								{
+									ParseTag(Scope, brackets, new KeywordToken(Scope, code.MovePeekedSpan(), "tag"), _createWorkspaceColumnEndTokens);
+								}
+								else break;
+							}
+							else break;
+						}
+					}
 				}
 			}
 		}

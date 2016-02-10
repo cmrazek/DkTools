@@ -160,29 +160,51 @@ namespace DkTools.Classifier
 						{
 							tokenInfo.Type = ProbeClassifierType.Keyword;
 							gotKeyword = true;
+							_pos = match.Index + match.Length;
 							break;
 						}
 					}
 
 					if (!gotKeyword)
 					{
-						if (_tokenMap.TryGetValue(_pos + _posOffset, out token) && token.Text == word)
+						if (_tokenMap.TryGetValue(_pos + _posOffset, out token))
 						{
-							var def = token.SourceDefinition;
-							if (def != null) tokenInfo.Type = def.ClassifierType;
-							else tokenInfo.Type = token.ClassifierType;
+							if (token.Text == word)
+							{
+								var def = token.SourceDefinition;
+								if (def != null) tokenInfo.Type = def.ClassifierType;
+								else tokenInfo.Type = token.ClassifierType;
+
+								_pos = match.Index + match.Length;
+								gotKeyword = true;
+							}
+							else
+							{
+								var tokenWord = token.Text;
+								if (tokenWord.StartsWith(word) &&
+									_pos + tokenWord.Length <= _length &&
+									_source.Substring(_pos, tokenWord.Length) == tokenWord)
+								{
+									var def = token.SourceDefinition;
+									if (def != null) tokenInfo.Type = def.ClassifierType;
+									else tokenInfo.Type = token.ClassifierType;
+
+									_pos = match.Index + tokenWord.Length;
+									gotKeyword = true;
+								}
+							}
 						}
-						// TODO: remove
-						//else if (Constants.Keywords.Contains(word)) tokenInfo.Type = ProbeClassifierType.Keyword;
-						//else if (Constants.DataTypeKeywords.Contains(word)) tokenInfo.Type = ProbeClassifierType.DataType;
-						else tokenInfo.Type = ProbeClassifierType.Normal;
+					}
+
+					if (!gotKeyword)
+					{
+						tokenInfo.Type = ProbeClassifierType.Normal;
+						_pos = match.Index + match.Length;
 					}
 
 					stmt = StatementCompletion.StatementLayout.ProcessWord(word, stmt);
 					state = (((int)stmt) << 16) | (state & ~State.StatementMask);
 				}
-
-				_pos = match.Index + match.Length;
 			}
 			else if ((match = _rxNumber.Match(_source, _pos)).Success)
 			{
