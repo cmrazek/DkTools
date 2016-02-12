@@ -120,9 +120,6 @@ namespace DkTools.CodeModel.Tokens.Statements
 		private static readonly string[] _createTableEndTokens = new string[] { "(", "updates", "database", "display", "modal",
 			"nopick", "pick", "snapshot", "prompt", "comment", "image", "description", "tag" };
 
-		private static readonly string[] _columnEndTokens = new string[] { ")", "}", ",", "prompt", "comment", "group", "endgroup",
-			"tag", "form", "formonly", "zoom", "row", "col", "rows", "cols" };
-
 		private void ParseCreateTable(KeywordToken tableToken)
 		{
 			AddToken(tableToken);
@@ -186,6 +183,7 @@ namespace DkTools.CodeModel.Tokens.Statements
 				if (!TryParseColumnDefinition(Scope, parent, table != null ? table.BaseDefinition : null, true))
 				{
 					if ((exp = ExpressionToken.TryParse(Scope, _columnEndTokens)) != null) parent.AddToken(exp);
+					else break;
 				}
 			}
 		}
@@ -223,9 +221,14 @@ namespace DkTools.CodeModel.Tokens.Statements
 						continue;
 					}
 
-					break;
+					if ((exp = ExpressionToken.TryParse(Scope, endTokens)) != null) AddToken(exp);
+					else break;
 				}
-				else break;
+				else
+				{
+					if ((exp = ExpressionToken.TryParse(Scope, endTokens)) != null) AddToken(exp);
+					else break;
+				}
 			}
 		}
 
@@ -310,6 +313,9 @@ namespace DkTools.CodeModel.Tokens.Statements
 			if (code.ReadExact(';')) AddToken(new StatementEndToken(Scope, code.Span));
 		}
 
+		private static readonly string[] _columnEndTokens = new string[] { ")", "}", ",", "prompt", "comment", "group", "endgroup",
+			"tag", "form", "formonly", "zoom", "row", "col", "rows", "cols" };
+
 		private static bool TryParseColumnDefinition(Scope scope, GroupToken parent, Definition parentDef, bool includeNameAndDataType)
 		{
 			string word;
@@ -364,9 +370,14 @@ namespace DkTools.CodeModel.Tokens.Statements
 						continue;
 					}
 
-					break;
+					if ((exp = ExpressionToken.TryParse(scope, _columnEndTokens)) != null) parent.AddToken(exp);
+					else break;
 				}
-				else break;
+				else
+				{
+					if ((exp = ExpressionToken.TryParse(scope, _columnEndTokens)) != null) parent.AddToken(exp);
+					else break;
+				}
 			}
 
 			if (code.ReadExact(','))
@@ -519,7 +530,12 @@ namespace DkTools.CodeModel.Tokens.Statements
 					{
 						ParseTag(Scope, this, new KeywordToken(Scope, code.MovePeekedSpan(), "tag"), _createRelationshipEndTokens);
 					}
-					else break;
+					else
+					{
+						var exp = ExpressionToken.TryParse(Scope, _createRelationshipEndTokens);
+						if (exp != null) AddToken(exp);
+						else break;
+					}
 				}
 				else if (code.ReadExact('(') || code.ReadExact('{'))
 				{
@@ -543,7 +559,12 @@ namespace DkTools.CodeModel.Tokens.Statements
 						}
 					}
 				}
-				else break;
+				else
+				{
+					var exp = ExpressionToken.TryParse(Scope, _createRelationshipEndTokens);
+					if (exp != null) AddToken(exp);
+					else break;
+				}
 			}
 		}
 
@@ -612,6 +633,18 @@ namespace DkTools.CodeModel.Tokens.Statements
 					{
 						ParseTag(Scope, this, new KeywordToken(Scope, code.MovePeekedSpan(), "tag"), _createIndexEndTokens);
 					}
+					else
+					{
+						var exp = ExpressionToken.TryParse(Scope, _createIndexEndTokens);
+						if (exp != null) AddToken(exp);
+						else break;
+					}
+				}
+				else
+				{
+					var exp = ExpressionToken.TryParse(Scope, _createIndexEndTokens);
+					if (exp != null) AddToken(exp);
+					else break;
 				}
 			}
 
@@ -689,7 +722,12 @@ namespace DkTools.CodeModel.Tokens.Statements
 					AddToken(new KeywordToken(Scope, code.Span, "description"));
 					while (code.ReadStringLiteral()) AddToken(new StringLiteralToken(Scope, code.Span, code.Text));
 				}
-				else break;
+				else
+				{
+					var exp = ExpressionToken.TryParse(Scope, _createStringdefEndTokens);
+					if (exp != null) AddToken(exp);
+					else break;
+				}
 			}
 		}
 
@@ -826,9 +864,19 @@ namespace DkTools.CodeModel.Tokens.Statements
 							}
 						}
 					}
+					else
+					{
+						var exp = ExpressionToken.TryParse(Scope, _createTimeRelationshipEndTokens);
+						if (exp != null) AddToken(exp);
+						else break;
+					}
+				}
+				else
+				{
+					var exp = ExpressionToken.TryParse(Scope, _createTimeRelationshipEndTokens);
+					if (exp != null) AddToken(exp);
 					else break;
 				}
-				else break;
 			}
 
 			if (code.PeekExact('('))
@@ -863,9 +911,19 @@ namespace DkTools.CodeModel.Tokens.Statements
 					{
 						ParseTag(Scope, this, new KeywordToken(Scope, code.MovePeekedSpan(), "tag"), _createWorkspaceEndTokens);
 					}
+					else
+					{
+						var exp = ExpressionToken.TryParse(Scope, _createWorkspaceEndTokens);
+						if (exp != null) AddToken(exp);
+						else break;
+					}
+				}
+				else
+				{
+					var exp = ExpressionToken.TryParse(Scope, _createWorkspaceEndTokens);
+					if (exp != null) AddToken(exp);
 					else break;
 				}
-				else break;
 			}
 
 			if (code.ReadExact('('))
@@ -927,9 +985,19 @@ namespace DkTools.CodeModel.Tokens.Statements
 								{
 									ParseTag(Scope, brackets, new KeywordToken(Scope, code.MovePeekedSpan(), "tag"), _createWorkspaceColumnEndTokens);
 								}
+								else
+								{
+									var exp = ExpressionToken.TryParse(Scope, _createWorkspaceColumnEndTokens);
+									if (exp != null) brackets.AddToken(exp);
+									else break;
+								}
+							}
+							else
+							{
+								var exp = ExpressionToken.TryParse(Scope, _createWorkspaceColumnEndTokens);
+								if (exp != null) brackets.AddToken(exp);
 								else break;
 							}
-							else break;
 						}
 					}
 				}
