@@ -148,6 +148,7 @@ namespace DkTools.Classifier
 				if ((state & State.Disabled) != 0)
 				{
 					tokenInfo.Type = ProbeClassifierType.Inactive;
+					_pos = match.Index + match.Length;
 				}
 				else
 				{
