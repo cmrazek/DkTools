@@ -50,7 +50,8 @@ namespace DkTools.CodeModel.Tokens
 				TokenCreateCallback = (token) =>
 				{
 					exp.AddToken(token);
-				}
+				},
+				VisibleModel = true
 			};
 
 			var abortParsing = false;

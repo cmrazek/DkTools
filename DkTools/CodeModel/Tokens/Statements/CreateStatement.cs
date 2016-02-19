@@ -139,7 +139,6 @@ namespace DkTools.CodeModel.Tokens.Statements
 			// Table number+1
 			if (Code.ReadNumber()) AddToken(new NumberToken(Scope, code.Span, code.Text));
 
-			string word;
 			ExpressionToken exp;
 
 			// Attributes
@@ -304,7 +303,8 @@ namespace DkTools.CodeModel.Tokens.Statements
 					TokenCreateCallback = token =>
 					{
 						AddToken(token);
-					}
+					},
+					VisibleModel = true
 				});
 			}
 
@@ -437,7 +437,9 @@ namespace DkTools.CodeModel.Tokens.Statements
 
 			Dict.Table table = null;
 
-			while (!code.EndOfFile)
+			var done = false;
+
+			while (!code.EndOfFile && !done)
 			{
 				if (!string.IsNullOrEmpty(word = code.PeekWord()))
 				{
@@ -548,6 +550,7 @@ namespace DkTools.CodeModel.Tokens.Statements
 						if (code.ReadExact(')') || code.ReadExact('}'))
 						{
 							brackets.AddClose(code.Span);
+							done = true;
 							break;
 						}
 
@@ -758,7 +761,8 @@ namespace DkTools.CodeModel.Tokens.Statements
 					TokenCreateCallback = token =>
 					{
 						AddToken(token);
-					}
+					},
+					VisibleModel = true
 				});
 				if (dt != null)
 				{

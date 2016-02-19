@@ -36,7 +36,8 @@ namespace DkTools.CodeModel.Tokens
 				TokenCreateCallback = (token) =>
 				{
 					ret.AddToken(token);
-				}
+				},
+				VisibleModel = true
 			});
 			if (dataType == null) dataType = DataType.Int;
 

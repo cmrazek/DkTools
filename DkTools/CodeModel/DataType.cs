@@ -199,6 +199,11 @@ namespace DkTools.CodeModel
 			/// </summary>
 			public Scope Scope { get; set; }
 
+			/// <summary>
+			/// (optional) Set to true if this is for a visible model which is not preprocessed.
+			/// </summary>
+			public bool VisibleModel { get; set; }
+
 #if REPORT_ERRORS
 			/// <summary>
 			/// (optional) An ErrorProvider to receive errors detected by this parsing function.
@@ -239,6 +244,11 @@ namespace DkTools.CodeModel
 			public void OnUnknown(Span span, string text)
 			{
 				if (TokenCreateCallback != null) TokenCreateCallback(new UnknownToken(Scope, span, text));
+			}
+
+			public void OnToken(Token token)
+			{
+				if (TokenCreateCallback != null) TokenCreateCallback(token);
 			}
 		}
 
@@ -431,6 +441,8 @@ namespace DkTools.CodeModel
 			return dataType;
 		}
 
+		private static readonly string[] _bracketsEndTokens = new string[] { ")" };
+
 		private static DataType ProcessNumeric(ParseArgs a, string tokenText)
 		{
 			var sb = new StringBuilder();
@@ -453,7 +465,7 @@ namespace DkTools.CodeModel
 				{
 					sb.Append(code.Text);
 					if (brackets != null) brackets.AddToken(new NumberToken(a.Scope, code.Span, code.Text));
-					
+
 					if (code.ReadExact(','))
 					{
 						sb.Append(',');
@@ -465,6 +477,11 @@ namespace DkTools.CodeModel
 							if (brackets != null) brackets.AddToken(new NumberToken(a.Scope, code.Span, code.Text));
 						}
 					}
+				}
+				else if (a.VisibleModel)
+				{
+					var exp = ExpressionToken.TryParse(a.Scope, _bracketsEndTokens);
+					if (exp != null) a.OnToken(exp);
 				}
 				if (code.ReadExact(')'))
 				{
@@ -538,6 +555,12 @@ namespace DkTools.CodeModel
 						}
 					}
 				}
+				else if (a.VisibleModel)
+				{
+					var exp = ExpressionToken.TryParse(a.Scope, _bracketsEndTokens);
+					if (exp != null) a.OnToken(exp);
+				}
+
 				if (code.ReadExact(')'))
 				{
 					sb.Append(')');
@@ -668,6 +691,33 @@ namespace DkTools.CodeModel
 				}
 
 				return new DataType(ValType.String, a.TypeName, sb.ToString());
+			}
+			else if (a.VisibleModel)
+			{
+				var exp = ExpressionToken.TryParse(a.Scope, _bracketsEndTokens);
+				if (exp != null)
+				{
+					var sb = new StringBuilder();
+					sb.Append(tokenText);
+					sb.Append('(');
+					sb.Append(code.Text);
+					if (brackets != null) brackets.AddToken(exp);
+					if (code.ReadExact(')'))
+					{
+						sb.Append(')');
+						if (brackets != null)
+						{
+							brackets.AddClose(code.Span);
+							a.TokenCreateCallback(brackets);
+						}
+					}
+
+					return new DataType(ValType.String, a.TypeName, sb.ToString());
+				}
+				else
+				{
+					return new DataType(ValType.String, a.TypeName, tokenText);
+				}
 			}
 			else
 			{
