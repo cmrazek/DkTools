@@ -22,7 +22,7 @@ namespace DkTools.CodeModel
 		private class CodeSegment
 		{
 			public string fileName;
-			public int start;
+			public int fileStartPos;
 			public int length;
 			public int startPos;
 			public int endPos;
@@ -32,10 +32,10 @@ namespace DkTools.CodeModel
 			public string text;
 			public bool disabled;
 
-			public CodeSegment(string fileName, int start, int startPos, int endPos, bool actualContent, bool primaryFile, bool disabled)
+			public CodeSegment(string fileName, int fileStartPos, int startPos, int endPos, bool actualContent, bool primaryFile, bool disabled)
 			{
 				this.fileName = fileName;
-				this.start = start;
+				this.fileStartPos = fileStartPos;
 				this.length = 0;
 				this.startPos = startPos;
 				this.endPos = endPos;
@@ -50,7 +50,7 @@ namespace DkTools.CodeModel
 			{
 				public int Compare(CodeSegment a, CodeSegment b)
 				{
-					return a.start.CompareTo(b.start);
+					return a.fileStartPos.CompareTo(b.fileStartPos);
 				}
 			}
 		}
@@ -154,17 +154,17 @@ namespace DkTools.CodeModel
 			if (_lastFindSegment >= 0)
 			{
 				var seg = _segments[_lastFindSegment];
-				if (seg.start <= offset && seg.start + seg.length > offset)
+				if (seg.fileStartPos <= offset && seg.fileStartPos + seg.length > offset)
 				{
 					return _lastFindSegment;
 				}
-				else if (offset < seg.start)
+				else if (offset < seg.fileStartPos)
 				{
 					// work backwards until the segment is found
 					while (--_lastFindSegment >= 0)
 					{
 						seg = _segments[_lastFindSegment];
-						if (seg.start <= offset) return _lastFindSegment;
+						if (seg.fileStartPos <= offset) return _lastFindSegment;
 					}
 					return -1;
 				}
@@ -174,7 +174,7 @@ namespace DkTools.CodeModel
 					while (++_lastFindSegment < _segments.Count)
 					{
 						seg = _segments[_lastFindSegment];
-						if (seg.start + seg.length > offset) return _lastFindSegment;
+						if (seg.fileStartPos + seg.length > offset) return _lastFindSegment;
 					}
 
 					// If at the end of the file, then return the last segment.
@@ -198,14 +198,14 @@ namespace DkTools.CodeModel
 				}
 
 				var seg = _segments[mid];
-				if (seg.start > offset)
+				if (seg.fileStartPos > offset)
 				{
 					max = mid - 1;
 					continue;
 				}
 
-				var length = _segments[mid + 1].start - seg.start;
-				if (seg.start + length <= offset)
+				var length = _segments[mid + 1].fileStartPos - seg.fileStartPos;
+				if (seg.fileStartPos + length <= offset)
 				{
 					min = mid + 1;
 					continue;
@@ -227,21 +227,21 @@ namespace DkTools.CodeModel
 			return _segments[segIndex].primaryFile;
 		}
 
-		public LocalFilePosition GetFilePosition(int sourceOffset)
+		public FilePosition GetFilePosition(int sourceOffset)
 		{
 			if (sourceOffset < 0 || sourceOffset > _length) throw new ArgumentOutOfRangeException("offset");
 
 			var segIndex = FindSegmentIndexForOffset(sourceOffset);
 			if (segIndex < 0)
 			{
-				return LocalFilePosition.Empty;
+				return FilePosition.Empty;
 			}
 			var seg = _segments[segIndex];
 			var pos = seg.startPos;
 
-			if (seg.actualContent) pos += sourceOffset - seg.start;
+			if (seg.actualContent) pos += sourceOffset - seg.fileStartPos;
 
-			return new LocalFilePosition(seg.fileName, pos, seg.primaryFile);
+			return new FilePosition(seg.fileName, pos, seg.primaryFile);
 		}
 
 		/// <summary>
@@ -259,7 +259,7 @@ namespace DkTools.CodeModel
 			var seg = _segments[segIndex];
 			if (seg.primaryFile)
 			{
-				if (seg.actualContent) return seg.startPos + (sourceOffset - seg.start);
+				if (seg.actualContent) return seg.startPos + (sourceOffset - seg.fileStartPos);
 				else return seg.startPos;
 			}
 			else
@@ -304,14 +304,14 @@ namespace DkTools.CodeModel
 					{
 						if (seg.startPos + seg.length >= primaryFilePos)
 						{
-							return seg.start + (primaryFilePos - seg.startPos);
+							return seg.fileStartPos + (primaryFilePos - seg.startPos);
 						}
 					}
 					else
 					{
-						if (seg.start == primaryFilePos)
+						if (seg.fileStartPos == primaryFilePos)
 						{
-							return seg.start;
+							return seg.fileStartPos;
 						}
 					}
 				}
@@ -348,7 +348,7 @@ namespace DkTools.CodeModel
 			{
 				var seg = _segments[segIndex];
 				sb.AppendFormat("SEGMENT {0} FileName [{1}] StartOffset [{4}] Length [{5}] Start [{2}] End [{3}] Primary [{6}] Content [",
-					segIndex, System.IO.Path.GetFileName(seg.fileName), seg.startPos, seg.endPos, seg.start, seg.length, seg.primaryFile);
+					segIndex, System.IO.Path.GetFileName(seg.fileName), seg.startPos, seg.endPos, seg.fileStartPos, seg.length, seg.primaryFile);
 				sb.Append(seg.text);
 				sb.AppendLine("]");
 			}
@@ -374,7 +374,7 @@ namespace DkTools.CodeModel
 						sb.AppendFormat(" EndPos [{0}] {1}", pos, sample.Trim());
 						sb.AppendLine();
 					}
-					sb.AppendFormat("SEGMENT [{0}] Offset [{3}] FileName [{1}] Actual [{4}] StartPos [{2}]", segIndex, seg.fileName, seg.startPos, seg.start, seg.actualContent);
+					sb.AppendFormat("SEGMENT [{0}] Offset [{3}] FileName [{1}] Actual [{4}] StartPos [{2}]", segIndex, seg.fileName, seg.startPos, seg.fileStartPos, seg.actualContent);
 
 					var length = 30;
 					if (length > seg.length) length = seg.length;
@@ -401,11 +401,6 @@ namespace DkTools.CodeModel
 			get { return _snapshot; }
 			set { _snapshot = value; }
 		}
-
-		//public bool IsEmptyLine
-		//{
-		//	get { return _isEmptyLine; }
-		//}
 
 		public IEnumerable<Span> GenerateDisabledSections()
 		{
@@ -663,43 +658,6 @@ namespace DkTools.CodeModel
 				}
 			}
 
-			//public void IgnoreUntil(Func<char, bool> callback)
-			//{
-			//	char ch;
-			//	var startPos = _pos;
-			//	var gotContent = false;
-
-			//	_sb.Clear();
-
-			//	while (_seg != null)
-			//	{
-			//		ch = Peek();
-			//		if (callback(ch))
-			//		{
-			//			if (_segOffset + 1 == _segLength)
-			//			{
-			//				// Hits the end of the segment
-			//				_writer.Append(string.Empty, new CodeAttributes(_seg.fileName, startPos, _seg.endPos, false, _seg.primaryFile, _suppress));
-			//				MoveNextSegment();
-			//				startPos = _pos;
-			//				gotContent = false;
-			//			}
-			//			else
-			//			{
-			//				// Within the current segment
-			//				MoveNext();
-			//				gotContent = true;
-			//			}
-			//		}
-			//		else break;
-			//	}
-
-			//	if (gotContent)
-			//	{
-			//		_writer.Append(string.Empty, new CodeAttributes(_seg.fileName, startPos, _pos, false, _seg.primaryFile, _suppress));
-			//	}
-			//}
-
 			public void IgnoreUntil(IEnumerable<char> breakChars)
 			{
 				char ch;
@@ -847,9 +805,18 @@ namespace DkTools.CodeModel
 				}
 			}
 
+			public FilePosition FilePosition
+			{
+				get
+				{
+					if (_seg == null) return FilePosition.Empty;
+					return new FilePosition(_seg.fileName, _seg.fileStartPos + (_pos - _seg.startPos), _seg.primaryFile);
+				}
+			}
+
 			public Match Match(Regex rx)
 			{
-				var curIndex = _seg.start + _segOffset;
+				var curIndex = _seg.fileStartPos + _segOffset;
 				var match = rx.Match(_src.Text, curIndex);
 				if (match.Success && match.Index == curIndex) return match;
 				return System.Text.RegularExpressions.Match.Empty;

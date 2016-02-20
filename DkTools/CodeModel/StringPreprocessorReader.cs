@@ -146,5 +146,10 @@ namespace DkTools.CodeModel
 			if (match.Success && match.Index == _pos) return match;
 			return System.Text.RegularExpressions.Match.Empty;
 		}
+
+		public FilePosition FilePosition
+		{
+			get { return new FilePosition(null, _pos, false); }
+		}
 	}
 }

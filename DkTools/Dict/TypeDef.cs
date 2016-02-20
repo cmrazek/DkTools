@@ -52,7 +52,7 @@ namespace DkTools.Dict
 				}
 			}
 
-			_def = new CodeModel.Definitions.DataTypeDefinition(_name, _dataType, global: true);
+			_def = new CodeModel.Definitions.DataTypeDefinition(_name, _dataType);
 		}
 
 		public string Name

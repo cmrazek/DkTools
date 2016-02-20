@@ -7,6 +7,7 @@ Version 1.2.24 - (WIP):
   Compile failed.  Shutdown operation components!!!
 - The DICT file is no longer scanned by the background scanner.
 - Added better support for dictionary 'create' statements.
+- Find All References now works with constants and data types.
 
 ____________________________________________________________________________________________________
 Version 1.2.23 - Jan 26, 2016:

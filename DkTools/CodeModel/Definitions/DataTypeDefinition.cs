@@ -12,7 +12,7 @@ namespace DkTools.CodeModel.Definitions
 		private DataType _dataType;
 
 		public DataTypeDefinition(string name, string fileName, int startPos, DataType dataType)
-			: base(name, fileName, startPos, null)
+			: base(name, fileName, startPos, CreateExternalRefId(name, fileName))
 		{
 #if DEBUG
 			if (dataType == null) throw new ArgumentNullException("dataType");
@@ -20,8 +20,8 @@ namespace DkTools.CodeModel.Definitions
 			_dataType = dataType;
 		}
 
-		public DataTypeDefinition(string name, DataType dataType, bool global)
-			: base(name, null, -1, global ? string.Concat("typedef:", name) : null)
+		public DataTypeDefinition(string name, DataType dataType)
+			: base(name, null, -1, CreateExternalRefId(name, null))
 		{
 			_dataType = dataType;
 		}
@@ -82,6 +82,18 @@ namespace DkTools.CodeModel.Definitions
 		public override bool RequiresArguments
 		{
 			get { return false; }
+		}
+
+		private static string CreateExternalRefId(string name, string fileName)
+		{
+			if (!string.IsNullOrEmpty(fileName))
+			{
+				return string.Concat("typedef:", name, ":", System.IO.Path.GetFileName(fileName));
+			}
+			else
+			{
+				return string.Concat("typedef:", name);
+			}
 		}
 	}
 }

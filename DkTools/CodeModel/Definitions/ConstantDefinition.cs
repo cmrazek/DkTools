@@ -12,7 +12,7 @@ namespace DkTools.CodeModel.Definitions
 		private string _text;
 
 		public ConstantDefinition(string name, string fileName, int startPos, string text)
-			: base(name, fileName, startPos, null)
+			: base(name, fileName, startPos, CreateExternalRefId(name, fileName))
 		{
 			_text = text;
 		}
@@ -73,6 +73,18 @@ namespace DkTools.CodeModel.Definitions
 		public override bool RequiresArguments
 		{
 			get { return false; }
+		}
+
+		private static string CreateExternalRefId(string name, string fileName)
+		{
+			if (!string.IsNullOrEmpty(fileName))
+			{
+				return string.Concat("const:", name, ":", System.IO.Path.GetFileName(fileName));
+			}
+			else
+			{
+				return string.Concat("const:", name);
+			}
 		}
 	}
 }

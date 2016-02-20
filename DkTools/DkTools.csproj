@@ -329,7 +329,7 @@
     <Compile Include="ErrorTagging\ErrorCode.cs" />
     <Compile Include="ErrorTagging\ErrorProvider.cs" />
     <Compile Include="CodeModel\FunctionPrivacy.cs" />
-    <Compile Include="CodeModel\LocalFilePosition.cs" />
+    <Compile Include="CodeModel\FilePosition.cs" />
     <Compile Include="CodeModel\Preprocessor.cs" />
     <Compile Include="CodeModel\IPreprocessorReader.cs" />
     <Compile Include="CodeModel\IPreprocessorWriter.cs" />

@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using DkTools.CodeModel.Definitions;
 using DkTools.CodeModel.Tokens;
 
 namespace DkTools.CodeModel
@@ -13,6 +14,7 @@ namespace DkTools.CodeModel
 		private FileStore _store;
 		private Dictionary<string, Define> _defines;
 		private List<IncludeDependency> _includeDependencies = new List<IncludeDependency>();
+		private List<Reference> _refs = new List<Reference>();
 
 		public Preprocessor(FileStore store)
 		{
@@ -24,7 +26,10 @@ namespace DkTools.CodeModel
 		{
 			if (reader == null) throw new ArgumentNullException("reader");
 
-			Preprocess(new PreprocessorParams(reader, writer, fileName, parentFiles, fileContext, ContentType.File));
+			Preprocess(new PreprocessorParams(reader, writer, fileName, parentFiles, fileContext, ContentType.File)
+			{
+				isMainSource = true
+			});
 		}
 
 		private void Preprocess(PreprocessorParams p)
@@ -46,12 +51,6 @@ namespace DkTools.CodeModel
 			{
 				str = rdr.PeekToken(false);
 				if (string.IsNullOrEmpty(str)) continue;
-
-				//if (string.IsNullOrWhiteSpace(str) && str.Contains('\n') && p.writer.IsEmptyLine)
-				//{
-				//	rdr.Ignore(str.Length);
-				//	continue;
-				//}
 
 				if (str[0] == '#')
 				{
@@ -168,6 +167,7 @@ namespace DkTools.CodeModel
 			var linkPos = rdr.Position;
 			var name = rdr.PeekIdentifier();
 			if (string.IsNullOrEmpty(name)) return;
+			var nameFilePos = rdr.FilePosition;
 			rdr.Ignore(name.Length);
 
 			// Check if this is parameterized
@@ -290,7 +290,9 @@ namespace DkTools.CodeModel
 
 			if (!p.suppress)
 			{
-				_defines[name] = new Define(name, sb.ToString(), paramNames, linkFileName, linkPos);
+				var define = new Define(name, sb.ToString(), paramNames, linkFileName, linkPos);
+				_defines[name] = define;
+				if (nameFilePos.IsInFile) _refs.Add(new Reference(define.Definition, nameFilePos));
 			}
 		}
 
@@ -299,12 +301,14 @@ namespace DkTools.CodeModel
 			p.reader.IgnoreWhiteSpaceAndComments(true);
 			var name = p.reader.PeekIdentifier();
 			if (string.IsNullOrEmpty(name)) return;
+			var nameFilePos = p.reader.FilePosition;
 			p.reader.Ignore(name.Length);
 
 			Define define;
 			if (_defines.TryGetValue(name, out define))
 			{
 				define.Disabled = true;
+				if (nameFilePos.IsInFile) _refs.Add(new Reference(define.Definition, nameFilePos));
 			}
 		}
 
@@ -324,7 +328,17 @@ namespace DkTools.CodeModel
 			}
 
 			Define define = null;
-			if (p.args != null) define = p.args.FirstOrDefault(x => x.Name == name);
+			if (p.args != null)
+			{
+				foreach (var arg in p.args)
+				{
+					if (arg.Name == name)
+					{
+						define = arg;
+						break;
+					}
+				}
+			}
 			if (define == null) _defines.TryGetValue(name, out define);
 			if (define == null)
 			{
@@ -332,15 +346,14 @@ namespace DkTools.CodeModel
 				return;
 			}
 
+			var nameFilePos = rdr.FilePosition;
+			if (nameFilePos.IsInFile) _refs.Add(new Reference(define.Definition, nameFilePos));
+
 			if (define.IsDataType)
 			{
 				// Insert the data type name before the data type, so that it's available in the quick info and database.
 				rdr.Insert(string.Format("@{0} ", DataType.DecorateEnumOptionIfRequired(name)));
 				rdr.Ignore(name.Length);
-
-				//// Keep data types as-is.
-				//rdr.Use(name.Length);
-				//return;
 			}
 			else
 			{
@@ -567,6 +580,17 @@ namespace DkTools.CodeModel
 
 			var name = rdr.PeekIdentifier();
 			if (string.IsNullOrEmpty(name)) return;
+
+			var nameFilePos = rdr.FilePosition;
+			if (nameFilePos.IsInFile)
+			{
+				Define define;
+				if (_defines.TryGetValue(name, out define))
+				{
+					_refs.Add(new Reference(define.Definition, nameFilePos));
+				}
+			}
+
 			rdr.Ignore(name.Length);
 
 			if (p.fileContext == FileContext.Include)
@@ -800,7 +824,7 @@ namespace DkTools.CodeModel
 		{
 			foreach (var define in _defines.Values)
 			{
-				defProv.AddGlobalFromFile(define.CreateDefinition());
+				defProv.AddGlobalFromFile(define.Definition);
 			}
 		}
 
@@ -825,6 +849,11 @@ namespace DkTools.CodeModel
 			p.reader.Ignore(directiveName.Length);
 		}
 
+		public IEnumerable<Reference> References
+		{
+			get { return _refs; }
+		}
+
 		private class Define
 		{
 			private string _name;
@@ -834,6 +863,7 @@ namespace DkTools.CodeModel
 			private int _pos;
 			private bool _disabled;
 			private DataType _dataType;
+			private Definition _def;
 
 			public Define(string name, string content, List<string> paramNames, string fileName, int pos)
 			{
@@ -892,34 +922,42 @@ namespace DkTools.CodeModel
 				set { _disabled = value; }
 			}
 
-			public Definitions.Definition CreateDefinition()
+			public Definition Definition
 			{
-				if (_paramNames == null)
+				get
 				{
-					if (_dataType != null)
+					if (_def == null)
 					{
-						return new Definitions.DataTypeDefinition(_name, _fileName, _pos, _dataType);
-					}
-					else
-					{
-						return new Definitions.ConstantDefinition(_name, _fileName, _pos, CodeParser.NormalizeText(_content));
-					}
-				}
-				else
-				{
-					var sig = new StringBuilder();
-					sig.Append(_name);
-					sig.Append('(');
-					var firstParam = true;
-					foreach (var paramName in _paramNames)
-					{
-						if (firstParam) firstParam = false;
-						else sig.Append(", ");
-						sig.Append(paramName);
-					}
-					sig.Append(')');
+						if (_paramNames == null)
+						{
+							if (_dataType != null)
+							{
+								_def = new Definitions.DataTypeDefinition(_name, _fileName, _pos, _dataType);
+							}
+							else
+							{
+								_def = new Definitions.ConstantDefinition(_name, _fileName, _pos, CodeParser.NormalizeText(_content));
+							}
+						}
+						else
+						{
+							var sig = new StringBuilder();
+							sig.Append(_name);
+							sig.Append('(');
+							var firstParam = true;
+							foreach (var paramName in _paramNames)
+							{
+								if (firstParam) firstParam = false;
+								else sig.Append(", ");
+								sig.Append(paramName);
+							}
+							sig.Append(')');
 
-					return new Definitions.MacroDefinition(_name, _fileName, _pos, sig.ToString(), CodeParser.NormalizeText(_content));
+							_def = new Definitions.MacroDefinition(_name, _fileName, _pos, sig.ToString(), CodeParser.NormalizeText(_content));
+						}
+					}
+
+					return _def;
 				}
 			}
 
@@ -974,8 +1012,10 @@ namespace DkTools.CodeModel
 			public bool replaceInEffect;
 			public bool resolvingMacros;
 			public FileContext fileContext;
+			public bool isMainSource;
 
-			public PreprocessorParams(IPreprocessorReader reader, IPreprocessorWriter writer, string fileName, IEnumerable<string> parentFiles, FileContext serverContext, ContentType contentType)
+			public PreprocessorParams(IPreprocessorReader reader, IPreprocessorWriter writer, string fileName,
+				IEnumerable<string> parentFiles, FileContext serverContext, ContentType contentType)
 			{
 				this.reader = reader;
 				this.writer = writer;
@@ -1043,6 +1083,28 @@ namespace DkTools.CodeModel
 			public bool LocalizedFile
 			{
 				get { return _localizedFile; }
+			}
+		}
+
+		public struct Reference
+		{
+			private Definition _def;
+			private FilePosition _filePos;
+
+			public Reference(Definition def, FilePosition filePos)
+			{
+				_def = def;
+				_filePos = filePos;
+			}
+
+			public Definition Definition
+			{
+				get { return _def; }
+			}
+
+			public FilePosition FilePosition
+			{
+				get { return _filePos; }
 			}
 		}
 	}

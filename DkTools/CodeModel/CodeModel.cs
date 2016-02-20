@@ -23,6 +23,7 @@ namespace DkTools.CodeModel
 		private ModelType _modelType;
 		private string _className;
 		private FileContext _fileContext;
+		private Preprocessor.Reference[] _prepRefs;
 #if REPORT_ERRORS
 		private Analysis _analysis;
 #endif
@@ -229,6 +230,17 @@ namespace DkTools.CodeModel
 		public FileContext FileContext
 		{
 			get { return _fileContext; }
+		}
+
+		public IEnumerable<Preprocessor.Reference> PreprocessorReferences
+		{
+			get { return _prepRefs; }
+			set { _prepRefs = value.ToArray(); }
+		}
+
+		public CodeSource Source
+		{
+			get { return _prepModel.Source; }
 		}
 
 #if REPORT_ERRORS

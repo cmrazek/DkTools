@@ -347,6 +347,8 @@ namespace DkTools.CodeModel
 				modelToReturn.PreprocessorModel = prepModel;
 			}
 
+			modelToReturn.PreprocessorReferences = prep.References;
+
 #if DEBUG
 			var endTime = DateTime.Now;
 			var elapsedTime = endTime.Subtract(startTime).TotalMilliseconds;

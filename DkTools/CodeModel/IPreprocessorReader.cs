@@ -18,15 +18,14 @@ namespace DkTools.CodeModel
 		Match Match(Regex rx);
 
 		void Use(int numChars);
-		//void UseUntil(Func<char, bool> callback);
 
 		void Ignore(int numChars);
-		//void IgnoreUntil(Func<char, bool> callback);
 		void IgnoreUntil(IEnumerable<char> breakChars);
 		void IgnoreWhile(IEnumerable<char> whileChars);
 
 		string FileName { get; }
 		int Position { get; }
+		FilePosition FilePosition { get; }
 
 		void Insert(string text);
 

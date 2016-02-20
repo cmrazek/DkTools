@@ -66,7 +66,7 @@ namespace DkTools.CodeModel
 						"Creates a string of varying length by concatenating a list of expressions. ", null),
 
 					// Data types
-					new DataTypeDefinition("int", DataType.Int, true),
+					new DataTypeDefinition("int", DataType.Int),
 
 					// Interfaces
 					new InterfaceTypeDefinition("oleobject"),

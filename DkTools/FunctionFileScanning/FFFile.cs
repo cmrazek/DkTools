@@ -424,6 +424,25 @@ namespace DkTools.FunctionFileScanning
 					}
 				}
 
+				foreach (var rf in model.PreprocessorReferences)
+				{
+					var def = rf.Definition;
+					var refId = def.ExternalRefId;
+					if (!string.IsNullOrEmpty(refId))
+					{
+						var filePos = rf.FilePosition;
+						if (filePos.PrimaryFile)
+						{
+							refList.Add(new Reference
+							{
+								ExternalRefId = refId,
+								TrueFileName = filePos.FileName,
+								Position = filePos.Position
+							});
+						}
+					}
+				}
+
 				UpdateRefList(db, refList);
 			}
 		}
