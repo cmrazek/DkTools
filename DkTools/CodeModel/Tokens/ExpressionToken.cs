@@ -316,6 +316,7 @@ namespace DkTools.CodeModel.Tokens
 						break;
 
 					case "BEGINHLP":
+						funcToken.AddToken(new KeywordToken(scope, code.MovePeekedSpan(), code.Text));
 						while (code.ReadStringLiteral())
 						{
 							funcToken.AddToken(new StringLiteralToken(scope, code.Span, code.Text));
