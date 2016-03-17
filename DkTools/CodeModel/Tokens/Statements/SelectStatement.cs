@@ -80,7 +80,7 @@ namespace DkTools.CodeModel.Tokens
 				}
 			}
 
-			// WHILE and ORDER BY
+			// WHERE and ORDER BY
 			var gotWhere = false;
 			var gotOrderBy = false;
 
@@ -199,6 +199,8 @@ namespace DkTools.CodeModel.Tokens
 			var code = scope.Code;
 			if (code.ReadWord())
 			{
+				var wordPos = code.TokenStartPostion;
+
 				var table = ProbeEnvironment.GetTable(code.Text);
 				if (table != null)
 				{
@@ -253,6 +255,9 @@ namespace DkTools.CodeModel.Tokens
 					}
 					return true;
 				}
+
+				// Word was not recognized, so set parser back to before the word so it can get picked up later.
+				code.Position = wordPos;
 			}
 
 			return false;
