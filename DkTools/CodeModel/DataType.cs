@@ -987,6 +987,8 @@ namespace DkTools.CodeModel
 			}
 			sb.Append(" }");
 
+			while (ReadAttribute(a, code, sb)) ;
+
 			var dataType = new DataType(ValType.Enum, a.TypeName, sb.ToString())
 			{
 				_completionOptions = options.ToArray(),

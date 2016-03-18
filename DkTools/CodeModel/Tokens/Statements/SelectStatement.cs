@@ -243,7 +243,7 @@ namespace DkTools.CodeModel.Tokens
 					if (code.ReadExact('.'))
 					{
 						parent.AddToken(new DotToken(scope, code.Span));
-						var word = code.PeekWord();
+						var word = code.PeekWordR();
 						if (!string.IsNullOrEmpty(word))
 						{
 							var childDef = extractDef.GetChildDefinition(word);

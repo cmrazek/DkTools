@@ -657,7 +657,13 @@ namespace DkTools
 			return true;
 		}
 
-		public string PeekWord()
+		public string ReadWordR()
+		{
+			if (!ReadWord()) return string.Empty;
+			return Text;
+		}
+
+		public string PeekWordR()
 		{
 			var pos = _pos;
 			if (ReadWord())
@@ -740,6 +746,33 @@ namespace DkTools
 			for (int i = 0; i < expLength; i++)
 			{
 				if (_source[_pos + i] != expecting[i]) return false;
+			}
+
+			if (_pos + expLength < _length && _source[_pos + expLength].IsWordChar(false))
+			{
+				return false;
+			}
+
+			_tokenStartPos = _pos;
+			_pos += expLength;
+
+			_tokenText.Clear();
+			_tokenText.Append(expecting);
+			_tokenTextStr = null;
+			_tokenType = CodeType.Unknown;
+			return true;
+		}
+
+		public bool ReadExactWholeWordI(string expecting)
+		{
+			if (!SkipWhiteSpace()) return false;
+
+			var expLength = expecting.Length;
+			if (_pos + expLength > _length) return false;
+
+			for (int i = 0; i < expLength; i++)
+			{
+				if (char.ToLower(_source[_pos + i]) != char.ToLower(expecting[i])) return false;
 			}
 
 			if (_pos + expLength < _length && _source[_pos + expLength].IsWordChar(false))
@@ -1016,18 +1049,75 @@ namespace DkTools
 
 		public bool PeekExact(string expecting)
 		{
-			var pos = _pos;
-			var ret = ReadExact(expecting);
-			_pos = pos;
-			return ret;
+			if (!SkipWhiteSpace()) return false;
+
+			var expLength = expecting.Length;
+			if (_pos + expLength > _length) return false;
+
+			for (int i = 0; i < expLength; i++)
+			{
+				if (_source[_pos + i] != expecting[i]) return false;
+			}
+
+			_tokenStartPos = _pos;
+
+			_tokenText.Clear();
+			_tokenText.Append(expecting);
+			_tokenTextStr = null;
+			_tokenType = CodeType.Unknown;
+			return true;
 		}
 
 		public bool PeekExactWholeWord(string expecting)
 		{
-			var pos = _pos;
-			var ret = ReadExactWholeWord(expecting);
-			_pos = pos;
-			return ret;
+			if (!SkipWhiteSpace()) return false;
+
+			var expLength = expecting.Length;
+			if (_pos + expLength > _length) return false;
+
+			for (int i = 0; i < expLength; i++)
+			{
+				if (_source[_pos + i] != expecting[i]) return false;
+			}
+
+			if (_pos + expLength < _length && _source[_pos + expLength].IsWordChar(false))
+			{
+				return false;
+			}
+
+			_tokenStartPos = _pos;
+
+			_tokenText.Clear();
+			_tokenText.Append(expecting);
+			_tokenTextStr = null;
+			_tokenType = CodeType.Unknown;
+			return true;
+		}
+
+		public bool PeekExactWholeWordI(string expecting)
+		{
+			if (!SkipWhiteSpace()) return false;
+
+			var expLength = expecting.Length;
+			if (_pos + expLength > _length) return false;
+
+			for (int i = 0; i < expLength; i++)
+			{
+				if (char.ToLower(_source[_pos + i]) != char.ToLower(expecting[i])) return false;
+			}
+
+			if (_pos + expLength < _length && _source[_pos + expLength].IsWordChar(false))
+			{
+				return false;
+			}
+
+			_tokenStartPos = _pos;
+
+			_tokenText.Clear();
+			_tokenText.Append(expecting);
+			_tokenTextStr = null;
+			_tokenType = CodeType.Unknown;
+			return true;
 		}
 
 		public bool PeekExactWholeWord(IEnumerable<string> expectingList)
@@ -1040,10 +1130,17 @@ namespace DkTools
 
 		public bool PeekExact(char expecting)
 		{
-			var pos = _pos;
-			var ret = ReadExact(expecting);
-			_pos = pos;
-			return ret;
+			if (!SkipWhiteSpace()) return false;
+
+			if (_pos >= _length || _source[_pos] != expecting) return false;
+
+			_tokenStartPos = _pos;
+
+			_tokenText.Clear();
+			_tokenText.Append(expecting);
+			_tokenTextStr = null;
+			_tokenType = CodeType.Unknown;
+			return true;
 		}
 
 		public int DocumentOffset
@@ -1165,8 +1262,7 @@ namespace DkTools
 
 		public bool MovePeeked()
 		{
-			_pos += _tokenText.Length;
-			if (_pos > _length) _pos = _length;
+			_pos = _tokenStartPos + _tokenText.Length;
 			return _pos < _length;
 		}
 

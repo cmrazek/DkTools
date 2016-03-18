@@ -199,7 +199,7 @@ namespace DkTools.CodeModel.Tokens
 			if (code.PeekExact('.'))
 			{
 				var dotSpan = code.MovePeekedSpan();
-				var word2 = code.PeekWord();
+				var word2 = code.PeekWordR();
 				if (!string.IsNullOrEmpty(word2))
 				{
 					var word2Span = code.MovePeekedSpan();
@@ -299,7 +299,7 @@ namespace DkTools.CodeModel.Tokens
 
 			while (true)
 			{
-				word = code.PeekWord();
+				word = code.PeekWordR();
 				switch (word)
 				{
 					case "description":
