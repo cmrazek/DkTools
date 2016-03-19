@@ -322,6 +322,7 @@
     <Compile Include="DkDict\Dict.cs" />
     <Compile Include="Dict\IDictObj.cs" />
     <Compile Include="Dict\InterfaceType.cs" />
+    <Compile Include="DkDict\Interface.cs" />
     <Compile Include="DkDict\RelInd.cs" />
     <Compile Include="DkDict\Stringdef.cs" />
     <Compile Include="DkDict\Table.cs" />

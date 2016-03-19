@@ -20,7 +20,6 @@ namespace DkTools.DkDict
 		public string Comment { get; set; }
 		public bool Updates { get; set; }
 		public string LinkDesc { get; set; }
-		public string OrderByDesc { get; set; }
 
 		private List<Tag> _tags;
 		private List<string> _sortCols;

@@ -11,7 +11,6 @@ namespace DkTools.DkDict
 	class Dict
 	{
 		private static CodeParser _code;
-		private static CodeSource _source;
 		private static Dictionary<string, Table> _tables = new Dictionary<string, Table>();
 		private static Dictionary<string, RelInd> _relinds = new Dictionary<string, RelInd>();
 		private static Dictionary<string, Stringdef> _stringdefs = new Dictionary<string, Stringdef>();
@@ -40,25 +39,26 @@ namespace DkTools.DkDict
 				var merger = new FileMerger();
 				merger.MergeFile(dictPathName, null, false, true);
 
-				var mergedSource = merger.MergedContent;
-				var mergedReader = new CodeSource.CodeSourcePreprocessorReader(mergedSource);
+				var mergedSource = merger.MergedContent.Text;
+				var mergedReader = new StringPreprocessorReader(mergedSource);
 
 				var fileStore = new FileStore();
 				var preprocessor = new Preprocessor(fileStore);
-				_source = new CodeSource();
-				preprocessor.Preprocess(mergedReader, _source, dictPathName, null, FileContext.Dictionary);
+				var writer = new StringPreprocessorWriter();
+				while (preprocessor.Preprocess(mergedReader, writer, dictPathName, null, FileContext.Dictionary))
+				{
+					mergedReader = new StringPreprocessorReader(writer.Text);
+					writer = new StringPreprocessorWriter();
+				}
 
 				var curTime = DateTime.Now;
 				var elapsed = curTime.Subtract(startTime);
 				Log.Write(LogLevel.Info, "DICT preprocessing completed. (elapsed: {0})", elapsed);
 
-#if DEBUG
-				var dictContent = _source.Text;
-				Log.Write(LogLevel.Debug, "  dict length: {0}", dictContent.Length);	// TODO: remove
-				File.WriteAllText("d:\\temp\\dict.txt", dictContent);	// TODO: remove
-#endif
+				var dictContent = writer.Text;
+				File.WriteAllText(Path.Combine(ProbeToolsPackage.AppDataDir, "dict.txt"), dictContent);
 
-				_code = new CodeParser(_source.Text);
+				_code = new CodeParser(dictContent);
 				ReadDict();
 
 				elapsed = DateTime.Now.Subtract(curTime);
@@ -72,8 +72,7 @@ namespace DkTools.DkDict
 
 		private static void ReportError(int pos, string message)
 		{
-			var filePos = _source.GetFilePosition(pos);
-			Log.Write(LogLevel.Warning, "{0}(offset: {1}; prep: {3}): {2}", filePos.FileName, filePos.Position, message, pos);
+			Log.Write(LogLevel.Warning, "DICT offset {1}: {2}", message, pos);
 		}
 
 		private static void ReportError(int pos, string format, params object[] args)
@@ -100,6 +99,11 @@ namespace DkTools.DkDict
 							else if (word.Equals("alter", StringComparison.OrdinalIgnoreCase))
 							{
 								ReadAlter();
+								suppressErrors = false;
+							}
+							else if (word.Equals("drop", StringComparison.OrdinalIgnoreCase))
+							{
+								ReadDrop();
 								suppressErrors = false;
 							}
 							else
@@ -154,10 +158,27 @@ namespace DkTools.DkDict
 				{
 					ReadCreateUnique();
 				}
+				else if (word.Equals("nopick", StringComparison.OrdinalIgnoreCase))
+				{
+					ReadCreateNoPick();
+				}
+				else if (word.Equals("primary", StringComparison.OrdinalIgnoreCase))
+				{
+					ReadCreatePrimary();
+				}
 				else if (word.Equals("relationship", StringComparison.OrdinalIgnoreCase))
 				{
 					ReadCreateRelationship();
 				}
+				else if (word.Equals("time", StringComparison.OrdinalIgnoreCase))
+				{
+					ReadCreateTime();
+				}
+				else if (word.Equals("interfacetype", StringComparison.OrdinalIgnoreCase))
+				{
+					ReadCreateInterfaceType();
+				}
+				// TODO: finish the types
 				else
 				{
 					ReportError(_code.TokenStartPostion, "Unrecognized word '{0}' after 'create'.", _code.Text);
@@ -186,9 +207,39 @@ namespace DkTools.DkDict
 				{
 					ReadAlterTable();
 				}
+				// TODO: finish the types
 				else
 				{
 					ReportError(_code.TokenStartPostion, "Unrecognized word '{0}' after 'alter'.", _code.Text);
+				}
+			}
+		}
+
+		private static void ReadDrop()
+		{
+			if (_code.ReadWord())
+			{
+				var word = _code.Text;
+				if (word.Equals("index", StringComparison.OrdinalIgnoreCase))
+				{
+					ReadDropIndex();
+				}
+				else if (word.Equals("table", StringComparison.OrdinalIgnoreCase))
+				{
+					ReadDropTable();
+				}
+				else if (word.Equals("relationship", StringComparison.OrdinalIgnoreCase))
+				{
+					ReadDropRelationship();
+				}
+				else if (word.Equals("time", StringComparison.OrdinalIgnoreCase))
+				{
+					ReadDropTime();
+				}
+				// TODO: interfacetype, and workspace
+				else
+				{
+					ReportError(_code.TokenStartPostion, "Unrecognized word '{0}' after 'drop'.", _code.Text);
 				}
 			}
 		}
@@ -247,6 +298,7 @@ namespace DkTools.DkDict
 						continue;
 					}
 					table.MasterTable = _code.Text;
+					continue;
 				}
 
 				var col = TryReadColumn();
@@ -297,24 +349,8 @@ namespace DkTools.DkDict
 						}
 						table.SnapshotFrequency = int.Parse(_code.Text);
 					}
-					else if (word.Equals("prompt", StringComparison.OrdinalIgnoreCase))
-					{
-						if (!_code.ReadStringLiteral())
-						{
-							ReportError(_code.Position, "Expected string literal to follow 'prompt'.");
-							continue;
-						}
-						table.Prompt = CodeParser.StringLiteralToString(_code.Text);
-					}
-					else if (word.Equals("comment", StringComparison.OrdinalIgnoreCase))
-					{
-						if (!_code.ReadStringLiteral())
-						{
-							ReportError(_code.Position, "Expected string literal to follow 'comment'.");
-							continue;
-						}
-						table.Comment = CodeParser.StringLiteralToString(_code.Text);
-					}
+					else if (word.Equals("prompt", StringComparison.OrdinalIgnoreCase)) table.Prompt = ReadPromptOrCommentAttribute();
+					else if (word.Equals("comment", StringComparison.OrdinalIgnoreCase)) table.Comment = ReadPromptOrCommentAttribute();
 					else if (word.Equals("image", StringComparison.OrdinalIgnoreCase))
 					{
 						if (!_code.ReadStringLiteral())
@@ -481,6 +517,39 @@ namespace DkTools.DkDict
 				}
 			}
 		}
+
+		private static void ReadDropTable()
+		{
+			var name = _code.ReadWordR();
+			if (string.IsNullOrEmpty(name))
+			{
+				ReportError(_code.Position, "Expected index name after 'drop index'.");
+				return;
+			}
+
+			Table table;
+			if (!_tables.TryGetValue(name, out table))
+			{
+				ReportError(_code.TokenStartPostion, "Dropped table '{0}' does not exist.", name);
+				return;
+			}
+
+			_tables.Remove(name);
+		}
+
+		public static Table GetTable(string tableName)
+		{
+			Table table;
+			if (_tables.TryGetValue(tableName, out table)) return table;
+
+			if (tableName.Length >= 2 && char.IsDigit(tableName[tableName.Length - 1]))
+			{
+				var baseTableName = tableName.Substring(0, tableName.Length - 1);
+				if (_tables.TryGetValue(baseTableName, out table)) return table;
+			}
+
+			return null;
+		}
 		#endregion
 
 		#region Columns
@@ -541,24 +610,8 @@ namespace DkTools.DkDict
 						}
 						col.Image = CodeParser.StringLiteralToString(_code.Text);
 					}
-					else if (word.Equals("prompt", StringComparison.OrdinalIgnoreCase))
-					{
-						if (!_code.ReadStringLiteral())
-						{
-							ReportError(_code.Position, "Expected string literal to follow 'prompt'.");
-							continue;
-						}
-						col.Prompt = CodeParser.StringLiteralToString(_code.Text);
-					}
-					else if (word.Equals("comment", StringComparison.OrdinalIgnoreCase))
-					{
-						if (!_code.ReadStringLiteral())
-						{
-							ReportError(_code.Position, "Expected string literal to follow 'comment'.");
-							continue;
-						}
-						col.Comment = CodeParser.StringLiteralToString(_code.Text);
-					}
+					else if (word.Equals("prompt", StringComparison.OrdinalIgnoreCase)) col.Prompt = ReadPromptOrCommentAttribute();
+					else if (word.Equals("comment", StringComparison.OrdinalIgnoreCase)) col.Comment = ReadPromptOrCommentAttribute();
 					else if (word.Equals("description", StringComparison.OrdinalIgnoreCase))
 					{
 						var sb = new StringBuilder();
@@ -594,6 +647,23 @@ namespace DkTools.DkDict
 						var tag = ReadTagAttribute();
 						if (tag != null) col.AddTag(tag);
 					}
+					else if (word.Equals("custom", StringComparison.OrdinalIgnoreCase))
+					{
+						if (_code.ReadStringLiteral())
+						{
+							col.CustomProgId = CodeParser.StringLiteralToString(_code.Text);
+
+							if (_code.ReadStringLiteral())
+							{
+								col.CustomLicense = CodeParser.StringLiteralToString(_code.Text);
+							}
+						}
+						else
+						{
+							ReportError(_code.Position, "Expected prog ID to follow 'custom'.");
+							continue;
+						}
+					}
 					else
 					{
 						ReportError(_code.TokenStartPostion, "Unknown word '{0}' in column definition.", word);
@@ -609,40 +679,7 @@ namespace DkTools.DkDict
 		}
 		#endregion
 
-		private static string ReadAccelSequence()
-		{
-			var sb = new StringBuilder();
-
-			var expectingDelim = false;
-
-			while (!_code.EndOfFile)
-			{
-				if (expectingDelim)
-				{
-					if (_code.PeekExact('+'))
-					{
-						sb.Append("+");
-						_code.MovePeeked();
-						expectingDelim = false;
-					}
-					else break;
-				}
-				else
-				{
-					_code.Peek();
-					if (_code.Type == CodeType.Word || _code.Type == CodeType.Number)
-					{
-						sb.Append(_code.Text);
-						_code.MovePeeked();
-						expectingDelim = true;
-					}
-					else break;
-				}
-			}
-
-			return sb.ToString();
-		}
-
+		#region Application
 		private static void ReadAlterApplication()
 		{
 			while (!_code.EndOfFile)
@@ -656,11 +693,7 @@ namespace DkTools.DkDict
 						word.Equals("prompt", StringComparison.OrdinalIgnoreCase) ||
 						word.Equals("comment", StringComparison.OrdinalIgnoreCase))
 					{
-						if (!_code.ReadStringLiteral())
-						{
-							ReportError(_code.Position, "Expected string literal after '{0}'.", word);
-							continue;
-						}
+						ReadPromptOrCommentAttribute();
 					}
 					else if (word.Equals("description", StringComparison.OrdinalIgnoreCase))
 					{
@@ -703,7 +736,9 @@ namespace DkTools.DkDict
 				}
 			}
 		}
+		#endregion
 
+		#region Stringdef
 		private static void ReadStringdef(bool create, bool alter)
 		{
 			if (!_code.ReadWord())
@@ -770,37 +805,9 @@ namespace DkTools.DkDict
 
 			_code.ReadExact(';');
 		}
+		#endregion
 
-		private static Tag ReadTagAttribute()
-		{
-			if (!_code.ReadTagName())
-			{
-				ReportError(_code.Position, "Expected tag name to follow 'tag'.");
-				return null;
-			}
-			var tagName = _code.Text;
-
-			if (!_code.ReadStringLiteral())
-			{
-				ReportError(_code.Position, "Expected string literal to follow tag name.");
-				return null;
-			}
-			var tagValue = CodeParser.StringLiteralToString(_code.Text);
-
-			return new Tag(tagName, tagValue);
-		}
-
-		private static string ReadDescriptionAttribute()
-		{
-			var sb = new StringBuilder();
-			while (_code.ReadStringLiteral())
-			{
-				if (sb.Length > 0) sb.AppendLine();
-				sb.Append(CodeParser.StringLiteralToString(_code.Text));
-			}
-			return sb.ToString();
-		}
-
+		#region Indexes / Relationships
 		private static void ReadCreateUnique()
 		{
 			var primary = false;
@@ -950,6 +957,9 @@ namespace DkTools.DkDict
 			_relinds[name] = relind;
 			relind.Number = number;
 
+			Table parentTable = null;
+			Table childTable = null;
+
 			while (!_code.EndOfFile)
 			{
 				if (_code.PeekExact('(') || _code.PeekExact('{')) break;
@@ -960,24 +970,8 @@ namespace DkTools.DkDict
 					if (word.Equals("updates", StringComparison.OrdinalIgnoreCase)) relind.Updates = true;
 					else if (word.Equals("nopick", StringComparison.OrdinalIgnoreCase)) relind.NoPick = true;
 					else if (word.Equals("pick", StringComparison.OrdinalIgnoreCase)) relind.NoPick = false;
-					else if (word.Equals("prompt", StringComparison.OrdinalIgnoreCase))
-					{
-						if (!_code.ReadStringLiteral())
-						{
-							ReportError(_code.Position, "Expected string literal to follow 'prompt'.");
-							continue;
-						}
-						relind.Prompt = CodeParser.StringLiteralToString(_code.Text);
-					}
-					else if (word.Equals("comment", StringComparison.OrdinalIgnoreCase))
-					{
-						if (!_code.ReadStringLiteral())
-						{
-							ReportError(_code.Position, "Expected string literal to follow 'comment'.");
-							continue;
-						}
-						relind.Comment = CodeParser.StringLiteralToString(_code.Text);
-					}
+					else if (word.Equals("prompt", StringComparison.OrdinalIgnoreCase)) relind.Prompt = ReadPromptOrCommentAttribute();
+					else if (word.Equals("comment", StringComparison.OrdinalIgnoreCase)) relind.Comment = ReadPromptOrCommentAttribute();
 					else if (word.Equals("description", StringComparison.OrdinalIgnoreCase))
 					{
 						relind.Description = ReadDescriptionAttribute();
@@ -992,9 +986,14 @@ namespace DkTools.DkDict
 						if (!_code.ReadWord())
 						{
 							ReportError(_code.Position, "Expected parent table name to follow 'one' in 'creation relationship' statement.");
-							continue;
+							break;
 						}
 						var parentName = _code.Text;
+						if (!_tables.TryGetValue(parentName, out parentTable))
+						{
+							ReportError(_code.TokenStartPostion, "Parent table '{0}' does not exist in 'create relationship'.", parentName);
+							break;
+						}
 
 						_code.ReadExactWholeWordI("to");
 						if (_code.ReadExactWholeWordI("one"))
@@ -1002,27 +1001,45 @@ namespace DkTools.DkDict
 							if (!_code.ReadWord())
 							{
 								ReportError(_code.Position, "Expected child table name to follow 'one' in 'creation relationship' statement.");
-								continue;
+								break;
 							}
 							var childName = _code.Text;
+							childTable = GetTable(childName);
+							if (childTable == null)
+							{
+								ReportError(_code.TokenStartPostion, "Child table '{0}' does not exist in 'create relationship'.", childName);
+								break;
+							}
 
 							relind.LinkDesc = string.Format("one {0} to one {1}", parentName, childName);
+
+							// WBDK seems to tolerate ending the statement here
+							if (!_code.PeekExactWholeWordI("order") && !_code.PeekExact('(') && !_code.PeekExact('{')) break;
 						}
 						else if (_code.ReadExactWholeWordI("many"))
 						{
 							if (!_code.ReadWord())
 							{
 								ReportError(_code.Position, "Expected child table name to follow 'one' in 'creation relationship' statement.");
-								continue;
+								break;
 							}
 							var childName = _code.Text;
+							childTable = GetTable(childName);
+							if (childTable == null)
+							{
+								ReportError(_code.TokenStartPostion, "Child table '{0}' does not exist in 'create relationship'.", childName);
+								break;
+							}
 
 							relind.LinkDesc = string.Format("one {0} to many {1}", parentName, childName);
+
+							// WBDK seems to tolerate ending the statement here
+							if (!_code.PeekExactWholeWordI("order") && !_code.PeekExact('(') && !_code.PeekExact('{')) break;
 						}
 						else
 						{
 							ReportError(_code.Position, "Syntax error in 'creation relationship' statement after 'one'.");
-							continue;
+							break;
 						}
 					}
 					else if (word.Equals("many", StringComparison.OrdinalIgnoreCase))
@@ -1030,9 +1047,14 @@ namespace DkTools.DkDict
 						if (!_code.ReadWord())
 						{
 							ReportError(_code.Position, "Expected parent table name to follow 'many' in 'creation relationship' statement.");
-							continue;
+							break;
 						}
 						var parentName = _code.Text;
+						if (!_tables.TryGetValue(parentName, out parentTable))
+						{
+							ReportError(_code.TokenStartPostion, "Parent table '{0}' does not exist in 'create relationship'.", parentName);
+							break;
+						}
 
 						_code.ReadExactWholeWordI("to");
 						if (_code.ReadExactWholeWordI("many"))
@@ -1040,33 +1062,48 @@ namespace DkTools.DkDict
 							if (!_code.ReadWord())
 							{
 								ReportError(_code.Position, "Expected child table name to follow 'many' in 'creation relationship' statement.");
-								continue;
+								break;
 							}
 							var childName = _code.Text;
+							childTable = GetTable(childName);
+							if (childTable == null)
+							{
+								ReportError(_code.TokenStartPostion, "Child table '{0}' does not exist in 'create relationship'.", childName);
+								break;
+							}
 
 							relind.LinkDesc = string.Format("many {0} to many {1}", parentName, childName);
+
+							// WBDK seems to tolerate ending the statement here
+							if (!_code.PeekExactWholeWordI("order") && !_code.PeekExact('(') && !_code.PeekExact('{')) break;
 						}
 						else
 						{
 							ReportError(_code.Position, "Syntax error in 'creation relationship' statement after 'many'.");
-							continue;
+							break;
 						}
 					}
 					else if (word.Equals("order", StringComparison.OrdinalIgnoreCase))
 					{
 						if (_code.ReadExactWholeWordI("by"))
 						{
-							var sb = new StringBuilder();
-							sb.Append("order by");
-							if (_code.ReadExactWholeWordI("unique")) sb.Append(" unique");
-
-							while (_code.ReadWord())
+							if (childTable == null)
 							{
-								sb.Append(' ');
-								sb.Append(_code.Text);
+								ReportError(_code.TokenStartPostion, "Found 'order by' before parent/child relationship in 'create relationship'.");
+								break;
 							}
 
-							relind.OrderByDesc = sb.ToString();
+							_code.ReadExactWholeWordI("unique");
+
+							while (!_code.EndOfFile)
+							{
+								if (_code.PeekExact('(') || _code.PeekExact('{')) break;
+								if (_code.ReadExact(',')) continue;
+
+								var colName = _code.ReadWordR();
+								if (!string.IsNullOrEmpty(word) && childTable.GetColumn(colName) != null) relind.AddSortColumn(colName);
+								else break;
+							}
 						}
 					}
 					else
@@ -1097,5 +1134,368 @@ namespace DkTools.DkDict
 
 		}
 
+		private static void ReadCreateTime()
+		{
+			if (!_code.ReadExactWholeWordI("relationship"))
+			{
+				ReportError(_code.Position, "Expected 'relationship' to follow 'create time'.");
+				return;
+			}
+
+			var name = _code.ReadWordR();
+			if (string.IsNullOrEmpty(name))
+			{
+				ReportError(_code.Position, "Expected relationship name to follow 'create time relationship'.");
+				return;
+			}
+
+			if (!_code.ReadNumber())
+			{
+				ReportError(_code.Position, "Expected schema number in 'create time relationship'.");
+				return;
+			}
+			var number = int.Parse(_code.Text);
+
+			var relind = new RelInd(false, name, string.Empty);
+			_relinds[name] = relind;
+			relind.Number = number;
+
+			Table masterTable = null;
+			Table historyTable = null;
+
+			while (!_code.EndOfFile)
+			{
+				if (_code.PeekExact('(') || _code.PeekExact('{')) break;
+
+				var word = _code.ReadWordR();
+				if (!string.IsNullOrEmpty(word))
+				{
+					if (word.Equals("prompt", StringComparison.OrdinalIgnoreCase)) relind.Prompt = ReadPromptOrCommentAttribute();
+					else if (word.Equals("comment", StringComparison.OrdinalIgnoreCase)) relind.Comment = ReadPromptOrCommentAttribute();
+					else if (word.Equals("description", StringComparison.OrdinalIgnoreCase)) relind.Description = ReadDescriptionAttribute();
+					else if (word.Equals("tag", StringComparison.OrdinalIgnoreCase))
+					{
+						var tag = ReadTagAttribute();
+						if (tag != null) relind.AddTag(tag);
+					}
+					else if (word.Equals("order", StringComparison.OrdinalIgnoreCase))
+					{
+						if (historyTable == null)
+						{
+							ReportError(_code.TokenStartPostion, "Found 'order' before master/history tables in 'create time relationship'.");
+							break;
+						}
+
+						_code.ReadExactWholeWordI("by");
+
+						while (!_code.EndOfFile)
+						{
+							if (_code.PeekExact('(') || _code.PeekExact('{')) break;
+							if (_code.ReadExact(',')) continue;
+
+							var colName = _code.PeekWordR();
+							if (historyTable.GetColumn(colName) != null)
+							{
+								_code.MovePeeked();
+								relind.AddSortColumn(colName);
+							}
+							else break;
+						}
+
+						break;
+					}
+					else if (_tables.TryGetValue(word, out masterTable))
+					{
+						var sb = new StringBuilder();
+						sb.Append(word);
+
+						_code.ReadExactWholeWordI("to");
+						sb.Append(" to ");
+
+						var historyTableName = _code.ReadWordR();
+						if ((historyTable = GetTable(historyTableName)) != null)
+						{
+							sb.Append(historyTableName);
+							relind.LinkDesc = sb.ToString();
+						}
+						else
+						{
+							ReportError(_code.TokenStartPostion, "Expected history table name to follow 'to' in 'create time relationship'.");
+							break;
+						}
+					}
+					else
+					{
+						ReportError(_code.TokenStartPostion, "Unrecognized word '{0}' in 'create time relationship'.");
+						break;
+					}
+				}
+				else
+				{
+					ReportError(_code.TokenStartPostion, "Syntax error in 'create time relationship'.");
+					break;
+				}
+			}
+
+			if (_code.ReadExact('(') || _code.ReadExact('{'))
+			{
+				if (!_code.ReadExact(')')) _code.ReadExact('}');
+			}
+		}
+
+		private static void ReadDropIndex()
+		{
+			var name = _code.ReadWordR();
+			if (string.IsNullOrEmpty(name))
+			{
+				ReportError(_code.Position, "Expected index name after 'drop index'.");
+				return;
+			}
+			var namePos = _code.TokenStartPostion;
+
+			if (!_code.ReadExactWholeWordI("on"))
+			{
+				ReportError(_code.Position, "Expected 'on' to follow dropped index name.");
+				return;
+			}
+
+			var tableName = _code.ReadWordR();
+			if (string.IsNullOrEmpty(tableName))
+			{
+				ReportError(_code.Position, "Expected 'on tablename' to follow dropped index name.");
+				return;
+			}
+
+			RelInd relind;
+			if (!_relinds.TryGetValue(name, out relind))
+			{
+				ReportError(namePos, "Dropped index '{0}' does not exist.", name);
+				return;
+			}
+
+			_relinds.Remove(name);
+		}
+
+		private static void ReadDropRelationship()
+		{
+			var name = _code.ReadWordR();
+			if (string.IsNullOrEmpty(name))
+			{
+				ReportError(_code.Position, "Expected relationship name after 'drop relationship'.");
+				return;
+			}
+
+			RelInd relind;
+			if (!_relinds.TryGetValue(name, out relind))
+			{
+				ReportError(_code.TokenStartPostion, "Dropped relationship '{0}' does not exist.", name);
+				return;
+			}
+
+			_relinds.Remove(name);
+		}
+
+		private static void ReadDropTime()
+		{
+			if (!_code.ReadExactWholeWordI("relationship"))
+			{
+				ReportError(_code.Position, "Expected 'relationship' to follow 'drop time'.");
+				return;
+			}
+
+			var name = _code.ReadWordR();
+			if (string.IsNullOrEmpty(name))
+			{
+				ReportError(_code.Position, "Expected time relationship name after 'drop time relationship'.");
+				return;
+			}
+
+			RelInd relind;
+			if (!_relinds.TryGetValue(name, out relind))
+			{
+				ReportError(_code.TokenStartPostion, "Dropped time relationship '{0}' does not exist.", name);
+				return;
+			}
+
+			_relinds.Remove(name);
+		}
+		#endregion
+
+		#region Attributes
+		private static Tag ReadTagAttribute()
+		{
+			if (!_code.ReadTagName())
+			{
+				ReportError(_code.Position, "Expected tag name to follow 'tag'.");
+				return null;
+			}
+			var tagName = _code.Text;
+
+			if (!_code.ReadStringLiteral())
+			{
+				ReportError(_code.Position, "Expected string literal to follow tag name.");
+				return null;
+			}
+			var tagValue = CodeParser.StringLiteralToString(_code.Text);
+
+			return new Tag(tagName, tagValue);
+		}
+
+		private static string ReadDescriptionAttribute()
+		{
+			var sb = new StringBuilder();
+			while (_code.ReadStringLiteral())
+			{
+				if (sb.Length > 0) sb.AppendLine();
+				sb.Append(CodeParser.StringLiteralToString(_code.Text));
+			}
+			return sb.ToString();
+		}
+
+		private static string ReadAccelSequence()
+		{
+			var sb = new StringBuilder();
+
+			var expectingDelim = false;
+
+			while (!_code.EndOfFile)
+			{
+				if (expectingDelim)
+				{
+					if (_code.PeekExact('+'))
+					{
+						sb.Append("+");
+						_code.MovePeeked();
+						expectingDelim = false;
+					}
+					else break;
+				}
+				else
+				{
+					_code.Peek();
+					if (_code.Type == CodeType.Word || _code.Type == CodeType.Number)
+					{
+						sb.Append(_code.Text);
+						_code.MovePeeked();
+						expectingDelim = true;
+					}
+					else break;
+				}
+			}
+
+			return sb.ToString();
+		}
+
+		private static string ReadPromptOrCommentAttribute()
+		{
+			// WBDK dict parser has a quirk where if there are multiple string separated by a space, then only the last string takes effect.
+			var ret = string.Empty;
+			var gotString = false;
+			while (_code.ReadStringLiteral())
+			{
+				ret = CodeParser.StringLiteralToString(_code.Text);
+				gotString = true;
+			}
+
+			if (!gotString)
+			{
+				if (_code.ReadWord())
+				{
+					Stringdef sd;
+					if (_stringdefs.TryGetValue(_code.Text, out sd))
+					{
+						ret = sd.Text;
+					}
+					else
+					{
+						ret = string.Concat("#", _code.Text, "#");
+					}
+				}
+			}
+
+			return ret;
+		}
+		#endregion
+
+		#region Interfaces
+		private static void ReadCreateInterfaceType()
+		{
+			var name = _code.ReadWordR();
+			if (string.IsNullOrEmpty(name))
+			{
+				ReportError(_code.Position, "Expected interface type name to follow 'create interface'.");
+				return;
+			}
+
+			var intf = new Interface(name);
+
+			while (!_code.EndOfFile)
+			{
+				if (_code.ReadExact(';')) break;
+
+				var word = _code.ReadWordR();
+				if (!string.IsNullOrEmpty(word))
+				{
+					if (word.Equals("path", StringComparison.OrdinalIgnoreCase)) intf.Path = ReadPromptOrCommentAttribute();
+					else if (word.Equals("framework", StringComparison.OrdinalIgnoreCase)) intf.Framework = true;
+					else if (word.Equals("progid", StringComparison.OrdinalIgnoreCase)) intf.ProgId = ReadPromptOrCommentAttribute();
+					else if (word.Equals("clsid", StringComparison.OrdinalIgnoreCase)) intf.ClsId = ReadPromptOrCommentAttribute();
+					else if (word.Equals("tlibid", StringComparison.OrdinalIgnoreCase))
+					{
+						intf.TLibId = ReadPromptOrCommentAttribute();
+						if (!_code.ReadExactWholeWordI("major"))
+						{
+							ReportError(_code.Position, "Expected 'major' to follow 'tlibid' type.");
+							break;
+						}
+						if (!_code.ReadNumber())
+						{
+							ReportError(_code.Position, "Expected number to follow 'major'.");
+							break;
+						}
+						if (!_code.ReadExactWholeWordI("minor"))
+						{
+							ReportError(_code.Position, "Expected 'minor' to follow 'major' number.");
+							break;
+						}
+						if (!_code.ReadNumber())
+						{
+							ReportError(_code.Position, "Expected number to follow 'minor'.");
+							break;
+						}
+					}
+					else if (word.Equals("iid", StringComparison.OrdinalIgnoreCase)) intf.Iid = ReadPromptOrCommentAttribute();
+					else if (word.Equals("description", StringComparison.OrdinalIgnoreCase)) intf.Description = ReadDescriptionAttribute();
+					else if (word.Equals("tag", StringComparison.OrdinalIgnoreCase))
+					{
+						var tag = ReadTagAttribute();
+						if (tag != null) intf.AddTag(tag);
+					}
+					else if (word.Equals("interface", StringComparison.OrdinalIgnoreCase))
+					{
+						if (_code.ReadStringLiteral()) intf.InterfaceName = CodeParser.StringLiteralToString(_code.Text);
+						else if (_code.ReadWord()) intf.InterfaceName = _code.Text;
+						else
+						{
+							ReportError(_code.Position, "Expected string literal or identifier to follow 'interface'.");
+							break;
+						}
+					}
+					else if (word.Equals("default", StringComparison.OrdinalIgnoreCase)) intf.Default = true;
+					else if (word.Equals("defaultevent", StringComparison.OrdinalIgnoreCase)) intf.DefaultEvent = true;
+					else
+					{
+						ReportError(_code.TokenStartPostion, "Unrecognized token '{0}' in 'create interfacetype'.", word);
+						break;
+					}
+				}
+				else
+				{
+					ReportError(_code.Position, "Syntax error in 'create interfacetype'.");
+					break;
+				}
+			}
+		}
+		#endregion
 	}
 }

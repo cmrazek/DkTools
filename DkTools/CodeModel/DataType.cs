@@ -304,6 +304,7 @@ namespace DkTools.CodeModel
 
 				case "numeric":
 				case "decimal":
+				case "NUMERIC":
 					a.OnDataTypeKeyword(code.Span, code.Text, null);
 					dataType = ProcessNumeric(a, code.Text);
 					break;
@@ -426,12 +427,6 @@ namespace DkTools.CodeModel
 			if (dataType != null)
 			{
 				if ((a.Flags & ParseFlag.FromRepo) != 0) IgnoreRepoWords(a, startWord);
-
-				// TODO: remove
-				//if (!string.IsNullOrEmpty(a.TypeName))
-				//{
-				//	dataType = dataType.CloneWithNewName(a.TypeName);
-				//}
 			}
 			else
 			{

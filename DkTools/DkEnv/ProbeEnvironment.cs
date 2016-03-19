@@ -430,9 +430,8 @@ namespace DkTools
 		{
 			try
 			{
-#if DEBUG
-				Debug.WriteLine("Loading dictionary...");
-#endif
+				Log.Write(LogLevel.Info, "Loading dictionary...");
+				var startTime = DateTime.Now;
 
 				_tables.Clear();
 				_stringDefs.Clear();
@@ -487,9 +486,8 @@ namespace DkTools
 
 				LoadRelInds();
 
-#if DEBUG
-				Debug.WriteLine("Dictionary loaded successfully.");
-#endif
+				var elapsed = DateTime.Now.Subtract(startTime);
+				Log.Write(LogLevel.Info, "Successfully loaded dictionary (elapsed: {0})", elapsed);
 			}
 			catch (Exception ex)
 			{

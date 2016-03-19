@@ -237,9 +237,11 @@ namespace DkTools.CodeModel
 		{
 			_labels = new List<LabelPos>();
 
-			var lineNum = 1;
-			foreach (var line in _lines)
+			Line line;
+			for (int lineNum = 0, lineCount = _lines.Count; lineNum < lineCount; lineNum++)
 			{
+				line = _lines[lineNum];
+
 				var match = _rxLabelLine.Match(line.text);
 				if (match.Success)
 				{
@@ -249,8 +251,6 @@ namespace DkTools.CodeModel
 						insertLineNum = lineNum + 1 // insert line after this one
 					});
 				}
-
-				lineNum++;
 			}
 		}
 
@@ -427,7 +427,6 @@ namespace DkTools.CodeModel
 			if (label != null) return label.insertLineNum;
 			return -1;
 		}
-
 
 		private void BumpLabels(int startLineNum, int delta)
 		{

@@ -21,6 +21,8 @@ namespace DkTools.DkDict
 		public string Description { get; set; }
 		public string Group { get; set; }
 		public bool EndGroup { get; set; }
+		public string CustomProgId { get; set; }
+		public string CustomLicense { get; set; }
 
 		private List<Tag> _tags;
 
