@@ -16,6 +16,9 @@ namespace DkTools.Dict
 		{
 			_repo = new PRepository();
 			_dict = _repo.LoadDictionary(appName, string.Empty, DICTSRVRLib.PDS_Access.Access_BROWSE);
+
+			// TODO: for testing only
+			//DkDict.Dict.Load();
 		}
 
 		public void Dispose()

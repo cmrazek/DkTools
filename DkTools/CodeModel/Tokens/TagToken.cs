@@ -17,7 +17,7 @@ namespace DkTools.CodeModel.Tokens
 			var code = scope.Code;
 			code.SkipWhiteSpace();
 
-			var word = code.PeekWord();
+			var word = code.PeekWordR();
 			if (string.IsNullOrEmpty(word))
 			{
 				return tagToken;

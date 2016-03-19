@@ -30,7 +30,7 @@ namespace DkTools.CodeModel.Tokens.Statements
 					break;
 				}
 
-				var word = code.PeekWord();
+				var word = code.PeekWordR();
 				if (string.IsNullOrEmpty(word)) break;
 
 				if (word == "rows" || word == "cols" || word == "genpages" || word == "outfile")
