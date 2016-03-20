@@ -380,7 +380,7 @@ namespace DkTools.CodeModel
 			if (define.IsDataType)
 			{
 				// Insert the data type name before the data type, so that it's available in the quick info and database.
-				rdr.Insert(string.Format("@{0} ", DataType.DecorateEnumOptionIfRequired(name)));
+				rdr.Insert(string.Format("@{0} ", DataType.NormalizeEnumOption(name)));
 				rdr.Ignore(name.Length);
 			}
 			else

@@ -57,18 +57,6 @@ namespace DkTools.CodeModel
 		public delegate VariableDefinition GetVariableDelegate(string name);
 		public delegate void TokenCreateDelegate(Token token);
 
-		// TODO: remove
-		///// <summary>
-		///// Creates a new data type object.
-		///// </summary>
-		///// <param name="name">The name or visible text of the data type. This will also be used as the info text.</param>
-		//public DataType(ValType valueType, string name)
-		//{
-		//	_valueType = valueType;
-		//	_name = name;
-		//	_infoText = name;
-		//}
-
 		/// <summary>
 		/// Creates a new data type object.
 		/// </summary>
@@ -102,20 +90,9 @@ namespace DkTools.CodeModel
 			_completionOptionsType = optionsType;
 		}
 
-		// TODO: remove if not needed
-		//public DataType CloneWithNewName(string newName)
-		//{
-		//	return new DataType(_valueType, newName, _infoText)
-		//	{
-		//		_completionOptions = _completionOptions,
-		//		_completionOptionsType = _completionOptionsType
-		//	};
-		//}
-
 		public string Name
 		{
 			get { return _name; }
-			//set { _name = value; }		TODO: remove
 		}
 
 		public bool HasCompletionOptions
@@ -157,7 +134,6 @@ namespace DkTools.CodeModel
 		public enum ParseFlag
 		{
 			Strict,
-			FromRepo,
 			InterfaceType
 		}
 
@@ -280,18 +256,6 @@ namespace DkTools.CodeModel
 
 			if (!code.ReadWord()) return null;
 			var startWord = code.Text;
-
-			if ((a.Flags & ParseFlag.FromRepo) != 0 && code.Text == "__SYSTEM__")
-			{
-				a.OnDataTypeKeyword(code.Span, code.Text, null);
-
-				if (!code.ReadWord())
-				{
-					code.Position = startPos;
-					return null;
-				}
-				startWord = code.Text;
-			}
 
 			DataType dataType = null;
 
@@ -424,11 +388,7 @@ namespace DkTools.CodeModel
 					break;
 			}
 
-			if (dataType != null)
-			{
-				if ((a.Flags & ParseFlag.FromRepo) != 0) IgnoreRepoWords(a, startWord);
-			}
-			else
+			if (dataType == null)
 			{
 				code.Position = code.TokenStartPostion;
 			}
@@ -844,38 +804,7 @@ namespace DkTools.CodeModel
 			}
 
 			// Read the option list
-			if ((a.Flags & ParseFlag.FromRepo) != 0)
-			{
-				// The WBDK repository doesn't put quotes around the strings that need them.
-				code.SkipWhiteSpace();
-				var optionStartPos = code.Position;
-				var gotComma = false;
-
-				while (!code.EndOfFile)
-				{
-					if (!code.Read()) break;
-
-					if (code.Text == "}")
-					{
-						if (gotComma)
-						{
-							var str = code.GetText(optionStartPos, code.TokenStartPostion - optionStartPos).Trim();
-							options.Add(new EnumOptionDefinition(DecorateEnumOptionIfRequired(str), null));
-							optionStartPos = code.Position;
-						}
-						break;
-					}
-
-					if (code.Text == ",")
-					{
-						var str = code.GetText(optionStartPos, code.TokenStartPostion - optionStartPos).Trim();
-						options.Add(new EnumOptionDefinition(DecorateEnumOptionIfRequired(str), null));
-						optionStartPos = code.Position;
-						gotComma = true;
-					}
-				}
-			}
-			else if ((a.Flags & ParseFlag.Strict) != 0)
+			if ((a.Flags & ParseFlag.Strict) != 0)
 			{
 				var expectingComma = false;
 				while (!code.EndOfFile)
@@ -915,7 +844,7 @@ namespace DkTools.CodeModel
 					{
 						if (braces != null) braces.AddToken(new EnumOptionToken(a.Scope, code.Span, code.Text, null));
 
-						var str = code.Text;
+						var str = NormalizeEnumOption(code.Text);
 						if (expectingComma)
 						{
 #if REPORT_ERRORS
@@ -959,7 +888,7 @@ namespace DkTools.CodeModel
 						case CodeType.Word:
 						case CodeType.StringLiteral:
 							if (braces != null) braces.AddToken(new EnumOptionToken(a.Scope, code.Span, code.Text, null));
-							options.Add(new EnumOptionDefinition(code.Text, null));
+							options.Add(new EnumOptionDefinition(NormalizeEnumOption(code.Text), null));
 							break;
 					}
 				}
@@ -1351,30 +1280,6 @@ namespace DkTools.CodeModel
 
 		private static readonly Regex _rxRepoWords = new Regex(@"\G((nomask|(NO)?PROBE|[%@]undefined|@neutral|(NO)?PICK)\b|&)");
 
-		private static void IgnoreRepoWords(ParseArgs a, string type)
-		{
-			var code = a.Code;
-
-			while (!code.EndOfFile)
-			{
-				code.SkipWhiteSpace();
-
-				if (code.ReadPattern(_rxRepoWords))
-				{
-					a.OnDataTypeKeyword(code.Span, code.Text, null);
-					continue;
-				}
-
-				if (type == "enum" && code.ReadStringLiteral())
-				{
-					a.OnStringLiteral(code.Span, code.Text);
-					continue;
-				}
-
-				break;
-			}
-		}
-
 		public void DumpTree(System.Xml.XmlWriter xml)
 		{
 			xml.WriteStartElement("dataType");
@@ -1424,18 +1329,20 @@ namespace DkTools.CodeModel
 			}
 		}
 
-		public static string DecorateEnumOptionIfRequired(string option)
+		public static string NormalizeEnumOption(string option)
 		{
-			if (string.IsNullOrEmpty(option)) return "\" \"";
+			if (string.IsNullOrWhiteSpace(option)) return "\" \"";
 
-			if (option.StartsWith("\"") && option.EndsWith("\"")) return option;
+			if (option.IsWord()) return option;
 
-			if (!option.IsWord())
+			if (option.StartsWith("\"") && option.EndsWith("\""))
 			{
-				return CodeParser.StringToStringLiteral(option);
+				var inner = CodeParser.StringLiteralToString(option);
+				if (string.IsNullOrWhiteSpace(inner) || inner.Trim() != inner || !inner.IsWord()) return option;
+				return inner;
 			}
 
-			return option;
+			return CodeParser.StringToStringLiteral(option);
 		}
 
 		public bool HasMethodsOrProperties
@@ -1522,7 +1429,7 @@ namespace DkTools.CodeModel
 		{
 			if (!string.IsNullOrEmpty(_name))
 			{
-				return string.Concat("@", DecorateEnumOptionIfRequired(_name), " ", _source);
+				return string.Concat("@", NormalizeEnumOption(_name), " ", _source);
 			}
 			else
 			{
