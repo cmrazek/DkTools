@@ -3,8 +3,9 @@ ________________________________________________________________________________
 Version 1.2.24 - (WIP):
 
 - Enhanced code modeling to provide better statement completion and enum option detection.
-- An error is now reported when the compiler fails with error:
-  Compile failed.  Shutdown operation components!!!
+- The dictionary is now parsed rather than relying on the DRV. This allows tables and columns to be
+  detected before the first compile.
+- An error is now reported when the compiler fails due to SAM/CAM still open in background.
 - The DICT file is no longer scanned by the background scanner.
 - Added better support for dictionary 'create' statements.
 - Find All References now works with constants and data types.

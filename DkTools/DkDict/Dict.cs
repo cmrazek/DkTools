@@ -12,6 +12,7 @@ namespace DkTools.DkDict
 	static class Dict
 	{
 		private static CodeParser _code;
+		private static CodeSource _source;
 		private static Dictionary<string, Table> _tables = new Dictionary<string, Table>();
 		private static Dictionary<string, RelInd> _relinds = new Dictionary<string, RelInd>();
 		private static Dictionary<string, Stringdef> _stringdefs = new Dictionary<string, Stringdef>();
@@ -42,29 +43,25 @@ namespace DkTools.DkDict
 				var merger = new FileMerger();
 				merger.MergeFile(dictPathName, null, false, true);
 
-				var mergedSource = merger.MergedContent.Text;
-				var mergedReader = new StringPreprocessorReader(mergedSource);
+				var mergedSource = merger.MergedContent;
+				var mergedReader = new CodeSource.CodeSourcePreprocessorReader(mergedSource);
 
 				var fileStore = new FileStore();
 				var preprocessor = new Preprocessor(fileStore);
-				var writer = new StringPreprocessorWriter();
-				preprocessor.Preprocess(mergedReader, writer, dictPathName, null, FileContext.Dictionary);
-				// TODO: remove
-				//while (preprocessor.Preprocess(mergedReader, writer, dictPathName, null, FileContext.Dictionary))
-				//{
-				//	mergedReader = new StringPreprocessorReader(writer.Text);
-				//	writer = new StringPreprocessorWriter();
-				//}
+				_source = new CodeSource();
+				preprocessor.Preprocess(mergedReader, _source, dictPathName, null, FileContext.Dictionary);
 
 				var curTime = DateTime.Now;
 				var elapsed = curTime.Subtract(startTime);
 				Log.Write(LogLevel.Info, "DICT preprocessing completed. (elapsed: {0})", elapsed);
 
-				var dictContent = writer.Text;
+				var dictContent = _source.Text;
 				File.WriteAllText(Path.Combine(ProbeToolsPackage.AppDataDir, "dict.txt"), dictContent);
 
 				_code = new CodeParser(dictContent);
 				ReadDict();
+
+				_source = null;	// So it can be GC'd
 
 				elapsed = DateTime.Now.Subtract(curTime);
 				Log.Write(LogLevel.Info, "DICT parsing complete. (elapsed: {0})", elapsed);
@@ -275,6 +272,7 @@ namespace DkTools.DkDict
 				return;
 			}
 			var tableName = _code.Text;
+			var namePos = _code.TokenStartPostion;
 
 			if (!_code.ReadNumber())
 			{
@@ -289,7 +287,7 @@ namespace DkTools.DkDict
 				tableNum2 = int.Parse(_code.Text);
 			}
 
-			var table = new Table(tableName, tableNum, tableNum2);
+			var table = new Table(tableName, tableNum, tableNum2, _source.GetFilePosition(namePos));
 			_tables[tableName] = table;
 
 			// Table attributes
@@ -588,6 +586,7 @@ namespace DkTools.DkDict
 				return null;
 			}
 			var name = _code.Text;
+			var namePos = _code.TokenStartPostion;
 			
 			var dataType = DataType.TryParse(new DataType.ParseArgs
 			{
@@ -600,7 +599,7 @@ namespace DkTools.DkDict
 				return null;
 			}
 
-			var col = new Column(tableName, name, dataType);
+			var col = new Column(tableName, name, dataType, _source.GetFilePosition(namePos));
 
 			ReadColumnAttributes(col);
 
@@ -922,6 +921,7 @@ namespace DkTools.DkDict
 				return;
 			}
 			var indexName = _code.Text;
+			var namePos = _code.TokenStartPostion;
 
 			if (!_code.ReadExactWholeWordI("on"))
 			{
@@ -936,7 +936,7 @@ namespace DkTools.DkDict
 			}
 			var tableName = _code.Text;
 
-			var relind = new RelInd(RelIndType.Index, indexName, tableName);
+			var relind = new RelInd(RelIndType.Index, indexName, tableName, _source.GetFilePosition(namePos));
 			_relinds[indexName] = relind;
 			relind.Unique = unique;
 			relind.Primary = primary;
@@ -998,6 +998,7 @@ namespace DkTools.DkDict
 				return;
 			}
 			var name = _code.Text;
+			var namePos = _code.TokenStartPostion;
 
 			if (!_code.ReadNumber())
 			{
@@ -1006,7 +1007,7 @@ namespace DkTools.DkDict
 			}
 			var number = int.Parse(_code.Text);
 
-			var relind = new RelInd(RelIndType.Relationship, name, string.Empty);
+			var relind = new RelInd(RelIndType.Relationship, name, string.Empty, _source.GetFilePosition(namePos));
 			_relinds[name] = relind;
 			relind.Number = number;
 
@@ -1201,6 +1202,7 @@ namespace DkTools.DkDict
 				ReportError(_code.Position, "Expected relationship name to follow 'create time relationship'.");
 				return;
 			}
+			var namePos = _code.TokenStartPostion;
 
 			if (!_code.ReadNumber())
 			{
@@ -1209,7 +1211,7 @@ namespace DkTools.DkDict
 			}
 			var number = int.Parse(_code.Text);
 
-			var relind = new RelInd(RelIndType.TimeRelationship, name, string.Empty);
+			var relind = new RelInd(RelIndType.TimeRelationship, name, string.Empty, _source.GetFilePosition(namePos));
 			_relinds[name] = relind;
 			relind.Number = number;
 

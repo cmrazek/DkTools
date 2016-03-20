@@ -9,9 +9,9 @@ namespace DkTools.CodeModel.AnalysisNodes
 {
 	class TableAndFieldNode : Node
 	{
-		private TableFieldDefinition _def;
+		private ColumnDefinition _def;
 
-		public TableAndFieldNode(Span span, TableFieldDefinition def)
+		public TableAndFieldNode(Span span, ColumnDefinition def)
 			: base(span, Value.CreateFromDataType(def.DataType))
 		{
 			_def = def;

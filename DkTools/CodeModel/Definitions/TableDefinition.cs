@@ -15,8 +15,8 @@ namespace DkTools.CodeModel.Definitions
 		private bool _orig;
 		private DkDict.Table _table;
 
-		public TableDefinition(string name, DkDict.Table table, bool orig)
-			: base(name, null, -1, DkDict.Table.GetExternalRefId(name))
+		public TableDefinition(string name, DkDict.Table table, bool orig, FilePosition filePos)
+			: base(name, filePos.FileName, filePos.Position, DkDict.Table.GetExternalRefId(name))
 		{
 #if DEBUG
 			if (table == null) throw new ArgumentNullException("table");

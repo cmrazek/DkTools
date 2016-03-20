@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace DkTools.CodeModel.Definitions
 {
-	internal class TableFieldDefinition : Definition
+	internal class ColumnDefinition : Definition
 	{
 		private string _tableName;
 		private string _fieldName;
@@ -16,8 +16,8 @@ namespace DkTools.CodeModel.Definitions
 		private string _desc;
 		private string _repoDesc;
 
-		public TableFieldDefinition(string tableName, string fieldName, string prompt, string comment, DataType dataType, string description)
-			: base(fieldName, null, -1, DkDict.Column.GetTableFieldExternalRefId(tableName, fieldName))
+		public ColumnDefinition(string tableName, string fieldName, string prompt, string comment, DataType dataType, string description, FilePosition filePos)
+			: base(fieldName, filePos.FileName, filePos.Position, DkDict.Column.GetTableFieldExternalRefId(tableName, fieldName))
 		{
 			_tableName = tableName;
 			_fieldName = fieldName;

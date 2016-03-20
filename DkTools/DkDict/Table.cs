@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using DkTools.CodeModel;
 using DkTools.CodeModel.Definitions;
 
 namespace DkTools.DkDict
@@ -17,6 +18,7 @@ namespace DkTools.DkDict
 		private TableDefinition _def;
 		private TableDefinition[] _defs;
 		private List<RelInd> _relinds = new List<RelInd>();
+		private FilePosition _filePos;
 
 		public bool Updates { get; set; }
 		public int DatabaseNumber { get; set; }
@@ -30,11 +32,12 @@ namespace DkTools.DkDict
 		public string Description { get; set; }
 		public string MasterTable { get; set; }
 
-		public Table(string name, int number, int number2)
+		public Table(string name, int number, int number2, FilePosition filePos)
 		{
 			_name = name;
 			_number = number;
 			_number2 = number2;
+			_filePos = filePos;
 		}
 
 		public string Name
@@ -118,7 +121,7 @@ namespace DkTools.DkDict
 			{
 				if (_def == null)
 				{
-					_def = new TableDefinition(_name, this, true);
+					_def = new TableDefinition(_name, this, true, _filePos);
 				}
 				return _def;
 			}
@@ -132,7 +135,7 @@ namespace DkTools.DkDict
 				{
 					_defs = new TableDefinition[10];
 					_defs[0] = BaseDefinition;
-					for (int i = 1; i <= 9; i++) _defs[i] = new TableDefinition(string.Concat(_name, i), this, false);
+					for (int i = 1; i <= 9; i++) _defs[i] = new TableDefinition(string.Concat(_name, i), this, false, _filePos);
 				}
 				return _defs;
 			}
@@ -148,7 +151,7 @@ namespace DkTools.DkDict
 			get { return _relinds; }
 		}
 
-		public IEnumerable<TableFieldDefinition> ColumnDefinitions
+		public IEnumerable<ColumnDefinition> ColumnDefinitions
 		{
 			get
 			{

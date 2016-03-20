@@ -70,45 +70,47 @@ namespace DkTools.Navigation
 
 		private static void BrowseToDefinition(CodeModel.Definitions.Definition def)
 		{
-			if (def is TableDefinition)
-			{
-				var table = DkDict.Dict.GetTable((def as TableDefinition).Name);
-				if (table != null)
-				{
-					var window = Shell.ShowProbeExplorerToolWindow();
-					window.FocusTable(table.Name);
-				}
-				else Shell.SetStatusText("Table not found.");
-			}
-			else if (def is TableFieldDefinition)
-			{
-				var tfdef = def as TableFieldDefinition;
+			// TODO: remove
+			//if (def is TableDefinition)
+			//{
+			//	var table = DkDict.Dict.GetTable((def as TableDefinition).Name);
+			//	if (table != null)
+			//	{
+			//		var window = Shell.ShowProbeExplorerToolWindow();
+			//		window.FocusTable(table.Name);
+			//	}
+			//	else Shell.SetStatusText("Table not found.");
+			//}
+			//else if (def is TableFieldDefinition)
+			//{
+			//	var tfdef = def as TableFieldDefinition;
 
-				var table = DkDict.Dict.GetTable(tfdef.TableName);
-				if (table != null)
-				{
-					var field = table.GetColumn(tfdef.FieldName);
-					if (field != null)
-					{
-						var window = Shell.ShowProbeExplorerToolWindow();
-						window.FocusTableField(table.Name, field.Name);
-					}
-					else Shell.SetStatusText("Field not found.");
-				}
-				else Shell.SetStatusText("Table not found.");
-			}
-			else if (def is RelIndDefinition)
-			{
-				var relIndDef = def as RelIndDefinition;
-				var table = DkDict.Dict.GetTable(relIndDef.BaseTableName);
-				if (table != null)
-				{
-					var window = Shell.ShowProbeExplorerToolWindow();
-					window.FocusTableRelInd(table.Name, relIndDef.Name);
-				}
-				else Shell.SetStatusText("Table not found.");
-			}
-			else if (def is FunctionDefinition)
+			//	var table = DkDict.Dict.GetTable(tfdef.TableName);
+			//	if (table != null)
+			//	{
+			//		var field = table.GetColumn(tfdef.FieldName);
+			//		if (field != null)
+			//		{
+			//			var window = Shell.ShowProbeExplorerToolWindow();
+			//			window.FocusTableField(table.Name, field.Name);
+			//		}
+			//		else Shell.SetStatusText("Field not found.");
+			//	}
+			//	else Shell.SetStatusText("Table not found.");
+			//}
+			//else if (def is RelIndDefinition)
+			//{
+			//	var relIndDef = def as RelIndDefinition;
+			//	var table = DkDict.Dict.GetTable(relIndDef.BaseTableName);
+			//	if (table != null)
+			//	{
+			//		var window = Shell.ShowProbeExplorerToolWindow();
+			//		window.FocusTableRelInd(table.Name, relIndDef.Name);
+			//	}
+			//	else Shell.SetStatusText("Table not found.");
+			//}
+			//else
+			if (def is FunctionDefinition)
 			{
 				var funcDef = def as FunctionDefinition;
 

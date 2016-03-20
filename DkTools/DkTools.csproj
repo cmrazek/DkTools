@@ -306,7 +306,7 @@
     <Compile Include="CodeModel\Definitions\RelIndDefinition.cs" />
     <Compile Include="CodeModel\Definitions\StringDefDefinition.cs" />
     <Compile Include="CodeModel\Definitions\TableDefinition.cs" />
-    <Compile Include="CodeModel\Definitions\TableFieldDefinition.cs" />
+    <Compile Include="CodeModel\Definitions\ColumnDefinition.cs" />
     <Compile Include="CodeModel\Definitions\VariableDefinition.cs" />
     <Compile Include="CodeModel\AnalysisNodes\Node.cs" />
     <Compile Include="CodeModel\Tokens\AlterToken.cs" />
@@ -475,11 +475,6 @@
     <Compile Include="Dict\Field.cs" />
     <Compile Include="Dict\RelInd.cs" />
     <Compile Include="Dict\Table.cs" />
-    <Compile Include="ProbeExplorer\RepoInfo.cs" />
-    <Compile Include="ProbeExplorer\RepoInfoItem.cs" />
-    <Compile Include="ProbeExplorer\RepoInfoWindow.xaml.cs">
-      <DependentUpon>RepoInfoWindow.xaml</DependentUpon>
-    </Compile>
     <Compile Include="ProcessRunner.cs" />
     <Compile Include="PromptForm.cs">
       <SubType>Form</SubType>
@@ -664,10 +659,6 @@
       <Generator>MSBuild:Compile</Generator>
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
-    </Page>
-    <Page Include="ProbeExplorer\RepoInfoWindow.xaml">
-      <SubType>Designer</SubType>
-      <Generator>MSBuild:Compile</Generator>
     </Page>
   </ItemGroup>
   <ItemGroup>

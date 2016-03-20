@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using DkTools.CodeModel;
 using DkTools.CodeModel.Definitions;
 
 namespace DkTools.DkDict
@@ -27,12 +28,14 @@ namespace DkTools.DkDict
 		private string _sortColString;
 		private List<Column> _cols;
 		private RelIndDefinition _def;
+		private FilePosition _filePos;
 
-		public RelInd(RelIndType type, string name, string tableName)
+		public RelInd(RelIndType type, string name, string tableName, FilePosition filePos)
 		{
 			_type = type;
 			_name = name;
 			_tableName = tableName;
+			_filePos = filePos;
 		}
 
 		public void AddTag(Tag tag)
@@ -173,7 +176,7 @@ namespace DkTools.DkDict
 				}
 			}
 
-			_def = new RelIndDefinition(_name, TableName, sb.ToString(), Description);
+			_def = new RelIndDefinition(_name, TableName, sb.ToString(), Description, _filePos);
 		}
 
 		public Definition Definition
@@ -208,7 +211,7 @@ namespace DkTools.DkDict
 			get { return _type; }
 		}
 
-		public IEnumerable<TableFieldDefinition> ColumnDefinitions
+		public IEnumerable<ColumnDefinition> ColumnDefinitions
 		{
 			get
 			{

@@ -12,10 +12,10 @@ namespace DkTools.CodeModel.Definitions
 		private string _relText;
 		private string _devDesc;
 
-		public static readonly RelIndDefinition Physical = new RelIndDefinition("physical", string.Empty, string.Empty, "Index on rowno");
+		public static readonly RelIndDefinition Physical = new RelIndDefinition("physical", string.Empty, string.Empty, "Index on rowno", FilePosition.Empty);
 
-		public RelIndDefinition(string name, string baseTableName, string relText, string devDesc)
-			: base(name, null, -1, GetExternalRefId(baseTableName, name))
+		public RelIndDefinition(string name, string baseTableName, string relText, string devDesc, FilePosition filePos)
+			: base(name, filePos.FileName, filePos.Position, GetExternalRefId(baseTableName, name))
 		{
 			_relText = relText;
 			_devDesc = devDesc;

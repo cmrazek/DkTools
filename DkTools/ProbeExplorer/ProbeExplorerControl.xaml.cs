@@ -34,7 +34,6 @@ namespace DkTools.ProbeExplorer
 		private BitmapImage _fieldImg;
 		private BitmapImage _indexImg;
 		private BitmapImage _relationshipImg;
-		private BitmapImage _extendedImg;
 
 		private static BitmapImage _functionImg;
 		#endregion
@@ -67,7 +66,6 @@ namespace DkTools.ProbeExplorer
 			_fieldImg = Res.FieldImg.ToBitmapImage();
 			_indexImg = Res.IndexImg.ToBitmapImage();
 			_relationshipImg = Res.RelationshipImg.ToBitmapImage();
-			_extendedImg = Res.DataTypeImg.ToBitmapImage();
 			if (_functionImg == null) _functionImg = Res.FunctionImg.ToBitmapImage();
 
 			ProbeEnvironment.AppChanged += new EventHandler(Probe_AppChanged);

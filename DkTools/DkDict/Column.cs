@@ -27,8 +27,9 @@ namespace DkTools.DkDict
 		private string _name;
 		private DataType _dataType;
 		private List<Tag> _tags;
-		private TableFieldDefinition _def;
+		private ColumnDefinition _def;
 		private string _fullName;
+		private FilePosition _filePos;
 
 		public enum PersistMode
 		{
@@ -38,12 +39,13 @@ namespace DkTools.DkDict
 			ZoomNoPersist
 		}
 
-		public Column(string tableName, string colName, DataType dataType)
+		public Column(string tableName, string colName, DataType dataType, FilePosition filePos)
 		{
 			_tableName = tableName;
 			_name = colName;
 			_dataType = dataType;
 			_fullName = string.Concat(tableName, ".", colName);
+			_filePos = filePos;
 		}
 
 		public void AddTag(Tag tag)
@@ -52,13 +54,13 @@ namespace DkTools.DkDict
 			_tags.Add(tag);
 		}
 
-		public TableFieldDefinition Definition
+		public ColumnDefinition Definition
 		{
 			get
 			{
 				if (_def == null)
 				{
-					_def = new TableFieldDefinition(TableName, Name, Prompt, Comment, DataType, Description);
+					_def = new ColumnDefinition(TableName, Name, Prompt, Comment, DataType, Description, _filePos);
 				}
 				return _def;
 			}
