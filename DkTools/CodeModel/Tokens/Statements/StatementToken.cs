@@ -25,6 +25,7 @@ namespace DkTools.CodeModel.Tokens
 				case "alter":
 				case "create":
 				case "col":
+				case "colff":
 				case "extern":
 				case "extract":
 				case "for":
@@ -89,6 +90,7 @@ namespace DkTools.CodeModel.Tokens
 							}
 						case "col":
 						case "row":
+						case "colff":
 							{
 								var keywordToken = new KeywordToken(scope, code.MovePeekedSpan(), code.Text);
 								var token = RowColStatement.Parse(scope, keywordToken);
