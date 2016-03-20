@@ -32,11 +32,11 @@ namespace DkTools.CodeModel.Tokens
 			ret.AddToken(new KeywordToken(scope, code.Span, "from"));
 
 			ExtractTableDefinition extractDef = null;
-			Dict.Table table = null;
+			DkDict.Table table = null;
 
 			if (code.ReadWord())
 			{
-				if ((table = ProbeEnvironment.GetTable(code.Text)) != null) ret.AddToken(new TableToken(scope, code.Span, code.Text, table.BaseDefinition));
+				if ((table = DkDict.Dict.GetTable(code.Text)) != null) ret.AddToken(new TableToken(scope, code.Span, code.Text, table.BaseDefinition));
 				else if ((extractDef = scope.DefinitionProvider.GetAny<ExtractTableDefinition>(code.TokenStartPostion, code.Text).FirstOrDefault()) != null)
 					ret.AddToken(new IdentifierToken(scope, code.Span, code.Text, extractDef));
 				else ret.AddToken(new UnknownToken(scope, code.Span, code.Text));
@@ -48,7 +48,7 @@ namespace DkTools.CodeModel.Tokens
 
 				if (code.ReadWord())
 				{
-					if ((table = ProbeEnvironment.GetTable(code.Text)) != null) ret.AddToken(new TableToken(scope, code.Span, code.Text, table.BaseDefinition));
+					if ((table = DkDict.Dict.GetTable(code.Text)) != null) ret.AddToken(new TableToken(scope, code.Span, code.Text, table.BaseDefinition));
 					else ret.AddToken(new UnknownToken(scope, code.Span, code.Text));
 				}
 			}
@@ -72,7 +72,7 @@ namespace DkTools.CodeModel.Tokens
 					}
 					else if (code.ReadWord())
 					{
-						if ((table = ProbeEnvironment.GetTable(code.Text)) != null) ret.AddToken(new TableToken(scope, code.Span, code.Text, table.BaseDefinition));
+						if ((table = DkDict.Dict.GetTable(code.Text)) != null) ret.AddToken(new TableToken(scope, code.Span, code.Text, table.BaseDefinition));
 						else ret.AddToken(new UnknownToken(scope, code.Span, code.Text));
 						expectingComma = true;
 					}
@@ -201,7 +201,7 @@ namespace DkTools.CodeModel.Tokens
 			{
 				var wordPos = code.TokenStartPostion;
 
-				var table = ProbeEnvironment.GetTable(code.Text);
+				var table = DkDict.Dict.GetTable(code.Text);
 				if (table != null)
 				{
 					var tableToken = new TableToken(scope, code.Span, code.Text, table.BaseDefinition);
@@ -210,7 +210,7 @@ namespace DkTools.CodeModel.Tokens
 						var dotToken = new DotToken(scope, code.Span);
 						if (code.ReadWord())
 						{
-							var field = table.GetField(code.Text);
+							var field = table.GetColumn(code.Text);
 							if (field != null)
 							{
 								var fieldName = code.Text;
@@ -229,7 +229,7 @@ namespace DkTools.CodeModel.Tokens
 
 				if (allowRelInd)
 				{
-					var relind = ProbeEnvironment.GetRelInd(code.Text);
+					var relind = DkDict.Dict.GetRelInd(code.Text);
 					if (relind != null)
 					{
 						parent.AddToken(new RelIndToken(scope, code.Span, code.Text, relind.Definition));

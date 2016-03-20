@@ -463,11 +463,12 @@ namespace DkTools.CodeModel
 					args.Add(new Define(define.ParamNames[i], paramList[i], null, string.Empty, 0));
 				}
 			}
-			if (p.args != null)
-			{
-				if (args == null) args = new List<Define>();
-				args.AddRange(p.args);
-			}
+			// TODO: remove if this works
+			//if (p.args != null)
+			//{
+			//	if (args == null) args = new List<Define>();
+			//	args.AddRange(p.args);
+			//}
 
 			string[] restrictedDefines = null;
 			if (p.restrictedDefines != null) restrictedDefines = p.restrictedDefines.Concat(new string[] { name }).ToArray();
@@ -475,6 +476,8 @@ namespace DkTools.CodeModel
 
 			var textToAdd = ResolveMacros(define.Content, restrictedDefines, args, p.fileContext, p.contentType);
 			rdr.Insert(textToAdd);
+
+			p.args = oldArgs;
 		}
 
 		private void ProcessStringizeKeyword(PreprocessorParams p)
@@ -523,9 +526,11 @@ namespace DkTools.CodeModel
 			parms.args = args;
 			parms.resolvingMacros = true;
 
+			//Preprocess(parms);		TODO: remove
 			while (Preprocess(parms))
 			{
 				parms.documentAltered = false;
+				parms.args = null;	// Only apply the arguments to the first round
 				parms.reader = new StringPreprocessorReader(writer.Text);
 				parms.writer = writer = new StringPreprocessorWriter();
 			}
@@ -588,12 +593,14 @@ namespace DkTools.CodeModel
 			// Run the preprocessor on the include file.
 			var includeSource = new CodeSource();
 			var parms = new PreprocessorParams(reader, includeSource, includeNode.FullPathName, parentFiles, p.fileContext, p.contentType);
-			while (Preprocess(parms))
-			{
-				parms.documentAltered = false;
-				parms.reader = new CodeSource.CodeSourcePreprocessorReader(includeSource);
-				parms.writer = includeSource = new CodeSource();
-			}
+			Preprocess(parms);
+			// TODO: remove
+			//while (Preprocess(parms))
+			//{
+			//	parms.documentAltered = false;
+			//	parms.reader = new CodeSource.CodeSourcePreprocessorReader(includeSource);
+			//	parms.writer = includeSource = new CodeSource();
+			//}
 
 			p.writer.Append(includeSource);
 
@@ -1085,12 +1092,14 @@ namespace DkTools.CodeModel
 			var parms = new PreprocessorParams(reader, writer, string.Empty, null, p.fileContext, ContentType.Condition);
 			parms.allowDirectives = false;
 			parms.args = p.args;
-			while (Preprocess(parms))
-			{
-				parms.documentAltered = false;
-				parms.reader = new StringPreprocessorReader(writer.Text);
-				parms.writer = writer = new StringPreprocessorWriter();
-			}
+			Preprocess(parms);
+			// TODO: remove
+			//while (Preprocess(parms))
+			//{
+			//	parms.documentAltered = false;
+			//	parms.reader = new StringPreprocessorReader(writer.Text);
+			//	parms.writer = writer = new StringPreprocessorWriter();
+			//}
 
 			// Evaluate the condition string
 			var parser = new CodeParser(writer.Text);

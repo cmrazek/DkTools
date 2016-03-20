@@ -13,10 +13,10 @@ namespace DkTools.CodeModel.Definitions
 		private string _comment;
 		private string _description;
 		private bool _orig;
-		private Dict.Table _table;
+		private DkDict.Table _table;
 
-		public TableDefinition(string name, Dict.Table table, bool orig)
-			: base(name, null, -1, Dict.Table.GetExternalRefId(name))
+		public TableDefinition(string name, DkDict.Table table, bool orig)
+			: base(name, null, -1, DkDict.Table.GetExternalRefId(name))
 		{
 #if DEBUG
 			if (table == null) throw new ArgumentNullException("table");
@@ -113,8 +113,8 @@ namespace DkTools.CodeModel.Definitions
 
 		public override Definition GetChildDefinition(string name)
 		{
-			var field = _table.GetField(name);
-			if (field != null) return field.Definition;
+			var col = _table.GetColumn(name);
+			if (col != null) return col.Definition;
 			return null;
 		}
 

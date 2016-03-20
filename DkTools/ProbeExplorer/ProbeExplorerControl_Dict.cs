@@ -21,7 +21,7 @@ namespace DkTools.ProbeExplorer
 		{
 			c_dictTree.Items.Clear();
 
-			var tables = ProbeEnvironment.Tables.ToList();
+			var tables = DkDict.Dict.Tables.ToList();
 			tables.Sort((a, b) => a.Name.CompareTo(b.Name));
 
 			foreach (var table in tables)
@@ -29,6 +29,7 @@ namespace DkTools.ProbeExplorer
 				c_dictTree.Items.Add(CreateTableTvi(table));
 			}
 
+			// TODO: remove
 			//var repoDict = ProbeEnvironment.CreateDictionary(ProbeEnvironment.CurrentApp);
 			//if (repoDict != null)
 			//{
@@ -90,7 +91,7 @@ namespace DkTools.ProbeExplorer
 		}
 
 		#region Table
-		private TreeViewItem CreateTableTvi(Dict.Table table)
+		private TreeViewItem CreateTableTvi(DkDict.Table table)
 		{
 			var tvi = CreateStandardTvi(_tableImg, table.Name, table.Prompt, table.BaseDefinition.QuickInfoTextWpf, true);
 			tvi.Expanded += TableTvi_Expanded;
@@ -117,14 +118,14 @@ namespace DkTools.ProbeExplorer
 				var tableNode = (sender as TreeViewItem);
 				if (tableNode != null)
 				{
-					var table = tableNode.Tag as Dict.Table;
+					var table = tableNode.Tag as DkDict.Table;
 					if (table != null)
 					{
 						tableNode.Items.Clear();
 
-						tableNode.Items.Add(CreateDictObjExtendedItem(table, string.Concat("Table: ", table.Name)));
+						//tableNode.Items.Add(CreateDictObjExtendedItem(table, string.Concat("Table: ", table.Name)));		TODO: remove
 
-						foreach (var field in table.Fields)
+						foreach (var field in table.Columns)
 						{
 							if (_dictFilter.Match(field.FullName))
 							{
@@ -172,10 +173,10 @@ namespace DkTools.ProbeExplorer
 			var menuItem = (sender as MenuItem);
 			if (menuItem != null)
 			{
-				var table = menuItem.Tag as Dict.Table;
+				var table = menuItem.Tag as DkDict.Table;
 				if (table != null)
 				{
-					Navigation.GoToDefinitionHelper.TriggerFindReferences(Dict.Table.GetExternalRefId(table.Name), table.Name);
+					Navigation.GoToDefinitionHelper.TriggerFindReferences(DkDict.Table.GetExternalRefId(table.Name), table.Name);
 					e.Handled = true;
 				}
 			}
@@ -183,7 +184,7 @@ namespace DkTools.ProbeExplorer
 		#endregion
 
 		#region Field
-		private TreeViewItem CreateFieldTvi(Dict.Field field)
+		private TreeViewItem CreateFieldTvi(DkDict.Column field)
 		{
 			var tvi = CreateStandardTvi(_fieldImg, field.Name, field.Prompt, field.Definition.QuickInfoTextWpf, true);
 			tvi.Tag = field;
@@ -210,12 +211,12 @@ namespace DkTools.ProbeExplorer
 				var fieldItem = (sender as TreeViewItem);
 				if (fieldItem != null)
 				{
-					var field = fieldItem.Tag as Dict.Field;
+					var field = fieldItem.Tag as DkDict.Column;
 					if (field != null)
 					{
 						fieldItem.Items.Clear();
 						CreateFieldInfoItems(fieldItem, field);
-						fieldItem.Items.Add(CreateDictObjExtendedItem(field, string.Concat("Column: ", field.Name)));
+						//fieldItem.Items.Add(CreateDictObjExtendedItem(field, string.Concat("Column: ", field.Name)));		TODO: remove
 						e.Handled = true;
 					}
 				}
@@ -226,7 +227,7 @@ namespace DkTools.ProbeExplorer
 			}
 		}
 
-		private void CreateFieldInfoItems(TreeViewItem fieldItem, Dict.Field field)
+		private void CreateFieldInfoItems(TreeViewItem fieldItem, DkDict.Column field)
 		{
 			fieldItem.Items.Add(CreateInfoTvi("Name", field.Name));
 			if (!string.IsNullOrEmpty(field.Prompt)) fieldItem.Items.Add(CreateInfoTvi("Prompt", field.Prompt));
@@ -258,10 +259,10 @@ namespace DkTools.ProbeExplorer
 				var menuItem = (sender as MenuItem);
 				if (menuItem != null)
 				{
-					var field = menuItem.Tag as Dict.Field;
+					var field = menuItem.Tag as DkDict.Column;
 					if (field != null)
 					{
-						Navigation.GoToDefinitionHelper.TriggerFindReferences(Dict.Field.GetTableFieldExternalRefId(field.ParentName, field.Name), field.Name);
+						Navigation.GoToDefinitionHelper.TriggerFindReferences(DkDict.Column.GetTableFieldExternalRefId(field.TableName, field.Name), field.Name);
 						e.Handled = true;
 					}
 				}
@@ -274,9 +275,9 @@ namespace DkTools.ProbeExplorer
 		#endregion
 
 		#region RelInd
-		private TreeViewItem CreateRelIndTreeViewItem(Dict.RelInd relind)
+		private TreeViewItem CreateRelIndTreeViewItem(DkDict.RelInd relind)
 		{
-			var tvi = CreateStandardTvi(relind.Type == Dict.RelIndType.Index ? _indexImg : _relationshipImg, relind.Name, relind.Prompt, relind.Definition.QuickInfoTextWpf, true);
+			var tvi = CreateStandardTvi(relind.Type == DkDict.RelIndType.Index ? _indexImg : _relationshipImg, relind.Name, relind.Prompt, relind.Definition.QuickInfoTextWpf, true);
 			tvi.Tag = relind;
 			tvi.Expanded += RelIndTvi_Expanded;
 			tvi.MouseRightButtonDown += RelIndTvi_MouseRightButtonDown;
@@ -301,12 +302,12 @@ namespace DkTools.ProbeExplorer
 				var relindItem = (sender as TreeViewItem);
 				if (relindItem != null)
 				{
-					var relind = relindItem.Tag as Dict.RelInd;
+					var relind = relindItem.Tag as DkDict.RelInd;
 					if (relind != null)
 					{
 						relindItem.Items.Clear();
-						CreateRelIndInfoItems(relindItem, relindItem.Tag as Dict.RelInd);
-						relindItem.Items.Add(CreateDictObjExtendedItem(relind, string.Concat("Index/Relationship: ", relind.Name)));
+						CreateRelIndInfoItems(relindItem, relindItem.Tag as DkDict.RelInd);
+						//relindItem.Items.Add(CreateDictObjExtendedItem(relind, string.Concat("Index/Relationship: ", relind.Name)));		TODO: remove
 						e.Handled = true;
 					}
 				}
@@ -317,13 +318,13 @@ namespace DkTools.ProbeExplorer
 			}
 		}
 
-		private void CreateRelIndInfoItems(TreeViewItem item, Dict.RelInd relind)
+		private void CreateRelIndInfoItems(TreeViewItem item, DkDict.RelInd relind)
 		{
 			item.Items.Add(CreateInfoTvi("Name", relind.Name));
 			if (!string.IsNullOrWhiteSpace(relind.Prompt)) item.Items.Add(CreateInfoTvi("Prompt", relind.Prompt));
 			if (!string.IsNullOrWhiteSpace(relind.Comment)) item.Items.Add(CreateInfoTvi("Comment", relind.Comment));
 			if (!string.IsNullOrWhiteSpace(relind.Description)) item.Items.Add(CreateInfoTvi("Description", relind.Description));
-			if (!string.IsNullOrWhiteSpace(relind.Columns)) item.Items.Add(CreateInfoTvi("Columns", relind.Columns));
+			if (!string.IsNullOrWhiteSpace(relind.SortedColumnString)) item.Items.Add(CreateInfoTvi("Columns", relind.SortedColumnString));
 		}
 
 		private void RelIndFindAllReferences_Click(object sender, RoutedEventArgs e)
@@ -333,7 +334,7 @@ namespace DkTools.ProbeExplorer
 				var menuItem = (sender as MenuItem);
 				if (menuItem != null)
 				{
-					var relInd = menuItem.Tag as Dict.RelInd;
+					var relInd = menuItem.Tag as DkDict.RelInd;
 					if (relInd != null)
 					{
 						Navigation.GoToDefinitionHelper.TriggerFindReferences(CodeModel.Definitions.RelIndDefinition.GetExternalRefId(relInd.TableName, relInd.Name), relInd.Name);
@@ -405,7 +406,7 @@ namespace DkTools.ProbeExplorer
 
 			foreach (TreeViewItem tableNode in c_dictTree.Items)
 			{
-				var table = tableNode.Tag as Dict.Table;
+				var table = tableNode.Tag as DkDict.Table;
 				if (table.Name == tableName)
 				{
 					tableNode.IsSelected = true;
@@ -426,13 +427,13 @@ namespace DkTools.ProbeExplorer
 
 			foreach (TreeViewItem tableNode in c_dictTree.Items)
 			{
-				var table = tableNode.Tag as Dict.Table;
+				var table = tableNode.Tag as DkDict.Table;
 				if (table.Name == tableName)
 				{
 					tableNode.IsExpanded = true;
 					foreach (TreeViewItem fieldNode in tableNode.Items)
 					{
-						var field = fieldNode.Tag as Dict.Field;
+						var field = fieldNode.Tag as DkDict.Column;
 						if (field != null && field.Name == fieldName)
 						{
 							fieldNode.IsSelected = true;
@@ -455,13 +456,13 @@ namespace DkTools.ProbeExplorer
 
 			foreach (TreeViewItem tableNode in c_dictTree.Items)
 			{
-				var table = tableNode.Tag as Dict.Table;
+				var table = tableNode.Tag as DkDict.Table;
 				if (table.Name == tableName)
 				{
 					tableNode.IsExpanded = true;
 					foreach (TreeViewItem relIndNode in tableNode.Items)
 					{
-						var relInd = relIndNode.Tag as Dict.RelInd;
+						var relInd = relIndNode.Tag as DkDict.RelInd;
 						if (relInd != null && relInd.Name == relIndName)
 						{
 							relIndNode.IsSelected = true;
@@ -491,7 +492,7 @@ namespace DkTools.ProbeExplorer
 
 			foreach (TreeViewItem tableNode in c_dictTree.Items)
 			{
-				var table = tableNode.Tag as Dict.Table;
+				var table = tableNode.Tag as DkDict.Table;
 				if (table == null) continue;
 
 				if (empty)
@@ -508,7 +509,7 @@ namespace DkTools.ProbeExplorer
 						showTable = true;
 					}
 
-					foreach (var field in table.Fields)
+					foreach (var field in table.Columns)
 					{
 						if (_dictFilter.Match(field.FullName))
 						{
@@ -615,102 +616,103 @@ namespace DkTools.ProbeExplorer
 		}
 		#endregion
 
-		private class ExtendedItemInfo
-		{
-			public Dict.IDictObj DictObject { get; set; }
-			public string WindowTitle { get; set; }
-		}
+		// TODO: remove
+		//private class ExtendedItemInfo
+		//{
+		//	public Dict.IDictObj DictObject { get; set; }
+		//	public string WindowTitle { get; set; }
+		//}
 
-		private TreeViewItem CreateDictObjExtendedItem(Dict.IDictObj obj, string windowTitle, string headerText = "extended information")
-		{
-			var tvi = CreateStandardTvi(_extendedImg, string.Empty, headerText, null, false);
-			tvi.Tag = new ExtendedItemInfo { DictObject = obj, WindowTitle = windowTitle };
-			tvi.MouseDoubleClick += ExtendedItem_MouseDoubleClick;
+		//private TreeViewItem CreateDictObjExtendedItem(Dict.IDictObj obj, string windowTitle, string headerText = "extended information")
+		//{
+		//	var tvi = CreateStandardTvi(_extendedImg, string.Empty, headerText, null, false);
+		//	tvi.Tag = new ExtendedItemInfo { DictObject = obj, WindowTitle = windowTitle };
+		//	tvi.MouseDoubleClick += ExtendedItem_MouseDoubleClick;
 
-			var menu = new ContextMenu();
-			var menuItem = new MenuItem { Header = "Export to CSV" };
-			menuItem.Click += ExtendedItem_ExportToCsv_Click;
-			menuItem.Tag = obj;
-			menu.Items.Add(menuItem);
-			tvi.ContextMenu = menu;
+		//	var menu = new ContextMenu();
+		//	var menuItem = new MenuItem { Header = "Export to CSV" };
+		//	menuItem.Click += ExtendedItem_ExportToCsv_Click;
+		//	menuItem.Tag = obj;
+		//	menu.Items.Add(menuItem);
+		//	tvi.ContextMenu = menu;
 
-			return tvi;
-		}
+		//	return tvi;
+		//}
 
-		private void ExtendedItem_MouseDoubleClick(object sender, MouseButtonEventArgs e)
-		{
-			try
-			{
-				var item = sender as TreeViewItem;
-				if (item == null) return;
+		//private void ExtendedItem_MouseDoubleClick(object sender, MouseButtonEventArgs e)
+		//{
+		//	try
+		//	{
+		//		var item = sender as TreeViewItem;
+		//		if (item == null) return;
 
-				var info = item.Tag as ExtendedItemInfo;
-				if (info == null) return;
+		//		var info = item.Tag as ExtendedItemInfo;
+		//		if (info == null) return;
 
-				var dict = ProbeEnvironment.CreateDictionary(ProbeEnvironment.CurrentApp);
-				var repoObj = info.DictObject.CreateRepoObject(dict);
-				if (repoObj == null) return;
-				var dlg = new RepoInfoWindow(repoObj, dict);
-				dlg.Title = info.WindowTitle;
-				dlg.Owner = System.Windows.Application.Current.MainWindow;
-				dlg.Show();
+		//		var dict = ProbeEnvironment.CreateDictionary(ProbeEnvironment.CurrentApp);
+		//		var repoObj = info.DictObject.CreateRepoObject(dict);
+		//		if (repoObj == null) return;
+		//		var dlg = new RepoInfoWindow(repoObj, dict);
+		//		dlg.Title = info.WindowTitle;
+		//		dlg.Owner = System.Windows.Application.Current.MainWindow;
+		//		dlg.Show();
 
-				e.Handled = true;
-			}
-			catch (Exception ex)
-			{
-				this.ShowError(ex);
-			}
-		}
+		//		e.Handled = true;
+		//	}
+		//	catch (Exception ex)
+		//	{
+		//		this.ShowError(ex);
+		//	}
+		//}
 
-		void ExtendedItem_ExportToCsv_Click(object sender, RoutedEventArgs e)
-		{
-			try
-			{
-				var menuItem = sender as MenuItem;
-				if (menuItem == null) return;
+		//void ExtendedItem_ExportToCsv_Click(object sender, RoutedEventArgs e)
+		//{
+		//	try
+		//	{
+		//		var menuItem = sender as MenuItem;
+		//		if (menuItem == null) return;
 
-				var dictObj = menuItem.Tag as Dict.IDictObj;
-				if (dictObj == null) return;
+		//		var dictObj = menuItem.Tag as Dict.IDictObj;
+		//		if (dictObj == null) return;
 
-				var dlg = new System.Windows.Forms.SaveFileDialog();
-				dlg.DefaultExt = "csv";
-				dlg.Filter = "CSV Files (*.csv)|*.csv|All Files (*.*)|*.*";
-				dlg.FilterIndex = 1;
-				if (dlg.ShowDialog() != System.Windows.Forms.DialogResult.OK) return;
-				var fileName = dlg.FileName;
+		//		var dlg = new System.Windows.Forms.SaveFileDialog();
+		//		dlg.DefaultExt = "csv";
+		//		dlg.Filter = "CSV Files (*.csv)|*.csv|All Files (*.*)|*.*";
+		//		dlg.FilterIndex = 1;
+		//		if (dlg.ShowDialog() != System.Windows.Forms.DialogResult.OK) return;
+		//		var fileName = dlg.FileName;
 
-				var dict = ProbeEnvironment.CreateDictionary(ProbeEnvironment.CurrentApp);
-				var repoObj = dictObj.CreateRepoObject(dict);
-				if (repoObj == null) return;
+		//		var dict = ProbeEnvironment.CreateDictionary(ProbeEnvironment.CurrentApp);
+		//		var repoObj = dictObj.CreateRepoObject(dict);
+		//		if (repoObj == null) return;
 
-				var items = RepoInfo.GenerateInfoItems(repoObj, 0);
+		//		var items = RepoInfo.GenerateInfoItems(repoObj, 0);
 
-				using (var csv = new CsvWriter(fileName))
-				{
-					csv.Write("Interface");
-					csv.Write("Property");
-					csv.Write("Value");
-					csv.Write("Type");
-					csv.EndLine();
+		//		using (var csv = new CsvWriter(fileName))
+		//		{
+		//			csv.Write("Interface");
+		//			csv.Write("Property");
+		//			csv.Write("Value");
+		//			csv.Write("Type");
+		//			csv.EndLine();
 
-					foreach (var item in items)
-					{
-						csv.Write(item.Interface);
-						csv.Write(item.PropertyName);
-						var value = item.Value;
-						if (value == null) csv.Write("(null)");
-						else csv.Write(value.ToString());
-						csv.Write(item.TypeText);
-						csv.EndLine();
-					}
-				}
-			}
-			catch (Exception ex)
-			{
-				this.ShowError(ex);
-			}
-		}
+		//			foreach (var item in items)
+		//			{
+		//				csv.Write(item.Interface);
+		//				csv.Write(item.PropertyName);
+		//				var value = item.Value;
+		//				if (value == null) csv.Write("(null)");
+		//				else csv.Write(value.ToString());
+		//				csv.Write(item.TypeText);
+		//				csv.EndLine();
+		//			}
+		//		}
+		//	}
+		//	catch (Exception ex)
+		//	{
+		//		this.ShowError(ex);
+		//	}
+		//}
 
 		#region Keyboard Input
 		private StringBuilder _keyBuf;
@@ -778,17 +780,17 @@ namespace DkTools.ProbeExplorer
 				var tag = tvi.Tag;
 				if (tag == null) continue;
 
-				if (tag is Dict.Table)
+				if (tag is DkDict.Table)
 				{
-					if ((tag as Dict.Table).Name.StartsWith(typedText, StringComparison.CurrentCultureIgnoreCase)) return tvi;
+					if ((tag as DkDict.Table).Name.StartsWith(typedText, StringComparison.CurrentCultureIgnoreCase)) return tvi;
 				}
-				else if (tag is Dict.Field)
+				else if (tag is DkDict.Column)
 				{
-					if ((tag as Dict.Field).Name.StartsWith(typedText, StringComparison.CurrentCultureIgnoreCase)) return tvi;
+					if ((tag as DkDict.Column).Name.StartsWith(typedText, StringComparison.CurrentCultureIgnoreCase)) return tvi;
 				}
-				else if (tag is Dict.RelInd)
+				else if (tag is DkDict.RelInd)
 				{
-					if ((tag as Dict.RelInd).Name.StartsWith(typedText, StringComparison.CurrentCultureIgnoreCase)) return tvi;
+					if ((tag as DkDict.RelInd).Name.StartsWith(typedText, StringComparison.CurrentCultureIgnoreCase)) return tvi;
 				}
 
 				if (tvi.IsExpanded && tvi.Items.Count > 0)

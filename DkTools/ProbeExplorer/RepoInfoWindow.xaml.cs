@@ -22,16 +22,15 @@ namespace DkTools.ProbeExplorer
 	public partial class RepoInfoWindow : Window, INotifyPropertyChanged
 	{
 		private object _repoObj;
-		//private List<RepoInfoItem> _items;
+		//private List<RepoInfoItem> _items;	TODO: remove
 		private ObservableCollection<RepoInfoItem> _items;
-		private Dict.Dict _dict;
+		//private Dict.Dict _dict;		TODO: remove
 
 		public event PropertyChangedEventHandler PropertyChanged;
 
-		internal RepoInfoWindow(object repoObj, Dict.Dict dict)
+		internal RepoInfoWindow(object repoObj)
 		{
 			_repoObj = repoObj;
-			_dict = dict;
 			_items = new ObservableCollection<RepoInfoItem>(RepoInfo.GenerateInfoItems(_repoObj, 0));
 
 			InitializeComponent();
@@ -46,6 +45,7 @@ namespace DkTools.ProbeExplorer
 		public object RepoInfoObject
 		{
 			get { return _repoObj; }
+			// TODO: remove
 			//set
 			//{
 			//	if (_repoObj != value)

@@ -416,15 +416,16 @@ namespace DkTools
 		#endregion
 
 		#region Table List
-		private static Dictionary<string, Dict.Table> _tables = new Dictionary<string, Dict.Table>();
-		private static Dictionary<string, Dict.StringDef> _stringDefs = new Dictionary<string, Dict.StringDef>();
-		private static Dictionary<string, Dict.TypeDef> _typeDefs = new Dictionary<string, Dict.TypeDef>();
-		private static Dictionary<string, Dict.InterfaceType> _intTypes = new Dictionary<string, Dict.InterfaceType>();
+		// TODO: remove
+		//private static Dictionary<string, Dict.Table> _tables = new Dictionary<string, Dict.Table>();
+		//private static Dictionary<string, Dict.StringDef> _stringDefs = new Dictionary<string, Dict.StringDef>();
+		//private static Dictionary<string, Dict.TypeDef> _typeDefs = new Dictionary<string, Dict.TypeDef>();
+		//private static Dictionary<string, Dict.InterfaceType> _intTypes = new Dictionary<string, Dict.InterfaceType>();
 
-		public static Dict.Dict CreateDictionary(string appName)
-		{
-			return new Dict.Dict(appName);
-		}
+		//public static Dict.Dict CreateDictionary(string appName)
+		//{
+		//	return new Dict.Dict(appName);
+		//}
 
 		private static void ReloadTableList()
 		{
@@ -433,58 +434,62 @@ namespace DkTools
 				Log.Write(LogLevel.Info, "Loading dictionary...");
 				var startTime = DateTime.Now;
 
-				_tables.Clear();
-				_stringDefs.Clear();
-				_typeDefs.Clear();
-				_intTypes.Clear();
+				DkDict.Dict.Load();
+
+				// TODO: remove
+				//_tables.Clear();
+				//_stringDefs.Clear();
+				//_typeDefs.Clear();
+				//_intTypes.Clear();
 
 				if (_currentApp != null)
 				{
-					using (var dict = CreateDictionary(_currentApp.Name))
-					{
-						foreach (var repoTable in dict.Tables)
-						{
-							var table = new Dict.Table(repoTable);
-							_tables[table.Name] = table;
-						}
+					// TODO: remove
+					//using (var dict = CreateDictionary(_currentApp.Name))
+					//{
+					//	foreach (var repoTable in dict.Tables)
+					//	{
+					//		var table = new Dict.Table(repoTable);
+					//		_tables[table.Name] = table;
+					//	}
 
-						foreach (var repoSD in dict.StringDefines)
-						{
-							var stringDef = new Dict.StringDef(repoSD);
-							_stringDefs[stringDef.Name] = stringDef;
-						}
+					//	foreach (var repoSD in dict.StringDefines)
+					//	{
+					//		var stringDef = new Dict.StringDef(repoSD);
+					//		_stringDefs[stringDef.Name] = stringDef;
+					//	}
 
-						foreach (var repoTD in dict.TypeDefines)
-						{
-							var typeDef = new Dict.TypeDef(repoTD);
-							_typeDefs[typeDef.Name] = typeDef;
-						}
+					//	foreach (var repoTD in dict.TypeDefines)
+					//	{
+					//		var typeDef = new Dict.TypeDef(repoTD);
+					//		_typeDefs[typeDef.Name] = typeDef;
+					//	}
 
-						foreach (var repoRel in dict.Relationships)
-						{
-							var parent = repoRel.Parent;
+					//	foreach (var repoRel in dict.Relationships)
+					//	{
+					//		var parent = repoRel.Parent;
 
-							Dict.Table table;
-							if (_tables.TryGetValue(repoRel.Parent.Name, out table))
-							{
-								var relind = new Dict.RelInd(table, repoRel);
-								table.AddRelInd(relind);
-							}
-							else
-							{
-								Log.WriteDebug("Could not find parent table for relationship '{0}'.", repoRel.Name);
-							}
-						}
+					//		Dict.Table table;
+					//		if (_tables.TryGetValue(repoRel.Parent.Name, out table))
+					//		{
+					//			var relind = new Dict.RelInd(table, repoRel);
+					//			table.AddRelInd(relind);
+					//		}
+					//		else
+					//		{
+					//			Log.WriteDebug("Could not find parent table for relationship '{0}'.", repoRel.Name);
+					//		}
+					//	}
 
-						foreach (var repoIntType in dict.Interfaces)
-						{
-							var intType = new Dict.InterfaceType(repoIntType);
-							_intTypes[intType.Name] = intType;
-						}
-					}
+					//	foreach (var repoIntType in dict.Interfaces)
+					//	{
+					//		var intType = new Dict.InterfaceType(repoIntType);
+					//		_intTypes[intType.Name] = intType;
+					//	}
+					//}
 				}
 
-				LoadRelInds();
+				//LoadRelInds();	TODO: remove
 
 				var elapsed = DateTime.Now.Subtract(startTime);
 				Log.Write(LogLevel.Info, "Successfully loaded dictionary (elapsed: {0})", elapsed);
@@ -495,127 +500,129 @@ namespace DkTools
 			}
 		}
 
-		public static IEnumerable<Dict.Table> Tables
-		{
-			get { return _tables.Values; }
-		}
+		//public static IEnumerable<DkDict.Table> Tables
+		//{
+		//	get { return DkDict.Dict.Tables; }
+		//}
 
-		public static bool IsProbeTable(string tableName)
-		{
-			if (_tables.ContainsKey(tableName)) return true;
+		// TODO: remove
+		//public static bool IsProbeTable(string tableName)
+		//{
+		//	if (_tables.ContainsKey(tableName)) return true;
 
-			if (tableName.Length > 1 && char.IsDigit(tableName[tableName.Length - 1]))
-			{
-				var prefixTableName = tableName.Substring(0, tableName.Length - 1);
-				if (_tables.ContainsKey(prefixTableName)) return true;
-			}
+		//	if (tableName.Length > 1 && char.IsDigit(tableName[tableName.Length - 1]))
+		//	{
+		//		var prefixTableName = tableName.Substring(0, tableName.Length - 1);
+		//		if (_tables.ContainsKey(prefixTableName)) return true;
+		//	}
 
-			return false;
-		}
+		//	return false;
+		//}
 
-		public static bool IsProbeTable(int tableNum)
-		{
-			return _tables.Any(t => { return t.Value.Number == tableNum; });
-		}
+		//public static bool IsProbeTable(int tableNum)
+		//{
+		//	return _tables.Any(t => { return t.Value.Number == tableNum; });
+		//}
 
-		public static Dict.Table GetTable(string tableName)
-		{
-			Dict.Table table;
-			if (_tables.TryGetValue(tableName, out table)) return table;
+		//public static Dict.Table GetTable(string tableName)
+		//{
+		//	Dict.Table table;
+		//	if (_tables.TryGetValue(tableName, out table)) return table;
 
-			if (tableName.Length > 1 && char.IsDigit(tableName[tableName.Length - 1]))
-			{
-				var prefixTableName = tableName.Substring(0, tableName.Length - 1);
-				if (_tables.TryGetValue(prefixTableName, out table)) return table;
-			}
+		//	if (tableName.Length > 1 && char.IsDigit(tableName[tableName.Length - 1]))
+		//	{
+		//		var prefixTableName = tableName.Substring(0, tableName.Length - 1);
+		//		if (_tables.TryGetValue(prefixTableName, out table)) return table;
+		//	}
 
-			return null;
-		}
+		//	return null;
+		//}
 
-		public static Dict.Table GetTable(int tableNum)
-		{
-			return (from t in _tables where t.Value.Number == tableNum select t.Value).FirstOrDefault();
-		}
+		//public static Dict.Table GetTable(int tableNum)
+		//{
+		//	return (from t in _tables where t.Value.Number == tableNum select t.Value).FirstOrDefault();
+		//}
 
-		public static IEnumerable<CodeModel.Definitions.Definition> DictDefinitions
-		{
-			get
-			{
-				foreach (var table in _tables.Values)
-				{
-					foreach (var def in table.Definitions) yield return def;
-				}
-				foreach (var relInd in _relInds.Values) yield return relInd.Definition;
-				foreach (var stringDef in _stringDefs.Values) yield return stringDef.Definition;
-				foreach (var typeDef in _typeDefs.Values) yield return typeDef.Definition;
-				foreach (var intType in _intTypes.Values) yield return intType.Definition;
-			}
-		}
+		//public static IEnumerable<CodeModel.Definitions.Definition> DictDefinitions
+		//{
+		//	get
+		//	{
+		//		foreach (var table in _tables.Values)
+		//		{
+		//			foreach (var def in table.Definitions) yield return def;
+		//		}
+		//		foreach (var relInd in _relInds.Values) yield return relInd.Definition;
+		//		foreach (var stringDef in _stringDefs.Values) yield return stringDef.Definition;
+		//		foreach (var typeDef in _typeDefs.Values) yield return typeDef.Definition;
+		//		foreach (var intType in _intTypes.Values) yield return intType.Definition;
+		//	}
+		//}
 
-		public static Dict.StringDef GetStringDef(string name)
-		{
-			Dict.StringDef ret;
-			if (_stringDefs.TryGetValue(name, out ret)) return ret;
-			return null;
-		}
+		//public static Dict.StringDef GetStringDef(string name)
+		//{
+		//	Dict.StringDef ret;
+		//	if (_stringDefs.TryGetValue(name, out ret)) return ret;
+		//	return null;
+		//}
 
-		public static Dict.TypeDef GetTypeDef(string name)
-		{
-			Dict.TypeDef ret;
-			if (_typeDefs.TryGetValue(name, out ret)) return ret;
-			return null;
-		}
+		//public static Dict.TypeDef GetTypeDef(string name)
+		//{
+		//	Dict.TypeDef ret;
+		//	if (_typeDefs.TryGetValue(name, out ret)) return ret;
+		//	return null;
+		//}
 
-		public static Dict.InterfaceType GetInterfaceType(string name)
-		{
-			Dict.InterfaceType intType;
-			if (_intTypes.TryGetValue(name, out intType)) return intType;
-			return null;
-		}
+		//public static Dict.InterfaceType GetInterfaceType(string name)
+		//{
+		//	Dict.InterfaceType intType;
+		//	if (_intTypes.TryGetValue(name, out intType)) return intType;
+		//	return null;
+		//}
 
-		public static IEnumerable<Dict.InterfaceType> InterfaceTypes
-		{
-			get
-			{
-				return _intTypes.Values;
-			}
-		}
+		//public static IEnumerable<Dict.InterfaceType> InterfaceTypes
+		//{
+		//	get
+		//	{
+		//		return _intTypes.Values;
+		//	}
+		//}
 
-		public static IEnumerable<Dict.StringDef> StringDefs
-		{
-			get { return _stringDefs.Values; }
-		}
+		//public static IEnumerable<Dict.StringDef> StringDefs
+		//{
+		//	get { return _stringDefs.Values; }
+		//}
 
-		public static IEnumerable<Dict.TypeDef> TypeDefs
-		{
-			get { return _typeDefs.Values; }
-		}
+		//public static IEnumerable<Dict.TypeDef> TypeDefs
+		//{
+		//	get { return _typeDefs.Values; }
+		//}
 		#endregion
 
 		#region RelInds
-		private static Dictionary<string, Dict.RelInd> _relInds = new Dictionary<string, Dict.RelInd>();
+		// TODO: remove
+		//private static Dictionary<string, Dict.RelInd> _relInds = new Dictionary<string, Dict.RelInd>();
 
-		private static void LoadRelInds()
-		{
-			_relInds.Clear();
+		//private static void LoadRelInds()
+		//{
+		//	_relInds.Clear();
 
-			foreach (var table in Tables)
-			{
-				foreach (var relInd in table.RelInds) _relInds[relInd.Name] = relInd;
-			}
-		}
+		//	foreach (var table in Tables)
+		//	{
+		//		foreach (var relInd in table.RelInds) _relInds[relInd.Name] = relInd;
+		//	}
+		//}
 
-		public static IEnumerable<Dict.RelInd> RelInds
-		{
-			get { return _relInds.Values; }
-		}
+		//public static IEnumerable<Dict.RelInd> RelInds
+		//{
+		//	get { return _relInds.Values; }
+		//}
 
-		public static Dict.RelInd GetRelInd(string name)
-		{
-			Dict.RelInd relind;
-			if (_relInds.TryGetValue(name, out relind)) return relind;
-			return null;
-		}
+		//public static Dict.RelInd GetRelInd(string name)
+		//{
+		//	Dict.RelInd relind;
+		//	if (_relInds.TryGetValue(name, out relind)) return relind;
+		//	return null;
+		//}
 		#endregion
 
 		#region File Paths

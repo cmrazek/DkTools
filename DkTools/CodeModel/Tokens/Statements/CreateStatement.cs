@@ -128,7 +128,7 @@ namespace DkTools.CodeModel.Tokens.Statements
 
 			// Table name
 			if (!code.ReadWord()) return;
-			var table = ProbeEnvironment.GetTable(code.Text);
+			var table = DkDict.Dict.GetTable(code.Text);
 			if (table != null) AddToken(new IdentifierToken(Scope, code.Span, code.Text, table.BaseDefinition));
 			else AddToken(new UnknownToken(Scope, code.Span, code.Text));
 
@@ -238,11 +238,11 @@ namespace DkTools.CodeModel.Tokens.Statements
 		private void ParseAlterTable()
 		{
 			var code = Code;
-			Dict.Table table = null;
+			DkDict.Table table = null;
 			ExpressionToken exp;
 			
 			var word = code.PeekWordR();
-			if (!string.IsNullOrEmpty(word) && (table = ProbeEnvironment.GetTable(word)) != null)
+			if (!string.IsNullOrEmpty(word) && (table = DkDict.Dict.GetTable(word)) != null)
 			{
 				AddToken(new IdentifierToken(Scope, code.MovePeekedSpan(), word, table.BaseDefinition));
 			}
@@ -269,7 +269,7 @@ namespace DkTools.CodeModel.Tokens.Statements
 
 			if (table != null)
 			{
-				var field = table.GetField(code.PeekWordR());
+				var field = table.GetColumn(code.PeekWordR());
 				if (field != null)
 				{
 					AddToken(new IdentifierToken(Scope, code.MovePeekedSpan(), code.Text, field.Definition));
@@ -422,7 +422,7 @@ namespace DkTools.CodeModel.Tokens.Statements
 
 			var code = Code;
 			var word = code.PeekWordR();
-			var relind = ProbeEnvironment.GetRelInd(word);
+			var relind = DkDict.Dict.GetRelInd(word);
 			if (relind != null)
 			{
 				AddToken(new IdentifierToken(Scope, code.MovePeekedSpan(), word, relind.Definition));
@@ -435,7 +435,7 @@ namespace DkTools.CodeModel.Tokens.Statements
 				if (exp != null) AddToken(exp);
 			}
 
-			Dict.Table table = null;
+			DkDict.Table table = null;
 
 			var done = false;
 
@@ -459,7 +459,7 @@ namespace DkTools.CodeModel.Tokens.Statements
 						word = code.PeekWordR();
 						if (!string.IsNullOrEmpty(word))
 						{
-							table = ProbeEnvironment.GetTable(word);
+							table = DkDict.Dict.GetTable(word);
 							if (table != null)
 							{
 								AddToken(new IdentifierToken(Scope, code.MovePeekedSpan(), word, table.BaseDefinition));
@@ -486,7 +486,7 @@ namespace DkTools.CodeModel.Tokens.Statements
 							word = code.PeekWordR();
 							if (!string.IsNullOrEmpty(word))
 							{
-								table = ProbeEnvironment.GetTable(word);
+								table = DkDict.Dict.GetTable(word);
 								if (table != null)
 								{
 									AddToken(new IdentifierToken(Scope, code.MovePeekedSpan(), word, table.BaseDefinition));
@@ -520,7 +520,7 @@ namespace DkTools.CodeModel.Tokens.Statements
 
 								if (table != null && !string.IsNullOrEmpty(word = code.PeekWordR()))
 								{
-									var field = table.GetField(word);
+									var field = table.GetColumn(word);
 									if (field != null) AddToken(new IdentifierToken(Scope, code.MovePeekedSpan(), word, field.Definition));
 									else break;
 								}
@@ -578,8 +578,8 @@ namespace DkTools.CodeModel.Tokens.Statements
 		private void ParseCreateIndex()
 		{
 			var code = Code;
-			Dict.RelInd relind = null;
-			Dict.Table table = null;
+			DkDict.RelInd relind = null;
+			DkDict.Table table = null;
 			string word;
 
 			if (code.ReadExactWholeWord("primary")) AddToken(new KeywordToken(Scope, code.Span, "primary"));
@@ -588,7 +588,7 @@ namespace DkTools.CodeModel.Tokens.Statements
 
 			if (!string.IsNullOrEmpty(word = code.PeekWordR()))
 			{
-				if ((relind = ProbeEnvironment.GetRelInd(word)) != null)
+				if ((relind = DkDict.Dict.GetRelInd(word)) != null)
 				{
 					AddToken(new IdentifierToken(Scope, code.MovePeekedSpan(), word, relind.Definition));
 				}
@@ -609,7 +609,7 @@ namespace DkTools.CodeModel.Tokens.Statements
 				AddToken(new KeywordToken(Scope, code.Span, "on"));
 
 				if (!string.IsNullOrEmpty(word = code.PeekWordR()) &&
-					(table = ProbeEnvironment.GetTable(word)) != null)
+					(table = DkDict.Dict.GetTable(word)) != null)
 				{
 					AddToken(new IdentifierToken(Scope, code.MovePeekedSpan(), word, table.BaseDefinition));
 				}
@@ -657,7 +657,7 @@ namespace DkTools.CodeModel.Tokens.Statements
 				brackets.AddOpen(code.Span);
 				AddToken(brackets);
 
-				Dict.Field field = null;
+				DkDict.Column field = null;
 
 				while (!code.EndOfFile)
 				{
@@ -674,7 +674,7 @@ namespace DkTools.CodeModel.Tokens.Statements
 
 					if (table != null &&
 						!string.IsNullOrEmpty(word = code.PeekWordR()) &&
-						(field = table.GetField(word)) != null)
+						(field = table.GetColumn(word)) != null)
 					{
 						brackets.AddToken(new IdentifierToken(Scope, code.MovePeekedSpan(), word, field.Definition));
 					}
@@ -695,7 +695,7 @@ namespace DkTools.CodeModel.Tokens.Statements
 			var code = Code;
 
 			var word = code.PeekWordR();
-			var sd = ProbeEnvironment.GetStringDef(word);
+			var sd = DkDict.Dict.GetStringdef(word);
 			if (sd != null)
 			{
 				AddToken(new IdentifierToken(Scope, code.Span, word, sd.Definition));
@@ -743,7 +743,7 @@ namespace DkTools.CodeModel.Tokens.Statements
 			var word = code.PeekWordR();
 			if (!string.IsNullOrEmpty(word))
 			{
-				var td = ProbeEnvironment.GetTypeDef(word);
+				var td = DkDict.Dict.GetTypedef(word);
 				if (td != null)
 				{
 					AddToken(new IdentifierToken(Scope, code.Span, word, td.Definition));
@@ -783,7 +783,7 @@ namespace DkTools.CodeModel.Tokens.Statements
 		{
 			var code = Code;
 			var word = code.PeekWordR();
-			var relind = ProbeEnvironment.GetRelInd(word);
+			var relind = DkDict.Dict.GetRelInd(word);
 			if (relind != null)
 			{
 				AddToken(new IdentifierToken(Scope, code.MovePeekedSpan(), word, relind.Definition));
@@ -793,7 +793,7 @@ namespace DkTools.CodeModel.Tokens.Statements
 			if (code.ReadNumber()) AddToken(new NumberToken(Scope, code.Span, code.Text));
 			else return;
 
-			Dict.Table table = null;
+			DkDict.Table table = null;
 
 			while (!code.EndOfFile)
 			{
@@ -824,7 +824,7 @@ namespace DkTools.CodeModel.Tokens.Statements
 
 								if (!string.IsNullOrEmpty(word = code.PeekWordR()))
 								{
-									var field = table.GetField(word);
+									var field = table.GetColumn(word);
 									if (field != null) AddToken(new IdentifierToken(Scope, code.MovePeekedSpan(), word, field.Definition));
 									else
 									{
@@ -839,7 +839,7 @@ namespace DkTools.CodeModel.Tokens.Statements
 					{
 						AddToken(new KeywordToken(Scope, code.MovePeekedSpan(), "to"));
 
-						if ((table = ProbeEnvironment.GetTable(word)) != null)
+						if ((table = DkDict.Dict.GetTable(word)) != null)
 						{
 							AddToken(new IdentifierToken(Scope, code.Span, word, table.BaseDefinition));
 						}
@@ -849,7 +849,7 @@ namespace DkTools.CodeModel.Tokens.Statements
 							if (exp != null) AddToken(exp);
 						}
 					}
-					else if ((table = ProbeEnvironment.GetTable(word)) != null)
+					else if ((table = DkDict.Dict.GetTable(word)) != null)
 					{
 						AddToken(new IdentifierToken(Scope, code.MovePeekedSpan(), word, table.BaseDefinition));
 
@@ -857,7 +857,7 @@ namespace DkTools.CodeModel.Tokens.Statements
 						{
 							AddToken(new KeywordToken(Scope, code.Span, "to"));
 
-							if ((table = ProbeEnvironment.GetTable(word)) != null)
+							if ((table = DkDict.Dict.GetTable(word)) != null)
 							{
 								AddToken(new IdentifierToken(Scope, code.Span, word, table.BaseDefinition));
 							}
@@ -953,10 +953,10 @@ namespace DkTools.CodeModel.Tokens.Statements
 					{
 						brackets.AddToken(new UnknownToken(Scope, code.Span, code.Text));
 
-						Dict.Table table = null;
+						DkDict.Table table = null;
 						do
 						{
-							table = ProbeEnvironment.GetTable(code.PeekWordR());
+							table = DkDict.Dict.GetTable(code.PeekWordR());
 							if (table != null)
 							{
 								brackets.AddToken(new IdentifierToken(Scope, code.MovePeekedSpan(), code.Text, table.BaseDefinition));

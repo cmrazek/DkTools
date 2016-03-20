@@ -137,7 +137,7 @@ namespace DkTools.CodeModel
 						break;
 
 					case CompletionOptionsType.Tables:
-						foreach (var table in ProbeEnvironment.Tables)
+						foreach (var table in DkDict.Dict.Tables)
 						{
 							foreach (var def in table.Definitions) yield return def;
 						}
@@ -145,7 +145,7 @@ namespace DkTools.CodeModel
 
 					case CompletionOptionsType.RelInds:
 						yield return RelIndDefinition.Physical;
-						foreach (var r in ProbeEnvironment.RelInds) yield return r.Definition;
+						foreach (var r in DkDict.Dict.RelInds) yield return r.Definition;
 						break;
 				}
 			}
@@ -1020,10 +1020,10 @@ namespace DkTools.CodeModel
 						var word2 = code.Text;
 						var word2Span = code.Span;
 
-						var table = ProbeEnvironment.GetTable(word1);
+						var table = DkDict.Dict.GetTable(word1);
 						if (table != null)
 						{
-							var field = table.GetField(word2);
+							var field = table.GetColumn(word2);
 							if (field != null)
 							{
 								if (a.TokenCreateCallback != null)
@@ -1164,7 +1164,7 @@ namespace DkTools.CodeModel
 					Definition[] methods = null;
 					Definition[] properties = null;
 
-					var intType = ProbeEnvironment.GetInterfaceType(code.Text);
+					var intType = DkDict.Dict.GetInterface(code.Text);
 					if (intType != null)
 					{
 						methods = intType.MethodDefinitions.ToArray();
@@ -1193,11 +1193,11 @@ namespace DkTools.CodeModel
 					sb.Append(' ');
 					sb.Append(code.Text);
 
-					Dict.InterfaceType intType = null;
+					DkDict.Interface intType = null;
 					Definition parentDef = null;
 					if (a.TokenCreateCallback != null)
 					{
-						intType = ProbeEnvironment.GetInterfaceType(code.Text);
+						intType = DkDict.Dict.GetInterface(code.Text);
 						if (intType != null)
 						{
 							a.TokenCreateCallback(new InterfaceTypeToken(a.Scope, code.Span, intType.Definition));

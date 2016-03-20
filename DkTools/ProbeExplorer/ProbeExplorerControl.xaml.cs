@@ -13,7 +13,6 @@ using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
 using IO = System.IO;
-using DkTools.Dict;
 using VsText=Microsoft.VisualStudio.Text;
 using VsTextEditor=Microsoft.VisualStudio.Text.Editor;
 

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using DkTools.CodeModel.Definitions;
 
 namespace DkTools.DkDict
 {
@@ -13,6 +14,9 @@ namespace DkTools.DkDict
 		private int _number2;
 		private List<Tag> _tags = new List<Tag>();
 		private List<Column> _columns = new List<Column>();
+		private TableDefinition _def;
+		private TableDefinition[] _defs;
+		private List<RelInd> _relinds = new List<RelInd>();
 
 		public bool Updates { get; set; }
 		public int DatabaseNumber { get; set; }
@@ -96,6 +100,63 @@ namespace DkTools.DkDict
 			if (colPos > pos) colPos--;
 			_columns.Insert(colPos, col);
 			return true;
+		}
+
+		public IEnumerable<Column> Columns
+		{
+			get { return _columns; }
+		}
+
+		public static string GetExternalRefId(string name)
+		{
+			return string.Concat("table:", name);
+		}
+
+		public TableDefinition BaseDefinition
+		{
+			get
+			{
+				if (_def == null)
+				{
+					_def = new TableDefinition(_name, this, true);
+				}
+				return _def;
+			}
+		}
+
+		public IEnumerable<TableDefinition> Definitions
+		{
+			get
+			{
+				if (_defs == null)
+				{
+					_defs = new TableDefinition[10];
+					_defs[0] = BaseDefinition;
+					for (int i = 1; i <= 9; i++) _defs[i] = new TableDefinition(string.Concat(_name, i), this, false);
+				}
+				return _defs;
+			}
+		}
+
+		public void AddRelInd(RelInd relind)
+		{
+			_relinds.Add(relind);
+		}
+
+		public IEnumerable<RelInd> RelInds
+		{
+			get { return _relinds; }
+		}
+
+		public IEnumerable<TableFieldDefinition> ColumnDefinitions
+		{
+			get
+			{
+				foreach (var col in _columns)
+				{
+					yield return col.Definition;
+				}
+			}
 		}
 	}
 }

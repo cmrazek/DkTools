@@ -8,9 +8,9 @@ namespace DkTools.CodeModel.Definitions
 {
 	internal class StringDefDefinition : Definition
 	{
-		private Dict.StringDef _stringDef;
+		private DkDict.Stringdef _stringDef;
 
-		public StringDefDefinition(Dict.StringDef stringDef)
+		public StringDefDefinition(DkDict.Stringdef stringDef)
 			: base(stringDef.Name, null, -1, GetExternalRefId(stringDef.Name))
 		{
 			_stringDef = stringDef;
@@ -33,14 +33,14 @@ namespace DkTools.CodeModel.Definitions
 
 		public override string QuickInfoTextStr
 		{
-			get { return _stringDef.Value; }
+			get { return _stringDef.Text; }
 		}
 
 		public override System.Windows.UIElement QuickInfoTextWpf
 		{
 			get
 			{
-				return WpfMainLine(_stringDef.Value);
+				return WpfMainLine(_stringDef.Text);
 			}
 		}
 

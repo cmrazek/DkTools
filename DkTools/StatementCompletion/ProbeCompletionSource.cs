@@ -278,20 +278,20 @@ namespace DkTools.StatementCompletion
 			// Typing a table.field.
 
 			// Table and field
-			var table = ProbeEnvironment.GetTable(word1);
+			var table = DkDict.Dict.GetTable(word1);
 			if (table != null)
 			{
-				foreach (var def in table.FieldDefinitions)
+				foreach (var def in table.ColumnDefinitions)
 				{
 					yield return CreateCompletion(def);
 				}
 			}
 
 			// Relationship and field
-			var relInd = ProbeEnvironment.GetRelInd(word1);
+			var relInd = DkDict.Dict.GetRelInd(word1);
 			if (relInd != null)
 			{
-				foreach (var def in relInd.FieldDefinitions)
+				foreach (var def in relInd.ColumnDefinitions)
 				{
 					yield return CreateCompletion(def);
 				}
@@ -512,7 +512,7 @@ namespace DkTools.StatementCompletion
 
 		private IEnumerable<Completion> HandleAfterOrderBy()
 		{
-			foreach (var relind in ProbeEnvironment.RelInds)
+			foreach (var relind in DkDict.Dict.RelInds)
 			{
 				var def = relind.Definition;
 				yield return CreateCompletion(def);

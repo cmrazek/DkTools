@@ -4,13 +4,12 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using DkTools.CodeModel;
+using DkTools.CodeModel.Definitions;
 
 namespace DkTools.DkDict
 {
 	class Column
 	{
-		public string Name { get; private set; }
-		public DataType DataType { get; set; }
 		public string Accel { get; set; }
 		public bool NoAudit { get; set; }
 		public PersistMode Persist { get; set; }
@@ -24,7 +23,12 @@ namespace DkTools.DkDict
 		public string CustomProgId { get; set; }
 		public string CustomLicense { get; set; }
 
+		private string _tableName;
+		private string _name;
+		private DataType _dataType;
 		private List<Tag> _tags;
+		private TableFieldDefinition _def;
+		private string _fullName;
 
 		public enum PersistMode
 		{
@@ -34,16 +38,56 @@ namespace DkTools.DkDict
 			ZoomNoPersist
 		}
 
-		public Column(string name, DataType dataType)
+		public Column(string tableName, string colName, DataType dataType)
 		{
-			Name = name;
-			DataType = dataType;
+			_tableName = tableName;
+			_name = colName;
+			_dataType = dataType;
+			_fullName = string.Concat(tableName, ".", colName);
 		}
 
 		public void AddTag(Tag tag)
 		{
 			if (_tags == null) _tags = new List<Tag>();
 			_tags.Add(tag);
+		}
+
+		public TableFieldDefinition Definition
+		{
+			get
+			{
+				if (_def == null)
+				{
+					_def = new TableFieldDefinition(TableName, Name, Prompt, Comment, DataType, Description);
+				}
+				return _def;
+			}
+		}
+
+		public static string GetTableFieldExternalRefId(string tableName, string fieldName)
+		{
+			return string.Concat("tableCol:", tableName, ".", fieldName);
+		}
+
+		public string Name
+		{
+			get { return _name; }
+		}
+
+		public string TableName
+		{
+			get { return _tableName; }
+		}
+
+		public DataType DataType
+		{
+			get { return _dataType; }
+			set { _dataType = value; }
+		}
+
+		public string FullName
+		{
+			get { return _fullName; }
 		}
 	}
 }

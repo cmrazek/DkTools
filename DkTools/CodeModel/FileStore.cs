@@ -321,11 +321,13 @@ namespace DkTools.CodeModel
 			var fileContext = FileContextUtil.GetFileContextFromFileName(fileName);
 			var prep = new Preprocessor(this);
 			if (includeDependencies != null) prep.AddIncludeDependencies(includeDependencies);
-			while (prep.Preprocess(reader, prepSource, fileName, new string[0], fileContext))
-			{
-				reader = new CodeSource.CodeSourcePreprocessorReader(prepSource);
-				prepSource = new CodeSource();
-			}
+			prep.Preprocess(reader, prepSource, fileName, new string[0], fileContext);
+			// TODO: remove
+			//while (prep.Preprocess(reader, prepSource, fileName, new string[0], fileContext))
+			//{
+			//	reader = new CodeSource.CodeSourcePreprocessorReader(prepSource);
+			//	prepSource = new CodeSource();
+			//}
 			prep.AddDefinitionsToProvider(defProvider);
 
 #if DEBUG

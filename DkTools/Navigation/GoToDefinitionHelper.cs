@@ -72,7 +72,7 @@ namespace DkTools.Navigation
 		{
 			if (def is TableDefinition)
 			{
-				var table = ProbeEnvironment.GetTable((def as TableDefinition).Name);
+				var table = DkDict.Dict.GetTable((def as TableDefinition).Name);
 				if (table != null)
 				{
 					var window = Shell.ShowProbeExplorerToolWindow();
@@ -84,10 +84,10 @@ namespace DkTools.Navigation
 			{
 				var tfdef = def as TableFieldDefinition;
 
-				var table = ProbeEnvironment.GetTable(tfdef.TableName);
+				var table = DkDict.Dict.GetTable(tfdef.TableName);
 				if (table != null)
 				{
-					var field = table.GetField(tfdef.FieldName);
+					var field = table.GetColumn(tfdef.FieldName);
 					if (field != null)
 					{
 						var window = Shell.ShowProbeExplorerToolWindow();
@@ -100,7 +100,7 @@ namespace DkTools.Navigation
 			else if (def is RelIndDefinition)
 			{
 				var relIndDef = def as RelIndDefinition;
-				var table = ProbeEnvironment.GetTable(relIndDef.BaseTableName);
+				var table = DkDict.Dict.GetTable(relIndDef.BaseTableName);
 				if (table != null)
 				{
 					var window = Shell.ShowProbeExplorerToolWindow();

@@ -16,7 +16,7 @@ namespace DkTools.CodeModel.Tokens
 			if (def != null) SourceDefinition = def;
 			else
 			{
-				var table = ProbeEnvironment.GetTable(text);
+				var table = DkDict.Dict.GetTable(text);
 				if (table != null) this.SourceDefinition = table.BaseDefinition;
 			}
 		}

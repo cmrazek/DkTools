@@ -5,15 +5,18 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using DkTools.CodeModel;
+using DkTools.CodeModel.Definitions;
 
 namespace DkTools.DkDict
 {
-	class Dict
+	static class Dict
 	{
 		private static CodeParser _code;
 		private static Dictionary<string, Table> _tables = new Dictionary<string, Table>();
 		private static Dictionary<string, RelInd> _relinds = new Dictionary<string, RelInd>();
 		private static Dictionary<string, Stringdef> _stringdefs = new Dictionary<string, Stringdef>();
+		private static Dictionary<string, Typedef> _typedefs = new Dictionary<string, Typedef>();
+		private static Dictionary<string, Interface> _interfaces = new Dictionary<string, Interface>();
 
 		public static void Load()
 		{
@@ -45,11 +48,13 @@ namespace DkTools.DkDict
 				var fileStore = new FileStore();
 				var preprocessor = new Preprocessor(fileStore);
 				var writer = new StringPreprocessorWriter();
-				while (preprocessor.Preprocess(mergedReader, writer, dictPathName, null, FileContext.Dictionary))
-				{
-					mergedReader = new StringPreprocessorReader(writer.Text);
-					writer = new StringPreprocessorWriter();
-				}
+				preprocessor.Preprocess(mergedReader, writer, dictPathName, null, FileContext.Dictionary);
+				// TODO: remove
+				//while (preprocessor.Preprocess(mergedReader, writer, dictPathName, null, FileContext.Dictionary))
+				//{
+				//	mergedReader = new StringPreprocessorReader(writer.Text);
+				//	writer = new StringPreprocessorWriter();
+				//}
 
 				var curTime = DateTime.Now;
 				var elapsed = curTime.Subtract(startTime);
@@ -72,7 +77,7 @@ namespace DkTools.DkDict
 
 		private static void ReportError(int pos, string message)
 		{
-			Log.Write(LogLevel.Warning, "DICT offset {1}: {2}", message, pos);
+			Log.Write(LogLevel.Warning, "DICT offset {1}: {0}", message, pos);
 		}
 
 		private static void ReportError(int pos, string format, params object[] args)
@@ -244,6 +249,18 @@ namespace DkTools.DkDict
 			}
 		}
 
+		public static IEnumerable<Definition> AllDictDefinitions
+		{
+			get
+			{
+				foreach (var table in _tables.Values) yield return table.BaseDefinition;
+				foreach (var relind in _relinds.Values) yield return relind.Definition;
+				foreach (var sd in _stringdefs.Values) yield return sd.Definition;
+				foreach (var td in _typedefs.Values) yield return td.Definition;
+				foreach (var intf in _interfaces.Values) yield return intf.Definition;
+			}
+		}
+
 		#region Tables
 		private static void ReadCreateTable()
 		{
@@ -301,7 +318,7 @@ namespace DkTools.DkDict
 					continue;
 				}
 
-				var col = TryReadColumn();
+				var col = TryReadColumn(tableName);
 				if (col == null) break;
 				else table.AddColumn(col);
 			}
@@ -439,7 +456,7 @@ namespace DkTools.DkDict
 				if (_code.ReadExactWholeWordI("add"))
 				{
 					_code.ReadExactWholeWordI("column");
-					var col = TryReadColumn();
+					var col = TryReadColumn(tableName);
 					if (col != null)
 					{
 						if (colPos >= 0) table.InsertColumn(colPos, col);
@@ -550,10 +567,20 @@ namespace DkTools.DkDict
 
 			return null;
 		}
+
+		public static IEnumerable<Table> Tables
+		{
+			get { return _tables.Values; }
+		}
+
+		public static bool IsTable(string name)
+		{
+			return _tables.ContainsKey(name);
+		}
 		#endregion
 
 		#region Columns
-		private static Column TryReadColumn()
+		private static Column TryReadColumn(string tableName)
 		{
 			if (!_code.ReadWord())
 			{
@@ -573,7 +600,7 @@ namespace DkTools.DkDict
 				return null;
 			}
 
-			var col = new Column(name, dataType);
+			var col = new Column(tableName, name, dataType);
 
 			ReadColumnAttributes(col);
 
@@ -805,6 +832,32 @@ namespace DkTools.DkDict
 
 			_code.ReadExact(';');
 		}
+
+		public static Stringdef GetStringdef(string name)
+		{
+			Stringdef sd;
+			if (_stringdefs.TryGetValue(name, out sd)) return sd;
+			return null;
+		}
+
+		public static IEnumerable<Stringdef> Stringdefs
+		{
+			get { return _stringdefs.Values; }
+		}
+		#endregion
+
+		#region Typedef
+		public static Typedef GetTypedef(string name)
+		{
+			Typedef td;
+			if (_typedefs.TryGetValue(name, out td)) return td;
+			return null;
+		}
+
+		public static IEnumerable<Typedef> Typedefs
+		{
+			get { return _typedefs.Values; }
+		}
 		#endregion
 
 		#region Indexes / Relationships
@@ -883,7 +936,7 @@ namespace DkTools.DkDict
 			}
 			var tableName = _code.Text;
 
-			var relind = new RelInd(true, indexName, tableName);
+			var relind = new RelInd(RelIndType.Index, indexName, tableName);
 			_relinds[indexName] = relind;
 			relind.Unique = unique;
 			relind.Primary = primary;
@@ -953,7 +1006,7 @@ namespace DkTools.DkDict
 			}
 			var number = int.Parse(_code.Text);
 
-			var relind = new RelInd(false, name, string.Empty);
+			var relind = new RelInd(RelIndType.Relationship, name, string.Empty);
 			_relinds[name] = relind;
 			relind.Number = number;
 
@@ -1126,7 +1179,7 @@ namespace DkTools.DkDict
 					if (_code.ReadExact(')') || _code.ReadExact('}')) break;
 					if (_code.ReadExact(',') || _code.ReadExact(';')) continue;
 
-					var col = TryReadColumn();
+					var col = TryReadColumn(name);
 					if (col == null) break;
 					else relind.AddColumn(col);
 				}
@@ -1156,7 +1209,7 @@ namespace DkTools.DkDict
 			}
 			var number = int.Parse(_code.Text);
 
-			var relind = new RelInd(false, name, string.Empty);
+			var relind = new RelInd(RelIndType.TimeRelationship, name, string.Empty);
 			_relinds[name] = relind;
 			relind.Number = number;
 
@@ -1319,6 +1372,18 @@ namespace DkTools.DkDict
 
 			_relinds.Remove(name);
 		}
+
+		public static RelInd GetRelInd(string name)
+		{
+			RelInd relind;
+			if (_relinds.TryGetValue(name, out relind)) return relind;
+			return null;
+		}
+
+		public static IEnumerable<RelInd> RelInds
+		{
+			get { return _relinds.Values; }
+		}
 		#endregion
 
 		#region Attributes
@@ -1428,6 +1493,7 @@ namespace DkTools.DkDict
 			}
 
 			var intf = new Interface(name);
+			_interfaces[name] = intf;
 
 			while (!_code.EndOfFile)
 			{
@@ -1495,6 +1561,18 @@ namespace DkTools.DkDict
 					break;
 				}
 			}
+		}
+
+		public static IEnumerable<Interface> Interfaces
+		{
+			get { return _interfaces.Values; }
+		}
+
+		public static Interface GetInterface(string name)
+		{
+			Interface intf;
+			if (_interfaces.TryGetValue(name, out intf)) return intf;
+			return null;
 		}
 		#endregion
 	}

@@ -8,17 +8,17 @@ namespace DkTools.CodeModel.Definitions
 {
 	internal sealed class InterfaceTypeDefinition : Definition
 	{
-		private Dict.InterfaceType _intType;
+		private DkDict.Interface _intType;
 		private string _devDesc;
 
-		public InterfaceTypeDefinition(Dict.InterfaceType intType)
+		public InterfaceTypeDefinition(DkDict.Interface intType)
 			: base(intType.Name, null, -1, GetExternalRefId(intType.Name))
 		{
 #if DEBUG
 			if (intType == null) throw new ArgumentNullException("intType");
 #endif
 			_intType = intType;
-			_devDesc = _intType.DevDescription;
+			_devDesc = _intType.Description;
 		}
 
 		public InterfaceTypeDefinition(string name)
@@ -69,19 +69,23 @@ namespace DkTools.CodeModel.Definitions
 			}
 		}
 
-		public Dict.InterfaceType DictInterfaceType
+		public DkDict.Interface DictInterfaceType
 		{
 			get { return _intType; }
 		}
 
 		public InterfaceMethodDefinition GetMethod(string name)
 		{
-			return _intType.GetMethod(name);
+			// TODO: Add support for methods
+			//return _intType.GetMethod(name);
+			return null;
 		}
 
 		public InterfacePropertyDefinition GetProperty(string name)
 		{
-			return _intType.GetProperty(name);
+			// TODO: Add support for properties
+			//return _intType.GetProperty(name);
+			return null;
 		}
 
 		public override string PickText

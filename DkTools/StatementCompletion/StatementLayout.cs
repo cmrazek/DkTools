@@ -147,7 +147,7 @@ namespace DkTools.StatementCompletion
 					break;
 
 				case StatementState.SelectFrom:
-					if (ProbeEnvironment.IsProbeTable(word)) return StatementState.SelectFromTable;
+					if (DkDict.Dict.IsTable(word)) return StatementState.SelectFromTable;
 					break;
 
 				case StatementState.SelectFromTable:
@@ -156,11 +156,11 @@ namespace DkTools.StatementCompletion
 					break;
 
 				case StatementState.SelectFromTableComma:
-					if (ProbeEnvironment.IsProbeTable(word)) return StatementState.SelectFromTableList;
+					if (DkDict.Dict.IsTable(word)) return StatementState.SelectFromTableList;
 					break;
 
 				case StatementState.SelectFromTableOf:
-					if (ProbeEnvironment.IsProbeTable(word)) return StatementState.SelectFromTableOfTable;
+					if (DkDict.Dict.IsTable(word)) return StatementState.SelectFromTableOfTable;
 					break;
 
 				case StatementState.Order:
@@ -586,7 +586,7 @@ namespace DkTools.StatementCompletion
 				case StatementState.SelectFrom:
 				case StatementState.SelectFromTableComma:
 				case StatementState.SelectFromTableOf:
-					foreach (var table in ProbeEnvironment.Tables)
+					foreach (var table in DkDict.Dict.Tables)
 					{
 						foreach (var def in table.Definitions)
 						{
@@ -607,7 +607,7 @@ namespace DkTools.StatementCompletion
 
 				#region interface
 				case StatementState.Interface:
-					foreach (var intf in ProbeEnvironment.InterfaceTypes)
+					foreach (var intf in DkDict.Dict.Interfaces)
 					{
 						yield return ProbeCompletionSource.CreateCompletion(intf.Definition);
 					}
@@ -616,21 +616,21 @@ namespace DkTools.StatementCompletion
 
 				#region alter
 				case StatementState.AlterTable:
-					foreach (var table in ProbeEnvironment.Tables)
+					foreach (var table in DkDict.Dict.Tables)
 					{
 						yield return ProbeCompletionSource.CreateCompletion(table.BaseDefinition);
 					}
 					break;
 
 				case StatementState.AlterStringdef:
-					foreach (var sd in ProbeEnvironment.StringDefs)
+					foreach (var sd in DkDict.Dict.Stringdefs)
 					{
 						yield return ProbeCompletionSource.CreateCompletion(sd.Definition);
 					}
 					break;
 
 				case StatementState.AlterTypedef:
-					foreach (var td in ProbeEnvironment.TypeDefs)
+					foreach (var td in DkDict.Dict.Typedefs)
 					{
 						yield return ProbeCompletionSource.CreateCompletion(td.Definition);
 					}
