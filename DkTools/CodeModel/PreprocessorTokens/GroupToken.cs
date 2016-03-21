@@ -154,7 +154,7 @@ namespace DkTools.CodeModel.PreprocessorTokens
 			if (_tokens.Count != 1)
 			{
 #if DEBUG
-				Log.WriteDebug("Syntax error.");
+				Log.WriteDebug("Syntax error. (there was not a single token remaining in preprocessor token group)");
 #endif
 				return null;
 			}

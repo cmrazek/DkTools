@@ -151,7 +151,7 @@ namespace DkTools.DkDict
 				}
 			}
 
-			_def = new RelIndDefinition(Name, TableName, sb.ToString(), Description, FilePosition);
+			_def = new RelIndDefinition(this, TableName, sb.ToString(), Description, FilePosition);
 		}
 
 		public override Definition Definition

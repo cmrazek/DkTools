@@ -271,7 +271,10 @@ namespace DkTools.DkDict
 		{
 			get
 			{
-				foreach (var table in _tables.Values) yield return table.Definition;
+				foreach (var table in _tables.Values)
+				{
+					foreach (var def in table.Definitions) yield return def;
+				}
 				foreach (var relind in _relinds.Values) yield return relind.Definition;
 				foreach (var sd in _stringdefs.Values) yield return sd.Definition;
 				foreach (var td in _typedefs.Values) yield return td.Definition;

@@ -332,11 +332,14 @@ namespace DkTools.CodeModel
 			var nameFilePos = p.reader.FilePosition;
 			p.reader.Ignore(name.Length);
 
-			Define define;
-			if (_defines.TryGetValue(name, out define))
+			if (!p.suppress)
 			{
-				define.Disabled = true;
-				if (nameFilePos.IsInFile) _refs.Add(new Reference(define.Definition, nameFilePos));
+				Define define;
+				if (_defines.TryGetValue(name, out define))
+				{
+					define.Disabled = true;
+					if (nameFilePos.IsInFile) _refs.Add(new Reference(define.Definition, nameFilePos));
+				}
 			}
 		}
 
@@ -368,7 +371,7 @@ namespace DkTools.CodeModel
 				}
 			}
 			if (define == null) _defines.TryGetValue(name, out define);
-			if (define == null)
+			if (define == null || define.Disabled)
 			{
 				rdr.Use(name.Length);
 				return;
@@ -1115,7 +1118,8 @@ namespace DkTools.CodeModel
 			else
 			{
 #if DEBUG
-				Log.WriteDebug("Condition returned indeterminate: {0}\r\n  File Name: {1}\r\n  Position: {2}", conditionStr, fileName, pos);
+				Log.WriteDebug("Condition returned indeterminate: {0}\r\n  File Name: {1}\r\n  Position: {2}\r\n  Resolved: {3}",
+					conditionStr, fileName, pos, writer.Text);
 #endif
 				ret = ConditionResult.Indeterminate;
 			}

@@ -72,7 +72,10 @@ namespace DkTools.CodeModel
 					new InterfaceTypeDefinition("oleobject"),
 
 					// Constants
-					new ConstantDefinition("_WINDOWS", null, 0, string.Empty)
+					new ConstantDefinition("_WINDOWS", null, 0, string.Empty),
+
+					// Indexes / Relationships
+					RelIndDefinition.Physical
 				};
 			}
 			AddGlobalFromAnywhere(_builtInDefs);
