@@ -8,40 +8,30 @@ using DkTools.CodeModel.Definitions;
 
 namespace DkTools.DkDict
 {
-	class RelInd
+	class RelInd : Table
 	{
 		public string Description { get; set; }
 		public bool Unique { get; set; }
 		public bool Primary { get; set; }
-		public bool NoPick { get; set; }
-		public int Number { get; set; }
-		public string Prompt { get; set; }
-		public string Comment { get; set; }
-		public bool Updates { get; set; }
+		// TODO: remove
+		//public bool NoPick { get; set; }
+		//public int Number { get; set; }
+		//public string Prompt { get; set; }
+		//public string Comment { get; set; }
+		//public bool Updates { get; set; }
 		public string LinkDesc { get; set; }
 
 		RelIndType _type;
-		private string _name;
 		private string _tableName;
-		private List<Tag> _tags;
 		private List<string> _sortCols;
 		private string _sortColString;
-		private List<Column> _cols;
 		private RelIndDefinition _def;
-		private FilePosition _filePos;
 
-		public RelInd(RelIndType type, string name, string tableName, FilePosition filePos)
+		public RelInd(RelIndType type, string name, int number, string tableName, FilePosition filePos)
+			: base(name, number, 0, filePos)
 		{
 			_type = type;
-			_name = name;
 			_tableName = tableName;
-			_filePos = filePos;
-		}
-
-		public void AddTag(Tag tag)
-		{
-			if (_tags == null) _tags = new List<Tag>();
-			_tags.Add(tag);
 		}
 
 		public void AddSortColumn(string colName)
@@ -73,21 +63,6 @@ namespace DkTools.DkDict
 				}
 
 				return _sortColString;
-			}
-		}
-
-		public void AddColumn(Column col)
-		{
-			if (_cols == null) _cols = new List<Column>();
-			_cols.Add(col);
-		}
-
-		public IEnumerable<Column> Columns
-		{
-			get
-			{
-				if (_cols == null) return new Column[0];
-				return _cols;
 			}
 		}
 
@@ -123,7 +98,7 @@ namespace DkTools.DkDict
 			}
 
 			sb.Append(' ');
-			sb.Append(_name);
+			sb.Append(Name);
 
 			if (_type == RelIndType.Index)
 			{
@@ -170,21 +145,29 @@ namespace DkTools.DkDict
 							sb.Append(col);
 						}
 						sb.Append(" ( ");
-						if (_cols != null) sb.Append("... ");
+						if (Columns.Any() != null) sb.Append("... ");
 						sb.Append(')');
 						break;
 				}
 			}
 
-			_def = new RelIndDefinition(_name, TableName, sb.ToString(), Description, _filePos);
+			_def = new RelIndDefinition(Name, TableName, sb.ToString(), Description, FilePosition);
 		}
 
-		public Definition Definition
+		public override Definition Definition
 		{
 			get
 			{
 				if (_def == null) CreateDefinition();
 				return _def;
+			}
+		}
+
+		public override IEnumerable<Definition> Definitions
+		{
+			get
+			{
+				yield return Definition;
 			}
 		}
 
@@ -201,28 +184,9 @@ namespace DkTools.DkDict
 			}
 		}
 
-		public string Name
-		{
-			get { return _name; }
-		}
-
 		public RelIndType Type
 		{
 			get { return _type; }
-		}
-
-		public IEnumerable<ColumnDefinition> ColumnDefinitions
-		{
-			get
-			{
-				if (_cols != null)
-				{
-					foreach (var col in _cols)
-					{
-						yield return col.Definition;
-					}
-				}
-			}
 		}
 	}
 

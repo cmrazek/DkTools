@@ -129,7 +129,7 @@ namespace DkTools.CodeModel.Tokens.Statements
 			// Table name
 			if (!code.ReadWord()) return;
 			var table = DkDict.Dict.GetTable(code.Text);
-			if (table != null) AddToken(new IdentifierToken(Scope, code.Span, code.Text, table.BaseDefinition));
+			if (table != null) AddToken(new IdentifierToken(Scope, code.Span, code.Text, table.Definition));
 			else AddToken(new UnknownToken(Scope, code.Span, code.Text));
 
 			// Table number
@@ -179,7 +179,7 @@ namespace DkTools.CodeModel.Tokens.Statements
 					continue;
 				}
 
-				if (!TryParseColumnDefinition(Scope, parent, table != null ? table.BaseDefinition : null, true))
+				if (!TryParseColumnDefinition(Scope, parent, table != null ? table.Definition : null, true))
 				{
 					if ((exp = ExpressionToken.TryParse(Scope, _columnEndTokens)) != null) parent.AddToken(exp);
 					else break;
@@ -244,7 +244,7 @@ namespace DkTools.CodeModel.Tokens.Statements
 			var word = code.PeekWordR();
 			if (!string.IsNullOrEmpty(word) && (table = DkDict.Dict.GetTable(word)) != null)
 			{
-				AddToken(new IdentifierToken(Scope, code.MovePeekedSpan(), word, table.BaseDefinition));
+				AddToken(new IdentifierToken(Scope, code.MovePeekedSpan(), word, table.Definition));
 			}
 			else
 			{
@@ -308,7 +308,7 @@ namespace DkTools.CodeModel.Tokens.Statements
 				});
 			}
 
-			TryParseColumnDefinition(Scope, this, table != null ? table.BaseDefinition : null, false);
+			TryParseColumnDefinition(Scope, this, table != null ? table.Definition : null, false);
 
 			if (code.ReadExact(';')) AddToken(new StatementEndToken(Scope, code.Span));
 		}
@@ -462,7 +462,7 @@ namespace DkTools.CodeModel.Tokens.Statements
 							table = DkDict.Dict.GetTable(word);
 							if (table != null)
 							{
-								AddToken(new IdentifierToken(Scope, code.MovePeekedSpan(), word, table.BaseDefinition));
+								AddToken(new IdentifierToken(Scope, code.MovePeekedSpan(), word, table.Definition));
 							}
 							else
 							{
@@ -489,7 +489,7 @@ namespace DkTools.CodeModel.Tokens.Statements
 								table = DkDict.Dict.GetTable(word);
 								if (table != null)
 								{
-									AddToken(new IdentifierToken(Scope, code.MovePeekedSpan(), word, table.BaseDefinition));
+									AddToken(new IdentifierToken(Scope, code.MovePeekedSpan(), word, table.Definition));
 								}
 								else
 								{
@@ -611,7 +611,7 @@ namespace DkTools.CodeModel.Tokens.Statements
 				if (!string.IsNullOrEmpty(word = code.PeekWordR()) &&
 					(table = DkDict.Dict.GetTable(word)) != null)
 				{
-					AddToken(new IdentifierToken(Scope, code.MovePeekedSpan(), word, table.BaseDefinition));
+					AddToken(new IdentifierToken(Scope, code.MovePeekedSpan(), word, table.Definition));
 				}
 				else
 				{
@@ -841,7 +841,7 @@ namespace DkTools.CodeModel.Tokens.Statements
 
 						if ((table = DkDict.Dict.GetTable(word)) != null)
 						{
-							AddToken(new IdentifierToken(Scope, code.Span, word, table.BaseDefinition));
+							AddToken(new IdentifierToken(Scope, code.Span, word, table.Definition));
 						}
 						else
 						{
@@ -851,7 +851,7 @@ namespace DkTools.CodeModel.Tokens.Statements
 					}
 					else if ((table = DkDict.Dict.GetTable(word)) != null)
 					{
-						AddToken(new IdentifierToken(Scope, code.MovePeekedSpan(), word, table.BaseDefinition));
+						AddToken(new IdentifierToken(Scope, code.MovePeekedSpan(), word, table.Definition));
 
 						if (code.ReadExactWholeWord("to"))
 						{
@@ -859,7 +859,7 @@ namespace DkTools.CodeModel.Tokens.Statements
 
 							if ((table = DkDict.Dict.GetTable(word)) != null)
 							{
-								AddToken(new IdentifierToken(Scope, code.Span, word, table.BaseDefinition));
+								AddToken(new IdentifierToken(Scope, code.Span, word, table.Definition));
 							}
 							else
 							{
@@ -959,7 +959,7 @@ namespace DkTools.CodeModel.Tokens.Statements
 							table = DkDict.Dict.GetTable(code.PeekWordR());
 							if (table != null)
 							{
-								brackets.AddToken(new IdentifierToken(Scope, code.MovePeekedSpan(), code.Text, table.BaseDefinition));
+								brackets.AddToken(new IdentifierToken(Scope, code.MovePeekedSpan(), code.Text, table.Definition));
 								if (code.ReadExact('\\')) brackets.AddToken(new OperatorToken(Scope, code.Span, code.Text));
 							}
 						}

@@ -618,7 +618,7 @@ namespace DkTools.StatementCompletion
 				case StatementState.AlterTable:
 					foreach (var table in DkDict.Dict.Tables)
 					{
-						yield return ProbeCompletionSource.CreateCompletion(table.BaseDefinition);
+						yield return ProbeCompletionSource.CreateCompletion(table.Definition);
 					}
 					break;
 

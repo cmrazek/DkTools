@@ -36,7 +36,7 @@ namespace DkTools.CodeModel.Tokens
 
 			if (code.ReadWord())
 			{
-				if ((table = DkDict.Dict.GetTable(code.Text)) != null) ret.AddToken(new TableToken(scope, code.Span, code.Text, table.BaseDefinition));
+				if ((table = DkDict.Dict.GetTable(code.Text)) != null) ret.AddToken(new TableToken(scope, code.Span, code.Text, table.Definition));
 				else if ((extractDef = scope.DefinitionProvider.GetAny<ExtractTableDefinition>(code.TokenStartPostion, code.Text).FirstOrDefault()) != null)
 					ret.AddToken(new IdentifierToken(scope, code.Span, code.Text, extractDef));
 				else ret.AddToken(new UnknownToken(scope, code.Span, code.Text));
@@ -48,7 +48,7 @@ namespace DkTools.CodeModel.Tokens
 
 				if (code.ReadWord())
 				{
-					if ((table = DkDict.Dict.GetTable(code.Text)) != null) ret.AddToken(new TableToken(scope, code.Span, code.Text, table.BaseDefinition));
+					if ((table = DkDict.Dict.GetTable(code.Text)) != null) ret.AddToken(new TableToken(scope, code.Span, code.Text, table.Definition));
 					else ret.AddToken(new UnknownToken(scope, code.Span, code.Text));
 				}
 			}
@@ -72,7 +72,7 @@ namespace DkTools.CodeModel.Tokens
 					}
 					else if (code.ReadWord())
 					{
-						if ((table = DkDict.Dict.GetTable(code.Text)) != null) ret.AddToken(new TableToken(scope, code.Span, code.Text, table.BaseDefinition));
+						if ((table = DkDict.Dict.GetTable(code.Text)) != null) ret.AddToken(new TableToken(scope, code.Span, code.Text, table.Definition));
 						else ret.AddToken(new UnknownToken(scope, code.Span, code.Text));
 						expectingComma = true;
 					}
@@ -204,7 +204,7 @@ namespace DkTools.CodeModel.Tokens
 				var table = DkDict.Dict.GetTable(code.Text);
 				if (table != null)
 				{
-					var tableToken = new TableToken(scope, code.Span, code.Text, table.BaseDefinition);
+					var tableToken = new TableToken(scope, code.Span, code.Text, table.Definition);
 					if (code.ReadExact('.'))
 					{
 						var dotToken = new DotToken(scope, code.Span);

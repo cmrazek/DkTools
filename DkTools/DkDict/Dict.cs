@@ -250,7 +250,7 @@ namespace DkTools.DkDict
 		{
 			get
 			{
-				foreach (var table in _tables.Values) yield return table.BaseDefinition;
+				foreach (var table in _tables.Values) yield return table.Definition;
 				foreach (var relind in _relinds.Values) yield return relind.Definition;
 				foreach (var sd in _stringdefs.Values) yield return sd.Definition;
 				foreach (var td in _typedefs.Values) yield return td.Definition;
@@ -402,10 +402,16 @@ namespace DkTools.DkDict
 			}
 			var tableName = _code.Text;
 			Table table;
+			
 			if (!_tables.TryGetValue(tableName, out table))
 			{
-				ReportError(_code.TokenStartPostion, "Table '{0}' has not been defined.", tableName);
-				return;
+				RelInd relind;
+				if (!_relinds.TryGetValue(tableName, out relind))
+				{
+					ReportError(_code.TokenStartPostion, "Table '{0}' has not been defined.", tableName);
+					return;
+				}
+				else table = relind;
 			}
 
 			ReadTableAttributes(table, ";", "before", "after", "add", "alter", "drop", "move");
@@ -936,7 +942,7 @@ namespace DkTools.DkDict
 			}
 			var tableName = _code.Text;
 
-			var relind = new RelInd(RelIndType.Index, indexName, tableName, _source.GetFilePosition(namePos));
+			var relind = new RelInd(RelIndType.Index, indexName, 0, tableName, _source.GetFilePosition(namePos));
 			_relinds[indexName] = relind;
 			relind.Unique = unique;
 			relind.Primary = primary;
@@ -1007,9 +1013,8 @@ namespace DkTools.DkDict
 			}
 			var number = int.Parse(_code.Text);
 
-			var relind = new RelInd(RelIndType.Relationship, name, string.Empty, _source.GetFilePosition(namePos));
+			var relind = new RelInd(RelIndType.Relationship, name, number, string.Empty, _source.GetFilePosition(namePos));
 			_relinds[name] = relind;
-			relind.Number = number;
 
 			Table parentTable = null;
 			Table childTable = null;
@@ -1186,6 +1191,10 @@ namespace DkTools.DkDict
 				}
 			}
 
+			if (relind.Columns.Any())
+			{
+				_tables[relind.Name] = relind;
+			}
 		}
 
 		private static void ReadCreateTime()
@@ -1211,9 +1220,8 @@ namespace DkTools.DkDict
 			}
 			var number = int.Parse(_code.Text);
 
-			var relind = new RelInd(RelIndType.TimeRelationship, name, string.Empty, _source.GetFilePosition(namePos));
+			var relind = new RelInd(RelIndType.TimeRelationship, name, number, string.Empty, _source.GetFilePosition(namePos));
 			_relinds[name] = relind;
-			relind.Number = number;
 
 			Table masterTable = null;
 			Table historyTable = null;

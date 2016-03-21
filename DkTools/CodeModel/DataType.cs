@@ -957,7 +957,7 @@ namespace DkTools.CodeModel
 							{
 								if (a.TokenCreateCallback != null)
 								{
-									var tableToken = new TableToken(a.Scope, word1Span, word1, table.BaseDefinition);
+									var tableToken = new TableToken(a.Scope, word1Span, word1, table.Definition);
 									var dotToken = new DotToken(a.Scope, dotSpan);
 									var fieldToken = new TableFieldToken(a.Scope, word2Span, word2, field);
 									var tableAndFieldToken = new TableAndFieldToken(a.Scope, tableToken, dotToken, fieldToken);

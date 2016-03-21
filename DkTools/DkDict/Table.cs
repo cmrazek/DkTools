@@ -15,8 +15,8 @@ namespace DkTools.DkDict
 		private int _number2;
 		private List<Tag> _tags = new List<Tag>();
 		private List<Column> _columns = new List<Column>();
-		private TableDefinition _def;
-		private TableDefinition[] _defs;
+		private Definition _def;
+		private Definition[] _defs;
 		private List<RelInd> _relinds = new List<RelInd>();
 		private FilePosition _filePos;
 
@@ -43,6 +43,11 @@ namespace DkTools.DkDict
 		public string Name
 		{
 			get { return _name; }
+		}
+
+		public int Number
+		{
+			get { return _number; }
 		}
 
 		public void AddTag(Tag tag)
@@ -115,7 +120,7 @@ namespace DkTools.DkDict
 			return string.Concat("table:", name);
 		}
 
-		public TableDefinition BaseDefinition
+		public virtual Definition Definition
 		{
 			get
 			{
@@ -127,14 +132,14 @@ namespace DkTools.DkDict
 			}
 		}
 
-		public IEnumerable<TableDefinition> Definitions
+		public virtual IEnumerable<Definition> Definitions
 		{
 			get
 			{
 				if (_defs == null)
 				{
-					_defs = new TableDefinition[10];
-					_defs[0] = BaseDefinition;
+					_defs = new Definition[10];
+					_defs[0] = Definition;
 					for (int i = 1; i <= 9; i++) _defs[i] = new TableDefinition(string.Concat(_name, i), this, false, _filePos);
 				}
 				return _defs;
@@ -160,6 +165,11 @@ namespace DkTools.DkDict
 					yield return col.Definition;
 				}
 			}
+		}
+
+		public FilePosition FilePosition
+		{
+			get { return _filePos; }
 		}
 	}
 }

@@ -17,7 +17,7 @@ namespace DkTools.CodeModel.Tokens
 			else
 			{
 				var table = DkDict.Dict.GetTable(text);
-				if (table != null) this.SourceDefinition = table.BaseDefinition;
+				if (table != null) this.SourceDefinition = table.Definition;
 			}
 		}
 	}

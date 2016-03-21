@@ -80,7 +80,7 @@ namespace DkTools.ProbeExplorer
 		#region Table
 		private TreeViewItem CreateTableTvi(DkDict.Table table)
 		{
-			var tvi = CreateStandardTvi(_tableImg, table.Name, table.Prompt, table.BaseDefinition.QuickInfoTextWpf, true);
+			var tvi = CreateStandardTvi(_tableImg, table.Name, table.Prompt, table.Definition.QuickInfoTextWpf, true);
 			tvi.Expanded += TableTvi_Expanded;
 			tvi.Tag = table;
 			tvi.MouseRightButtonDown += TableTvi_MouseRightButtonDown;
