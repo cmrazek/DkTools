@@ -132,6 +132,8 @@ namespace DkTools.ErrorTagging
 		{
 			try
 			{
+				if (_model == null) return;
+
 				if (string.Equals(e.FileName, _model.FileName, StringComparison.OrdinalIgnoreCase))
 				{
 					if (_model.FileContext != FileContext.Include)
@@ -157,6 +159,8 @@ namespace DkTools.ErrorTagging
 		{
 			try
 			{
+				if (_model == null) return;
+
 				if (string.Equals(e.FileName, _model.FileName, StringComparison.OrdinalIgnoreCase))
 				{
 					var ev = TagsChanged;

@@ -14,18 +14,26 @@ namespace DkTools.Compiler
 		{
 			if (string.IsNullOrWhiteSpace(sourceFileName)) return;
 
+			Log.WriteDebug("Running background FEC for file '{0}'.", sourceFileName);
+
 			var counter = 10;
-			while (ProbeCompiler.Instance.InProgress.Set(true) == true && counter-- > 0)
+			while (counter > 0)
 			{
-				Log.WriteDebug("Waiting for other compile/FEC operation to complete...");
-				System.Threading.Thread.Sleep(1000);
+				if (!ProbeCompiler.Instance.Mutex.WaitOne(1000))
+				{
+					Log.WriteDebug("Waiting for other compile/FEC operation to complete...");
+					counter--;
+					if (counter == 0)
+					{
+						Log.WriteDebug("Ran out of retries when waiting for compile/FEC operation to complete.");
+						return;
+					}
+				}
+				else break;
 			}
 
 			try
 			{
-
-				Log.WriteDebug("Running background FEC for file '{0}'.", sourceFileName);
-
 				var first = true;
 				var reportError = new Action<ErrorTask>(task =>
 					{
@@ -83,6 +91,7 @@ namespace DkTools.Compiler
 				if (exitCode == 0)
 				{
 					if (first) reportError(null);
+					Log.WriteDebug("Background FEC completed successfully.");
 				}
 				else
 				{
@@ -95,7 +104,7 @@ namespace DkTools.Compiler
 			}
 			finally
 			{
-				ProbeCompiler.Instance.InProgress.Value = false;
+				ProbeCompiler.Instance.Mutex.ReleaseMutex();
 			}
 		}
 	}

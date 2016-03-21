@@ -22,7 +22,7 @@ namespace DkTools.Compiler
 		private int _numErrors = 0;
 		private int _numWarnings = 0;
 		private bool _buildFailed = false;
-		private LockedValue<bool> _inProgress = new LockedValue<bool>();
+		private Mutex _mutex = new Mutex();
 
 		private const int k_compileKillSleep = 10;
 		private const int k_compileSleep = 100;
@@ -130,11 +130,10 @@ namespace DkTools.Compiler
 		{
 			var startTime = DateTime.Now;
 
-			while (_inProgress.Set(true) == true)
+			while (!_mutex.WaitOne(1000))
 			{
-				if (_kill) break;
+				if (_kill) return;
 				WriteLine("Waiting for background compile to complete...");
-				System.Threading.Thread.Sleep(1000);
 			}
 
 			try
@@ -189,7 +188,7 @@ namespace DkTools.Compiler
 			}
 			finally
 			{
-				_inProgress.Value = false;
+				_mutex.ReleaseMutex();
 			}
 		}
 
@@ -661,9 +660,9 @@ namespace DkTools.Compiler
 			return sb.ToString();
 		}
 
-		public LockedValue<bool> InProgress
+		public Mutex Mutex
 		{
-			get { return _inProgress; }
+			get { return _mutex; }
 		}
 	}
 }
