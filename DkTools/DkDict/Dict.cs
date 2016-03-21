@@ -180,7 +180,14 @@ namespace DkTools.DkDict
 				{
 					ReadCreateInterfaceType();
 				}
-				// TODO: typedef, workspace
+				else if (word.Equals("workspace", StringComparison.OrdinalIgnoreCase))
+				{
+					ReadCreateWorkspace();
+				}
+				else if (word.Equals("typedef", StringComparison.OrdinalIgnoreCase))
+				{
+					ReadCreateTypedef();
+				}
 				else
 				{
 					ReportError(_code.TokenStartPostion, "Unrecognized word '{0}' after 'create'.", _code.Text);
@@ -209,7 +216,14 @@ namespace DkTools.DkDict
 				{
 					ReadAlterTable();
 				}
-				// TODO: typedef, workspace
+				else if (word.Equals("workspace", StringComparison.OrdinalIgnoreCase))
+				{
+					ReadAlterWorkspace();
+				}
+				else if (word.Equals("typedef", StringComparison.OrdinalIgnoreCase))
+				{
+					ReadAlterTypedef();
+				}
 				else
 				{
 					ReportError(_code.TokenStartPostion, "Unrecognized word '{0}' after 'alter'.", _code.Text);
@@ -238,7 +252,14 @@ namespace DkTools.DkDict
 				{
 					ReadDropTime();
 				}
-				// TODO: interfacetype, and workspace
+				else if (word.Equals("workspace", StringComparison.OrdinalIgnoreCase))
+				{
+					ReadDropWorkspace();
+				}
+				else if (word.Equals("interfacetype", StringComparison.OrdinalIgnoreCase))
+				{
+					ReadDropInterfaceType();
+				}
 				else
 				{
 					ReportError(_code.TokenStartPostion, "Unrecognized word '{0}' after 'drop'.", _code.Text);
@@ -840,6 +861,40 @@ namespace DkTools.DkDict
 		#endregion
 
 		#region Typedef
+		private static void ReadCreateTypedef()
+		{
+			var name = _code.ReadWordR();
+			if (string.IsNullOrEmpty(name))
+			{
+				ReportError(_code.Position, "Expected typedef name to follow 'create typedef'.");
+				return;
+			}
+
+			var dataType = DataType.TryParse(new DataType.ParseArgs
+			{
+				Code = _code
+			});
+			if (dataType == null)
+			{
+				ReportError(_code.Position, "Expected typedef data type.");
+				return;
+			}
+
+			_typedefs[name] = new Typedef(name, dataType);
+		}
+
+		private static void ReadAlterTypedef()
+		{
+			var name = _code.ReadWordR();
+			if (string.IsNullOrEmpty(name))
+			{
+				ReportError(_code.Position, "Expected typedef name to follow 'alter typedef'.");
+				return;
+			}
+
+			// Alter typedef is not supported at this time
+		}
+
 		public static Typedef GetTypedef(string name)
 		{
 			Typedef td;
@@ -1571,6 +1626,163 @@ namespace DkTools.DkDict
 			Interface intf;
 			if (_interfaces.TryGetValue(name, out intf)) return intf;
 			return null;
+		}
+
+		private static void ReadDropInterfaceType()
+		{
+			var name = _code.ReadWordR();
+			if (string.IsNullOrEmpty(name))
+			{
+				ReportError(_code.Position, "Expected typedef name to follow 'drop interfacetype'.");
+				return;
+			}
+
+			if (!_interfaces.ContainsKey(name))
+			{
+				ReportError(_code.TokenStartPostion, "Dropped interface type '{0}' does not exist.", name);
+				return;
+			}
+
+			_interfaces.Remove(name);
+		}
+		#endregion
+
+		#region Workspaces
+		private static void ReadCreateWorkspace()
+		{
+			var name = _code.ReadWordR();
+			if (string.IsNullOrEmpty(name))
+			{
+				ReportError(_code.Position, "Expected workspace name to follow 'create workspace'.");
+				return;
+			}
+
+			ReadWorkspaceAttributes();
+
+			if (_code.ReadExact('(') || _code.ReadExact('{'))
+			{
+				while (!_code.EndOfFile)
+				{
+					if (_code.ReadExact(')') || _code.ReadExact('}')) break;
+					if (_code.ReadExact(',')) continue;
+					if (!ReadWorkspaceItem()) break;
+				}
+			}
+		}
+
+		private static void ReadAlterWorkspace()
+		{
+			var name = _code.ReadWordR();
+			if (string.IsNullOrEmpty(name))
+			{
+				ReportError(_code.Position, "Expected workspace name to follow 'alter workspace'.");
+				return;
+			}
+
+			ReadWorkspaceAttributes();
+
+			if (_code.ReadExact('(') || _code.ReadExact('{'))
+			{
+				while (!_code.EndOfFile)
+				{
+					if (_code.ReadExact(')') || _code.ReadExact('}')) break;
+					if (_code.ReadExact(',')) continue;
+
+					if (_code.ReadExactWholeWordI("add") ||
+						_code.ReadExactWholeWordI("alter") ||
+						_code.ReadExactWholeWordI("drop"))
+					{
+						if (!ReadWorkspaceItem()) break;
+					}
+					else
+					{
+						ReportError(_code.Position, "Expected 'add', 'alter' or 'drop' in 'alter workspace.");
+						break;
+					}
+				}
+			}
+		}
+
+		private static void ReadWorkspaceAttributes()
+		{
+			while (!_code.EndOfFile)
+			{
+				if (_code.PeekExact('(') || _code.PeekExact('{') || _code.PeekExact(';')) return;
+
+				var word = _code.ReadWordR();
+				if (!string.IsNullOrEmpty(word))
+				{
+					if (word.Equals("prompt", StringComparison.OrdinalIgnoreCase)) ReadPromptOrCommentAttribute();
+					else if (word.Equals("comment", StringComparison.OrdinalIgnoreCase)) ReadPromptOrCommentAttribute();
+					else if (word.Equals("description", StringComparison.OrdinalIgnoreCase)) ReadDescriptionAttribute();
+					else if (word.Equals("tag", StringComparison.OrdinalIgnoreCase)) ReadTagAttribute();
+					else if (word.Equals("image", StringComparison.OrdinalIgnoreCase)) ReadPromptOrCommentAttribute();
+					else
+					{
+						ReportError(_code.Position, "Unknown word '{0}' in workspace.", word);
+						return;
+					}
+				}
+				else
+				{
+					ReportError(_code.Position, "Syntax error in workspace.");
+					return;
+				}
+			}
+		}
+
+		private static bool ReadWorkspaceItem()
+		{
+			// FileName
+			if (!_code.ReadWord())
+			{
+				ReportError(_code.Position, "Expected file name in workspace.");
+				return false;
+			}
+
+			// TablePath
+			var gotPath = false;
+			while (true)
+			{
+				if (!_code.ReadWord()) break;
+				gotPath = true;
+				if (!_code.ReadExact('\\')) break;
+			}
+			if (!gotPath)
+			{
+				ReportError(_code.Position, "Expected table path in workspace item.");
+				return false;
+			}
+
+			// Attributes
+			while (!_code.EndOfFile)
+			{
+				if (_code.ReadExact(',')) break;
+				if (_code.PeekExact(')') || _code.PeekExact('}')) break;
+
+				var word = _code.ReadWordR();
+				if (word.Equals("prompt", StringComparison.OrdinalIgnoreCase)) ReadPromptOrCommentAttribute();
+				else if (word.Equals("comment", StringComparison.OrdinalIgnoreCase)) ReadPromptOrCommentAttribute();
+				else if (word.Equals("tag", StringComparison.OrdinalIgnoreCase)) ReadTagAttribute();
+				else if (word.Equals("preload", StringComparison.OrdinalIgnoreCase)) { }
+				else
+				{
+					ReportError(_code.Position, "Unknown word '{0}' in workspace item.", word);
+					return false;
+				}
+			}
+
+			return true;
+		}
+
+		private static void ReadDropWorkspace()
+		{
+			var name = _code.ReadWordR();
+			if (string.IsNullOrEmpty(name))
+			{
+				ReportError(_code.Position, "Expected workspace name to follow 'drop workspace'.");
+				return;
+			}
 		}
 		#endregion
 	}
