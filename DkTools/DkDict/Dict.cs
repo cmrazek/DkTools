@@ -180,7 +180,7 @@ namespace DkTools.DkDict
 				{
 					ReadCreateInterfaceType();
 				}
-				// TODO: finish the types
+				// TODO: typedef, workspace
 				else
 				{
 					ReportError(_code.TokenStartPostion, "Unrecognized word '{0}' after 'create'.", _code.Text);
@@ -209,7 +209,7 @@ namespace DkTools.DkDict
 				{
 					ReadAlterTable();
 				}
-				// TODO: finish the types
+				// TODO: typedef, workspace
 				else
 				{
 					ReportError(_code.TokenStartPostion, "Unrecognized word '{0}' after 'alter'.", _code.Text);
@@ -633,6 +633,11 @@ namespace DkTools.DkDict
 						col.Persist = Column.PersistMode.Zoom;
 						if (_code.ReadExactWholeWord("nopersist")) col.Persist = Column.PersistMode.ZoomNoPersist;
 					}
+					else if (word.Equals("nopersist", StringComparison.OrdinalIgnoreCase))
+					{
+						if (col.Persist == Column.PersistMode.Form) col.Persist = Column.PersistMode.FormOnly;
+						else if (col.Persist == Column.PersistMode.Zoom) col.Persist = Column.PersistMode.ZoomNoPersist;
+					}
 					else if (word.Equals("image"))
 					{
 						if (!_code.ReadStringLiteral())
@@ -644,25 +649,8 @@ namespace DkTools.DkDict
 					}
 					else if (word.Equals("prompt", StringComparison.OrdinalIgnoreCase)) col.Prompt = ReadPromptOrCommentAttribute();
 					else if (word.Equals("comment", StringComparison.OrdinalIgnoreCase)) col.Comment = ReadPromptOrCommentAttribute();
-					else if (word.Equals("description", StringComparison.OrdinalIgnoreCase))
-					{
-						var sb = new StringBuilder();
-						while (_code.ReadStringLiteral())
-						{
-							if (sb.Length > 0) sb.AppendLine();
-							sb.Append(CodeParser.StringLiteralToString(_code.Text));
-						}
-						col.Description = sb.ToString();
-					}
-					else if (word.Equals("group", StringComparison.OrdinalIgnoreCase))
-					{
-						if (!_code.ReadStringLiteral())
-						{
-							ReportError(_code.Position, "Expected string literal to follow 'group'.");
-							continue;
-						}
-						col.Group = CodeParser.StringLiteralToString(_code.Text);
-					}
+					else if (word.Equals("description", StringComparison.OrdinalIgnoreCase)) col.Description = ReadDescriptionAttribute();
+					else if (word.Equals("group", StringComparison.OrdinalIgnoreCase)) col.Group = ReadPromptOrCommentAttribute();
 					else if (word.Equals("row", StringComparison.OrdinalIgnoreCase) ||
 						word.Equals("col", StringComparison.OrdinalIgnoreCase))
 					{

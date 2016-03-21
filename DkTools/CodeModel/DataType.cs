@@ -1024,6 +1024,8 @@ namespace DkTools.CodeModel
 				}
 			}
 
+			while (ReadAttribute(a, code, sb)) ;
+
 			return new DataType(ValType.Section, a.TypeName, sb.ToString());
 		}
 
@@ -1040,6 +1042,8 @@ namespace DkTools.CodeModel
 				sb.Append(code.Text);
 				a.OnNumber(code.Span, code.Text);
 			}
+
+			while (ReadAttribute(a, code, sb)) ;
 
 			return new DataType(ValType.Scroll, a.TypeName, sb.ToString());
 		}
@@ -1071,6 +1075,8 @@ namespace DkTools.CodeModel
 					}
 				}
 			}
+
+			while (ReadAttribute(a, code, sb)) ;
 
 			return new DataType(ValType.Graphic, a.TypeName, sb.ToString());
 		}
