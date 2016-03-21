@@ -515,6 +515,9 @@ namespace DkTools.ProbeExplorer
 		{
 			if (ProbeEnvironment.Initialized)
 			{
+				Log.Write(LogLevel.Info, "Refreshing DK Explorer file list...");
+				var startTime = DateTime.Now;
+
 				var hiddenExt = ProbeToolsPackage.Instance.ProbeExplorerOptions.HiddenExtensions;
 				if (string.IsNullOrWhiteSpace(hiddenExt)) hiddenExt = Constants.DefaultHiddenExtensions;
 
@@ -530,6 +533,9 @@ namespace DkTools.ProbeExplorer
 				}
 
 				if (!string.IsNullOrEmpty(c_fileFilterTextBox.Text)) c_fileFilterTextBox.Text = string.Empty;
+
+				var elapsed = DateTime.Now.Subtract(startTime);
+				Log.Write(LogLevel.Info, "Finished refreshing DK Explorer file list. (elapsed: {0})", elapsed);
 			}
 		}
 

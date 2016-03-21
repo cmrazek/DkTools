@@ -19,6 +19,9 @@ namespace DkTools.ProbeExplorer
 	{
 		private void RefreshDictTree()
 		{
+			Log.Write(LogLevel.Info, "Refreshing DK Explorer dictionary view...");
+			var startTime = DateTime.Now;
+
 			c_dictTree.Items.Clear();
 
 			var tables = DkDict.Dict.Tables.ToList();
@@ -28,6 +31,9 @@ namespace DkTools.ProbeExplorer
 			{
 				c_dictTree.Items.Add(CreateTableTvi(table));
 			}
+
+			var elapsed = DateTime.Now.Subtract(startTime);
+			Log.Write(LogLevel.Info, "Finished refreshing DK Explorer dictionary view. (elapsed: {0})", elapsed);
 		}
 
 		private TreeViewItem CreateStandardTvi(BitmapImage img, string title, string titleInfo, UIElement quickInfoText, bool expandable)

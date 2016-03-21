@@ -49,6 +49,7 @@ namespace DkTools.FunctionFileScanning
 	visible				tinyint			not null
 );",
 "create index func_ix_appid on func (app_id, name)",
+"create index func_ix_fileid on func (file_id)",
 
 @"create table include_depends
 (

@@ -20,19 +20,6 @@ namespace DkTools.FunctionFileScanning
 		private GroupedList<string, FFFunction> _consolidatedFunctions;
 		private GroupedList<string, FFClass> _consolidatedClasses;
 
-		///// <summary>
-		///// Functions visible globally without an extern.
-		///// </summary>
-		//private GroupedList<string, FFFunction> _functions = new GroupedList<string, FFFunction>();
-
-		///// <summary>
-		///// Classes available globally.
-		///// </summary>
-		//private GroupedList<string, FFClass> _classes = new GroupedList<string, FFClass>();
-
-		//private CodeModel.Definitions.Definition[] _definitions = null;
-		//private object _definitionsLock = new object();
-
 		public FFApp(FFScanner scanner, FFDatabase db, string name)
 		{
 			if (scanner == null) throw new ArgumentNullException("scanner");

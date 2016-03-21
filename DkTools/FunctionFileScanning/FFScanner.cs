@@ -306,12 +306,16 @@ namespace DkTools.FunctionFileScanning
 		{
 			try
 			{
-				Log.WriteDebug("Loading function file database.");
+				Log.Write(LogLevel.Info, "Loading function file database...");
+				var startTime = DateTime.Now;
 
 				using (var db = new FFDatabase())
 				{
 					_currentApp = new FFApp(this, db, appName);
 				}
+
+				var elapsed = DateTime.Now.Subtract(startTime);
+				Log.Write(LogLevel.Info, "Function file database loaded. (elapsed: {0})", elapsed);
 			}
 			catch (Exception ex)
 			{
