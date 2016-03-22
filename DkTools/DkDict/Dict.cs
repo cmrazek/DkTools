@@ -311,8 +311,11 @@ namespace DkTools.DkDict
 				tableNum2 = int.Parse(_code.Text);
 			}
 
-			var table = new Table(tableName, tableNum, tableNum2, _source.GetFilePosition(namePos));
+			var nameFilePos = _source.GetFilePosition(namePos);
+			var table = new Table(tableName, tableNum, tableNum2, nameFilePos);
 			_tables[tableName] = table;
+
+			table.AddColumn(new Column(tableName, "rowno", DataType.Unsigned9, nameFilePos));
 
 			// Table attributes
 			ReadTableAttributes(table, "(", "{");
@@ -1059,11 +1062,14 @@ namespace DkTools.DkDict
 			}
 			var number = int.Parse(_code.Text);
 
-			var relind = new RelInd(RelIndType.Relationship, name, number, string.Empty, _source.GetFilePosition(namePos));
+			var nameFilePos = _source.GetFilePosition(namePos);
+			var relind = new RelInd(RelIndType.Relationship, name, number, string.Empty, nameFilePos);
 			_relinds[name] = relind;
 
 			Table parentTable = null;
 			Table childTable = null;
+			var parentMany = false;
+			var childMany = false;
 
 			while (!_code.EndOfFile)
 			{
@@ -1088,6 +1094,8 @@ namespace DkTools.DkDict
 					}
 					else if (word.Equals("one", StringComparison.OrdinalIgnoreCase))
 					{
+						parentMany = false;
+
 						if (!_code.ReadWord())
 						{
 							ReportError(_code.Position, "Expected parent table name to follow 'one' in 'creation relationship' statement.");
@@ -1103,6 +1111,8 @@ namespace DkTools.DkDict
 						_code.ReadExactWholeWordI("to");
 						if (_code.ReadExactWholeWordI("one"))
 						{
+							childMany = false;
+
 							if (!_code.ReadWord())
 							{
 								ReportError(_code.Position, "Expected child table name to follow 'one' in 'creation relationship' statement.");
@@ -1123,6 +1133,8 @@ namespace DkTools.DkDict
 						}
 						else if (_code.ReadExactWholeWordI("many"))
 						{
+							childMany = true;
+
 							if (!_code.ReadWord())
 							{
 								ReportError(_code.Position, "Expected child table name to follow 'one' in 'creation relationship' statement.");
@@ -1149,6 +1161,8 @@ namespace DkTools.DkDict
 					}
 					else if (word.Equals("many", StringComparison.OrdinalIgnoreCase))
 					{
+						parentMany = true;
+
 						if (!_code.ReadWord())
 						{
 							ReportError(_code.Position, "Expected parent table name to follow 'many' in 'creation relationship' statement.");
@@ -1164,6 +1178,8 @@ namespace DkTools.DkDict
 						_code.ReadExactWholeWordI("to");
 						if (_code.ReadExactWholeWordI("many"))
 						{
+							childMany = true;
+
 							if (!_code.ReadWord())
 							{
 								ReportError(_code.Position, "Expected child table name to follow 'many' in 'creation relationship' statement.");
@@ -1241,6 +1257,39 @@ namespace DkTools.DkDict
 			{
 				_tables[relind.Name] = relind;
 			}
+
+			if (parentTable != null && childTable != null)
+			{
+				if (parentMany)
+				{
+					// child must be many if parent is many
+
+					parentTable.AddColumn(new Column(parentTable.Name, string.Concat("has_", name, "_", childTable.Name),
+						DataType.Unsigned2, nameFilePos));
+
+					childTable.AddColumn(new Column(childTable.Name, string.Concat("rowno_", name, "_", parentTable.Name),
+						DataType.Unsigned9, nameFilePos));
+				}
+				else // one parent
+				{
+					if (childMany)
+					{
+						parentTable.AddColumn(new Column(parentTable.Name, string.Concat("has_", name, "_", childTable.Name),
+							DataType.Unsigned2, nameFilePos));
+
+						childTable.AddColumn(new Column(childTable.Name, string.Concat("rowno_", name, "_", parentTable.Name),
+							DataType.Unsigned9, nameFilePos));
+					}
+					else // one child
+					{
+						parentTable.AddColumn(new Column(parentTable.Name, string.Concat("rowno_", name, "_", childTable.Name),
+							DataType.Unsigned2, nameFilePos));
+
+						childTable.AddColumn(new Column(childTable.Name, string.Concat("rowno_", name, "_", parentTable.Name),
+							DataType.Unsigned9, nameFilePos));
+					}
+				}
+			}
 		}
 
 		private static void ReadCreateTime()
@@ -1266,7 +1315,8 @@ namespace DkTools.DkDict
 			}
 			var number = int.Parse(_code.Text);
 
-			var relind = new RelInd(RelIndType.TimeRelationship, name, number, string.Empty, _source.GetFilePosition(namePos));
+			var nameFilePos = _source.GetFilePosition(namePos);
+			var relind = new RelInd(RelIndType.TimeRelationship, name, number, string.Empty, nameFilePos);
 			_relinds[name] = relind;
 
 			Table masterTable = null;
@@ -1349,6 +1399,15 @@ namespace DkTools.DkDict
 			if (_code.ReadExact('(') || _code.ReadExact('{'))
 			{
 				if (!_code.ReadExact(')')) _code.ReadExact('}');
+			}
+
+			if (masterTable != null && historyTable != null)
+			{
+				masterTable.AddColumn(new Column(masterTable.Name, string.Concat("has_", name, "_", historyTable.Name),
+					DataType.Unsigned2, nameFilePos));
+
+				historyTable.AddColumn(new Column(historyTable.Name, string.Concat("rowno_", name, "_", masterTable.Name),
+					DataType.Unsigned9, nameFilePos));
 			}
 		}
 

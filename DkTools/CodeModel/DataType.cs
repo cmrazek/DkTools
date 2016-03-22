@@ -50,6 +50,8 @@ namespace DkTools.CodeModel
 		public static readonly DataType Table = new DataType(ValType.Table, null, "table") { _completionOptionsType = CompletionOptionsType.Tables };
 		public static readonly DataType Ulong = new DataType(ValType.Numeric, null, "ulong");
 		public static readonly DataType Unsigned = new DataType(ValType.Numeric, null, "unsigned");
+		public static readonly DataType Unsigned2 = new DataType(ValType.Numeric, null, "numeric(2) unsigned");
+		public static readonly DataType Unsigned9 = new DataType(ValType.Numeric, null, "numeric(9) unsigned");
 		public static readonly DataType Variant = new DataType(ValType.Interface, null, "variant");
 		public static readonly DataType Void = new DataType(ValType.Void, null, "void");
 
