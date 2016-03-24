@@ -314,7 +314,7 @@ namespace DkTools.CodeModel.Tokens.Statements
 		}
 
 		private static readonly string[] _columnEndTokens = new string[] { ")", "}", ",", "prompt", "comment", "group", "endgroup",
-			"tag", "form", "formonly", "zoom", "row", "col", "rows", "cols" };
+			"tag", "form", "formonly", "zoom", "row", "col", "rows", "cols", "image", "tool" };
 
 		private static bool TryParseColumnDefinition(Scope scope, GroupToken parent, Definition parentDef, bool includeNameAndDataType)
 		{
@@ -351,14 +351,14 @@ namespace DkTools.CodeModel.Tokens.Statements
 				if (!string.IsNullOrEmpty(word = code.PeekWordR()))
 				{
 					if (word == "prompt" || word == "comment" || word == "group" || word == "row" || word == "col" ||
-						word == "rows" || word == "cols")
+						word == "rows" || word == "cols" || word == "image")
 					{
 						parent.AddToken(new KeywordToken(scope, code.MovePeekedSpan(), code.Text));
 						if ((exp = ExpressionToken.TryParse(scope, _columnEndTokens)) != null) parent.AddToken(exp);
 						continue;
 					}
 
-					if (word == "endgroup" || word == "form" || word == "formonly" || word == "zoom")
+					if (word == "endgroup" || word == "form" || word == "formonly" || word == "zoom" || word == "tool")
 					{
 						parent.AddToken(new KeywordToken(scope, code.MovePeekedSpan(), code.Text));
 						continue;
