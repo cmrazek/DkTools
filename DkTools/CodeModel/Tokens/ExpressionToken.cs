@@ -290,6 +290,11 @@ namespace DkTools.CodeModel.Tokens
 				return null;
 			}
 
+			if (Constants.HighlightKeywords.Contains(word))
+			{
+				return new KeywordToken(scope, wordSpan, word);
+			}
+
 			return new UnknownToken(scope, wordSpan, word);
 		}
 

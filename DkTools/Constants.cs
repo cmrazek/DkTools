@@ -49,6 +49,9 @@ namespace DkTools
 			"many nomenu nopick nopersist on one onerror or order outfile permanent physical private prompt protected public relationship return row rows select snapshot static switch",
 			"table tag to tool typedef unique updates where while widthof zoom");
 
+		// Keywords that are not supported by the code model, but should be highlighted anyway.
+		public static readonly HashSet<string> HighlightKeywords = Util.ParseWordList("where");
+
 		public static readonly HashSet<string> SwitchKeywords = Util.ParseWordList("case default");
 		public static readonly HashSet<string> FunctionKeywords = Util.ParseWordList("if return switch while");
 		public static readonly HashSet<string> SelectFromKeywords = Util.ParseWordList("of");

@@ -307,7 +307,6 @@
     <Compile Include="CodeModel\Definitions\ColumnDefinition.cs" />
     <Compile Include="CodeModel\Definitions\VariableDefinition.cs" />
     <Compile Include="CodeModel\AnalysisNodes\Node.cs" />
-    <Compile Include="CodeModel\Tokens\AlterToken.cs" />
     <Compile Include="CodeModel\Tokens\InterfaceMethodCallToken.cs" />
     <Compile Include="CodeModel\Tokens\InterfacePropertyToken.cs" />
     <Compile Include="CodeModel\Tokens\InterfaceTypeToken.cs" />
