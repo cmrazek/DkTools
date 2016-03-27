@@ -64,7 +64,10 @@ namespace DkTools.CodeModel.Tokens
 						var fieldDef = exDef.GetField(parseWord);
 						if (fieldDef != null)
 						{
-							return new ExtractFieldToken(scope, parseWordSpan, parseWord, fieldDef);
+							// Return the field token and the '='; otherwise the AssignmentOperator parsing will consume the next field's token.
+							return new CompositeToken(scope, fieldDef.DataType,
+								new ExtractFieldToken(scope, parseWordSpan, parseWord, fieldDef),
+								new OperatorToken(scope, code.MovePeekedSpan(), code.Text));
 						}
 					}
 
