@@ -15,6 +15,7 @@ namespace DkTools.DkDict
 		private int _number2;
 		private List<Tag> _tags = new List<Tag>();
 		private List<Column> _columns = new List<Column>();
+		private Dictionary<string, Column> _colsByName = new Dictionary<string, Column>();
 		private Definition _def;
 		private Definition[] _defs;
 		private List<RelInd> _relinds = new List<RelInd>();
@@ -58,19 +59,19 @@ namespace DkTools.DkDict
 		public void AddColumn(Column col)
 		{
 			_columns.Add(col);
+			_colsByName[col.Name] = col;
 		}
 
 		public void InsertColumn(int pos, Column col)
 		{
 			_columns.Insert(pos, col);
+			_colsByName[col.Name] = col;
 		}
 
 		public Column GetColumn(string colName)
 		{
-			foreach (var col in _columns)
-			{
-				if (col.Name == colName) return col;
-			}
+			Column col;
+			if (_colsByName.TryGetValue(colName, out col)) return col;
 			return null;
 		}
 
@@ -91,6 +92,7 @@ namespace DkTools.DkDict
 			{
 				if (col.Name == colName)
 				{
+					_colsByName.Remove(colName);
 					return _columns.Remove(col);
 				}
 			}

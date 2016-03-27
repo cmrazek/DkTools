@@ -13,12 +13,6 @@ namespace DkTools.DkDict
 		public string Description { get; set; }
 		public bool Unique { get; set; }
 		public bool Primary { get; set; }
-		// TODO: remove
-		//public bool NoPick { get; set; }
-		//public int Number { get; set; }
-		//public string Prompt { get; set; }
-		//public string Comment { get; set; }
-		//public bool Updates { get; set; }
 		public string LinkDesc { get; set; }
 
 		RelIndType _type;
