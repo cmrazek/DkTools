@@ -416,15 +416,6 @@ namespace DkTools
 			linePosOut = linePos;
 		}
 
-		// TODO: remove
-		//public Token Token
-		//{
-		//	get
-		//	{
-		//		return new Token(_tokenType, _tokenText.ToString(), _tokenStartPos, Position);
-		//	}
-		//}
-
 		public CodeType Type
 		{
 			get { return _tokenType; }

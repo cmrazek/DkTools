@@ -449,7 +449,6 @@ namespace DkTools.CodeModel
 
 				if (_code.ReadWord())
 				{
-					// TODO: report an error if the first token is not a string literal
 					var word = _code.Text;
 					if (word == "description")
 					{
@@ -465,21 +464,13 @@ namespace DkTools.CodeModel
 
 					if (word == "prompt")
 					{
-						if (!_code.ReadStringLiteral())
-						{
-							// TODO: report error
-							return false;
-						}
+						if (!_code.ReadStringLiteral()) return false;
 						continue;
 					}
 
 					if (word == "comment")
 					{
-						if (!_code.ReadStringLiteral())
-						{
-							// TODO: report error
-							return false;
-						}
+						if (!_code.ReadStringLiteral()) return false;
 						continue;
 					}
 
@@ -498,7 +489,6 @@ namespace DkTools.CodeModel
 							{
 								if (!_rxAccelWord.IsMatch(_code.Text))
 								{
-									// TODO: report error
 									_code.Position = resetPos;
 									return false;
 								}
@@ -507,7 +497,6 @@ namespace DkTools.CodeModel
 							{
 								if (_code.Text.Length != 1 || !char.IsDigit(_code.Text[0]))
 								{
-									// TODO: report error
 									_code.Position = resetPos;
 									return false;
 								}

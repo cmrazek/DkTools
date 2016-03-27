@@ -62,9 +62,6 @@ namespace DkTools.CodeModel.Tokens
 				if (code.PeekExact(';') || code.PeekExact('{') || code.PeekExact('}')) break;
 				if (endTokens != null && code.Peek() && endTokens.Contains(code.Text)) break;
 
-				var dt = DataType.TryParse(dataTypeArgs);	// TODO: this could interfere with enum options
-				if (dt != null) continue;
-
 				if (!code.Read()) break;
 
 				switch (code.Type)
@@ -85,12 +82,19 @@ namespace DkTools.CodeModel.Tokens
 							}
 							else
 							{
-								var wordToken = ProcessWord(exp, scope, word, wordSpan);
-								if (wordToken != null) exp.AddToken(wordToken);
-								else
+								var oldPos = code.Position;
+								code.Position = wordSpan.Start;	// DataType.TryParse() needs to be before the first word
+								var dt = DataType.TryParse(dataTypeArgs);
+								if (dt == null)
 								{
-									code.Position = wordSpan.Start;
-									abortParsing = true;
+									code.Position = oldPos;
+									var wordToken = ProcessWord(exp, scope, word, wordSpan);
+									if (wordToken != null) exp.AddToken(wordToken);
+									else
+									{
+										code.Position = wordSpan.Start;
+										abortParsing = true;
+									}
 								}
 							}
 						}

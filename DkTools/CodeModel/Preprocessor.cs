@@ -466,12 +466,6 @@ namespace DkTools.CodeModel
 					args.Add(new Define(define.ParamNames[i], paramList[i], null, string.Empty, 0));
 				}
 			}
-			// TODO: remove if this works
-			//if (p.args != null)
-			//{
-			//	if (args == null) args = new List<Define>();
-			//	args.AddRange(p.args);
-			//}
 
 			string[] restrictedDefines = null;
 			if (p.restrictedDefines != null) restrictedDefines = p.restrictedDefines.Concat(new string[] { name }).ToArray();
@@ -529,7 +523,6 @@ namespace DkTools.CodeModel
 			parms.args = args;
 			parms.resolvingMacros = true;
 
-			//Preprocess(parms);		TODO: remove
 			while (Preprocess(parms))
 			{
 				parms.documentAltered = false;
@@ -597,13 +590,6 @@ namespace DkTools.CodeModel
 			var includeSource = new CodeSource();
 			var parms = new PreprocessorParams(reader, includeSource, includeNode.FullPathName, parentFiles, p.fileContext, p.contentType);
 			Preprocess(parms);
-			// TODO: remove
-			//while (Preprocess(parms))
-			//{
-			//	parms.documentAltered = false;
-			//	parms.reader = new CodeSource.CodeSourcePreprocessorReader(includeSource);
-			//	parms.writer = includeSource = new CodeSource();
-			//}
 
 			p.writer.Append(includeSource);
 
@@ -1096,13 +1082,6 @@ namespace DkTools.CodeModel
 			parms.allowDirectives = false;
 			parms.args = p.args;
 			Preprocess(parms);
-			// TODO: remove
-			//while (Preprocess(parms))
-			//{
-			//	parms.documentAltered = false;
-			//	parms.reader = new StringPreprocessorReader(writer.Text);
-			//	parms.writer = writer = new StringPreprocessorWriter();
-			//}
 
 			// Evaluate the condition string
 			var parser = new CodeParser(writer.Text);

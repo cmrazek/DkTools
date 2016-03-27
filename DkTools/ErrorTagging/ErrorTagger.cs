@@ -52,30 +52,6 @@ namespace DkTools.ErrorTagging
 
 			if (!ProbeToolsPackage.Instance.EditorOptions.ShowErrors) yield break;
 
-#if REPORT_ERRORS
-			var viewSnapshot = _view.TextSnapshot;
-
-			var analysis = _model.Analysis;
-			if (analysis != null)
-			{
-				foreach (var error in analysis.ErrorProvider.Errors)
-				{
-					var vsSpan = new SnapshotSpan(_model.Snapshot, error.Span.Start, error.Span.Length);
-					if (_model.Snapshot != viewSnapshot) vsSpan = vsSpan.TranslateTo(viewSnapshot, SpanTrackingMode.EdgeExclusive);
-
-					foreach (var span in spans)
-					{
-						if (span.OverlapsWith(vsSpan))
-						{
-							//Log.WriteDebug("Error at {0}: {1}", error.Span, error.Message);	// TODO: remove
-							yield return new TagSpan<ErrorTag>(vsSpan, new ErrorTag(CodeError, error.Message));
-							break;
-						}
-					}
-				}
-			}
-#endif
-
 			foreach (var tagSpan in ErrorTaskProvider.Instance.GetErrorTagsForFile(_model.FileName, spans))
 			{
 				yield return tagSpan;

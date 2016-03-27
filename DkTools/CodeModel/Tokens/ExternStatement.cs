@@ -104,6 +104,7 @@ namespace DkTools.CodeModel.Tokens
 							return;
 					}
 				}
+				else break;
 			}
 		}
 

@@ -10,7 +10,6 @@ namespace DkTools.DkDict
 {
 	class RelInd : Table
 	{
-		public string Description { get; set; }
 		public bool Unique { get; set; }
 		public bool Primary { get; set; }
 		public string LinkDesc { get; set; }
@@ -139,7 +138,7 @@ namespace DkTools.DkDict
 							sb.Append(col);
 						}
 						sb.Append(" ( ");
-						if (Columns.Any() != null) sb.Append("... ");
+						if (Columns.Any()) sb.Append("... ");
 						sb.Append(')');
 						break;
 				}

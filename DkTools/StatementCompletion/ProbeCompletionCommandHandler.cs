@@ -25,7 +25,6 @@ namespace DkTools.StatementCompletion
 		private ProbeCompletionCommandHandlerProvider _provider;
 		private ICompletionSession _session;
 
-		//private static readonly Regex _rxAfterAssignOrCompare = new Regex(@"(?:==|=|!=)\s$");		TODO: remove
 		private static readonly Regex _rxFunctionStartBracket = new Regex(@"\w+\s*\($");
 		public static readonly Regex RxAfterWord = new Regex(@"\b(\w+)\s$");
 		private static readonly Regex _rxAfterIfDef = new Regex(@"\#ifn?def\s$");

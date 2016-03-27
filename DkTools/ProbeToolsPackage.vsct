@@ -169,7 +169,6 @@
       </Button>
 
       <!-- DK Menu -> Editor -> Disable Dead Code -->
-      <!-- TODO -->
 			<Button guid="guidProbeToolsCmdSet" id="cmdShowErrors" priority="0x0020" type="Button">
         <Parent guid="guidProbeToolsCmdSet" id="grpEditorOptionsMenu" />
         <Icon guid="guidImages" id="bmpShowErrors" />
@@ -483,7 +482,6 @@
       </Button>
 
       <!-- DK Toolbar -> Show Errors -->
-      <!-- TODO -->
       <Button guid="guidProbeToolsCmdSet" id="cmdShowErrors" priority="0x0020" type="Button">
         <Parent guid="guidProbeToolsCmdSet" id="tbEditorOptionsGroup" />
         <Icon guid="guidImages" id="bmpShowErrors" />

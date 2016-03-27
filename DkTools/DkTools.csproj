@@ -254,7 +254,6 @@
     <Compile Include="Classifier\ProbeClassifierType.cs" />
     <Compile Include="Classifier\State.cs" />
     <Compile Include="Classifier\TextBufferStateTracker.cs" />
-    <Compile Include="CodeModel\Analysis.cs" />
     <Compile Include="CodeModel\AnalysisNodes\ArgumentNode.cs" />
     <Compile Include="CodeModel\AnalysisNodes\ArrayBracketsNode.cs" />
     <Compile Include="CodeModel\AnalysisNodes\BracketsNode.cs" />
@@ -289,7 +288,6 @@
     <Compile Include="CodeModel\Value.cs" />
     <Compile Include="CodeModel\AnalysisNodes\VariableNode.cs" />
     <Compile Include="CodeModel\CodeSource.cs" />
-    <Compile Include="CodeModel\DefinitionLocation.cs" />
     <Compile Include="CodeModel\DefinitionProvider.cs" />
     <Compile Include="CodeModel\Definitions\ClassDefinition.cs" />
     <Compile Include="CodeModel\Definitions\ConstantDefinition.cs" />
@@ -317,11 +315,8 @@
     <Compile Include="Compiler\BackgroundFec.cs" />
     <Compile Include="CsvWriter.cs" />
     <Compile Include="DictTextViewListener.cs" />
-    <Compile Include="Dict\Dict.cs" />
     <Compile Include="DkDict\Column.cs" />
     <Compile Include="DkDict\Dict.cs" />
-    <Compile Include="Dict\IDictObj.cs" />
-    <Compile Include="Dict\InterfaceType.cs" />
     <Compile Include="DkDict\Interface.cs" />
     <Compile Include="DkDict\RelInd.cs" />
     <Compile Include="DkDict\Stringdef.cs" />
@@ -413,8 +408,6 @@
     <Compile Include="Commands.cs" />
     <Compile Include="Compiler\ProbeCompiler.cs" />
     <Compile Include="Constants.cs" />
-    <Compile Include="Dict\StringDef.cs" />
-    <Compile Include="Dict\TypeDef.cs" />
     <Compile Include="DkEnv\DkEnvVarMerger.cs" />
     <Compile Include="DkEnv\EnvVarList.cs" />
     <Compile Include="DkEnv\RegUtil.cs" />
@@ -472,9 +465,6 @@
       <DependentUpon>ProbeExplorerControl.xaml</DependentUpon>
     </Compile>
     <Compile Include="ProbeExplorer\ProbeExplorerToolWindow.cs" />
-    <Compile Include="Dict\Field.cs" />
-    <Compile Include="Dict\RelInd.cs" />
-    <Compile Include="Dict\Table.cs" />
     <Compile Include="ProcessRunner.cs" />
     <Compile Include="PromptForm.cs">
       <SubType>Form</SubType>

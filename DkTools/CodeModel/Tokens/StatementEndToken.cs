@@ -18,26 +18,6 @@ namespace DkTools.CodeModel.Tokens
 			get { return true; }
 		}
 
-		// TODO: remove
-		///// <summary>
-		///// Attempts to parse a ';' from the file.
-		///// </summary>
-		///// <param name="parent">Parent token</param>
-		///// <param name="scope">Current scope</param>
-		///// <returns>If the next token is a ';', then a new StatementEndToken; otherwise null.</returns>
-		//public static StatementEndToken TryParse(GroupToken parent, Scope scope)
-		//{
-		//	var file = scope.File;
-		//	file.SkipWhiteSpaceAndComments(scope);
-
-		//	if (file.PeekChar() != ';') return null;
-
-		//	var startPos = file.Position;
-		//	file.MoveNext();
-
-		//	return new StatementEndToken(parent, scope, new Span(startPos, file.Position));
-		//}
-
 		public override string Text
 		{
 			get
