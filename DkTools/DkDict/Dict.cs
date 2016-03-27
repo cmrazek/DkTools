@@ -137,6 +137,8 @@ namespace DkTools.DkDict
 						break;
 				}
 			}
+
+			AddImplicitTables();
 		}
 
 		private static void ReadCreate()
@@ -317,28 +319,6 @@ namespace DkTools.DkDict
 
 			// Implicit columns
 			table.AddColumn(new Column(tableName, "rowno", DataType.Unsigned9, nameFilePos));
-
-			if (tableName == "updates")
-			{
-				// Special implicit columns for updates
-				table.AddColumn(new Column(tableName, "column", new DataType(ValType.String, null, "char(30)"), nameFilePos));
-				table.AddColumn(new Column(tableName, "tablename", new DataType(ValType.String, null, "char(8)"), nameFilePos));
-				table.AddColumn(new Column(tableName, "urowno", DataType.Unsigned9, nameFilePos));
-				table.AddColumn(new Column(tableName, "entered", DataType.Date, nameFilePos));
-				table.AddColumn(new Column(tableName, "new", DataType.Char255, nameFilePos));
-				table.AddColumn(new Column(tableName, "old", DataType.Char255, nameFilePos));
-				table.AddColumn(new Column(tableName, "seqno_updatesix", DataType.Unsigned9, nameFilePos));
-
-				if (!_relinds.ContainsKey("updatesix"))
-				{
-					var updatesix = new RelInd(RelIndType.Index, "updatesix", 0, "updates", nameFilePos);
-					updatesix.AddSortColumn("tablename");
-					updatesix.AddSortColumn("urowno");
-					updatesix.AddSortColumn("entered");
-					updatesix.AddSortColumn("seqno_updatesix");
-					_relinds["updatesix"] = updatesix;
-				}
-			}
 
 			// Table attributes
 			ReadTableAttributes(table, "(", "{");
@@ -630,6 +610,40 @@ namespace DkTools.DkDict
 		public static bool IsTable(string name)
 		{
 			return _tables.ContainsKey(name);
+		}
+
+		private static void AddImplicitTables()
+		{
+			Table updates;
+			FilePosition updatesFilePos = FilePosition.Empty;
+			if (!_tables.TryGetValue("updates", out updates))
+			{
+				updates = new Table("updates", 399, 0, updatesFilePos);
+				_tables["updates"] = updates;
+			}
+			else
+			{
+				updatesFilePos = updates.FilePosition;
+			}
+
+			// Special implicit columns for updates
+			updates.AddColumn(new Column("updates", "column", new DataType(ValType.String, null, "char(30)"), updatesFilePos));
+			updates.AddColumn(new Column("updates", "tablename", new DataType(ValType.String, null, "char(8)"), updatesFilePos));
+			updates.AddColumn(new Column("updates", "urowno", DataType.Unsigned9, updatesFilePos));
+			updates.AddColumn(new Column("updates", "entered", DataType.Date, updatesFilePos));
+			updates.AddColumn(new Column("updates", "new", DataType.Char255, updatesFilePos));
+			updates.AddColumn(new Column("updates", "old", DataType.Char255, updatesFilePos));
+			updates.AddColumn(new Column("updates", "seqno_updatesix", DataType.Unsigned9, updatesFilePos));
+
+			if (!_relinds.ContainsKey("updatesix"))
+			{
+				var updatesix = new RelInd(RelIndType.Index, "updatesix", 0, "updates", updatesFilePos);
+				updatesix.AddSortColumn("tablename");
+				updatesix.AddSortColumn("urowno");
+				updatesix.AddSortColumn("entered");
+				updatesix.AddSortColumn("seqno_updatesix");
+				_relinds["updatesix"] = updatesix;
+			}
 		}
 		#endregion
 
