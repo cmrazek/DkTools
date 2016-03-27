@@ -315,7 +315,30 @@ namespace DkTools.DkDict
 			var table = new Table(tableName, tableNum, tableNum2, nameFilePos);
 			_tables[tableName] = table;
 
+			// Implicit columns
 			table.AddColumn(new Column(tableName, "rowno", DataType.Unsigned9, nameFilePos));
+
+			if (tableName == "updates")
+			{
+				// Special implicit columns for updates
+				table.AddColumn(new Column(tableName, "column", new DataType(ValType.String, null, "char(30)"), nameFilePos));
+				table.AddColumn(new Column(tableName, "tablename", new DataType(ValType.String, null, "char(8)"), nameFilePos));
+				table.AddColumn(new Column(tableName, "urowno", DataType.Unsigned9, nameFilePos));
+				table.AddColumn(new Column(tableName, "entered", DataType.Date, nameFilePos));
+				table.AddColumn(new Column(tableName, "new", DataType.Char255, nameFilePos));
+				table.AddColumn(new Column(tableName, "old", DataType.Char255, nameFilePos));
+				table.AddColumn(new Column(tableName, "seqno_updatesix", DataType.Unsigned9, nameFilePos));
+
+				if (!_relinds.ContainsKey("updatesix"))
+				{
+					var updatesix = new RelInd(RelIndType.Index, "updatesix", 0, "updates", nameFilePos);
+					updatesix.AddSortColumn("tablename");
+					updatesix.AddSortColumn("urowno");
+					updatesix.AddSortColumn("entered");
+					updatesix.AddSortColumn("seqno_updatesix");
+					_relinds["updatesix"] = updatesix;
+				}
+			}
 
 			// Table attributes
 			ReadTableAttributes(table, "(", "{");
