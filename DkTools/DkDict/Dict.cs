@@ -518,8 +518,13 @@ namespace DkTools.DkDict
 					{
 						var dataType = DataType.TryParse(new DataType.ParseArgs
 						{
-							Code = _code
-							// TODO: add support for typedefs
+							Code = _code,
+							DataTypeCallback = (name) =>
+								{
+									Typedef td;
+									if (_typedefs.TryGetValue(name, out td)) return td.Definition;
+									return null;
+								}
 						});
 						if (dataType == null)
 						{
@@ -655,13 +660,18 @@ namespace DkTools.DkDict
 				ReportError(_code.Position, "Expected column name.");
 				return null;
 			}
-			var name = _code.Text;
-			var namePos = _code.TokenStartPostion;
+			var colName = _code.Text;
+			var colNamePos = _code.TokenStartPostion;
 			
 			var dataType = DataType.TryParse(new DataType.ParseArgs
 			{
-				Code = _code
-				// TODO: add support for typedefs
+				Code = _code,
+				DataTypeCallback = (name) =>
+				{
+					Typedef td;
+					if (_typedefs.TryGetValue(name, out td)) return td.Definition;
+					return null;
+				}
 			});
 			if (dataType == null)
 			{
@@ -669,7 +679,7 @@ namespace DkTools.DkDict
 				return null;
 			}
 
-			var col = new Column(tableName, name, dataType, _source.GetFilePosition(namePos));
+			var col = new Column(tableName, colName, dataType, _source.GetFilePosition(colNamePos));
 
 			ReadColumnAttributes(col);
 
