@@ -23,9 +23,9 @@ namespace DkTools
 		public bool ShowErrors { get; set; }
 
 		[Category("Editor Options")]
-		[DisplayName("Background Scanning")]
-		[Description("Scan files in the background to provide more info.")]
-		public bool BackgroundScan { get; set; }
+		[DisplayName("Disable Background Scanning")]
+		[Description("Stop scanning files in the background (will cause classes, functions to not be detected properly).")]
+		public bool DisableBackgroundScan { get; set; }
 
 		public event EventHandler EditorRefreshRequired;
 

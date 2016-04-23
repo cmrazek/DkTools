@@ -1,6 +1,11 @@
 DkTools2012 ChangeLog
 ____________________________________________________________________________________________________
-Version 1.3 - (WIP):
+Version 1.4 - (WIP):
+
+- Fixed issue with background scanning being disabled by default.
+
+____________________________________________________________________________________________________
+Version 1.3 - Mar 28, 2016:
 
 - Enhanced code modeling to provide better statement completion and enum option detection.
 - The dictionary is now parsed rather than relying on the DRV. This allows tables and columns to be

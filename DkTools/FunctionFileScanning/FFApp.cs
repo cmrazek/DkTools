@@ -84,7 +84,11 @@ namespace DkTools.FunctionFileScanning
 					_id = db.QueryIdentityInt();
 				}
 
-				Shell.ShowNotificationAsync(Res.FFDatabaseCreationNotification, Res.FFDatabaseCreationCaption);
+				var options = ProbeToolsPackage.Instance.EditorOptions;
+				if (!options.DisableBackgroundScan)
+				{
+					Shell.ShowNotificationAsync(Res.FFDatabaseCreationNotification, Res.FFDatabaseCreationCaption);
+				}
 			}
 		}
 

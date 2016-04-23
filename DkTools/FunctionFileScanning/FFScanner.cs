@@ -188,7 +188,7 @@ namespace DkTools.FunctionFileScanning
 		public void EnqueueChangedFile(string fullPath)
 		{
 			var options = ProbeToolsPackage.Instance.EditorOptions;
-			if (!options.BackgroundScan) return;
+			if (options.DisableBackgroundScan) return;
 
 			var fileContext = FileContextUtil.GetFileContextFromFileName(fullPath);
 			if (fileContext != FileContext.Include && fileContext != FileContext.Dictionary)
@@ -286,7 +286,7 @@ namespace DkTools.FunctionFileScanning
 			}
 
 			var options = ProbeToolsPackage.Instance.EditorOptions;
-			if (options.BackgroundScan)
+			if (!options.DisableBackgroundScan)
 			{
 				var scanList = new List<ScanInfo>();
 				foreach (var dir in ProbeEnvironment.SourceDirs)
@@ -329,7 +329,7 @@ namespace DkTools.FunctionFileScanning
 			try
 			{
 				var options = ProbeToolsPackage.Instance.EditorOptions;
-				if (options.BackgroundScan)
+				if (!options.DisableBackgroundScan)
 				{
 					var fileContext = FileContextUtil.GetFileContextFromFileName(e.FileName);
 					if (ProbeEnvironment.FileExistsInApp(e.FileName))
@@ -360,7 +360,7 @@ namespace DkTools.FunctionFileScanning
 			if (_currentApp == null) return;
 
 			var options = ProbeToolsPackage.Instance.EditorOptions;
-			if (!options.BackgroundScan) return;
+			if (options.DisableBackgroundScan) return;
 
 			using (var db = new FFDatabase())
 			{
