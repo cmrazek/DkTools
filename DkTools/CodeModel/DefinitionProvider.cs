@@ -64,6 +64,8 @@ namespace DkTools.CodeModel
 						"Prevents a compiler warning if a parameter passed to a function is not used.", null),
 					new FunctionDefinition("vstring", DataType.StringVarying, "string varying vstring( expression, ... );",
 						"Creates a string of varying length by concatenating a list of expressions. ", null),
+					new FunctionDefinition("widthof", DataType.Int, "int widthof( name );",
+						"Returns the displayable width of a variable or column.", null),
 
 					// Data types
 					new DataTypeDefinition("int", DataType.Int),

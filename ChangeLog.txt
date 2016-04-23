@@ -3,6 +3,7 @@ ________________________________________________________________________________
 Version 1.4 - (WIP):
 
 - Fixed issue with background scanning being disabled by default.
+- Added support for widthof()
 
 ____________________________________________________________________________________________________
 Version 1.3 - Mar 28, 2016:
