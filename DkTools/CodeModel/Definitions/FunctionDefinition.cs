@@ -9,17 +9,12 @@ namespace DkTools.CodeModel.Definitions
 {
 	internal class FunctionDefinition : Definition
 	{
-		private DataType _dataType;
-		private string _signature;
+		private FunctionSignature _sig;
 		private int _bodyStartPos;
 		private int _argsStartPos;
 		private int _argsEndPos;
-		private FunctionPrivacy _privacy;
-		private bool _extern;
-		private string _className;
 		private Span _entireSpan;
 		private string _devDesc;
-		private DataType[] _argDataTypes;
 
 		/// <summary>
 		/// Creates a function definition object.
@@ -31,24 +26,19 @@ namespace DkTools.CodeModel.Definitions
 		/// <param name="signature">Signature text</param>
 		/// <param name="argsEndPos">Ending position of the argument brackets</param>
 		/// <param name="bodyStartPos">Position of the function's body braces (if does not match, then will be ignored)</param>
-		public FunctionDefinition(string className, string funcName, FilePosition filePos, DataType dataType, string signature,
-			int argsStartPos, int argsEndPos, int bodyStartPos, Span entireSpan, FunctionPrivacy privacy, bool isExtern, string devDesc, IEnumerable<DataType> argDataTypes)
-			: base(funcName, filePos, !string.IsNullOrEmpty(className) ? string.Concat("class:", className, ".func:", funcName) : string.Concat("func:", funcName))
+		public FunctionDefinition(FunctionSignature sig, FilePosition filePos,
+			int argsStartPos, int argsEndPos, int bodyStartPos, Span entireSpan, string devDesc)
+			: base(sig.FunctionName, filePos, !string.IsNullOrEmpty(sig.ClassName) ? string.Concat("class:", sig.ClassName, ".func:", sig.FunctionName) : string.Concat("func:", sig.FunctionName))
 		{
 #if DEBUG
-			if (string.IsNullOrWhiteSpace(signature)) throw new ArgumentNullException("signature");
+			if (sig == null) throw new ArgumentNullException("sig");
 #endif
-			_dataType = dataType != null ? dataType : DataType.Int;
-			_signature = signature;
+			_sig = sig;
 			_argsStartPos = argsStartPos;
 			_argsEndPos = argsEndPos;
 			_bodyStartPos = bodyStartPos;
-			_privacy = privacy;
-			_extern = isExtern;
-			_className = className;
 			_entireSpan = entireSpan;
 			_devDesc = devDesc;
-			if (argDataTypes != null) _argDataTypes = argDataTypes.ToArray();
 		}
 
 		/// <summary>
@@ -58,45 +48,36 @@ namespace DkTools.CodeModel.Definitions
 		/// <param name="dataType">Data type</param>
 		/// <param name="signature">Signature</param>
 		/// <param name="devDesc">Developer description</param>
-		public FunctionDefinition(string funcName, DataType dataType, string signature, string devDesc, IEnumerable<DataType> argDataTypes)
-			: base(funcName, FilePosition.Empty, string.Concat("func:", funcName))
+		public FunctionDefinition(FunctionSignature sig, string devDesc)
+			: base(sig.FunctionName, FilePosition.Empty, string.Concat("func:", sig.FunctionName))
 		{
 #if DEBUG
-			if (string.IsNullOrWhiteSpace(signature)) throw new ArgumentNullException("signature");
+			if (sig == null) throw new ArgumentNullException("sig");
 #endif
-			_dataType = dataType != null ? dataType : DataType.Int;
-			_signature = signature;
+			_sig = sig;
 			_argsStartPos = _argsEndPos = _bodyStartPos = 0;
-			_privacy = FunctionPrivacy.Public;
-			_extern = true;
-			_className = null;
 			_entireSpan = Span.Empty;
 			_devDesc = devDesc;
-			if (argDataTypes != null) _argDataTypes = argDataTypes.ToArray();
 		}
 
 		public FunctionDefinition CloneAsExtern()
 		{
-			return new FunctionDefinition(_className, Name, FilePosition, _dataType, _signature, _argsStartPos, _argsEndPos, _bodyStartPos, _entireSpan, _privacy, true, _devDesc, _argDataTypes);
+			return new FunctionDefinition(_sig.Clone(), FilePosition, _argsStartPos, _argsEndPos, _bodyStartPos, _entireSpan, _devDesc);
 		}
 
 		public override DataType DataType
 		{
-			get { return _dataType; }
+			get { return _sig.ReturnDataType; }
 		}
 
-		public override IEnumerable<DataType> ArgumentDataTypes
+		public override IEnumerable<ArgumentDescriptor> Arguments
 		{
-			get
-			{
-				if (_argDataTypes != null) return _argDataTypes;
-				return new DataType[0];
-			}
+			get { return _sig.Arguments; }
 		}
 
-		public string Signature
+		public FunctionSignature Signature
 		{
-			get { return _signature; }
+			get { return _sig; }
 		}
 
 		public override bool CompletionVisible
@@ -118,8 +99,8 @@ namespace DkTools.CodeModel.Definitions
 		{
 			get
 			{
-				if (string.IsNullOrEmpty(_devDesc)) return _signature;
-				return string.Concat(_signature, "\r\n\r\n", _devDesc);
+				if (string.IsNullOrEmpty(_devDesc)) return _sig.PrettySignature;
+				return string.Concat(_sig.PrettySignature, "\r\n\r\n", _devDesc);
 			}
 		}
 
@@ -128,7 +109,7 @@ namespace DkTools.CodeModel.Definitions
 			get
 			{
 				return WpfDivs(
-					WpfMainLine(_signature),
+					WpfMainLine(_sig.PrettySignature),
 					string.IsNullOrEmpty(_devDesc) ? null : WpfInfoLine(_devDesc));
 			}
 		}
@@ -150,34 +131,25 @@ namespace DkTools.CodeModel.Definitions
 
 		public FunctionPrivacy Privacy
 		{
-			get { return _privacy; }
+			get { return _sig.Privacy; }
 		}
 
 		public bool Extern
 		{
-			get { return _extern; }
+			get { return _sig.Extern; }
 		}
 
 		public override void DumpTreeAttribs(System.Xml.XmlWriter xml)
 		{
 			base.DumpTreeAttribs(xml);
 
-			xml.WriteAttributeString("signature", _signature);
+			xml.WriteAttributeString("signature", _sig.PrettySignature);
 			xml.WriteAttributeString("bodyStartPos", _bodyStartPos.ToString());
-		}
-
-		public override void DumpTreeInner(System.Xml.XmlWriter xml)
-		{
-			xml.WriteStartElement("FunctionDataType");
-			_dataType.DumpTree(xml);
-			xml.WriteEndElement();
-
-			base.DumpTreeInner(xml);
 		}
 
 		public string ClassName
 		{
-			get { return _className; }
+			get { return _sig.ClassName; }
 		}
 
 		public Span EntireSpan
@@ -192,7 +164,7 @@ namespace DkTools.CodeModel.Definitions
 
 		public override string PickText
 		{
-			get { return Signature; }
+			get { return _sig.PrettySignature; }
 		}
 
 		public override bool RequiresChild

@@ -3,6 +3,7 @@ ________________________________________________________________________________
 Version 1.4 - (WIP):
 
 - Added support for permanent extracts.
+- Function signatures with enums now show the data type name rather than dumping the entire list.
 - Fixed issue with background scanning being disabled by default.
 - Added support for widthof()
 - Added support for public, private and protected keywords in classes.

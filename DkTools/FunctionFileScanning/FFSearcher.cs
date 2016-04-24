@@ -32,14 +32,17 @@ namespace DkTools.FunctionFileScanning
 		{
 			if (_db == null) yield break;
 
-			using (var cmd = _db.CreateCommand("select file_.file_name, func.* from func inner join file_ on file_.id = func.file_id where func.app_id = @app_id and func.name = @func_name"))
+			using (var cmd = _db.CreateCommand("select file_.file_name, func.*, alt_file.file_name as alt_file_name from func" +
+				" inner join file_ on file_.id = func.file_id" +
+				" left outer join alt_file on alt_file.id = func.alt_file_id" +
+				" where func.app_id = @app_id" +
+				" and func.name = @func_name"))
 			{
 				cmd.Parameters.AddWithValue("@app_id", _app.Id);
 				cmd.Parameters.AddWithValue("@func_name", funcName);
 				using (var rdr = cmd.ExecuteReader())
 				{
 					var ordFileName = rdr.GetOrdinal("file_name");
-					var ordSpan = rdr.GetOrdinal("span");
 
 					while (rdr.Read())
 					{

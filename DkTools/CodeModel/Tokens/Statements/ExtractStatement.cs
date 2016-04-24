@@ -11,6 +11,7 @@ namespace DkTools.CodeModel.Tokens.Statements
 	{
 		private string _name;
 		private bool _permanent;
+		private ExtractFieldDefinition[] _fields;
 
 		private ExtractStatement(Scope scope, IEnumerable<Token> tokens)
 			: base(scope)
@@ -39,12 +40,12 @@ namespace DkTools.CodeModel.Tokens.Statements
 			if (!code.ReadWord())
 			{
 				// Not correct syntax; exit here.
-				return new ExtractStatement(scope, tokens);
+				return new ExtractStatement(scope, tokens) { _fields = new ExtractFieldDefinition[0] };
 			}
 			else if ((exDef = scope.DefinitionProvider.GetGlobalFromFile<ExtractTableDefinition>(code.Text).FirstOrDefault()) == null)
 			{
 				// The extract definition would have been added by the preprocessor. If it's not recognized here, then it's incorrect syntax.
-				return new ExtractStatement(scope, tokens);
+				return new ExtractStatement(scope, tokens) { _fields = new ExtractFieldDefinition[0] };
 			}
 			else
 			{
@@ -113,6 +114,8 @@ namespace DkTools.CodeModel.Tokens.Statements
 				if (dataType != null) fieldDef.SetDataType(dataType);
 			}
 
+			ret._fields = (from f in fieldTokens select f.SourceDefinition as ExtractFieldDefinition).ToArray();
+
 			return ret;
 		}
 
@@ -125,11 +128,7 @@ namespace DkTools.CodeModel.Tokens.Statements
 		{
 			get
 			{
-				if (SourceDefinition != null && SourceDefinition is ExtractTableDefinition)
-				{
-					return (SourceDefinition as ExtractTableDefinition).Fields;
-				}
-				return new ExtractFieldDefinition[0];
+				return _fields;
 			}
 		}
 

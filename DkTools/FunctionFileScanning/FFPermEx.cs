@@ -21,14 +21,11 @@ namespace DkTools.FunctionFileScanning
 		private int _id;
 		private FilePosition _filePos;
 
-		public FFPermEx(FFFile file, ExtractStatement exToken)
+		public FFPermEx(FFFile file, ExtractStatement exToken, ExtractTableDefinition exDef)
 		{
 			_file = file;
 			_name = exToken.Name;
-			_def = exToken.SourceDefinition as ExtractTableDefinition;
-#if DEBUG
-			if (_def == null) throw new ArgumentException("Extract token source definition is null or not of the correct type.");
-#endif
+			_def = exDef;
 			_fields.AddRange(exToken.Fields);
 			_filePos = exToken.FilePosition;
 		}
@@ -109,7 +106,8 @@ namespace DkTools.FunctionFileScanning
 				_def = new ExtractTableDefinition(_name, exToken.FilePosition, true);
 			}
 
-			_fields = exToken.Fields.ToList();
+			_fields.Clear();
+			_fields.AddRange(exToken.Fields);
 			_filePos = exToken.FilePosition;
 		}
 

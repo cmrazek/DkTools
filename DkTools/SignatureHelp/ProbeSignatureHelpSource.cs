@@ -84,7 +84,7 @@ namespace DkTools.SignatureHelp
 							{
 								foreach (var def in cls.GetFunctionDefinitions(funcName))
 								{
-									yield return CreateSignature(_textBuffer, def.Signature, def.DevDescription, applicableToSpan);
+									yield return CreateSignature(_textBuffer, def.Signature.PrettySignature, def.DevDescription, applicableToSpan);
 								}
 							}
 						}
@@ -197,7 +197,7 @@ namespace DkTools.SignatureHelp
 					var funcDef = (def as CodeModel.Definitions.FunctionDefinition);
 					if (string.IsNullOrEmpty(funcDef.ClassName) || funcDef.ClassName == model.ClassName)
 					{
-						yield return new SignatureInfo(def.Signature, def.DevDescription);
+						yield return new SignatureInfo(def.Signature.PrettySignature, def.DevDescription);
 					}
 				}
 			}
@@ -207,7 +207,7 @@ namespace DkTools.SignatureHelp
 				{
 					if ((def as CodeModel.Definitions.FunctionDefinition).ClassName == className)
 					{
-						yield return new SignatureInfo(def.Signature, def.DevDescription);
+						yield return new SignatureInfo(def.Signature.PrettySignature, def.DevDescription);
 						yield break;
 					}
 				}

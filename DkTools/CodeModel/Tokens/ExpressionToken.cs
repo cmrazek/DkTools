@@ -233,7 +233,7 @@ namespace DkTools.CodeModel.Tokens
 									if (argsPresent)
 									{
 										var openBracketToken = new OperatorToken(scope, argsOpenBracketSpan, "(");
-										compToken.AddToken(ArgsToken.Parse(scope, openBracketToken, childDef.ArgumentDataTypes));
+										compToken.AddToken(ArgsToken.Parse(scope, openBracketToken, childDef.Arguments));
 									}
 
 									return compToken;
@@ -259,7 +259,7 @@ namespace DkTools.CodeModel.Tokens
 					{
 						var wordToken = new IdentifierToken(scope, wordSpan, word, def);
 						var openBracketToken = new OperatorToken(scope, argsOpenBracketSpan, "(");
-						var argsToken = ArgsToken.Parse(scope, openBracketToken, def.ArgumentDataTypes);
+						var argsToken = ArgsToken.Parse(scope, openBracketToken, def.Arguments);
 
 						var compToken = new CompositeToken(scope, def.DataType);
 						compToken.AddToken(wordToken);

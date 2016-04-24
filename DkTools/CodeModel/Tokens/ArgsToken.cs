@@ -8,7 +8,7 @@ namespace DkTools.CodeModel.Tokens
 {
 	class ArgsToken : GroupToken
 	{
-		private DataType[] _argDataTypes;
+		private ArgumentDescriptor[] _args;
 
 		private ArgsToken(Scope scope, OperatorToken openBracketToken)
 			: base(scope)
@@ -23,10 +23,10 @@ namespace DkTools.CodeModel.Tokens
 		/// </summary>
 		/// <param name="scope">The scope for this token.</param>
 		/// <param name="openBracketToken">The open bracket token.</param>
-		/// <param name="argDataTypes">(optional) The data types required for each argument, if known.</param>
+		/// <param name="args">(optional) A descriptor for each argument, if known.</param>
 		/// <returns>A new argument token.</returns>
 		/// <remarks>This function assumes the opening bracket has already been read from the stream.</remarks>
-		public static ArgsToken Parse(Scope scope, OperatorToken openBracketToken, IEnumerable<DataType> argDataTypes)
+		public static ArgsToken Parse(Scope scope, OperatorToken openBracketToken, IEnumerable<ArgumentDescriptor> args)
 		{
 			var code = scope.Code;
 			var ret = new ArgsToken(scope, openBracketToken);
@@ -36,7 +36,7 @@ namespace DkTools.CodeModel.Tokens
 			scope = scope.Clone();
 			scope.Hint |= ScopeHint.SuppressStatementStarts;
 
-			if (argDataTypes != null) ret._argDataTypes = argDataTypes.ToArray();
+			if (args != null) ret._args = args.ToArray();
 
 			while (code.SkipWhiteSpace())
 			{
@@ -55,7 +55,7 @@ namespace DkTools.CodeModel.Tokens
 					continue;
 				}
 
-				if (ret._argDataTypes != null && argIndex < ret._argDataTypes.Length) dataType = ret._argDataTypes[argIndex];
+				if (ret._args != null && argIndex < ret._args.Length) dataType = ret._args[argIndex].DataType;
 				else dataType = null;
 
 				var exp = ExpressionToken.TryParse(scope, _endTokens, expectedDataType: dataType);

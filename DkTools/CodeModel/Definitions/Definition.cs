@@ -62,6 +62,15 @@ namespace DkTools.CodeModel.Definitions
 			get { return _filePos.Position; }
 		}
 
+		public string LocationText
+		{
+			get
+			{
+				if (!string.IsNullOrEmpty(_filePos.FileName)) return _filePos.FileName;
+				return "(unknown)";
+			}
+		}
+
 		public FilePosition FilePosition
 		{
 			get { return _filePos; }
@@ -233,9 +242,9 @@ namespace DkTools.CodeModel.Definitions
 			get { return false; }
 		}
 
-		public virtual IEnumerable<DataType> ArgumentDataTypes
+		public virtual IEnumerable<ArgumentDescriptor> Arguments
 		{
-			get { return new DataType[0]; }
+			get { return new ArgumentDescriptor[0]; }
 		}
 
 		public virtual DataType DataType

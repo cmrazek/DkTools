@@ -1320,6 +1320,12 @@ namespace DkTools.CodeModel
 			}
 		}
 
+		public string ToPrettyString()
+		{
+			if (!string.IsNullOrEmpty(_name)) return _name;
+			return _source;
+		}
+
 		public System.Windows.UIElement QuickInfoWpf
 		{
 			get

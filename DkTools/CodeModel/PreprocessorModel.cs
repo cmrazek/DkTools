@@ -297,7 +297,7 @@ namespace DkTools.CodeModel
 			var localArgStartPos = _source.GetFilePosition(argStartPos);
 			var argScope = new CodeScope(localArgStartPos.Position);
 			int argEndPos = 0;
-			var argDataTypeList = new List<DataType>();
+			var args = new List<ArgumentDescriptor>();
 			var argDefList = new List<Definition>();
 
 			// Read the arguments
@@ -312,7 +312,7 @@ namespace DkTools.CodeModel
 				{
 					continue;
 				}
-				if (TryReadFunctionArgument(argScope, localArgStartPos.PrimaryFile, argDataTypeList, argDefList)) continue;
+				if (TryReadFunctionArgument(argScope, localArgStartPos.PrimaryFile, args, argDefList)) continue;
 
 #if REPORT_ERRORS
 				_code.Peek();
@@ -328,10 +328,9 @@ namespace DkTools.CodeModel
 			if (isExtern)
 			{
 				var localPos = _source.GetFilePosition(nameSpan.Start);
-				var sig = CodeParser.NormalizeText(_code.GetText(allStartPos, argEndPos - allStartPos));
 
-				var def = new FunctionDefinition(_className, funcName, localPos,
-					returnDataType, sig, 0, 0, 0, Span.Empty, privacy, true, description, argDataTypeList);
+				var def = new FunctionDefinition(new FunctionSignature(true, privacy, returnDataType, _className, funcName, args),
+					localPos, 0, 0, 0, Span.Empty, description);
 				_externFuncs[funcName] = def;
 				AddGlobalDefinition(def);
 				return;
@@ -367,9 +366,8 @@ namespace DkTools.CodeModel
 			var argEndPrimaryPos = _source.GetPrimaryFilePosition(argEndPos);
 			var entireSpan = _source.GetPrimaryFileSpan(new Span(allStartPos, bodyEndPos));
 
-			var funcSig = CodeParser.NormalizeText(_code.GetText(allStartPos, argEndPos - allStartPos));
-			var funcDef = new FunctionDefinition(_className, funcName, nameActualPos, returnDataType, funcSig,
-				argStartPrimaryPos, argEndPrimaryPos, bodyStartLocalPos, entireSpan, privacy, isExtern, description, argDataTypeList);
+			var funcDef = new FunctionDefinition(new FunctionSignature(false, privacy, returnDataType, _className, funcName, args),
+				nameActualPos, argStartPrimaryPos, argEndPrimaryPos, bodyStartLocalPos, entireSpan, description);
 			_localFuncs.Add(new LocalFunction(funcDef, nameSpan, statementsStartPos, bodyEndPos, argDefList, varList));
 			AddGlobalDefinition(funcDef);
 
@@ -555,7 +553,7 @@ namespace DkTools.CodeModel
 			}
 		}
 
-		private bool TryReadFunctionArgument(CodeScope scope, bool createDefinitions, List<DataType> argDataTypes, List<Definition> newDefList)
+		private bool TryReadFunctionArgument(CodeScope scope, bool createDefinitions, List<ArgumentDescriptor> args, List<Definition> newDefList)
 		{
 			var dataType = DataType.TryParse(new DataType.ParseArgs
 			{
@@ -565,11 +563,28 @@ namespace DkTools.CodeModel
 			});
 			if (dataType == null) return false;
 
-			argDataTypes.Add(dataType);
+			PassByMethod passByMethod = PassByMethod.Value;
+			if (_code.ReadExact("&"))	// Optional reference
+			{
+				if (_code.ReadExact("+"))	// Optional &+
+				{
+					passByMethod = PassByMethod.ReferencePlus;
+				}
+				else
+				{
+					passByMethod = PassByMethod.Reference;
+				}
+			}
 
-			_code.ReadExact("&");	// Optional reference
-			_code.ReadExact("+");	// Optional &+
-			if (_code.ReadWord() && createDefinitions)	// Optional var name
+			string name = null;
+			if (_code.ReadWord())
+			{
+				name = _code.Text;
+			}
+
+			args.Add(new ArgumentDescriptor(name, dataType, passByMethod));
+
+			if (name != null && createDefinitions)	// Optional var name
 			{
 				var arrayLength = TryReadArrayDecl();
 

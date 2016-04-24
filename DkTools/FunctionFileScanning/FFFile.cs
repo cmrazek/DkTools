@@ -7,6 +7,8 @@ using System.Text;
 using System.Threading.Tasks;
 using DkTools.CodeModel;
 using DkTools.CodeModel.Definitions;
+using DkTools.CodeModel.Tokens;
+using DkTools.CodeModel.Tokens.Statements;
 
 namespace DkTools.FunctionFileScanning
 {
@@ -62,7 +64,10 @@ namespace DkTools.FunctionFileScanning
 				_class = new FFClass(_app, this, className);
 			}
 
-			using (var cmd = db.CreateCommand("select * from func where file_id = @file_id"))
+			using (var cmd = db.CreateCommand(
+				"select func.*, alt_file.file_name as alt_file_name from func" +
+				" left outer join alt_file on alt_file.id = func.alt_file_id" +
+				" where file_id = @file_id"))
 			{
 				cmd.Parameters.AddWithValue("@file_id", _id);
 				using (var funcRdr = cmd.ExecuteReader())
@@ -492,13 +497,13 @@ namespace DkTools.FunctionFileScanning
 				}
 				else
 				{
-					if (extract.SourceDefinition == null ||
-						!(extract.SourceDefinition is ExtractTableDefinition))
-					{
-						continue;
-					}
+					var token = extract.FindFirstChild<ExtractTableToken>();
+					if (token == null) continue;
 
-					permEx = new FFPermEx(this, extract);
+					var def = token.SourceDefinition as ExtractTableDefinition;
+					if (def == null) continue;
+
+					permEx = new FFPermEx(this, extract, def);
 					_permExs.Add(permEx);
 				}
 

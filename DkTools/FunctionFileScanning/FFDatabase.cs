@@ -40,16 +40,15 @@ namespace DkTools.FunctionFileScanning
 	name				nvarchar(100)	not null,
 	app_id				int				not null,
 	file_id				int				not null,
+	alt_file_id			int				not null,
+	pos					int				not null,
 	sig					ntext			not null,
-	span				nvarchar(100)	not null,
-	data_type			ntext			not null,
-	arg_data_types		ntext			not null,
-	privacy				nvarchar(10)	not null,
 	description			ntext,
 	visible				tinyint			not null
 );",
 "create index func_ix_appid on func (app_id, name)",
 "create index func_ix_fileid on func (file_id)",
+"create index func_ix_altfileid on func (alt_file_id)",
 
 @"create table include_depends
 (

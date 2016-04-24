@@ -380,7 +380,8 @@ namespace DkTools.FunctionFileScanning
 			List<int> altFilesToRemove = null;
 
 			using (var cmd = db.CreateCommand("select id from alt_file" +
-				" where not exists (select * from ref where alt_file_id = alt_file.id)" +
+				" where not exists (select * from func where alt_file_id = alt_file.id)" +
+				" and not exists (select * from ref where alt_file_id = alt_file.id)" +
 				" and not exists (select * from permex where alt_file_id = alt_file.id)" +
 				" and not exists (select * from permex_col where alt_file_id = alt_file.id)"))
 			{

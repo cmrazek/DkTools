@@ -16,10 +16,8 @@ namespace DkTools.FunctionFileScanning
 		private FFClass _class;
 		private int _id;
 		private string _name;
-		private string _sig;
+		private FunctionSignature _sig;
 		private CodeModel.Span _span;
-		private CodeModel.DataType _dataType;
-		private CodeModel.FunctionPrivacy _privacy;
 		private CodeModel.Definitions.FunctionDefinition _def;
 		private string _devDesc;
 		private bool _visible;
@@ -41,12 +39,6 @@ namespace DkTools.FunctionFileScanning
 			_name = def.Name;
 			_sig = def.Signature;
 			_span = new CodeModel.Span(def.SourceStartPos, def.SourceStartPos);
-			_dataType = def.DataType;
-
-#if DEBUG
-			if (_dataType == null) throw new InvalidOperationException("Function data type is null.");
-#endif
-			_privacy = def.Privacy;
 			_devDesc = def.DevDescription;
 			_def = def;
 
@@ -66,29 +58,19 @@ namespace DkTools.FunctionFileScanning
 
 			_id = rdr.GetInt32(rdr.GetOrdinal("id"));
 			_name = rdr.GetString(rdr.GetOrdinal("name"));
-			_sig = rdr.GetString(rdr.GetOrdinal("sig"));
-			_span = CodeModel.Span.FromSaveString(rdr.GetString(rdr.GetOrdinal("span")));
-
-			var dataTypeText = rdr.GetString(rdr.GetOrdinal("data_type"));
-
-			_dataType = DataType.TryParse(new DataType.ParseArgs { Code = new CodeParser(dataTypeText) });
-			if (_dataType == null)
-			{
-				Log.WriteDebug("Failed to parse data type from database: {0}", dataTypeText);
-				_dataType = new CodeModel.DataType(ValType.Unknown, null, dataTypeText);
-			}
-
-			var argDataTypes = ParseDataTypeList(rdr.GetString(rdr.GetOrdinal("arg_data_types"))).ToArray();
+			_sig = FunctionSignature.ParseFromDb(rdr.GetString(rdr.GetOrdinal("sig")));
 
 			var devDescValue = rdr["description"];
 			if (!Convert.IsDBNull(devDescValue)) _devDesc = Convert.ToString(devDescValue);
 			else _devDesc = null;
 
-			var str = rdr.GetString(rdr.GetOrdinal("privacy"));
-			if (!Enum.TryParse<CodeModel.FunctionPrivacy>(str, out _privacy)) _privacy = CodeModel.FunctionPrivacy.Public;
+			var fileName = _file.FileName;
+			var altFileName = rdr.GetStringOrNull(rdr.GetOrdinal("alt_file_name"));
+			if (!string.IsNullOrEmpty(altFileName)) fileName = altFileName;
+			var pos = rdr.GetInt32(rdr.GetOrdinal("pos"));
+			var filePos = new FilePosition(fileName, pos);
 
-			_def = new CodeModel.Definitions.FunctionDefinition(_class != null ? _class.Name : null, _name, new FilePosition(_file.FileName, _span.Start, true), _dataType, _sig,
-					0, 0, 0, CodeModel.Span.Empty, _privacy, true, _devDesc, argDataTypes);
+			_def = new CodeModel.Definitions.FunctionDefinition(_sig, filePos, 0, 0, 0, _span, _devDesc);
 
 			UpdateVisibility();
 		}
@@ -98,59 +80,29 @@ namespace DkTools.FunctionFileScanning
 			var className = FileContextUtil.GetClassNameFromFileName(fileName);
 
 			var funcName = rdr.GetString(rdr.GetOrdinal("name"));
-			var nameSpan = Span.FromSaveString(rdr.GetString(rdr.GetOrdinal("span")));
-
-			var dataTypeText = rdr.GetString(rdr.GetOrdinal("data_type"));
-			var dataType = DataType.TryParse(new DataType.ParseArgs
-			{
-				Code = new CodeParser(dataTypeText)
-			});
-			if (dataType == null)
-			{
-				Log.WriteDebug("Failed to parse data type from database: {0}", dataTypeText);
-				dataType = new CodeModel.DataType(ValType.Unknown, null, dataTypeText);
-			}
-
-			var argDataTypes = ParseDataTypeList(rdr.GetString(rdr.GetOrdinal("arg_data_types"))).ToArray();
-
-			var sig = rdr.GetString(rdr.GetOrdinal("sig"));
-
-			FunctionPrivacy privacy;
-			var str = rdr.GetString(rdr.GetOrdinal("privacy"));
-			if (!Enum.TryParse<CodeModel.FunctionPrivacy>(str, out privacy)) privacy = CodeModel.FunctionPrivacy.Public;
+			var sig = FunctionSignature.ParseFromDb(rdr.GetString(rdr.GetOrdinal("sig")));
 
 			string devDesc = null;
 			var devDescValue = rdr["description"];
 			if (!Convert.IsDBNull(devDescValue)) devDesc = Convert.ToString(devDescValue);
 
-			var filePos = new FilePosition(fileName, nameSpan.Start, true);
+			var trueFileName = fileName;
+			var altFileName = rdr.GetStringOrNull(rdr.GetOrdinal("alt_file_name"));
+			if (!string.IsNullOrEmpty(altFileName)) trueFileName = altFileName;
+			var pos = rdr.GetInt32(rdr.GetOrdinal("pos"));
+			var filePos = new FilePosition(trueFileName, pos);
 
-			return new CodeModel.Definitions.FunctionDefinition(className, funcName, filePos, dataType, sig, 0, 0, 0, Span.Empty,
-				privacy, true, devDesc, argDataTypes);
+			return new CodeModel.Definitions.FunctionDefinition(sig, filePos, 0, 0, 0, Span.Empty, devDesc);
 		}
 
-		private static IEnumerable<DataType> ParseDataTypeList(string argDataTypesString)
+		private static IEnumerable<ArgumentDescriptor> ParseArguments(string argsString)
 		{
-			if (!string.IsNullOrWhiteSpace(argDataTypesString))
+			if (string.IsNullOrEmpty(argsString)) yield break;
+
+			foreach (var argString in argsString.Split('|'))
 			{
-				var code = new CodeParser(argDataTypesString);
-				if (code.ReadExact('('))
-				{
-					while (true)
-					{
-						yield return DataType.TryParse(new DataType.ParseArgs { Code = code });
-
-						if (code.ReadExact(',')) continue;
-						if (code.ReadExact(')')) break;
-
-						Log.WriteDebug("Failed to parse delimiter in arg data type list: {0}", argDataTypesString);
-						break;
-					}
-				}
-				else
-				{
-					Log.WriteDebug("Failed to parse starting '(' from arg data type list: {0}", argDataTypesString);
-				}
+				var arg = ArgumentDescriptor.ParseFromDb(argString);
+				if (arg.HasValue) yield return arg.Value;
 			}
 		}
 
@@ -162,8 +114,6 @@ namespace DkTools.FunctionFileScanning
 #endif
 			_sig = def.Signature;
 			_span = new CodeModel.Span(def.SourceStartPos, def.SourceStartPos);
-			_dataType = def.DataType;
-			_privacy = def.Privacy;
 			_def = def;
 			_devDesc = def.DevDescription;
 
@@ -191,7 +141,7 @@ namespace DkTools.FunctionFileScanning
 			get { return _name; }
 		}
 
-		public string Signature
+		public FunctionSignature Signature
 		{
 			get { return _sig; }
 		}
@@ -210,54 +160,47 @@ namespace DkTools.FunctionFileScanning
 		{
 			var sb = new StringBuilder();
 			var first = true;
-			foreach (var argDataType in _def.ArgumentDataTypes)
+			foreach (var arg in _def.Arguments)
 			{
-				if (first)
-				{
-					sb.Append('(');
-					first = false;
-				}
-				else
-				{
-					sb.Append(',');
-				}
-				sb.Append(argDataType.ToCodeString());
+				if (first) first = false;
+				else sb.Append('|');
+				sb.Append(arg.ToDbString());
 			}
-			if (!first) sb.Append(')');
-			var argDataTypes = sb.ToString();
+			var argsString = sb.ToString();
+
+			var altFileId = 0;
+			var filePos = _def.FilePosition;
+			if (!string.Equals(filePos.FileName, _file.FileName, StringComparison.OrdinalIgnoreCase)) altFileId = _app.GetAltFileId(db, filePos.FileName);
 
 			if (_id != 0)
 			{
-				using (var cmd = db.CreateCommand("update func set file_id = @file_id, name = @name, sig = @sig, span = @span, data_type = @data_type, " +
-					"arg_data_types = @arg_data_types, privacy = @privacy, description = @dev_desc, visible = @visible where id = @id"))
+				using (var cmd = db.CreateCommand("update func set file_id = @file_id, name = @name, sig = @sig, alt_file_id = @alt_file_id, pos = @pos, " +
+					"description = @dev_desc, visible = @visible where id = @id"))
 				{
 					cmd.Parameters.AddWithValue("@id", _id);
 					cmd.Parameters.AddWithValue("@file_id", _file.Id);
 					cmd.Parameters.AddWithValue("@name", _name);
-					cmd.Parameters.AddWithValue("@sig", _sig);
-					cmd.Parameters.AddWithValue("@span", _span.SaveString);
-					cmd.Parameters.AddWithValue("@data_type", _dataType.ToCodeString());
-					cmd.Parameters.AddWithValue("@arg_data_types", argDataTypes);
-					cmd.Parameters.AddWithValue("@privacy", _privacy.ToString());
+					cmd.Parameters.AddWithValue("@sig", _sig.ToDbString());
+					cmd.Parameters.AddWithValue("@alt_file_id", altFileId);
+					cmd.Parameters.AddWithValue("@pos", filePos.Position);
 					if (string.IsNullOrEmpty(_devDesc)) cmd.Parameters.AddWithValue("@dev_desc", DBNull.Value);
 					else cmd.Parameters.AddWithValue("@dev_desc", _devDesc);
 					cmd.Parameters.AddWithValue("@visible", _visible ? 1 : 0);
+					
 					cmd.ExecuteNonQuery();
 				}
 			}
 			else
 			{
-				using (var cmd = db.CreateCommand(@"insert into func (name, app_id, file_id, sig, span, data_type, arg_data_types, privacy, description, visible)
-													values (@name, @app_id, @file_id, @sig, @span, @data_type, @arg_data_types, @privacy, @dev_desc, @visible)"))
+				using (var cmd = db.CreateCommand(@"insert into func (name, app_id, file_id, alt_file_id, pos, sig, description, visible)
+													values (@name, @app_id, @file_id, @alt_file_id, @pos, @sig, @dev_desc, @visible)"))
 				{
 					cmd.Parameters.AddWithValue("@name", _name);
 					cmd.Parameters.AddWithValue("@app_id", _app.Id);
 					cmd.Parameters.AddWithValue("@file_id", _file.Id);
-					cmd.Parameters.AddWithValue("@sig", _sig);
-					cmd.Parameters.AddWithValue("@span", _span.SaveString);
-					cmd.Parameters.AddWithValue("@data_type", _dataType.ToCodeString());
-					cmd.Parameters.AddWithValue("@arg_data_types", argDataTypes);
-					cmd.Parameters.AddWithValue("@privacy", _privacy.ToString());
+					cmd.Parameters.AddWithValue("@alt_file_id", altFileId);
+					cmd.Parameters.AddWithValue("@pos", filePos.Position);
+					cmd.Parameters.AddWithValue("@sig", _sig.ToDbString());
 					if (string.IsNullOrEmpty(_devDesc)) cmd.Parameters.AddWithValue("@dev_desc", DBNull.Value);
 					else cmd.Parameters.AddWithValue("@dev_desc", _devDesc);
 					cmd.Parameters.AddWithValue("@visible", _visible ? 1 : 0);
