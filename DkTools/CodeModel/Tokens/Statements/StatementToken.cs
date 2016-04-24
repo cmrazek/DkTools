@@ -42,6 +42,10 @@ namespace DkTools.CodeModel.Tokens
 					return scope.ContinueOwner != null;
 				case "break":
 					return scope.BreakOwner != null;
+				case "private":
+				case "protected":
+				case "public":
+					return scope.Model.FileContext.IsClass();
 				default:
 					return false;
 			}
@@ -157,6 +161,17 @@ namespace DkTools.CodeModel.Tokens
 								if (callback != null) callback(token);
 								return ret;
 							}
+						case "public":
+						case "private":
+						case "protected":
+							if (scope.Model.FileContext.IsClass())
+							{
+								var keywordToken = new KeywordToken(scope, code.MovePeekedSpan(), code.Text);
+								ret.AddToken(keywordToken);
+								if (callback != null) callback(keywordToken);
+								return ret;
+							}
+							else break;
 						case "return":
 							{
 								var keywordToken = new KeywordToken(scope, code.MovePeekedSpan(), code.Text);

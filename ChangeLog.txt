@@ -5,6 +5,7 @@ Version 1.4 - (WIP):
 - Added support for permanent extracts.
 - Fixed issue with background scanning being disabled by default.
 - Added support for widthof()
+- Added support for public, private and protected keywords in classes.
 
 ____________________________________________________________________________________________________
 Version 1.3 - Mar 28, 2016:
