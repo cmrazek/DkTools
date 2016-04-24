@@ -10,8 +10,8 @@ namespace DkTools.CodeModel.Definitions
 	{
 		private DkDict.Stringdef _stringDef;
 
-		public StringDefDefinition(DkDict.Stringdef stringDef)
-			: base(stringDef.Name, null, -1, GetExternalRefId(stringDef.Name))
+		public StringDefDefinition(DkDict.Stringdef stringDef, FilePosition filePos)
+			: base(stringDef.Name, filePos, GetExternalRefId(stringDef.Name))
 		{
 			_stringDef = stringDef;
 		}

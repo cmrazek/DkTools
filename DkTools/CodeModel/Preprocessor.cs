@@ -49,7 +49,7 @@ namespace DkTools.CodeModel
 			if (_defines == null)
 			{
 				_defines = new Dictionary<string, Define>();
-				_defines["_WINDOWS"] = new Define("_WINDOWS", string.Empty, null, null, 0);
+				_defines["_WINDOWS"] = new Define("_WINDOWS", string.Empty, null, FilePosition.Empty);
 			}
 
 			string str;
@@ -191,8 +191,7 @@ namespace DkTools.CodeModel
 
 			// Get the define name
 			rdr.IgnoreWhiteSpaceAndComments(true);
-			var linkFileName = rdr.FileName;
-			var linkPos = rdr.Position;
+			var linkFilePos = rdr.FilePosition;
 			var name = rdr.PeekIdentifier();
 			if (string.IsNullOrEmpty(name)) return;
 			var nameFilePos = rdr.FilePosition;
@@ -318,7 +317,7 @@ namespace DkTools.CodeModel
 
 			if (!p.suppress)
 			{
-				var define = new Define(name, sb.ToString().Trim(), paramNames, linkFileName, linkPos);
+				var define = new Define(name, sb.ToString().Trim(), paramNames, linkFilePos);
 				_defines[name] = define;
 				if (nameFilePos.IsInFile) _refs.Add(new Reference(define.Definition, nameFilePos));
 			}
@@ -463,7 +462,7 @@ namespace DkTools.CodeModel
 				if (args == null) args = new List<Define>();
 				for (int i = 0, ii = paramList.Count; i < ii; i++)
 				{
-					args.Add(new Define(define.ParamNames[i], paramList[i], null, string.Empty, 0));
+					args.Add(new Define(define.ParamNames[i], paramList[i], null, FilePosition.Empty));
 				}
 			}
 
@@ -905,19 +904,17 @@ namespace DkTools.CodeModel
 			private string _name;
 			private string _content;
 			private List<string> _paramNames;
-			private string _fileName;
-			private int _pos;
+			private FilePosition _filePos;
 			private bool _disabled;
 			private DataType _dataType;
 			private Definition _def;
 
-			public Define(string name, string content, List<string> paramNames, string fileName, int pos)
+			public Define(string name, string content, List<string> paramNames, FilePosition filePos)
 			{
 				_name = name;
 				_content = content;
 				_paramNames = paramNames;
-				_fileName = fileName;
-				_pos = pos;
+				_filePos = filePos;
 
 				if (_paramNames == null)
 				{
@@ -952,16 +949,6 @@ namespace DkTools.CodeModel
 				get { return _paramNames; }
 			}
 
-			public string FileName
-			{
-				get { return _fileName; }
-			}
-
-			public int Position
-			{
-				get { return _pos; }
-			}
-
 			public bool Disabled
 			{
 				get { return _disabled; }
@@ -978,11 +965,11 @@ namespace DkTools.CodeModel
 						{
 							if (_dataType != null)
 							{
-								_def = new Definitions.DataTypeDefinition(_name, _fileName, _pos, _dataType);
+								_def = new Definitions.DataTypeDefinition(_name, _filePos, _dataType);
 							}
 							else
 							{
-								_def = new Definitions.ConstantDefinition(_name, _fileName, _pos, CodeParser.NormalizeText(_content));
+								_def = new Definitions.ConstantDefinition(_name, _filePos, CodeParser.NormalizeText(_content));
 							}
 						}
 						else
@@ -999,7 +986,7 @@ namespace DkTools.CodeModel
 							}
 							sig.Append(')');
 
-							_def = new Definitions.MacroDefinition(_name, _fileName, _pos, sig.ToString(), CodeParser.NormalizeText(_content));
+							_def = new Definitions.MacroDefinition(_name, _filePos, sig.ToString(), CodeParser.NormalizeText(_content));
 						}
 					}
 

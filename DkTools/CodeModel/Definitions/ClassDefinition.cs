@@ -10,7 +10,7 @@ namespace DkTools.CodeModel.Definitions
 	internal class ClassDefinition : Definition
 	{
 		public ClassDefinition(string name, string fileName)
-			: base(name, fileName, 0, FunctionFileScanning.FFClass.GetExternalRefId(name))
+			: base(name, new FilePosition(fileName, 0, true), FunctionFileScanning.FFClass.GetExternalRefId(name))
 		{
 		}
 

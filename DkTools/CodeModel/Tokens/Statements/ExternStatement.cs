@@ -6,7 +6,7 @@ using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using DkTools.CodeModel.Definitions;
 
-namespace DkTools.CodeModel.Tokens
+namespace DkTools.CodeModel.Tokens.Statements
 {
 	class ExternStatement : GroupToken
 	{

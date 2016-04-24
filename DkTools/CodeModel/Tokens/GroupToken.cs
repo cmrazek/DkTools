@@ -111,6 +111,15 @@ namespace DkTools.CodeModel.Tokens
 				return _tokens.Count > 0 ? _tokens[0] : null;
 			}
 		}
+
+		public Token FindFirstChild<T>() where T : Token
+		{
+			foreach (var token in _tokens)
+			{
+				if (token is T) return token as T;
+			}
+			return null;
+		}
 	}
 
 	internal enum ParseScopeResult

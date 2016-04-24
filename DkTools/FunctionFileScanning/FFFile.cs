@@ -18,6 +18,7 @@ namespace DkTools.FunctionFileScanning
 		private DateTime _modified;
 		private FileContext _context;
 		private List<FFFunction> _functions = new List<FFFunction>();
+		private List<FFPermEx> _permExs = new List<FFPermEx>();
 		private FFClass _class = null;
 		private bool _visible;
 
@@ -73,6 +74,23 @@ namespace DkTools.FunctionFileScanning
 				}
 			}
 
+			using (var cmd = db.CreateCommand(
+				"select permex.*, alt_file.file_name as alt_file_name from permex" +
+				" left outer join alt_file on alt_file.id = permex.alt_file_id" +
+				" where permex.file_id = @file_id"))
+			{
+				cmd.Parameters.AddWithValue("@file_id", _id);
+				using (var rdr = cmd.ExecuteReader())
+				{
+					while (rdr.Read())
+					{
+						_permExs.Add(new FFPermEx(this, rdr));
+					}
+				}
+			}
+
+			foreach (var permex in _permExs) permex.Load(db);
+
 			UpdateVisibility();
 		}
 
@@ -90,6 +108,11 @@ namespace DkTools.FunctionFileScanning
 		public int Id
 		{
 			get { return _id; }
+		}
+
+		public FFApp App
+		{
+			get { return _app; }
 		}
 
 		public FileContext FileContext
@@ -223,7 +246,7 @@ namespace DkTools.FunctionFileScanning
 
 			// Scan the refs in the database to find which ones should be updated or removed
 			using (var cmd = db.CreateCommand("select ref.*, alt_file.file_name as true_file_name from ref "
-				+ "left outer join alt_file on alt_file.id = ref.true_file_id "
+				+ "left outer join alt_file on alt_file.id = ref.alt_file_id "
 				+ "where file_id = @file_id"))
 			{
 				cmd.Parameters.AddWithValue("@file_id", _id);
@@ -320,7 +343,7 @@ namespace DkTools.FunctionFileScanning
 				}
 
 				// Inserts the ref records
-				using (var cmd = db.CreateCommand("insert into ref (app_id, file_id, ext_ref_id, true_file_id, pos) values (@app_id, @file_id, @ext_ref_id, @true_file_id, @pos)"))
+				using (var cmd = db.CreateCommand("insert into ref (app_id, file_id, ext_ref_id, alt_file_id, pos) values (@app_id, @file_id, @ext_ref_id, @alt_file_id, @pos)"))
 				{
 					foreach (var newRef in memRefs.Where(r => !r.Exists))
 					{
@@ -335,7 +358,7 @@ namespace DkTools.FunctionFileScanning
 						cmd.Parameters.AddWithValue("@app_id", _app.Id);
 						cmd.Parameters.AddWithValue("@file_id", _id);
 						cmd.Parameters.AddWithValue("@ext_ref_id", newRef.ExternalRefId);
-						cmd.Parameters.AddWithValue("@true_file_id", trueFileId);
+						cmd.Parameters.AddWithValue("@alt_file_id", trueFileId);
 						cmd.Parameters.AddWithValue("@pos", newRef.Position);
 						cmd.ExecuteNonQuery();
 					}
@@ -363,45 +386,54 @@ namespace DkTools.FunctionFileScanning
 
 		public void UpdateFromModel(CodeModel.CodeModel model, FFDatabase db, FileStore store, DateTime fileModified, FFScanMode scanMode)
 		{
-			if (scanMode == FFScanMode.Deep)
-			{
-				_modified = fileModified;
-			}
-			else
-			{
-				_modified = Constants.ZeroDate;
-			}
+			if (scanMode == FFScanMode.Deep) _modified = fileModified;
+			else _modified = Constants.ZeroDate;
+			UpdateVisibility();
 			InsertOrUpdate(db, store, model);
 
-			// Get the list of functions defined in the file.
-			var modelFuncs = (from f in model.DefinitionProvider.GetGlobalFromFile<CodeModel.Definitions.FunctionDefinition>()
-							  where f.Extern == false
-							  select f).ToArray();
-
-			// Insert/update the functions that exist in the model.
-			foreach (var modelFunc in modelFuncs)
+			// Only extract functions for .f files or class files.
+			switch (_context)
 			{
-				var func = _functions.FirstOrDefault(f => f.Name == modelFunc.Name);
-				if (func != null)
-				{
-					func.UpdateFromDefinition(modelFunc);
-				}
-				else
-				{
-					func = new FFFunction(_app, this, _class, modelFunc);
-					_functions.Add(func);
-				}
+				case CodeModel.FileContext.Function:
+				case CodeModel.FileContext.ClientClass:
+				case CodeModel.FileContext.ServerClass:
+				case CodeModel.FileContext.NeutralClass:
 
-				func.InsertOrUpdate(db);
+					// Get the list of functions defined in the file.
+					var modelFuncs = (from f in model.DefinitionProvider.GetGlobalFromFile<CodeModel.Definitions.FunctionDefinition>()
+									  where f.Extern == false
+									  select f).ToArray();
+
+					// Insert/update the functions that exist in the model.
+					foreach (var modelFunc in modelFuncs)
+					{
+						var func = _functions.FirstOrDefault(f => f.Name == modelFunc.Name);
+						if (func != null)
+						{
+							func.UpdateFromDefinition(modelFunc);
+						}
+						else
+						{
+							func = new FFFunction(_app, this, _class, modelFunc);
+							_functions.Add(func);
+						}
+
+						func.InsertOrUpdate(db);
+					}
+
+					// Purge functions that no longer exist in the model.
+					var removeFuncs = (from f in _functions where !modelFuncs.Any(m => m.Name == f.Name) select f).ToArray();
+					foreach (var removeFunc in removeFuncs)
+					{
+						removeFunc.Remove(db);
+						_functions.Remove(removeFunc);
+					}
+
+					break;
 			}
 
-			// Purge functions that no longer exist in the model.
-			var removeFuncs = (from f in _functions where !modelFuncs.Any(m => m.Name == f.Name) select f).ToArray();
-			foreach (var removeFunc in removeFuncs)
-			{
-				removeFunc.Remove(db);
-				_functions.Remove(removeFunc);
-			}
+			// Get all permanent extracts in the file
+			UpdatePermExList(db, model.File.FindDownward<CodeModel.Tokens.Statements.ExtractStatement>().Where(x => x.IsPermanent).ToArray());
 
 			if (scanMode == FFScanMode.Deep)
 			{
@@ -447,6 +479,59 @@ namespace DkTools.FunctionFileScanning
 			}
 		}
 
+		private void UpdatePermExList(FFDatabase db, IEnumerable<CodeModel.Tokens.Statements.ExtractStatement> exList)
+		{
+			var keptPermExs = new List<FFPermEx>();
+
+			foreach (var extract in exList)
+			{
+				FFPermEx permEx = _permExs.FirstOrDefault(p => p.Name == extract.Name);
+				if (permEx != null)
+				{
+					permEx.UpdateFromToken(extract);
+				}
+				else
+				{
+					if (extract.SourceDefinition == null ||
+						!(extract.SourceDefinition is ExtractTableDefinition))
+					{
+						continue;
+					}
+
+					permEx = new FFPermEx(this, extract);
+					_permExs.Add(permEx);
+				}
+
+				permEx.SyncToDatabase(db);
+				keptPermExs.Add(permEx);
+			}
+
+			// Remove deleted extracts
+			var exsToDelete = _permExs.Where(p => !keptPermExs.Any(k => k.Name == p.Name)).ToArray();
+			if (exsToDelete.Length > 0)
+			{
+				using (var cmd = db.CreateCommand("delete from permex_col where permex_id = @permex_id"))
+				{
+					foreach (var permex in exsToDelete)
+					{
+						cmd.Parameters.Clear();
+						cmd.Parameters.AddWithValue("@permex_id", permex.Id);
+						cmd.ExecuteNonQuery();
+					}
+				}
+
+				using (var cmd = db.CreateCommand("delete from permex where id = @id"))
+				{
+					foreach (var permex in exsToDelete)
+					{
+						cmd.Parameters.Clear();
+						cmd.Parameters.AddWithValue("@id", permex.Id);
+						cmd.ExecuteNonQuery();
+					}
+				}
+			}
+		}
+
 		private class Reference
 		{
 			public string ExternalRefId { get; set; }
@@ -477,19 +562,29 @@ namespace DkTools.FunctionFileScanning
 
 		private void UpdateVisibility()
 		{
-			if (_context == CodeModel.FileContext.Function || _context.IsClass())
+			switch (_context)
 			{
-				_visible = true;
-			}
-			else
-			{
-				_visible = false;
+				case CodeModel.FileContext.Function:
+				case CodeModel.FileContext.ClientClass:
+				case CodeModel.FileContext.NeutralClass:
+				case CodeModel.FileContext.ServerClass:
+				case CodeModel.FileContext.ServerProgram:
+					_visible = true;
+					break;
+				default:
+					_visible = false;
+					break;
 			}
 		}
 
 		public bool Visible
 		{
 			get { return _visible; }
+		}
+
+		public IEnumerable<FFPermEx> PermExs
+		{
+			get { return _permExs; }
 		}
 	}
 }

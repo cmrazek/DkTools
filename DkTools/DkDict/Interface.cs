@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using DkTools.CodeModel;
 using DkTools.CodeModel.Definitions;
 
 namespace DkTools.DkDict
@@ -23,10 +24,12 @@ namespace DkTools.DkDict
 		private string _name;
 		private List<Tag> _tags;
 		private InterfaceTypeDefinition _def;
+		private FilePosition _filePos;
 
-		public Interface(string name)
+		public Interface(string name, FilePosition filePos)
 		{
 			_name = name;
+			_filePos = filePos;
 		}
 
 		public void AddTag(Tag tag)
@@ -41,7 +44,7 @@ namespace DkTools.DkDict
 			{
 				if (_def == null)
 				{
-					_def = new InterfaceTypeDefinition(_name);
+					_def = new InterfaceTypeDefinition(_name, _filePos);
 				}
 				return _def;
 			}

@@ -31,9 +31,9 @@ namespace DkTools.CodeModel.Definitions
 		/// <param name="signature">Signature text</param>
 		/// <param name="argsEndPos">Ending position of the argument brackets</param>
 		/// <param name="bodyStartPos">Position of the function's body braces (if does not match, then will be ignored)</param>
-		public FunctionDefinition(string className, string funcName, string fileName, int nameStartPos, DataType dataType, string signature,
+		public FunctionDefinition(string className, string funcName, FilePosition filePos, DataType dataType, string signature,
 			int argsStartPos, int argsEndPos, int bodyStartPos, Span entireSpan, FunctionPrivacy privacy, bool isExtern, string devDesc, IEnumerable<DataType> argDataTypes)
-			: base(funcName, fileName, nameStartPos, !string.IsNullOrEmpty(className) ? string.Concat("class:", className, ".func:", funcName) : string.Concat("func:", funcName))
+			: base(funcName, filePos, !string.IsNullOrEmpty(className) ? string.Concat("class:", className, ".func:", funcName) : string.Concat("func:", funcName))
 		{
 #if DEBUG
 			if (string.IsNullOrWhiteSpace(signature)) throw new ArgumentNullException("signature");
@@ -59,7 +59,7 @@ namespace DkTools.CodeModel.Definitions
 		/// <param name="signature">Signature</param>
 		/// <param name="devDesc">Developer description</param>
 		public FunctionDefinition(string funcName, DataType dataType, string signature, string devDesc, IEnumerable<DataType> argDataTypes)
-			: base(funcName, null, 0, string.Concat("func:", funcName))
+			: base(funcName, FilePosition.Empty, string.Concat("func:", funcName))
 		{
 #if DEBUG
 			if (string.IsNullOrWhiteSpace(signature)) throw new ArgumentNullException("signature");
@@ -77,7 +77,7 @@ namespace DkTools.CodeModel.Definitions
 
 		public FunctionDefinition CloneAsExtern()
 		{
-			return new FunctionDefinition(_className, Name, SourceFileName, SourceStartPos, _dataType, _signature, _argsStartPos, _argsEndPos, _bodyStartPos, _entireSpan, _privacy, true, _devDesc, _argDataTypes);
+			return new FunctionDefinition(_className, Name, FilePosition, _dataType, _signature, _argsStartPos, _argsEndPos, _bodyStartPos, _entireSpan, _privacy, true, _devDesc, _argDataTypes);
 		}
 
 		public override DataType DataType

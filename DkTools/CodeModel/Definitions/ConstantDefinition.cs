@@ -11,8 +11,8 @@ namespace DkTools.CodeModel.Definitions
 	{
 		private string _text;
 
-		public ConstantDefinition(string name, string fileName, int startPos, string text)
-			: base(name, fileName, startPos, CreateExternalRefId(name, fileName))
+		public ConstantDefinition(string name, FilePosition filePos, string text)
+			: base(name, filePos, CreateExternalRefId(name, filePos.FileName))
 		{
 			_text = text;
 		}

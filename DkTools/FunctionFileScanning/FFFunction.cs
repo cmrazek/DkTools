@@ -87,7 +87,7 @@ namespace DkTools.FunctionFileScanning
 			var str = rdr.GetString(rdr.GetOrdinal("privacy"));
 			if (!Enum.TryParse<CodeModel.FunctionPrivacy>(str, out _privacy)) _privacy = CodeModel.FunctionPrivacy.Public;
 
-			_def = new CodeModel.Definitions.FunctionDefinition(_class != null ? _class.Name : null, _name, _file.FileName, _span.Start, _dataType, _sig,
+			_def = new CodeModel.Definitions.FunctionDefinition(_class != null ? _class.Name : null, _name, new FilePosition(_file.FileName, _span.Start, true), _dataType, _sig,
 					0, 0, 0, CodeModel.Span.Empty, _privacy, true, _devDesc, argDataTypes);
 
 			UpdateVisibility();
@@ -123,7 +123,9 @@ namespace DkTools.FunctionFileScanning
 			var devDescValue = rdr["description"];
 			if (!Convert.IsDBNull(devDescValue)) devDesc = Convert.ToString(devDescValue);
 
-			return new CodeModel.Definitions.FunctionDefinition(className, funcName, fileName, nameSpan.Start, dataType, sig, 0, 0, 0, Span.Empty,
+			var filePos = new FilePosition(fileName, nameSpan.Start, true);
+
+			return new CodeModel.Definitions.FunctionDefinition(className, funcName, filePos, dataType, sig, 0, 0, 0, Span.Empty,
 				privacy, true, devDesc, argDataTypes);
 		}
 

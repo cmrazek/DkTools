@@ -14,8 +14,8 @@ namespace DkTools.CodeModel.Definitions
 		private int[] _arrayLengths;
 		private string _declText;
 
-		public VariableDefinition(string name, string fileName, int startPos, DataType dataType, bool arg, int[] arrayLengths)
-			: base(name, fileName, startPos, null)
+		public VariableDefinition(string name, FilePosition filePos, DataType dataType, bool arg, int[] arrayLengths)
+			: base(name, filePos, null)
 		{
 #if DEBUG
 			if (dataType == null) throw new ArgumentNullException("dataType");

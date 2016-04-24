@@ -13,8 +13,7 @@ namespace DkTools.CodeModel.Definitions
 	internal abstract class Definition
 	{
 		private string _name;
-		private string _sourceFileName;
-		private int _sourceStartPos;
+		private FilePosition _filePos;
 		private string _externalRefId;
 
 		public abstract bool CompletionVisible { get; }
@@ -29,14 +28,13 @@ namespace DkTools.CodeModel.Definitions
 
 		private const int k_maxWpfWidth = 600;
 
-		public Definition(string name, string sourceFileName, int sourceStartPos, string externalRefId)
+		public Definition(string name, FilePosition filePos, string externalRefId)
 		{
 #if DEBUG
 			if (string.IsNullOrWhiteSpace(name)) throw new ArgumentNullException("name");
 #endif
 			_name = name;
-			_sourceFileName = sourceFileName;
-			_sourceStartPos = sourceStartPos;
+			_filePos = filePos;
 			_externalRefId = externalRefId;
 		}
 
@@ -53,7 +51,7 @@ namespace DkTools.CodeModel.Definitions
 		/// </summary>
 		public string SourceFileName
 		{
-			get { return _sourceFileName; }
+			get { return _filePos.FileName; }
 		}
 
 		/// <summary>
@@ -61,19 +59,12 @@ namespace DkTools.CodeModel.Definitions
 		/// </summary>
 		public int SourceStartPos
 		{
-			get { return _sourceStartPos; }
+			get { return _filePos.Position; }
 		}
 
-		public string LocationText
+		public FilePosition FilePosition
 		{
-			get
-			{
-				if (!string.IsNullOrEmpty(_sourceFileName))
-				{
-					return _sourceFileName;
-				}
-				return "(unknown)";
-			}
+			get { return _filePos; }
 		}
 
 		public void DumpTree(System.Xml.XmlWriter xml)
@@ -87,8 +78,8 @@ namespace DkTools.CodeModel.Definitions
 		public virtual void DumpTreeAttribs(System.Xml.XmlWriter xml)
 		{
 			xml.WriteAttributeString("name", _name);
-			xml.WriteAttributeString("sourceFileName", _sourceFileName);
-			xml.WriteAttributeString("sourceStartPos", _sourceStartPos.ToString());
+			xml.WriteAttributeString("sourceFileName", _filePos.FileName);
+			xml.WriteAttributeString("sourceStartPos", _filePos.Position.ToString());
 		}
 
 		public virtual void DumpTreeInner(System.Xml.XmlWriter xml)
@@ -101,8 +92,8 @@ namespace DkTools.CodeModel.Definitions
 			var sb = new StringBuilder();
 			sb.AppendFormat("Type [{0}]", GetType());
 			sb.AppendFormat(" Name [{0}]", Name);
-			sb.AppendFormat(" File [{0}]", _sourceFileName != null ? _sourceFileName : "(null)");
-			sb.AppendFormat(" Offset [{0}]", _sourceStartPos.ToString());
+			sb.AppendFormat(" File [{0}]", _filePos.IsEmpty ? "(null)" : _filePos.FileName);
+			sb.AppendFormat(" Offset [{0}]", _filePos.Position);
 			sb.AppendFormat(" CompletionType [{0}]", CompletionType);
 			sb.AppendFormat(" QuickInfoText [{0}]", QuickInfoTextStr.ToSingleLine());
 			return sb.ToString();
@@ -224,12 +215,12 @@ namespace DkTools.CodeModel.Definitions
 			var def = obj as Definition;
 			if (def == null) return false;
 
-			return _name == def._name && _sourceFileName == def._sourceFileName && _sourceStartPos == def._sourceStartPos;
+			return _name == def._name && _filePos == def._filePos;
 		}
 
 		public override int GetHashCode()
 		{
-			return _name.GetHashCode() ^ _sourceFileName.GetHashCode() ^ _sourceStartPos.GetHashCode();
+			return _name.GetHashCode() ^ _filePos.GetHashCode();
 		}
 
 		public virtual bool AllowsFunctionBody

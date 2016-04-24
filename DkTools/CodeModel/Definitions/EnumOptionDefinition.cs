@@ -11,7 +11,7 @@ namespace DkTools.CodeModel.Definitions
 		private DataType _dataType;
 
 		public EnumOptionDefinition(string text, DataType dataType)
-			: base(text, null, -1, null)
+			: base(text, FilePosition.Empty, null)
 		{
 			_dataType = dataType;
 		}

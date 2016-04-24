@@ -11,8 +11,8 @@ namespace DkTools.CodeModel.Definitions
 		private bool _permanent;
 		private List<ExtractFieldDefinition> _fields = new List<ExtractFieldDefinition>();
 
-		public ExtractTableDefinition(string name, string sourceFileName, int sourceStartPos, bool permanent)
-			: base(name, sourceFileName, sourceStartPos, permanent ? string.Concat("permx:", name) : null)
+		public ExtractTableDefinition(string name, FilePosition filePos, bool permanent)
+			: base(name, filePos, permanent ? string.Concat("permx:", name) : null)
 		{
 			_permanent = permanent;
 		}

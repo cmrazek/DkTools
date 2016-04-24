@@ -19,6 +19,7 @@ namespace DkTools.FunctionFileScanning
 
 		private GroupedList<string, FFFunction> _consolidatedFunctions;
 		private GroupedList<string, FFClass> _consolidatedClasses;
+		private GroupedList<string, FFPermEx> _consolidatedPermExs;
 
 		public FFApp(FFScanner scanner, FFDatabase db, string name)
 		{
@@ -105,6 +106,7 @@ namespace DkTools.FunctionFileScanning
 		{
 			_consolidatedFunctions = null;
 			_consolidatedClasses = null;
+			_consolidatedPermExs = null;
 
 			var fileNameLower = file.FileName.ToLower();
 			if (!_files.ContainsKey(fileNameLower))
@@ -125,6 +127,8 @@ namespace DkTools.FunctionFileScanning
 			{
 				_consolidatedFunctions = new GroupedList<string, FFFunction>();
 				_consolidatedClasses = new GroupedList<string, FFClass>();
+				_consolidatedPermExs = new GroupedList<string, FFPermEx>();
+
 				foreach (var file in _files.Values)
 				{
 					foreach (var func in file.Functions)
@@ -135,6 +139,11 @@ namespace DkTools.FunctionFileScanning
 
 					var cls = file.Class;
 					if (cls != null) _consolidatedClasses.Add(cls.Name, cls);
+
+					foreach (var permex in file.PermExs)
+					{
+						_consolidatedPermExs.Add(permex.Name, permex);
+					}
 				}
 			}
 		}
@@ -164,6 +173,13 @@ namespace DkTools.FunctionFileScanning
 			return _consolidatedClasses[name];
 		}
 
+		public IEnumerable<FFPermEx> GetPermExs(string name)
+		{
+			CheckConsolidatedLists();
+
+			return _consolidatedPermExs[name];
+		}
+
 		/// <summary>
 		/// Gets a list of definitions that are available at the global scope.
 		/// Only public definitions are returned.
@@ -181,6 +197,11 @@ namespace DkTools.FunctionFileScanning
 				foreach (var cls in _consolidatedClasses.Values)
 				{
 					yield return cls.ClassDefinition;
+				}
+
+				foreach (var permex in _consolidatedPermExs.Values)
+				{
+					yield return permex.Definition;
 				}
 			}
 		}
@@ -339,6 +360,51 @@ namespace DkTools.FunctionFileScanning
 						cmd.Parameters.AddWithValue("@id", id);
 						cmd.ExecuteNonQuery();
 					}
+
+					using (var cmd = db.CreateCommand("delete from permex_col where file_id = @id"))
+					{
+						cmd.Parameters.AddWithValue("@id", id);
+						cmd.ExecuteNonQuery();
+					}
+
+					using (var cmd = db.CreateCommand("delete from permex where file_id = @id"))
+					{
+						cmd.Parameters.AddWithValue("@id", id);
+						cmd.ExecuteNonQuery();
+					}
+				}
+			}
+
+			// Purge alt_file records that are no longer used
+
+			List<int> altFilesToRemove = null;
+
+			using (var cmd = db.CreateCommand("select id from alt_file" +
+				" where not exists (select * from ref where alt_file_id = alt_file.id)" +
+				" and not exists (select * from permex where alt_file_id = alt_file.id)" +
+				" and not exists (select * from permex_col where alt_file_id = alt_file.id)"))
+			{
+				using (var rdr = cmd.ExecuteReader())
+				{
+					var ordId = rdr.GetOrdinal("id");
+					while (rdr.Read())
+					{
+						if (altFilesToRemove == null) altFilesToRemove = new List<int>();
+						altFilesToRemove.Add(rdr.GetInt32(ordId));
+					}
+				}
+			}
+
+			if (altFilesToRemove != null)
+			{
+				using (var cmd = db.CreateCommand("delete from alt_file where id = @id"))
+				{
+					foreach (var id in altFilesToRemove)
+					{
+						cmd.Parameters.Clear();
+						cmd.Parameters.AddWithValue("@id", id);
+						cmd.ExecuteNonQuery();
+					}
 				}
 			}
 
@@ -415,6 +481,45 @@ namespace DkTools.FunctionFileScanning
 				Log.WriteEx(ex);
 				return null;
 			}
+		}
+
+		public int GetOrCreateAltFileId(FFDatabase db, string fileName)
+		{
+			using (var cmd = db.CreateCommand("select top 1 id from alt_file where file_name = @file_name"))
+			{
+				cmd.Parameters.AddWithValue("@file_name", fileName);
+				using (var rdr = cmd.ExecuteReader(CommandBehavior.SingleRow))
+				{
+					if (rdr.Read())
+					{
+						return rdr.GetInt32(rdr.GetOrdinal("id"));
+					}
+				}
+			}
+
+			using (var cmd = db.CreateCommand("insert into alt_file (file_name) values (@file_name)"))
+			{
+				cmd.Parameters.AddWithValue("@file_name", fileName);
+				cmd.ExecuteNonQuery();
+				return db.QueryIdentityInt();
+			}
+		}
+
+		public int GetAltFileId(FFDatabase db, string fileName)
+		{
+			using (var cmd = db.CreateCommand("select top 1 id from alt_file where file_name = @file_name"))
+			{
+				cmd.Parameters.AddWithValue("@file_name", fileName);
+				using (var rdr = cmd.ExecuteReader(CommandBehavior.SingleRow))
+				{
+					if (rdr.Read())
+					{
+						return rdr.GetInt32(rdr.GetOrdinal("id"));
+					}
+				}
+			}
+
+			return 0;
 		}
 	}
 }

@@ -21,6 +21,13 @@ namespace DkTools.CodeModel
 			_primaryFile = primaryFile;
 		}
 
+		public FilePosition(string fileName, int pos)
+		{
+			_fileName = fileName;
+			_pos = pos;
+			_primaryFile = false;
+		}
+
 		public string FileName
 		{
 			get { return _fileName; }
@@ -41,7 +48,19 @@ namespace DkTools.CodeModel
 			if (obj == null || obj.GetType() != typeof(FilePosition)) return false;
 
 			var right = (FilePosition)obj;
-			return _fileName == right._fileName && _pos == right._pos;
+			return string.Equals(_fileName, right._fileName, StringComparison.OrdinalIgnoreCase) && _pos == right._pos;
+		}
+
+		public static bool operator == (FilePosition left, FilePosition right)
+		{
+			if (left == null) return right == null;
+			return left.Equals(right);
+		}
+
+		public static bool operator != (FilePosition left, FilePosition right)
+		{
+			if (left == null) return right != null;
+			return !left.Equals(right);
 		}
 
 		public override int GetHashCode()
@@ -52,6 +71,11 @@ namespace DkTools.CodeModel
 		public bool IsInFile
 		{
 			get { return !string.IsNullOrEmpty(_fileName); }
+		}
+
+		public bool IsEmpty
+		{
+			get { return string.IsNullOrEmpty(_fileName); }
 		}
 	}
 }

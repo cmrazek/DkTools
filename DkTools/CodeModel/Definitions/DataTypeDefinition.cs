@@ -11,8 +11,8 @@ namespace DkTools.CodeModel.Definitions
 	{
 		private DataType _dataType;
 
-		public DataTypeDefinition(string name, string fileName, int startPos, DataType dataType)
-			: base(name, fileName, startPos, CreateExternalRefId(name, fileName))
+		public DataTypeDefinition(string name, FilePosition filePos, DataType dataType)
+			: base(name, filePos, CreateExternalRefId(name, filePos.FileName))
 		{
 #if DEBUG
 			if (dataType == null) throw new ArgumentNullException("dataType");
@@ -21,7 +21,7 @@ namespace DkTools.CodeModel.Definitions
 		}
 
 		public DataTypeDefinition(string name, DataType dataType)
-			: base(name, null, -1, CreateExternalRefId(name, null))
+			: base(name, FilePosition.Empty, CreateExternalRefId(name, null))
 		{
 			_dataType = dataType;
 		}

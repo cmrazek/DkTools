@@ -11,8 +11,8 @@ namespace DkTools.CodeModel.Definitions
 		private DkDict.Interface _intType;
 		private string _devDesc;
 
-		public InterfaceTypeDefinition(DkDict.Interface intType)
-			: base(intType.Name, null, -1, GetExternalRefId(intType.Name))
+		public InterfaceTypeDefinition(DkDict.Interface intType, FilePosition filePos)
+			: base(intType.Name, filePos, GetExternalRefId(intType.Name))
 		{
 #if DEBUG
 			if (intType == null) throw new ArgumentNullException("intType");
@@ -21,8 +21,8 @@ namespace DkTools.CodeModel.Definitions
 			_devDesc = _intType.Description;
 		}
 
-		public InterfaceTypeDefinition(string name)
-			: base(name, null, -1, GetExternalRefId(name))
+		public InterfaceTypeDefinition(string name, FilePosition filePos)
+			: base(name, filePos, GetExternalRefId(name))
 		{
 		}
 

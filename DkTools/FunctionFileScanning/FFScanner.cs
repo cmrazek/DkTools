@@ -157,10 +157,11 @@ namespace DkTools.FunctionFileScanning
 								// Ignore dictionary and include files
 								break;
 
-							case FileContext.ClientClass:
 							case FileContext.Function:
+							case FileContext.ClientClass:
 							case FileContext.NeutralClass:
 							case FileContext.ServerClass:
+							case FileContext.ServerProgram:
 								// Files that export global functions must be scanned twice:
 								// First for the exports before everything else, then again for the deep info.
 								scanList.Add(new ScanInfo { fileName = fileName, mode = FFScanMode.Exports });

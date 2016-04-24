@@ -12,7 +12,7 @@ namespace DkTools.CodeModel.Definitions
 		private DataType _dataType;
 
 		public InterfacePropertyDefinition(InterfaceTypeDefinition intTypeDef, string name, DataType dataType)
-			: base(name, null, -1, GetExternalRefId(intTypeDef.Name, name))
+			: base(name, FilePosition.Empty, GetExternalRefId(intTypeDef.Name, name))
 		{
 #if DEBUG
 			if (intTypeDef == null) throw new ArgumentNullException("intTypeDef");

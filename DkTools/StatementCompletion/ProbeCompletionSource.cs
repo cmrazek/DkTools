@@ -322,6 +322,14 @@ namespace DkTools.StatementCompletion
 				}
 			}
 
+			foreach (var permex in ffScanner.CurrentApp.GetPermExs(word1))
+			{
+				foreach (var field in permex.Fields)
+				{
+					yield return CreateCompletion(field);
+				}
+			}
+
 			// Interface and method/property
 			var fileStore = CodeModel.FileStore.GetOrCreateForTextBuffer(_textBuffer);
 			if (fileStore != null)

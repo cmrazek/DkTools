@@ -146,14 +146,14 @@ namespace DkTools.CodeModel
 				else if (_code.ReadExact(';'))
 				{
 					var localPos = _source.GetFilePosition(nameSpan.Start);
-					var def = new VariableDefinition(name, localPos.FileName, localPos.Position, dataType, false, arrayLength);
+					var def = new VariableDefinition(name, localPos, dataType, false, arrayLength);
 					_globalVars[name] = def;
 					AddGlobalDefinition(def);
 				}
 				else if (_code.ReadExact(','))
 				{
 					var localPos = _source.GetFilePosition(nameSpan.Start);
-					var def = new VariableDefinition(name, localPos.FileName, localPos.Position, dataType, false, arrayLength);
+					var def = new VariableDefinition(name, localPos, dataType, false, arrayLength);
 					_globalVars[name] = def;
 					AddGlobalDefinition(def);
 					AfterRootDataType(dataType, dataTypeStartPos, privacy, isExtern);
@@ -330,7 +330,7 @@ namespace DkTools.CodeModel
 				var localPos = _source.GetFilePosition(nameSpan.Start);
 				var sig = CodeParser.NormalizeText(_code.GetText(allStartPos, argEndPos - allStartPos));
 
-				var def = new FunctionDefinition(_className, funcName, localPos.FileName, localPos.Position,
+				var def = new FunctionDefinition(_className, funcName, localPos,
 					returnDataType, sig, 0, 0, 0, Span.Empty, privacy, true, description, argDataTypeList);
 				_externFuncs[funcName] = def;
 				AddGlobalDefinition(def);
@@ -368,7 +368,7 @@ namespace DkTools.CodeModel
 			var entireSpan = _source.GetPrimaryFileSpan(new Span(allStartPos, bodyEndPos));
 
 			var funcSig = CodeParser.NormalizeText(_code.GetText(allStartPos, argEndPos - allStartPos));
-			var funcDef = new FunctionDefinition(_className, funcName, nameActualPos.FileName, nameActualPos.Position, returnDataType, funcSig,
+			var funcDef = new FunctionDefinition(_className, funcName, nameActualPos, returnDataType, funcSig,
 				argStartPrimaryPos, argEndPrimaryPos, bodyStartLocalPos, entireSpan, privacy, isExtern, description, argDataTypeList);
 			_localFuncs.Add(new LocalFunction(funcDef, nameSpan, statementsStartPos, bodyEndPos, argDefList, varList));
 			AddGlobalDefinition(funcDef);
@@ -574,7 +574,7 @@ namespace DkTools.CodeModel
 				var arrayLength = TryReadArrayDecl();
 
 				var localPos = _source.GetFilePosition(_code.TokenStartPostion);
-				var def = new VariableDefinition(_code.Text, localPos.FileName, localPos.Position, dataType, true, arrayLength);
+				var def = new VariableDefinition(_code.Text, localPos, dataType, true, arrayLength);
 				scope.AddDefinition(def);
 				if (localPos.PrimaryFile)
 				{
@@ -609,7 +609,7 @@ namespace DkTools.CodeModel
 
 				var arrayLength = TryReadArrayDecl();
 
-				var def = new VariableDefinition(varName, localPos.FileName, localPos.Position, dataType, false, arrayLength);
+				var def = new VariableDefinition(varName, localPos, dataType, false, arrayLength);
 				scope.AddDefinition(def);
 				if (localPos.PrimaryFile)
 				{
@@ -714,21 +714,22 @@ namespace DkTools.CodeModel
 			if (!_defProv.GetGlobalFromFile<ExtractTableDefinition>(name).Any())	// Don't add a definition if it's already there (extracts can be called multiple times)
 			{
 				var localPos = _source.GetFilePosition(_code.TokenStartPostion);
-				exDef = new ExtractTableDefinition(name, localPos.FileName, localPos.Position, permanent);
+				exDef = new ExtractTableDefinition(name, localPos, permanent);
 			}
 
 			string lastToken = null;
+			var lastTokenPos = 0;
 			var fields = new List<string>();
 
 			var done = false;
 			while (!_code.EndOfFile && !done)
 			{
-				if (_code.ReadExact('=') && lastToken != null)
+				if (!_code.PeekExact("==") && _code.ReadExact('=') && lastToken != null)
 				{
 					if (exDef != null)
 					{
-						var localPos = _source.GetFilePosition(_code.TokenStartPostion);
-						var fieldDef = new ExtractFieldDefinition(lastToken, localPos.FileName, localPos.Position, exDef);
+						var localPos = _source.GetFilePosition(lastTokenPos);
+						var fieldDef = new ExtractFieldDefinition(lastToken, localPos, exDef);
 						exDef.AddField(fieldDef);
 					}
 					if (fields == null) fields = new List<string>();
@@ -738,6 +739,7 @@ namespace DkTools.CodeModel
 				else if (_code.ReadWord())
 				{
 					lastToken = _code.Text;
+					lastTokenPos = _code.TokenStartPostion;
 				}
 				else
 				{

@@ -274,7 +274,7 @@
     <Compile Include="CodeModel\Tokens\Statements\ContinueStatement.cs" />
     <Compile Include="CodeModel\Tokens\EnumOptionToken.cs" />
     <Compile Include="CodeModel\Tokens\ExpressionToken.cs" />
-    <Compile Include="CodeModel\Tokens\ExternStatement.cs" />
+    <Compile Include="CodeModel\Tokens\Statements\ExternStatement.cs" />
     <Compile Include="CodeModel\Tokens\IBreakOwner.cs" />
     <Compile Include="CodeModel\Tokens\IContinueOwner.cs" />
     <Compile Include="CodeModel\Tokens\Statements\CreateStatement.cs" />
@@ -430,6 +430,7 @@
     <Compile Include="FunctionFileScanning\FFFunction.cs" />
     <Compile Include="FunctionFileScanning\FFApp.cs" />
     <Compile Include="FunctionFileScanning\FFClass.cs" />
+    <Compile Include="FunctionFileScanning\FFPermEx.cs" />
     <Compile Include="FunctionFileScanning\FFSearcher.cs" />
     <Compile Include="FunctionFileScanning\FunctionFileDatabase.cs">
       <DependentUpon>FunctionFileDatabase.xsd</DependentUpon>

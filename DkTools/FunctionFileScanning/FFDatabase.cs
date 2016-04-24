@@ -69,21 +69,48 @@ namespace DkTools.FunctionFileScanning
 	app_id				int				not null,
 	file_id				int				not null,
 	ext_ref_id			nvarchar(100)	not null,
-	true_file_id		int				not null,
+	alt_file_id			int				not null,
 	pos					int				not null
 )",
 @"create index ref_ix_extrefid on ref (ext_ref_id, app_id)",
 @"create index ref_ix_fileid on ref (file_id)",
+@"create index ref_ix_altfileid on ref (alt_file_id)",
 
 @"create table alt_file
 (
 	id					int				identity not null primary key,
 	file_name			nvarchar(260)	not null
 )",
-@"create index alt_file_ix_filename on alt_file (file_name)"
+@"create index alt_file_ix_filename on alt_file (file_name)",
+
+@"create table permex
+(
+	id					int				identity not null primary key,
+	app_id				int				not null,
+	file_id				int				not null,
+	name				nvarchar(8)		not null,
+	alt_file_id			int				not null,
+	pos					int				not null
+)",
+@"create index permex_ix_file on permex (file_id)",
+@"create index permex_ix_altfile on permex (alt_file_id)",
+
+@"create table permex_col
+(
+	id					int				identity not null primary key,
+	permex_id			int				not null,
+	file_id				int				not null,
+	name				nvarchar(255)	not null,
+	data_type			ntext			not null,
+	alt_file_id			int				not null,
+	pos					int				not null
+)",
+@"create index permexcol_ix_permexid on permex_col (permex_id, name)",
+@"create index permexcol_ix_fileid on permex_col (file_id)",
+@"create index permexcol_ix_altfileid on permex_col (alt_file_id)"
 };
 
-		public const string DatabaseFileName = "DkScan_v6.sdf";
+		public const string DatabaseFileName = "DkScan_v7.sdf";	// New for 1.3.1
 		public static readonly string[] OldDatabaseFileNames = new string[]
 		{
 			"DkScan.sdf",
@@ -91,6 +118,7 @@ namespace DkTools.FunctionFileScanning
 			"DkScan_v3.sdf",		// last used 1.2.10
 			"DkScan_v4.sdf",		// last used 1.2.11
 			"DkScan_v5.sdf",		// last used 1.2.23
+			"DkScan_v6.sdf",		// last used 1.3
 		};
 
 		private SqlCeConnection _conn;

@@ -841,6 +841,7 @@ namespace DkTools.DkDict
 				return;
 			}
 			var name = _code.Text;
+			var namePos = _code.Position;
 
 			string value = null;
 			string desc = null;
@@ -890,7 +891,9 @@ namespace DkTools.DkDict
 			if (value == null) value = string.Empty;
 			if (desc == null) desc = string.Empty;
 
-			var sd = new Stringdef(name, value, desc);
+			var nameFilePos = _source.GetFilePosition(namePos);
+
+			var sd = new Stringdef(name, value, desc, nameFilePos);
 			_stringdefs[name] = sd;
 			if (tags != null)
 			{
@@ -1654,7 +1657,9 @@ namespace DkTools.DkDict
 				return;
 			}
 
-			var intf = new Interface(name);
+			var nameFilePos = _source.GetFilePosition(_code.Position);
+
+			var intf = new Interface(name, nameFilePos);
 			_interfaces[name] = intf;
 
 			while (!_code.EndOfFile)

@@ -234,7 +234,7 @@ namespace DkTools.Navigation
 			using (var cmd = db.CreateCommand(
 				"select file_.file_name, ref.pos, alt_file.file_name as true_file_name from ref"
 				+ " inner join file_ on file_.id = ref.file_id"
-				+ " left outer join alt_file on alt_file.id = ref.true_file_id"
+				+ " left outer join alt_file on alt_file.id = ref.alt_file_id"
 				+ " where ref.ext_ref_id = @ext_ref_id"
 				+ " and ref.app_id = @app_id"
 			)) {

@@ -12,8 +12,8 @@ namespace DkTools.CodeModel.Definitions
 		private string _signature;
 		private string _body;
 
-		public MacroDefinition(string name, string fileName, int startPos, string signature, string body)
-			: base(name, fileName, startPos, null)
+		public MacroDefinition(string name, FilePosition filePos, string signature, string body)
+			: base(name, filePos, null)
 		{
 #if DEBUG
 			if (string.IsNullOrWhiteSpace(signature)) throw new ArgumentNullException("signature");

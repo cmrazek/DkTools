@@ -17,7 +17,7 @@ namespace DkTools.CodeModel.Definitions
 		private string _repoDesc;
 
 		public ColumnDefinition(string tableName, string fieldName, string prompt, string comment, DataType dataType, string description, FilePosition filePos)
-			: base(fieldName, filePos.FileName, filePos.Position, DkDict.Column.GetTableFieldExternalRefId(tableName, fieldName))
+			: base(fieldName, filePos, DkDict.Column.GetTableFieldExternalRefId(tableName, fieldName))
 		{
 			_tableName = tableName;
 			_fieldName = fieldName;

@@ -19,7 +19,7 @@ namespace DkTools.CodeModel.Definitions
 			"Index on rowno", FilePosition.Empty);
 
 		public RelIndDefinition(RelInd relind, string baseTableName, string relText, string devDesc, FilePosition filePos)
-			: base(relind.Name, filePos.FileName, filePos.Position, GetExternalRefId(baseTableName, relind.Name))
+			: base(relind.Name, filePos, GetExternalRefId(baseTableName, relind.Name))
 		{
 			_relind = relind;
 			_relText = relText;

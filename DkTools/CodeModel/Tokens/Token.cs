@@ -17,6 +17,7 @@ namespace DkTools.CodeModel.Tokens
 		private Span _span;
 		private Definition _sourceDefinition;
 		private Classifier.ProbeClassifierType _classifierType;
+		private FilePosition _filePos;
 
 		public void DumpTree(System.Xml.XmlWriter xml)
 		{
@@ -106,6 +107,18 @@ namespace DkTools.CodeModel.Tokens
 					_span = value;
 					OnSpanChanged();
 				}
+			}
+		}
+
+		public FilePosition FilePosition
+		{
+			get
+			{
+				if (_filePos.IsEmpty)
+				{
+					_filePos = _scope.File.CodeSource.GetFilePosition(_span.Start);
+				}
+				return _filePos;
 			}
 		}
 

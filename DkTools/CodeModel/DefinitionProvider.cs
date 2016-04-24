@@ -71,10 +71,10 @@ namespace DkTools.CodeModel
 					new DataTypeDefinition("int", DataType.Int),
 
 					// Interfaces
-					new InterfaceTypeDefinition("oleobject"),
+					new InterfaceTypeDefinition("oleobject", FilePosition.Empty),
 
 					// Constants
-					new ConstantDefinition("_WINDOWS", null, 0, string.Empty),
+					new ConstantDefinition("_WINDOWS", FilePosition.Empty, string.Empty),
 
 					// Indexes / Relationships
 					RelIndDefinition.Physical

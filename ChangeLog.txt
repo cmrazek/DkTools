@@ -2,6 +2,7 @@ DkTools2012 ChangeLog
 ____________________________________________________________________________________________________
 Version 1.4 - (WIP):
 
+- Added support for permanent extracts.
 - Fixed issue with background scanning being disabled by default.
 - Added support for widthof()
 

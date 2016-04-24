@@ -13,7 +13,7 @@ namespace DkTools.CodeModel.Definitions
 		private DataType _returnDataType;
 
 		public InterfaceMethodDefinition(InterfaceTypeDefinition intType, string name, string signature, DataType returnDataType)
-			: base(name, null, -1, string.Concat("interface:", intType.Name, ".method:", name))
+			: base(name, FilePosition.Empty, string.Concat("interface:", intType.Name, ".method:", name))
 		{
 #if DEBUG
 			if (intType == null) throw new ArgumentNullException("intType");

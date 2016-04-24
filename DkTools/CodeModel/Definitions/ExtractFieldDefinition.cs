@@ -9,9 +9,10 @@ namespace DkTools.CodeModel.Definitions
 	internal class ExtractFieldDefinition : Definition
 	{
 		private ExtractTableDefinition _ex;
+		private DataType _dataType;
 
-		public ExtractFieldDefinition(string name, string sourceFileName, int sourceStartPos, ExtractTableDefinition tableDef)
-			: base(name, sourceFileName, sourceStartPos, tableDef.Permanent ? GetExternalRefId(tableDef.Name, name) : null)
+		public ExtractFieldDefinition(string name, FilePosition filePos, ExtractTableDefinition tableDef)
+			: base(name, filePos, tableDef.Permanent ? GetExternalRefId(tableDef.Name, name) : null)
 		{ }
 
 		public override bool CompletionVisible
@@ -42,8 +43,26 @@ namespace DkTools.CodeModel.Definitions
 		{
 			get
 			{
-				return WpfDivs(WpfMainLine(_ex != null ? string.Concat(_ex.Name, ".", Name) : Name),
-					_ex != null ? WpfInfoLine(_ex.Permanent ? "Permanent extract" : "Temporary extract") : null);
+				if (_ex == null)
+				{
+					return WpfDivs(
+						WpfMainLine(Name),
+						WpfInfoLine(_ex.Permanent ? "Permanent extract" : "Temporary extract"));
+				}
+
+				if (_dataType != null)
+				{
+					return WpfDivs(
+						WpfMainLine(string.Concat(_ex.Name, ".", Name)),
+						WpfInfoLine(_ex.Permanent ? "Permanent extract" : "Temporary extract"),
+						WpfInfoLine(_dataType.InfoText));
+				}
+				else
+				{
+					return WpfDivs(
+						WpfMainLine(string.Concat(_ex.Name, ".", Name)),
+						WpfInfoLine(_ex.Permanent ? "Permanent extract" : "Temporary extract"));
+				}
 			}
 		}
 
@@ -81,6 +100,16 @@ namespace DkTools.CodeModel.Definitions
 		public override bool RequiresArguments
 		{
 			get { return false; }
+		}
+
+		public override DataType DataType
+		{
+			get { return _dataType; }
+		}
+
+		public void SetDataType(DataType dataType)
+		{
+			_dataType = dataType;
 		}
 	}
 }
