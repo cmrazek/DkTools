@@ -6,11 +6,13 @@ using System.Threading.Tasks;
 
 namespace DkTools.CodeModel
 {
-	struct ArgumentDescriptor
+	class ArgumentDescriptor
 	{
 		private string _name;
 		private DataType _dataType;
 		private PassByMethod _passByMethod;
+		private string _sigText;
+		private Span _sigSpan;
 
 		public ArgumentDescriptor(string name, DataType dataType, PassByMethod passByMethod)
 		{
@@ -72,7 +74,7 @@ namespace DkTools.CodeModel
 			return sb.ToString();
 		}
 
-		public static ArgumentDescriptor? ParseFromDb(string str)
+		public static ArgumentDescriptor ParseFromDb(string str)
 		{
 			string name = null;
 			PassByMethod passByMethod = PassByMethod.Value;
@@ -108,6 +110,54 @@ namespace DkTools.CodeModel
 			}
 
 			return new ArgumentDescriptor(name, dataType, passByMethod);
+		}
+
+		public string SignatureText
+		{
+			get
+			{
+				if (_sigText == null)
+				{
+					var sb = new StringBuilder();
+					var spaceRequired = false;
+
+					if (_dataType != null)
+					{
+						sb.Append(_dataType.ToPrettyString());
+						spaceRequired = true;
+					}
+
+					switch (_passByMethod)
+					{
+						case PassByMethod.Reference:
+							if (spaceRequired) sb.Append(' ');
+							sb.Append('&');
+							spaceRequired = false;
+							break;
+						case PassByMethod.ReferencePlus:
+							if (spaceRequired) sb.Append(' ');
+							sb.Append("&+");
+							spaceRequired = false;
+							break;
+					}
+
+					if (!string.IsNullOrEmpty(_name))
+					{
+						if (spaceRequired) sb.Append(' ');
+						sb.Append(_name);
+					}
+
+					_sigText = sb.ToString();
+				}
+
+				return _sigText;
+			}
+		}
+
+		public Span SignatureSpan
+		{
+			get { return _sigSpan; }
+			set { _sigSpan = value; }
 		}
 	}
 }

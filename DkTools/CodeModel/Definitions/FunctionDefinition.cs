@@ -14,20 +14,9 @@ namespace DkTools.CodeModel.Definitions
 		private int _argsStartPos;
 		private int _argsEndPos;
 		private Span _entireSpan;
-		private string _devDesc;
 
-		/// <summary>
-		/// Creates a function definition object.
-		/// </summary>
-		/// <param name="scope">Current scope</param>
-		/// <param name="name">Function name</param>
-		/// <param name="sourceToken">Function name token</param>
-		/// <param name="dataType">Function's return type</param>
-		/// <param name="signature">Signature text</param>
-		/// <param name="argsEndPos">Ending position of the argument brackets</param>
-		/// <param name="bodyStartPos">Position of the function's body braces (if does not match, then will be ignored)</param>
 		public FunctionDefinition(FunctionSignature sig, FilePosition filePos,
-			int argsStartPos, int argsEndPos, int bodyStartPos, Span entireSpan, string devDesc)
+			int argsStartPos, int argsEndPos, int bodyStartPos, Span entireSpan)
 			: base(sig.FunctionName, filePos, !string.IsNullOrEmpty(sig.ClassName) ? string.Concat("class:", sig.ClassName, ".func:", sig.FunctionName) : string.Concat("func:", sig.FunctionName))
 		{
 #if DEBUG
@@ -38,17 +27,9 @@ namespace DkTools.CodeModel.Definitions
 			_argsEndPos = argsEndPos;
 			_bodyStartPos = bodyStartPos;
 			_entireSpan = entireSpan;
-			_devDesc = devDesc;
 		}
 
-		/// <summary>
-		/// Creates a built-in function definition.
-		/// </summary>
-		/// <param name="funcName">Function name</param>
-		/// <param name="dataType">Data type</param>
-		/// <param name="signature">Signature</param>
-		/// <param name="devDesc">Developer description</param>
-		public FunctionDefinition(FunctionSignature sig, string devDesc)
+		public FunctionDefinition(FunctionSignature sig)
 			: base(sig.FunctionName, FilePosition.Empty, string.Concat("func:", sig.FunctionName))
 		{
 #if DEBUG
@@ -57,12 +38,11 @@ namespace DkTools.CodeModel.Definitions
 			_sig = sig;
 			_argsStartPos = _argsEndPos = _bodyStartPos = 0;
 			_entireSpan = Span.Empty;
-			_devDesc = devDesc;
 		}
 
 		public FunctionDefinition CloneAsExtern()
 		{
-			return new FunctionDefinition(_sig.Clone(), FilePosition, _argsStartPos, _argsEndPos, _bodyStartPos, _entireSpan, _devDesc);
+			return new FunctionDefinition(_sig.Clone(), FilePosition, _argsStartPos, _argsEndPos, _bodyStartPos, _entireSpan);
 		}
 
 		public override DataType DataType
@@ -99,8 +79,8 @@ namespace DkTools.CodeModel.Definitions
 		{
 			get
 			{
-				if (string.IsNullOrEmpty(_devDesc)) return _sig.PrettySignature;
-				return string.Concat(_sig.PrettySignature, "\r\n\r\n", _devDesc);
+				if (string.IsNullOrEmpty(_sig.Description)) return _sig.PrettySignature;
+				return string.Concat(_sig.PrettySignature, "\r\n\r\n", _sig.Description);
 			}
 		}
 
@@ -110,7 +90,7 @@ namespace DkTools.CodeModel.Definitions
 			{
 				return WpfDivs(
 					WpfMainLine(_sig.PrettySignature),
-					string.IsNullOrEmpty(_devDesc) ? null : WpfInfoLine(_devDesc));
+					string.IsNullOrEmpty(_sig.Description) ? null : WpfInfoLine(_sig.Description));
 			}
 		}
 
@@ -155,11 +135,6 @@ namespace DkTools.CodeModel.Definitions
 		public Span EntireSpan
 		{
 			get { return _entireSpan; }
-		}
-
-		public string DevDescription
-		{
-			get { return _devDesc; }
 		}
 
 		public override string PickText

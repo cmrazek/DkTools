@@ -84,7 +84,7 @@ namespace DkTools.SignatureHelp
 							{
 								foreach (var def in cls.GetFunctionDefinitions(funcName))
 								{
-									yield return CreateSignature(_textBuffer, def.Signature.PrettySignature, def.DevDescription, applicableToSpan);
+									yield return CreateSignature(_textBuffer, def.Signature, applicableToSpan);
 								}
 							}
 						}
@@ -139,20 +139,21 @@ namespace DkTools.SignatureHelp
 						var applicableToSpan = snapshot.CreateTrackingSpan(snapshotSpan.Span, VsText.SpanTrackingMode.EdgeInclusive, 0);
 						
 						var methodDef = methodToken.MethodDefinition;
-						yield return CreateSignature(_textBuffer, methodDef.Signature, methodDef.DevDescription, applicableToSpan);
+						yield return CreateSignature(_textBuffer, methodDef.Signature, applicableToSpan);
 						yield break;
 					}
 				}
 			}
 		}
 
-		private ProbeSignature CreateSignature(VsText.ITextBuffer textBuffer, string methodSig, string devDesc, VsText.ITrackingSpan span)
+		private ProbeSignature CreateSignature(VsText.ITextBuffer textBuffer, FunctionSignature signature, VsText.ITrackingSpan span)
 		{
-			var sig = new ProbeSignature(textBuffer, methodSig, devDesc != null ? devDesc : string.Empty, null);
+			var sig = new ProbeSignature(textBuffer, signature, null);
 			textBuffer.Changed += sig.SubjectBufferChanged;
 
-			sig.Parameters = new ReadOnlyCollection<IParameter>((from a in GetSignatureArguments(methodSig) select new ProbeParameter(string.Empty, a.Span.ToVsTextSpan(), a.Name, sig)).Cast<IParameter>().ToList());
-
+			sig.Parameters = new ReadOnlyCollection<IParameter>((from a in signature.Arguments
+																 select new ProbeParameter(string.Empty, a.SignatureSpan.ToVsTextSpan(),
+																	 string.IsNullOrEmpty(a.Name) ? string.Empty : a.Name, sig)).Cast<IParameter>().ToArray());
 
 			sig.ApplicableToSpan = span;
 			sig.ComputeCurrentParameter();
@@ -184,11 +185,11 @@ namespace DkTools.SignatureHelp
 		{
 			foreach (var sig in GetAllSignaturesForFunction(model, modelPos, className, funcName))
 			{
-				yield return CreateSignature(_textBuffer, sig.Signature, sig.DevDescription, applicableToSpan);
+				yield return CreateSignature(_textBuffer, sig, applicableToSpan);
 			}
 		}
 
-		public static IEnumerable<SignatureInfo> GetAllSignaturesForFunction(CodeModel.CodeModel model, int modelPos, string className, string funcName)
+		public static IEnumerable<FunctionSignature> GetAllSignaturesForFunction(CodeModel.CodeModel model, int modelPos, string className, string funcName)
 		{
 			if (string.IsNullOrEmpty(className))
 			{
@@ -197,7 +198,7 @@ namespace DkTools.SignatureHelp
 					var funcDef = (def as CodeModel.Definitions.FunctionDefinition);
 					if (string.IsNullOrEmpty(funcDef.ClassName) || funcDef.ClassName == model.ClassName)
 					{
-						yield return new SignatureInfo(def.Signature.PrettySignature, def.DevDescription);
+						yield return def.Signature;
 					}
 				}
 			}
@@ -207,7 +208,7 @@ namespace DkTools.SignatureHelp
 				{
 					if ((def as CodeModel.Definitions.FunctionDefinition).ClassName == className)
 					{
-						yield return new SignatureInfo(def.Signature.PrettySignature, def.DevDescription);
+						yield return def.Signature;
 						yield break;
 					}
 				}
@@ -221,88 +222,18 @@ namespace DkTools.SignatureHelp
 
 						foreach (var method in dataType.GetMethods(funcName).Cast<CodeModel.Definitions.InterfaceMethodDefinition>())
 						{
-							yield return new SignatureInfo(method.Signature, method.DevDescription);
+							yield return method.Signature;
 						}
 					}
 				}
 			}
 		}
 
-		public static IEnumerable<ArgumentInfo> GetSignatureArguments(string sig)
+		public static IEnumerable<ArgumentInfo> GetSignatureArguments(FunctionSignature sig)
 		{
-			// Find the arguments token
-			string argsText = null;
-			int argsOffset = 0;
-			var argsParser = new CodeParser(sig);
-			while (argsParser.ReadNestable())
+			foreach (var arg in sig.Arguments)
 			{
-				if (argsParser.Type == CodeType.Nested)
-				{
-					argsText = argsParser.Text;
-					argsOffset = argsParser.TokenStartPostion + 1;
-				}
-			}
-
-			if (string.IsNullOrEmpty(argsText)) yield break;
-			if (argsText.StartsWith("(")) argsText = argsText.Substring(1);
-			if (argsText.EndsWith(")")) argsText = argsText.Substring(0, argsText.Length - 1);
-
-			// Parse the arguments
-			var parser = new CodeParser(argsText);
-			parser.ReturnWhiteSpace = true;
-
-			var sb = new StringBuilder();
-			string str;
-			var gotComma = false;
-			var argStartPos = 0;
-			string argName = null;
-			while (!parser.EndOfFile)
-			{
-				if (!parser.ReadNestable()) yield break;
-				str = parser.Text;
-				switch (str)
-				{
-					case ",":
-						yield return new ArgumentInfo(sb.ToString().Trim(), argName, new Span(argStartPos + argsOffset, parser.TokenStartPostion + argsOffset));
-						sb.Clear();
-						gotComma = true;
-						argStartPos = parser.Position;
-						argName = null;
-						break;
-					//case ")":
-					//	str = sb.ToString().Trim();
-					//	if (gotComma || !string.IsNullOrEmpty(str)) yield return new ArgumentInfo(str, argName, new Span(argStartPos + argsOffset, parser.TokenStartPostion + argsOffset));
-					//	yield break;
-					default:
-						sb.Append(str);
-						if (parser.Type == CodeType.Word) argName = parser.Text;
-						break;
-				}
-			}
-
-			var lastArg = sb.ToString();
-			if (gotComma || !string.IsNullOrWhiteSpace(lastArg)) yield return new ArgumentInfo(lastArg.Trim(), argName, new Span(argStartPos + argsOffset, parser.Position + argsOffset));
-		}
-
-		public struct SignatureInfo
-		{
-			private string _sig;
-			private string _devDesc;
-
-			public SignatureInfo(string sig, string devDesc)
-			{
-				_sig = sig;
-				_devDesc = devDesc;
-			}
-
-			public string Signature
-			{
-				get { return _sig; }
-			}
-
-			public string DevDescription
-			{
-				get { return _devDesc; }
+				yield return new ArgumentInfo(arg.SignatureText, string.IsNullOrEmpty(arg.Name) ? string.Empty : arg.Name, arg.SignatureSpan);
 			}
 		}
 

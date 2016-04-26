@@ -20,97 +20,99 @@ namespace DkTools.CodeModel
 				{
 					// Functions
 					new FunctionDefinition(new FunctionSignature(true, FunctionPrivacy.Public, DataType.Void, null, "abs",
-						new ArgumentDescriptor[] { new ArgumentDescriptor("expression to be evaluated", null) }),
-						"Calculates the absolute value of an expression."),
+						"Calculates the absolute value of an expression.",
+						new ArgumentDescriptor[] { new ArgumentDescriptor("expression to be evaluated", null) })),
 
 					new FunctionDefinition(new FunctionSignature(true, FunctionPrivacy.Public, DataType.Void, null, "avg",
-						new ArgumentDescriptor[] { new ArgumentDescriptor("expression, where expression, group TableName.ColumnName | all, in SelectName", null) }),
-						"Calculates the running average of an expression for a set of rows in a select statement."),
+						"Calculates the running average of an expression for a set of rows in a select statement.",
+						new ArgumentDescriptor[] { new ArgumentDescriptor("expression, where expression, group TableName.ColumnName | all, in SelectName", null) })),
 
 					new FunctionDefinition(new FunctionSignature(true, FunctionPrivacy.Public, DataType.Void, null, "count",
-						new ArgumentDescriptor[] { new ArgumentDescriptor("* , where expression, group TableName.ColumnName | all, in SelectName", null) }),
-						"Keeps a running count of the number of rows selected in a select statement that satisfy a condition."),
+						"Keeps a running count of the number of rows selected in a select statement that satisfy a condition.",
+						new ArgumentDescriptor[] { new ArgumentDescriptor("* , where expression, group TableName.ColumnName | all, in SelectName", null) })),
 
 					new FunctionDefinition(new FunctionSignature(true, FunctionPrivacy.Public, DataType.Void, null, "createobject",
-						new ArgumentDescriptor[] { new ArgumentDescriptor("iObj", null) }),
-						"Instantiates a COM object. The parameter iObj becomes a handle to the instance. The interface type of iObj determines what methods and properties the handle can call."),
+						"Instantiates a COM object. The parameter iObj becomes a handle to the instance. The interface type of iObj determines what methods and properties the handle can call.",
+						new ArgumentDescriptor[] { new ArgumentDescriptor("iObj", null) })),
 
 					new FunctionDefinition(new FunctionSignature(true, FunctionPrivacy.Public, DataType.Void, null, "diag",
-						new ArgumentDescriptor[] { new ArgumentDescriptor("expressions ...", null) }),
-						"Outputs specified expressions to a diagnostic device."),
+						"Outputs specified expressions to a diagnostic device.",
+						new ArgumentDescriptor[] { new ArgumentDescriptor("expressions ...", null) })),
 
 					new FunctionDefinition(new FunctionSignature(true, FunctionPrivacy.Public, DataType.Char255, null, "FormatString",
+						"Generates a message from a format string containing placeholder substrings '%1', '%2', '%3' etc., in any order, along with other optional user-specified substrings.",
 						new ArgumentDescriptor[] {
 							new ArgumentDescriptor("FormatControlString", DataType.Char255, PassByMethod.Value),
-							new ArgumentDescriptor("expression1, expression2, ...", null) }),
-						"Generates a message from a format string containing placeholder substrings '%1', '%2', '%3' etc., in any order, along with other optional user-specified substrings."),
+							new ArgumentDescriptor("expression1, expression2, ...", null) })),
 
 					new FunctionDefinition(new FunctionSignature(true, FunctionPrivacy.Public, DataType.Void, null, "gofield",
-						new ArgumentDescriptor[] { new ArgumentDescriptor("TableName.ColumnName", null) }),
-						"Puts the focus on the requested field on the form."),
+						"Puts the focus on the requested field on the form.",
+						new ArgumentDescriptor[] { new ArgumentDescriptor("TableName.ColumnName", null) })),
 
 					new FunctionDefinition(new FunctionSignature(true, FunctionPrivacy.Public, DataType.Int, null, "invokeerror",
-						new ArgumentDescriptor[] { new ArgumentDescriptor("iObj", null) }),
-						"Determines whether an instantiated COM or .NET object has encountered an error. If an error, returns the error code of the object."),
+						"Determines whether an instantiated COM or .NET object has encountered an error. If an error, returns the error code of the object.",
+						new ArgumentDescriptor[] { new ArgumentDescriptor("iObj", null) })),
 
 					new FunctionDefinition(new FunctionSignature(true, FunctionPrivacy.Public, DataType.Char255, null, "invokeerrorstring",
-						new ArgumentDescriptor[] { new ArgumentDescriptor("iObj", null) }),
-						"Returns the text of the last error invoked on the object."),
+						"Returns the text of the last error invoked on the object.",
+						new ArgumentDescriptor[] { new ArgumentDescriptor("iObj", null) })),
 
 					new FunctionDefinition(new FunctionSignature(true, FunctionPrivacy.Public, DataType.Int, null, "isinstance",
-						new ArgumentDescriptor[] { new ArgumentDescriptor("iObj", null) }),
-						"Determines whether a variable points to a valid instance of the variable interface type. "),
+						"Determines whether a variable points to a valid instance of the variable interface type. ",
+						new ArgumentDescriptor[] { new ArgumentDescriptor("iObj", null) })),
 
 					new FunctionDefinition(new FunctionSignature(true, FunctionPrivacy.Public, DataType.Char255, null, "makestring", 
-						new ArgumentDescriptor[] { new ArgumentDescriptor("expressions ...", null) }),
-						"Creates a string by concatenating a list of expressions."),
+						"Creates a string by concatenating a list of expressions.",
+						new ArgumentDescriptor[] { new ArgumentDescriptor("expressions ...", null) })),
 
 					new FunctionDefinition(new FunctionSignature(true, FunctionPrivacy.Public, DataType.Void, null, "max",
-						new ArgumentDescriptor[] { new ArgumentDescriptor("expression, where expression, group TableName.ColumnName | all, in SelectName", null) }),
-						"Determines the running maximum of an expression for a set of rows in a select statement."),
+						"Determines the running maximum of an expression for a set of rows in a select statement.",
+						new ArgumentDescriptor[] { new ArgumentDescriptor("expression, where expression, group TableName.ColumnName | all, in SelectName", null) })),
 
 					new FunctionDefinition(new FunctionSignature(true, FunctionPrivacy.Public, DataType.Void, null, "min",
-						new ArgumentDescriptor[] { new ArgumentDescriptor("expression, where expression, group TableName.ColumnName | all, in SelectName", null) }),
-						"Determines the running minimum of an expression for a set of rows in a select statement."),
+						"Determines the running minimum of an expression for a set of rows in a select statement.",
+						new ArgumentDescriptor[] { new ArgumentDescriptor("expression, where expression, group TableName.ColumnName | all, in SelectName", null) })),
 
 					new FunctionDefinition(new FunctionSignature(true, FunctionPrivacy.Public, DataType.Void, null, "oldvalue",
-						new ArgumentDescriptor[] { new ArgumentDescriptor("TableName.ColumnName", null) }),
-						"Returns the value of a column in the old row buffer."),
+						"Returns the value of a column in the old row buffer.",
+						new ArgumentDescriptor[] { new ArgumentDescriptor("TableName.ColumnName", null) })),
 
 					new FunctionDefinition(new FunctionSignature(true, FunctionPrivacy.Public, DataType.Void, null, "qcolsend",
-						new ArgumentDescriptor[] { new ArgumentDescriptor("TableName.ColumnName ...", null) }),
-						"Sends columns of the client's current row buffer to SAM or from SAM to the client. Only the current row buffer (not the old buffer) of the recepient is overwritten."),
+						"Sends columns of the client's current row buffer to SAM or from SAM to the client. Only the current row buffer (not the old buffer) of the recepient is overwritten.",
+						new ArgumentDescriptor[] { new ArgumentDescriptor("TableName.ColumnName ...", null) })),
 
 					new FunctionDefinition(new FunctionSignature(true, FunctionPrivacy.Public, DataType.Void, null, "releaseobject",
-						new ArgumentDescriptor[] { new ArgumentDescriptor("iObj", null) }),
-						"Releases the object identified by iObj, and automatically disconnects all events associated with iObj."),
+						"Releases the object identified by iObj, and automatically disconnects all events associated with iObj.",
+						new ArgumentDescriptor[] { new ArgumentDescriptor("iObj", null) })),
 
 					new FunctionDefinition(new FunctionSignature(true, FunctionPrivacy.Public, DataType.Int, null, "SetMessage",
+						"Writes to the error message buffer. CAM displays the contents of that buffer when a trigger encounters an error. " +
+						"In code, you can read that buffer using the getmsg function.\r\n\r\n" +
+						"Provides similar functionality to setmsg, but allows you to maintain one source code for all languages " +
+						"(with one set of resource files per language).",
 						new ArgumentDescriptor[] {
 							new ArgumentDescriptor("MessageControlString", DataType.Char255, PassByMethod.Value),
-							new ArgumentDescriptor("expressions ...", null) }),
-						"Writes to the error message buffer. CAM displays the contents of that buffer when a trigger encounters an error. In code, you can read that buffer using the getmsg function.\r\n\r\n" +
-						"Provides similar functionality to setmsg, but allows you to maintain one source code for all languages (with one set of resource files per language)."),
+							new ArgumentDescriptor("expressions ...", null) })),
 
 					new FunctionDefinition(new FunctionSignature(true, FunctionPrivacy.Public, DataType.Char255, null, "STRINGIZE",
-						new ArgumentDescriptor[] { new ArgumentDescriptor("expression", null) }),
-						"Converts macro parameters to strings."),
+						"Converts macro parameters to strings.",
+						new ArgumentDescriptor[] { new ArgumentDescriptor("expression", null) })),
 
 					new FunctionDefinition(new FunctionSignature(true, FunctionPrivacy.Public, DataType.Void, null, "sum",
-						new ArgumentDescriptor[] { new ArgumentDescriptor("expression, where expression, group TableName.ColumnName | all, in SelectName", null) }),
-						"Calculates the running total of an expression for a set of rows in a select statement."),
+						"Calculates the running total of an expression for a set of rows in a select statement.",
+						new ArgumentDescriptor[] { new ArgumentDescriptor("expression, where expression, group TableName.ColumnName | all, in SelectName", null) })),
 
 					new FunctionDefinition(new FunctionSignature(true, FunctionPrivacy.Public, DataType.Void, null, "UNREFERENCED_PARAMETER",
-						new ArgumentDescriptor[] { new ArgumentDescriptor("parameter", null) }),
-						"Prevents a compiler warning if a parameter passed to a function is not used."),
+						"Prevents a compiler warning if a parameter passed to a function is not used.",
+						new ArgumentDescriptor[] { new ArgumentDescriptor("parameter", null) })),
 
 					new FunctionDefinition(new FunctionSignature(true, FunctionPrivacy.Public, DataType.StringVarying, null, "vstring",
-						new ArgumentDescriptor[] { new ArgumentDescriptor("expression, ...", null) }),
-						"Creates a string of varying length by concatenating a list of expressions. "),
+						"Creates a string of varying length by concatenating a list of expressions. ",
+						new ArgumentDescriptor[] { new ArgumentDescriptor("expression, ...", null) })),
 
 					new FunctionDefinition(new FunctionSignature(true, FunctionPrivacy.Public, DataType.Int, null, "widthof",
-						new ArgumentDescriptor[] { new ArgumentDescriptor("name", null) }),
-						"Returns the displayable width of a variable or column."),
+						"Returns the displayable width of a variable or column.",
+						new ArgumentDescriptor[] { new ArgumentDescriptor("name", null) })),
 
 					// Data types
 					new DataTypeDefinition("int", DataType.Int),

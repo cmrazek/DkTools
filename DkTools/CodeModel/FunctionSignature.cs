@@ -15,17 +15,19 @@ namespace DkTools.CodeModel
 		private string _funcName;
 		private ArgumentDescriptor[] _args;
 		private string _prettySignature;
+		private string _devDesc;
 
 		private FunctionSignature()
 		{ }
 
-		public FunctionSignature(bool isExtern, FunctionPrivacy privacy, DataType returnDataType, string className, string funcName, IEnumerable<ArgumentDescriptor> args)
+		public FunctionSignature(bool isExtern, FunctionPrivacy privacy, DataType returnDataType, string className, string funcName, string devDesc, IEnumerable<ArgumentDescriptor> args)
 		{
 			_extern = isExtern;
 			_privacy = privacy;
 			_returnDataType = returnDataType;
 			_className = className;
 			_funcName = funcName;
+			_devDesc = devDesc;
 			_args = args.ToArray();
 		}
 
@@ -39,6 +41,7 @@ namespace DkTools.CodeModel
 				_className = _className,
 				_funcName = _funcName,
 				_args = _args.ToArray(),
+				_devDesc = _devDesc,
 				_prettySignature = _prettySignature
 			};
 		}
@@ -53,6 +56,12 @@ namespace DkTools.CodeModel
 			get { return _funcName; }
 		}
 
+		public string Description
+		{
+			get { return _devDesc; }
+			set { _devDesc = value; }
+		}
+
 		public FunctionPrivacy Privacy
 		{
 			get { return _privacy; }
@@ -65,84 +74,73 @@ namespace DkTools.CodeModel
 
 		public IEnumerable<ArgumentDescriptor> Arguments
 		{
-			get { return _args; }
+			get
+			{
+				CheckPrettySignature();
+				return _args;
+			}
+		}
+
+		public ArgumentDescriptor TryGetArgument(int index)
+		{
+			if (index < 0 || index >= _args.Length) return null;
+			CheckPrettySignature();
+			return _args[index];
+		}
+
+		private void CheckPrettySignature()
+		{
+			if (_prettySignature == null)
+			{
+				var sb = new StringBuilder();
+				var spaceRequired = false;
+
+				if (_privacy != FunctionPrivacy.Public)
+				{
+					sb.Append(_privacy.ToString().ToLower());
+					spaceRequired = true;
+				}
+
+				if (_extern)
+				{
+					if (spaceRequired) sb.Append(' ');
+					sb.Append("extern");
+					spaceRequired = true;
+				}
+
+				if (_returnDataType != null)
+				{
+					if (spaceRequired) sb.Append(' ');
+					sb.Append(_returnDataType.ToPrettyString());
+					spaceRequired = true;
+				}
+
+				if (spaceRequired) sb.Append(' ');
+				sb.Append(_funcName);
+				sb.Append('(');
+				spaceRequired = false;
+
+				var firstArg = true;
+				foreach (var arg in _args)
+				{
+					if (firstArg) firstArg = false;
+					else sb.Append(", ");
+
+					var argStartPos = sb.Length;
+					sb.Append(arg.SignatureText);
+					arg.SignatureSpan = new Span(argStartPos, sb.Length);
+				}
+
+				sb.Append(')');
+				_prettySignature = sb.ToString();
+			}
 		}
 
 		public string PrettySignature
 		{
 			get
 			{
-				if (_prettySignature == null)
-				{
-					var sb = new StringBuilder();
-					var spaceRequired = false;
-
-					if (_privacy != FunctionPrivacy.Public)
-					{
-						sb.Append(_privacy.ToString().ToLower());
-						spaceRequired = true;
-					}
-
-					if (_extern)
-					{
-						if (spaceRequired) sb.Append(' ');
-						sb.Append("extern");
-						spaceRequired = true;
-					}
-
-					if (_returnDataType != null)
-					{
-						if (spaceRequired) sb.Append(' ');
-						sb.Append(_returnDataType.ToPrettyString());
-						spaceRequired = true;
-					}
-
-					if (spaceRequired) sb.Append(' ');
-					sb.Append(_funcName);
-					sb.Append('(');
-					spaceRequired = false;
-
-					var firstArg = true;
-					foreach (var arg in _args)
-					{
-						if (firstArg) firstArg = false;
-						else
-						{
-							sb.Append(',');
-							spaceRequired = true;
-						}
-
-						if (arg.DataType != null)
-						{
-							if (spaceRequired) sb.Append(' ');
-							sb.Append(arg.DataType.ToPrettyString());
-							spaceRequired = true;
-						}
-
-						switch (arg.PassByMethod)
-						{
-							case PassByMethod.Reference:
-								if (spaceRequired) sb.Append(' ');
-								sb.Append('&');
-								spaceRequired = false;
-								break;
-							case PassByMethod.ReferencePlus:
-								if (spaceRequired) sb.Append(' ');
-								sb.Append("&+");
-								break;
-						}
-
-						if (!string.IsNullOrEmpty(arg.Name))
-						{
-							if (spaceRequired) sb.Append(' ');
-							sb.Append(arg.Name);
-							spaceRequired = true;
-						}
-					}
-
-					sb.Append(')');
-					_prettySignature = sb.ToString();
-				}
+				CheckPrettySignature();
 				return _prettySignature;
 			}
 		}
@@ -190,6 +188,13 @@ namespace DkTools.CodeModel
 				sb.Append(_funcName);
 			}
 
+			if (!string.IsNullOrEmpty(_devDesc))
+			{
+				if (sb.Length > 0) sb.Append(' ');
+				sb.Append("desc ");
+				sb.Append(CodeParser.StringToStringLiteral(_devDesc));
+			}
+
 			foreach (var arg in _args)
 			{
 				if (sb.Length > 0) sb.Append(' ');
@@ -209,6 +214,7 @@ namespace DkTools.CodeModel
 			DataType returnDataType = null;
 			string className = null;
 			string funcName = string.Empty;
+			string devDesc = null;
 			var args = new List<ArgumentDescriptor>();
 
 			var stopParsing = false;
@@ -246,14 +252,18 @@ namespace DkTools.CodeModel
 						if (!code.ReadWord()) Log.WriteDebug("Unable to read function name from: {0}", str);
 						else funcName = code.Text;
 						break;
+					case "desc":
+						if (!code.ReadStringLiteral()) Log.WriteDebug("Unable to read description from: {0}", str);
+						else devDesc = CodeParser.StringLiteralToString(code.Text);
+						break;
 					case "arg":
 						if (!code.ReadStringLiteral()) Log.WriteDebug("Unable to read return data type from: {0}", str);
 						else
 						{
 							var argString = CodeParser.StringLiteralToString(code.Text);
 							var arg = ArgumentDescriptor.ParseFromDb(argString);
-							if (!arg.HasValue) Log.WriteDebug("Unable to parse argument from: {0}", argString);
-							else args.Add(arg.Value);
+							if (arg == null) Log.WriteDebug("Unable to parse argument from: {0}", argString);
+							else args.Add(arg);
 						}
 						break;
 					default:
@@ -263,7 +273,7 @@ namespace DkTools.CodeModel
 				}
 			}
 
-			return new FunctionSignature(isExtern, privacy, returnDataType, className, funcName, args);
+			return new FunctionSignature(isExtern, privacy, returnDataType, className, funcName, devDesc, args);
 		}
 
 		public bool Extern

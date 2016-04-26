@@ -329,8 +329,9 @@ namespace DkTools.CodeModel
 			{
 				var localPos = _source.GetFilePosition(nameSpan.Start);
 
-				var def = new FunctionDefinition(new FunctionSignature(true, privacy, returnDataType, _className, funcName, args),
-					localPos, 0, 0, 0, Span.Empty, description);
+				var def = new FunctionDefinition(
+					new FunctionSignature(true, privacy, returnDataType, _className, funcName, description, args),
+					localPos, 0, 0, 0, Span.Empty);
 				_externFuncs[funcName] = def;
 				AddGlobalDefinition(def);
 				return;
@@ -366,8 +367,8 @@ namespace DkTools.CodeModel
 			var argEndPrimaryPos = _source.GetPrimaryFilePosition(argEndPos);
 			var entireSpan = _source.GetPrimaryFileSpan(new Span(allStartPos, bodyEndPos));
 
-			var funcDef = new FunctionDefinition(new FunctionSignature(false, privacy, returnDataType, _className, funcName, args),
-				nameActualPos, argStartPrimaryPos, argEndPrimaryPos, bodyStartLocalPos, entireSpan, description);
+			var funcDef = new FunctionDefinition(new FunctionSignature(false, privacy, returnDataType, _className, funcName, description, args),
+				nameActualPos, argStartPrimaryPos, argEndPrimaryPos, bodyStartLocalPos, entireSpan);
 			_localFuncs.Add(new LocalFunction(funcDef, nameSpan, statementsStartPos, bodyEndPos, argDefList, varList));
 			AddGlobalDefinition(funcDef);
 

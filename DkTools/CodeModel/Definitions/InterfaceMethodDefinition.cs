@@ -9,20 +9,20 @@ namespace DkTools.CodeModel.Definitions
 	internal sealed class InterfaceMethodDefinition : Definition
 	{
 		private InterfaceTypeDefinition _intType;
-		private string _signature;
+		private FunctionSignature _sig;
 		private DataType _returnDataType;
 
-		public InterfaceMethodDefinition(InterfaceTypeDefinition intType, string name, string signature, DataType returnDataType)
+		public InterfaceMethodDefinition(InterfaceTypeDefinition intType, string name, FunctionSignature sig, DataType returnDataType)
 			: base(name, FilePosition.Empty, string.Concat("interface:", intType.Name, ".method:", name))
 		{
 #if DEBUG
 			if (intType == null) throw new ArgumentNullException("intType");
 			if (string.IsNullOrEmpty(name)) throw new ArgumentNullException("name");
-			if (string.IsNullOrEmpty(signature)) throw new ArgumentNullException("signature");
+			if (_sig == null) throw new ArgumentNullException("signature");
 			if (returnDataType == null) throw new ArgumentNullException("returnDataType");
 #endif
 			_intType = intType;
-			_signature = signature;
+			_sig = sig;
 			_returnDataType = returnDataType;
 		}
 
@@ -45,7 +45,7 @@ namespace DkTools.CodeModel.Definitions
 		{
 			get
 			{
-				return _signature;	// TODO: include interface name
+				return _sig.PrettySignature;
 			}
 		}
 
@@ -53,13 +53,13 @@ namespace DkTools.CodeModel.Definitions
 		{
 			get
 			{
-				return WpfMainLine(_signature);	// TODO: include interface name
+				return WpfMainLine(_sig.PrettySignature);
 			}
 		}
 
-		public string Signature
+		public FunctionSignature Signature
 		{
-			get { return _signature; }
+			get { return _sig; }
 		}
 
 		public string DevDescription

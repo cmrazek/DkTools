@@ -19,7 +19,6 @@ namespace DkTools.FunctionFileScanning
 		private FunctionSignature _sig;
 		private CodeModel.Span _span;
 		private CodeModel.Definitions.FunctionDefinition _def;
-		private string _devDesc;
 		private bool _visible;
 
 		private FFFunction()
@@ -39,7 +38,6 @@ namespace DkTools.FunctionFileScanning
 			_name = def.Name;
 			_sig = def.Signature;
 			_span = new CodeModel.Span(def.SourceStartPos, def.SourceStartPos);
-			_devDesc = def.DevDescription;
 			_def = def;
 
 			UpdateVisibility();
@@ -61,8 +59,11 @@ namespace DkTools.FunctionFileScanning
 			_sig = FunctionSignature.ParseFromDb(rdr.GetString(rdr.GetOrdinal("sig")));
 
 			var devDescValue = rdr["description"];
-			if (!Convert.IsDBNull(devDescValue)) _devDesc = Convert.ToString(devDescValue);
-			else _devDesc = null;
+			if (!Convert.IsDBNull(devDescValue))
+			{
+				// TODO: Transitionary until the next database version
+				if (_sig.Description == null) _sig.Description = Convert.ToString(devDescValue);
+			}
 
 			var fileName = _file.FileName;
 			var altFileName = rdr.GetStringOrNull(rdr.GetOrdinal("alt_file_name"));
@@ -70,7 +71,7 @@ namespace DkTools.FunctionFileScanning
 			var pos = rdr.GetInt32(rdr.GetOrdinal("pos"));
 			var filePos = new FilePosition(fileName, pos);
 
-			_def = new CodeModel.Definitions.FunctionDefinition(_sig, filePos, 0, 0, 0, _span, _devDesc);
+			_def = new CodeModel.Definitions.FunctionDefinition(_sig, filePos, 0, 0, 0, _span);
 
 			UpdateVisibility();
 		}
@@ -82,9 +83,12 @@ namespace DkTools.FunctionFileScanning
 			var funcName = rdr.GetString(rdr.GetOrdinal("name"));
 			var sig = FunctionSignature.ParseFromDb(rdr.GetString(rdr.GetOrdinal("sig")));
 
-			string devDesc = null;
 			var devDescValue = rdr["description"];
-			if (!Convert.IsDBNull(devDescValue)) devDesc = Convert.ToString(devDescValue);
+			if (!Convert.IsDBNull(devDescValue))
+			{
+				// TODO: Transitionary until the next database version
+				if (sig.Description == null) sig.Description = Convert.ToString(devDescValue);
+			}
 
 			var trueFileName = fileName;
 			var altFileName = rdr.GetStringOrNull(rdr.GetOrdinal("alt_file_name"));
@@ -92,18 +96,7 @@ namespace DkTools.FunctionFileScanning
 			var pos = rdr.GetInt32(rdr.GetOrdinal("pos"));
 			var filePos = new FilePosition(trueFileName, pos);
 
-			return new CodeModel.Definitions.FunctionDefinition(sig, filePos, 0, 0, 0, Span.Empty, devDesc);
-		}
-
-		private static IEnumerable<ArgumentDescriptor> ParseArguments(string argsString)
-		{
-			if (string.IsNullOrEmpty(argsString)) yield break;
-
-			foreach (var argString in argsString.Split('|'))
-			{
-				var arg = ArgumentDescriptor.ParseFromDb(argString);
-				if (arg.HasValue) yield return arg.Value;
-			}
+			return new CodeModel.Definitions.FunctionDefinition(sig, filePos, 0, 0, 0, Span.Empty);
 		}
 
 		public void UpdateFromDefinition(CodeModel.Definitions.FunctionDefinition def)
@@ -115,7 +108,6 @@ namespace DkTools.FunctionFileScanning
 			_sig = def.Signature;
 			_span = new CodeModel.Span(def.SourceStartPos, def.SourceStartPos);
 			_def = def;
-			_devDesc = def.DevDescription;
 
 			UpdateVisibility();
 		}
@@ -174,8 +166,9 @@ namespace DkTools.FunctionFileScanning
 
 			if (_id != 0)
 			{
+				// TODO: next database version, remove description field
 				using (var cmd = db.CreateCommand("update func set file_id = @file_id, name = @name, sig = @sig, alt_file_id = @alt_file_id, pos = @pos, " +
-					"description = @dev_desc, visible = @visible where id = @id"))
+					"description = null, visible = @visible where id = @id"))
 				{
 					cmd.Parameters.AddWithValue("@id", _id);
 					cmd.Parameters.AddWithValue("@file_id", _file.Id);
@@ -183,8 +176,6 @@ namespace DkTools.FunctionFileScanning
 					cmd.Parameters.AddWithValue("@sig", _sig.ToDbString());
 					cmd.Parameters.AddWithValue("@alt_file_id", altFileId);
 					cmd.Parameters.AddWithValue("@pos", filePos.Position);
-					if (string.IsNullOrEmpty(_devDesc)) cmd.Parameters.AddWithValue("@dev_desc", DBNull.Value);
-					else cmd.Parameters.AddWithValue("@dev_desc", _devDesc);
 					cmd.Parameters.AddWithValue("@visible", _visible ? 1 : 0);
 					
 					cmd.ExecuteNonQuery();
@@ -192,8 +183,8 @@ namespace DkTools.FunctionFileScanning
 			}
 			else
 			{
-				using (var cmd = db.CreateCommand(@"insert into func (name, app_id, file_id, alt_file_id, pos, sig, description, visible)
-													values (@name, @app_id, @file_id, @alt_file_id, @pos, @sig, @dev_desc, @visible)"))
+				using (var cmd = db.CreateCommand(@"insert into func (name, app_id, file_id, alt_file_id, pos, sig, visible)
+													values (@name, @app_id, @file_id, @alt_file_id, @pos, @sig, @visible)"))
 				{
 					cmd.Parameters.AddWithValue("@name", _name);
 					cmd.Parameters.AddWithValue("@app_id", _app.Id);
@@ -201,8 +192,6 @@ namespace DkTools.FunctionFileScanning
 					cmd.Parameters.AddWithValue("@alt_file_id", altFileId);
 					cmd.Parameters.AddWithValue("@pos", filePos.Position);
 					cmd.Parameters.AddWithValue("@sig", _sig.ToDbString());
-					if (string.IsNullOrEmpty(_devDesc)) cmd.Parameters.AddWithValue("@dev_desc", DBNull.Value);
-					else cmd.Parameters.AddWithValue("@dev_desc", _devDesc);
 					cmd.Parameters.AddWithValue("@visible", _visible ? 1 : 0);
 					cmd.ExecuteNonQuery();
 					_id = db.QueryIdentityInt();

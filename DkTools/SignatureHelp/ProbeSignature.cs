@@ -20,19 +20,17 @@ namespace DkTools.SignatureHelp
     {
         private ITextBuffer _subjectBuffer;
         private IParameter _currentParam;
-        private string _content;
-        private string _documentation;
+		private CodeModel.FunctionSignature _sig;
         private ITrackingSpan _applicableToSpan;
         private ReadOnlyCollection<IParameter> _params;
         private string _printContent;
 
         public event EventHandler<CurrentParameterChangedEventArgs> CurrentParameterChanged;
 
-        public ProbeSignature(ITextBuffer subjectBuffer, string content, string doc, ReadOnlyCollection<IParameter> parameters)
+        public ProbeSignature(ITextBuffer subjectBuffer, CodeModel.FunctionSignature sig, ReadOnlyCollection<IParameter> parameters)
         {
             _subjectBuffer = subjectBuffer;
-            _content = content;
-            _documentation = doc;
+			_sig = sig;
             _params = parameters;
             _subjectBuffer.Changed += new EventHandler<TextContentChangedEventArgs>(SubjectBufferChanged);
         }
@@ -84,16 +82,14 @@ namespace DkTools.SignatureHelp
             internal set { _applicableToSpan = value; }
         }
 
-        public string Content
-        {
-            get { return _content; }
-            internal set { _content = value; }
-        }
+		public string Content
+		{
+			get { return _sig.PrettySignature; }
+		}
 
         public string Documentation
         {
-            get { return _documentation; }
-            internal set { _documentation = value; }
+            get { return _sig.Description != null ? _sig.Description : string.Empty; }
         }
 
         public ReadOnlyCollection<IParameter> Parameters
