@@ -68,7 +68,7 @@ namespace DkTools.Navigation
 			}
 		}
 
-		private static void BrowseToDefinition(CodeModel.Definitions.Definition def)
+		internal static bool BrowseToDefinition(CodeModel.Definitions.Definition def)
 		{
 			if (def is FunctionDefinition)
 			{
@@ -95,23 +95,26 @@ namespace DkTools.Navigation
 					}
 				}
 
-				PromptDefinitions(funcList);
+				return PromptDefinitions(funcList);
 			}
 			else if (!string.IsNullOrWhiteSpace(def.SourceFileName))
 			{
 				Shell.OpenDocument(def.SourceFileName, def.SourceStartPos);
+				return true;
 			}
+
+			return false;
 		}
 
-		private static void PromptDefinitions(IEnumerable<Definition> defs)
+		private static bool PromptDefinitions(IEnumerable<Definition> defs)
 		{
 			var defList = defs.ToArray();
-			if (defList.Length == 0) return;
+			if (defList.Length == 0) return false;
 
 			if (defList.Length == 1)
 			{
 				Shell.OpenDocument(defList[0].SourceFileName, defList[0].SourceStartPos);
-				return;
+				return true;
 			}
 
 			var dlg = new DefinitionPickerWindow();
@@ -123,8 +126,11 @@ namespace DkTools.Navigation
 				if (selDef != null)
 				{
 					Shell.OpenDocument(selDef.SourceFileName, selDef.SourceStartPos);
+					return true;
 				}
 			}
+
+			return false;
 		}
 
 		public static void TriggerFindReferences(ITextView textView)

@@ -94,6 +94,12 @@ namespace DkTools.ProbeExplorer
 			var menu = new ContextMenu();
 
 			var menuItem = new MenuItem();
+			menuItem.Header = "Go To Definition";
+			menuItem.Click += TableGoToDefinition_Click;
+			menuItem.Tag = table;
+			menu.Items.Add(menuItem);
+
+			menuItem = new MenuItem();
 			menuItem.Header = "Find All References";
 			menuItem.Click += TableFindAllReferences_Click;
 			menuItem.Tag = table;
@@ -172,6 +178,27 @@ namespace DkTools.ProbeExplorer
 				}
 			}
 		}
+
+		void TableGoToDefinition_Click(object sender, RoutedEventArgs e)
+		{
+			try
+			{
+				var menuItem = (sender as MenuItem);
+				if (menuItem != null)
+				{
+					var table = menuItem.Tag as DkDict.Table;
+					if (table != null)
+					{
+						Navigation.GoToDefinitionHelper.BrowseToDefinition(table.Definition);
+						e.Handled = true;
+					}
+				}
+			}
+			catch (Exception ex)
+			{
+				this.ShowError(ex);
+			}
+		}
 		#endregion
 
 		#region Field
@@ -185,6 +212,12 @@ namespace DkTools.ProbeExplorer
 			var menu = new ContextMenu();
 
 			var menuItem = new MenuItem();
+			menuItem.Header = "Go To Definition";
+			menuItem.Click += FieldGoToDefinition_Click;
+			menuItem.Tag = field;
+			menu.Items.Add(menuItem);
+
+			menuItem = new MenuItem();
 			menuItem.Header = "Find All References";
 			menuItem.Click += FieldFindAllReferences_Click;
 			menuItem.Tag = field;
@@ -262,6 +295,27 @@ namespace DkTools.ProbeExplorer
 				this.ShowError(ex);
 			}
 		}
+
+		private void FieldGoToDefinition_Click(object sender, RoutedEventArgs e)
+		{
+			try
+			{
+				var menuItem = (sender as MenuItem);
+				if (menuItem != null)
+				{
+					var field = menuItem.Tag as DkDict.Column;
+					if (field != null)
+					{
+						Navigation.GoToDefinitionHelper.BrowseToDefinition(field.Definition);
+						e.Handled = true;
+					}
+				}
+			}
+			catch (Exception ex)
+			{
+				this.ShowError(ex);
+			}
+		}
 		#endregion
 
 		#region RelInd
@@ -275,6 +329,12 @@ namespace DkTools.ProbeExplorer
 			var menu = new ContextMenu();
 
 			var menuItem = new MenuItem();
+			menuItem.Header = "Go To Definition";
+			menuItem.Click += RelIndGoToDefinition_Click;
+			menuItem.Tag = relind;
+			menu.Items.Add(menuItem);
+
+			menuItem = new MenuItem();
 			menuItem.Header = "Find All References";
 			menuItem.Click += RelIndFindAllReferences_Click;
 			menuItem.Tag = relind;
@@ -346,6 +406,27 @@ namespace DkTools.ProbeExplorer
 				{
 					tvi.IsSelected = true;
 					e.Handled = true;
+				}
+			}
+			catch (Exception ex)
+			{
+				this.ShowError(ex);
+			}
+		}
+
+		private void RelIndGoToDefinition_Click(object sender, RoutedEventArgs e)
+		{
+			try
+			{
+				var menuItem = (sender as MenuItem);
+				if (menuItem != null)
+				{
+					var relInd = menuItem.Tag as DkDict.RelInd;
+					if (relInd != null)
+					{
+						Navigation.GoToDefinitionHelper.BrowseToDefinition(relInd.Definition);
+						e.Handled = true;
+					}
 				}
 			}
 			catch (Exception ex)

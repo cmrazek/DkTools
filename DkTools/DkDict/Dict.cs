@@ -1093,6 +1093,9 @@ namespace DkTools.DkDict
 					}
 				}
 			}
+
+			var table = GetTable(tableName);
+			if (table != null) table.AddRelInd(relind);
 		}
 
 		private static void ReadCreateRelationship()
@@ -1310,6 +1313,8 @@ namespace DkTools.DkDict
 
 			if (parentTable != null && childTable != null)
 			{
+				parentTable.AddRelInd(relind);
+
 				if (parentMany)
 				{
 					// child must be many if parent is many
@@ -1453,6 +1458,8 @@ namespace DkTools.DkDict
 
 			if (masterTable != null && historyTable != null)
 			{
+				masterTable.AddRelInd(relind);
+
 				masterTable.AddColumn(new Column(masterTable.Name, string.Concat("has_", name, "_", historyTable.Name),
 					DataType.Unsigned2, nameFilePos));
 
