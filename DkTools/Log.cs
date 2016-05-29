@@ -159,7 +159,7 @@ namespace DkTools
 			Error(ex, string.Format(format, args));
 		}
 
-		public static void Error(Exception ex)
+		public static void WriteEx(Exception ex)
 		{
 			Write(LogLevel.Error, ex.ToString());
 		}

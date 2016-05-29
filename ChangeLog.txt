@@ -7,6 +7,7 @@ Version 1.3.2 - (WIP)
 - Added support for 'page' keyword.
 - Fixed missing indexes/relationships in Dictionary Explorer.
 - Added 'Go To Definition' context menu item on all items in Dictionary Explorer.
+- Background FEC is now only run for files within the current ACM profile.
 
 ____________________________________________________________________________________________________
 Version 1.3.1 - Apr 25, 2016:

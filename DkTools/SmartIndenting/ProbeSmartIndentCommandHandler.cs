@@ -51,7 +51,7 @@ namespace DkTools.SmartIndenting
 			}
 			catch (Exception ex)
 			{
-				Log.Error(ex);
+				Log.WriteEx(ex);
 				return VSConstants.E_FAIL;
 			}
 		}

@@ -19,7 +19,7 @@ namespace DkTools
 
 		internal static void ShowError(Exception ex)
 		{
-			Log.Error(ex);
+			Log.WriteEx(ex);
 			Util.ShowErrorDialog(ex.Message, ex.ToString());
 		}
 

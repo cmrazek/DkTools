@@ -100,7 +100,7 @@ namespace DkTools.Compiler
 			}
 			catch (Exception ex)
 			{
-				Log.Error(ex);
+				Log.WriteEx(ex);
 			}
 			finally
 			{

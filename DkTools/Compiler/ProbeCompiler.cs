@@ -78,7 +78,7 @@ namespace DkTools.Compiler
 			catch (Exception ex)
 			{
 				WriteLine(string.Concat("Exception when starting compile:\r\n", ex));
-				Log.Error(ex);
+				Log.WriteEx(ex);
 			}
 		}
 
@@ -91,7 +91,7 @@ namespace DkTools.Compiler
 			catch (Exception ex)
 			{
 				WriteLine(string.Concat("Exception when killing compile:\r\n", ex));
-				Log.Error(ex);
+				Log.WriteEx(ex);
 			}
 		}
 
@@ -184,7 +184,7 @@ namespace DkTools.Compiler
 			}
 			catch (Exception ex)
 			{
-				Log.Error(ex);
+				Log.WriteEx(ex);
 			}
 			finally
 			{

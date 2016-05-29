@@ -479,7 +479,7 @@ namespace DkTools.FunctionFileScanning
 			}
 			catch (Exception ex)
 			{
-				Log.Error(ex);
+				Log.WriteEx(ex);
 				return null;
 			}
 		}

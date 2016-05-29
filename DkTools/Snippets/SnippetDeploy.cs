@@ -48,7 +48,7 @@ namespace DkTools.Snippets
 			}
 			catch (Exception ex)
 			{
-				Log.Error(ex);
+				Log.WriteEx(ex);
 			}
 		}
 
@@ -84,7 +84,7 @@ namespace DkTools.Snippets
 			}
 			catch (Exception ex)
 			{
-				Log.Error(ex);
+				Log.WriteEx(ex);
 			}
 		}
 	}

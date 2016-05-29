@@ -38,7 +38,7 @@ namespace DkTools.ErrorTagging
 			}
 			catch (Exception ex)
 			{
-				Log.Error(ex);
+				Log.WriteEx(ex);
 			}
 		}
 	}

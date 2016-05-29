@@ -93,14 +93,19 @@ namespace DkTools.ErrorTagging
 				}
 #endif
 
-				_backgroundFecDeferrer.OnActivity();
+				if (_model != null &&
+					_model.FileContext != FileContext.Include &&
+					ProbeEnvironment.FileExistsInApp(_model.FileName))
+				{
+					_backgroundFecDeferrer.OnActivity();
+				}
 
 				var ev = TagsChanged;
 				if (ev != null) ev(this, new SnapshotSpanEventArgs(new SnapshotSpan(_view.TextSnapshot, 0, _view.TextSnapshot.Length)));
 			}
 			catch (Exception ex)
 			{
-				Log.Error(ex);
+				Log.WriteEx(ex);
 			}
 		}
 
@@ -112,7 +117,8 @@ namespace DkTools.ErrorTagging
 
 				if (string.Equals(e.FileName, _model.FileName, StringComparison.OrdinalIgnoreCase))
 				{
-					if (_model.FileContext != FileContext.Include)
+					if (_model.FileContext != FileContext.Include &&
+						ProbeEnvironment.FileExistsInApp(_model.FileName))
 					{
 						_backgroundFecDeferrer.OnActivity();
 					}
@@ -127,7 +133,7 @@ namespace DkTools.ErrorTagging
 			}
 			catch (Exception ex)
 			{
-				Log.Error(ex);
+				Log.WriteEx(ex);
 			}
 		}
 
@@ -145,7 +151,7 @@ namespace DkTools.ErrorTagging
 			}
 			catch (Exception ex)
 			{
-				Log.Error(ex);
+				Log.WriteEx(ex);
 			}
 		}
 
@@ -168,14 +174,15 @@ namespace DkTools.ErrorTagging
 			{
 				if (_model != null &&
 					_model.FileContext != FileContext.Include &&
-					ProbeToolsPackage.Instance.EditorOptions.ShowErrors)
+					ProbeToolsPackage.Instance.EditorOptions.ShowErrors &&
+					ProbeEnvironment.FileExistsInApp(_model.FileName))
 				{
 					Compiler.BackgroundFec.Run(_model.FileName, _model.Snapshot.TextBuffer.CurrentSnapshot);
 				}
 			}
 			catch (Exception ex)
 			{
-				Log.Error(ex);
+				Log.WriteEx(ex);
 			}
 		}
 	}

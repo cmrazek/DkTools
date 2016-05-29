@@ -742,7 +742,7 @@ namespace DkTools
 					}
 					catch (Exception ex)
 					{
-						Log.Error(ex);
+						Log.WriteEx(ex);
 
 						var codeSource = new CodeModel.CodeSource();
 						codeSource.Append(content, new CodeModel.CodeAttributes(fileName, 0, content.Length, true, true, false));

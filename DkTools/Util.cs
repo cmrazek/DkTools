@@ -124,7 +124,7 @@ namespace DkTools
 
 		public static void ShowError(this System.Windows.Controls.UserControl ctrl, Exception ex)
 		{
-			Log.Error(ex);
+			Log.WriteEx(ex);
 			ShowErrorDialog(ex.Message, ex.ToString());
 		}
 
@@ -136,13 +136,13 @@ namespace DkTools
 
 		public static void ShowError(this System.Windows.Window window, Exception ex)
 		{
-			Log.Error(ex);
+			Log.WriteEx(ex);
 			ShowErrorDialog(ex.Message, ex.ToString());
 		}
 
 		public static void ShowError(this System.Windows.Forms.IWin32Window window, Exception ex)
 		{
-			Log.Error(ex);
+			Log.WriteEx(ex);
 			ShowErrorDialog(ex.Message, ex.ToString());
 		}
 
