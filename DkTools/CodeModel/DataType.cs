@@ -1407,11 +1407,11 @@ namespace DkTools.CodeModel
 		{
 			if (dataType == null)
 			{
-				Log.WriteDebug("WARNING: DataType.Parse was unable to parse [{0}]", dataTypeText);
+				Log.Debug("WARNING: DataType.Parse was unable to parse [{0}]", dataTypeText);
 			}
 			else if (usedParser.Read())
 			{
-				Log.WriteDebug("WARNING: DataType.Parse stopped before end of text [{0}] got [{1}]", dataTypeText, dataType.Name);
+				Log.Debug("WARNING: DataType.Parse stopped before end of text [{0}] got [{1}]", dataTypeText, dataType.Name);
 			}
 		}
 #endif

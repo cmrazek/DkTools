@@ -100,7 +100,7 @@ namespace DkTools.ErrorTagging
 			}
 			catch (Exception ex)
 			{
-				Log.WriteEx(ex);
+				Log.Error(ex);
 			}
 		}
 
@@ -127,7 +127,7 @@ namespace DkTools.ErrorTagging
 			}
 			catch (Exception ex)
 			{
-				Log.WriteEx(ex);
+				Log.Error(ex);
 			}
 		}
 
@@ -145,7 +145,7 @@ namespace DkTools.ErrorTagging
 			}
 			catch (Exception ex)
 			{
-				Log.WriteEx(ex);
+				Log.Error(ex);
 			}
 		}
 
@@ -175,7 +175,7 @@ namespace DkTools.ErrorTagging
 			}
 			catch (Exception ex)
 			{
-				Log.WriteEx(ex);
+				Log.Error(ex);
 			}
 		}
 	}

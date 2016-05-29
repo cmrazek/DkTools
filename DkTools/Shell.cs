@@ -19,7 +19,7 @@ namespace DkTools
 
 		internal static void ShowError(Exception ex)
 		{
-			Log.WriteEx(ex);
+			Log.Error(ex);
 			Util.ShowErrorDialog(ex.Message, ex.ToString());
 		}
 
@@ -161,7 +161,7 @@ namespace DkTools
 
 		internal static void SetStatusText(string text)
 		{
-			Log.WriteDebug("Status: {0}", text);
+			Log.Debug("Status: {0}", text);
 			ProbeToolsPackage.Instance.StatusBarService.SetText(text);
 		}
 

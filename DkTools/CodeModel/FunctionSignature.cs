@@ -232,42 +232,42 @@ namespace DkTools.CodeModel
 						privacy = FunctionPrivacy.Protected;
 						break;
 					case "rdt":
-						if (!code.ReadStringLiteral()) Log.WriteDebug("Unable to read return data type from: {0}", str);
+						if (!code.ReadStringLiteral()) Log.Debug("Unable to read return data type from: {0}", str);
 						else
 						{
 							var dtString = CodeParser.StringLiteralToString(code.Text);
 							returnDataType = DataType.TryParse(new DataType.ParseArgs { Code = new CodeParser(dtString) });
 							if (returnDataType == null)
 							{
-								Log.WriteDebug("Unable to parse return data type from: {0}", dtString);
+								Log.Debug("Unable to parse return data type from: {0}", dtString);
 								returnDataType = new DataType(ValType.Unknown, null, dtString);
 							}
 						}
 						break;
 					case "cls":
-						if (!code.ReadWord()) Log.WriteDebug("Unable to read class name from: {0}", str);
+						if (!code.ReadWord()) Log.Debug("Unable to read class name from: {0}", str);
 						else className = code.Text;
 						break;
 					case "fn":
-						if (!code.ReadWord()) Log.WriteDebug("Unable to read function name from: {0}", str);
+						if (!code.ReadWord()) Log.Debug("Unable to read function name from: {0}", str);
 						else funcName = code.Text;
 						break;
 					case "desc":
-						if (!code.ReadStringLiteral()) Log.WriteDebug("Unable to read description from: {0}", str);
+						if (!code.ReadStringLiteral()) Log.Debug("Unable to read description from: {0}", str);
 						else devDesc = CodeParser.StringLiteralToString(code.Text);
 						break;
 					case "arg":
-						if (!code.ReadStringLiteral()) Log.WriteDebug("Unable to read return data type from: {0}", str);
+						if (!code.ReadStringLiteral()) Log.Debug("Unable to read return data type from: {0}", str);
 						else
 						{
 							var argString = CodeParser.StringLiteralToString(code.Text);
 							var arg = ArgumentDescriptor.ParseFromDb(argString);
-							if (arg == null) Log.WriteDebug("Unable to parse argument from: {0}", argString);
+							if (arg == null) Log.Debug("Unable to parse argument from: {0}", argString);
 							else args.Add(arg);
 						}
 						break;
 					default:
-						Log.WriteDebug("Unexpected word '{0}' in function signature: {1}", code.Text, str);
+						Log.Debug("Unexpected word '{0}' in function signature: {1}", code.Text, str);
 						stopParsing = true;
 						break;
 				}

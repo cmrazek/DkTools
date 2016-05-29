@@ -17,7 +17,7 @@ namespace DkTools.Navigation
 			var caretPtTest = view.Caret.Position.Point.GetPoint(buf => (!buf.ContentType.IsOfType("projection")), Microsoft.VisualStudio.Text.PositionAffinity.Predecessor);
 			if (!caretPtTest.HasValue)
 			{
-				Log.WriteDebug("Couldn't get caret point.");
+				Log.Debug("Couldn't get caret point.");
 				return;
 			}
 			var caretPt = caretPtTest.Value;
@@ -31,7 +31,7 @@ namespace DkTools.Navigation
 			var selTokens = model.File.FindDownwardTouching(modelPos).ToArray();
 			if (selTokens.Length == 0)
 			{
-				Log.WriteDebug("Touching no tokens.");
+				Log.Debug("Touching no tokens.");
 				return;
 			}
 

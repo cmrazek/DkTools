@@ -76,7 +76,7 @@ namespace DkTools.CodeModel
 				}
 				catch (Exception ex)
 				{
-					Log.WriteEx(ex, "Error when merging local file '{0}' into '{1}'.", localFileName, fileName);
+					Log.Error(ex, "Error when merging local file '{0}' into '{1}'.", localFileName, fileName);
 				}
 			}
 
@@ -135,7 +135,15 @@ namespace DkTools.CodeModel
 
 			foreach (string probeDir in ProbeEnvironment.SourceDirs)
 			{
-				FindFiles_SearchDir(probeDir, fileName);
+				try
+				{
+					if (!Directory.Exists(probeDir)) continue;
+					FindFiles_SearchDir(probeDir, fileName);
+				}
+				catch (Exception ex)
+				{
+					Log.Error(ex, "Exception when scanning source directory [{0}]", probeDir);
+				}
 			}
 
 			if (string.IsNullOrEmpty(_origFileName))
@@ -143,7 +151,15 @@ namespace DkTools.CodeModel
 				_localFileNames.Clear();
 				foreach (string includeDir in ProbeEnvironment.IncludeDirs)
 				{
-					FindFiles_SearchDir(includeDir, fileName);
+					try
+					{
+						if (!Directory.Exists(includeDir)) continue;
+						FindFiles_SearchDir(includeDir, fileName);
+					}
+					catch (Exception ex)
+					{
+						Log.Error(ex, "Exception when scanning include directory [{0}]", includeDir);
+					}
 				}
 			}
 		}
@@ -171,7 +187,14 @@ namespace DkTools.CodeModel
 
 			foreach (string subDir in Directory.GetDirectories(dir))
 			{
-				FindFiles_SearchDir(subDir, fileName);
+				try
+				{
+					FindFiles_SearchDir(subDir, fileName);
+				}
+				catch (Exception ex)
+				{
+					Log.Error(ex, "Exception when scanning directory [{0}]", subDir);
+				}
 			}
 		}
 

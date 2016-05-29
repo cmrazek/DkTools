@@ -234,7 +234,7 @@ namespace DkTools.StatementCompletion
 			}
 			catch (Exception ex)
 			{
-				Log.WriteEx(ex);
+				Log.Error(ex);
 				return VSConstants.E_FAIL;
 			}
 		}

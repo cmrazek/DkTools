@@ -61,7 +61,7 @@ namespace DkTools.Navigation
 			var fileStore = CodeModel.FileStore.GetOrCreateForTextBuffer(_view.TextBuffer);
 			if (fileStore == null)
 			{
-				Log.WriteDebug("No file store available.");
+				Log.Debug("No file store available.");
 				return;
 			}
 			var model = fileStore.GetMostRecentModel(_view.TextSnapshot, "ReferenceScroller.GoToNextReference()");
@@ -70,7 +70,7 @@ namespace DkTools.Navigation
 			var caretPtTest = _view.Caret.Position.Point.GetPoint(buf => (!buf.ContentType.IsOfType("projection")), Microsoft.VisualStudio.Text.PositionAffinity.Predecessor);
 			if (!caretPtTest.HasValue)
 			{
-				Log.WriteDebug("Couldn't get caret point.");
+				Log.Debug("Couldn't get caret point.");
 				return;
 			}
 			var caretPt = caretPtTest.Value;
@@ -89,7 +89,7 @@ namespace DkTools.Navigation
 			var refs = model.File.FindDownward(t => t.SourceDefinition == def).ToArray();
 			if (refs.Length == 0)
 			{
-				Log.WriteDebug("List of references is empty.");
+				Log.Debug("List of references is empty.");
 				return;
 			}
 
@@ -105,7 +105,7 @@ namespace DkTools.Navigation
 			}
 			if (refIndex == -1)
 			{
-				Log.WriteDebug("The current token couldn't be found in the reference list.");
+				Log.Debug("The current token couldn't be found in the reference list.");
 				return;
 			}
 

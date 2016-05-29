@@ -81,7 +81,7 @@ namespace DkTools.FunctionFileScanning
 							var dataType = DataType.TryParse(new DataType.ParseArgs { Code = new CodeParser(dataTypeString) });
 							if (dataType == null)
 							{
-								Log.WriteDebug("Failed to parse permanent extract data type from database: {0}", dataTypeString);
+								Log.Debug("Failed to parse permanent extract data type from database: {0}", dataTypeString);
 								dataType = new CodeModel.DataType(ValType.Unknown, null, dataTypeString);
 							}
 							fieldDef.SetDataType(dataType);

@@ -157,7 +157,7 @@ namespace DkTools.FunctionFileScanning
 			{
 				if (!File.Exists(FileName))
 				{
-					Log.WriteDebug("Creating new scanner database...");
+					Log.Debug("Creating new scanner database...");
 
 					var connStr = ConnectionString;
 					var engine = new SqlCeEngine(connStr);
@@ -166,7 +166,7 @@ namespace DkTools.FunctionFileScanning
 
 					foreach (var query in k_databaseInitScript)
 					{
-						Log.WriteDebug("Executing database initialization query: {0}", query);
+						Log.Debug("Executing database initialization query: {0}", query);
 						ExecuteNonQuery(query);
 					}
 				}
@@ -196,7 +196,7 @@ namespace DkTools.FunctionFileScanning
 			}
 			catch (Exception ex)
 			{
-				Log.WriteEx(ex, "Exception when creating scanner database.");
+				Log.Error(ex, "Exception when creating scanner database.");
 				Disconnect();
 				return false;
 			}

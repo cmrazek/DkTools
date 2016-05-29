@@ -26,7 +26,7 @@ namespace DkTools
 			}
 			catch (Exception ex)
 			{
-				Log.WriteEx(ex);
+				Log.Error(ex);
 				return string.Empty;
 			}
 		}
@@ -71,7 +71,7 @@ namespace DkTools
 			}
 			catch (Exception ex)
 			{
-				Log.WriteEx(ex);
+				Log.Error(ex);
 				return default(T);
 			}
 		}

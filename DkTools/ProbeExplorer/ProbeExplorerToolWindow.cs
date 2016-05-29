@@ -30,7 +30,7 @@ namespace DkTools.ProbeExplorer
 			}
 			catch (Exception ex)
 			{
-				Log.WriteEx(ex);
+				Log.Error(ex);
 			}
 		}
 

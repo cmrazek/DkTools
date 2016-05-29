@@ -85,7 +85,7 @@ namespace DkTools.CodeModel
 			{
 				if (!code.ReadWord())
 				{
-					Log.WriteDebug("Unable to parse argument name from: {0}", str);
+					Log.Debug("Unable to parse argument name from: {0}", str);
 					return null;
 				}
 				name = code.Text;
@@ -105,7 +105,7 @@ namespace DkTools.CodeModel
 				dataType = DataType.TryParse(new DataType.ParseArgs { Code = code });
 				if (dataType == null)
 				{
-					Log.WriteDebug("Unable to parse data type from: {0}", str);
+					Log.Debug("Unable to parse data type from: {0}", str);
 				}
 			}
 

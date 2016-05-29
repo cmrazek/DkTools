@@ -29,14 +29,14 @@ namespace DkTools.Navigation
 				var selTokens = model.File.FindDownwardTouching(modelPos).ToArray();
 				if (selTokens.Length == 0)
 				{
-					Log.WriteDebug("Nothing selected.");
+					Log.Debug("Nothing selected.");
 					return;
 				}
 
 				var defToken = selTokens.LastOrDefault(t => t.SourceDefinition != null);
 				if (defToken != null && defToken.SourceDefinition != null)
 				{
-					Log.WriteDebug("Got token with SourceDefinition.");
+					Log.Debug("Got token with SourceDefinition.");
 					BrowseToDefinition(defToken.SourceDefinition);
 					return;
 				}
@@ -44,7 +44,7 @@ namespace DkTools.Navigation
 				var includeToken = selTokens.LastOrDefault(t => t is CodeModel.Tokens.IncludeToken) as CodeModel.Tokens.IncludeToken;
 				if (includeToken != null)
 				{
-					Log.WriteDebug("Found include token.");
+					Log.Debug("Found include token.");
 
 					var pathName = includeToken.FullPathName;
 					if (!string.IsNullOrEmpty(pathName))
@@ -59,7 +59,7 @@ namespace DkTools.Navigation
 					}
 				}
 
-				Log.WriteDebug("Found no definitions.");
+				Log.Debug("Found no definitions.");
 				Shell.SetStatusText("Definition not found.");
 			}
 			catch (Exception ex)

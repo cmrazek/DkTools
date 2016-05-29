@@ -352,7 +352,7 @@ namespace DkTools.ProbeExplorer
 			}
 			catch (Exception ex)
 			{
-				Log.WriteEx(ex, "Exception when expanding directory node.");
+				Log.Error(ex, "Exception when expanding directory node.");
 			}
 		}
 
@@ -374,7 +374,7 @@ namespace DkTools.ProbeExplorer
 			}
 			catch (Exception ex)
 			{
-				Log.WriteEx(ex);
+				Log.Error(ex);
 			}
 		}
 
@@ -398,7 +398,7 @@ namespace DkTools.ProbeExplorer
 			}
 			catch (Exception ex)
 			{
-				Log.WriteEx(ex);
+				Log.Error(ex);
 			}
 		}
 
@@ -664,7 +664,7 @@ namespace DkTools.ProbeExplorer
 			}
 			catch (Exception ex)
 			{
-				Log.WriteEx(ex);
+				Log.Error(ex);
 			}
 		}
 
@@ -684,7 +684,7 @@ namespace DkTools.ProbeExplorer
 			}
 			catch (Exception ex)
 			{
-				Log.WriteEx(ex);
+				Log.Error(ex);
 			}
 		}
 

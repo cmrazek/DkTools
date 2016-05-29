@@ -309,7 +309,7 @@ namespace DkTools.CodeModel
 		public CodeModel CreatePreprocessedModel(CodeSource source, string fileName, bool visible, string reason, IEnumerable<Preprocessor.IncludeDependency> includeDependencies)
 		{
 #if DEBUG
-			Log.WriteDebug("Creating preprocessed model. Reason: {0}", reason);
+			Log.Debug("Creating preprocessed model. Reason: {0}", reason);
 			var startTime = DateTime.Now;
 #endif
 
@@ -355,7 +355,7 @@ namespace DkTools.CodeModel
 			var prepTime = midTime1.Subtract(startTime).TotalMilliseconds;
 			var modelTime = midTime2.Subtract(midTime1).TotalMilliseconds;
 			var visTime = endTime.Subtract(midTime2).TotalMilliseconds;
-			Log.WriteDebug("Created model in {0} msecs ({1} preprocessor, {2} model, {3} visible)", elapsedTime, prepTime, modelTime, visTime);
+			Log.Debug("Created model in {0} msecs ({1} preprocessor, {2} model, {3} visible)", elapsedTime, prepTime, modelTime, visTime);
 #endif
 
 			return modelToReturn;
@@ -478,7 +478,7 @@ namespace DkTools.CodeModel
 						}
 						catch (Exception ex)
 						{
-							Log.WriteEx(ex, "Exception when attempting to read content of include file '{0}'.", _fullPathName);
+							Log.Error(ex, "Exception when attempting to read content of include file '{0}'.", _fullPathName);
 							_source = null;
 						}
 					}
@@ -492,7 +492,7 @@ namespace DkTools.CodeModel
 				{
 					try
 					{
-						Log.WriteDebug("Processing include file: {0}", _fullPathName);
+						Log.Debug("Processing include file: {0}", _fullPathName);
 
 						var content = Source;
 						if (content == null) return null;
@@ -503,7 +503,7 @@ namespace DkTools.CodeModel
 					}
 					catch (Exception ex)
 					{
-						Log.WriteEx(ex, "Exception when processing include file '{0}'.", _fullPathName);
+						Log.Error(ex, "Exception when processing include file '{0}'.", _fullPathName);
 						_codeFile = null;
 					}
 
@@ -525,7 +525,7 @@ namespace DkTools.CodeModel
 					var modDate = fileInfo.LastWriteTime;
 					if (Math.Abs(modDate.Subtract(_lastModifiedDate).TotalSeconds) > 1.0)
 					{
-						Log.WriteDebug("Detected change in include file: {0}", _fullPathName);
+						Log.Debug("Detected change in include file: {0}", _fullPathName);
 						OnFileChangeSuspected();
 						_lastModifiedDate = modDate;
 					}
@@ -537,7 +537,7 @@ namespace DkTools.CodeModel
 			{
 				if (e.FileName.Equals(_fullPathName, StringComparison.OrdinalIgnoreCase))
 				{
-					Log.WriteDebug("Detected change in include file (saving): {0}", _fullPathName);
+					Log.Debug("Detected change in include file (saving): {0}", _fullPathName);
 					OnFileChangeSuspected();
 				}
 			}

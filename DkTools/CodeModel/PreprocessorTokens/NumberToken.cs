@@ -16,7 +16,7 @@ namespace DkTools.CodeModel.PreprocessorTokens
 			long value;
 			if (!long.TryParse(text, out value))
 			{
-				Log.WriteDebug("'{0}' is not a valid number.", text);
+				Log.Debug("'{0}' is not a valid number.", text);
 				_value = null;
 			}
 			else _value = value;

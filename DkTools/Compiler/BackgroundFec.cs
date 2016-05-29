@@ -14,18 +14,18 @@ namespace DkTools.Compiler
 		{
 			if (string.IsNullOrWhiteSpace(sourceFileName)) return;
 
-			Log.WriteDebug("Running background FEC for file '{0}'.", sourceFileName);
+			Log.Debug("Running background FEC for file '{0}'.", sourceFileName);
 
 			var counter = 10;
 			while (counter > 0)
 			{
 				if (!ProbeCompiler.Instance.Mutex.WaitOne(1000))
 				{
-					Log.WriteDebug("Waiting for other compile/FEC operation to complete...");
+					Log.Debug("Waiting for other compile/FEC operation to complete...");
 					counter--;
 					if (counter == 0)
 					{
-						Log.WriteDebug("Ran out of retries when waiting for compile/FEC operation to complete.");
+						Log.Debug("Ran out of retries when waiting for compile/FEC operation to complete.");
 						return;
 					}
 				}
@@ -51,7 +51,7 @@ namespace DkTools.Compiler
 						var index = line.IndexOf(": error :");
 						if (index >= 0)
 						{
-							Log.WriteDebug("Background FEC error: {0}", line);
+							Log.Debug("Background FEC error: {0}", line);
 
 							string fileName;
 							int lineNum;
@@ -67,7 +67,7 @@ namespace DkTools.Compiler
 						index = line.IndexOf(": warning :");
 						if (index >= 0)
 						{
-							Log.WriteDebug("Background FEC warning: {0}", line);
+							Log.Debug("Background FEC warning: {0}", line);
 
 							string fileName;
 							int lineNum;
@@ -91,7 +91,7 @@ namespace DkTools.Compiler
 				if (exitCode == 0)
 				{
 					if (first) reportError(null);
-					Log.WriteDebug("Background FEC completed successfully.");
+					Log.Debug("Background FEC completed successfully.");
 				}
 				else
 				{
@@ -100,7 +100,7 @@ namespace DkTools.Compiler
 			}
 			catch (Exception ex)
 			{
-				Log.WriteEx(ex);
+				Log.Error(ex);
 			}
 			finally
 			{

@@ -1084,7 +1084,7 @@ namespace DkTools.CodeModel
 			else
 			{
 #if DEBUG
-				Log.WriteDebug("Condition returned indeterminate: {0}\r\n  File Name: {1}\r\n  Position: {2}\r\n  Resolved: {3}",
+				Log.Debug("Condition returned indeterminate: {0}\r\n  File Name: {1}\r\n  Position: {2}\r\n  Resolved: {3}",
 					conditionStr, fileName, pos, writer.Text);
 #endif
 				ret = ConditionResult.Indeterminate;

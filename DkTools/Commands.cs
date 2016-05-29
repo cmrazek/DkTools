@@ -139,7 +139,7 @@ namespace DkTools
 					}
 					catch (Exception ex)
 					{
-						Log.WriteEx(ex, "Error when querying visible status for command ID {0}", id);
+						Log.Error(ex, "Error when querying visible status for command ID {0}", id);
 					}
 				}
 				cmd.cmdObject.Visible = visible;
@@ -153,7 +153,7 @@ namespace DkTools
 					}
 					catch (Exception ex)
 					{
-						Log.WriteEx(ex, "Error when querying enabled status for command ID {0}", id);
+						Log.Error(ex, "Error when querying enabled status for command ID {0}", id);
 					}
 				}
 				cmd.cmdObject.Enabled = enabled;
@@ -167,7 +167,7 @@ namespace DkTools
 					}
 					catch (Exception ex)
 					{
-						Log.WriteEx(ex, "Error when querying checked status for command ID {0}", id);
+						Log.Error(ex, "Error when querying checked status for command ID {0}", id);
 					}
 				}
 				cmd.cmdObject.Checked = chkd;
@@ -188,7 +188,7 @@ namespace DkTools
 			{
 				if (!doc.Saved)
 				{
-					Log.WriteDebug(string.Concat("Doc Path: ", Path.GetFullPath(doc.Path)));
+					Log.Debug(string.Concat("Doc Path: ", Path.GetFullPath(doc.Path)));
 
 					var docFileName = doc.FullName;
 					var saveFile = false;
@@ -211,12 +211,12 @@ namespace DkTools
 					{
 						try
 						{
-							Log.WriteDebug("Saving document: {0}", doc.FullName);
+							Log.Debug("Saving document: {0}", doc.FullName);
 							doc.Save();
 						}
 						catch (Exception ex)
 						{
-							Log.WriteEx(ex, string.Format("Unable to save document '{0}'.", doc.FullName));
+							Log.Error(ex, string.Format("Unable to save document '{0}'.", doc.FullName));
 						}
 					}
 				}
@@ -742,7 +742,7 @@ namespace DkTools
 					}
 					catch (Exception ex)
 					{
-						Log.WriteEx(ex);
+						Log.Error(ex);
 
 						var codeSource = new CodeModel.CodeSource();
 						codeSource.Append(content, new CodeModel.CodeAttributes(fileName, 0, content.Length, true, true, false));
@@ -812,7 +812,7 @@ namespace DkTools
 
 				var tracker = Classifier.TextBufferStateTracker.GetTrackerForTextBuffer(view.TextBuffer);
 				var state = tracker.GetStateForPosition(view.Caret.Position.BufferPosition, view.TextSnapshot);
-				Log.WriteDebug("State at caret: 0x{0:X8}", state);
+				Log.Debug("State at caret: 0x{0:X8}", state);
 			}
 		}
 #endif

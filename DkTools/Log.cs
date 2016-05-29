@@ -46,7 +46,7 @@ namespace DkTools
 			}
 			catch (Exception ex)
 			{
-				Debug.WriteLine(ex.ToString());
+				System.Diagnostics.Debug.WriteLine(ex.ToString());
 				_initialized = false;
 			}
 		}
@@ -67,7 +67,7 @@ namespace DkTools
 			}
 			catch (Exception ex)
 			{
-				Debug.WriteLine(ex);
+				System.Diagnostics.Debug.WriteLine(ex);
 			}
 		}
 
@@ -87,7 +87,7 @@ namespace DkTools
 					}
 					catch (Exception ex)
 					{
-						WriteEx(ex, "Error when examining log file for purge: {0}", logFileName);
+						Error(ex, "Error when examining log file for purge: {0}", logFileName);
 					}
 				}
 
@@ -102,13 +102,13 @@ namespace DkTools
 					}
 					catch (Exception ex)
 					{
-						WriteEx(ex, "Error when deleting old log file: {0}", logFileName);
+						Error(ex, "Error when deleting old log file: {0}", logFileName);
 					}
 				}
 			}
 			catch (Exception ex)
 			{
-				WriteEx(ex, "Error when purging old log files.");
+				Error(ex, "Error when purging old log files.");
 			}
 		}
 
@@ -131,14 +131,14 @@ namespace DkTools
 					_sb.Append(message);
 					var msg = _sb.ToString();
 #if DEBUG
-					Debug.WriteLine(msg);
+					System.Diagnostics.Debug.WriteLine(msg);
 #endif
 					if (_writer != null) _writer.WriteLine(msg);
 				}
 			}
 			catch (Exception ex)
 			{
-				Debug.WriteLine(ex.ToString());
+				System.Diagnostics.Debug.WriteLine(ex.ToString());
 			}
 		}
 
@@ -149,33 +149,71 @@ namespace DkTools
 			Write(level, string.Format(format, args));
 		}
 
-		public static void WriteEx(Exception ex, string message)
+		public static void Error(Exception ex, string message)
 		{
 			Write(LogLevel.Error, string.Concat(message, "\r\n", ex));
 		}
 
-		public static void WriteEx(Exception ex, string format, params object[] args)
+		public static void Error(Exception ex, string format, params object[] args)
 		{
-			WriteEx(ex, string.Format(format, args));
+			Error(ex, string.Format(format, args));
 		}
 
-		public static void WriteEx(Exception ex)
+		public static void Error(Exception ex)
 		{
 			Write(LogLevel.Error, ex.ToString());
 		}
 
-		public static void WriteDebug(string message)
+		public static void Debug(string message)
 		{
 			if (_level > LogLevel.Debug) return;
 
 			Write(LogLevel.Debug, message);
 		}
 
-		public static void WriteDebug(string format, params object[] args)
+		public static void Debug(string format, params object[] args)
 		{
 			if (_level > LogLevel.Debug) return;
 
 			Write(LogLevel.Debug, string.Format(format, args));
+		}
+
+		public static void Info(string message)
+		{
+			if (_level > LogLevel.Info) return;
+
+			Write(LogLevel.Info, message);
+		}
+
+		public static void Info(string format, params object[] args)
+		{
+			if (_level > LogLevel.Info) return;
+
+			Write(LogLevel.Info, string.Format(format, args));
+		}
+
+		public static void Warning(string message)
+		{
+			if (_level > LogLevel.Warning) return;
+
+			Write(LogLevel.Warning, message);
+		}
+
+		public static void Warning(string format, params object[] args)
+		{
+			if (_level > LogLevel.Warning) return;
+
+			Write(LogLevel.Warning, string.Format(format, args));
+		}
+
+		public static void Error(string message)
+		{
+			Write(LogLevel.Error, message);
+		}
+
+		public static void Error(string format, params object[] args)
+		{
+			Write(LogLevel.Error, string.Format(format, args));
 		}
 	}
 }

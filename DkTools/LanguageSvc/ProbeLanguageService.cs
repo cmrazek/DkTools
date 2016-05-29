@@ -50,7 +50,7 @@ namespace DkTools.LanguageSvc
 			}
 			catch (Exception ex)
 			{
-				Log.WriteEx(ex);
+				Log.Error(ex);
 			}
 
 			base.OnIdle(periodic);

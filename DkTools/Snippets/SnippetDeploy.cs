@@ -48,7 +48,7 @@ namespace DkTools.Snippets
 			}
 			catch (Exception ex)
 			{
-				Log.WriteEx(ex);
+				Log.Error(ex);
 			}
 		}
 
@@ -66,7 +66,7 @@ namespace DkTools.Snippets
 					var fileInfo = new FileInfo(fileName);
 					if (fileInfo.LastWriteTime >= deployDate)
 					{
-						Log.WriteDebug("Snippet file '{0}' is already up-to-date.", fileName);
+						Log.Debug("Snippet file '{0}' is already up-to-date.", fileName);
 						return;
 					}
 				}
@@ -84,7 +84,7 @@ namespace DkTools.Snippets
 			}
 			catch (Exception ex)
 			{
-				Log.WriteEx(ex);
+				Log.Error(ex);
 			}
 		}
 	}

@@ -100,7 +100,7 @@ namespace DkTools.FunctionFileScanning
 			}
 			catch (Exception ex)
 			{
-				Log.WriteEx(ex, "Exception in function file scanner.");
+				Log.Error(ex, "Exception in function file scanner.");
 			}
 		}
 
@@ -182,7 +182,7 @@ namespace DkTools.FunctionFileScanning
 			}
 			catch (Exception ex)
 			{
-				Log.WriteEx(ex, string.Format("Exception when scanning directory '{0}' for functions.", dir));
+				Log.Error(ex, string.Format("Exception when scanning directory '{0}' for functions.", dir));
 			}
 		}
 
@@ -230,7 +230,7 @@ namespace DkTools.FunctionFileScanning
 
 				var ffFile = app.GetFileForScan(db, scan.fileName);
 
-				Log.WriteDebug("Processing file: {0} (modified={1}, last modified={2})", scan.fileName, fileModified, modified);
+				Log.Debug("Processing file: {0} (modified={1}, last modified={2})", scan.fileName, fileModified, modified);
 				if (scan.mode == FFScanMode.Exports) Shell.SetStatusText(string.Format("DkTools background scanning file: {0} (exports only)", scan.fileName));
 				else Shell.SetStatusText(string.Format("DkTools background scanning file: {0}", scan.fileName));
 
@@ -264,7 +264,7 @@ namespace DkTools.FunctionFileScanning
 			}
 			catch (Exception ex)
 			{
-				Log.WriteEx(ex, "Exception when background processing function name: {0} (mode: {1})", scan.fileName, scan.mode);
+				Log.Error(ex, "Exception when background processing function name: {0} (mode: {1})", scan.fileName, scan.mode);
 			}
 		}
 
@@ -320,7 +320,7 @@ namespace DkTools.FunctionFileScanning
 			}
 			catch (Exception ex)
 			{
-				Log.WriteEx(ex, "Error when loading function file database.");
+				Log.Error(ex, "Error when loading function file database.");
 				_currentApp = null;
 			}
 		}
@@ -337,13 +337,13 @@ namespace DkTools.FunctionFileScanning
 					{
 						if (fileContext != FileContext.Include && !FileContextUtil.IsLocalizedFile(e.FileName))
 						{
-							Log.WriteDebug("Scanner detected a saved file: {0}", e.FileName);
+							Log.Debug("Scanner detected a saved file: {0}", e.FileName);
 
 							EnqueueChangedFile(e.FileName);
 						}
 						else
 						{
-							Log.WriteDebug("Scanner detected an include file was saved: {0}", e.FileName);
+							Log.Debug("Scanner detected an include file was saved: {0}", e.FileName);
 
 							EnqueueFilesDependentOnInclude(e.FileName);
 						}
@@ -352,7 +352,7 @@ namespace DkTools.FunctionFileScanning
 			}
 			catch (Exception ex)
 			{
-				Log.WriteEx(ex);
+				Log.Error(ex);
 			}
 		}
 
@@ -397,7 +397,7 @@ namespace DkTools.FunctionFileScanning
 
 				if (fileIds.Any())
 				{
-					Log.WriteDebug("Resetting modified date on {0} file(s).", fileIds.Count);
+					Log.Debug("Resetting modified date on {0} file(s).", fileIds.Count);
 
 					using (var cmd = db.CreateCommand("update file_ set modified = '1900-01-01' where id = @id"))
 					{

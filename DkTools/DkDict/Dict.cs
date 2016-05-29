@@ -68,7 +68,7 @@ namespace DkTools.DkDict
 			}
 			catch (Exception ex)
 			{
-				Log.WriteEx(ex, "Error when reading DICT file.");
+				Log.Error(ex, "Error when reading DICT file.");
 			}
 		}
 

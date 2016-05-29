@@ -101,7 +101,11 @@ namespace DkTools
 								var path = _currentApp.SourcePath[i];
 								if (string.IsNullOrWhiteSpace(path))
 								{
-									Log.Write(LogLevel.Warning, "PROBE environment has returned a blank source path in slot {0}.", i);
+									Log.Warning("PROBE environment has returned a blank source path in slot {0}.", i);
+								}
+								else if (!Directory.Exists(path))
+								{
+									Log.Warning("Source directory [{0}] does not exist.", path);
 								}
 								else
 								{
@@ -110,7 +114,7 @@ namespace DkTools
 							}
 							catch (Exception ex)
 							{
-								Log.WriteEx(ex, "Exception when attempting to retrieve source dir in slot{0}", i);
+								Log.Error(ex, "Exception when attempting to retrieve source dir in slot{0}", i);
 							}
 							
 						}
@@ -150,7 +154,11 @@ namespace DkTools
 								var path = _currentApp.ExePath[i];
 								if (string.IsNullOrWhiteSpace(path))
 								{
-									Log.Write(LogLevel.Warning, "PROBE has returned a blank exe path in slot {0}", i);
+									Log.Warning("PROBE has returned a blank exe path in slot {0}", i);
+								}
+								else if (!Directory.Exists(path))
+								{
+									Log.Warning("Exe directory [{0}] does not exist.", path);
 								}
 								else
 								{
@@ -159,7 +167,7 @@ namespace DkTools
 							}
 							catch (Exception ex)
 							{
-								Log.WriteEx(ex, "Exception when attempting to retrieve exe path in slot {0}", i);
+								Log.Error(ex, "Exception when attempting to retrieve exe path in slot {0}", i);
 							}
 						}
 
@@ -227,7 +235,11 @@ namespace DkTools
 								var path = _currentApp.LibraryPath[i];
 								if (string.IsNullOrWhiteSpace(path))
 								{
-									Log.Write(LogLevel.Warning, "PROBE returned blank lib path in slot {0}", i);
+									Log.Warning("PROBE returned blank lib path in slot {0}", i);
+								}
+								else if (!Directory.Exists(path))
+								{
+									Log.Warning("Lib directory [{0}] does not exist.", path);
 								}
 								else
 								{
@@ -236,7 +248,7 @@ namespace DkTools
 							}
 							catch (Exception ex)
 							{
-								Log.WriteEx(ex, "Exception when attempting to retrieve lib path in slot {0}", i);
+								Log.Error(ex, "Exception when attempting to retrieve lib path in slot {0}", i);
 							}
 							
 						}
@@ -270,7 +282,11 @@ namespace DkTools
 								var path = _currentApp.IncludePath[i];
 								if (string.IsNullOrWhiteSpace(path))
 								{
-									Log.Write(LogLevel.Warning, "PROBE has returned blank include path in slot {0}", i);
+									Log.Warning("PROBE has returned blank include path in slot {0}", i);
+								}
+								else if (!Directory.Exists(path))
+								{
+									Log.Warning("Lib directory [{0}] does not exist.", path);
 								}
 								else
 								{
@@ -279,7 +295,7 @@ namespace DkTools
 							}
 							catch (Exception ex)
 							{
-								Log.WriteEx(ex, "Exception when attempting to retrieve include path slot {0}", i);
+								Log.Error(ex, "Exception when attempting to retrieve include path slot {0}", i);
 							}
 						}
 
@@ -369,7 +385,7 @@ namespace DkTools
 				}
 				catch (Exception ex)
 				{
-					Log.WriteEx(ex, "Error when setting current Probe app.");
+					Log.Error(ex, "Error when setting current Probe app.");
 				}
 			}
 		}
@@ -436,7 +452,7 @@ namespace DkTools
 			}
 			catch (Exception ex)
 			{
-				Log.WriteEx(ex, "Exception when reloading DK table list.");
+				Log.Error(ex, "Exception when reloading DK table list.");
 			}
 		}
 		#endregion
@@ -594,8 +610,15 @@ namespace DkTools
 				_includeFiles = new List<string>();
 				foreach (var dir in IncludeDirs)
 				{
-					if (string.IsNullOrWhiteSpace(dir)) continue;
-					_includeFiles.AddRange(GetAllIncludeFiles_ProcessDir(dir));
+					try
+					{
+						if (string.IsNullOrWhiteSpace(dir) || !Directory.Exists(dir)) continue;
+						_includeFiles.AddRange(GetAllIncludeFiles_ProcessDir(dir));
+					}
+					catch (Exception ex)
+					{
+						Log.Error(ex, "Exception when scanning for include files in directory [{0}]", dir);
+					}
 				}
 			}
 			return _includeFiles;
@@ -603,18 +626,29 @@ namespace DkTools
 
 		private static IEnumerable<string> GetAllIncludeFiles_ProcessDir(string dir)
 		{
+			var files = new List<string>();
+
 			foreach (var fileName in Directory.GetFiles(dir))
 			{
-				yield return fileName;
+				files.Add(fileName);
 			}
 
 			foreach (var subDir in Directory.GetDirectories(dir))
 			{
-				foreach (var fileName in GetAllIncludeFiles_ProcessDir(subDir))
+				try
 				{
-					yield return fileName;
+					foreach (var fileName in GetAllIncludeFiles_ProcessDir(subDir))
+					{
+						files.Add(fileName);
+					}
+				}
+				catch (Exception ex)
+				{
+					Log.Error(ex, "Exception when scanning for include files in subdirectory [{0}]", subDir);
 				}
 			}
+
+			return files;
 		}
 
 		public static IEnumerable<string> GetAllSourceIncludeFiles()

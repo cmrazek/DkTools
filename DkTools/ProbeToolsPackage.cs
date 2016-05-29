@@ -398,7 +398,7 @@ namespace DkTools
 					}
 					catch (Exception ex)
 					{
-						Log.WriteDebug("Exception when processing finished callback for background work item: {0}", ex);
+						Log.Debug("Exception when processing finished callback for background work item: {0}", ex);
 					}
 				}
 			}
