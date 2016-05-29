@@ -309,12 +309,15 @@ namespace DkTools
 
 				using (var pr = new ProcessRunner())
 				{
-					int exitCode = pr.ExecuteProcess("fec.exe", string.Concat("\"", baseFileName, "\""),
-						Path.GetDirectoryName(baseFileName), true);
+					var args = string.Concat("\"", baseFileName, "\"");
+
+					var output = new StringOutput();
+
+					var exitCode = pr.CaptureProcess("fec.exe", args, Path.GetDirectoryName(baseFileName), output);
 
 					if (exitCode != 0)
 					{
-						Shell.ShowError(string.Format("FEC returned exit code {0}.", exitCode));
+						Shell.ShowError(string.Format("FEC returned exit code {0}\r\n\r\n{1}", exitCode, output.Text));
 						return;
 					}
 				}
