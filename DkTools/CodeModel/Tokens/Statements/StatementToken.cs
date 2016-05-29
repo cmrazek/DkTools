@@ -32,6 +32,7 @@ namespace DkTools.CodeModel.Tokens
 				case "format":
 				case "header":
 				case "if":
+				case "page":
 				case "return":
 				case "row":
 				case "select":
@@ -95,6 +96,7 @@ namespace DkTools.CodeModel.Tokens
 						case "col":
 						case "row":
 						case "colff":
+						case "page":
 							{
 								var keywordToken = new KeywordToken(scope, code.MovePeekedSpan(), code.Text);
 								var token = RowColStatement.Parse(scope, keywordToken);
