@@ -186,7 +186,7 @@ namespace DkTools.FunctionFileScanning
 						}
 						catch (Exception ex)
 						{
-							Log.WriteEx(ex, "Exception when deleting old scanner database.");
+							Log.Error(ex, "Exception when deleting old scanner database.");
 						}
 					}
 				}
