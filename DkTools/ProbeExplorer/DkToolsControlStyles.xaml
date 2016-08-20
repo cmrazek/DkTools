@@ -1,0 +1,696 @@
+﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+					xmlns:vs_shell="clr-namespace:Microsoft.VisualStudio.PlatformUI;assembly=Microsoft.VisualStudio.Shell.11.0" xmlns:Themes="clr-namespace:Microsoft.Windows.Themes;assembly=PresentationFramework.Aero2">
+	<!-- http://www.wpftutorial.net/ListBoxSelectionBackground.html -->
+	<!-- http://stackoverflow.com/questions/2138200/change-background-color-for-selected-listbox-item -->
+	<!-- https://msdn.microsoft.com/en-us/library/microsoft.visualstudio.platformui.environmentcolors(v=vs.110).aspx -->
+	<!-- http://sellsbrothers.com/2091 -->
+	<Style TargetType="{x:Type Label}">
+		<Setter Property="Foreground" Value="{DynamicResource {x:Static vs_shell:EnvironmentColors.ToolWindowTextBrushKey}}"/>
+	</Style>
+	<Style TargetType="{x:Type TextBlock}">
+		<Setter Property="Foreground" Value="{DynamicResource {x:Static vs_shell:EnvironmentColors.ToolWindowTextBrushKey}}"/>
+	</Style>
+	<Style TargetType="{x:Type TextBox}">
+		<Setter Property="Foreground" Value="{DynamicResource {x:Static vs_shell:EnvironmentColors.ToolWindowTextBrushKey}}"/>
+		<Setter Property="Background" Value="{DynamicResource {x:Static vs_shell:EnvironmentColors.ToolWindowBackgroundBrushKey}}"/>
+	</Style>
+
+	<!-- ListBox -->
+	<Style TargetType="{x:Type ListBox}">
+		<Setter Property="Foreground" Value="{DynamicResource {x:Static vs_shell:EnvironmentColors.ToolWindowTextBrushKey}}"/>
+		<Setter Property="Background" Value="{DynamicResource {x:Static vs_shell:EnvironmentColors.ToolWindowBackgroundBrushKey}}"/>
+	</Style>
+	<Style x:Key="ListBoxItemStyle_Style" TargetType="{x:Type ListBoxItem}">
+		<Setter Property="Template">
+			<Setter.Value>
+				<ControlTemplate TargetType="{x:Type ListBoxItem}">
+					<Border x:Name="_ListViewItemBorder" Padding="2" SnapsToDevicePixels="True">
+						<ContentPresenter/>
+					</Border>
+					<ControlTemplate.Triggers>
+						<Trigger Property="IsSelected" Value="True">
+							<Setter TargetName="_ListViewItemBorder" Property="Background" Value="{DynamicResource {x:Static vs_shell:EnvironmentColors.SystemHighlightBrushKey}}"/>
+							<Setter Property="Foreground" Value="{DynamicResource {x:Static vs_shell:EnvironmentColors.SystemHighlightTextBrushKey}}"/>
+						</Trigger>
+					</ControlTemplate.Triggers>
+				</ControlTemplate>
+			</Setter.Value>
+		</Setter>
+	</Style>
+
+	<!-- TreeView -->
+	<Style TargetType="{x:Type TreeView}">
+		<Setter Property="Foreground" Value="{DynamicResource {x:Static vs_shell:EnvironmentColors.ToolWindowTextBrushKey}}"/>
+		<Setter Property="Background" Value="{DynamicResource {x:Static vs_shell:EnvironmentColors.ToolWindowBackgroundBrushKey}}"/>
+	</Style>
+	<ControlTemplate x:Key="ProbeExplorerTreeViewControlTemplate" TargetType="{x:Type TreeView}">
+		<Border x:Name="Bd" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" SnapsToDevicePixels="True">
+			<ScrollViewer x:Name="_tv_scrollviewer_" Background="{TemplateBinding Background}" CanContentScroll="False" Focusable="False" HorizontalScrollBarVisibility="{TemplateBinding ScrollViewer.HorizontalScrollBarVisibility}" Padding="{TemplateBinding Padding}" SnapsToDevicePixels="{TemplateBinding SnapsToDevicePixels}" VerticalScrollBarVisibility="{TemplateBinding ScrollViewer.VerticalScrollBarVisibility}">
+				<ItemsPresenter/>
+			</ScrollViewer>
+		</Border>
+		<ControlTemplate.Triggers>
+			<Trigger Property="IsEnabled" Value="False">
+				<Setter Property="Background" TargetName="Bd" Value="{DynamicResource {x:Static vs_shell:EnvironmentColors.ToolWindowBackgroundBrushKey}}"/>
+			</Trigger>
+			<Trigger Property="VirtualizingPanel.IsVirtualizing" Value="True">
+				<Setter Property="CanContentScroll" TargetName="_tv_scrollviewer_" Value="True"/>
+			</Trigger>
+		</ControlTemplate.Triggers>
+	</ControlTemplate>
+	<Style x:Key="ExpandCollapseToggleStyle"
+		TargetType="{x:Type ToggleButton}">
+		<Setter Property="Focusable"
+			Value="False" />
+		<Setter Property="Template">
+			<Setter.Value>
+				<ControlTemplate TargetType="{x:Type ToggleButton}">
+					<Grid Width="15" Height="13" Background="Transparent">
+						<VisualStateManager.VisualStateGroups>
+							<VisualStateGroup x:Name="CheckStates">
+								<VisualState x:Name="Checked">
+									<Storyboard>
+										<ObjectAnimationUsingKeyFrames Storyboard.TargetProperty="(UIElement.Visibility)" Storyboard.TargetName="Collapsed">
+											<DiscreteObjectKeyFrame KeyTime="0" Value="{x:Static Visibility.Hidden}" />
+										</ObjectAnimationUsingKeyFrames>
+										<ObjectAnimationUsingKeyFrames Storyboard.TargetProperty="(UIElement.Visibility)" Storyboard.TargetName="Expanded">
+											<DiscreteObjectKeyFrame KeyTime="0" Value="{x:Static Visibility.Visible}" />
+										</ObjectAnimationUsingKeyFrames>
+									</Storyboard>
+								</VisualState>
+								<VisualState x:Name="Unchecked" />
+								<VisualState x:Name="Indeterminate" />
+							</VisualStateGroup>
+						</VisualStateManager.VisualStateGroups>
+						<Path x:Name="Collapsed" HorizontalAlignment="Left" VerticalAlignment="Center" Margin="1,1,1,1" Data="M 4 0 L 8 4 L 4 8 Z">
+							<Path.Fill>
+								<SolidColorBrush Color="{DynamicResource {x:Static vs_shell:EnvironmentColors.ToolWindowBackgroundColorKey}}" />
+							</Path.Fill>
+							<Path.Stroke>
+								<SolidColorBrush Color="{DynamicResource {x:Static vs_shell:EnvironmentColors.ComboBoxGlyphColorKey}}" />
+							</Path.Stroke>
+						</Path>
+						<Path x:Name="Expanded" HorizontalAlignment="Left" VerticalAlignment="Center" Margin="1,1,1,1" Data="M 0 4 L 8 4 L 4 8 Z" Visibility="Hidden">
+							<Path.Fill>
+								<SolidColorBrush Color="{DynamicResource {x:Static vs_shell:EnvironmentColors.ComboBoxGlyphColorKey}}" />
+							</Path.Fill>
+							<!--<Path.Stroke>
+								<SolidColorBrush Color="{DynamicResource {x:Static vs_shell:EnvironmentColors.ComboBoxGlyphColorKey}}" />
+							</Path.Stroke>-->
+						</Path>
+					</Grid>
+				</ControlTemplate>
+			</Setter.Value>
+		</Setter>
+	</Style>
+	<Style x:Key="TreeViewItemFocusVisual">
+		<Setter Property="Control.Template">
+			<Setter.Value>
+				<ControlTemplate>
+					<Border>
+						<Rectangle Margin="0,0,0,0" StrokeThickness="5" Stroke="Black" StrokeDashArray="1 2" Opacity="0" />
+					</Border>
+				</ControlTemplate>
+			</Setter.Value>
+		</Setter>
+	</Style>
+	<Style x:Key="TreeViewItem_Style" TargetType="{x:Type TreeViewItem}">
+		<Setter Property="Template">
+			<Setter.Value>
+				<ControlTemplate TargetType="{x:Type TreeViewItem}">
+					<Grid>
+						<Grid.ColumnDefinitions>
+							<ColumnDefinition MinWidth="19"
+								Width="Auto" />
+							<ColumnDefinition Width="Auto" />
+							<ColumnDefinition Width="*" />
+						</Grid.ColumnDefinitions>
+						<Grid.RowDefinitions>
+							<RowDefinition Height="Auto" />
+							<RowDefinition />
+						</Grid.RowDefinitions>
+						<VisualStateManager.VisualStateGroups>
+							<VisualStateGroup x:Name="SelectionStates">
+								<VisualState x:Name="Selected">
+									<Storyboard>
+										<ColorAnimationUsingKeyFrames Storyboard.TargetName="Bd" Storyboard.TargetProperty="(Panel.Background).(SolidColorBrush.Color)">
+											<EasingColorKeyFrame KeyTime="0" Value="{DynamicResource {x:Static vs_shell:EnvironmentColors.SystemHighlightColorKey}}" />
+										</ColorAnimationUsingKeyFrames>
+									</Storyboard>
+								</VisualState>
+								<VisualState x:Name="Unselected" />
+								<VisualState x:Name="SelectedInactive">
+									<Storyboard>
+										<ColorAnimationUsingKeyFrames Storyboard.TargetName="Bd" Storyboard.TargetProperty="(Panel.Background).(SolidColorBrush.Color)">
+											<EasingColorKeyFrame KeyTime="0" Value="{DynamicResource {x:Static vs_shell:EnvironmentColors.SystemHighlightColorKey}}" />
+										</ColorAnimationUsingKeyFrames>
+									</Storyboard>
+								</VisualState>
+							</VisualStateGroup>
+							<VisualStateGroup x:Name="ExpansionStates">
+								<VisualState x:Name="Expanded">
+									<Storyboard>
+										<ObjectAnimationUsingKeyFrames Storyboard.TargetProperty="(UIElement.Visibility)" Storyboard.TargetName="ItemsHost">
+											<DiscreteObjectKeyFrame KeyTime="0" Value="{x:Static Visibility.Visible}" />
+										</ObjectAnimationUsingKeyFrames>
+									</Storyboard>
+								</VisualState>
+								<VisualState x:Name="Collapsed" />
+							</VisualStateGroup>
+						</VisualStateManager.VisualStateGroups>
+						<ToggleButton x:Name="Expander" Style="{StaticResource ExpandCollapseToggleStyle}" ClickMode="Press" IsChecked="{Binding IsExpanded, RelativeSource={RelativeSource TemplatedParent}}"/>
+						<Border x:Name="Bd" Grid.Column="1" Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" Padding="{TemplateBinding Padding}">
+							<ContentPresenter x:Name="PART_Header" ContentSource="Header" HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"/>
+						</Border>
+						<ItemsPresenter x:Name="ItemsHost" Grid.Row="1" Grid.Column="1" Grid.ColumnSpan="2" Visibility="Collapsed" />
+					</Grid>
+					<ControlTemplate.Triggers>
+						<Trigger Property="HasItems" Value="false">
+							<Setter TargetName="Expander" Property="Visibility" Value="Hidden" />
+						</Trigger>
+						<MultiTrigger>
+							<MultiTrigger.Conditions>
+								<Condition Property="HasHeader" Value="false" />
+								<Condition Property="Width" Value="Auto" />
+							</MultiTrigger.Conditions>
+							<Setter TargetName="PART_Header" Property="MinWidth" Value="75" />
+						</MultiTrigger>
+						<MultiTrigger>
+							<MultiTrigger.Conditions>
+								<Condition Property="HasHeader" Value="false" />
+								<Condition Property="Height" Value="Auto" />
+							</MultiTrigger.Conditions>
+							<Setter TargetName="PART_Header" Property="MinHeight" Value="19" />
+						</MultiTrigger>
+					</ControlTemplate.Triggers>
+				</ControlTemplate>
+			</Setter.Value>
+		</Setter>
+	</Style>
+
+	
+	<Style TargetType="ComboBox">
+		<Setter Property="Foreground" Value="{DynamicResource {x:Static vs_shell:EnvironmentColors.ComboBoxTextBrushKey}}"/>
+	</Style>
+	<ControlTemplate x:Key="DkToolsComboBoxControlTemplate" TargetType="{x:Type ComboBox}">
+		<Grid x:Name="templateRoot" SnapsToDevicePixels="True">
+			<Grid.ColumnDefinitions>
+				<ColumnDefinition Width="*"/>
+				<ColumnDefinition MinWidth="{DynamicResource {x:Static SystemParameters.VerticalScrollBarWidthKey}}" Width="0"/>
+			</Grid.ColumnDefinitions>
+			<Popup x:Name="PART_Popup" AllowsTransparency="True" Grid.ColumnSpan="2" IsOpen="{Binding IsDropDownOpen, Mode=TwoWay, RelativeSource={RelativeSource TemplatedParent}}" Margin="1"
+				   PopupAnimation="{DynamicResource {x:Static SystemParameters.ComboBoxPopupAnimationKey}}" Placement="Bottom">
+				<Themes:SystemDropShadowChrome x:Name="shadow" Color="Transparent" MaxHeight="{TemplateBinding MaxDropDownHeight}" MinWidth="{Binding ActualWidth, ElementName=templateRoot}">
+					<Border x:Name="DropDownBorder" BorderBrush="{DynamicResource {x:Static vs_shell:EnvironmentColors.ComboBoxPopupBorderBrushKey}}" BorderThickness="1"
+							Background="{DynamicResource {x:Static vs_shell:EnvironmentColors.ComboBoxPopupBackgroundBeginBrushKey}}">
+						<!--<Border x:Name="DropDownBorder" BorderBrush="{DynamicResource {x:Static SystemColors.WindowFrameBrushKey}}" BorderThickness="1" Background="{DynamicResource {x:Static SystemColors.WindowBrushKey}}">-->
+						<ScrollViewer x:Name="DropDownScrollViewer">
+							<Grid x:Name="grid" RenderOptions.ClearTypeHint="Enabled">
+								<Canvas x:Name="canvas" HorizontalAlignment="Left" Height="0" VerticalAlignment="Top" Width="0">
+									<Rectangle x:Name="OpaqueRect" Fill="{Binding Background, ElementName=DropDownBorder}" Height="{Binding ActualHeight, ElementName=DropDownBorder}" Width="{Binding ActualWidth, ElementName=DropDownBorder}"/>
+								</Canvas>
+								<ItemsPresenter x:Name="ItemsPresenter" KeyboardNavigation.DirectionalNavigation="Contained" SnapsToDevicePixels="{TemplateBinding SnapsToDevicePixels}"/>
+							</Grid>
+						</ScrollViewer>
+					</Border>
+				</Themes:SystemDropShadowChrome>
+			</Popup>
+			<ToggleButton x:Name="toggleButton" BorderBrush="{DynamicResource {x:Static vs_shell:EnvironmentColors.ComboBoxBorderBrushKey}}"
+						  BorderThickness="{TemplateBinding BorderThickness}" Background="{TemplateBinding Background}" Grid.ColumnSpan="2"
+						  IsChecked="{Binding IsDropDownOpen, Mode=TwoWay, RelativeSource={RelativeSource TemplatedParent}}">
+				<ToggleButton.Style>
+					<Style TargetType="{x:Type ToggleButton}">
+						<Setter Property="OverridesDefaultStyle" Value="True"/>
+						<Setter Property="IsTabStop" Value="False"/>
+						<Setter Property="Focusable" Value="False"/>
+						<Setter Property="ClickMode" Value="Press"/>
+						<Setter Property="Template">
+							<Setter.Value>
+								<ControlTemplate TargetType="{x:Type ToggleButton}">
+									<Border x:Name="templateRoot"
+											BorderBrush="{DynamicResource {x:Static vs_shell:EnvironmentColors.ComboBoxBorderBrushKey}}"
+											BorderThickness="{TemplateBinding BorderThickness}"
+											SnapsToDevicePixels="True"
+											Background="{DynamicResource {x:Static vs_shell:EnvironmentColors.ComboBoxBackgroundBrushKey}}">
+										<Border x:Name="splitBorder" BorderBrush="Transparent" BorderThickness="1" HorizontalAlignment="Right" Margin="0" SnapsToDevicePixels="True" Width="{DynamicResource {x:Static SystemParameters.VerticalScrollBarWidthKey}}">
+											<Path x:Name="Arrow" Data="F1M0,0L2.667,2.66665 5.3334,0 5.3334,-1.78168 2.6667,0.88501 0,-1.78168 0,0z" Fill="{DynamicResource {x:Static vs_shell:EnvironmentColors.ComboBoxGlyphBrushKey}}" HorizontalAlignment="Center" Margin="0" VerticalAlignment="Center"/>
+										</Border>
+									</Border>
+									<ControlTemplate.Triggers>
+										<MultiDataTrigger>
+											<MultiDataTrigger.Conditions>
+												<Condition Binding="{Binding IsEditable, RelativeSource={RelativeSource FindAncestor, AncestorLevel=1, AncestorType={x:Type ComboBox}}}" Value="true"/>
+												<Condition Binding="{Binding IsMouseOver, RelativeSource={RelativeSource Self}}" Value="false"/>
+												<Condition Binding="{Binding IsPressed, RelativeSource={RelativeSource Self}}" Value="false"/>
+												<Condition Binding="{Binding IsEnabled, RelativeSource={RelativeSource Self}}" Value="true"/>
+											</MultiDataTrigger.Conditions>
+											<Setter Property="Background" TargetName="templateRoot" Value="White"/>
+											<Setter Property="BorderBrush" TargetName="templateRoot" Value="{DynamicResource {x:Static vs_shell:EnvironmentColors.ComboBoxMouseOverBorderBrushKey}}"/>
+											<Setter Property="Background" TargetName="splitBorder" Value="Transparent"/>
+											<Setter Property="BorderBrush" TargetName="splitBorder" Value="Transparent"/>
+										</MultiDataTrigger>
+										<Trigger Property="IsMouseOver" Value="True">
+											<Setter Property="Fill" TargetName="Arrow" Value="Black"/>
+										</Trigger>
+										<MultiDataTrigger>
+											<MultiDataTrigger.Conditions>
+												<Condition Binding="{Binding IsMouseOver, RelativeSource={RelativeSource Self}}" Value="true"/>
+												<Condition Binding="{Binding IsEditable, RelativeSource={RelativeSource FindAncestor, AncestorLevel=1, AncestorType={x:Type ComboBox}}}" Value="false"/>
+											</MultiDataTrigger.Conditions>
+											<Setter Property="Background" TargetName="templateRoot">
+												<Setter.Value>
+													<LinearGradientBrush EndPoint="0,1" StartPoint="0,0">
+														<GradientStop Color="{DynamicResource {x:Static vs_shell:EnvironmentColors.ComboBoxMouseOverBackgroundBeginColorKey}}" Offset="0"/>
+														<GradientStop Color="{DynamicResource {x:Static vs_shell:EnvironmentColors.ComboBoxMouseOverBackgroundEndColorKey}}" Offset="1"/>
+													</LinearGradientBrush>
+												</Setter.Value>
+											</Setter>
+											<Setter Property="BorderBrush" TargetName="templateRoot" Value="{DynamicResource {x:Static vs_shell:EnvironmentColors.ComboBoxMouseOverBorderBrushKey}}"/>
+										</MultiDataTrigger>
+										<MultiDataTrigger>
+											<MultiDataTrigger.Conditions>
+												<Condition Binding="{Binding IsMouseOver, RelativeSource={RelativeSource Self}}" Value="true"/>
+												<Condition Binding="{Binding IsEditable, RelativeSource={RelativeSource FindAncestor, AncestorLevel=1, AncestorType={x:Type ComboBox}}}" Value="true"/>
+											</MultiDataTrigger.Conditions>
+											<Setter Property="Background" TargetName="templateRoot" Value="White"/>
+											<Setter Property="BorderBrush" TargetName="templateRoot" Value="{DynamicResource {x:Static vs_shell:EnvironmentColors.ComboBoxMouseOverBorderBrushKey}}"/>
+											<Setter Property="Background" TargetName="splitBorder" Value="{DynamicResource {x:Static vs_shell:EnvironmentColors.ComboBoxBackgroundBrushKey}}"/>
+											<Setter Property="BorderBrush" TargetName="splitBorder" Value="{DynamicResource {x:Static vs_shell:EnvironmentColors.ComboBoxBorderBrushKey}}"/>
+										</MultiDataTrigger>
+										<Trigger Property="IsPressed" Value="True">
+											<Setter Property="Fill" TargetName="Arrow" Value="Black"/>
+										</Trigger>
+										<MultiDataTrigger>
+											<MultiDataTrigger.Conditions>
+												<Condition Binding="{Binding IsPressed, RelativeSource={RelativeSource Self}}" Value="true"/>
+												<Condition Binding="{Binding IsEditable, RelativeSource={RelativeSource FindAncestor, AncestorLevel=1, AncestorType={x:Type ComboBox}}}" Value="false"/>
+											</MultiDataTrigger.Conditions>
+											<Setter Property="Background" TargetName="templateRoot" Value="{DynamicResource {x:Static vs_shell:EnvironmentColors.ComboBoxMouseDownBackgroundBrushKey}}"/>
+											<Setter Property="BorderBrush" TargetName="templateRoot" Value="{DynamicResource {x:Static vs_shell:EnvironmentColors.ComboBoxMouseDownBorderBrushKey}}"/>
+										</MultiDataTrigger>
+										<MultiDataTrigger>
+											<MultiDataTrigger.Conditions>
+												<Condition Binding="{Binding IsPressed, RelativeSource={RelativeSource Self}}" Value="true"/>
+												<Condition Binding="{Binding IsEditable, RelativeSource={RelativeSource FindAncestor, AncestorLevel=1, AncestorType={x:Type ComboBox}}}" Value="true"/>
+											</MultiDataTrigger.Conditions>
+											<Setter Property="Background" TargetName="templateRoot" Value="White"/>
+											<Setter Property="BorderBrush" TargetName="templateRoot" Value="{DynamicResource {x:Static vs_shell:EnvironmentColors.ComboBoxMouseDownBorderBrushKey}}"/>
+											<Setter Property="Background" TargetName="splitBorder" Value="{DynamicResource {x:Static vs_shell:EnvironmentColors.ComboBoxMouseDownBackgroundBrushKey}}"/>
+											<Setter Property="BorderBrush" TargetName="splitBorder" Value="{DynamicResource {x:Static vs_shell:EnvironmentColors.ComboBoxMouseDownBorderBrushKey}}"/>
+										</MultiDataTrigger>
+										<Trigger Property="IsEnabled" Value="False">
+											<Setter Property="Fill" TargetName="Arrow" Value="{DynamicResource {x:Static vs_shell:EnvironmentColors.ComboBoxDisabledGlyphColorKey}}"/>
+										</Trigger>
+										<MultiDataTrigger>
+											<MultiDataTrigger.Conditions>
+												<Condition Binding="{Binding IsEnabled, RelativeSource={RelativeSource Self}}" Value="false"/>
+												<Condition Binding="{Binding IsEditable, RelativeSource={RelativeSource FindAncestor, AncestorLevel=1, AncestorType={x:Type ComboBox}}}" Value="false"/>
+											</MultiDataTrigger.Conditions>
+											<Setter Property="Background" TargetName="templateRoot" Value="{DynamicResource {x:Static vs_shell:EnvironmentColors.ComboBoxDisabledBackgroundBrushKey}}"/>
+											<Setter Property="BorderBrush" TargetName="templateRoot" Value="{DynamicResource {x:Static vs_shell:EnvironmentColors.ComboBoxDisabledBorderColorKey}}"/>
+										</MultiDataTrigger>
+										<MultiDataTrigger>
+											<MultiDataTrigger.Conditions>
+												<Condition Binding="{Binding IsEnabled, RelativeSource={RelativeSource Self}}" Value="false"/>
+												<Condition Binding="{Binding IsEditable, RelativeSource={RelativeSource FindAncestor, AncestorLevel=1, AncestorType={x:Type ComboBox}}}" Value="true"/>
+											</MultiDataTrigger.Conditions>
+											<Setter Property="Background" TargetName="templateRoot" Value="White"/>
+											<Setter Property="BorderBrush" TargetName="templateRoot" Value="{DynamicResource {x:Static vs_shell:EnvironmentColors.ComboBoxDisabledBorderColorKey}}"/>
+											<Setter Property="Background" TargetName="splitBorder" Value="Transparent"/>
+											<Setter Property="BorderBrush" TargetName="splitBorder" Value="Transparent"/>
+										</MultiDataTrigger>
+									</ControlTemplate.Triggers>
+								</ControlTemplate>
+							</Setter.Value>
+						</Setter>
+					</Style>
+				</ToggleButton.Style>
+			</ToggleButton>
+			<ContentPresenter x:Name="contentPresenter" ContentTemplate="{TemplateBinding SelectionBoxItemTemplate}" Content="{TemplateBinding SelectionBoxItem}"
+							  ContentStringFormat="{TemplateBinding SelectionBoxItemStringFormat}" HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
+							  IsHitTestVisible="False" Margin="{TemplateBinding Padding}" SnapsToDevicePixels="{TemplateBinding SnapsToDevicePixels}"
+							  VerticalAlignment="{TemplateBinding VerticalContentAlignment}"/>
+		</Grid>
+		<ControlTemplate.Triggers>
+			<Trigger Property="HasDropShadow" SourceName="PART_Popup" Value="True">
+				<Setter Property="Margin" TargetName="shadow" Value="0,0,5,5"/>
+				<Setter Property="Color" TargetName="shadow" Value="#71000000"/>
+			</Trigger>
+			<Trigger Property="HasItems" Value="False">
+				<Setter Property="Height" TargetName="DropDownBorder" Value="95"/>
+			</Trigger>
+			<MultiTrigger>
+				<MultiTrigger.Conditions>
+					<Condition Property="IsGrouping" Value="True"/>
+					<Condition Property="VirtualizingPanel.IsVirtualizingWhenGrouping" Value="False"/>
+				</MultiTrigger.Conditions>
+				<Setter Property="ScrollViewer.CanContentScroll" Value="False"/>
+			</MultiTrigger>
+			<Trigger Property="CanContentScroll" SourceName="DropDownScrollViewer" Value="False">
+				<Setter Property="Canvas.Top" TargetName="OpaqueRect" Value="{Binding VerticalOffset, ElementName=DropDownScrollViewer}"/>
+				<Setter Property="Canvas.Left" TargetName="OpaqueRect" Value="{Binding HorizontalOffset, ElementName=DropDownScrollViewer}"/>
+			</Trigger>
+		</ControlTemplate.Triggers>
+	</ControlTemplate>
+	
+	<!-- Button -->
+	<ControlTemplate x:Key="DkToolsButtonControlTemplate" TargetType="{x:Type Button}">
+		<Border x:Name="border"
+				BorderBrush="{DynamicResource {x:Static vs_shell:EnvironmentColors.ComboBoxBorderBrushKey}}"
+				BorderThickness="{TemplateBinding BorderThickness}"
+				Background="{DynamicResource {x:Static vs_shell:EnvironmentColors.ComboBoxBackgroundBrushKey}}"
+				SnapsToDevicePixels="True">
+			<ContentPresenter x:Name="contentPresenter" ContentTemplate="{TemplateBinding ContentTemplate}" Content="{TemplateBinding Content}" ContentStringFormat="{TemplateBinding ContentStringFormat}"
+							  Focusable="False" HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}" Margin="{TemplateBinding Padding}" RecognizesAccessKey="True"
+							  SnapsToDevicePixels="{TemplateBinding SnapsToDevicePixels}" VerticalAlignment="{TemplateBinding VerticalContentAlignment}"/>
+		</Border>
+		<ControlTemplate.Triggers>
+			<Trigger Property="IsDefaulted" Value="True">
+				<Setter Property="BorderBrush" TargetName="border" Value="{DynamicResource {x:Static SystemColors.HighlightBrushKey}}"/>
+				<Setter Property="Background" TargetName="border" Value="{DynamicResource {x:Static vs_shell:EnvironmentColors.ComboBoxMouseOverBackgroundBeginBrushKey}}"/>
+				<Setter Property="TextElement.Foreground" TargetName="contentPresenter" Value="{DynamicResource {x:Static vs_shell:EnvironmentColors.ComboBoxTextBrushKey}}"/>
+			</Trigger>
+			<Trigger Property="IsMouseOver" Value="True">
+				<Setter Property="Background" TargetName="border" Value="{DynamicResource {x:Static vs_shell:EnvironmentColors.ComboBoxMouseOverBackgroundBeginBrushKey}}"/>
+				<Setter Property="BorderBrush" TargetName="border" Value="{DynamicResource {x:Static vs_shell:EnvironmentColors.ComboBoxBorderBrushKey}}"/>
+				<Setter Property="TextElement.Foreground" TargetName="contentPresenter" Value="{DynamicResource {x:Static vs_shell:EnvironmentColors.ComboBoxTextBrushKey}}"/>
+			</Trigger>
+			<Trigger Property="IsPressed" Value="True">
+				<Setter Property="Background" TargetName="border" Value="{DynamicResource {x:Static vs_shell:EnvironmentColors.SystemButtonHighlightBrushKey}}"/>
+				<Setter Property="BorderBrush" TargetName="border" Value="{DynamicResource {x:Static vs_shell:EnvironmentColors.ComboBoxBorderBrushKey}}"/>
+				<Setter Property="TextElement.Foreground" TargetName="contentPresenter" Value="{DynamicResource {x:Static vs_shell:EnvironmentColors.ComboBoxTextBrushKey}}"/>
+			</Trigger>
+			<Trigger Property="ToggleButton.IsChecked" Value="True">
+				<Setter Property="Background" TargetName="border" Value="{DynamicResource {x:Static vs_shell:EnvironmentColors.SystemButtonFaceBrushKey}}"/>
+				<Setter Property="BorderBrush" TargetName="border" Value="{DynamicResource {x:Static vs_shell:EnvironmentColors.ComboBoxBorderBrushKey}}"/>
+				<Setter Property="TextElement.Foreground" TargetName="contentPresenter" Value="{DynamicResource {x:Static vs_shell:EnvironmentColors.ComboBoxTextBrushKey}}"/>
+			</Trigger>
+			<Trigger Property="IsEnabled" Value="False">
+				<Setter Property="Background" TargetName="border" Value="{DynamicResource {x:Static vs_shell:EnvironmentColors.ComboBoxDisabledBackgroundBrushKey}}"/>
+				<Setter Property="BorderBrush" TargetName="border" Value="{DynamicResource {x:Static vs_shell:EnvironmentColors.ComboBoxDisabledBorderBrushKey}}"/>
+				<Setter Property="TextElement.Foreground" TargetName="contentPresenter" Value="{DynamicResource {x:Static vs_shell:EnvironmentColors.ComboBoxDisabledTextBrushKey}}"/>
+			</Trigger>
+		</ControlTemplate.Triggers>
+	</ControlTemplate>
+	
+	<!-- TabControl -->
+	<ControlTemplate x:Key="DkToolsTabControlControlTemplate" TargetType="{x:Type TabControl}">
+		<Grid x:Name="templateRoot" ClipToBounds="True" SnapsToDevicePixels="True" KeyboardNavigation.TabNavigation="Local">
+			<Grid.ColumnDefinitions>
+				<ColumnDefinition x:Name="ColumnDefinition0"/>
+				<ColumnDefinition x:Name="ColumnDefinition1" Width="0"/>
+			</Grid.ColumnDefinitions>
+			<Grid.RowDefinitions>
+				<RowDefinition x:Name="RowDefinition0" Height="Auto"/>
+				<RowDefinition x:Name="RowDefinition1" Height="*"/>
+			</Grid.RowDefinitions>
+			<TabPanel x:Name="HeaderPanel" Background="Transparent" Grid.Column="0" IsItemsHost="True" Margin="2,2,2,0" Grid.Row="0" KeyboardNavigation.TabIndex="1" Panel.ZIndex="1"/>
+			<Border x:Name="ContentPanel"
+					BorderBrush="{DynamicResource {x:Static vs_shell:EnvironmentColors.ToolWindowTabBorderBrushKey}}"
+					BorderThickness="{TemplateBinding BorderThickness}"
+					Background="{DynamicResource {x:Static vs_shell:EnvironmentColors.ToolWindowBackgroundBrushKey}}"
+					Grid.Column="0"
+					KeyboardNavigation.DirectionalNavigation="Contained"
+					Grid.Row="1"
+					KeyboardNavigation.TabIndex="2"
+					KeyboardNavigation.TabNavigation="Local">
+				<ContentPresenter x:Name="PART_SelectedContentHost" ContentTemplate="{TemplateBinding SelectedContentTemplate}"
+								  Content="{TemplateBinding SelectedContent}" ContentStringFormat="{TemplateBinding SelectedContentStringFormat}"
+								  ContentSource="SelectedContent" Margin="{TemplateBinding Padding}" SnapsToDevicePixels="{TemplateBinding SnapsToDevicePixels}"/>
+			</Border>
+		</Grid>
+		<ControlTemplate.Triggers>
+			<Trigger Property="TabStripPlacement" Value="Bottom">
+				<Setter Property="Grid.Row" TargetName="HeaderPanel" Value="1"/>
+				<Setter Property="Grid.Row" TargetName="ContentPanel" Value="0"/>
+				<Setter Property="Height" TargetName="RowDefinition0" Value="*"/>
+				<Setter Property="Height" TargetName="RowDefinition1" Value="Auto"/>
+				<Setter Property="Margin" TargetName="HeaderPanel" Value="2,0,2,2"/>
+			</Trigger>
+			<Trigger Property="TabStripPlacement" Value="Left">
+				<Setter Property="Grid.Row" TargetName="HeaderPanel" Value="0"/>
+				<Setter Property="Grid.Row" TargetName="ContentPanel" Value="0"/>
+				<Setter Property="Grid.Column" TargetName="HeaderPanel" Value="0"/>
+				<Setter Property="Grid.Column" TargetName="ContentPanel" Value="1"/>
+				<Setter Property="Width" TargetName="ColumnDefinition0" Value="Auto"/>
+				<Setter Property="Width" TargetName="ColumnDefinition1" Value="*"/>
+				<Setter Property="Height" TargetName="RowDefinition0" Value="*"/>
+				<Setter Property="Height" TargetName="RowDefinition1" Value="0"/>
+				<Setter Property="Margin" TargetName="HeaderPanel" Value="2,2,0,2"/>
+			</Trigger>
+			<Trigger Property="TabStripPlacement" Value="Right">
+				<Setter Property="Grid.Row" TargetName="HeaderPanel" Value="0"/>
+				<Setter Property="Grid.Row" TargetName="ContentPanel" Value="0"/>
+				<Setter Property="Grid.Column" TargetName="HeaderPanel" Value="1"/>
+				<Setter Property="Grid.Column" TargetName="ContentPanel" Value="0"/>
+				<Setter Property="Width" TargetName="ColumnDefinition0" Value="*"/>
+				<Setter Property="Width" TargetName="ColumnDefinition1" Value="Auto"/>
+				<Setter Property="Height" TargetName="RowDefinition0" Value="*"/>
+				<Setter Property="Height" TargetName="RowDefinition1" Value="0"/>
+				<Setter Property="Margin" TargetName="HeaderPanel" Value="0,2,2,2"/>
+			</Trigger>
+			<Trigger Property="IsEnabled" Value="False">
+				<Setter Property="TextElement.Foreground" TargetName="templateRoot" Value="{DynamicResource {x:Static SystemColors.GrayTextBrushKey}}"/>
+			</Trigger>
+		</ControlTemplate.Triggers>
+	</ControlTemplate>
+	<ControlTemplate x:Key="DkToolsTabItemControlTemplate" TargetType="{x:Type TabItem}">
+		<Grid x:Name="templateRoot" SnapsToDevicePixels="True">
+			<Border x:Name="mainBorder" BorderBrush="{DynamicResource {x:Static vs_shell:EnvironmentColors.ToolWindowTabBorderBrushKey}}" BorderThickness="1,1,1,0" Background="{TemplateBinding Background}" Margin="0">
+				<Border x:Name="innerBorder" BorderBrush="Transparent" BorderThickness="1,1,1,0" Background="White" Margin="-1" Opacity="0"/>
+			</Border>
+			<ContentPresenter x:Name="contentPresenter"
+							  ContentTemplate="{TemplateBinding HeaderTemplate}" Content="{TemplateBinding Header}"
+							  ContentStringFormat="{TemplateBinding HeaderStringFormat}"
+							  ContentSource="Header"
+							  Focusable="False"
+							  HorizontalAlignment="{Binding HorizontalContentAlignment, RelativeSource={RelativeSource FindAncestor, AncestorLevel=1, AncestorType={x:Type ItemsControl}}}"
+							  Margin="{TemplateBinding Padding}"
+							  RecognizesAccessKey="True"
+							  SnapsToDevicePixels="{TemplateBinding SnapsToDevicePixels}"
+							  VerticalAlignment="{Binding VerticalContentAlignment, RelativeSource={RelativeSource FindAncestor, AncestorLevel=1, AncestorType={x:Type ItemsControl}}}"
+							  />
+		</Grid>
+		<ControlTemplate.Triggers>
+			
+			<!-- Mouse Over -->
+			<MultiDataTrigger>
+				<MultiDataTrigger.Conditions>
+					<Condition Binding="{Binding IsMouseOver, RelativeSource={RelativeSource Self}}" Value="true"/>
+					<Condition Binding="{Binding TabStripPlacement, RelativeSource={RelativeSource FindAncestor, AncestorLevel=1, AncestorType={x:Type TabControl}}}" Value="Left"/>
+				</MultiDataTrigger.Conditions>
+				<Setter Property="Background" TargetName="mainBorder">
+					<Setter.Value>
+						<LinearGradientBrush EndPoint="0,1" StartPoint="0,0">
+							<GradientStop Color="{DynamicResource {x:Static vs_shell:EnvironmentColors.ToolWindowTabMouseOverBackgroundBeginColorKey}}" Offset="0"/>
+							<GradientStop Color="{DynamicResource {x:Static vs_shell:EnvironmentColors.ToolWindowTabMouseOverBackgroundEndColorKey}}" Offset="1"/>
+							<!--<GradientStop Color="#FFECF4FC" Offset="0"/>
+							<GradientStop Color="#FFDCECFC" Offset="1"/>-->
+						</LinearGradientBrush>
+					</Setter.Value>
+				</Setter>
+				<Setter Property="BorderBrush" TargetName="mainBorder" Value="{DynamicResource {x:Static vs_shell:EnvironmentColors.ToolWindowTabMouseOverBorderBrushKey}}"/>
+				<Setter Property="BorderThickness" TargetName="innerBorder" Value="1,1,0,1"/>
+				<Setter Property="BorderThickness" TargetName="mainBorder" Value="1,1,0,1"/>
+			</MultiDataTrigger>
+			<MultiDataTrigger>
+				<MultiDataTrigger.Conditions>
+					<Condition Binding="{Binding IsMouseOver, RelativeSource={RelativeSource Self}}" Value="true"/>
+					<Condition Binding="{Binding TabStripPlacement, RelativeSource={RelativeSource FindAncestor, AncestorLevel=1, AncestorType={x:Type TabControl}}}" Value="Bottom"/>
+				</MultiDataTrigger.Conditions>
+				<Setter Property="Background" TargetName="mainBorder">
+					<Setter.Value>
+						<LinearGradientBrush EndPoint="0,1" StartPoint="0,0">
+							<GradientStop Color="{DynamicResource {x:Static vs_shell:EnvironmentColors.ToolWindowTabMouseOverBackgroundBeginColorKey}}" Offset="0"/>
+							<GradientStop Color="{DynamicResource {x:Static vs_shell:EnvironmentColors.ToolWindowTabMouseOverBackgroundEndColorKey}}" Offset="1"/>
+							<!--<GradientStop Color="#FFECF4FC" Offset="0"/>
+							<GradientStop Color="#FFDCECFC" Offset="1"/>-->
+						</LinearGradientBrush>
+					</Setter.Value>
+				</Setter>
+				<Setter Property="BorderBrush" TargetName="mainBorder" Value="{DynamicResource {x:Static vs_shell:EnvironmentColors.ToolWindowTabMouseOverBorderBrushKey}}"/>
+				<Setter Property="BorderThickness" TargetName="innerBorder" Value="1,0,1,1"/>
+				<Setter Property="BorderThickness" TargetName="mainBorder" Value="1,0,1,1"/>
+			</MultiDataTrigger>
+			<MultiDataTrigger>
+				<MultiDataTrigger.Conditions>
+					<Condition Binding="{Binding IsMouseOver, RelativeSource={RelativeSource Self}}" Value="true"/>
+					<Condition Binding="{Binding TabStripPlacement, RelativeSource={RelativeSource FindAncestor, AncestorLevel=1, AncestorType={x:Type TabControl}}}" Value="Right"/>
+				</MultiDataTrigger.Conditions>
+				<Setter Property="Background" TargetName="mainBorder">
+					<Setter.Value>
+						<LinearGradientBrush EndPoint="0,1" StartPoint="0,0">
+							<GradientStop Color="{DynamicResource {x:Static vs_shell:EnvironmentColors.ToolWindowTabMouseOverBackgroundBeginColorKey}}" Offset="0"/>
+							<GradientStop Color="{DynamicResource {x:Static vs_shell:EnvironmentColors.ToolWindowTabMouseOverBackgroundEndColorKey}}" Offset="1"/>
+						</LinearGradientBrush>
+					</Setter.Value>
+				</Setter>
+				<Setter Property="BorderBrush" TargetName="mainBorder" Value="{DynamicResource {x:Static vs_shell:EnvironmentColors.ToolWindowTabMouseOverBorderBrushKey}}"/>
+				<Setter Property="BorderThickness" TargetName="innerBorder" Value="0,1,1,1"/>
+				<Setter Property="BorderThickness" TargetName="mainBorder" Value="0,1,1,1"/>
+			</MultiDataTrigger>
+			<MultiDataTrigger>
+				<MultiDataTrigger.Conditions>
+					<Condition Binding="{Binding IsMouseOver, RelativeSource={RelativeSource Self}}" Value="true"/>
+					<Condition Binding="{Binding TabStripPlacement, RelativeSource={RelativeSource FindAncestor, AncestorLevel=1, AncestorType={x:Type TabControl}}}" Value="Top"/>
+				</MultiDataTrigger.Conditions>
+				<Setter Property="Background" TargetName="mainBorder">
+					<Setter.Value>
+						<LinearGradientBrush EndPoint="0,1" StartPoint="0,0">
+							<GradientStop Color="{DynamicResource {x:Static vs_shell:EnvironmentColors.ToolWindowTabMouseOverBackgroundBeginColorKey}}" Offset="0"/>
+							<GradientStop Color="{DynamicResource {x:Static vs_shell:EnvironmentColors.ToolWindowTabMouseOverBackgroundEndColorKey}}" Offset="1"/>
+						</LinearGradientBrush>
+					</Setter.Value>
+				</Setter>
+				<Setter Property="BorderBrush" TargetName="mainBorder" Value="{DynamicResource {x:Static vs_shell:EnvironmentColors.ToolWindowTabMouseOverBorderBrushKey}}"/>
+				<Setter Property="BorderThickness" TargetName="innerBorder" Value="1,1,1,0"/>
+				<Setter Property="BorderThickness" TargetName="mainBorder" Value="1,1,1,0"/>
+			</MultiDataTrigger>
+			
+			<!-- Disabled -->
+			<MultiDataTrigger>
+				<MultiDataTrigger.Conditions>
+					<Condition Binding="{Binding IsEnabled, RelativeSource={RelativeSource Self}}" Value="false"/>
+					<Condition Binding="{Binding TabStripPlacement, RelativeSource={RelativeSource FindAncestor, AncestorLevel=1, AncestorType={x:Type TabControl}}}" Value="Left"/>
+				</MultiDataTrigger.Conditions>
+				<Setter Property="Opacity" TargetName="contentPresenter" Value="0.56"/>
+				<Setter Property="Background" TargetName="mainBorder" Value="{DynamicResource {x:Static vs_shell:EnvironmentColors.ToolWindowButtonInactiveBrushKey}}"/>
+				<Setter Property="BorderBrush" TargetName="mainBorder" Value="{DynamicResource {x:Static vs_shell:EnvironmentColors.ToolWindowTabBorderBrushKey}}"/>
+				<Setter Property="BorderThickness" TargetName="innerBorder" Value="1,1,0,1"/>
+				<Setter Property="BorderThickness" TargetName="mainBorder" Value="1,1,0,1"/>
+			</MultiDataTrigger>
+			<MultiDataTrigger>
+				<MultiDataTrigger.Conditions>
+					<Condition Binding="{Binding IsEnabled, RelativeSource={RelativeSource Self}}" Value="false"/>
+					<Condition Binding="{Binding TabStripPlacement, RelativeSource={RelativeSource FindAncestor, AncestorLevel=1, AncestorType={x:Type TabControl}}}" Value="Bottom"/>
+				</MultiDataTrigger.Conditions>
+				<Setter Property="Opacity" TargetName="contentPresenter" Value="0.56"/>
+				<Setter Property="Background" TargetName="mainBorder" Value="{DynamicResource {x:Static vs_shell:EnvironmentColors.ToolWindowButtonInactiveBrushKey}}"/>
+				<Setter Property="BorderBrush" TargetName="mainBorder" Value="{DynamicResource {x:Static vs_shell:EnvironmentColors.ToolWindowTabBorderBrushKey}}"/>
+				<Setter Property="BorderThickness" TargetName="innerBorder" Value="1,0,1,1"/>
+				<Setter Property="BorderThickness" TargetName="mainBorder" Value="1,0,1,1"/>
+			</MultiDataTrigger>
+			<MultiDataTrigger>
+				<MultiDataTrigger.Conditions>
+					<Condition Binding="{Binding IsEnabled, RelativeSource={RelativeSource Self}}" Value="false"/>
+					<Condition Binding="{Binding TabStripPlacement, RelativeSource={RelativeSource FindAncestor, AncestorLevel=1, AncestorType={x:Type TabControl}}}" Value="Right"/>
+				</MultiDataTrigger.Conditions>
+				<Setter Property="Opacity" TargetName="contentPresenter" Value="0.56"/>
+				<Setter Property="Background" TargetName="mainBorder" Value="{DynamicResource {x:Static vs_shell:EnvironmentColors.ToolWindowButtonInactiveBrushKey}}"/>
+				<Setter Property="BorderBrush" TargetName="mainBorder" Value="{DynamicResource {x:Static vs_shell:EnvironmentColors.ToolWindowTabBorderBrushKey}}"/>
+				<Setter Property="BorderThickness" TargetName="innerBorder" Value="0,1,1,1"/>
+				<Setter Property="BorderThickness" TargetName="mainBorder" Value="0,1,1,1"/>
+			</MultiDataTrigger>
+			<MultiDataTrigger>
+				<MultiDataTrigger.Conditions>
+					<Condition Binding="{Binding IsEnabled, RelativeSource={RelativeSource Self}}" Value="false"/>
+					<Condition Binding="{Binding TabStripPlacement, RelativeSource={RelativeSource FindAncestor, AncestorLevel=1, AncestorType={x:Type TabControl}}}" Value="Top"/>
+				</MultiDataTrigger.Conditions>
+				<Setter Property="Opacity" TargetName="contentPresenter" Value="0.56"/>
+				<Setter Property="Background" TargetName="mainBorder" Value="{DynamicResource {x:Static vs_shell:EnvironmentColors.ToolWindowButtonInactiveBrushKey}}"/>
+				<Setter Property="BorderBrush" TargetName="mainBorder" Value="{DynamicResource {x:Static vs_shell:EnvironmentColors.ToolWindowTabBorderBrushKey}}"/>
+				<Setter Property="BorderThickness" TargetName="innerBorder" Value="1,1,1,0"/>
+				<Setter Property="BorderThickness" TargetName="mainBorder" Value="1,1,1,0"/>
+			</MultiDataTrigger>
+			
+			<!-- Selected -->
+			<MultiDataTrigger>
+				<MultiDataTrigger.Conditions>
+					<Condition Binding="{Binding IsSelected, RelativeSource={RelativeSource Self}}" Value="true"/>
+					<Condition Binding="{Binding TabStripPlacement, RelativeSource={RelativeSource FindAncestor, AncestorLevel=1, AncestorType={x:Type TabControl}}}" Value="Left"/>
+				</MultiDataTrigger.Conditions>
+				<Setter Property="Panel.ZIndex" Value="1"/>
+				<Setter Property="Margin" Value="-2,-2,0,-2"/>
+				<Setter Property="Opacity" TargetName="innerBorder" Value="1"/>
+				<Setter Property="BorderThickness" TargetName="innerBorder" Value="1,1,0,1"/>
+				<Setter Property="BorderThickness" TargetName="mainBorder" Value="1,1,0,1"/>
+				<Setter Property="Background" TargetName="innerBorder" Value="{DynamicResource {x:Static vs_shell:EnvironmentColors.ToolWindowTabSelectedTabBrushKey}}"/>
+				<Setter Property="TextElement.Foreground" TargetName="contentPresenter" Value="{DynamicResource {x:Static vs_shell:EnvironmentColors.ToolWindowTabSelectedTextBrushKey}}"/>
+			</MultiDataTrigger>
+			<MultiDataTrigger>
+				<MultiDataTrigger.Conditions>
+					<Condition Binding="{Binding IsSelected, RelativeSource={RelativeSource Self}}" Value="true"/>
+					<Condition Binding="{Binding TabStripPlacement, RelativeSource={RelativeSource FindAncestor, AncestorLevel=1, AncestorType={x:Type TabControl}}}" Value="Bottom"/>
+				</MultiDataTrigger.Conditions>
+				<Setter Property="Panel.ZIndex" Value="1"/>
+				<Setter Property="Margin" Value="-2,0,-2,-2"/>
+				<Setter Property="Opacity" TargetName="innerBorder" Value="1"/>
+				<Setter Property="BorderThickness" TargetName="innerBorder" Value="1,0,1,1"/>
+				<Setter Property="BorderThickness" TargetName="mainBorder" Value="1,0,1,1"/>
+				<Setter Property="Background" TargetName="innerBorder" Value="{DynamicResource {x:Static vs_shell:EnvironmentColors.ToolWindowTabSelectedTabBrushKey}}"/>
+				<Setter Property="TextElement.Foreground" TargetName="contentPresenter" Value="{DynamicResource {x:Static vs_shell:EnvironmentColors.ToolWindowTabSelectedTextBrushKey}}"/>
+			</MultiDataTrigger>
+			<MultiDataTrigger>
+				<MultiDataTrigger.Conditions>
+					<Condition Binding="{Binding IsSelected, RelativeSource={RelativeSource Self}}" Value="true"/>
+					<Condition Binding="{Binding TabStripPlacement, RelativeSource={RelativeSource FindAncestor, AncestorLevel=1, AncestorType={x:Type TabControl}}}" Value="Right"/>
+				</MultiDataTrigger.Conditions>
+				<Setter Property="Panel.ZIndex" Value="1"/>
+				<Setter Property="Margin" Value="0,-2,-2,-2"/>
+				<Setter Property="Opacity" TargetName="innerBorder" Value="1"/>
+				<Setter Property="BorderThickness" TargetName="innerBorder" Value="0,1,1,1"/>
+				<Setter Property="BorderThickness" TargetName="mainBorder" Value="0,1,1,1"/>
+				<Setter Property="Background" TargetName="innerBorder" Value="{DynamicResource {x:Static vs_shell:EnvironmentColors.ToolWindowTabSelectedTabBrushKey}}"/>
+				<Setter Property="TextElement.Foreground" TargetName="contentPresenter" Value="{DynamicResource {x:Static vs_shell:EnvironmentColors.ToolWindowTabSelectedTextBrushKey}}"/>
+			</MultiDataTrigger>
+			<MultiDataTrigger>
+				<MultiDataTrigger.Conditions>
+					<Condition Binding="{Binding IsSelected, RelativeSource={RelativeSource Self}}" Value="true"/>
+					<Condition Binding="{Binding TabStripPlacement, RelativeSource={RelativeSource FindAncestor, AncestorLevel=1, AncestorType={x:Type TabControl}}}" Value="Top"/>
+				</MultiDataTrigger.Conditions>
+				<Setter Property="Panel.ZIndex" Value="1"/>
+				<Setter Property="Margin" Value="-2,-2,-2,0"/>
+				<Setter Property="Opacity" TargetName="innerBorder" Value="1"/>
+				<Setter Property="BorderThickness" TargetName="innerBorder" Value="1,1,1,0"/>
+				<Setter Property="BorderThickness" TargetName="mainBorder" Value="1,1,1,0"/>
+				<Setter Property="Background" TargetName="innerBorder" Value="{DynamicResource {x:Static vs_shell:EnvironmentColors.ToolWindowTabSelectedTabBrushKey}}"/>
+				<Setter Property="TextElement.Foreground" TargetName="contentPresenter" Value="{DynamicResource {x:Static vs_shell:EnvironmentColors.ToolWindowTabSelectedTextBrushKey}}"/>
+			</MultiDataTrigger>
+
+			<!-- Not Selected -->
+			<MultiDataTrigger>
+				<MultiDataTrigger.Conditions>
+					<Condition Binding="{Binding IsSelected, RelativeSource={RelativeSource Self}}" Value="false"/>
+					<Condition Binding="{Binding TabStripPlacement, RelativeSource={RelativeSource FindAncestor, AncestorLevel=1, AncestorType={x:Type TabControl}}}" Value="Left"/>
+				</MultiDataTrigger.Conditions>
+				<Setter Property="BorderThickness" TargetName="innerBorder" Value="1,1,0,1"/>
+				<Setter Property="BorderThickness" TargetName="mainBorder" Value="1,1,0,1"/>
+				<Setter Property="Background" TargetName="mainBorder" Value="{DynamicResource {x:Static vs_shell:EnvironmentColors.ToolWindowTabGradientBrushKey}}"/>
+				<Setter Property="TextElement.Foreground" TargetName="contentPresenter" Value="{DynamicResource {x:Static vs_shell:EnvironmentColors.ToolWindowTextBrushKey}}"/>
+			</MultiDataTrigger>
+			<MultiDataTrigger>
+				<MultiDataTrigger.Conditions>
+					<Condition Binding="{Binding IsSelected, RelativeSource={RelativeSource Self}}" Value="false"/>
+					<Condition Binding="{Binding TabStripPlacement, RelativeSource={RelativeSource FindAncestor, AncestorLevel=1, AncestorType={x:Type TabControl}}}" Value="Bottom"/>
+				</MultiDataTrigger.Conditions>
+				<Setter Property="BorderThickness" TargetName="innerBorder" Value="1,0,1,1"/>
+				<Setter Property="BorderThickness" TargetName="mainBorder" Value="1,0,1,1"/>
+				<Setter Property="Background" TargetName="mainBorder" Value="{DynamicResource {x:Static vs_shell:EnvironmentColors.ToolWindowTabGradientBrushKey}}"/>
+				<Setter Property="TextElement.Foreground" TargetName="contentPresenter" Value="{DynamicResource {x:Static vs_shell:EnvironmentColors.ToolWindowTextBrushKey}}"/>
+			</MultiDataTrigger>
+			<MultiDataTrigger>
+				<MultiDataTrigger.Conditions>
+					<Condition Binding="{Binding IsSelected, RelativeSource={RelativeSource Self}}" Value="false"/>
+					<Condition Binding="{Binding TabStripPlacement, RelativeSource={RelativeSource FindAncestor, AncestorLevel=1, AncestorType={x:Type TabControl}}}" Value="Right"/>
+				</MultiDataTrigger.Conditions>
+				<Setter Property="BorderThickness" TargetName="innerBorder" Value="0,1,1,1"/>
+				<Setter Property="BorderThickness" TargetName="mainBorder" Value="0,1,1,1"/>
+				<Setter Property="Background" TargetName="mainBorder" Value="{DynamicResource {x:Static vs_shell:EnvironmentColors.ToolWindowTabGradientBrushKey}}"/>
+				<Setter Property="TextElement.Foreground" TargetName="contentPresenter" Value="{DynamicResource {x:Static vs_shell:EnvironmentColors.ToolWindowTextBrushKey}}"/>
+			</MultiDataTrigger>
+			<MultiDataTrigger>
+				<MultiDataTrigger.Conditions>
+					<Condition Binding="{Binding IsSelected, RelativeSource={RelativeSource Self}}" Value="false"/>
+					<Condition Binding="{Binding TabStripPlacement, RelativeSource={RelativeSource FindAncestor, AncestorLevel=1, AncestorType={x:Type TabControl}}}" Value="Top"/>
+				</MultiDataTrigger.Conditions>
+				<Setter Property="BorderThickness" TargetName="innerBorder" Value="1,1,1,0"/>
+				<Setter Property="BorderThickness" TargetName="mainBorder" Value="1,1,1,0"/>
+				<Setter Property="Background" TargetName="mainBorder" Value="{DynamicResource {x:Static vs_shell:EnvironmentColors.ToolWindowTabGradientBrushKey}}"/>
+				<Setter Property="TextElement.Foreground" TargetName="contentPresenter" Value="{DynamicResource {x:Static vs_shell:EnvironmentColors.ToolWindowTextBrushKey}}"/>
+			</MultiDataTrigger>
+			
+		</ControlTemplate.Triggers>
+	</ControlTemplate>
+
+</ResourceDictionary>

@@ -16,11 +16,11 @@ using Microsoft.VisualStudio.Utilities;
 namespace DkTools.BraceHighlighting
 {
     [Export(typeof(EditorFormatDefinition))]
-    [Name("DkCodeBraceHighlightDefinition")]
+    [Name("DkCodeBraceHighlightDefinition.Light")]
     [UserVisible(true)]
-    internal class BraceHighlightDefinition : MarkerFormatDefinition
+    internal class BraceHighlightDefinitionLight : MarkerFormatDefinition
     {
-        public BraceHighlightDefinition()
+        public BraceHighlightDefinitionLight()
         {
             this.BackgroundColor = Colors.LightGray;
             this.Border = new Pen(Brushes.DarkGray, 0.5);
@@ -28,4 +28,18 @@ namespace DkTools.BraceHighlighting
             this.ZOrder = 5;
         }
     }
+
+	[Export(typeof(EditorFormatDefinition))]
+	[Name("DkCodeBraceHighlightDefinition.Dark")]
+	[UserVisible(true)]
+	internal class BraceHighlightDefinitionDark : MarkerFormatDefinition
+	{
+		public BraceHighlightDefinitionDark()
+		{
+			this.BackgroundColor = Colors.DarkSlateGray;
+			this.Border = new Pen(Brushes.DarkGray, 0.5);
+			this.DisplayName = "BraceHighlight";
+			this.ZOrder = 5;
+		}
+	}
 }

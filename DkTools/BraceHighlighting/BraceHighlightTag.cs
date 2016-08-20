@@ -14,7 +14,7 @@ namespace DkTools.BraceHighlighting
     internal class BraceHighlightTag : TextMarkerTag
     {
         public BraceHighlightTag()
-            : base("DkCodeBraceHighlightDefinition")
+			: base(VSTheme.CurrentTheme == VSThemeMode.Light ? "DkCodeBraceHighlightDefinition.Light" : "DkCodeBraceHighlightDefinition.Dark")
         {
         }
     }

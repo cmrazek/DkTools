@@ -4,17 +4,26 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
 			 xmlns:local="clr-namespace:DkTools.ProbeExplorer"
+			 xmlns:vs_shell="clr-namespace:Microsoft.VisualStudio.PlatformUI;assembly=Microsoft.VisualStudio.Shell.11.0"
              mc:Ignorable="d" d:DesignHeight="300" d:DesignWidth="300" Loaded="UserControl_Loaded">
+	<UserControl.Resources>
+		<ResourceDictionary>
+			<ResourceDictionary.MergedDictionaries>
+				<ResourceDictionary Source="/DkTools2012;component/ProbeExplorer/DkToolsControlStyles.xaml"/>
+			</ResourceDictionary.MergedDictionaries>
+		</ResourceDictionary>
+	</UserControl.Resources>
     <Grid Loaded="Grid_Loaded">
 		<Label Content="App:" Height="25" Name="c_appLabel" VerticalAlignment="Top" HorizontalAlignment="Left" Width="37" />
-		<ComboBox Height="23" Margin="43,2,27,0" Name="c_appCombo" VerticalAlignment="Top" SelectionChanged="AppCombo_SelectionChanged" HorizontalAlignment="Stretch" />
-        <Button Height="23" Width="23" HorizontalAlignment="Right" Margin="0,2,0,0" Name="c_refreshButton" VerticalAlignment="Top" Click="RefreshButton_Click" ToolTip="Reloads all data from the WBDK environment (app names, files, dictionary)">
+		<ComboBox Height="23" Margin="43,2,27,0" Name="c_appCombo" VerticalAlignment="Top" SelectionChanged="AppCombo_SelectionChanged" HorizontalAlignment="Stretch" Template="{DynamicResource DkToolsComboBoxControlTemplate}"/>
+        <Button Height="23" Width="23" HorizontalAlignment="Right" Margin="0,2,0,0" Name="c_refreshButton" VerticalAlignment="Top" Click="RefreshButton_Click"
+				ToolTip="Reloads all data from the WBDK environment (app names, files, dictionary)" Template="{DynamicResource DkToolsButtonControlTemplate}">
             <Button.Content>
                 <Image Source="/DkTools2012;component/Images/ico_refresh.gif" />
             </Button.Content>
         </Button>
-        <TabControl HorizontalAlignment="Stretch" Margin="0,31,0,0" Name="c_tabControl" VerticalAlignment="Stretch" SelectionChanged="TabControl_SelectionChanged">
-            <TabItem Header="Files" Name="c_filesTab">
+		<TabControl HorizontalAlignment="Stretch" Margin="0,31,0,0" Name="c_tabControl" VerticalAlignment="Stretch" SelectionChanged="TabControl_SelectionChanged" Template="{DynamicResource DkToolsTabControlControlTemplate}">
+            <TabItem Header="Files" Name="c_filesTab" Template="{DynamicResource DkToolsTabItemControlTemplate}">
                 <Grid>
 					<TextBox Height="23" HorizontalAlignment="Stretch" Name="c_fileFilterTextBox" VerticalAlignment="Top" TextChanged="FileFilterTextBox_TextChanged" KeyDown="FileFilterTextBox_KeyDown" PreviewKeyDown="FileFilterTextBox_PreviewKeyDown" Margin="0">
 					</TextBox>
@@ -25,12 +34,12 @@
 							</ContextMenu>
 						</TreeView.ContextMenu>
 					</TreeView>
-                    <ListBox HorizontalAlignment="Stretch" Margin="0,25,0,0" Name="c_fileList" VerticalAlignment="Stretch" KeyDown="FileList_KeyDown">
+					<ListBox HorizontalAlignment="Stretch" Margin="0,25,0,0" Name="c_fileList" VerticalAlignment="Stretch" KeyDown="FileList_KeyDown">
 					</ListBox>
 					<Image Name="c_clearFileFilterImg" Height="16" HorizontalAlignment="Right" Margin="0,4,4,0" Stretch="Fill" VerticalAlignment="Top" Width="16" Source="/DkTools2012;component/Images/Clear.png" Opacity="0.5" MouseUp="ClearFileFilterImg_MouseUp" MouseEnter="ClearFileFilterImg_MouseEnter" MouseLeave="ClearFileFilterImg_MouseLeave" />
 				</Grid>
             </TabItem>
-            <TabItem Header="Dictionary" Name="c_dictTab">
+			<TabItem Header="Dictionary" Name="c_dictTab" Template="{DynamicResource DkToolsTabItemControlTemplate}">
                 <Grid>
                     <TextBox Name="c_dictTreeFilter" Height="23" HorizontalAlignment="Stretch" VerticalAlignment="Top" TextChanged="DictTreeFilter_TextChanged"
                              KeyDown="DictTreeFilter_KeyDown_1"/>
@@ -41,7 +50,7 @@
                     </TreeView>
                 </Grid>
             </TabItem>
-			<TabItem Name="c_functionTab" Header="Functions">
+			<TabItem Name="c_functionTab" Header="Functions" Template="{DynamicResource DkToolsTabItemControlTemplate}">
 				<Grid>
 					<TextBox Name="c_functionFilter"
 							 Height="23"

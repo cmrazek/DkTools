@@ -12,35 +12,55 @@ namespace DkTools.Classifier
 	{
 		private ITextSnapshot _snapshot;
 		private ProbeClassifierScanner _scanner;
-		private Dictionary<ProbeClassifierType, IClassificationType> _tokenTypes;
+		private Dictionary<ProbeClassifierType, IClassificationType> _lightTokenTypes;
+		private Dictionary<ProbeClassifierType, IClassificationType> _darkTokenTypes;
 
 		public event EventHandler<ClassificationChangedEventArgs> ClassificationChanged;
 
 		public ProbeClassifier(IClassificationTypeRegistryService registry)
 		{
-			_tokenTypes = new Dictionary<ProbeClassifierType, IClassificationType>();
+			_lightTokenTypes = new Dictionary<ProbeClassifierType, IClassificationType>();
+			_lightTokenTypes[ProbeClassifierType.Normal] = registry.GetClassificationType("DK.Normal.Light");
+			_lightTokenTypes[ProbeClassifierType.Comment] = registry.GetClassificationType("DK.Comment.Light");
+			_lightTokenTypes[ProbeClassifierType.Keyword] = registry.GetClassificationType("DK.Keyword.Light");
+			_lightTokenTypes[ProbeClassifierType.Number] = registry.GetClassificationType("DK.Number.Light");
+			_lightTokenTypes[ProbeClassifierType.StringLiteral] = registry.GetClassificationType("DK.StringLiteral.Light");
+			_lightTokenTypes[ProbeClassifierType.Preprocessor] = registry.GetClassificationType("DK.Preprocessor.Light");
+			_lightTokenTypes[ProbeClassifierType.Inactive] = registry.GetClassificationType("DK.Inactive.Light");
+			_lightTokenTypes[ProbeClassifierType.TableName] = registry.GetClassificationType("DK.TableName.Light");
+			_lightTokenTypes[ProbeClassifierType.TableField] = registry.GetClassificationType("DK.TableField.Light");
+			_lightTokenTypes[ProbeClassifierType.Constant] = registry.GetClassificationType("DK.Constant.Light");
+			_lightTokenTypes[ProbeClassifierType.DataType] = registry.GetClassificationType("DK.DataType.Light");
+			_lightTokenTypes[ProbeClassifierType.Function] = registry.GetClassificationType("DK.Function.Light");
+			_lightTokenTypes[ProbeClassifierType.Delimiter] = registry.GetClassificationType("DK.Delimiter.Light");
+			_lightTokenTypes[ProbeClassifierType.Operator] = registry.GetClassificationType("DK.Operator.Light");
+			_lightTokenTypes[ProbeClassifierType.Variable] = registry.GetClassificationType("DK.Variable.Light");
+			_lightTokenTypes[ProbeClassifierType.Interface] = registry.GetClassificationType("DK.Interface.Light");
 
-			_tokenTypes[ProbeClassifierType.Normal] = registry.GetClassificationType("DK.Normal");
-			_tokenTypes[ProbeClassifierType.Comment] = registry.GetClassificationType("DK.Comment");
-			_tokenTypes[ProbeClassifierType.Keyword] = registry.GetClassificationType("DK.Keyword");
-			_tokenTypes[ProbeClassifierType.Number] = registry.GetClassificationType("DK.Number");
-			_tokenTypes[ProbeClassifierType.StringLiteral] = registry.GetClassificationType("DK.StringLiteral");
-			_tokenTypes[ProbeClassifierType.Preprocessor] = registry.GetClassificationType("DK.Preprocessor");
-			_tokenTypes[ProbeClassifierType.Inactive] = registry.GetClassificationType("DK.Inactive");
-			_tokenTypes[ProbeClassifierType.TableName] = registry.GetClassificationType("DK.TableName");
-			_tokenTypes[ProbeClassifierType.TableField] = registry.GetClassificationType("DK.TableField");
-			_tokenTypes[ProbeClassifierType.Constant] = registry.GetClassificationType("DK.Constant");
-			_tokenTypes[ProbeClassifierType.DataType] = registry.GetClassificationType("DK.DataType");
-			_tokenTypes[ProbeClassifierType.Function] = registry.GetClassificationType("DK.Function");
-			_tokenTypes[ProbeClassifierType.Delimiter] = registry.GetClassificationType("DK.Delimiter");
-			_tokenTypes[ProbeClassifierType.Operator] = registry.GetClassificationType("DK.Operator");
-			_tokenTypes[ProbeClassifierType.Variable] = registry.GetClassificationType("DK.Variable");
-			_tokenTypes[ProbeClassifierType.Interface] = registry.GetClassificationType("DK.Interface");
+			_darkTokenTypes = new Dictionary<ProbeClassifierType, IClassificationType>();
+			_darkTokenTypes[ProbeClassifierType.Normal] = registry.GetClassificationType("DK.Normal.Dark");
+			_darkTokenTypes[ProbeClassifierType.Comment] = registry.GetClassificationType("DK.Comment.Dark");
+			_darkTokenTypes[ProbeClassifierType.Keyword] = registry.GetClassificationType("DK.Keyword.Dark");
+			_darkTokenTypes[ProbeClassifierType.Number] = registry.GetClassificationType("DK.Number.Dark");
+			_darkTokenTypes[ProbeClassifierType.StringLiteral] = registry.GetClassificationType("DK.StringLiteral.Dark");
+			_darkTokenTypes[ProbeClassifierType.Preprocessor] = registry.GetClassificationType("DK.Preprocessor.Dark");
+			_darkTokenTypes[ProbeClassifierType.Inactive] = registry.GetClassificationType("DK.Inactive.Dark");
+			_darkTokenTypes[ProbeClassifierType.TableName] = registry.GetClassificationType("DK.TableName.Dark");
+			_darkTokenTypes[ProbeClassifierType.TableField] = registry.GetClassificationType("DK.TableField.Dark");
+			_darkTokenTypes[ProbeClassifierType.Constant] = registry.GetClassificationType("DK.Constant.Dark");
+			_darkTokenTypes[ProbeClassifierType.DataType] = registry.GetClassificationType("DK.DataType.Dark");
+			_darkTokenTypes[ProbeClassifierType.Function] = registry.GetClassificationType("DK.Function.Dark");
+			_darkTokenTypes[ProbeClassifierType.Delimiter] = registry.GetClassificationType("DK.Delimiter.Dark");
+			_darkTokenTypes[ProbeClassifierType.Operator] = registry.GetClassificationType("DK.Operator.Dark");
+			_darkTokenTypes[ProbeClassifierType.Variable] = registry.GetClassificationType("DK.Variable.Dark");
+			_darkTokenTypes[ProbeClassifierType.Interface] = registry.GetClassificationType("DK.Interface.Dark");
 
 			_scanner = new ProbeClassifierScanner();
 
 			ProbeEnvironment.AppChanged += new EventHandler(ProbeEnvironment_AppChanged);
 			ProbeToolsPackage.Instance.EditorOptions.EditorRefreshRequired += EditorOptions_ClassifierRefreshRequired;
+
+			Microsoft.VisualStudio.PlatformUI.VSColorTheme.ThemeChanged += VSColorTheme_ThemeChanged;
 		}
 
 		public IList<ClassificationSpan> GetClassificationSpans(SnapshotSpan span)
@@ -73,8 +93,17 @@ namespace DkTools.Classifier
 
 			while (_scanner.ScanTokenAndProvideInfoAboutIt(tokenInfo, ref state))
 			{
-				IClassificationType classificationType;
-				if (_tokenTypes.TryGetValue(tokenInfo.Type, out classificationType))
+				IClassificationType classificationType = null;
+				if (VSTheme.CurrentTheme == VSThemeMode.Light)
+				{
+					_lightTokenTypes.TryGetValue(tokenInfo.Type, out classificationType);
+				}
+				else
+				{
+					_darkTokenTypes.TryGetValue(tokenInfo.Type, out classificationType);
+				}
+
+				if (classificationType != null)
 				{
 					spans.Add(new ClassificationSpan(new SnapshotSpan(_snapshot, new Span(span.Start.Position + tokenInfo.StartIndex, tokenInfo.Length)), classificationType));
 				}
@@ -110,6 +139,19 @@ namespace DkTools.Classifier
 		void EditorOptions_ClassifierRefreshRequired(object sender, EventArgs e)
 		{
 			UpdateClassification();
+		}
+
+		private void VSColorTheme_ThemeChanged(Microsoft.VisualStudio.PlatformUI.ThemeChangedEventArgs e)
+		{
+			try
+			{
+				VSTheme.OnThemeChanged();
+				UpdateClassification();
+			}
+			catch (Exception ex)
+			{
+				Log.Error(ex, "Exception on classifier theme changed.");
+			}
 		}
 	}
 }
