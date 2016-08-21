@@ -1469,8 +1469,29 @@ namespace DkTools.DkDict
 				masterTable.AddColumn(new Column(masterTable.Name, string.Concat("has_", name, "_", historyTable.Name),
 					DataType.Unsigned2, nameFilePos));
 
-				historyTable.AddColumn(new Column(historyTable.Name, string.Concat("rowno_", name, "_", masterTable.Name),
-					DataType.Unsigned9, nameFilePos));
+				var sb = new StringBuilder();
+				sb.Append("enum { \" \"");
+				var completionOptions = new List<string>();
+				completionOptions.Add("\" \"");
+				foreach (var col in masterTable.Columns)
+				{
+					sb.Append(", ");
+					sb.Append(col.Name);
+					completionOptions.Add(col.Name);
+				}
+				sb.Append(" }");
+				var fieldDataType = sb.ToString();
+				historyTable.AddColumn(new Column(historyTable.Name, "field",
+					new DataType(ValType.Enum, string.Format("like {0}.field", historyTable.Name), fieldDataType, completionOptions),
+					nameFilePos));
+
+				historyTable.AddColumn(new Column(historyTable.Name, "value", new DataType(ValType.String, "char(255)", "char(255)"), nameFilePos));
+
+				historyTable.AddColumn(new Column(historyTable.Name, string.Concat("rowno_", name, "_", masterTable.Name), DataType.Unsigned9, nameFilePos));
+
+				historyTable.AddColumn(new Column(historyTable.Name, string.Concat("seqno_", name, "_", historyTable.Name), DataType.Unsigned9, nameFilePos));
+
+				historyTable.AddColumn(new Column(historyTable.Name, "tdm_flags", DataType.Unsigned2, nameFilePos));
 			}
 		}
 

@@ -27,15 +27,7 @@ namespace DkTools.CodeModel
 			InterfaceMembers
 		}
 
-		public static readonly DataType Boolean_t = new DataType(ValType.Enum, null, "Boolean_t")
-		{
-			_completionOptionsType = CompletionOptionsType.EnumOptionsList,
-			_completionOptions = new Definition[]
-			{
-				new EnumOptionDefinition("TRUE", null),	// TODO: need to bind these to the Boolean_t data type
-				new EnumOptionDefinition("FALSE", null)
-			}
-		};
+		public static readonly DataType Boolean_t = new DataType(ValType.Enum, null, "Boolean_t", new string[] { "FALSE", "TRUE" });
 		public static readonly DataType Char = new DataType(ValType.Char, null, "char");
 		public static readonly DataType Char255 = new DataType(ValType.String, null, "char(255)");
 		public static readonly DataType Command = new DataType(ValType.Command, null, "command");
@@ -78,7 +70,7 @@ namespace DkTools.CodeModel
 		/// </summary>
 		/// <param name="name">(optional) Name of the data type</param>
 		/// <param name="source">(required) Source code that defines the data type</param>
-		/// <param name="completionOptions">(optional) A list of hardcoded options for this data type.</param>
+		/// <param name="completionOptions">(required) A list of hardcoded options for this data type.</param>
 		/// <param name="optionsType">(required) The type of completion options</param>
 		public DataType(ValType valueType, string name, string source, IEnumerable<Definition> completionOptions, CompletionOptionsType optionsType)
 		{
@@ -88,8 +80,26 @@ namespace DkTools.CodeModel
 			_valueType = valueType;
 			_name = name;
 			_source = source;
-			if (completionOptions != null) _completionOptions = completionOptions.ToArray();
+			_completionOptions = completionOptions.ToArray();
 			_completionOptionsType = optionsType;
+		}
+
+		/// <summary>
+		/// Creates a new data type object.
+		/// </summary>
+		/// <param name="name">(optional) Name of the data type</param>
+		/// <param name="source">(required) Source code that defines the data type</param>
+		/// <param name="enumOptions">A list of enum options for this data type.</param>
+		public DataType(ValType valueType, string name, string source, IEnumerable<string> enumOptions)
+		{
+			if (string.IsNullOrWhiteSpace(source)) throw new ArgumentNullException("source");
+			if (enumOptions == null) throw new ArgumentNullException("completionOptions");
+
+			_valueType = valueType;
+			_name = name;
+			_source = source;
+			_completionOptions = (from o in enumOptions select new EnumOptionDefinition(o, this)).ToArray();
+			_completionOptionsType = CompletionOptionsType.EnumOptionsList;
 		}
 
 		public string Name
