@@ -420,6 +420,11 @@ namespace DkTools.DkDict
 						return;
 					}
 				}
+				else
+				{
+					ReportError(_code.Position, "Expected table attribute.");
+					return;
+				}
 			}
 		}
 
@@ -1090,6 +1095,7 @@ namespace DkTools.DkDict
 					else
 					{
 						ReportError(_code.Position, "Syntax error in 'create index' columns.");
+						break;
 					}
 				}
 			}
