@@ -10,6 +10,8 @@ namespace DkTools
 	{
 		private static VSThemeMode? _mode;
 
+		public static event EventHandler ThemeChanged;
+
 		public static VSThemeMode CurrentTheme
 		{
 			get
@@ -63,6 +65,9 @@ namespace DkTools
 		{
 			_mode = null;
 			Log.Debug("Detected theme change. New theme: {0}", CurrentTheme);
+
+			var ev = ThemeChanged;
+			if (ev != null) ev(null, EventArgs.Empty);
 		}
 	}
 

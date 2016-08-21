@@ -223,32 +223,32 @@ namespace DkTools.Classifier
 
 		#region Inactive
 		[Export]
-		[Name("DK.Disabled.Light")]
-		internal static ClassificationTypeDefinition DisabledLight = null;
+		[Name("DK.Inactive.Light")]
+		internal static ClassificationTypeDefinition InactiveLight = null;
 
 		[Export(typeof(EditorFormatDefinition))]
-		[ClassificationType(ClassificationTypeNames = "DK.Disabled.Light")]
-		[Name("DK.Disabled.Light")]
+		[ClassificationType(ClassificationTypeNames = "DK.Inactive.Light")]
+		[Name("DK.Inactive.Light")]
 		[UserVisible(true)]
-		internal sealed class DisabledFormatLight : ClassificationFormatDefinition
+		internal sealed class InactiveFormatLight : ClassificationFormatDefinition
 		{
-			public DisabledFormatLight()
+			public InactiveFormatLight()
 			{
 				ForegroundColor = Colors.LightGray;
 			}
 		}
 
 		[Export]
-		[Name("DK.Disabled.Dark")]
-		internal static ClassificationTypeDefinition DisabledDark = null;
+		[Name("DK.Inactive.Dark")]
+		internal static ClassificationTypeDefinition InactiveDark = null;
 
 		[Export(typeof(EditorFormatDefinition))]
-		[ClassificationType(ClassificationTypeNames = "DK.Disabled.Dark")]
-		[Name("DK.Disabled.Dark")]
+		[ClassificationType(ClassificationTypeNames = "DK.Inactive.Dark")]
+		[Name("DK.Inactive.Dark")]
 		[UserVisible(true)]
-		internal sealed class DisabledFormatDark : ClassificationFormatDefinition
+		internal sealed class InactiveFormatDark : ClassificationFormatDefinition
 		{
-			public DisabledFormatDark()
+			public InactiveFormatDark()
 			{
 				ForegroundColor = Colors.DimGray;
 			}

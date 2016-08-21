@@ -21,7 +21,7 @@ namespace DkTools.ProbeExplorer
 	/// <summary>
 	/// Interaction logic for ProbeExplorerControl.xaml
 	/// </summary>
-	public partial class ProbeExplorerControl : UserControl
+	public partial class ProbeExplorerControl : UserControl, INotifyPropertyChanged
 	{
 		#region Variables
 		private List<string> _fileList;
@@ -29,7 +29,6 @@ namespace DkTools.ProbeExplorer
 		private TextFilter _dictFilter = new TextFilter();
 
 		private BitmapImage _folderImg;
-		private BitmapImage _fileImg;
 		private BitmapImage _tableImg;
 		private BitmapImage _fieldImg;
 		private BitmapImage _indexImg;
@@ -53,15 +52,22 @@ namespace DkTools.ProbeExplorer
 		{
 			public string FileName { get; set; }
 		}
+
+		public event PropertyChangedEventHandler PropertyChanged;
+		public void FirePropertyChanged(string propName)
+		{
+			var ev = PropertyChanged;
+			if (ev != null) ev(this, new PropertyChangedEventArgs(propName));
+		}
 		#endregion
 
 		#region Construction
 		public ProbeExplorerControl()
 		{
+			DataContext = this;
 			InitializeComponent();
 
 			_folderImg = Res.FolderImg.ToBitmapImage();
-			_fileImg = Res.FileImg.ToBitmapImage();
 			_tableImg = Res.TableImg.ToBitmapImage();
 			_fieldImg = Res.FieldImg.ToBitmapImage();
 			_indexImg = Res.IndexImg.ToBitmapImage();
@@ -83,7 +89,9 @@ namespace DkTools.ProbeExplorer
 		}
 
 		private void UserControl_Loaded(object sender, RoutedEventArgs e)
-		{ }
+		{
+			VSTheme.ThemeChanged += VSTheme_ThemeChanged;
+		}
 
 		private void Grid_Loaded(object sender, RoutedEventArgs e)
 		{
@@ -283,7 +291,7 @@ namespace DkTools.ProbeExplorer
 			var tag = new FileTreeNode { path = fileName, dir = false };
 
 			var node = new TreeViewItem();
-			node.Header = CreateFileTreeViewHeader(IO.Path.GetFileName(fileName), _fileImg);
+			node.Header = CreateFileTreeViewHeader(IO.Path.GetFileName(fileName), FileImage);
 			node.Tag = tag;
 			node.MouseDoubleClick += FileNode_MouseDoubleClick;
 			node.KeyDown += FileNode_KeyDown;
@@ -587,7 +595,7 @@ namespace DkTools.ProbeExplorer
 			panel.Orientation = Orientation.Horizontal;
 			panel.Children.Add(new Image
 			{
-				Source = _fileImg,
+				Source = FileImage,
 				Width = k_iconWidth,
 				Height = k_iconHeight,
 				Margin = new Thickness(0, 0, k_iconSpacer, 0)
@@ -1257,6 +1265,61 @@ namespace DkTools.ProbeExplorer
 		{
 			c_functionFilter.Text = string.Empty;
 			c_functionFilter.Focus();
+		}
+		#endregion
+
+		#region Theming
+		void VSTheme_ThemeChanged(object sender, EventArgs e)
+		{
+			try
+			{
+				_clearImage = null;
+				_fileImage = null;
+
+				FirePropertyChanged(NameOf_ClearImage);
+
+				UpdateForFileFilter();
+			}
+			catch (Exception ex)
+			{
+				Log.Error(ex);
+			}
+		}
+
+		private BitmapImage _clearImage;
+		public const string NameOf_ClearImage = "ClearImage";
+		public BitmapImage ClearImage
+		{
+			get
+			{
+				if (_clearImage == null)
+				{
+					switch (VSTheme.CurrentTheme)
+					{
+						case VSThemeMode.Dark:
+							_clearImage = Res.ClearIcon_Dark.ToBitmapImage();
+							break;
+						default:
+							_clearImage = Res.ClearIcon_Light.ToBitmapImage();
+							break;
+					}
+				}
+				return _clearImage;
+			}
+		}
+
+		private BitmapImage _fileImage;
+		public const string NameOf_FileImage = "FileImage";
+		public BitmapImage FileImage
+		{
+			get
+			{
+				if (_fileImage == null)
+				{
+					_fileImage = VSTheme.CurrentTheme == VSThemeMode.Dark ? Res.FileImg_Dark.ToBitmapImage() : Res.FileImg_Light.ToBitmapImage();
+				}
+				return _fileImage;
+			}
 		}
 		#endregion
 	}

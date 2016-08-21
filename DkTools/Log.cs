@@ -149,6 +149,11 @@ namespace DkTools
 			Write(level, string.Format(format, args));
 		}
 
+		public static void Error(Exception ex)
+		{
+			Write(LogLevel.Error, ex.ToString());
+		}
+
 		public static void Error(Exception ex, string message)
 		{
 			Write(LogLevel.Error, string.Concat(message, "\r\n", ex));

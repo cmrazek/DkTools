@@ -589,7 +589,6 @@
     <None Include="Resources\ProbeExplorerIcon.png" />
     <None Include="Resources\Table.gif" />
     <None Include="Resources\Variable.png" />
-    <None Include="Resources\Function.png" />
     <None Include="Resources\Constant.png" />
     <None Include="Resources\DataType.gif" />
     <None Include="Resources\Keyword.png" />
@@ -608,6 +607,10 @@
     <None Include="Resources\ExpandMinus.png" />
     <None Include="Resources\ExpandPlus.png" />
     <None Include="Resources\Interface.gif" />
+    <None Include="Resources\Clear.png" />
+    <None Include="Resources\Clear.Dark.png" />
+    <None Include="Resources\File.Dark.png" />
+    <None Include="Resources\Function.png" />
     <Content Include="Resources\Package.ico" />
   </ItemGroup>
   <ItemGroup>

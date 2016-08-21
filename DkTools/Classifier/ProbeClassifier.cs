@@ -60,7 +60,7 @@ namespace DkTools.Classifier
 			ProbeEnvironment.AppChanged += new EventHandler(ProbeEnvironment_AppChanged);
 			ProbeToolsPackage.Instance.EditorOptions.EditorRefreshRequired += EditorOptions_ClassifierRefreshRequired;
 
-			Microsoft.VisualStudio.PlatformUI.VSColorTheme.ThemeChanged += VSColorTheme_ThemeChanged;
+			VSTheme.ThemeChanged += VSTheme_ThemeChanged;
 		}
 
 		public IList<ClassificationSpan> GetClassificationSpans(SnapshotSpan span)
@@ -141,11 +141,10 @@ namespace DkTools.Classifier
 			UpdateClassification();
 		}
 
-		private void VSColorTheme_ThemeChanged(Microsoft.VisualStudio.PlatformUI.ThemeChangedEventArgs e)
+		void VSTheme_ThemeChanged(object sender, EventArgs e)
 		{
 			try
 			{
-				VSTheme.OnThemeChanged();
 				UpdateClassification();
 			}
 			catch (Exception ex)

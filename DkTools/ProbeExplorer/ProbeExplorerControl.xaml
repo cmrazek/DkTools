@@ -13,8 +13,15 @@
 			</ResourceDictionary.MergedDictionaries>
 		</ResourceDictionary>
 	</UserControl.Resources>
-    <Grid Loaded="Grid_Loaded">
-		<Label Content="App:" Height="25" Name="c_appLabel" VerticalAlignment="Top" HorizontalAlignment="Left" Width="37" />
+	<Grid Loaded="Grid_Loaded" Background="{DynamicResource {x:Static vs_shell:EnvironmentColors.ToolWindowFloatingFrameBrushKey}}">
+		<Label Content="App:"
+			   Height="25"
+			   Name="c_appLabel"
+			   VerticalAlignment="Top"
+			   HorizontalAlignment="Left"
+			   Width="37"
+			   Foreground="{DynamicResource {x:Static vs_shell:EnvironmentColors.ToolWindowFloatingFrameTextBrushKey}}"
+			   />
 		<ComboBox Height="23" Margin="43,2,27,0" Name="c_appCombo" VerticalAlignment="Top" SelectionChanged="AppCombo_SelectionChanged" HorizontalAlignment="Stretch" Template="{DynamicResource DkToolsComboBoxControlTemplate}"/>
         <Button Height="23" Width="23" HorizontalAlignment="Right" Margin="0,2,0,0" Name="c_refreshButton" VerticalAlignment="Top" Click="RefreshButton_Click"
 				ToolTip="Reloads all data from the WBDK environment (app names, files, dictionary)" Template="{DynamicResource DkToolsButtonControlTemplate}">
@@ -23,9 +30,20 @@
             </Button.Content>
         </Button>
 		<TabControl HorizontalAlignment="Stretch" Margin="0,31,0,0" Name="c_tabControl" VerticalAlignment="Stretch" SelectionChanged="TabControl_SelectionChanged" Template="{DynamicResource DkToolsTabControlControlTemplate}">
+			
+			<!-- Region Files Tab -->
             <TabItem Header="Files" Name="c_filesTab" Template="{DynamicResource DkToolsTabItemControlTemplate}">
                 <Grid>
-					<TextBox Height="23" HorizontalAlignment="Stretch" Name="c_fileFilterTextBox" VerticalAlignment="Top" TextChanged="FileFilterTextBox_TextChanged" KeyDown="FileFilterTextBox_KeyDown" PreviewKeyDown="FileFilterTextBox_PreviewKeyDown" Margin="0">
+					<TextBox Height="23"
+							 HorizontalAlignment="Stretch"
+							 Name="c_fileFilterTextBox"
+							 VerticalAlignment="Top"
+							 TextChanged="FileFilterTextBox_TextChanged"
+							 KeyDown="FileFilterTextBox_KeyDown"
+							 PreviewKeyDown="FileFilterTextBox_PreviewKeyDown"
+							 Margin="0"
+							 Template="{DynamicResource DkToolsTextBoxControlTemplate}"
+							 >
 					</TextBox>
 					<TreeView Name="c_fileTree" Margin="0,25,0,0" PreviewMouseRightButtonDown="FileTree_PreviewMouseRightButtonDown">
 						<TreeView.ContextMenu>
@@ -36,20 +54,52 @@
 					</TreeView>
 					<ListBox HorizontalAlignment="Stretch" Margin="0,25,0,0" Name="c_fileList" VerticalAlignment="Stretch" KeyDown="FileList_KeyDown">
 					</ListBox>
-					<Image Name="c_clearFileFilterImg" Height="16" HorizontalAlignment="Right" Margin="0,4,4,0" Stretch="Fill" VerticalAlignment="Top" Width="16" Source="/DkTools2012;component/Images/Clear.png" Opacity="0.5" MouseUp="ClearFileFilterImg_MouseUp" MouseEnter="ClearFileFilterImg_MouseEnter" MouseLeave="ClearFileFilterImg_MouseLeave" />
+					<Image Name="c_clearFileFilterImg"
+						   Height="16"
+						   HorizontalAlignment="Right"
+						   Margin="0,4,4,0"
+						   Stretch="Fill"
+						   VerticalAlignment="Top"
+						   Width="16"
+						   Source="{Binding ClearImage}"
+						   Opacity="0.5"
+						   MouseUp="ClearFileFilterImg_MouseUp"
+						   MouseEnter="ClearFileFilterImg_MouseEnter"
+						   MouseLeave="ClearFileFilterImg_MouseLeave"
+						   />
 				</Grid>
             </TabItem>
+			<!-- Endregion -->
+			
+			<!-- Region Dictionary Tab -->
 			<TabItem Header="Dictionary" Name="c_dictTab" Template="{DynamicResource DkToolsTabItemControlTemplate}">
                 <Grid>
-                    <TextBox Name="c_dictTreeFilter" Height="23" HorizontalAlignment="Stretch" VerticalAlignment="Top" TextChanged="DictTreeFilter_TextChanged"
-                             KeyDown="DictTreeFilter_KeyDown_1"/>
-                    <Image Name="c_dictTreeFilterClear" Width="16" Height="16" VerticalAlignment="Top" HorizontalAlignment="Right"
-                           Source="/DkTools2012;component/Images/Clear.png" Opacity="0.5" Margin="0,4,4,0"
-                           MouseUp="DictTreeFilterClear_MouseUp_1" MouseEnter="DictTreeFilterClear_MouseEnter_1" MouseLeave="DictTreeFilterClear_MouseLeave_1"/>
+                    <TextBox Name="c_dictTreeFilter" Height="23"
+							 HorizontalAlignment="Stretch"
+							 VerticalAlignment="Top"
+							 TextChanged="DictTreeFilter_TextChanged"
+                             KeyDown="DictTreeFilter_KeyDown_1"
+							 Template="{DynamicResource DkToolsTextBoxControlTemplate}"
+							 />
+                    <Image Name="c_dictTreeFilterClear"
+						   Width="16"
+						   Height="16"
+						   VerticalAlignment="Top"
+						   HorizontalAlignment="Right"
+                           Source="{Binding ClearImage}"
+						   Opacity="0.5"
+						   Margin="0,4,4,0"
+                           MouseUp="DictTreeFilterClear_MouseUp_1"
+						   MouseEnter="DictTreeFilterClear_MouseEnter_1"
+						   MouseLeave="DictTreeFilterClear_MouseLeave_1"
+						   />
                     <TreeView Name="c_dictTree" Margin="0,25,0,0" TextInput="DictTree_TextInput">
                     </TreeView>
                 </Grid>
             </TabItem>
+			<!-- Endregion -->
+			
+			<!-- Region Function Tab -->
 			<TabItem Name="c_functionTab" Header="Functions" Template="{DynamicResource DkToolsTabItemControlTemplate}">
 				<Grid>
 					<TextBox Name="c_functionFilter"
@@ -59,13 +109,14 @@
 							 KeyDown="FunctionFilter_KeyDown"
 							 PreviewKeyDown="FunctionFilter_PreviewKeyDown"
 							 TextChanged="FunctionFilter_TextChanged"
+							 Template="{DynamicResource DkToolsTextBoxControlTemplate}"
 							 />
 					<Image Name="c_functionFilterClear"
 						   Width="16"
 						   Height="16"
 						   VerticalAlignment="Top"
 						   HorizontalAlignment="Right"
-                           Source="/DkTools2012;component/Images/Clear.png"
+                           Source="{Binding ClearImage}"
 						   Opacity="0.5"
 						   Margin="0,4,4,0"
                            MouseUp="FunctionFilterClear_MouseUp"
@@ -103,6 +154,7 @@
 					</ListBox>
 				</Grid>
 			</TabItem>
+			<!-- Endregion -->
         </TabControl>
     </Grid>
 </UserControl>

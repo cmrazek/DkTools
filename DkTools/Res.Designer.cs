@@ -73,6 +73,26 @@ namespace DkTools {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
+        internal static System.Drawing.Bitmap ClearIcon_Dark {
+            get {
+                object obj = ResourceManager.GetObject("ClearIcon_Dark", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        internal static System.Drawing.Bitmap ClearIcon_Light {
+            get {
+                object obj = ResourceManager.GetObject("ClearIcon_Light", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
         internal static System.Drawing.Bitmap ConstantImg {
             get {
                 object obj = ResourceManager.GetObject("ConstantImg", resourceCulture);
@@ -152,9 +172,19 @@ namespace DkTools {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
-        internal static System.Drawing.Bitmap FileImg {
+        internal static System.Drawing.Bitmap FileImg_Dark {
             get {
-                object obj = ResourceManager.GetObject("FileImg", resourceCulture);
+                object obj = ResourceManager.GetObject("FileImg_Dark", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        internal static System.Drawing.Bitmap FileImg_Light {
+            get {
+                object obj = ResourceManager.GetObject("FileImg_Light", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }

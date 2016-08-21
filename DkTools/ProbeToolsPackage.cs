@@ -150,6 +150,8 @@ namespace DkTools
 
 			_dteDocumentEvents = _dteEvents.DocumentEvents;
 			_dteDocumentEvents.DocumentSaved += DocumentEvents_DocumentSaved;
+
+			Microsoft.VisualStudio.PlatformUI.VSColorTheme.ThemeChanged += VSColorTheme_ThemeChanged;
 		}
 
 		protected override void Dispose(bool disposing)
@@ -288,6 +290,11 @@ namespace DkTools
 			{
 				Shell.ShowError(ex);
 			}
+		}
+
+		private void VSColorTheme_ThemeChanged(Microsoft.VisualStudio.PlatformUI.ThemeChangedEventArgs e)
+		{
+			VSTheme.OnThemeChanged();
 		}
 
 		#region Settings
