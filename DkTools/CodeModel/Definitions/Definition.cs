@@ -6,6 +6,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
 using VsText = Microsoft.VisualStudio.Text;
+using VsUI = Microsoft.VisualStudio.PlatformUI;
 using DkTools.CodeModel.Tokens;
 
 namespace DkTools.CodeModel.Definitions
@@ -109,6 +110,26 @@ namespace DkTools.CodeModel.Definitions
 		}
 #endif
 
+		#region WPF Quick Info
+		private static Brush _textForegroundBrush;
+		private static Brush TextForegroundBrush
+		{
+			get
+			{
+				if (_textForegroundBrush == null)
+				{
+					var color = VsUI.VSColorTheme.GetThemedColor(VsUI.EnvironmentColors.ToolTipTextColorKey);
+					_textForegroundBrush = new SolidColorBrush(Color.FromArgb(color.A, color.R, color.G, color.B));
+				}
+				return _textForegroundBrush;
+			}
+		}
+
+		public static void OnThemeChanged()
+		{
+			_textForegroundBrush = null;
+		}
+
 		public static UIElement WpfDivs(params UIElement[] items)
 		{
 			var panel = new StackPanel
@@ -144,14 +165,16 @@ namespace DkTools.CodeModel.Definitions
 				Text = label + ":",
 				FontWeight = FontWeights.Bold,
 				MinWidth = 75,
-				HorizontalAlignment = HorizontalAlignment.Left
+				HorizontalAlignment = HorizontalAlignment.Left,
+				Foreground = TextForegroundBrush
 			});
 			panel.Children.Add(new TextBlock
 			{
 				Text = value,
 				FontStyle = FontStyles.Normal,
 				HorizontalAlignment = HorizontalAlignment.Left,
-				TextWrapping = TextWrapping.Wrap
+				TextWrapping = TextWrapping.Wrap,
+				Foreground = TextForegroundBrush
 			});
 
 			return panel;
@@ -170,7 +193,8 @@ namespace DkTools.CodeModel.Definitions
 				Text = label + ":",
 				FontWeight = FontWeights.Bold,
 				MinWidth = 75,
-				HorizontalAlignment = HorizontalAlignment.Left
+				HorizontalAlignment = HorizontalAlignment.Left,
+				Foreground = TextForegroundBrush
 			});
 			panel.Children.Add(value);
 
@@ -185,7 +209,8 @@ namespace DkTools.CodeModel.Definitions
 				HorizontalAlignment = HorizontalAlignment.Left,
 				Margin = new Thickness(0, 0, 0, 4),
 				MaxWidth = k_maxWpfWidth,
-				TextWrapping = TextWrapping.Wrap
+				TextWrapping = TextWrapping.Wrap,
+				Foreground = TextForegroundBrush
 			};
 		}
 
@@ -198,7 +223,8 @@ namespace DkTools.CodeModel.Definitions
 				HorizontalAlignment = HorizontalAlignment.Left,
 				Margin = new Thickness(0, 4, 0, 0),
 				MaxWidth = k_maxWpfWidth,
-				TextWrapping = TextWrapping.Wrap
+				TextWrapping = TextWrapping.Wrap,
+				Foreground = TextForegroundBrush
 			};
 		}
 
@@ -213,6 +239,7 @@ namespace DkTools.CodeModel.Definitions
 			panel.Children.Add(child);
 			return panel;
 		}
+		#endregion
 
 		public string ExternalRefId
 		{

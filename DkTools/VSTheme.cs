@@ -68,6 +68,8 @@ namespace DkTools
 
 			var ev = ThemeChanged;
 			if (ev != null) ev(null, EventArgs.Empty);
+
+			CodeModel.Definitions.Definition.OnThemeChanged();
 		}
 	}
 
