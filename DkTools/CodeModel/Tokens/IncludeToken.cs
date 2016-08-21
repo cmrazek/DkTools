@@ -49,6 +49,12 @@ namespace DkTools.CodeModel.Tokens
 				searchFileDir = fileName.StartsWith("\"");
 				fileNameToken = new StringLiteralToken(scope, code.Span, code.Text);
 				includeSpan = new Span(prepToken.Span.Start, fileNameToken.Span.End);
+
+				if ((fileName.StartsWith("\"") && fileName.EndsWith("\"")) ||
+					(fileName.StartsWith("<") && fileName.EndsWith(">")))
+				{
+					fileName = fileName.Substring(1, fileName.Length - 2);
+				}
 			}
 
 			var ret = new IncludeToken(scope, includeSpan, prepToken, fileName, searchFileDir);
