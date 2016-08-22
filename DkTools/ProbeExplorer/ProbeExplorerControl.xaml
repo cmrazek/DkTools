@@ -52,8 +52,13 @@
 							</ContextMenu>
 						</TreeView.ContextMenu>
 					</TreeView>
-					<ListBox HorizontalAlignment="Stretch" Margin="0,25,0,0" Name="c_fileList" VerticalAlignment="Stretch" KeyDown="FileList_KeyDown">
-					</ListBox>
+					<ListBox HorizontalAlignment="Stretch"
+							 Margin="0,25,0,0"
+							 Name="c_fileList"
+							 VerticalAlignment="Stretch"
+							 KeyDown="FileList_KeyDown"
+							 ItemContainerStyle="{DynamicResource ListBoxItemStyle_Style}"
+							 />
 					<Image Name="c_clearFileFilterImg"
 						   Height="16"
 						   HorizontalAlignment="Right"
@@ -137,7 +142,7 @@
 							</DataTemplate>
 						</ListBox.ItemTemplate>
 						<ListBox.ItemContainerStyle>
-							<Style TargetType="ListBoxItem">
+							<Style TargetType="ListBoxItem" BasedOn="{StaticResource {x:Type ListBoxItem}}">
 								<EventSetter Event="Selected" Handler="FunctionListBoxItem_Selected"/>
 								<EventSetter Event="KeyDown" Handler="FunctionListBoxItem_KeyDown"/>
 								<EventSetter Event="MouseDoubleClick" Handler="FunctionListBoxItem_MouseDoubleClick"/>
