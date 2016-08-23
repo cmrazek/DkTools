@@ -22,7 +22,14 @@
 			   Width="37"
 			   Foreground="{DynamicResource {x:Static vs_shell:EnvironmentColors.ToolWindowFloatingFrameTextBrushKey}}"
 			   />
-		<ComboBox Height="23" Margin="43,2,27,0" Name="c_appCombo" VerticalAlignment="Top" SelectionChanged="AppCombo_SelectionChanged" HorizontalAlignment="Stretch" Template="{DynamicResource DkToolsComboBoxControlTemplate}"/>
+		<ComboBox Height="23"
+				  Margin="43,2,27,0"
+				  Name="c_appCombo"
+				  VerticalAlignment="Top"
+				  SelectionChanged="AppCombo_SelectionChanged"
+				  HorizontalAlignment="Stretch"
+				  Template="{DynamicResource DkToolsComboBoxControlTemplate}"
+				  />
         <Button Height="23" Width="23" HorizontalAlignment="Right" Margin="0,2,0,0" Name="c_refreshButton" VerticalAlignment="Top" Click="RefreshButton_Click"
 				ToolTip="Reloads all data from the WBDK environment (app names, files, dictionary)" Template="{DynamicResource DkToolsButtonControlTemplate}">
             <Button.Content>
