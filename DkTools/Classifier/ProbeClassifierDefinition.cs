@@ -80,7 +80,7 @@ namespace DkTools.Classifier
 		{
 			public CommentFormatDark()
 			{
-				ForegroundColor = Colors.LimeGreen;
+				ForegroundColor = Colors.ForestGreen;
 			}
 		}
 		#endregion
@@ -148,7 +148,7 @@ namespace DkTools.Classifier
 		{
 			public NumberFormatDark()
 			{
-				ForegroundColor = Colors.OrangeRed;
+				ForegroundColor = Colors.Brown;
 			}
 		}
 		#endregion
@@ -182,7 +182,7 @@ namespace DkTools.Classifier
 		{
 			public StringLiteralFormatDark()
 			{
-				ForegroundColor = Colors.OrangeRed;
+				ForegroundColor = Colors.Brown;
 			}
 		}
 		#endregion
@@ -488,7 +488,7 @@ namespace DkTools.Classifier
 		{
 			public OperatorFormatDark()
 			{
-				ForegroundColor = Colors.LightGray;
+				ForegroundColor = Colors.LightSlateGray;
 			}
 		}
 		#endregion
@@ -522,7 +522,7 @@ namespace DkTools.Classifier
 		{
 			public VariableFormatDark()
 			{
-				ForegroundColor = Colors.LightSlateGray;
+				ForegroundColor = Colors.Silver;
 			}
 		}
 		#endregion
