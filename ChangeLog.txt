@@ -5,7 +5,8 @@ Version 1.3.4 - (WIP):
 
 - Added support for 'dark' and 'blue' Visual Studio themes.
 - Added missing implicit columns to time relationship history tables (e.g. dmhi, lohi, tehi)
-- Fixed code modeling problem when extract fields contain casts.
+- Fixed code modeling issue when extract fields contain casts.
+- Enum option values will now be detected when they occur after a cast.
 
 ____________________________________________________________________________________________________
 Version 1.3.3 - Aug 19, 2016:

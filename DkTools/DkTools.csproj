@@ -275,6 +275,7 @@
     <Compile Include="CodeModel\Tokens\Statements\BreakStatement.cs" />
     <Compile Include="CodeModel\Tokens\Operators\ComparisonOperator.cs" />
     <Compile Include="CodeModel\Tokens\CompositeToken.cs" />
+    <Compile Include="CodeModel\Tokens\Statements\CastStatement.cs" />
     <Compile Include="CodeModel\Tokens\Statements\ContinueStatement.cs" />
     <Compile Include="CodeModel\Tokens\EnumOptionToken.cs" />
     <Compile Include="CodeModel\Tokens\ExpressionToken.cs" />

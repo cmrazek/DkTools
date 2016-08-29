@@ -39,5 +39,13 @@ namespace DkTools.CodeModel.Tokens
 			base.DumpTreeInner(xml);
 			_dataType.DumpTree(xml);
 		}
+
+		public override bool IsDataTypeDeclaration
+		{
+			get
+			{
+				return true;
+			}
+		}
 	}
 }

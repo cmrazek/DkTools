@@ -119,8 +119,12 @@ namespace DkTools.CodeModel.Tokens
 						switch (code.Text)
 						{
 							case "(":
-								code.Position = code.Span.Start;
-								exp.AddToken(BracketsToken.Parse(scope));
+								{
+									code.Position = code.Span.Start;
+									var bracketsToken = BracketsToken.Parse(scope);
+									if (bracketsToken.IsCast) exp.AddToken(Statements.CastStatement.Parse(scope, bracketsToken, endTokens));
+									else exp.AddToken(bracketsToken);
+								}
 								break;
 							case "{":
 								code.Position = code.Span.Start;
@@ -351,6 +355,14 @@ namespace DkTools.CodeModel.Tokens
 			{
 				if (ChildrenCount > 0) return Children.First().ValueDataType;
 				return base.ValueDataType;
+			}
+		}
+
+		public override bool IsDataTypeDeclaration
+		{
+			get
+			{
+				return ChildrenCount > 0 && Children.First().IsDataTypeDeclaration;
 			}
 		}
 	}

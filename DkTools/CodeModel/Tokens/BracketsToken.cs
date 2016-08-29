@@ -110,6 +110,26 @@ namespace DkTools.CodeModel.Tokens
 #endif
 			AddToken(_closeToken = new CloseBracketToken(Scope, span, this));
 		}
+
+		public bool IsCast
+		{
+			get
+			{
+				return _innerTokens.Count == 1 && _innerTokens[0].IsDataTypeDeclaration;
+			}
+		}
+
+		public DataType CastDataType
+		{
+			get
+			{
+				if (_innerTokens.Count == 1 && _innerTokens[0].IsDataTypeDeclaration)
+				{
+					return _innerTokens[0].ValueDataType;
+				}
+				return null;
+			}
+		}
 	}
 
 	internal abstract class BracketToken : Token, IBraceMatchingToken

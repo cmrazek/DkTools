@@ -527,5 +527,10 @@ namespace DkTools.CodeModel.Tokens
 		{
 			get { return true; }
 		}
+
+		public virtual bool IsDataTypeDeclaration
+		{
+			get { return false; }
+		}
 	}
 }

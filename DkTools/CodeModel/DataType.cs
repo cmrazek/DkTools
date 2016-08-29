@@ -192,6 +192,11 @@ namespace DkTools.CodeModel
 			/// </summary>
 			public bool VisibleModel { get; set; }
 
+			/// <summary>
+			/// (out) The first token parsed by the data type
+			/// </summary>
+			public Token FirstToken { get; set; }
+
 #if REPORT_ERRORS
 			/// <summary>
 			/// (optional) An ErrorProvider to receive errors detected by this parsing function.
@@ -201,41 +206,56 @@ namespace DkTools.CodeModel
 
 			public void OnKeyword(Span span, string text)
 			{
-				if (TokenCreateCallback != null) TokenCreateCallback(new KeywordToken(Scope, span, text));
+				var tok = new KeywordToken(Scope, span, text);
+				if (FirstToken == null) FirstToken = tok;
+				if (TokenCreateCallback != null) TokenCreateCallback(tok);
 			}
 
 			public void OnDataTypeKeyword(Span span, string text, Definition def)
 			{
-				if (TokenCreateCallback != null) TokenCreateCallback(new DataTypeKeywordToken(Scope, span, text, def));
+				var tok = new DataTypeKeywordToken(Scope, span, text, def);
+				if (FirstToken == null) FirstToken = tok;
+				if (TokenCreateCallback != null) TokenCreateCallback(tok);
 			}
 
 			public void OnIdentifier(Span span, string text, Definition def)
 			{
-				if (TokenCreateCallback != null) TokenCreateCallback(new IdentifierToken(Scope, span, text, def));
+				var tok = new IdentifierToken(Scope, span, text, def);
+				if (FirstToken == null) FirstToken = tok;
+				if (TokenCreateCallback != null) TokenCreateCallback(tok);
 			}
 
 			public void OnOperator(Span span, string text)
 			{
-				if (TokenCreateCallback != null) TokenCreateCallback(new OperatorToken(Scope, span, text));
+				var tok = new OperatorToken(Scope, span, text);
+				if (FirstToken == null) FirstToken = tok;
+				if (TokenCreateCallback != null) TokenCreateCallback(tok);
 			}
 
 			public void OnStringLiteral(Span span, string text)
 			{
-				if (TokenCreateCallback != null) TokenCreateCallback(new StringLiteralToken(Scope, span, text));
+				var tok = new StringLiteralToken(Scope, span, text);
+				if (FirstToken == null) FirstToken = tok;
+				if (TokenCreateCallback != null) TokenCreateCallback(tok);
 			}
 
 			public void OnNumber(Span span, string text)
 			{
-				if (TokenCreateCallback != null) TokenCreateCallback(new NumberToken(Scope, span, text));
+				var tok = new NumberToken(Scope, span, text);
+				if (FirstToken == null) FirstToken = tok;
+				if (TokenCreateCallback != null) TokenCreateCallback(tok);
 			}
 
 			public void OnUnknown(Span span, string text)
 			{
-				if (TokenCreateCallback != null) TokenCreateCallback(new UnknownToken(Scope, span, text));
+				var tok = new UnknownToken(Scope, span, text);
+				if (FirstToken == null) FirstToken = tok;
+				if (TokenCreateCallback != null) TokenCreateCallback(tok);
 			}
 
 			public void OnToken(Token token)
 			{
+				if (FirstToken == null) FirstToken = token;
 				if (TokenCreateCallback != null) TokenCreateCallback(token);
 			}
 		}
@@ -248,7 +268,6 @@ namespace DkTools.CodeModel
 		public static DataType TryParse(ParseArgs a)
 		{
 			var code = a.Code;
-
 			var startPos = code.Position;
 
 			// Check if there is a data-type name embedded before the source.
@@ -403,6 +422,13 @@ namespace DkTools.CodeModel
 			if (dataType == null)
 			{
 				code.Position = code.TokenStartPostion;
+			}
+
+			// Give the first keyword in the data type an inferred data type, to get casting to work
+			var dtToken = a.FirstToken as DataTypeKeywordToken;
+			if (dtToken != null)
+			{
+				dtToken.InferredDataType = dataType;
 			}
 
 			return dataType;
