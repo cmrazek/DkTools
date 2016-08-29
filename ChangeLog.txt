@@ -5,6 +5,7 @@ Version 1.3.4 - (WIP):
 
 - Added support for 'dark' and 'blue' Visual Studio themes.
 - Added missing implicit columns to time relationship history tables (e.g. dmhi, lohi, tehi)
+- Fixed code modeling problem when extract fields contain casts.
 
 ____________________________________________________________________________________________________
 Version 1.3.3 - Aug 19, 2016:

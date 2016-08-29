@@ -772,6 +772,12 @@ namespace DkTools.CodeModel
 #endif
 							done = true;
 							break;
+						case "(":
+							ReadNestable(")");
+							break;
+						case "[":
+							ReadNestable("]");
+							break;
 					}
 				}
 			}
