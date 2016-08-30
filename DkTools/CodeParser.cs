@@ -16,6 +16,7 @@ namespace DkTools
 		private string _tokenTextStr;
 		private CodeType _tokenType = CodeType.Unknown;
 		private bool _returnWhiteSpace = false;
+		private bool _stopAtLineEnd = false;
 		private bool _returnComments = false;
 		private int _tokenStartPos;
 		private bool _tokenTerminated = true;
@@ -55,17 +56,42 @@ namespace DkTools
 
 				if (char.IsWhiteSpace(ch))
 				{
+					if (_stopAtLineEnd && (ch == '\r' || ch == '\n'))
+					{
+						_tokenType = CodeType.WhiteSpace;
+						return false;
+					}
+
 					_tokenText.Append(ch);
 					_pos++;
-					while (_pos < _length && char.IsWhiteSpace(_source[_pos]))
+
+					while (_pos < _length)
 					{
-						_tokenText.Append(_source[_pos++]);
+						ch = _source[_pos];
+						if (_stopAtLineEnd && (ch == '\r' || ch == '\n')) break;
+						else if (char.IsWhiteSpace(ch))
+						{
+							_tokenText.Append(ch);
+							_pos++;
+						}
+						else break;
 					}
+
+					// TODO: remove
+					//while (_pos < _length && char.IsWhiteSpace(_source[_pos]))
+					//{
+					//	_tokenText.Append(_source[_pos++]);
+					//}
 
 					if (_returnWhiteSpace)
 					{
 						_tokenType = CodeType.WhiteSpace;
 						return true;
+					}
+					else if (_stopAtLineEnd && _tokenText.Length == 0)
+					{
+						_tokenType = CodeType.WhiteSpace;
+						return false;
 					}
 					else continue;
 				}
@@ -382,6 +408,12 @@ namespace DkTools
 		{
 			get { return _returnWhiteSpace; }
 			set { _returnWhiteSpace = value; }
+		}
+
+		public bool StopAtLineEnd
+		{
+			get { return _stopAtLineEnd; }
+			set { _stopAtLineEnd = value; }
 		}
 
 		public bool ReturnComments
@@ -840,7 +872,8 @@ namespace DkTools
 				ch = _source[_pos];
 				if (char.IsWhiteSpace(ch))
 				{
-					if (_returnWhiteSpace) return true;
+					if (_stopAtLineEnd && (ch == '\r' || ch == '\n')) return true;
+					else if (_returnWhiteSpace) return true;
 					_pos++;
 				}
 				else if (ch == '/' && !_returnComments && _pos + 1 < _length)

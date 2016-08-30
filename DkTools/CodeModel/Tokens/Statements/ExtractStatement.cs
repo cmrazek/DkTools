@@ -71,48 +71,63 @@ namespace DkTools.CodeModel.Tokens.Statements
 					break;
 				}
 
-				var exp = ExpressionToken.TryParse(scope, null, (parseWord, parseWordSpan) =>
+				ExtractFieldDefinition fieldDef;
+				if ((fieldDef = exDef.GetField(code.PeekWordR())) != null)
 				{
-					if (!code.PeekExact("==") && code.PeekExact('='))
-					{
-						var fieldDef = exDef.GetField(parseWord);
-						if (fieldDef != null)
-						{
-							var fieldToken = new ExtractFieldToken(scope, parseWordSpan, parseWord, fieldDef);
-							fieldTokens.Add(fieldToken);
-
-							var equalsToken = new OperatorToken(scope, code.MovePeekedSpan(), code.Text);
-
-							// Return the field token and the '='; otherwise the AssignmentOperator parsing will consume the next field's token.
-							return new CompositeToken(scope, fieldDef.DataType, fieldToken, equalsToken);
-						}
-					}
-
-					return null;
-				});
-				if (exp != null) ret.AddToken(exp);
+					var fieldToken = new ExtractFieldToken(scope, code.MovePeekedSpan(), code.Text, fieldDef);
+					fieldTokens.Add(fieldToken);
+					ret.AddToken(fieldToken);
+				}
 				else break;
+
+				if (!code.PeekExact("==") && code.PeekExact('='))
+				{
+					var equalsToken = new OperatorToken(scope, code.MovePeekedSpan(), code.Text);
+					ret.AddToken(equalsToken);
+				}
+				else break;
+
+				var oldValue = code.StopAtLineEnd;
+				code.StopAtLineEnd = true;
+				try
+				{
+					while (true)
+					{
+						var exp = ExpressionToken.TryParse(scope, null, expectedDataType: fieldDef.DataType);
+						if (exp != null)
+						{
+							ret.AddToken(exp);
+							if (fieldDef.DataType == null) fieldDef.SetDataType(exp.ValueDataType);
+						}
+						else break;
+					}
+				}
+				finally
+				{
+					code.StopAtLineEnd = oldValue;
+				}
 			}
 
-			// Try to get the data types for the fields
-			foreach (var fieldToken in fieldTokens)
-			{
-				var fieldDef = fieldToken.SourceDefinition as ExtractFieldDefinition;
-				if (fieldDef == null) continue;
-				if (fieldDef.DataType != null) continue;	// Data type already known, so don't bother
+			// TODO: remove?
+			//// Try to get the data types for the fields
+			//foreach (var fieldToken in fieldTokens)
+			//{
+			//	var fieldDef = fieldToken.SourceDefinition as ExtractFieldDefinition;
+			//	if (fieldDef == null) continue;
+			//	if (fieldDef.DataType != null) continue;	// Data type already known, so don't bother
 
-				var compToken = fieldToken.Parent as CompositeToken;
-				if (compToken == null) continue;
+			//	var compToken = fieldToken.Parent as CompositeToken;
+			//	if (compToken == null) continue;
 
-				var expToken = compToken.Parent as ExpressionToken;
-				if (expToken == null) continue;
+			//	var expToken = compToken.Parent as ExpressionToken;
+			//	if (expToken == null) continue;
 
-				var valueToken = expToken.FindNextSibling(compToken);
-				if (valueToken == null) continue;
+			//	var valueToken = expToken.FindNextSibling(compToken);
+			//	if (valueToken == null) continue;
 
-				var dataType = valueToken.ValueDataType;
-				if (dataType != null) fieldDef.SetDataType(dataType);
-			}
+			//	var dataType = valueToken.ValueDataType;
+			//	if (dataType != null) fieldDef.SetDataType(dataType);
+			//}
 
 			ret._fields = (from f in fieldTokens select f.SourceDefinition as ExtractFieldDefinition).ToArray();
 
