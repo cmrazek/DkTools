@@ -3,7 +3,9 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using EnvDTE;
+using Microsoft.VisualStudio.Text;
 
 namespace DkTools.Tagging
 {
@@ -218,6 +220,275 @@ namespace DkTools.Tagging
 				sel.StartOfLine(vsStartOfLineOptions.vsStartOfLineOptionsFirstText, true);
 				sel.Tabify();
 				sel.EndOfLine();
+			}
+		}
+
+		public static void CommentBlock()
+		{
+			var view = Shell.ActiveView;
+			var snapshot = view.TextSnapshot;
+			var buffer = view.TextBuffer;
+
+			var startPt = view.Selection.Start.Position;
+			var endPt = view.Selection.End.Position;
+
+			if (startPt.Position == endPt.Position)
+			{
+				// Use // style comment on single line
+
+				var line = snapshot.GetLineFromPosition(startPt.Position);
+				var lineText = line.GetText();
+				if (!string.IsNullOrWhiteSpace(lineText))
+				{
+					var startOffset = 0;
+					while (startOffset < lineText.Length)
+					{
+						var ch = lineText[startOffset];
+						if (ch == ' ' || ch == '\t') startOffset++;
+						else break;
+					}
+
+					if (startOffset < lineText.Length)
+					{
+						buffer.Insert(line.Start.Position + startOffset, "//");
+					}
+				}
+
+				return;
+			}
+
+			var strBefore = snapshot.GetLineTextUpToPosition(startPt.Position);
+			var strAfter = snapshot.GetLineTextAfterPosition(endPt.Position);
+
+			if (string.IsNullOrWhiteSpace(strBefore) && string.IsNullOrWhiteSpace(strAfter))
+			{
+				// Can do multi line // style comments
+
+				var startLineNumber = snapshot.GetLineNumberFromPosition(startPt.Position);
+				var endLineNumber = snapshot.GetLineNumberFromPosition(endPt.Position);
+
+				// Calculate the indent level at which the comments should be inserted
+				var tabSize = view.GetTabSize();
+				var keepTabs = view.GetKeepTabs();
+				var desiredIndent = -1;
+				var lines = new List<string>();
+				for (int i = startLineNumber; i <= endLineNumber; i++)
+				{
+					var line = snapshot.GetLineFromLineNumber(i);
+					var lineText = line.GetText();
+					lines.Add(lineText);
+					if (!string.IsNullOrWhiteSpace(lineText))
+					{
+						var indent = lineText.GetIndentCount(tabSize);
+						if (desiredIndent == -1 || indent < desiredIndent) desiredIndent = indent;
+					}
+				}
+
+				// Apply the comments to the line text
+				for (int i = 0, ii = lines.Count; i < ii; i++)
+				{
+					var line = lines[i];
+					AddCommentToLine(ref line, desiredIndent, tabSize, keepTabs);
+					lines[i] = line;
+				}
+
+				var sb = new StringBuilder();
+				foreach (var line in lines)
+				{
+					if (sb.Length > 0) sb.AppendLine();
+					sb.Append(line);
+				}
+
+				var startLine = snapshot.GetLineFromPosition(startPt.Position);
+				var endLine = snapshot.GetLineFromPosition(endPt.Position);
+				buffer.Replace(new Span(startLine.Start.Position, endLine.End.Position - startLine.Start.Position), sb.ToString());
+			}
+			else
+			{
+				// Use /*..*/ style comments
+
+				var span = new Span(startPt.Position, endPt.Position - startPt.Position);
+				var sb = new StringBuilder(snapshot.GetText(span));
+				sb.Insert(0, "/*");
+				sb.Append("*/");
+				buffer.Replace(span, sb.ToString());
+			}
+		}
+
+		public static void UncommentBlock()
+		{
+			var view = Shell.ActiveView;
+			var snapshot = view.TextSnapshot;
+			var buffer = view.TextBuffer;
+
+			var startPt = view.Selection.Start.Position;
+			var endPt = view.Selection.End.Position;
+
+			if (startPt.Position == endPt.Position)
+			{
+				// Uncomment // on single line
+
+				var line = snapshot.GetLineFromPosition(startPt.Position);
+				var lineText = line.GetText();
+
+				UncommentLine(ref lineText);
+
+				buffer.Replace(line.GetSpan(), lineText);
+
+				return;
+			}
+
+			var strBefore = snapshot.GetLineTextUpToPosition(startPt.Position);
+			var strAfter = snapshot.GetLineTextAfterPosition(endPt.Position);
+
+			if (string.IsNullOrWhiteSpace(strBefore) && string.IsNullOrWhiteSpace(strAfter))
+			{
+				// Uncomment // from multiple lines
+
+				var startLineNumber = snapshot.GetLineNumberFromPosition(startPt.Position);
+				var endLineNumber = snapshot.GetLineNumberFromPosition(endPt.Position);
+				var sb = new StringBuilder();
+				for (var lineNumber = startLineNumber; lineNumber <= endLineNumber; lineNumber++)
+				{
+					var line = snapshot.GetLineFromLineNumber(lineNumber);
+					var lineText = line.GetText();
+
+					UncommentLine(ref lineText);
+
+					if (sb.Length > 0) sb.AppendLine();
+					sb.Append(lineText);
+				}
+
+				var startLine = snapshot.GetLineFromPosition(startPt.Position);
+				var endLine = snapshot.GetLineFromPosition(endPt.Position);
+				buffer.Replace(new Span(startLine.Start.Position, endLine.End.Position - startLine.Start.Position), sb.ToString());
+			}
+			else
+			{
+				// Uncomment from middle of text
+
+				var span = new Span(startPt.Position, endPt.Position - startPt.Position);
+				var selText = snapshot.GetText(span);
+				var beforeText = snapshot.GetLineTextUpToPosition(startPt.Position);
+				var afterText = snapshot.GetLineTextAfterPosition(endPt.Position);
+				var origSpan = span;
+				var origText = selText;
+
+				if (selText.StartsWith("/*"))
+				{
+					selText = selText.Substring(2);
+				}
+				else if (beforeText.EndsWith("/*"))
+				{
+					span = new Span(span.Start - 2, span.Length + 2);
+				}
+				else if (beforeText.EndsWith("/") && selText.StartsWith("*"))
+				{
+					selText = selText.Substring(1);
+					span = new Span(span.Start - 1, span.Length + 1);
+				}
+
+				if (selText.EndsWith("*/"))
+				{
+					selText = selText.Substring(0, selText.Length - 2);
+				}
+				else if (afterText.StartsWith("*/"))
+				{
+					span = new Span(span.Start, span.Length + 2);
+				}
+				else if (selText.EndsWith("*") && afterText.StartsWith("/"))
+				{
+					selText = selText.Substring(0, selText.Length - 1);
+					span = new Span(span.Start, span.Length + 1);
+				}
+
+				if (selText != origText || span != origSpan)
+				{
+					buffer.Replace(span, selText);
+				}
+			}
+		}
+
+		private static void AddCommentToLine(ref string line, int commentIndent, int tabSize, bool keepTabs)
+		{
+			if (string.IsNullOrWhiteSpace(line)) return;
+
+			var sb = new StringBuilder(line);
+
+			var indentRemoved = 0;
+			var charsRemoved = 0;
+			while (indentRemoved < commentIndent)
+			{
+				var ch = sb[charsRemoved];
+				if (ch == ' ')
+				{
+					charsRemoved++;
+					indentRemoved++;
+				}
+				else if (ch == '\t')
+				{
+					charsRemoved++;
+					indentRemoved += ((indentRemoved / tabSize) + 1) * tabSize;
+				}
+				else break;
+			}
+
+			if (charsRemoved > 0) sb.Remove(0, charsRemoved);
+
+			var indentAdded = 0;
+			var insertPos = 0;
+			if (keepTabs)
+			{
+				while (indentAdded < commentIndent)
+				{
+					if (indentAdded + tabSize <= commentIndent)
+					{
+						sb.Insert(insertPos, '\t');
+						indentAdded += tabSize;
+						insertPos++;
+					}
+					else
+					{
+						sb.Insert(insertPos, new string(' ', commentIndent - indentAdded));
+						insertPos += commentIndent - indentAdded;
+						indentAdded = commentIndent;
+					}
+				}
+			}
+			else
+			{
+				sb.Insert(0, new string(' ', commentIndent));
+				insertPos = commentIndent;
+				indentAdded = commentIndent;
+			}
+
+			sb.Insert(insertPos, "//");
+			insertPos += 2;
+
+			if (indentRemoved > indentAdded)
+			{
+				sb.Insert(insertPos, new string(' ', indentRemoved - indentAdded));
+			}
+
+			line = sb.ToString();
+		}
+
+		private static readonly Regex _rxUncommentLineStart = new Regex(@"^(\s*)(?://|/\*)?(.*)$");
+		private static readonly Regex _rxUncommentLineEnd = new Regex(@"^(.*)\*/(\s*)$");
+
+		private static void UncommentLine(ref string line)
+		{
+			if (string.IsNullOrWhiteSpace(line)) return;
+
+			Match match;
+			if ((match = _rxUncommentLineStart.Match(line)).Success)
+			{
+				line = string.Concat(match.Groups[1].Value, match.Groups[2].Value);
+			}
+
+			if ((match = _rxUncommentLineEnd.Match(line)).Success)
+			{
+				line = string.Concat(match.Groups[1].Value, match.Groups[2].Value);
 			}
 		}
 	}

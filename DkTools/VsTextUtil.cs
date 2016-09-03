@@ -21,6 +21,15 @@ namespace DkTools
 			return string.Empty;
 		}
 
+		public static string GetLineTextAfterPosition(this ITextSnapshot snapshot, int pos)
+		{
+			var line = snapshot.GetLineFromPosition(pos);
+			var lineStart = line.Start.Position;
+			var lineText = line.GetText();
+			if (pos - lineStart <= lineText.Length) return lineText.Substring(pos - lineStart);
+			return string.Empty;
+		}
+
 		public static int TranslateOffsetToSnapshot(this ITextSnapshot fromSnap, int offset, ITextSnapshot toSnap)
 		{
 			if (fromSnap != toSnap)
@@ -125,6 +134,11 @@ namespace DkTools
 		public static bool GetKeepTabs(this ITextView view)
 		{
 			return !view.Options.GetOptionValue<bool>(DefaultOptions.ConvertTabsToSpacesOptionId);
+		}
+
+		public static Span GetSpan(this ITextSnapshotLine line)
+		{
+			return new Span(line.Start.Position, line.End.Position - line.Start.Position);
 		}
 	}
 

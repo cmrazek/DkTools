@@ -109,6 +109,16 @@ namespace DkTools.StatementCompletion
 						Navigation.GoToBraceHelper.Trigger(_textView, true);
 						return VSConstants.S_OK;
 					}
+					else if (nCmdID == (uint)VSConstants.VSStd2KCmdID.COMMENT_BLOCK)
+					{
+						Tagging.Tagger.CommentBlock();
+						return VSConstants.S_OK;
+					}
+					else if (nCmdID == (uint)VSConstants.VSStd2KCmdID.UNCOMMENT_BLOCK)
+					{
+						Tagging.Tagger.UncommentBlock();
+						return VSConstants.S_OK;
+					}
 				}
 
 				if (_session != null && !_session.IsDismissed)
