@@ -246,7 +246,7 @@ namespace DkTools.CodeModel.Tokens
 						var word = code.PeekWordR();
 						if (!string.IsNullOrEmpty(word))
 						{
-							var childDef = extractDef.GetChildDefinition(word);
+							var childDef = extractDef.GetChildDefinitions(word).FirstOrDefault();
 							if (childDef != null)
 							{
 								parent.AddToken(new IdentifierToken(scope, code.MovePeekedSpan(), word, childDef));

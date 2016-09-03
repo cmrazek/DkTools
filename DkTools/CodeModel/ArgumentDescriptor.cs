@@ -14,6 +14,8 @@ namespace DkTools.CodeModel
 		private string _sigText;
 		private Span _sigSpan;
 
+		public static readonly ArgumentDescriptor[] EmptyArray = new ArgumentDescriptor[0];
+
 		public ArgumentDescriptor(string name, DataType dataType, PassByMethod passByMethod)
 		{
 			_name = name;

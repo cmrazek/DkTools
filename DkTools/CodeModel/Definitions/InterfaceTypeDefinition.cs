@@ -56,13 +56,13 @@ namespace DkTools.CodeModel.Definitions
 			{
 				if (string.IsNullOrEmpty(_devDesc))
 				{
-					return WpfMainLine(string.Concat("interface ", Name));
+					return _intType.DataType.QuickInfoWpf;
 				}
 				else
 				{
 					return WpfDivs
 					(
-						WpfMainLine(string.Concat("interface ", Name)),
+						_intType.DataType.QuickInfoWpf,
 						WpfInfoLine(_devDesc)
 					);
 				}
@@ -74,18 +74,14 @@ namespace DkTools.CodeModel.Definitions
 			get { return _intType; }
 		}
 
-		public InterfaceMethodDefinition GetMethod(string name)
+		public IEnumerable<InterfaceMethodDefinition> GetMethods(string name)
 		{
-			// TODO: Add support for methods
-			//return _intType.GetMethod(name);
-			return null;
+			foreach (var meth in _intType.GetMethods(name)) yield return meth;
 		}
 
-		public InterfacePropertyDefinition GetProperty(string name)
+		public IEnumerable<InterfacePropertyDefinition> GetProperties(string name)
 		{
-			// TODO: Add support for properties
-			//return _intType.GetProperty(name);
-			return null;
+			foreach (var prop in _intType.GetProperties(name)) yield return prop;
 		}
 
 		public override string PickText
@@ -108,18 +104,22 @@ namespace DkTools.CodeModel.Definitions
 			get { return true; }
 		}
 
-		public override Definition GetChildDefinition(string name)
+		public override IEnumerable<Definition> GetChildDefinitions(string name)
 		{
-			Definition def = _intType.GetMethod(name);
-			if (def != null) return def;
-
-			def = _intType.GetProperty(name);
-			if (def != null) return def;
-
-			return null;
+			foreach (var def in _intType.GetMethods(name)) yield return def;
+			foreach (var def in _intType.GetProperties(name)) yield return def;
 		}
 
-		public override bool RequiresArguments
+		public override IEnumerable<Definition> ChildDefinitions
+		{
+			get
+			{
+				foreach (var def in _intType.MethodDefinitions) yield return def;
+				foreach (var def in _intType.PropertyDefinitions) yield return def;
+			}
+		}
+
+		public override bool ArgumentsRequired
 		{
 			get { return false; }
 		}

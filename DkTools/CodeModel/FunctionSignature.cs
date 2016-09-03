@@ -17,6 +17,8 @@ namespace DkTools.CodeModel
 		private string _prettySignature;
 		private string _devDesc;
 
+		public static readonly FunctionSignature[] EmptyArray = new FunctionSignature[0];
+
 		private FunctionSignature()
 		{ }
 

@@ -14,9 +14,8 @@ namespace DkTools.CodeModel
 		private string _source;
 		private Definition[] _completionOptions;
 		private CompletionOptionsType _completionOptionsType;
-		private Definition[] _methods;
-		private Definition[] _properties;
 		private ValType _valueType;
+		private DkDict.Interface _intf;
 
 		public enum CompletionOptionsType
 		{
@@ -105,6 +104,19 @@ namespace DkTools.CodeModel
 		public string Name
 		{
 			get { return _name; }
+			set { _name = value; }
+		}
+
+		public string Source
+		{
+			get { return _source; }
+			set { _source = value; }
+		}
+
+		public DkDict.Interface Interface
+		{
+			get { return _intf; }
+			set { _intf = value; }
 		}
 
 		public bool HasCompletionOptions
@@ -136,6 +148,15 @@ namespace DkTools.CodeModel
 						yield return RelIndDefinition.Physical;
 						foreach (var r in DkDict.Dict.RelInds) yield return r.Definition;
 						break;
+
+					case CompletionOptionsType.InterfaceMembers:
+						if (_intf != null)
+						{
+							foreach (var def in _intf.MethodDefinitions) yield return def;
+							foreach (var def in _intf.PropertyDefinitions) yield return def;
+						}
+						break;
+
 				}
 			}
 		}
@@ -145,8 +166,7 @@ namespace DkTools.CodeModel
 		[Flags]
 		public enum ParseFlag
 		{
-			Strict,
-			InterfaceType
+			Strict
 		}
 
 		public class ParseArgs
@@ -206,51 +226,72 @@ namespace DkTools.CodeModel
 
 			public void OnKeyword(Span span, string text)
 			{
-				var tok = new KeywordToken(Scope, span, text);
-				if (FirstToken == null) FirstToken = tok;
-				if (TokenCreateCallback != null) TokenCreateCallback(tok);
+				if (TokenCreateCallback != null)
+				{
+					var tok = new KeywordToken(Scope, span, text);
+					if (FirstToken == null) FirstToken = tok;
+					TokenCreateCallback(tok);
+				}
 			}
 
 			public void OnDataTypeKeyword(Span span, string text, Definition def)
 			{
-				var tok = new DataTypeKeywordToken(Scope, span, text, def);
-				if (FirstToken == null) FirstToken = tok;
-				if (TokenCreateCallback != null) TokenCreateCallback(tok);
+				if (TokenCreateCallback != null)
+				{
+					var tok = new DataTypeKeywordToken(Scope, span, text, def);
+					if (FirstToken == null) FirstToken = tok;
+					TokenCreateCallback(tok);
+				}
 			}
 
 			public void OnIdentifier(Span span, string text, Definition def)
 			{
-				var tok = new IdentifierToken(Scope, span, text, def);
-				if (FirstToken == null) FirstToken = tok;
-				if (TokenCreateCallback != null) TokenCreateCallback(tok);
+				if (TokenCreateCallback != null)
+				{
+					var tok = new IdentifierToken(Scope, span, text, def);
+					if (FirstToken == null) FirstToken = tok;
+					TokenCreateCallback(tok);
+				}
 			}
 
 			public void OnOperator(Span span, string text)
 			{
-				var tok = new OperatorToken(Scope, span, text);
-				if (FirstToken == null) FirstToken = tok;
-				if (TokenCreateCallback != null) TokenCreateCallback(tok);
+				if (TokenCreateCallback != null)
+				{
+					var tok = new OperatorToken(Scope, span, text);
+					if (FirstToken == null) FirstToken = tok;
+					TokenCreateCallback(tok);
+				}
 			}
 
 			public void OnStringLiteral(Span span, string text)
 			{
-				var tok = new StringLiteralToken(Scope, span, text);
-				if (FirstToken == null) FirstToken = tok;
-				if (TokenCreateCallback != null) TokenCreateCallback(tok);
+				if (TokenCreateCallback != null)
+				{
+					var tok = new StringLiteralToken(Scope, span, text);
+					if (FirstToken == null) FirstToken = tok;
+					TokenCreateCallback(tok);
+				}
 			}
 
 			public void OnNumber(Span span, string text)
 			{
-				var tok = new NumberToken(Scope, span, text);
-				if (FirstToken == null) FirstToken = tok;
-				if (TokenCreateCallback != null) TokenCreateCallback(tok);
+				if (TokenCreateCallback != null)
+				{
+					var tok = new NumberToken(Scope, span, text);
+					if (FirstToken == null) FirstToken = tok;
+					TokenCreateCallback(tok);
+				}
 			}
 
 			public void OnUnknown(Span span, string text)
 			{
-				var tok = new UnknownToken(Scope, span, text);
-				if (FirstToken == null) FirstToken = tok;
-				if (TokenCreateCallback != null) TokenCreateCallback(tok);
+				if (TokenCreateCallback != null)
+				{
+					var tok = new UnknownToken(Scope, span, text);
+					if (FirstToken == null) FirstToken = tok;
+					TokenCreateCallback(tok);
+				}
 			}
 
 			public void OnToken(Token token)
@@ -482,7 +523,7 @@ namespace DkTools.CodeModel
 					if (brackets != null)
 					{
 						brackets.AddClose(code.Span);
-						a.TokenCreateCallback(brackets);
+						a.OnToken(brackets);
 					}
 				}
 				else return new DataType(ValType.Numeric, a.TypeName, sb.ToString());
@@ -560,7 +601,7 @@ namespace DkTools.CodeModel
 					if (brackets != null)
 					{
 						brackets.AddClose(code.Span);
-						a.TokenCreateCallback(brackets);
+						a.OnToken(brackets);
 					}
 				}
 				else return new DataType(ValType.Numeric, a.TypeName, sb.ToString());
@@ -663,7 +704,7 @@ namespace DkTools.CodeModel
 					if (brackets != null)
 					{
 						brackets.AddClose(code.Span);
-						a.TokenCreateCallback(brackets);
+						a.OnToken(brackets);
 					}
 				}
 				else return new DataType(ValType.String, a.TypeName, sb.ToString());
@@ -701,7 +742,7 @@ namespace DkTools.CodeModel
 						if (brackets != null)
 						{
 							brackets.AddClose(code.Span);
-							a.TokenCreateCallback(brackets);
+							a.OnToken(brackets);
 						}
 					}
 
@@ -912,7 +953,7 @@ namespace DkTools.CodeModel
 						if (braces != null)
 						{
 							braces.AddClose(code.Span);
-							a.TokenCreateCallback(braces);
+							a.OnToken(braces);
 						}
 						break;
 					}
@@ -999,7 +1040,7 @@ namespace DkTools.CodeModel
 									var dotToken = new DotToken(a.Scope, dotSpan);
 									var fieldToken = new TableFieldToken(a.Scope, word2Span, word2, field);
 									var tableAndFieldToken = new TableAndFieldToken(a.Scope, tableToken, dotToken, fieldToken);
-									a.TokenCreateCallback(tableAndFieldToken);
+									a.OnToken(tableAndFieldToken);
 								}
 								return field.DataType;
 							}
@@ -1007,9 +1048,9 @@ namespace DkTools.CodeModel
 
 						if (a.TokenCreateCallback != null)
 						{
-							a.TokenCreateCallback(new UnknownToken(a.Scope, word1Span, word1));
-							a.TokenCreateCallback(new UnknownToken(a.Scope, dotSpan, "."));
-							a.TokenCreateCallback(new UnknownToken(a.Scope, word2Span, word2));
+							a.OnToken(new UnknownToken(a.Scope, word1Span, word1));
+							a.OnToken(new UnknownToken(a.Scope, dotSpan, "."));
+							a.OnToken(new UnknownToken(a.Scope, word2Span, word2));
 						}
 
 						return new DataType(ValType.Unknown, a.TypeName, string.Concat("like ", word1, ".", word2));
@@ -1018,8 +1059,8 @@ namespace DkTools.CodeModel
 					{
 						if (a.TokenCreateCallback != null)
 						{
-							a.TokenCreateCallback(new UnknownToken(a.Scope, word1Span, word1));
-							a.TokenCreateCallback(new UnknownToken(a.Scope, dotSpan, "."));
+							a.OnToken(new UnknownToken(a.Scope, word1Span, word1));
+							a.OnToken(new UnknownToken(a.Scope, dotSpan, "."));
 						}
 
 						return new DataType(ValType.Unknown, a.TypeName, string.Concat("like ", word1, "."));
@@ -1036,7 +1077,7 @@ namespace DkTools.CodeModel
 					}
 				}
 
-				if (a.TokenCreateCallback != null) a.TokenCreateCallback(new UnknownToken(a.Scope, word1Span, word1));
+				if (a.TokenCreateCallback != null) a.OnToken(new UnknownToken(a.Scope, word1Span, word1));
 
 				return new DataType(ValType.Unknown, a.TypeName, string.Concat("like ", word1));
 			}
@@ -1121,122 +1162,30 @@ namespace DkTools.CodeModel
 
 		private static DataType ProcessInterface(ParseArgs a)
 		{
-			var sb = new StringBuilder();
-			sb.Append("interface");
-
 			var code = a.Code;
-
-			if ((a.Flags & ParseFlag.InterfaceType) == 0)
+			if (code.ReadWord())
 			{
-				if (code.ReadWord())
+				var intfName = code.Text;
+
+				var intf = DkDict.Dict.GetInterface(code.Text);
+				if (intf != null)
 				{
-					sb.Append(' ');
-					sb.Append(code.Text);
-
-					var completionOptions = new List<Definition>();
-					Definition[] methods = null;
-					Definition[] properties = null;
-
-					var intType = DkDict.Dict.GetInterface(code.Text);
-					if (intType != null)
-					{
-						methods = intType.MethodDefinitions.ToArray();
-						completionOptions.AddRange(methods);
-						properties = intType.PropertyDefinitions.ToArray();
-						completionOptions.AddRange(properties);
-
-						if (a.TokenCreateCallback != null) a.TokenCreateCallback(new InterfaceTypeToken(a.Scope, code.Span, intType.Definition));
-					}
-
-					return new DataType(ValType.Interface, a.TypeName, sb.ToString())
-					{
-						_completionOptions = completionOptions.ToArray(),
-						_completionOptionsType = CompletionOptionsType.InterfaceMembers,
-						_methods = methods,
-						_properties = properties
-					};
-				}
-			}
-			else
-			{
-				// Parsing the text from a WBDK interface, which could contain .NET or COM specific formatting.
-
-				if (code.ReadWord())
-				{
-					sb.Append(' ');
-					sb.Append(code.Text);
-
-					DkDict.Interface intType = null;
-					Definition parentDef = null;
 					if (a.TokenCreateCallback != null)
 					{
-						intType = DkDict.Dict.GetInterface(code.Text);
-						if (intType != null)
-						{
-							a.TokenCreateCallback(new InterfaceTypeToken(a.Scope, code.Span, intType.Definition));
-							parentDef = intType.Definition;
-						}
-						else a.OnUnknown(code.Span, code.Text);
+						a.OnToken(new IdentifierToken(a.Scope, code.Span, code.Text, intf.Definition));
 					}
 
-					while (code.ReadExact('.'))
-					{
-						sb.Append('.');
-						if (a.TokenCreateCallback != null) a.TokenCreateCallback(new DotToken(a.Scope, code.Span));
-
-						if (code.ReadWord())
-						{
-							sb.Append(code.Text);
-							if (a.TokenCreateCallback != null && parentDef != null && parentDef.AllowsChild)
-							{
-								var def = parentDef.GetChildDefinition(code.Text);
-								if (def != null)
-								{
-									a.OnIdentifier(code.Span, code.Text, def);
-									parentDef = def;
-								}
-								else
-								{
-									a.OnUnknown(code.Span, code.Text);
-								}
-							}
-						}
-						else break;
-					}
-
-					if (code.ReadExact('*'))
-					{
-						sb.Append('*');
-						a.OnOperator(code.Span, code.Text);
-					}
-					else if (code.ReadExact('&'))
-					{
-						sb.Append('&');
-						a.OnOperator(code.Span, code.Text);
-					}
-					else if (code.ReadExact('['))
-					{
-						sb.Append('[');
-
-						ArrayBracesToken arrayBraces = null;
-						if (a.TokenCreateCallback != null)
-						{
-							arrayBraces = new ArrayBracesToken(a.Scope);
-							arrayBraces.AddOpen(code.Span);
-						}
-
-						if (code.ReadExact(']'))
-						{
-							sb.Append(']');
-							if (arrayBraces != null) arrayBraces.AddClose(code.Span);
-						}
-
-						if (arrayBraces != null) a.TokenCreateCallback(arrayBraces);
-					}
+					return intf.DataType;
 				}
+
+				// TODO: remove
+				//return new DataType(ValType.Interface, a.TypeName, intfName, Definition.EmptyArray, CompletionOptionsType.InterfaceMembers)
+				//{
+				//	Interface = intf
+				//};
 			}
 
-			return new DataType(ValType.Interface, a.TypeName, sb.ToString());
+			return new DataType(ValType.Interface, a.TypeName, "interface");
 		}
 
 		private static bool ReadAttribute(ParseArgs a, CodeParser code, StringBuilder sb, params string[] extraTokens)
@@ -1395,49 +1344,6 @@ namespace DkTools.CodeModel
 			return CodeParser.StringToStringLiteral(option);
 		}
 
-		public bool HasMethodsOrProperties
-		{
-			get { return _methods != null || _properties != null; }
-		}
-
-		public IEnumerable<Definition> GetMethods(string name)
-		{
-			if (_methods != null)
-			{
-				foreach (var method in _methods)
-				{
-					if (method.Name == name) yield return method;
-				}
-			}
-		}
-
-		public IEnumerable<Definition> GetProperties(string name)
-		{
-			if (_properties != null)
-			{
-				foreach (var prop in _properties)
-				{
-					if (prop.Name == name) yield return prop;
-				}
-			}
-		}
-
-		public IEnumerable<Definition> MethodsAndProperties
-		{
-			get
-			{
-				if (_methods != null)
-				{
-					foreach (var meth in _methods) yield return meth;
-				}
-
-				if (_properties != null)
-				{
-					foreach (var prop in _properties) yield return prop;
-				}
-			}
-		}
-
 #if DEBUG
 		public static void CheckDataTypeParsing(string dataTypeText, CodeParser usedParser, DataType dataType)
 		{
@@ -1484,6 +1390,157 @@ namespace DkTools.CodeModel
 			else
 			{
 				return _source;
+			}
+		}
+
+		public static float CalcArgumentCompatibility(DataType argType, DataType passType)
+		{
+			if (argType == null) return 1.0f;
+			if (passType == null) return .5f;
+
+			switch (argType.ValueType)
+			{
+				case ValType.Unknown:
+				case ValType.Void:
+					return 1.0f;
+				case ValType.Numeric:
+					switch (passType.ValueType)
+					{
+						case ValType.Unknown:	return .5f;
+						case ValType.Void:		return .5f;
+						case ValType.Numeric:	return 1.0f;
+						case ValType.String:	return .9f;
+						case ValType.Char:		return .75f;
+						case ValType.Enum:		return .75f;
+						case ValType.Date:		return .75f;
+						case ValType.Time:		return .75f;
+						default:				return .2f;
+					}
+				case ValType.String:
+					switch (passType.ValueType)
+					{
+						case ValType.Unknown:	return .5f;
+						case ValType.Void:		return .5f;
+						case ValType.Numeric:	return .9f;
+						case ValType.String:	return 1.0f;
+						case ValType.Char:		return .8f;
+						case ValType.Enum:		return .9f;
+						case ValType.Date:		return .9f;
+						case ValType.Time:		return .9f;
+						default:				return .2f;
+					}
+				case ValType.Char:
+					switch (passType.ValueType)
+					{
+						case ValType.Unknown:	return .5f;
+						case ValType.Void:		return .5f;
+						case ValType.Numeric:	return .7f;
+						case ValType.String:	return .7f;
+						case ValType.Char:		return 1.0f;
+						case ValType.Enum:		return .8f;
+						case ValType.Date:		return .7f;
+						case ValType.Time:		return .7f;
+						default:				return .2f;
+					}
+				case ValType.Enum:
+					switch (passType.ValueType)
+					{
+						case ValType.Unknown:	return .5f;
+						case ValType.Void:		return .5f;
+						case ValType.Numeric:	return .8f;
+						case ValType.String:	return .9f;
+						case ValType.Char:		return .9f;
+						case ValType.Enum:		return 1.0f;
+						case ValType.Date:		return .7f;
+						case ValType.Time:		return .7f;
+						default:				return .2f;
+					}
+				case ValType.Date:
+					switch (passType.ValueType)
+					{
+						case ValType.Unknown:	return .5f;
+						case ValType.Void:		return .5f;
+						case ValType.Numeric:	return .9f;
+						case ValType.String:	return .9f;
+						case ValType.Char:		return .7f;
+						case ValType.Enum:		return .7f;
+						case ValType.Date:		return 1.0f;
+						case ValType.Time:		return .7f;
+						default:				return .2f;
+					}
+				case ValType.Time:
+					switch (passType.ValueType)
+					{
+						case ValType.Unknown:	return .5f;
+						case ValType.Void:		return .5f;
+						case ValType.Numeric:	return .9f;
+						case ValType.String:	return .9f;
+						case ValType.Char:		return .7f;
+						case ValType.Enum:		return .7f;
+						case ValType.Date:		return .7f;
+						case ValType.Time:		return 1.0f;
+						default:				return .2f;
+					}
+				case ValType.Table:
+					switch (passType.ValueType)
+					{
+						case ValType.Unknown:	return .5f;
+						case ValType.Void:		return .5f;
+						case ValType.Table:		return 1.0f;
+						case ValType.IndRel:	return .9f;
+						default:				return .2f;
+					}
+				case ValType.IndRel:
+					switch (passType.ValueType)
+					{
+						case ValType.Unknown:	return .5f;
+						case ValType.Void:		return .5f;
+						case ValType.Table:		return .9f;
+						case ValType.IndRel:	return 1.0f;
+						default:				return .2f;
+					}
+				case ValType.Interface:
+					switch (passType.ValueType)
+					{
+						case ValType.Unknown:	return .5f;
+						case ValType.Void:		return .5f;
+						case ValType.Interface: return argType._source == passType._source ? 1.0f : .7f;
+						default:				return .2f;
+					}
+				case ValType.Command:
+					switch (passType.ValueType)
+					{
+						case ValType.Unknown:	return .5f;
+						case ValType.Void:		return .5f;
+						case ValType.Command:	return 1.0f;
+						default:				return .2f;
+					}
+				case ValType.Section:
+					switch (passType.ValueType)
+					{
+						case ValType.Unknown:	return .5f;
+						case ValType.Void:		return .5f;
+						case ValType.Section:	return 1.0f;
+						default:				return .2f;
+					}
+				case ValType.Scroll:
+					switch (passType.ValueType)
+					{
+						case ValType.Unknown:	return .5f;
+						case ValType.Void:		return .5f;
+						case ValType.Scroll:	return 1.0f;
+						default:				return .2f;
+					}
+				case ValType.Graphic:
+					switch (passType.ValueType)
+					{
+						case ValType.Unknown:	return .5f;
+						case ValType.Void:		return .5f;
+						case ValType.Graphic:	return 1.0f;
+						default:				return .2f;
+					}
+				default:
+					return .2f;
 			}
 		}
 	}

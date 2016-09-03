@@ -20,5 +20,13 @@ namespace DkTools.CodeModel.Tokens
 				if (table != null) this.SourceDefinition = table.Definition;
 			}
 		}
+
+		public override DataType ValueDataType
+		{
+			get
+			{
+				return DataType.Table;
+			}
+		}
 	}
 }

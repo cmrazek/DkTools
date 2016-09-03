@@ -18,7 +18,7 @@ namespace DkTools.CodeModel.Definitions
 #if DEBUG
 			if (intType == null) throw new ArgumentNullException("intType");
 			if (string.IsNullOrEmpty(name)) throw new ArgumentNullException("name");
-			if (_sig == null) throw new ArgumentNullException("signature");
+			if (sig == null) throw new ArgumentNullException("signature");
 			if (returnDataType == null) throw new ArgumentNullException("returnDataType");
 #endif
 			_intType = intType;
@@ -77,24 +77,25 @@ namespace DkTools.CodeModel.Definitions
 			get { return QuickInfoTextStr; }
 		}
 
-		public override bool RequiresChild
-		{
-			get { return false; }
-		}
-
-		public override bool AllowsChild
-		{
-			get { return false; }
-		}
-
-		public override Definition GetChildDefinition(string name)
-		{
-			throw new NotSupportedException();
-		}
-
-		public override bool RequiresArguments
+		public override bool ArgumentsRequired
 		{
 			get { return true; }
+		}
+
+		public override IEnumerable<ArgumentDescriptor> Arguments
+		{
+			get
+			{
+				return _sig.Arguments;
+			}
+		}
+
+		public override FunctionSignature ArgumentsSignature
+		{
+			get
+			{
+				return _sig;
+			}
 		}
 
 		public override DataType DataType

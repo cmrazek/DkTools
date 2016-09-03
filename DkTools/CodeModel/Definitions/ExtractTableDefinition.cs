@@ -90,17 +90,23 @@ namespace DkTools.CodeModel.Definitions
 			get { return true; }
 		}
 
-		public override Definition GetChildDefinition(string name)
+		public override IEnumerable<Definition> GetChildDefinitions(string name)
 		{
 			foreach (var field in _fields)
 			{
-				if (field.Name == name) return field;
+				if (field.Name == name) yield return field;
 			}
-
-			return null;
 		}
 
-		public override bool RequiresArguments
+		public override IEnumerable<Definition> ChildDefinitions
+		{
+			get
+			{
+				foreach (var field in _fields) yield return field;
+			}
+		}
+
+		public override bool ArgumentsRequired
 		{
 			get { return false; }
 		}

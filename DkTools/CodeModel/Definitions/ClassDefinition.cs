@@ -57,20 +57,32 @@ namespace DkTools.CodeModel.Definitions
 			get { return true; }
 		}
 
-		public override Definition GetChildDefinition(string name)
+		public override IEnumerable<Definition> GetChildDefinitions(string name)
 		{
 			foreach (var cls in ProbeToolsPackage.Instance.FunctionFileScanner.CurrentApp.GetClasses(Name))
 			{
 				foreach (var func in cls.GetFunctionDefinitions(name))
 				{
-					return func;
+					yield return func;
 				}
 			}
-
-			return null;
 		}
 
-		public override bool RequiresArguments
+		public override IEnumerable<Definition> ChildDefinitions
+		{
+			get
+			{
+				foreach (var cls in ProbeToolsPackage.Instance.FunctionFileScanner.CurrentApp.GetClasses(Name))
+				{
+					foreach (var func in cls.FunctionDefinitions)
+					{
+						yield return func;
+					}
+				}
+			}
+		}
+
+		public override bool ArgumentsRequired
 		{
 			get { return false; }
 		}

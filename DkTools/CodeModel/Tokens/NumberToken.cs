@@ -22,5 +22,13 @@ namespace DkTools.CodeModel.Tokens
 			xml.WriteAttributeString("text", _text);
 			base.DumpTreeInner(xml);
 		}
+
+		public override DataType ValueDataType
+		{
+			get
+			{
+				return DataType.Numeric;
+			}
+		}
 	}
 }
