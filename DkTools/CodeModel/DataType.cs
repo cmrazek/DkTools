@@ -40,6 +40,7 @@ namespace DkTools.CodeModel
 		public static readonly DataType StringVarying = new DataType(ValType.String, null, "string varying");
 		public static readonly DataType Table = new DataType(ValType.Table, null, "table") { _completionOptionsType = CompletionOptionsType.Tables };
 		public static readonly DataType Ulong = new DataType(ValType.Numeric, null, "ulong");
+		public static readonly DataType Unknown = new DataType(ValType.Unknown, null, string.Empty);
 		public static readonly DataType Unsigned = new DataType(ValType.Numeric, null, "unsigned");
 		public static readonly DataType Unsigned2 = new DataType(ValType.Numeric, null, "numeric(2) unsigned");
 		public static readonly DataType Unsigned9 = new DataType(ValType.Numeric, null, "numeric(9) unsigned");
@@ -57,7 +58,7 @@ namespace DkTools.CodeModel
 		/// <param name="source">(required) source code that defines the data type.</param>
 		public DataType(ValType valueType, string name, string source)
 		{
-			if (string.IsNullOrWhiteSpace(source)) throw new ArgumentNullException("source");
+			if (string.IsNullOrWhiteSpace(source) && valueType != ValType.Unknown) throw new ArgumentNullException("source");
 
 			_valueType = valueType;
 			_name = name;
@@ -111,6 +112,12 @@ namespace DkTools.CodeModel
 		{
 			get { return _source; }
 			set { _source = value; }
+		}
+
+		public override string ToString()
+		{
+			if (!string.IsNullOrEmpty(_name)) return string.Concat(_name, " (", _source, ")");
+			else return _source;
 		}
 
 		public DkDict.Interface Interface
