@@ -8,6 +8,7 @@ Version 1.3.4 - (WIP):
 - Added better support for comment/uncomment block.
 - Fixed code modeling issue when extract fields contain casts.
 - Enum option values will now be detected when they occur after a cast.
+- Added proper support for interface types.
 
 ____________________________________________________________________________________________________
 Version 1.3.3 - Aug 19, 2016:
