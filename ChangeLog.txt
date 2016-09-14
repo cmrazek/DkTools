@@ -1,7 +1,7 @@
 DkTools2012 ChangeLog
 
 ____________________________________________________________________________________________________
-Version 1.3.4 - (WIP):
+Version 1.3.4 - Sep 14, 2016:
 
 - Added support for 'dark' and 'blue' Visual Studio themes.
 - Added missing implicit columns to time relationship history tables (e.g. dmhi, lohi, tehi)
