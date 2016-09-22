@@ -329,9 +329,9 @@ namespace DkTools.CodeModel
 			{
 				var localPos = _source.GetFilePosition(nameSpan.Start);
 
-				var def = new FunctionDefinition(
-					new FunctionSignature(true, privacy, returnDataType, _className, funcName, description, args),
-					localPos, 0, 0, 0, Span.Empty);
+				var sig = new FunctionSignature(true, privacy, returnDataType, _className, funcName, description, args);
+				sig.ApplyDocumentation(localPos.FileName);
+				var def = new FunctionDefinition(sig, localPos, 0, 0, 0, Span.Empty);
 				_externFuncs[funcName] = def;
 				AddGlobalDefinition(def);
 				return;
