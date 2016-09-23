@@ -18,6 +18,7 @@ namespace DkTools.DkDict
 		private static Dictionary<string, Stringdef> _stringdefs = new Dictionary<string, Stringdef>();
 		private static Dictionary<string, Typedef> _typedefs = new Dictionary<string, Typedef>();
 		private static Dictionary<string, Interface> _interfaces = new Dictionary<string, Interface>();
+		private static Dictionary<string, Interface> _impliedInterfaces = new Dictionary<string, Interface>();
 
 		public static void Load()
 		{
@@ -65,11 +66,56 @@ namespace DkTools.DkDict
 
 				elapsed = DateTime.Now.Subtract(curTime);
 				Log.Write(LogLevel.Info, "DICT parsing complete. (elapsed: {0})", elapsed);
+
+				LoadDkRepo();
 			}
 			catch (Exception ex)
 			{
 				Log.Error(ex, "Error when reading DICT file.");
 			}
+		}
+
+		private static void LoadDkRepo()
+		{
+			Log.Info("Loading WBDK Repository.");
+			var startTime = DateTime.Now;
+
+			try
+			{
+				var appName = ProbeEnvironment.CurrentApp;
+				var repo = new DICTSRVRLib.PRepository();
+				var dict = repo.LoadDictionary(appName, string.Empty, DICTSRVRLib.PDS_Access.Access_READ);
+				if (dict == null)
+				{
+					Log.Info("The WBDK repository for app '{0}' does not exist.", appName);
+					return;
+				}
+
+				for (int i = 1, ii = dict.InterfaceTypeCount; i <= ii; i++)
+				{
+					var intf = dict.InterfaceTypes[i];
+					var intfName = intf.Name;
+
+					Interface existingIntf;
+					if (_interfaces.TryGetValue(intfName, out existingIntf))
+					{
+						existingIntf.LoadFromRepo(intf);
+					}
+					else
+					{
+						existingIntf = new Interface(intfName, FilePosition.Empty);
+						existingIntf.LoadFromRepo(intf);
+						_interfaces[intfName] = existingIntf;
+					}
+				}
+			}
+			catch (Exception ex)
+			{
+				Log.Error(ex, "Error when loading WBDK repository.");
+			}
+
+			var elapsed = DateTime.Now.Subtract(startTime);
+			Log.Info("WBDK repository loading complete. (elapsed: {0})", elapsed);
 		}
 
 		private static void ReportError(int pos, string message)
@@ -1792,6 +1838,18 @@ namespace DkTools.DkDict
 			}
 
 			_interfaces.Remove(name);
+		}
+
+		public static void AddImpliedInterface(string name, Interface intf)
+		{
+			_impliedInterfaces[name] = intf;
+		}
+
+		public static Interface GetImpliedInterface(string name)
+		{
+			Interface intf;
+			if (_impliedInterfaces.TryGetValue(name, out intf)) return intf;
+			return null;
 		}
 		#endregion
 

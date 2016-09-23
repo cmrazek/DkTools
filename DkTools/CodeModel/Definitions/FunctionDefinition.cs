@@ -142,24 +142,17 @@ namespace DkTools.CodeModel.Definitions
 			get { return _sig.PrettySignature; }
 		}
 
-		public override bool RequiresChild
-		{
-			get { return false; }
-		}
-
-		public override bool AllowsChild
-		{
-			get { return false; }
-		}
-
-		public override Definition GetChildDefinition(string name)
-		{
-			throw new NotSupportedException();
-		}
-
-		public override bool RequiresArguments
+		public override bool ArgumentsRequired
 		{
 			get { return true; }
+		}
+
+		public override FunctionSignature ArgumentsSignature
+		{
+			get
+			{
+				return _sig;
+			}
 		}
 
 		public override bool AllowsFunctionBody

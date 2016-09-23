@@ -111,14 +111,21 @@ namespace DkTools.CodeModel.Definitions
 			get { return true; }
 		}
 
-		public override Definition GetChildDefinition(string name)
+		public override IEnumerable<Definition> GetChildDefinitions(string name)
 		{
 			var col = _table.GetColumn(name);
-			if (col != null) return col.Definition;
-			return null;
+			if (col != null) yield return col.Definition;
 		}
 
-		public override bool RequiresArguments
+		public override IEnumerable<Definition> ChildDefinitions
+		{
+			get
+			{
+				return _table.ColumnDefinitions;
+			}
+		}
+
+		public override bool ArgumentsRequired
 		{
 			get { return false; }
 		}

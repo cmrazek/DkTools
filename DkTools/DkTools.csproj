@@ -323,6 +323,8 @@
     <Compile Include="DkDict\Column.cs" />
     <Compile Include="DkDict\Dict.cs" />
     <Compile Include="DkDict\Interface.cs" />
+    <Compile Include="DkDict\InterfaceMethod.cs" />
+    <Compile Include="DkDict\InterfaceProperty.cs" />
     <Compile Include="DkDict\RelInd.cs" />
     <Compile Include="DkDict\Stringdef.cs" />
     <Compile Include="DkDict\Table.cs" />

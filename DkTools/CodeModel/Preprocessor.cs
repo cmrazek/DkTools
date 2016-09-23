@@ -974,19 +974,15 @@ namespace DkTools.CodeModel
 						}
 						else
 						{
-							var sig = new StringBuilder();
-							sig.Append(_name);
-							sig.Append('(');
-							var firstParam = true;
+							var args = new List<ArgumentDescriptor>();
 							foreach (var paramName in _paramNames)
 							{
-								if (firstParam) firstParam = false;
-								else sig.Append(", ");
-								sig.Append(paramName);
+								args.Add(new ArgumentDescriptor(paramName, DataType.Unknown));
 							}
-							sig.Append(')');
 
-							_def = new Definitions.MacroDefinition(_name, _filePos, sig.ToString(), CodeParser.NormalizeText(_content));
+							var sig = new FunctionSignature(false, FunctionPrivacy.Public, DataType.Unknown, null, _name, null, args);
+
+							_def = new Definitions.MacroDefinition(_name, _filePos, sig, CodeParser.NormalizeText(_content));
 						}
 					}
 

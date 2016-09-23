@@ -342,9 +342,9 @@ namespace DkTools.StatementCompletion
 					if (def is VariableDefinition)
 					{
 						var varDef = def as VariableDefinition;
-						foreach (var def2 in varDef.DataType.MethodsAndProperties)
+						if (varDef.AllowsChild)
 						{
-							yield return CreateCompletion(def2);
+							foreach (var childDef in varDef.ChildDefinitions) yield return CreateCompletion(childDef);
 						}
 					}
 				}

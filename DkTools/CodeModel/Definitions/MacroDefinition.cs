@@ -9,22 +9,17 @@ namespace DkTools.CodeModel.Definitions
 {
 	internal class MacroDefinition : Definition
 	{
-		private string _signature;
+		private FunctionSignature _signature;
 		private string _body;
 
-		public MacroDefinition(string name, FilePosition filePos, string signature, string body)
+		public MacroDefinition(string name, FilePosition filePos, FunctionSignature signature, string body)
 			: base(name, filePos, null)
 		{
 #if DEBUG
-			if (string.IsNullOrWhiteSpace(signature)) throw new ArgumentNullException("signature");
+			if (signature == null) throw new ArgumentNullException("signature");
 #endif
 			_signature = signature;
 			_body = body;
-		}
-
-		public string Signature
-		{
-			get { return _signature; }
 		}
 
 		public override bool CompletionVisible
@@ -54,7 +49,7 @@ namespace DkTools.CodeModel.Definitions
 		{
 			get
 			{
-				return WpfDivs(WpfMainLine(_signature), WpfInfoLine(_body.Trim()));
+				return WpfDivs(WpfMainLine(_signature.PrettySignature), WpfInfoLine(_body.Trim()));
 			}
 		}
 
@@ -63,24 +58,17 @@ namespace DkTools.CodeModel.Definitions
 			get { return QuickInfoTextStr; }
 		}
 
-		public override bool RequiresChild
-		{
-			get { return false; }
-		}
-
-		public override bool AllowsChild
-		{
-			get { return false; }
-		}
-
-		public override Definition GetChildDefinition(string name)
-		{
-			throw new NotSupportedException();
-		}
-
-		public override bool RequiresArguments
+		public override bool ArgumentsRequired
 		{
 			get { return true; }
+		}
+
+		public override FunctionSignature ArgumentsSignature
+		{
+			get
+			{
+				return _signature;
+			}
 		}
 	}
 }

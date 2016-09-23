@@ -24,8 +24,6 @@ namespace DkTools.SignatureHelp
 	{
 		private VsText.ITextBuffer _textBuffer;
 
-		private Regex _rxFuncBeforeBracket = new Regex(@"((\w+)\s*\.\s*)?(\w+)\s*$");
-
 		public ProbeSignatureHelpSource(VsText.ITextBuffer textBuffer)
 		{
 			_textBuffer = textBuffer;
@@ -35,7 +33,6 @@ namespace DkTools.SignatureHelp
 		{
 			var snapshot = _textBuffer.CurrentSnapshot;
 			var origPos = session.GetTriggerPoint(_textBuffer).GetPosition(snapshot);
-			//var source = snapshot.GetText();
 			var pos = origPos;
 
 			if (ProbeSignatureHelpCommandHandler.s_typedChar == '(')
@@ -54,6 +51,8 @@ namespace DkTools.SignatureHelp
 			}
 		}
 
+		private Regex _rxFuncBeforeBracket = new Regex(@"((\w+)\s*\.\s*)?(\w+)\s*$");
+
 		private IEnumerable<ISignature> HandleOpenBracket(VsText.ITextSnapshot snapshot, int triggerPos)
 		{
 			var lineText = snapshot.GetLineTextUpToPosition(triggerPos);
@@ -61,35 +60,49 @@ namespace DkTools.SignatureHelp
 			var match = _rxFuncBeforeBracket.Match(lineText);
 			if (match.Success)
 			{
-				var tableName = match.Groups[2].Value;
+				var line = snapshot.GetLineFromPosition(triggerPos);
+				var word1 = match.Groups[2].Value;
+				var word1Start = line.Start.Position + match.Groups[2].Index;
 				var funcName = match.Groups[3].Value;
+				var funcNameStart = line.Start.Position + match.Groups[3].Index;
 
-				if (!string.IsNullOrEmpty(funcName))
+				var fileStore = FileStore.GetOrCreateForTextBuffer(_textBuffer);
+				if (fileStore != null)
 				{
-					var applicableToSpan = snapshot.CreateTrackingSpan(new VsText.Span(triggerPos, 0), VsText.SpanTrackingMode.EdgeInclusive);
-					var fileStore = CodeModel.FileStore.GetOrCreateForTextBuffer(_textBuffer);
-					if (fileStore != null)
+					if (!string.IsNullOrEmpty(word1))
 					{
-						var model = fileStore.GetMostRecentModel(snapshot, "Signature help after '('");
-						var modelPos = model.AdjustPosition(triggerPos, snapshot);
+						VsText.ITrackingSpan applicableToSpan = null;
 
-						foreach (var sig in GetSignatures(model, modelPos, tableName, funcName, applicableToSpan))
-						{
-							yield return sig;
-						}
+						var model = fileStore.GetMostRecentModel(snapshot, "Signature help after '(' - dot separated words");
+						var modelPos = model.AdjustPosition(word1Start, snapshot);
 
-						if (!string.IsNullOrEmpty(tableName))
+						foreach (var word1Def in model.DefinitionProvider.GetAny(modelPos, word1))
 						{
-							foreach (var cls in ProbeToolsPackage.Instance.FunctionFileScanner.CurrentApp.GetClasses(tableName))
+							if (!word1Def.AllowsChild) continue;
+							foreach (var word2Def in word1Def.GetChildDefinitions(funcName))
 							{
-								foreach (var def in cls.GetFunctionDefinitions(funcName))
-								{
-									yield return CreateSignature(_textBuffer, def.Signature, applicableToSpan);
-								}
+								if (!word2Def.ArgumentsRequired) continue;
+								if (applicableToSpan == null) applicableToSpan = snapshot.CreateTrackingSpan(new VsText.Span(triggerPos, 0), VsText.SpanTrackingMode.EdgeInclusive);
+								yield return CreateSignature(_textBuffer, word2Def.ArgumentsSignature, applicableToSpan);
 							}
 						}
 					}
+					else
+					{
+						VsText.ITrackingSpan applicableToSpan = null;
+
+						var model = fileStore.GetMostRecentModel(snapshot, "Signature help after '('");
+						var modelPos = model.AdjustPosition(funcNameStart, snapshot);
+						foreach (var def in model.DefinitionProvider.GetAny(modelPos, funcName))
+						{
+							if (!def.ArgumentsRequired) continue;
+
+							if (applicableToSpan == null) applicableToSpan = snapshot.CreateTrackingSpan(new VsText.Span(triggerPos, 0), VsText.SpanTrackingMode.EdgeInclusive);
+							yield return CreateSignature(_textBuffer, def.ArgumentsSignature, applicableToSpan);
+						}
+					}
 				}
+				
 			}
 		}
 
@@ -104,13 +117,13 @@ namespace DkTools.SignatureHelp
 				var argsToken = model.File.FindDownward<ArgsToken>().LastOrDefault();
 				if (argsToken != null)
 				{
-					var sig = argsToken.Signature;
-					if (sig != null)
-					{
-						var modelSpan = new VsText.SnapshotSpan(model.Snapshot, argsToken.Span.Start, modelPos - argsToken.Span.Start + 1);
-						var snapshotSpan = modelSpan.TranslateTo(snapshot, VsText.SpanTrackingMode.EdgeInclusive);
-						var applicableToSpan = snapshot.CreateTrackingSpan(snapshotSpan.Span, VsText.SpanTrackingMode.EdgeInclusive, 0);
+					var modelSpan = new VsText.SnapshotSpan(model.Snapshot, argsToken.Span.ToVsTextSpan());
+					var snapshotSpan = modelSpan.TranslateTo(snapshot, VsText.SpanTrackingMode.EdgeInclusive);
+					var applicableToSpan = snapshot.CreateTrackingSpan(snapshotSpan.Span, VsText.SpanTrackingMode.EdgeInclusive, 0);
+					yield return CreateSignature(_textBuffer, argsToken.Signature, applicableToSpan);
 
+					foreach (var sig in argsToken.SignatureAlternatives)
+					{
 						yield return CreateSignature(_textBuffer, sig, applicableToSpan);
 					}
 				}
@@ -191,9 +204,9 @@ namespace DkTools.SignatureHelp
 						var varDef = def1 as CodeModel.Definitions.VariableDefinition;
 						var dataType = varDef.DataType;
 
-						foreach (var method in dataType.GetMethods(funcName).Cast<CodeModel.Definitions.InterfaceMethodDefinition>())
+						foreach (var opt in dataType.CompletionOptions)
 						{
-							yield return method.Signature;
+							if (opt.ArgumentsRequired) yield return opt.ArgumentsSignature;
 						}
 					}
 				}

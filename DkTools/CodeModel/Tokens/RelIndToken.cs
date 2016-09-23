@@ -14,5 +14,13 @@ namespace DkTools.CodeModel.Tokens
 			ClassifierType = Classifier.ProbeClassifierType.TableName;
 			SourceDefinition = def;
 		}
+
+		public override DataType ValueDataType
+		{
+			get
+			{
+				return DataType.IndRel;
+			}
+		}
 	}
 }

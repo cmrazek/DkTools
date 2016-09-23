@@ -211,38 +211,63 @@ namespace DkTools.CodeModel.Tokens
 				if (!string.IsNullOrEmpty(word2))
 				{
 					var word2Span = code.MovePeekedSpan();
-					var argsPresent = code.PeekExact('(');
+					var argsPresent = (scope.Hint & ScopeHint.SuppressFunctionCall) == 0 && code.PeekExact('(');
 					var argsOpenBracketSpan = argsPresent ? code.MovePeekedSpan() : Span.Empty;
 
 					foreach (var def in scope.DefinitionProvider.GetAny(wordSpan.Start, word))
 					{
 						if (def.AllowsChild)
 						{
-							var childDef = def.GetChildDefinition(word2);
-							if (childDef != null)
+							// When arguments are present, take only the definitions that accept arguments
+							var childDefs = def.GetChildDefinitions(word2).Where(x => argsPresent ? x.ArgumentsRequired : true).ToArray();
+							if (childDefs.Any())
 							{
-								var childRequiresArgs = childDef.RequiresArguments;
-								if (childRequiresArgs && (scope.Hint & ScopeHint.SuppressFunctionCall) != 0) childRequiresArgs = false;
+								ArgsToken argsToken = null;
+								Definition childDef = null;
 
-								if (argsPresent == childRequiresArgs)
+								if (argsPresent)
 								{
-									var word1Token = new IdentifierToken(scope, wordSpan, word, def);
-									var dotToken = new DotToken(scope, dotSpan);
-									var word2Token = new IdentifierToken(scope, word2Span, word2, childDef);
-									var compToken = new CompositeToken(scope, childDef.DataType);
-									compToken.AddToken(word1Token);
-									compToken.AddToken(dotToken);
-									compToken.AddToken(word2Token);
-
-									if (argsPresent)
-									{
-										var openBracketToken = new OperatorToken(scope, argsOpenBracketSpan, "(");
-										compToken.AddToken(ArgsToken.Parse(scope, openBracketToken, childDef.Arguments, childDef.Signature));
-									}
-
-									return compToken;
+									var openBracketToken = new OperatorToken(scope, argsOpenBracketSpan, "(");
+									argsToken = ArgsToken.ParseAndChooseArguments(scope, openBracketToken, childDefs, out childDef);
 								}
+								else
+								{
+									childDef = childDefs[0];
+								}
+
+								var word1Token = new IdentifierToken(scope, wordSpan, word, def);
+								var dotToken = new DotToken(scope, dotSpan);
+								var word2Token = new IdentifierToken(scope, word2Span, word2, childDef);
+								var compToken = new CompositeToken(scope, childDef.DataType);
+								compToken.AddToken(word1Token);
+								compToken.AddToken(dotToken);
+								compToken.AddToken(word2Token);
+								if (argsToken != null) compToken.AddToken(argsToken);
+								return compToken;
 							}
+
+							// TODO: remove
+							//foreach (var childDef in def.GetChildDefinitions(word2))
+							//{
+							//	var childRequiresArgs = childDef.ArgumentsRequired;
+							//	if (childRequiresArgs && (scope.Hint & ScopeHint.SuppressFunctionCall) != 0) childRequiresArgs = false;
+
+							//	var word1Token = new IdentifierToken(scope, wordSpan, word, def);
+							//	var dotToken = new DotToken(scope, dotSpan);
+							//	var word2Token = new IdentifierToken(scope, word2Span, word2, childDef);
+							//	var compToken = new CompositeToken(scope, childDef.DataType);
+							//	compToken.AddToken(word1Token);
+							//	compToken.AddToken(dotToken);
+							//	compToken.AddToken(word2Token);
+
+							//	if (argsPresent && childRequiresArgs)
+							//	{
+							//		var openBracketToken = new OperatorToken(scope, argsOpenBracketSpan, "(");
+							//		compToken.AddToken(ArgsToken.Parse(scope, openBracketToken, childDef.Arguments));
+							//	}
+
+							//	return compToken;
+							//}
 						}
 					}
 				}
@@ -259,7 +284,7 @@ namespace DkTools.CodeModel.Tokens
 
 				foreach (var def in scope.DefinitionProvider.GetAny(wordSpan.Start, word))
 				{
-					if (def.RequiresArguments)
+					if (def.ArgumentsRequired)
 					{
 						var wordToken = new IdentifierToken(scope, wordSpan, word, def);
 						var openBracketToken = new OperatorToken(scope, argsOpenBracketSpan, "(");
@@ -282,7 +307,7 @@ namespace DkTools.CodeModel.Tokens
 
 			foreach (var def in scope.DefinitionProvider.GetAny(wordSpan.Start, word))
 			{
-				if (def.RequiresArguments || def.RequiresChild) continue;
+				if (def.ArgumentsRequired || def.RequiresChild) continue;
 
 				return new IdentifierToken(scope, wordSpan, word, def);
 			}

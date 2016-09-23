@@ -113,7 +113,11 @@ namespace DkTools.CodeModel.Definitions
 
 		public override bool AllowsChild
 		{
-			get { return false; }
+			get
+			{
+				if (_dataType != null) return _dataType.HasCompletionOptions;
+				return false;
+			}
 		}
 
 		public override bool RequiresChild
@@ -121,12 +125,27 @@ namespace DkTools.CodeModel.Definitions
 			get { return false; }
 		}
 
-		public override Definition GetChildDefinition(string name)
+		public override IEnumerable<Definition> GetChildDefinitions(string name)
 		{
-			throw new NotSupportedException();
+			if (_dataType != null)
+			{
+				foreach (var opt in _dataType.CompletionOptions)
+				{
+					if (opt.Name == name) yield return opt;
+				}
+			}
 		}
 
-		public override bool RequiresArguments
+		public override IEnumerable<Definition> ChildDefinitions
+		{
+			get
+			{
+				if (_dataType != null) return _dataType.CompletionOptions;
+				return Definition.EmptyArray;
+			}
+		}
+
+		public override bool ArgumentsRequired
 		{
 			get { return false; }
 		}

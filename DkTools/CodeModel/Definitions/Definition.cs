@@ -23,11 +23,10 @@ namespace DkTools.CodeModel.Definitions
 		public abstract string QuickInfoTextStr { get; }
 		public abstract UIElement QuickInfoTextWpf { get; }
 		public abstract string PickText { get; }
-		public abstract bool AllowsChild { get; }
-		public abstract bool RequiresChild { get; }
-		public abstract Definition GetChildDefinition(string name);
 
 		private const int k_maxWpfWidth = 600;
+
+		public static readonly Definition[] EmptyArray = new Definition[0];
 
 		public Definition(string name, FilePosition filePos, string externalRefId)
 		{
@@ -264,14 +263,19 @@ namespace DkTools.CodeModel.Definitions
 			get { return false; }
 		}
 
-		public virtual bool RequiresArguments
+		public virtual bool ArgumentsRequired
 		{
 			get { return false; }
 		}
 
 		public virtual IEnumerable<ArgumentDescriptor> Arguments
 		{
-			get { return new ArgumentDescriptor[0]; }
+			get { return ArgumentDescriptor.EmptyArray; }
+		}
+
+		public virtual FunctionSignature ArgumentsSignature
+		{
+			get { return null; }
 		}
 
 		public virtual DataType DataType
@@ -279,9 +283,27 @@ namespace DkTools.CodeModel.Definitions
 			get { return null; }
 		}
 
+		public virtual bool AllowsChild
+		{
+			get { return false; }
+		}
+
+		public virtual bool RequiresChild
+		{
+			get { return false; }
+		}
+
+		public virtual IEnumerable<Definition> GetChildDefinitions(string name)
+		{
+			return Definition.EmptyArray;
+		}
+
+		public virtual IEnumerable<Definition> ChildDefinitions
+		{
+			get { return Definition.EmptyArray; }
+		}
 		public virtual FunctionSignature Signature
 		{
 			get { return null; }
-		}
-	}
+		}	}
 }

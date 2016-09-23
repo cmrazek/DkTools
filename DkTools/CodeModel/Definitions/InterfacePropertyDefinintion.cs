@@ -42,11 +42,13 @@ namespace DkTools.CodeModel.Definitions
 			get
 			{
 				var sb = new StringBuilder();
-				sb.Append(_dataType.Name);
-				sb.Append(' ');
-				sb.Append(Name);
-				sb.AppendLine();
-
+				sb.Append("Name: ");
+				sb.AppendLine(Name);
+				if (_dataType != null)
+				{
+					sb.Append("Data Type: ");
+					sb.Append(_dataType);
+				}
 				sb.Append("Interface: ");
 				sb.Append(_intTypeDef.Name);
 
@@ -58,12 +60,11 @@ namespace DkTools.CodeModel.Definitions
 		{
 			get
 			{
-				return WpfDivs
-				(
+				return WpfDivs(
 					WpfAttribute("Name", Name),
-					WpfAttribute("Data Type", _dataType.Name),
-					WpfAttribute("Interface", _intTypeDef.Name)
-				);
+					WpfAttribute("Data Type", _dataType.InfoText),
+					WpfAttribute("Interface", _intTypeDef.Name));
+					
 			}
 		}
 
@@ -82,22 +83,7 @@ namespace DkTools.CodeModel.Definitions
 			return string.Concat("interface:", intfName, ".prop:", propName);
 		}
 
-		public override bool AllowsChild
-		{
-			get { return false; }
-		}
-
-		public override bool RequiresChild
-		{
-			get { return false; }
-		}
-
-		public override Definition GetChildDefinition(string name)
-		{
-			throw new NotSupportedException();
-		}
-
-		public override bool RequiresArguments
+		public override bool ArgumentsRequired
 		{
 			get { return false; }
 		}
