@@ -100,47 +100,18 @@ namespace DkTools.SignatureHelp
 			{
 				var model = fileStore.GetMostRecentModel(snapshot, "Signature help after ','");
 				var modelPos = model.AdjustPosition(triggerPos, snapshot);
-				var tokens = model.FindTokens(modelPos).ToArray();
 
-				var lastToken = tokens.LastOrDefault(t => t is FunctionCallToken || t is InterfaceMethodCallToken);
-				if (lastToken != null)
+				var argsToken = model.File.FindDownward<ArgsToken>().LastOrDefault();
+				if (argsToken != null)
 				{
-					if (lastToken is FunctionCallToken)
+					var sig = argsToken.Signature;
+					if (sig != null)
 					{
-						var funcCallToken = lastToken as FunctionCallToken;
-						var classToken = funcCallToken.ClassToken;
-						var className = classToken != null ? classToken.Text : null;
-						var nameToken = funcCallToken.NameToken;
-						var funcName = nameToken.Text;
-
-						var bracketPos = nameToken.Span.End;
-						if (modelPos >= bracketPos)
-						{
-							var modelSpan = new VsText.SnapshotSpan(model.Snapshot, bracketPos, modelPos - bracketPos);
-							var snapshotSpan = modelSpan.TranslateTo(snapshot, VsText.SpanTrackingMode.EdgeInclusive);
-							var applicableToSpan = snapshot.CreateTrackingSpan(snapshotSpan.Span, VsText.SpanTrackingMode.EdgeInclusive, 0);
-
-							foreach (var sig in GetSignatures(model, modelPos, className, funcName, applicableToSpan))
-							{
-								yield return sig;
-							}
-						}
-
-						yield break;
-					}
-
-					if (lastToken is InterfaceMethodCallToken)
-					{
-						var methodToken = lastToken as InterfaceMethodCallToken;
-						var bracketPos = methodToken.NameToken.Span.End;
-
-						var modelSpan = new VsText.SnapshotSpan(model.Snapshot, bracketPos, modelPos - bracketPos);
+						var modelSpan = new VsText.SnapshotSpan(model.Snapshot, argsToken.Span.Start, modelPos - argsToken.Span.Start + 1);
 						var snapshotSpan = modelSpan.TranslateTo(snapshot, VsText.SpanTrackingMode.EdgeInclusive);
 						var applicableToSpan = snapshot.CreateTrackingSpan(snapshotSpan.Span, VsText.SpanTrackingMode.EdgeInclusive, 0);
-						
-						var methodDef = methodToken.MethodDefinition;
-						yield return CreateSignature(_textBuffer, methodDef.Signature, applicableToSpan);
-						yield break;
+
+						yield return CreateSignature(_textBuffer, sig, applicableToSpan);
 					}
 				}
 			}

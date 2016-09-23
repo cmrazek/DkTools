@@ -57,7 +57,7 @@ namespace DkTools.CodeModel.Definitions
 			}
 		}
 
-		public FunctionSignature Signature
+		public override FunctionSignature Signature
 		{
 			get { return _sig; }
 		}

@@ -9,6 +9,7 @@ namespace DkTools.CodeModel.Tokens
 	class ArgsToken : GroupToken
 	{
 		private ArgumentDescriptor[] _args;
+		private FunctionSignature _sig;
 
 		private ArgsToken(Scope scope, OperatorToken openBracketToken)
 			: base(scope)
@@ -24,9 +25,10 @@ namespace DkTools.CodeModel.Tokens
 		/// <param name="scope">The scope for this token.</param>
 		/// <param name="openBracketToken">The open bracket token.</param>
 		/// <param name="args">(optional) A descriptor for each argument, if known.</param>
+		/// <param name="sig">(optional) A signature for the function being called.</param>
 		/// <returns>A new argument token.</returns>
 		/// <remarks>This function assumes the opening bracket has already been read from the stream.</remarks>
-		public static ArgsToken Parse(Scope scope, OperatorToken openBracketToken, IEnumerable<ArgumentDescriptor> args)
+		public static ArgsToken Parse(Scope scope, OperatorToken openBracketToken, IEnumerable<ArgumentDescriptor> args, FunctionSignature sig)
 		{
 			var code = scope.Code;
 			var ret = new ArgsToken(scope, openBracketToken);
@@ -37,6 +39,7 @@ namespace DkTools.CodeModel.Tokens
 			scope.Hint |= ScopeHint.SuppressStatementStarts;
 
 			if (args != null) ret._args = args.ToArray();
+			ret._sig = sig;
 
 			while (code.SkipWhiteSpace())
 			{
@@ -64,6 +67,11 @@ namespace DkTools.CodeModel.Tokens
 			}
 
 			return ret;
+		}
+
+		public FunctionSignature Signature
+		{
+			get { return _sig; }
 		}
 	}
 }

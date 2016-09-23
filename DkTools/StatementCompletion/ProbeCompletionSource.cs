@@ -594,38 +594,6 @@ namespace DkTools.StatementCompletion
 				if (!option.CompletionVisible) continue;
 				yield return CreateCompletion(option);
 			}
-
-			// TODO: remove
-			//var editPos = model.AdjustPosition(snapPt);
-			//var parentToken = model.FindTokens(editPos, t => t is GroupToken).LastOrDefault() as GroupToken;
-
-			//var argParser = new CodeParser(argText);
-			//var dataType = CodeModel.DataType.TryParse(new DataType.ParseArgs
-			//{
-			//	Code = argParser,
-			//	DataTypeCallback = dataTypeName =>
-			//	{
-			//		var def = model.DefinitionProvider.GetLocal<DataTypeDefinition>(editPos, dataTypeName).FirstOrDefault();
-			//		if (def != null) return def;
-
-			//		return model.DefinitionProvider.GetGlobalFromAnywhere<DataTypeDefinition>(dataTypeName).FirstOrDefault();
-			//	},
-			//	VariableCallback = varName =>
-			//	{
-			//		var def = model.DefinitionProvider.GetLocal<VariableDefinition>(editPos, varName).FirstOrDefault();
-			//		if (def != null) return def;
-
-			//		return model.DefinitionProvider.GetGlobalFromAnywhere<VariableDefinition>(varName).FirstOrDefault();
-			//	}
-			//});
-			//if (dataType != null && dataType.HasCompletionOptions)
-			//{
-			//	foreach (var opt in dataType.CompletionOptions)
-			//	{
-			//		if (!opt.CompletionVisible) continue;
-			//		yield return CreateCompletion(opt);
-			//	}
-			//}
 		}
 
 		private bool GetInsideFunction(ITextSnapshot snapshot, int pos, out string className, out string funcName, out int argIndex)
@@ -748,14 +716,5 @@ namespace DkTools.StatementCompletion
 				yield return CreateCompletion(keyword, CompletionType.Keyword);
 			}
 		}
-
-		// TODO: remove
-		//public string GetArgumentText(string sig, int argIndex)
-		//{
-		//	var args = SignatureHelp.ProbeSignatureHelpSource.GetSignatureArguments(sig).ToArray();
-		//	if (argIndex < 0 || argIndex >= args.Length) return null;
-
-		//	return args[argIndex].Text;
-		//}
 	}
 }

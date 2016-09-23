@@ -56,7 +56,6 @@ namespace DkTools.CodeModel.Tokens.Statements
 			var ret = new ExtractStatement(scope, tokens);
 			ret._name = name;
 			ret._permanent = permanent;
-			//ret.SourceDefinition = exDef;
 
 			var scope2 = scope.CloneIndent();
 			scope2.Hint |= ScopeHint.SuppressControlStatements | ScopeHint.SuppressFunctionDefinition | ScopeHint.SuppressVarDecl;
@@ -107,27 +106,6 @@ namespace DkTools.CodeModel.Tokens.Statements
 					code.StopAtLineEnd = oldValue;
 				}
 			}
-
-			// TODO: remove?
-			//// Try to get the data types for the fields
-			//foreach (var fieldToken in fieldTokens)
-			//{
-			//	var fieldDef = fieldToken.SourceDefinition as ExtractFieldDefinition;
-			//	if (fieldDef == null) continue;
-			//	if (fieldDef.DataType != null) continue;	// Data type already known, so don't bother
-
-			//	var compToken = fieldToken.Parent as CompositeToken;
-			//	if (compToken == null) continue;
-
-			//	var expToken = compToken.Parent as ExpressionToken;
-			//	if (expToken == null) continue;
-
-			//	var valueToken = expToken.FindNextSibling(compToken);
-			//	if (valueToken == null) continue;
-
-			//	var dataType = valueToken.ValueDataType;
-			//	if (dataType != null) fieldDef.SetDataType(dataType);
-			//}
 
 			ret._fields = (from f in fieldTokens select f.SourceDefinition as ExtractFieldDefinition).ToArray();
 

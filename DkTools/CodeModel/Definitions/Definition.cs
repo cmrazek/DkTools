@@ -278,5 +278,10 @@ namespace DkTools.CodeModel.Definitions
 		{
 			get { return null; }
 		}
+
+		public virtual FunctionSignature Signature
+		{
+			get { return null; }
+		}
 	}
 }
