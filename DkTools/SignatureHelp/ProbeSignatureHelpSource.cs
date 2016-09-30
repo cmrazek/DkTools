@@ -112,9 +112,9 @@ namespace DkTools.SignatureHelp
 			if (fileStore != null)
 			{
 				var model = fileStore.GetMostRecentModel(snapshot, "Signature help after ','");
-				var modelPos = model.AdjustPosition(triggerPos, snapshot);
+				var modelPos = (new VsText.SnapshotPoint(snapshot, triggerPos)).TranslateTo(model.Snapshot, VsText.PointTrackingMode.Negative).Position;
 
-				var argsToken = model.File.FindDownward<ArgsToken>().LastOrDefault();
+				var argsToken = model.File.FindDownward<ArgsToken>().Where(t => t.Span.Start < modelPos && (t.Span.End > modelPos || !t.IsTerminated)).LastOrDefault();
 				if (argsToken != null)
 				{
 					var modelSpan = new VsText.SnapshotSpan(model.Snapshot, argsToken.Span.ToVsTextSpan());

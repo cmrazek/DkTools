@@ -288,7 +288,7 @@ namespace DkTools.CodeModel.Tokens
 					{
 						var wordToken = new IdentifierToken(scope, wordSpan, word, def);
 						var openBracketToken = new OperatorToken(scope, argsOpenBracketSpan, "(");
-						var argsToken = ArgsToken.Parse(scope, openBracketToken, def.Arguments, def.Signature);
+						var argsToken = ArgsToken.Parse(scope, openBracketToken, def.Signature);
 
 						var compToken = new CompositeToken(scope, def.DataType);
 						compToken.AddToken(wordToken);
