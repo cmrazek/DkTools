@@ -33,6 +33,7 @@ namespace DkTools.CodeModel
 		public string Name
 		{
 			get { return _name; }
+			set { _name = value; }
 		}
 
 		public DataType DataType

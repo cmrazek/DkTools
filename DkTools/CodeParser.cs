@@ -77,12 +77,6 @@ namespace DkTools
 						else break;
 					}
 
-					// TODO: remove
-					//while (_pos < _length && char.IsWhiteSpace(_source[_pos]))
-					//{
-					//	_tokenText.Append(_source[_pos++]);
-					//}
-
 					if (_returnWhiteSpace)
 					{
 						_tokenType = CodeType.WhiteSpace;

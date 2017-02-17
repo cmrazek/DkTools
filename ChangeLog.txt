@@ -8,6 +8,13 @@ Version 1.3.5 - (WIP):
 ____________________________________________________________________________________________________
 Version 1.3.4 - Sep 14, 2016:
 
+- Added descriptions and argument names for built-in WBDK functions.
+- Added support for interfaces.
+- Fixed signature help when typing a comma in a function call.
+
+____________________________________________________________________________________________________
+Version 1.3.4 - Sep 14, 2016:
+
 - Added support for 'dark' and 'blue' Visual Studio themes.
 - Added missing implicit columns to time relationship history tables (e.g. dmhi, lohi, tehi)
 - Added better support for comment/uncomment block.

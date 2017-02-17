@@ -302,5 +302,8 @@ namespace DkTools.CodeModel.Definitions
 		{
 			get { return Definition.EmptyArray; }
 		}
-	}
+		public virtual FunctionSignature Signature
+		{
+			get { return null; }
+		}	}
 }

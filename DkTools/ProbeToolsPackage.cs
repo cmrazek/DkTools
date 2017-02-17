@@ -119,6 +119,7 @@ namespace DkTools
 			ProbeEnvironment.Initialize();
 			TempManager.Init(TempDir);
 			Snippets.SnippetDeploy.DeploySnippets();
+			CodeModel.SignatureDocumentor.Initialize();
 
 			// Proffer the service.	http://msdn.microsoft.com/en-us/library/bb166498.aspx
 			var langService = new ProbeLanguageService(this);

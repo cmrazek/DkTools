@@ -283,6 +283,20 @@ namespace DkTools.CodeModel
 			get { return _extern; }
 		}
 
-		
+		public void ApplyDocumentation(string fileName)
+		{
+			var doc = SignatureDocumentor.GetDocumentation(fileName, _funcName);
+			if (doc != null)
+			{
+				if (string.IsNullOrEmpty(_devDesc)) _devDesc = doc.Description;
+
+				var args = doc.Arguments;
+				var numArgs = _args.Length < args.Length ? _args.Length : args.Length;
+				for (int a = 0; a < numArgs; a++)
+				{
+					if (string.IsNullOrEmpty(_args[a].Name)) _args[a].Name = args[a];
+				}
+			}
+		}
 	}
 }

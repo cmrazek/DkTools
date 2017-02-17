@@ -12,6 +12,7 @@ namespace DkTools.CodeModel.Tokens
 	{
 		private FunctionSignature _sig;
 		private FunctionSignature[] _sigAlternatives;
+		private bool _terminated;
 
 		private ArgsToken(Scope scope, OperatorToken openBracketToken)
 			: base(scope)
@@ -26,7 +27,7 @@ namespace DkTools.CodeModel.Tokens
 		/// </summary>
 		/// <param name="scope">The scope for this token.</param>
 		/// <param name="openBracketToken">The open bracket token.</param>
-		/// <param name="args">(optional) A descriptor for each argument, if known.</param>
+		/// <param name="sig">(optional) A signature for the function being called.</param>
 		/// <returns>A new argument token.</returns>
 		/// <remarks>This function assumes the opening bracket has already been read from the stream.</remarks>
 		public static ArgsToken Parse(Scope scope, OperatorToken openBracketToken, FunctionSignature sig)
@@ -39,7 +40,7 @@ namespace DkTools.CodeModel.Tokens
 			scope.Hint |= ScopeHint.SuppressStatementStarts;
 
 			ret._sig = sig;
-			var args = sig.Arguments.ToArray();
+			var args = sig != null ? sig.Arguments.ToArray() : ArgumentDescriptor.EmptyArray;
 
 			while (code.SkipWhiteSpace())
 			{
@@ -47,6 +48,7 @@ namespace DkTools.CodeModel.Tokens
 				if (code.Text == ")")
 				{
 					ret.AddToken(new OperatorToken(scope, code.MovePeekedSpan(), ")"));
+					ret._terminated = true;
 					return ret;
 				}
 
@@ -57,7 +59,9 @@ namespace DkTools.CodeModel.Tokens
 					continue;
 				}
 
-				var exp = ExpressionToken.TryParse(scope, _endTokens, expectedDataType: argIndex < args.Length ? args[argIndex].DataType : null);
+
+				var dataType = argIndex < args.Length ? args[argIndex].DataType : null;
+				var exp = ExpressionToken.TryParse(scope, _endTokens, expectedDataType: dataType);
 				if (exp != null) ret.AddToken(exp);
 				else break;
 			}
@@ -107,6 +111,7 @@ namespace DkTools.CodeModel.Tokens
 					if (code.Text == ")")
 					{
 						tokens.Add(new OperatorToken(scope, code.MovePeekedSpan(), ")"));
+						ret._terminated = true;
 						break;
 					}
 					else if (code.Text == ",")
@@ -170,6 +175,11 @@ namespace DkTools.CodeModel.Tokens
 				if (_sigAlternatives != null) return _sigAlternatives;
 				return FunctionSignature.EmptyArray;
 			}
+		}
+
+		public bool IsTerminated
+		{
+			get { return _terminated; }
 		}
 	}
 }

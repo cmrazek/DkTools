@@ -29,7 +29,7 @@ namespace DkTools.CodeModel.Tokens
 
 		public virtual void DumpTreeAttribs(System.Xml.XmlWriter xml)
 		{
-			xml.WriteAttributeString("offset", _span.Start.ToString());
+			xml.WriteAttributeString("span", _span.ToString());
 		}
 
 		public virtual void DumpTreeInner(System.Xml.XmlWriter xml)

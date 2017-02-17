@@ -270,6 +270,7 @@
     <Compile Include="CodeModel\ArgumentDescriptor.cs" />
     <Compile Include="CodeModel\FunctionSignature.cs" />
     <Compile Include="CodeModel\PassByMethod.cs" />
+    <Compile Include="CodeModel\SignatureDocumentor.cs" />
     <Compile Include="CodeModel\Tokens\ArgsToken.cs" />
     <Compile Include="CodeModel\Tokens\Operators\AssignmentOperator.cs" />
     <Compile Include="CodeModel\Tokens\Statements\BreakStatement.cs" />
