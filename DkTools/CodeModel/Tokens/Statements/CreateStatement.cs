@@ -824,7 +824,7 @@ namespace DkTools.CodeModel.Tokens.Statements
 
 								if (!string.IsNullOrEmpty(word = code.PeekWordR()))
 								{
-									var field = table.GetColumn(word);
+									var field = table != null ? table.GetColumn(word) : null;
 									if (field != null) AddToken(new IdentifierToken(Scope, code.MovePeekedSpan(), word, field.Definition));
 									else
 									{
