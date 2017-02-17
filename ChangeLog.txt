@@ -1,16 +1,13 @@
-DkTools2012 ChangeLog
+DkTools ChangeLog
 
 ____________________________________________________________________________________________________
 Version 1.3.5 - (WIP):
 
-- Fixed null reference exception when parsing some create time relationship statements.
-
-____________________________________________________________________________________________________
-Version 1.3.4 - Sep 14, 2016:
-
 - Added descriptions and argument names for built-in WBDK functions.
-- Added support for interfaces.
 - Fixed signature help when typing a comma in a function call.
+- Added better support for interfaces.
+- Fixed null reference exception when parsing some create time relationship statements.
+- Fixed uncomment block deleting /*..*/ style comments that existed previously.
 
 ____________________________________________________________________________________________________
 Version 1.3.4 - Sep 14, 2016:

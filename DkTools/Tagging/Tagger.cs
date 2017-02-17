@@ -473,22 +473,30 @@ namespace DkTools.Tagging
 			line = sb.ToString();
 		}
 
-		private static readonly Regex _rxUncommentLineStart = new Regex(@"^(\s*)(?://|/\*)?(.*)$");
-		private static readonly Regex _rxUncommentLineEnd = new Regex(@"^(.*)\*/(\s*)$");
+		private static readonly Regex _rxUncommentSingleLineStart = new Regex(@"^(\s*)//(.*)$");
+		private static readonly Regex _rxUncommentMultiLineStart = new Regex(@"^(\s*)/\*(.*)$");
+		private static readonly Regex _rxUncommentMultiLineEnd = new Regex(@"^(.*)\*/(\s*)$");
 
 		private static void UncommentLine(ref string line)
 		{
 			if (string.IsNullOrWhiteSpace(line)) return;
 
 			Match match;
-			if ((match = _rxUncommentLineStart.Match(line)).Success)
+			if ((match = _rxUncommentSingleLineStart.Match(line)).Success)
 			{
 				line = string.Concat(match.Groups[1].Value, match.Groups[2].Value);
 			}
-
-			if ((match = _rxUncommentLineEnd.Match(line)).Success)
+			else
 			{
-				line = string.Concat(match.Groups[1].Value, match.Groups[2].Value);
+				if ((match = _rxUncommentMultiLineStart.Match(line)).Success)
+				{
+					line = string.Concat(match.Groups[1].Value, match.Groups[2].Value);
+				}
+
+				if ((match = _rxUncommentMultiLineEnd.Match(line)).Success)
+				{
+					line = string.Concat(match.Groups[1].Value, match.Groups[2].Value);
+				}
 			}
 		}
 	}
