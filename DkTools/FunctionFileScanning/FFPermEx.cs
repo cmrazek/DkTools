@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Data;
-using System.Data.SqlServerCe;
+using System.Data.SQLite;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -18,7 +18,7 @@ namespace DkTools.FunctionFileScanning
 		private string _name;
 		private ExtractTableDefinition _def;
 		private List<ExtractFieldDefinition> _fields = new List<ExtractFieldDefinition>();
-		private int _id;
+		private long _id;
 		private FilePosition _filePos;
 
 		public FFPermEx(FFFile file, ExtractStatement exToken, ExtractTableDefinition exDef)
@@ -30,11 +30,11 @@ namespace DkTools.FunctionFileScanning
 			_filePos = exToken.FilePosition;
 		}
 
-		public FFPermEx(FFFile file, SqlCeDataReader rdr)
+		public FFPermEx(FFFile file, SQLiteDataReader rdr)
 		{
 			_file = file;
 			_name = rdr.GetString(rdr.GetOrdinal("name"));
-			_id = rdr.GetInt32(rdr.GetOrdinal("id"));
+			_id = rdr.GetInt32(rdr.GetOrdinal("rowid"));
 
 			var fileName = rdr.GetStringOrNull(rdr.GetOrdinal("alt_file_name"));
 			if (string.IsNullOrEmpty(fileName)) fileName = file.FileName;
@@ -48,10 +48,11 @@ namespace DkTools.FunctionFileScanning
 		{
 			_fields.Clear();
 
-			using (var cmd = db.CreateCommand(
-				"select name, pos, data_type, alt_file.file_name as alt_file_name from permex_col" +
-				" left outer join alt_file on alt_file.id = permex_col.alt_file_id" +
-				" where permex_id = @id"))
+			using (var cmd = db.CreateCommand(@"
+				select name, pos, data_type, alt_file.file_name as alt_file_name from permex_col
+				left outer join alt_file on alt_file.rowid = permex_col.alt_file_id
+				where permex_id = @id
+				"))
 			{
 				cmd.Parameters.AddWithValue("@id", _id);
 
@@ -113,33 +114,38 @@ namespace DkTools.FunctionFileScanning
 
 		public void SyncToDatabase(FFDatabase db)
 		{
-			int trueFileId = string.Equals(_filePos.FileName, _file.FileName, StringComparison.OrdinalIgnoreCase) ? 0 : _file.App.GetOrCreateAltFileId(db, _filePos.FileName);
+			long trueFileId = string.Equals(_filePos.FileName, _file.FileName, StringComparison.OrdinalIgnoreCase) ? 0L :
+				_file.App.GetOrCreateAltFileId(db, _filePos.FileName);
 
 			if (_id == 0)
 			{
 				// Insert the master record
-				using (var cmd = db.CreateCommand("insert into permex (app_id, file_id, name, alt_file_id, pos)" +
-					" values (@app_id, @file_id, @name, @alt_file_id, @pos)"))
+				using (var cmd = db.CreateCommand(@"
+					insert into permex (app_id, file_id, name, alt_file_id, pos)
+					values (@app_id, @file_id, @name, @alt_file_id, @pos);
+					select last_insert_rowid()
+					"))
 				{
 					cmd.Parameters.AddWithValue("@app_id", _file.App.Id);
 					cmd.Parameters.AddWithValue("@file_id", _file.Id);
 					cmd.Parameters.AddWithValue("@name", _name);
 					cmd.Parameters.AddWithValue("@alt_file_id", trueFileId);
 					cmd.Parameters.AddWithValue("@pos", _filePos.Position);
-					cmd.ExecuteNonQuery();
+					_id = Convert.ToInt64(cmd.ExecuteScalar());
 				}
-
-				_id = db.QueryIdentityInt();
 
 				// Insert all the fields
 				foreach (var field in _fields)
 				{
 					var fieldFilePos = field.FilePosition;
-					var fieldTrueFileId = string.Equals(fieldFilePos.FileName, _file.FileName, StringComparison.OrdinalIgnoreCase) ? 0 : _file.App.GetOrCreateAltFileId(db, fieldFilePos.FileName);
+					var fieldTrueFileId = string.Equals(fieldFilePos.FileName, _file.FileName, StringComparison.OrdinalIgnoreCase) ? 0 :
+						_file.App.GetOrCreateAltFileId(db, fieldFilePos.FileName);
 					var fieldDataType = field.DataType != null ? field.DataType.ToCodeString() : string.Empty;
 
-					using (var cmd = db.CreateCommand("insert into permex_col (permex_id, file_id, name, data_type, alt_file_id, pos)" +
-						" values (@permex_id, @file_id, @name, @data_type, @alt_file_id, @pos)"))
+					using (var cmd = db.CreateCommand(@"
+						insert into permex_col (permex_id, file_id, name, data_type, alt_file_id, pos)
+						values (@permex_id, @file_id, @name, @data_type, @alt_file_id, @pos)
+						"))
 					{
 						cmd.Parameters.AddWithValue("@permex_id", _id);
 						cmd.Parameters.AddWithValue("@file_id", _file.Id);
@@ -154,25 +160,24 @@ namespace DkTools.FunctionFileScanning
 			else
 			{
 				// Update the master record
-				using (var cmd = db.CreateCommand("update permex set alt_file_id = @alt_file_id, pos = @pos"))
+				using (var cmd = db.CreateCommand("update permex set alt_file_id = @alt_file_id, pos = @pos where rowid = @id"))
 				{
+					cmd.Parameters.AddWithValue("@id", _id);
 					cmd.Parameters.AddWithValue("@alt_file_id", trueFileId);
 					cmd.Parameters.AddWithValue("@pos", _filePos.Position);
 				}
 
 				// Get a list of fields under this extract
-				var dbNames = new Dictionary<string, int>();
-				using (var cmd = db.CreateCommand("select id, name from permex_col where permex_id = @permex_id"))
+				var dbNames = new Dictionary<string, long>();
+				using (var cmd = db.CreateCommand("select rowid, name from permex_col where permex_id = @permex_id"))
 				{
 					cmd.Parameters.AddWithValue("@permex_id", _id);
 					using (var rdr = cmd.ExecuteReader())
 					{
-						var ordId = rdr.GetOrdinal("id");
-						var ordName = rdr.GetOrdinal("name");
 						while (rdr.Read())
 						{
-							var id = rdr.GetInt32(ordId);
-							var name = rdr.GetString(ordName);
+							var id = rdr.GetInt64(0);
+							var name = rdr.GetString(1);
 							dbNames[name] = id;
 						}
 					}
@@ -182,18 +187,20 @@ namespace DkTools.FunctionFileScanning
 				foreach (var field in _fields)
 				{
 					var fieldFilePos = field.FilePosition;
-					var fieldTrueFileId = string.Equals(fieldFilePos.FileName, _file.FileName, StringComparison.OrdinalIgnoreCase) ? 0 : _file.App.GetOrCreateAltFileId(db, fieldFilePos.FileName);
+					var fieldTrueFileId = string.Equals(fieldFilePos.FileName, _file.FileName, StringComparison.OrdinalIgnoreCase) ? 0 :
+						_file.App.GetOrCreateAltFileId(db, fieldFilePos.FileName);
 					var fieldDataType = field.DataType != null ? field.DataType.ToCodeString() : string.Empty;
 
 					if (dbNames.ContainsKey(field.Name))
 					{
 						// Field already exists in the database, so update it
-						using (var cmd = db.CreateCommand(
-							"update permex_col set" +
-							" data_type = @data_type," +
-							" alt_file_id = @alt_file_id," +
-							" pos = @pos" +
-							" where id = @id"))
+						using (var cmd = db.CreateCommand(@"
+							update permex_col set
+							data_type = @data_type,
+							alt_file_id = @alt_file_id,
+							pos = @pos
+							where rowid = @id
+							"))
 						{
 							cmd.Parameters.AddWithValue("@id", dbNames[field.Name]);
 							cmd.Parameters.AddWithValue("@data_type", fieldDataType);
@@ -205,8 +212,10 @@ namespace DkTools.FunctionFileScanning
 					else
 					{
 						// Field does not yet exist in the database, so insert a new one
-						using (var cmd = db.CreateCommand("insert into permex_col (permex_id, file_id, name, data_type, alt_file_id, pos)" +
-						" values (@permex_id, @file_id, @name, @data_type, @alt_file_id, @pos)"))
+						using (var cmd = db.CreateCommand(@"
+							insert into permex_col (permex_id, file_id, name, data_type, alt_file_id, pos)
+							values (@permex_id, @file_id, @name, @data_type, @alt_file_id, @pos)
+							"))
 						{
 							cmd.Parameters.AddWithValue("@permex_id", _id);
 							cmd.Parameters.AddWithValue("@file_id", _file.Id);
@@ -223,7 +232,7 @@ namespace DkTools.FunctionFileScanning
 				var fieldIdsToDelete = (from d in dbNames where !_fields.Any(f => d.Key == f.Name) select d.Value).ToArray();
 				if (fieldIdsToDelete.Length > 0)
 				{
-					using (var cmd = db.CreateCommand("delete from permex_col where id = @id"))
+					using (var cmd = db.CreateCommand("delete from permex_col where rowid = @id"))
 					{
 						foreach (var fieldId in fieldIdsToDelete)
 						{
@@ -241,7 +250,7 @@ namespace DkTools.FunctionFileScanning
 			get { return _name; }
 		}
 
-		public int Id
+		public long Id
 		{
 			get { return _id; }
 		}

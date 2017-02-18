@@ -130,7 +130,11 @@ namespace DkTools.FunctionFileScanning
 					else
 					{
 						Shell.SetStatusText("DkTools background purging...");
-						_currentApp.PurgeData(db);
+						using (var txn = db.BeginTransaction())
+						{
+							_currentApp.PurgeData(db);
+							txn.Commit();
+						}
 
 						var scanElapsed = DateTime.Now.Subtract(scanStartTime);
 
@@ -251,7 +255,11 @@ namespace DkTools.FunctionFileScanning
 				var classList = new List<FFClass>();
 				var funcList = new List<FFFunction>();
 
-				ffFile.UpdateFromModel(model, db, fileStore, fileModified, scan.mode);
+				using (var txn = db.BeginTransaction())
+				{
+					ffFile.UpdateFromModel(model, db, fileStore, fileModified, scan.mode);
+					txn.Commit();
+				}
 
 				if (ffFile.Visible)
 				{
@@ -365,30 +373,27 @@ namespace DkTools.FunctionFileScanning
 
 			using (var db = new FFDatabase())
 			{
-				var fileIds = new Dictionary<int, string>();
+				var fileIds = new Dictionary<long, string>();
 
-				using (var cmd = db.CreateCommand(
-					"select file_id, file_name from include_depends"
-					+ " inner join file_ on file_.id = include_depends.file_id"
-					+ " where include_depends.app_id = @app_id"
-					+ " and include_depends.include_file_name = @include_file_name"
-					))
+				using (var cmd = db.CreateCommand(@"
+					select file_id, file_name from include_depends
+					inner join file_ on file_.rowid = include_depends.file_id
+					where include_depends.app_id = @app_id
+					and include_depends.include_file_name = @include_file_name
+					"))
 				{
 					cmd.Parameters.AddWithValue("@app_id", _currentApp.Id);
 					cmd.Parameters.AddWithValue("@include_file_name", includeFileName);
 
 					using (var rdr = cmd.ExecuteReader())
 					{
-						var ordId = rdr.GetOrdinal("file_id");
-						var ordFileName = rdr.GetOrdinal("file_name");
-
 						while (rdr.Read())
 						{
-							var fileName = rdr.GetString(ordFileName);
+							var fileName = rdr.GetString(1);
 							var context = FileContextUtil.GetFileContextFromFileName(fileName);
 							if (context != FileContext.Include && context != FileContext.Dictionary)
 							{
-								fileIds[rdr.GetInt32(ordId)] = fileName;
+								fileIds[rdr.GetInt64(0)] = fileName;
 							}
 						}
 					}
@@ -399,16 +404,20 @@ namespace DkTools.FunctionFileScanning
 				{
 					Log.Debug("Resetting modified date on {0} file(s).", fileIds.Count);
 
-					using (var cmd = db.CreateCommand("update file_ set modified = '1900-01-01' where id = @id"))
+					using (var txn = db.BeginTransaction())
 					{
-						foreach (var item in fileIds)
+						using (var cmd = db.CreateCommand("update file_ set modified = '1900-01-01' where rowid = @id"))
 						{
-							cmd.Parameters.Clear();
-							cmd.Parameters.AddWithValue("@id", item.Key);
-							cmd.ExecuteNonQuery();
+							foreach (var item in fileIds)
+							{
+								cmd.Parameters.Clear();
+								cmd.Parameters.AddWithValue("@id", item.Key);
+								cmd.ExecuteNonQuery();
 
-							_currentApp.TrySetFileDate(item.Value, DateTime.MinValue);
+								_currentApp.TrySetFileDate(item.Value, DateTime.MinValue);
+							}
 						}
+						txn.Commit();
 					}
 				}
 			}

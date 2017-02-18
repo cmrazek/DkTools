@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Data.SqlServerCe;
+using System.Data.SQLite;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -8,27 +8,21 @@ using System.Threading.Tasks;
 
 namespace DkTools.FunctionFileScanning
 {
-	/*
-	 * Tables:
-	 *	files
-	 *		id int
-	 */
 	internal class FFDatabase : IDisposable
 	{
+		#region Initialization Scripts
 		private static readonly string[] k_databaseInitScript = {
 
 @"create table app
 (
-	id			int				identity not null primary key,
-	name		nvarchar(255)	not null
+	name		varchar(255)	not null
 );",
 "create unique index app_ix_name on app (name)",
 
 @"create table file_
 (
-	id			int				identity not null primary key,
-	app_id		int				not null,
-	file_name	nvarchar(260)	not null,
+	app_id		integer			not null,
+	file_name	varchar(260)	not null,
 	modified	datetime		not null,
 	visible		tinyint			not null
 );",
@@ -36,14 +30,13 @@ namespace DkTools.FunctionFileScanning
 
 @"create table func
 (
-	id					int				identity not null primary key,
-	name				nvarchar(100)	not null,
-	app_id				int				not null,
-	file_id				int				not null,
-	alt_file_id			int				not null,
+	name				varchar(100)	not null,
+	app_id				integer			not null,
+	file_id				integer			not null,
+	alt_file_id			integer			not null,
 	pos					int				not null,
-	sig					ntext			not null,
-	description			ntext,
+	sig					text			not null,
+	description			text,
 	visible				tinyint			not null
 );",
 "create index func_ix_appid on func (app_id, name)",
@@ -52,10 +45,9 @@ namespace DkTools.FunctionFileScanning
 
 @"create table include_depends
 (
-	id					int				identity not null primary key,
-	app_id				int				not null,
-	file_id				int				not null,
-	include_file_name	nvarchar(260)	not null,
+	app_id				integer			not null,
+	file_id				integer			not null,
+	include_file_name	varchar(260)	not null,
 	include				tinyint			not null,
 	localized_file		tinyint			not null
 )",
@@ -64,11 +56,10 @@ namespace DkTools.FunctionFileScanning
 
 @"create table ref
 (
-	id					int				identity not null primary key,
-	app_id				int				not null,
-	file_id				int				not null,
-	ext_ref_id			nvarchar(100)	not null,
-	alt_file_id			int				not null,
+	app_id				integer			not null,
+	file_id				integer			not null,
+	ext_ref_id			varchar(100)	not null,
+	alt_file_id			integer			not null,
 	pos					int				not null
 )",
 @"create index ref_ix_extrefid on ref (ext_ref_id, app_id)",
@@ -77,18 +68,16 @@ namespace DkTools.FunctionFileScanning
 
 @"create table alt_file
 (
-	id					int				identity not null primary key,
-	file_name			nvarchar(260)	not null
+	file_name			varchar(260)	not null
 )",
 @"create index alt_file_ix_filename on alt_file (file_name)",
 
 @"create table permex
 (
-	id					int				identity not null primary key,
-	app_id				int				not null,
-	file_id				int				not null,
-	name				nvarchar(8)		not null,
-	alt_file_id			int				not null,
+	app_id				integer			not null,
+	file_id				integer			not null,
+	name				varchar(8)		not null,
+	alt_file_id			integer			not null,
 	pos					int				not null
 )",
 @"create index permex_ix_file on permex (file_id)",
@@ -96,20 +85,20 @@ namespace DkTools.FunctionFileScanning
 
 @"create table permex_col
 (
-	id					int				identity not null primary key,
-	permex_id			int				not null,
-	file_id				int				not null,
-	name				nvarchar(255)	not null,
-	data_type			ntext			not null,
-	alt_file_id			int				not null,
+	permex_id			integer			not null,
+	file_id				integer			not null,
+	name				varchar(255)	not null,
+	data_type			text			not null,
+	alt_file_id			integer			not null,
 	pos					int				not null
 )",
 @"create index permexcol_ix_permexid on permex_col (permex_id, name)",
 @"create index permexcol_ix_fileid on permex_col (file_id)",
 @"create index permexcol_ix_altfileid on permex_col (alt_file_id)"
 };
+		#endregion
 
-		public const string DatabaseFileName = "DkScan_v7.sdf";	// New for 1.3.1
+		public const string DatabaseFileName = "DkScan_v8.sqlite";	// New for 1.4
 		public static readonly string[] OldDatabaseFileNames = new string[]
 		{
 			"DkScan.sdf",
@@ -118,13 +107,14 @@ namespace DkTools.FunctionFileScanning
 			"DkScan_v4.sdf",		// last used 1.2.11
 			"DkScan_v5.sdf",		// last used 1.2.23
 			"DkScan_v6.sdf",		// last used 1.3
+			"DkScan_v7.sdf",		// last used 1.3.5
 		};
 
-		private SqlCeConnection _conn;
+		private SQLiteConnection _conn;
 
 		public FFDatabase()
 		{
-			if (!CreateNewDatabaseIfNecessary()) return;
+			CreateNewDatabaseIfNecessary();
 			Connect();
 		}
 
@@ -137,7 +127,7 @@ namespace DkTools.FunctionFileScanning
 		{
 			if (_conn == null)
 			{
-				_conn = new SqlCeConnection(ConnectionString);
+				_conn = new SQLiteConnection(ConnectionString);
 				_conn.Open();
 			}
 		}
@@ -151,24 +141,21 @@ namespace DkTools.FunctionFileScanning
 			}
 		}
 
-		private bool CreateNewDatabaseIfNecessary()
+		private void CreateNewDatabaseIfNecessary()
 		{
 			try
 			{
-				if (!File.Exists(FileName))
+				if (File.Exists(FileName)) return;
+
+				Log.Debug("Creating new scanner database...");
+
+				SQLiteConnection.CreateFile(FileName);
+				Connect();
+
+				foreach (var query in k_databaseInitScript)
 				{
-					Log.Debug("Creating new scanner database...");
-
-					var connStr = ConnectionString;
-					var engine = new SqlCeEngine(connStr);
-					engine.CreateDatabase();
-					Connect();
-
-					foreach (var query in k_databaseInitScript)
-					{
-						Log.Debug("Executing database initialization query: {0}", query);
-						ExecuteNonQuery(query);
-					}
+					Log.Debug("Executing database initialization query: {0}", query);
+					ExecuteNonQuery(query);
 				}
 
 #if !DEBUG
@@ -191,14 +178,10 @@ namespace DkTools.FunctionFileScanning
 					}
 				}
 #endif
-
-				return true;
 			}
 			catch (Exception ex)
 			{
 				Log.Error(ex, "Exception when creating scanner database.");
-				Disconnect();
-				return false;
 			}
 		}
 
@@ -206,7 +189,7 @@ namespace DkTools.FunctionFileScanning
 		{
 			get
 			{
-				return string.Concat("Data Source = ", FileName, ";Max Database Size = 1000");
+				return string.Format("Data Source={0};Version=3;", FileName);
 			}
 		}
 
@@ -240,12 +223,12 @@ namespace DkTools.FunctionFileScanning
 			}
 		}
 
-		public SqlCeConnection Connection
+		public SQLiteConnection Connection
 		{
 			get { return _conn; }
 		}
 
-		public SqlCeCommand CreateCommand(string sql)
+		public SQLiteCommand CreateCommand(string sql)
 		{
 			if (_conn == null) throw new InvalidOperationException("Database connection is not established.");
 
@@ -255,9 +238,9 @@ namespace DkTools.FunctionFileScanning
 			return cmd;
 		}
 
-		public int QueryIdentityInt()
+		public SQLiteTransaction BeginTransaction()
 		{
-			return ExecuteScalarInt("select @@identity");
+			return _conn.BeginTransaction();
 		}
 	}
 }

@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Data;
-using System.Data.SqlServerCe;
+using System.Data.SQLite;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -13,7 +13,7 @@ namespace DkTools.FunctionFileScanning
 	{
 		private FFScanner _scanner;
 		private string _name;
-		private int _id;
+		private long _id;
 		private Dictionary<string, FFFile> _files = new Dictionary<string, FFFile>();
 		private Dictionary<string, DateTime> _invisibleFiles = new Dictionary<string, DateTime>();
 
@@ -32,14 +32,14 @@ namespace DkTools.FunctionFileScanning
 			if (conn == null) return;
 
 			// Load app info
-			using (var cmd = db.CreateCommand("select * from app where name = @name"))
+			using (var cmd = db.CreateCommand("select rowid from app where name = @name"))
 			{
 				cmd.Parameters.AddWithValue("@name", _name);
 				using (var rdr = cmd.ExecuteReader(CommandBehavior.SingleRow))
 				{
 					if (rdr.Read())
 					{
-						_id = rdr.GetInt32(rdr.GetOrdinal("id"));
+						_id = rdr.GetInt64(0);
 					}
 				}
 			}
@@ -47,17 +47,23 @@ namespace DkTools.FunctionFileScanning
 			if (_id != 0)
 			{
 				// Load files
-				using (var cmd = db.CreateCommand("select * from file_ where app_id = @app_id and visible != 0"))
+				var loadedFiles = new List<FFFile>();
+				using (var cmd = db.CreateCommand("select rowid, * from file_ where app_id = @app_id and visible != 0"))
 				{
 					cmd.Parameters.AddWithValue("@app_id", _id);
 					using (var rdr = cmd.ExecuteReader())
 					{
 						while (rdr.Read())
 						{
-							var file = new FFFile(this, db, rdr);
-							_files[file.FileName.ToLower()] = file;
+							loadedFiles.Add(new FFFile(this, db, rdr));
 						}
 					}
+				}
+
+				foreach (var file in loadedFiles)
+				{
+					file.Load(db);
+					_files[file.FileName.ToLower()] = file;
 				}
 
 				using (var cmd = db.CreateCommand("select file_name, modified from file_ where app_id = @app_id and visible = 0"))
@@ -65,12 +71,10 @@ namespace DkTools.FunctionFileScanning
 					cmd.Parameters.AddWithValue("@app_id", _id);
 					using (var rdr = cmd.ExecuteReader())
 					{
-						var ordFileName = rdr.GetOrdinal("file_name");
-						var ordModified = rdr.GetOrdinal("modified");
 						while (rdr.Read())
 						{
-							var fileName = rdr.GetString(ordFileName);
-							var modified = rdr.GetDateTime(ordModified);
+							var fileName = rdr.GetString(0);
+							var modified = rdr.GetDateTime(1);
 							_invisibleFiles[fileName.ToLower()] = modified;
 						}
 					}
@@ -78,11 +82,10 @@ namespace DkTools.FunctionFileScanning
 			}
 			else // _id == 0
 			{
-				using (var cmd = db.CreateCommand("insert into app (name) values (@name)"))
+				using (var cmd = db.CreateCommand("insert into app (name) values (@name); select last_insert_rowid();"))
 				{
 					cmd.Parameters.AddWithValue("@name", _name);
-					cmd.ExecuteNonQuery();
-					_id = db.QueryIdentityInt();
+					_id = Convert.ToInt64(cmd.ExecuteScalar());
 				}
 
 				var options = ProbeToolsPackage.Instance.EditorOptions;
@@ -253,18 +256,22 @@ namespace DkTools.FunctionFileScanning
 			// Check if this is in the list of invisible files.
 			if (_invisibleFiles.ContainsKey(fileNameLower))
 			{
-				using (var cmd = db.CreateCommand("select * from file_ where app_id = @app_id and file_name = @file_name"))
+				using (var cmd = db.CreateCommand("select rowid, * from file_ where app_id = @app_id and file_name = @file_name"))
 				{
 					cmd.Parameters.AddWithValue("@app_id", _id);
 					cmd.Parameters.AddWithValue("@file_name", fileName);
 					using (var rdr = cmd.ExecuteReader(CommandBehavior.SingleRow))
 					{
-						if (rdr.Read())
-						{
-							return new FFFile(this, db, rdr);
-						}
+						if (rdr.Read()) file = new FFFile(this, db, rdr);
 					}
 				}
+			}
+
+			if (file != null)
+			{
+				// Was loaded as invisible file
+				file.Load(db);
+				return file;
 			}
 
 			// New file
@@ -282,7 +289,7 @@ namespace DkTools.FunctionFileScanning
 			}
 		}
 
-		public int Id
+		public long Id
 		{
 			get { return _id; }
 		}
@@ -310,22 +317,18 @@ namespace DkTools.FunctionFileScanning
 
 			// Remove files in the database that aren't in memory.
 			{
-				var removeFiles = new List<int>();
+				var removeFiles = new List<long>();
 
-				using (var cmd = db.CreateCommand("select id, file_name from file_ where app_id = @app_id"))
+				using (var cmd = db.CreateCommand("select rowid, file_name from file_ where app_id = @app_id"))
 				{
 					cmd.Parameters.AddWithValue("@app_id", _id);
 					using (var rdr = cmd.ExecuteReader())
 					{
-						var ordId = rdr.GetOrdinal("id");
-						var ordFileName = rdr.GetOrdinal("file_name");
-
 						while (rdr.Read())
 						{
-							var id = rdr.GetInt32(ordId);
-							var fileName = rdr.GetString(ordFileName);
+							var id = rdr.GetInt64(0);
+							var fileNameLower = rdr.GetString(1).ToLower();
 
-							var fileNameLower = fileName.ToLower();
 							if (!_files.ContainsKey(fileNameLower) &&
 								!_invisibleFiles.ContainsKey(fileNameLower))
 							{
@@ -337,7 +340,7 @@ namespace DkTools.FunctionFileScanning
 
 				foreach (var id in removeFiles)
 				{
-					using (var cmd = db.CreateCommand("delete from file_ where id = @id"))
+					using (var cmd = db.CreateCommand("delete from file_ where rowid = @id"))
 					{
 						cmd.Parameters.AddWithValue("@id", id);
 						cmd.ExecuteNonQuery();
@@ -377,28 +380,27 @@ namespace DkTools.FunctionFileScanning
 
 			// Purge alt_file records that are no longer used
 
-			List<int> altFilesToRemove = null;
+			List<long> altFilesToRemove = null;
 
-			using (var cmd = db.CreateCommand("select id from alt_file" +
-				" where not exists (select * from func where alt_file_id = alt_file.id)" +
-				" and not exists (select * from ref where alt_file_id = alt_file.id)" +
-				" and not exists (select * from permex where alt_file_id = alt_file.id)" +
-				" and not exists (select * from permex_col where alt_file_id = alt_file.id)"))
+			using (var cmd = db.CreateCommand("select rowid from alt_file" +
+				" where not exists (select * from func where alt_file_id = alt_file.rowid)" +
+				" and not exists (select * from ref where alt_file_id = alt_file.rowid)" +
+				" and not exists (select * from permex where alt_file_id = alt_file.rowid)" +
+				" and not exists (select * from permex_col where alt_file_id = alt_file.rowid)"))
 			{
 				using (var rdr = cmd.ExecuteReader())
 				{
-					var ordId = rdr.GetOrdinal("id");
 					while (rdr.Read())
 					{
-						if (altFilesToRemove == null) altFilesToRemove = new List<int>();
-						altFilesToRemove.Add(rdr.GetInt32(ordId));
+						if (altFilesToRemove == null) altFilesToRemove = new List<long>();
+						altFilesToRemove.Add(rdr.GetInt64(0));
 					}
 				}
 			}
 
 			if (altFilesToRemove != null)
 			{
-				using (var cmd = db.CreateCommand("delete from alt_file where id = @id"))
+				using (var cmd = db.CreateCommand("delete from alt_file where rowid = @id"))
 				{
 					foreach (var id in altFilesToRemove)
 					{
@@ -414,22 +416,19 @@ namespace DkTools.FunctionFileScanning
 
 		private void PurgeNonexistentApps(FFDatabase db)
 		{
-			var appsToRemove = new Dictionary<int, string>();
+			var appsToRemove = new Dictionary<long, string>();
 			var appNames = ProbeEnvironment.AppNames.ToArray();
 
-			using (var cmd = db.CreateCommand("select id, name from app"))
+			using (var cmd = db.CreateCommand("select rowid, name from app"))
 			{
 				using (var rdr = cmd.ExecuteReader())
 				{
-					var ordId = rdr.GetOrdinal("id");
-					var ordName = rdr.GetOrdinal("name");
-
 					while (rdr.Read())
 					{
-						var name = rdr.GetString(ordName);
+						var name = rdr.GetString(1);
 						if (!appNames.Any(a => string.Equals(a, name, StringComparison.OrdinalIgnoreCase)))
 						{
-							appsToRemove[rdr.GetInt32(ordId)] = name;
+							appsToRemove[rdr.GetInt64(0)] = name;
 						}
 					}
 				}
@@ -484,43 +483,42 @@ namespace DkTools.FunctionFileScanning
 			}
 		}
 
-		public int GetOrCreateAltFileId(FFDatabase db, string fileName)
+		public long GetOrCreateAltFileId(FFDatabase db, string fileName)
 		{
-			using (var cmd = db.CreateCommand("select top 1 id from alt_file where file_name = @file_name"))
+			using (var cmd = db.CreateCommand("select rowid from alt_file where file_name = @file_name limit 1"))
 			{
 				cmd.Parameters.AddWithValue("@file_name", fileName);
 				using (var rdr = cmd.ExecuteReader(CommandBehavior.SingleRow))
 				{
 					if (rdr.Read())
 					{
-						return rdr.GetInt32(rdr.GetOrdinal("id"));
+						return rdr.GetInt64(0);
 					}
 				}
 			}
 
-			using (var cmd = db.CreateCommand("insert into alt_file (file_name) values (@file_name)"))
+			using (var cmd = db.CreateCommand("insert into alt_file (file_name) values (@file_name); select last_insert_rowid();"))
 			{
 				cmd.Parameters.AddWithValue("@file_name", fileName);
-				cmd.ExecuteNonQuery();
-				return db.QueryIdentityInt();
+				return Convert.ToInt64(cmd.ExecuteScalar());
 			}
 		}
 
-		public int GetAltFileId(FFDatabase db, string fileName)
+		public long GetAltFileId(FFDatabase db, string fileName)
 		{
-			using (var cmd = db.CreateCommand("select top 1 id from alt_file where file_name = @file_name"))
+			using (var cmd = db.CreateCommand("select rowid from alt_file where file_name = @file_name limit 1"))
 			{
 				cmd.Parameters.AddWithValue("@file_name", fileName);
 				using (var rdr = cmd.ExecuteReader(CommandBehavior.SingleRow))
 				{
 					if (rdr.Read())
 					{
-						return rdr.GetInt32(rdr.GetOrdinal("id"));
+						return rdr.GetInt64(0);
 					}
 				}
 			}
 
-			return 0;
+			return 0L;
 		}
 	}
 }

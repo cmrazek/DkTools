@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Data;
-using System.Data.SqlServerCe;
+using System.Data.SQLite;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -15,7 +15,7 @@ namespace DkTools.FunctionFileScanning
 	internal class FFFile
 	{
 		private FFApp _app;
-		private int _id;
+		private long _id;
 		private string _fileName;
 		private DateTime _modified;
 		private FileContext _context;
@@ -31,7 +31,7 @@ namespace DkTools.FunctionFileScanning
 			if (string.IsNullOrEmpty(fileName)) throw new ArgumentNullException("fileName");
 #endif
 			_app = app;
-			_id = 0;	// Will be inserted during next database update
+			_id = 0L;	// Will be inserted during next database update
 			_fileName = fileName;
 			_modified = Constants.ZeroDate;
 			_context = FileContextUtil.GetFileContextFromFileName(_fileName);
@@ -45,7 +45,7 @@ namespace DkTools.FunctionFileScanning
 			UpdateVisibility();
 		}
 
-		public FFFile(FFApp app, FFDatabase db, SqlCeDataReader fileRdr)
+		public FFFile(FFApp app, FFDatabase db, SQLiteDataReader fileRdr)
 		{
 #if DEBUG
 			if (app == null) throw new ArgumentNullException("app");
@@ -53,7 +53,7 @@ namespace DkTools.FunctionFileScanning
 			if (fileRdr == null) throw new ArgumentNullException("rdr");
 #endif
 			_app = app;
-			_id = fileRdr.GetInt32(fileRdr.GetOrdinal("id"));
+			_id = fileRdr.GetInt64(fileRdr.GetOrdinal("rowid"));
 			_fileName = fileRdr.GetString(fileRdr.GetOrdinal("file_name"));
 			_context = FileContextUtil.GetFileContextFromFileName(_fileName);
 			_modified = fileRdr.GetDateTime(fileRdr.GetOrdinal("modified"));
@@ -64,9 +64,14 @@ namespace DkTools.FunctionFileScanning
 				_class = new FFClass(_app, this, className);
 			}
 
+			UpdateVisibility();
+		}
+
+		public void Load(FFDatabase db)
+		{
 			using (var cmd = db.CreateCommand(
-				"select func.*, alt_file.file_name as alt_file_name from func" +
-				" left outer join alt_file on alt_file.id = func.alt_file_id" +
+				"select func.rowid, func.*, alt_file.file_name as alt_file_name from func" +
+				" left outer join alt_file on alt_file.rowid = func.alt_file_id" +
 				" where file_id = @file_id"))
 			{
 				cmd.Parameters.AddWithValue("@file_id", _id);
@@ -80,8 +85,8 @@ namespace DkTools.FunctionFileScanning
 			}
 
 			using (var cmd = db.CreateCommand(
-				"select permex.*, alt_file.file_name as alt_file_name from permex" +
-				" left outer join alt_file on alt_file.id = permex.alt_file_id" +
+				"select permex.rowid, permex.*, alt_file.file_name as alt_file_name from permex" +
+				" left outer join alt_file on alt_file.rowid = permex.alt_file_id" +
 				" where permex.file_id = @file_id"))
 			{
 				cmd.Parameters.AddWithValue("@file_id", _id);
@@ -95,8 +100,6 @@ namespace DkTools.FunctionFileScanning
 			}
 
 			foreach (var permex in _permExs) permex.Load(db);
-
-			UpdateVisibility();
 		}
 
 		public string FileName
@@ -110,7 +113,7 @@ namespace DkTools.FunctionFileScanning
 			set { _modified = value; }
 		}
 
-		public int Id
+		public long Id
 		{
 			get { return _id; }
 		}
@@ -129,7 +132,7 @@ namespace DkTools.FunctionFileScanning
 		{
 			if (_id != 0)
 			{
-				using (var cmd = db.CreateCommand("update file_ set modified = @modified, visible = @visible where id = @id"))
+				using (var cmd = db.CreateCommand("update file_ set modified = @modified, visible = @visible where rowid = @id"))
 				{
 					cmd.Parameters.AddWithValue("@id", _id);
 					cmd.Parameters.AddWithValue("@modified", _modified);
@@ -139,98 +142,92 @@ namespace DkTools.FunctionFileScanning
 			}
 			else
 			{
-				using (var cmd = db.CreateCommand("insert into file_ (app_id, file_name, modified, visible) values (@app_id, @file_name, @modified, @visible)"))
+				using (var cmd = db.CreateCommand(
+					"insert into file_ (app_id, file_name, modified, visible) values (@app_id, @file_name, @modified, @visible);"
+					+ " select last_insert_rowid();"))
 				{
 					cmd.Parameters.AddWithValue("@app_id", _app.Id);
 					cmd.Parameters.AddWithValue("@file_name", _fileName);
 					cmd.Parameters.AddWithValue("@modified", _modified);
 					cmd.Parameters.AddWithValue("@visible", _visible ? 1 : 0);
-					cmd.ExecuteNonQuery();
-					_id = db.QueryIdentityInt();
+					_id = Convert.ToInt64(cmd.ExecuteScalar());
 				}
 			}
 
 			UpdateIncludeDependencies(db, store, model);
 		}
 
+		private struct DbInclude
+		{
+			public long id;
+			public string fileName;
+			public bool include;
+			public bool localizedFile;
+		}
+
 		private void UpdateIncludeDependencies(FFDatabase db, CodeModel.FileStore store, CodeModel.CodeModel model)
 		{
-			var inclList = model.PreprocessorModel.IncludeDependencies.ToArray();
+			var modelIncludeList = model.PreprocessorModel.IncludeDependencies.ToArray();
 
-			// Look for dependencies that are no longer there.
-			List<int> removeList = null;
-			using (var cmd = db.CreateCommand("select id, include_file_name, include, localized_file from include_depends where file_id = @file_id"))
+			var dbIncludes = new List<DbInclude>();
+			using (var cmd = db.CreateCommand("select rowid, include_file_name, include, localized_file from include_depends where file_id = @file_id"))
 			{
 				cmd.Parameters.AddWithValue("@file_id", _id);
 				using (var rdr = cmd.ExecuteReader())
 				{
-					var ordId = rdr.GetOrdinal("id");
-					var ordFileName = rdr.GetOrdinal("include_file_name");
-					var ordInclude = rdr.GetOrdinal("include");
-					var ordLocalizedFile = rdr.GetOrdinal("localized_file");
-
 					while (rdr.Read())
 					{
-						var id = rdr.GetInt32(ordId);
-						var includeFileName = rdr.GetString(ordFileName);
-						var include = rdr.GetTinyIntBoolean(ordInclude);
-						var localizedFile = rdr.GetTinyIntBoolean(ordLocalizedFile);
-
-						if (!inclList.Any(x => x.FileName.Equals(includeFileName, StringComparison.OrdinalIgnoreCase) && x.Include == include && x.LocalizedFile == localizedFile))
+						dbIncludes.Add(new DbInclude
 						{
-							if (removeList == null) removeList = new List<int>();
-							removeList.Add(id);
-						}
+							id = rdr.GetInt64(0),
+							fileName = rdr.GetString(1),
+							include = rdr.GetTinyIntBoolean(2),
+							localizedFile = rdr.GetTinyIntBoolean(3)
+						});
 					}
 				}
 			}
 
-			// Remove outdated dependencies.
-			if (removeList != null && removeList.Count > 0)
+			// Remove dependencies that are no longer there
+			var recordsToRemove = (from d in dbIncludes
+								   where !modelIncludeList.Any(m => m.FileName.Equals(d.fileName, StringComparison.OrdinalIgnoreCase) &&
+									   m.Include == d.include &&
+									   m.LocalizedFile == d.localizedFile)
+								   select d).ToArray();
+			if (recordsToRemove.Length > 0)
 			{
-				var sb = new StringBuilder();
-				sb.Append("delete from include_depends where id in (");
-				var first = true;
-				for (int i = 0, ii = removeList.Count; i < ii; i++)
+				using (var cmd = db.CreateCommand("delete from include_depends where rowid = @rowid"))
 				{
-					if (first) first = false;
-					else sb.Append(',');
-					sb.AppendFormat("@id{0}", i);
-				}
-				sb.Append(')');
-
-				using (var cmd = db.CreateCommand(sb.ToString()))
-				{
-					for (int i = 0, ii = removeList.Count; i < ii; i++)
+					foreach (var id in recordsToRemove)
 					{
-						cmd.Parameters.AddWithValue(string.Format("@id{0}", i), removeList[i]);
+						cmd.Parameters.Clear();
+						cmd.Parameters.AddWithValue("@rowid", id);
+						cmd.ExecuteNonQuery();
 					}
-					cmd.ExecuteNonQuery();
 				}
 			}
 
-			// Add new dependencies.
-			foreach (var inclDepend in inclList)
+			// Add new dependencies
+			var recordsToAdd = (from m in modelIncludeList
+								where !dbIncludes.Any(d => d.fileName.Equals(m.FileName, StringComparison.OrdinalIgnoreCase) &&
+									d.include == m.Include &&
+									d.localizedFile == m.LocalizedFile)
+								select m).ToArray();
+			if (recordsToAdd.Length > 0)
 			{
-				int numFound;
-				using (var cmd = db.CreateCommand("select count(*) from include_depends where file_id = @file_id and include_file_name = @include_file_name and include = @include and localized_file = @localized_file"))
+				using (var cmd = db.CreateCommand(@"
+					insert into include_depends (app_id, file_id, include_file_name, include, localized_file)
+					values (@app_id, @file_id, @include_file_name, @include, @localized_file)
+					"))
 				{
-					cmd.Parameters.AddWithValue("@file_id", _id);
-					cmd.Parameters.AddWithValue("@include_file_name", inclDepend.FileName);
-					cmd.Parameters.AddWithValue("@include", inclDepend.Include);
-					cmd.Parameters.AddWithValue("@localized_file", inclDepend.LocalizedFile);
-					numFound = Convert.ToInt32(cmd.ExecuteScalar());
-				}
-
-				if (numFound == 0)
-				{
-					using (var cmd = db.CreateCommand(@"insert into include_depends (app_id, file_id, include_file_name, include, localized_file) values (@app_id, @file_id, @include_file_name, @include, @localized_file)"))
+					foreach (var incl in recordsToAdd)
 					{
+						cmd.Parameters.Clear();
 						cmd.Parameters.AddWithValue("@app_id", _app.Id);
 						cmd.Parameters.AddWithValue("@file_id", _id);
-						cmd.Parameters.AddWithValue("@include_file_name", inclDepend.FileName);
-						cmd.Parameters.AddWithValue("@include", inclDepend.Include);
-						cmd.Parameters.AddWithValue("@localized_file", inclDepend.LocalizedFile);
+						cmd.Parameters.AddWithValue("@include_file_name", incl.FileName);
+						cmd.Parameters.AddWithValue("@include", incl.Include ? 1 : 0);
+						cmd.Parameters.AddWithValue("@localized_file", incl.LocalizedFile ? 1 : 0);
 						cmd.ExecuteNonQuery();
 					}
 				}
@@ -247,25 +244,25 @@ namespace DkTools.FunctionFileScanning
 				r.Exists = false;
 			}
 
-			List<int> dbRefsToRemove = null;
+			List<long> dbRefsToRemove = null;
 
 			// Scan the refs in the database to find which ones should be updated or removed
-			using (var cmd = db.CreateCommand("select ref.*, alt_file.file_name as true_file_name from ref "
-				+ "left outer join alt_file on alt_file.id = ref.alt_file_id "
+			using (var cmd = db.CreateCommand("select ref.rowid, ref.*, alt_file.file_name as true_file_name from ref "
+				+ "left outer join alt_file on alt_file.rowid = ref.alt_file_id "
 				+ "where file_id = @file_id"))
 			{
 				cmd.Parameters.AddWithValue("@file_id", _id);
 
 				using (var rdr = cmd.ExecuteReader())
 				{
-					var ordId = rdr.GetOrdinal("id");
+					var ordId = rdr.GetOrdinal("rowid");
 					var ordExtRefId = rdr.GetOrdinal("ext_ref_id");
 					var ordTrueFileName = rdr.GetOrdinal("true_file_name");
 					var ordPos = rdr.GetOrdinal("pos");
 
 					while (rdr.Read())
 					{
-						var id = rdr.GetInt32(ordId);
+						var id = rdr.GetInt64(ordId);
 						var extRefId = rdr.GetString(ordExtRefId);
 						var trueFileName = rdr.GetStringOrNull(ordTrueFileName);
 						var pos = rdr.GetInt32(ordPos);
@@ -280,7 +277,7 @@ namespace DkTools.FunctionFileScanning
 						}
 						else
 						{
-							if (dbRefsToRemove == null) dbRefsToRemove = new List<int>();
+							if (dbRefsToRemove == null) dbRefsToRemove = new List<long>();
 							dbRefsToRemove.Add(id);
 						}
 					}
@@ -290,10 +287,11 @@ namespace DkTools.FunctionFileScanning
 			// Remove refs no longer used
 			if (dbRefsToRemove != null)
 			{
-				foreach (var id in dbRefsToRemove)
+				using (var cmd = db.CreateCommand("delete from ref where rowid = @id"))
 				{
-					using (var cmd = db.CreateCommand("delete from ref where id = @id"))
+					foreach (var id in dbRefsToRemove)
 					{
+						cmd.Parameters.Clear();
 						cmd.Parameters.AddWithValue("@id", id);
 						cmd.ExecuteNonQuery();
 					}
@@ -304,7 +302,7 @@ namespace DkTools.FunctionFileScanning
 			if (memRefs.Any(r => !r.Exists))
 			{
 				// Get the list of alt file names used.
-				var altFileNames = new Dictionary<string, int>();
+				var altFileNames = new Dictionary<string, long>();
 				foreach (var altFileName in (from r in memRefs where !r.Exists && !string.IsNullOrEmpty(r.TrueFileName) select r.TrueFileName))
 				{
 					if (!altFileNames.Keys.Any(x => string.Equals(x, altFileName))) altFileNames[altFileName] = 0;
@@ -313,7 +311,7 @@ namespace DkTools.FunctionFileScanning
 				if (altFileNames.Any())
 				{
 					// Look up the IDs of any alt file names used.
-					using (var cmd = db.CreateCommand("select top 1 id from alt_file where file_name = @file_name"))
+					using (var cmd = db.CreateCommand("select rowid from alt_file where file_name = @file_name limit 1"))
 					{
 						foreach (var altFileName in altFileNames.Keys.ToArray())	// Put into array early to avoid collection modified error
 						{
@@ -322,11 +320,7 @@ namespace DkTools.FunctionFileScanning
 
 							using (var rdr = cmd.ExecuteReader(CommandBehavior.SingleRow))
 							{
-								if (rdr.Read())
-								{
-									var id = rdr.GetInt32OrNull(rdr.GetOrdinal("id"));
-									if (id.HasValue) altFileNames[altFileName] = id.Value;
-								}
+								if (rdr.Read()) altFileNames[altFileName] = rdr.GetInt64(0);
 							}
 						}
 					}
@@ -334,25 +328,25 @@ namespace DkTools.FunctionFileScanning
 					// Insert new alt file names.
 					if (altFileNames.Any(x => x.Value == 0))
 					{
-						using (var cmd = db.CreateCommand("insert into alt_file (file_name) values (@file_name)"))
+						using (var cmd = db.CreateCommand("insert into alt_file (file_name) values (@file_name); select last_insert_rowid();"))
 						{
 							foreach (var altFileName in (from a in altFileNames where a.Value == 0 select a.Key).ToArray())	// Put into array early to avoid collection modified error
 							{
 								cmd.Parameters.Clear();
 								cmd.Parameters.AddWithValue("@file_name", altFileName);
-								cmd.ExecuteNonQuery();
-								altFileNames[altFileName] = db.QueryIdentityInt();
+								altFileNames[altFileName] = Convert.ToInt64(cmd.ExecuteScalar());
 							}
 						}
 					}
 				}
 
 				// Inserts the ref records
-				using (var cmd = db.CreateCommand("insert into ref (app_id, file_id, ext_ref_id, alt_file_id, pos) values (@app_id, @file_id, @ext_ref_id, @alt_file_id, @pos)"))
+				using (var cmd = db.CreateCommand("insert into ref (app_id, file_id, ext_ref_id, alt_file_id, pos)" +
+					" values (@app_id, @file_id, @ext_ref_id, @alt_file_id, @pos)"))
 				{
 					foreach (var newRef in memRefs.Where(r => !r.Exists))
 					{
-						var trueFileId = 0;
+						var trueFileId = 0L;
 						if (!string.IsNullOrEmpty(newRef.TrueFileName))
 						{
 							var altFileName = (from a in altFileNames where string.Equals(a.Key, newRef.TrueFileName, StringComparison.OrdinalIgnoreCase) select a.Key).FirstOrDefault();
@@ -375,7 +369,7 @@ namespace DkTools.FunctionFileScanning
 		{
 			if (_id != 0)
 			{
-				using (var cmd = db.CreateCommand("delete from file_ where id = @id"))
+				using (var cmd = db.CreateCommand("delete from file_ where rowid = @id"))
 				{
 					cmd.Parameters.AddWithValue("@id", _id);
 					cmd.ExecuteNonQuery();
@@ -525,7 +519,7 @@ namespace DkTools.FunctionFileScanning
 					}
 				}
 
-				using (var cmd = db.CreateCommand("delete from permex where id = @id"))
+				using (var cmd = db.CreateCommand("delete from permex where rowid = @id"))
 				{
 					foreach (var permex in exsToDelete)
 					{

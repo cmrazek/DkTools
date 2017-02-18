@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Data;
-using System.Data.SqlServerCe;
+using System.Data.SQLite;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -14,7 +14,7 @@ namespace DkTools.FunctionFileScanning
 		private FFApp _app;
 		private FFFile _file;
 		private FFClass _class;
-		private int _id;
+		private long _id;
 		private string _name;
 		private FunctionSignature _sig;
 		private CodeModel.Span _span;
@@ -43,7 +43,7 @@ namespace DkTools.FunctionFileScanning
 			UpdateVisibility();
 		}
 
-		public FFFunction(FFApp app, FFFile file, FFClass cls, SqlCeDataReader rdr)
+		public FFFunction(FFApp app, FFFile file, FFClass cls, SQLiteDataReader rdr)
 		{
 #if DEBUG
 			if (app == null) throw new ArgumentNullException("app");
@@ -54,15 +54,15 @@ namespace DkTools.FunctionFileScanning
 			_file = file;
 			_class = cls;
 
-			_id = rdr.GetInt32(rdr.GetOrdinal("id"));
+			_id = rdr.GetInt64(rdr.GetOrdinal("rowid"));
 			_name = rdr.GetString(rdr.GetOrdinal("name"));
 			_sig = FunctionSignature.ParseFromDb(rdr.GetString(rdr.GetOrdinal("sig")));
 
-			var devDescValue = rdr["description"];
-			if (!Convert.IsDBNull(devDescValue))
+			var devDescValue = rdr.GetStringOrNull(rdr.GetOrdinal("description"));
+			if (devDescValue != null)
 			{
 				// TODO: Transitionary until the next database version
-				if (_sig.Description == null) _sig.Description = Convert.ToString(devDescValue);
+				if (_sig.Description == null) _sig.Description = devDescValue;
 			}
 
 			var fileName = _file.FileName;
@@ -76,18 +76,18 @@ namespace DkTools.FunctionFileScanning
 			UpdateVisibility();
 		}
 
-		public static CodeModel.Definitions.FunctionDefinition CreateFunctionDefinitionFromSqlReader(SqlCeDataReader rdr, string fileName)
+		public static CodeModel.Definitions.FunctionDefinition CreateFunctionDefinitionFromSqlReader(SQLiteDataReader rdr, string fileName)
 		{
 			var className = FileContextUtil.GetClassNameFromFileName(fileName);
 
 			var funcName = rdr.GetString(rdr.GetOrdinal("name"));
 			var sig = FunctionSignature.ParseFromDb(rdr.GetString(rdr.GetOrdinal("sig")));
 
-			var devDescValue = rdr["description"];
-			if (!Convert.IsDBNull(devDescValue))
+			var devDescValue = rdr.GetStringOrNull(rdr.GetOrdinal("description"));
+			if (devDescValue != null)
 			{
 				// TODO: Transitionary until the next database version
-				if (sig.Description == null) sig.Description = Convert.ToString(devDescValue);
+				if (sig.Description == null) sig.Description = devDescValue;
 			}
 
 			var trueFileName = fileName;
@@ -160,15 +160,17 @@ namespace DkTools.FunctionFileScanning
 			}
 			var argsString = sb.ToString();
 
-			var altFileId = 0;
+			var altFileId = 0L;
 			var filePos = _def.FilePosition;
 			if (!string.Equals(filePos.FileName, _file.FileName, StringComparison.OrdinalIgnoreCase)) altFileId = _app.GetAltFileId(db, filePos.FileName);
 
 			if (_id != 0)
 			{
 				// TODO: next database version, remove description field
-				using (var cmd = db.CreateCommand("update func set file_id = @file_id, name = @name, sig = @sig, alt_file_id = @alt_file_id, pos = @pos, " +
-					"description = null, visible = @visible where id = @id"))
+				using (var cmd = db.CreateCommand(@"
+					update func set file_id = @file_id, name = @name, sig = @sig, alt_file_id = @alt_file_id, pos = @pos,
+					description = null, visible = @visible where rowid = @id
+					"))
 				{
 					cmd.Parameters.AddWithValue("@id", _id);
 					cmd.Parameters.AddWithValue("@file_id", _file.Id);
@@ -183,8 +185,11 @@ namespace DkTools.FunctionFileScanning
 			}
 			else
 			{
-				using (var cmd = db.CreateCommand(@"insert into func (name, app_id, file_id, alt_file_id, pos, sig, visible)
-													values (@name, @app_id, @file_id, @alt_file_id, @pos, @sig, @visible)"))
+				using (var cmd = db.CreateCommand(@"
+					insert into func (name, app_id, file_id, alt_file_id, pos, sig, visible)
+					values (@name, @app_id, @file_id, @alt_file_id, @pos, @sig, @visible);
+					select last_insert_rowid();
+					"))
 				{
 					cmd.Parameters.AddWithValue("@name", _name);
 					cmd.Parameters.AddWithValue("@app_id", _app.Id);
@@ -193,8 +198,7 @@ namespace DkTools.FunctionFileScanning
 					cmd.Parameters.AddWithValue("@pos", filePos.Position);
 					cmd.Parameters.AddWithValue("@sig", _sig.ToDbString());
 					cmd.Parameters.AddWithValue("@visible", _visible ? 1 : 0);
-					cmd.ExecuteNonQuery();
-					_id = db.QueryIdentityInt();
+					_id = Convert.ToInt64(cmd.ExecuteScalar());
 				}
 			}
 		}
@@ -203,7 +207,7 @@ namespace DkTools.FunctionFileScanning
 		{
 			if (_id != 0)
 			{
-				using (var cmd = db.CreateCommand("delete from func where id = @id"))
+				using (var cmd = db.CreateCommand("delete from func where rowid = @id"))
 				{
 					cmd.Parameters.AddWithValue("@id", _id);
 					cmd.ExecuteNonQuery();
@@ -211,7 +215,7 @@ namespace DkTools.FunctionFileScanning
 			}
 		}
 
-		public int Id
+		public long Id
 		{
 			get { return _id; }
 		}

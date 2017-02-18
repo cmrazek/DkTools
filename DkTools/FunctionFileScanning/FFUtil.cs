@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Data;
-using System.Data.SqlServerCe;
+using System.Data.SQLite;
 using System.Linq;
 using System.Text;
 using DkTools.CodeModel.Definitions;
@@ -53,19 +53,19 @@ namespace DkTools.FunctionFileScanning
 			}
 		}
 
-		public static string GetStringOrNull(this SqlCeDataReader rdr, int ordinal)
+		public static string GetStringOrNull(this SQLiteDataReader rdr, int ordinal)
 		{
 			if (rdr.IsDBNull(ordinal)) return null;
 			return rdr.GetString(ordinal);
 		}
 
-		public static int? GetInt32OrNull(this SqlCeDataReader rdr, int ordinal)
+		public static int? GetInt32OrNull(this SQLiteDataReader rdr, int ordinal)
 		{
 			if (rdr.IsDBNull(ordinal)) return null;
 			return rdr.GetInt32(ordinal);
 		}
 
-		public static bool GetTinyIntBoolean(this SqlCeDataReader rdr, int ordinal)
+		public static bool GetTinyIntBoolean(this SQLiteDataReader rdr, int ordinal)
 		{
 			return rdr.GetByte(ordinal) != 0;
 		}
