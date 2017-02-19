@@ -14,6 +14,8 @@ namespace DkTools.ErrorTagging
 	{
 		public static ErrorTaskProvider Instance;
 
+		private object _tasksLock = new object();
+
 		public event EventHandler<ErrorTaskEventArgs> ErrorTagsChangedForFile;
 		public class ErrorTaskEventArgs : EventArgs
 		{
@@ -42,7 +44,10 @@ namespace DkTools.ErrorTagging
 				return;
 			}
 
-			Tasks.Add(task);
+			lock (_tasksLock)
+			{
+				Tasks.Add(task);
+			}
 
 			var ev = ErrorTagsChangedForFile;
 			if (ev != null) ev(this, new ErrorTaskEventArgs { FileName = task.Document });
@@ -51,8 +56,11 @@ namespace DkTools.ErrorTagging
 		public void Clear()
 		{
 			var tasks = Tasks.Cast<ErrorTask>().ToArray();
-			
-			Tasks.Clear();
+
+			lock (_tasksLock)
+			{
+				Tasks.Clear();
+			}
 
 			foreach (ErrorTask task in tasks)
 			{
@@ -63,7 +71,10 @@ namespace DkTools.ErrorTagging
 
 		public void RemoveTask(ErrorTask task)
 		{
-			Tasks.Remove(task);
+			lock (_tasksLock)
+			{
+				Tasks.Remove(task);
+			}
 
 			var ev = ErrorTagsChangedForFile;
 			if (ev != null) ev(this, new ErrorTaskEventArgs { FileName = task.Document });
@@ -115,11 +126,19 @@ namespace DkTools.ErrorTagging
 
 		public IEnumerable<ITagSpan<ErrorTag>> GetErrorTagsForFile(string fileName, NormalizedSnapshotSpanCollection spans)
 		{
+			var tags = new List<TagSpan<ErrorTag>>();
+
 			var firstSpan = spans.FirstOrDefault();
-			if (firstSpan == null) yield break;
+			if (firstSpan == null) return tags;
 			var snapshot = firstSpan.Snapshot;
 
-			foreach (var task in (from t in Tasks.Cast<ErrorTask>() where string.Equals(t.Document, fileName, StringComparison.OrdinalIgnoreCase) select t))
+			ErrorTask[] tasks;
+			lock (_tasksLock)
+			{
+				tasks = Tasks.Cast<ErrorTask>().ToArray();
+			}
+
+			foreach (var task in (from t in tasks where string.Equals(t.Document, fileName, StringComparison.OrdinalIgnoreCase) select t))
 			{
 				var line = task.GetSnapshot(snapshot).GetLineFromLineNumber(task.Line);
 				foreach (var span in spans)
@@ -138,12 +157,14 @@ namespace DkTools.ErrorTagging
 							if (newStartPos < endPos) startPos = newStartPos;
 						}
 
-						yield return new TagSpan<ErrorTag>(new SnapshotSpan(span.Snapshot, startPos, endPos - startPos),
-							new ErrorTag(task.Type == ErrorType.Warning ? ErrorTagger.CodeWarning : ErrorTagger.CodeError, task.Text));
+						tags.Add(new TagSpan<ErrorTag>(new SnapshotSpan(span.Snapshot, startPos, endPos - startPos),
+							new ErrorTag(task.Type == ErrorType.Warning ? ErrorTagger.CodeWarning : ErrorTagger.CodeError, task.Text)));
 						break;
 					}
 				}
 			}
+
+			return tags;
 		}
 
 		public IEnumerable<ErrorTask> GetErrorMessagesAtPoint(string fileName, SnapshotPoint pt)

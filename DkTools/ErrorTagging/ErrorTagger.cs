@@ -50,12 +50,9 @@ namespace DkTools.ErrorTagging
 		{
 			_model = _store.GetMostRecentModel(_view.TextSnapshot, "ErrorTagger.GetTags()");
 
-			if (!ProbeToolsPackage.Instance.EditorOptions.ShowErrors) yield break;
+			if (!ProbeToolsPackage.Instance.EditorOptions.ShowErrors) return new TagSpan<ErrorTag>[0];
 
-			foreach (var tagSpan in ErrorTaskProvider.Instance.GetErrorTagsForFile(_model.FileName, spans))
-			{
-				yield return tagSpan;
-			}
+			return ErrorTaskProvider.Instance.GetErrorTagsForFile(_model.FileName, spans);
 		}
 
 		private void OnModelUpdated(object sender, FileStore.ModelUpdatedEventArgs e)
