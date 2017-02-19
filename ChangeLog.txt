@@ -5,6 +5,8 @@ Version 1.4 - (WIP):
 
 - Changed database from SQLCE to SQLite.
 - When viewing include files, common definitions from parent files are now shown.
+- When using 'go to definition' on an extern function, it will now go directly to the function
+  definition instead of prompting with a list including the externs.
 
 ____________________________________________________________________________________________________
 Version 1.3.5 - Feb 17, 2017:

@@ -93,6 +93,14 @@ namespace DkTools.Navigation
 							}
 						}
 					}
+
+					// If there is one true function definition and the list, and the others are externs, then just go straight to the true definition.
+					if (funcList.Count > 1 &&
+						funcList.Count(x => !x.Extern) == 1 &&
+						funcList.Count(x => x.Extern) == funcList.Count - 1)
+					{
+						funcList = funcList.Where(x => !x.Extern).ToList();
+					}
 				}
 
 				return PromptDefinitions(funcList);
