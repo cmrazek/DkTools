@@ -579,12 +579,28 @@ namespace DkTools.ProbeExplorer
 						showTable = true;
 					}
 
-					foreach (var field in table.Columns)
+					if (!showTable)
 					{
-						if (_dictFilter.Match(field.FullName))
+						foreach (var field in table.Columns)
 						{
-							showTable = true;
-							expandTable = true;
+							if (_dictFilter.Match(field.FullName))
+							{
+								showTable = true;
+								expandTable = true;
+								break;
+							}
+						}
+
+						if (!showTable)
+						{
+							foreach (var relind in table.RelInds)
+							{
+								if (_dictFilter.Match(relind.Name))
+								{
+									showTable = true;
+									expandTable = true;
+								}
+							}
 						}
 					}
 
