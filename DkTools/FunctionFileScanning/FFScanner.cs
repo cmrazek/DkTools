@@ -16,7 +16,8 @@ namespace DkTools.FunctionFileScanning
 
 		private FFApp _currentApp;
 		private object _currentAppLock = new object();
-		private Queue<ScanInfo> _scanQueue = new Queue<ScanInfo>();
+		private Queue<ScanInfo> _scanQueue;
+		private object _scanLock = new object();
 
 		private const int k_threadWaitIdle = 1000;
 		private const int k_threadWaitActive = 0;
@@ -87,9 +88,9 @@ namespace DkTools.FunctionFileScanning
 				while (!_kill.WaitOne(k_threadWaitIdle))
 				{
 					var gotActivity = false;
-					lock (_scanQueue)
+					lock (_scanLock)
 					{
-						if (_scanQueue.Count > 0) gotActivity = true;
+						if (_scanQueue != null && _scanQueue.Count > 0) gotActivity = true;
 					}
 
 					if (gotActivity)
@@ -115,9 +116,9 @@ namespace DkTools.FunctionFileScanning
 				while (!_kill.WaitOne(k_threadWaitActive))
 				{
 					ScanInfo? scanInfo = null;
-					lock (_scanQueue)
+					lock (_scanLock)
 					{
-						if (_scanQueue.Count > 0)
+						if (_scanQueue != null && _scanQueue.Count > 0)
 						{
 							scanInfo = _scanQueue.Dequeue();
 						}
@@ -139,6 +140,10 @@ namespace DkTools.FunctionFileScanning
 						var scanElapsed = DateTime.Now.Subtract(scanStartTime);
 
 						Shell.SetStatusText(string.Format("DkTools background scanning complete.  (elapsed: {0})", scanElapsed));
+						lock (_scanLock)
+						{
+							_scanQueue = null;
+						}
 						return;
 					}
 				}
@@ -157,8 +162,12 @@ namespace DkTools.FunctionFileScanning
 						switch (fileContext)
 						{
 							case FileContext.Include:
+								// Ignore include files.
+								break;
+
 							case FileContext.Dictionary:
-								// Ignore dictionary and include files
+								// Deep scan for dictionary only; no exports produced.
+								scanList.Add(new ScanInfo { fileName = fileName, mode = FFScanMode.Deep });
 								break;
 
 							case FileContext.Function:
@@ -198,8 +207,9 @@ namespace DkTools.FunctionFileScanning
 			var fileContext = FileContextUtil.GetFileContextFromFileName(fullPath);
 			if (fileContext != FileContext.Include && fileContext != FileContext.Dictionary)
 			{
-				lock (_scanQueue)
+				lock (_scanLock)
 				{
+					if (_scanQueue == null) _scanQueue = new Queue<ScanInfo>();
 					if (!_scanQueue.Any(s => string.Equals(s.fileName, fullPath, StringComparison.OrdinalIgnoreCase)))
 					{
 						_scanQueue.Enqueue(new ScanInfo
@@ -221,7 +231,7 @@ namespace DkTools.FunctionFileScanning
 				if (FileContextUtil.IsLocalizedFile(scan.fileName)) return;
 
 				var fileContext = CodeModel.FileContextUtil.GetFileContextFromFileName(scan.fileName);
-				if (fileContext == FileContext.Include || fileContext == FileContext.Dictionary) return;
+				if (fileContext == FileContext.Include) return;
 
 				DateTime modified;
 				if (!app.TryGetFileDate(scan.fileName, out modified)) modified = DateTime.MinValue;
@@ -269,6 +279,10 @@ namespace DkTools.FunctionFileScanning
 				{
 					app.OnInvisibleFileChanged(ffFile);
 				}
+
+#if DEBUG
+				FFDatabase.DumpMemoryStats();
+#endif
 			}
 			catch (Exception ex)
 			{
@@ -289,9 +303,9 @@ namespace DkTools.FunctionFileScanning
 
 		public void RestartScanning()
 		{
-			lock (_scanQueue)
+			lock (_scanLock)
 			{
-				_scanQueue.Clear();
+				_scanQueue = new Queue<ScanInfo>();
 			}
 
 			var options = ProbeToolsPackage.Instance.EditorOptions;
@@ -304,7 +318,7 @@ namespace DkTools.FunctionFileScanning
 				}
 
 				scanList.Sort();
-				lock (_scanQueue)
+				lock (_scanLock)
 				{
 					foreach (var scanItem in scanList) _scanQueue.Enqueue(scanItem);
 				}

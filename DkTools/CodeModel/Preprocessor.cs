@@ -32,17 +32,19 @@ namespace DkTools.CodeModel
 		/// <param name="fileContext">The type of file.</param>
 		/// <returns>True if the preprocessor changed a part of the document and the document should be re-run through this function again.
 		/// False if the document has finished preprocessing.</returns>
-		public bool Preprocess(IPreprocessorReader reader, IPreprocessorWriter writer, string fileName, IEnumerable<string> parentFiles, FileContext fileContext)
+		public PreprocessorResult Preprocess(IPreprocessorReader reader, IPreprocessorWriter writer, string fileName,
+			IEnumerable<string> parentFiles, FileContext fileContext, string stopAtIncludeFile = null)
 		{
 			if (reader == null) throw new ArgumentNullException("reader");
 
-			return Preprocess(new PreprocessorParams(reader, writer, fileName, parentFiles, fileContext, ContentType.File)
+			return Preprocess(new PreprocessorParams(reader, writer, fileName, parentFiles, fileContext,
+				ContentType.File, stopAtIncludeFile)
 			{
 				isMainSource = true
 			});
 		}
 
-		private bool Preprocess(PreprocessorParams p)
+		private PreprocessorResult Preprocess(PreprocessorParams p)
 		{
 			// This function assumes the source has already been merged.
 
@@ -57,7 +59,7 @@ namespace DkTools.CodeModel
 			var rdr = p.reader;
 			p.reader.SetWriter(p.writer);
 
-			while (!rdr.EOF)
+			while (!rdr.EOF && !p.result.IncludeFileReached)
 			{
 				str = rdr.PeekToken(false);
 				if (string.IsNullOrEmpty(str)) continue;
@@ -87,13 +89,13 @@ namespace DkTools.CodeModel
 					else if (str == "STRINGIZE")
 					{
 						rdr.Ignore(str.Length);
-						p.documentAltered = true;
+						p.result.DocumentAltered = true;
 						ProcessStringizeKeyword(p);
 					}
 					else if (str == "defined" && p.contentType == ContentType.Condition)
 					{
 						rdr.Ignore(str.Length);
-						p.documentAltered = true;
+						p.result.DocumentAltered = true;
 						ProcessDefinedKeyword(p);
 					}
 					else
@@ -117,14 +119,14 @@ namespace DkTools.CodeModel
 
 			p.writer.Flush();
 
-			return p.documentAltered;
+			return p.result;
 		}
 
 		private void ProcessDirective(PreprocessorParams p, string directiveName)
 		{
 			// This function is called after the '#' has been read from the file.
 
-			p.documentAltered = true;
+			p.result.DocumentAltered = true;
 
 			switch (directiveName)
 			{
@@ -390,7 +392,7 @@ namespace DkTools.CodeModel
 				rdr.Ignore(name.Length);
 			}
 
-			p.documentAltered = true;
+			p.result.DocumentAltered = true;
 
 			List<string> paramList = null;
 			if (define.ParamNames != null)
@@ -517,14 +519,14 @@ namespace DkTools.CodeModel
 			var reader = new StringPreprocessorReader(source);
 			var writer = new StringPreprocessorWriter();
 
-			var parms = new PreprocessorParams(reader, writer, string.Empty, null, serverContext, contentType);
+			var parms = new PreprocessorParams(reader, writer, string.Empty, null, serverContext, contentType, null);
 			parms.restrictedDefines = restrictedDefines;
 			parms.args = args;
 			parms.resolvingMacros = true;
 
-			while (Preprocess(parms))
+			while (Preprocess(parms).DocumentAltered)
 			{
-				parms.documentAltered = false;
+				parms.result.DocumentAltered = false;
 				parms.args = null;	// Only apply the arguments to the first round
 				parms.reader = new StringPreprocessorReader(writer.Text);
 				parms.writer = writer = new StringPreprocessorWriter();
@@ -581,14 +583,20 @@ namespace DkTools.CodeModel
 			var includeNode = _store.GetIncludeFile(p.fileName, fileName, searchSameDir, parentFiles);
 			if (includeNode == null) return;
 
+			if (p.stopAtIncludeFile != null && includeNode.FullPathName.Equals(p.stopAtIncludeFile, StringComparison.OrdinalIgnoreCase))
+			{
+				p.result.IncludeFileReached = true;
+				return;
+			}
+
 			var rawSource = includeNode.Source;
 			if (rawSource == null) return;
 			var reader = new CodeSource.CodeSourcePreprocessorReader(rawSource);
 
 			// Run the preprocessor on the include file.
 			var includeSource = new CodeSource();
-			var parms = new PreprocessorParams(reader, includeSource, includeNode.FullPathName, parentFiles, p.fileContext, p.contentType);
-			Preprocess(parms);
+			var parms = new PreprocessorParams(reader, includeSource, includeNode.FullPathName, parentFiles, p.fileContext, p.contentType, p.stopAtIncludeFile);
+			p.result.Merge(Preprocess(parms));
 
 			p.writer.Append(includeSource);
 
@@ -865,6 +873,17 @@ namespace DkTools.CodeModel
 			}
 		}
 
+		public IEnumerable<Definition> ActiveDefines
+		{
+			get
+			{
+				foreach (var def in _defines.Values)
+				{
+					if (!def.Disabled) yield return def.Definition;
+				}
+			}
+		}
+
 		private void ProcessReplace(PreprocessorParams p, string directiveName)
 		{
 			p.reader.Ignore(directiveName.Length);
@@ -1042,10 +1061,11 @@ namespace DkTools.CodeModel
 			public bool resolvingMacros;
 			public FileContext fileContext;
 			public bool isMainSource;
-			public bool documentAltered;
+			public string stopAtIncludeFile;
+			public PreprocessorResult result = new PreprocessorResult();
 
 			public PreprocessorParams(IPreprocessorReader reader, IPreprocessorWriter writer, string fileName,
-				IEnumerable<string> parentFiles, FileContext serverContext, ContentType contentType)
+				IEnumerable<string> parentFiles, FileContext serverContext, ContentType contentType, string stopAtIncludeFile)
 			{
 				this.reader = reader;
 				this.writer = writer;
@@ -1053,6 +1073,19 @@ namespace DkTools.CodeModel
 				if (parentFiles != null) this.parentFiles = parentFiles.ToArray();
 				this.fileContext = serverContext;
 				this.contentType = contentType;
+				this.stopAtIncludeFile = stopAtIncludeFile;
+			}
+		}
+
+		public class PreprocessorResult
+		{
+			public bool DocumentAltered { get; set; }
+			public bool IncludeFileReached { get; set; }
+
+			public void Merge(PreprocessorResult result)
+			{
+				if (result.DocumentAltered) DocumentAltered = true;
+				if (result.IncludeFileReached) IncludeFileReached = true;
 			}
 		}
 
@@ -1061,7 +1094,7 @@ namespace DkTools.CodeModel
 			// Run preprocessor on the condition string
 			var reader = new StringPreprocessorReader(conditionStr);
 			var writer = new StringPreprocessorWriter();
-			var parms = new PreprocessorParams(reader, writer, string.Empty, null, p.fileContext, ContentType.Condition);
+			var parms = new PreprocessorParams(reader, writer, string.Empty, null, p.fileContext, ContentType.Condition, null);
 			parms.allowDirectives = false;
 			parms.args = p.args;
 			Preprocess(parms);

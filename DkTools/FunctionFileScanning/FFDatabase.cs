@@ -22,7 +22,7 @@ namespace DkTools.FunctionFileScanning
 @"create table file_
 (
 	app_id		integer			not null,
-	file_name	varchar(260)	not null,
+	file_name	varchar(260)	not null collate nocase,
 	modified	datetime		not null,
 	visible		tinyint			not null
 );",
@@ -47,7 +47,7 @@ namespace DkTools.FunctionFileScanning
 (
 	app_id				integer			not null,
 	file_id				integer			not null,
-	include_file_name	varchar(260)	not null,
+	include_file_name	varchar(260)	not null collate nocase,
 	include				tinyint			not null,
 	localized_file		tinyint			not null
 )",
@@ -127,6 +127,7 @@ namespace DkTools.FunctionFileScanning
 		{
 			if (_conn == null)
 			{
+				Log.Debug("Connecting to database.");
 				_conn = new SQLiteConnection(ConnectionString);
 				_conn.Open();
 			}
@@ -242,5 +243,25 @@ namespace DkTools.FunctionFileScanning
 		{
 			return _conn.BeginTransaction();
 		}
+
+#if DEBUG
+		public static void DumpMemoryStats()
+		{
+			IDictionary<string, long> stats = new Dictionary<string, long>();
+			SQLiteConnection.GetMemoryStatistics(ref stats);
+
+			var sb = new StringBuilder();
+			sb.AppendLine("SQLite Memory Statistics:");
+			foreach (var stat in stats)
+			{
+				sb.Append(stat.Key);
+				sb.Append(": ");
+				sb.Append(stat.Value);
+				sb.AppendLine();
+			}
+
+			Log.Debug(sb.ToString());
+		}
+#endif
 	}
 }

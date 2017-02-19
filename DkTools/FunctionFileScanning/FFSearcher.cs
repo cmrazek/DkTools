@@ -53,5 +53,32 @@ namespace DkTools.FunctionFileScanning
 				}
 			}
 		}
+
+		public IEnumerable<string> GetIncludeParentFiles(string includePathName, int limit)
+		{
+			if (_db == null) return new string[0];
+
+			var files = new List<string>();
+
+			using (var cmd = _db.CreateCommand(@"
+				select distinct f.file_name from include_depends i
+				inner join file_ f on f.rowid = i.file_id
+				where i.include_file_name = @file_name
+				and i.app_id = @app_id
+				limit @limit
+				"))
+			{
+				cmd.Parameters.AddWithValue("@app_id", _app.Id);
+				cmd.Parameters.AddWithValue("@file_name", includePathName);
+				cmd.Parameters.AddWithValue("@limit", limit);
+
+				using (var rdr = cmd.ExecuteReader())
+				{
+					while (rdr.Read()) files.Add(rdr.GetString(0));
+				}
+			}
+
+			return files;
+		}
 	}
 }

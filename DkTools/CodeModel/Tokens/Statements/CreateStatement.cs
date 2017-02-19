@@ -830,6 +830,7 @@ namespace DkTools.CodeModel.Tokens.Statements
 									{
 										var exp = ExpressionToken.TryParse(Scope, _createTimeRelationshipEndTokens);
 										if (exp != null) AddToken(exp);
+										else break;
 									}
 								}
 							}

@@ -6,6 +6,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using VsText = Microsoft.VisualStudio.Text;
+using DkTools.CodeModel.Definitions;
 using DkTools.CodeModel.Tokens;
 
 namespace DkTools.CodeModel
@@ -14,6 +15,7 @@ namespace DkTools.CodeModel
 	{
 		private Dictionary<string, IncludeFile> _sameDirIncludeFiles = new Dictionary<string, IncludeFile>();
 		private Dictionary<string, IncludeFile> _globalIncludeFiles = new Dictionary<string, IncludeFile>();
+		private Dictionary<string, Definitions.Definition[]> _includeParentDefs = new Dictionary<string, Definitions.Definition[]>();
 
 		private CodeModel _model;
 		private Guid _guid;
@@ -324,6 +326,12 @@ namespace DkTools.CodeModel
 			prep.Preprocess(reader, prepSource, fileName, new string[0], fileContext);
 			prep.AddDefinitionsToProvider(defProvider);
 
+			if (fileContext == FileContext.Include && !string.IsNullOrEmpty(fileName))
+			{
+				var includeParentDefs = GetIncludeParentDefinitions(fileName);
+				defProvider.AddGlobalFromFile(includeParentDefs);
+			}
+
 #if DEBUG
 			var midTime1 = DateTime.Now;
 #endif
@@ -428,6 +436,79 @@ namespace DkTools.CodeModel
 		private void FileStore_AllModelRebuildRequired(object sender, EventArgs e)
 		{
 			_model = null;
+		}
+
+		public Definition[] GetIncludeParentDefinitions(string includePathName)
+		{
+			Definition[] cachedDefs;
+			if (_includeParentDefs.TryGetValue(includePathName.ToLower(), out cachedDefs)) return cachedDefs;
+
+			Log.Debug("Getting include file parent definitions: {0}", includePathName);
+
+			IEnumerable<string> parentFileNames;
+			using (var searcher = ProbeToolsPackage.Instance.FunctionFileScanner.CurrentApp.CreateSearcher())
+			{
+				parentFileNames = searcher.GetIncludeParentFiles(includePathName, 3);	// TODO: make limit configurable
+			}
+
+			Definition[] commonDefines = null;
+
+			if (!parentFileNames.Any())
+			{
+				Log.Debug("This file is not included by any other file.");
+				commonDefines = new Definition[0];
+				_includeParentDefs[includePathName.ToLower()] = commonDefines;
+				return commonDefines;
+			}
+
+			foreach (var parentPathName in parentFileNames)
+			{
+				Log.Debug("Preprocessing include parent: {0}", parentPathName);
+
+				var merger = new FileMerger();
+				merger.MergeFile(parentPathName, null, false, true);
+				var source = merger.MergedContent;
+
+				var reader = new CodeSource.CodeSourcePreprocessorReader(source);
+				var prepSource = new CodeSource();
+
+				var fileContext = FileContextUtil.GetFileContextFromFileName(parentPathName);
+				var prep = new Preprocessor(this);
+				var prepResult = prep.Preprocess(reader, prepSource, parentPathName, new string[0], fileContext, includePathName);
+				if (!prepResult.IncludeFileReached)
+				{
+					Log.Warning("Include file not reached when preprocessing parent.\r\nInclude File: {0}\r\nParent File: {1}",
+						includePathName, parentPathName);
+					continue;
+				}
+
+				var defs = prep.ActiveDefines;
+				if (!defs.Any())
+				{
+					// No defines will be common
+					Log.Debug("No definitions found in include parent file: {0}", parentPathName);
+					commonDefines = new Definition[0];
+					break;
+				}
+
+				if (commonDefines == null)
+				{
+					commonDefines = defs.ToArray();
+					Log.Debug("{1} definition(s) found in include parent file: {0}", parentPathName, commonDefines.Length);
+				}
+				else
+				{
+					// Create array of defines common to all
+					commonDefines = (from c in commonDefines where defs.Any(d => d.Name == c.Name) select c).ToArray();
+					Log.Debug("{1} definition(s) found in include parent file: {0}", parentPathName, commonDefines.Length);
+					if (commonDefines.Length == 0) break;
+				}
+			}
+
+			if (commonDefines == null) commonDefines = new Definition[0];
+			Log.Debug("Using {0} definition(s) from include parent files.", commonDefines.Length);
+			_includeParentDefs[includePathName.ToLower()] = commonDefines;
+			return commonDefines;
 		}
 
 		public sealed class IncludeFile
