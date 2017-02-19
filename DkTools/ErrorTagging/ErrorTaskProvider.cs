@@ -119,7 +119,8 @@ namespace DkTools.ErrorTagging
 			if (firstSpan == null) yield break;
 			var snapshot = firstSpan.Snapshot;
 
-			foreach (var task in (from t in Tasks.Cast<ErrorTask>() where string.Equals(t.Document, fileName, StringComparison.OrdinalIgnoreCase) select t))
+			var tasks = Tasks.Cast<ErrorTask>().ToArray();
+			foreach (var task in (from t in tasks where string.Equals(t.Document, fileName, StringComparison.OrdinalIgnoreCase) select t))
 			{
 				var line = task.GetSnapshot(snapshot).GetLineFromLineNumber(task.Line);
 				foreach (var span in spans)
