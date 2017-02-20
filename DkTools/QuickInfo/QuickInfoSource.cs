@@ -34,6 +34,8 @@ namespace DkTools.QuickInfo
 		{
 			applicableToSpan = null;
 
+			quickInfoContent.Clear();
+
 			var subjectTriggerPoint = session.GetTriggerPoint(_subjectBuffer.CurrentSnapshot);
 			if (!subjectTriggerPoint.HasValue) return;
 			var snapshotPoint = subjectTriggerPoint.Value;
@@ -71,7 +73,7 @@ namespace DkTools.QuickInfo
 
 					foreach (var task in ErrorTagging.ErrorTaskProvider.Instance.GetErrorMessagesAtPoint(model.FileName, snapshotPoint))
 					{
-						quickInfoContent.Add(task.Text);
+						quickInfoContent.Add(task.QuickInfoContent);
 						if (applicableToSpan == null)
 						{
 							applicableToSpan = model.Snapshot.CreateTrackingSpan(task.GetSnapshotSpan(snapshotPoint.Snapshot), SpanTrackingMode.EdgeInclusive);

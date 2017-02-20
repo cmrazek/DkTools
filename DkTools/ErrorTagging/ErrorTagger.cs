@@ -15,10 +15,12 @@ namespace DkTools.ErrorTagging
 		private ITextView _view;
 		private FileStore _store;
 		private CodeModel.CodeModel _model;
-#if REPORT_ERRORS
-		private BackgroundDeferrer _analysisDeferrer;
-#endif
 		private BackgroundDeferrer _backgroundFecDeferrer;
+
+		// TODO: remove
+		//#if REPORT_ERRORS
+		//		private BackgroundDeferrer _analysisDeferrer;
+		//#endif
 
 		public const string CodeError = "Code Error";
 		public const string CodeWarning = "Code Warning";
@@ -64,18 +66,19 @@ namespace DkTools.ErrorTagging
 #endif
 		}
 
-#if REPORT_ERRORS
-		private void _analysisDeferrer_Idle(object sender, BackgroundDeferrer.IdleEventArgs e)
-		{
-			_model = _store.GetMostRecentModel(_view.TextSnapshot, "ErrorTagger._analysisDeferrer_Idle()");
+		// TODO: remove
+//#if REPORT_ERRORS
+//		private void _analysisDeferrer_Idle(object sender, BackgroundDeferrer.IdleEventArgs e)
+//		{
+//			_model = _store.GetMostRecentModel(_view.TextSnapshot, "ErrorTagger._analysisDeferrer_Idle()");
 
-			if (_model.PerformCodeAnalysis())
-			{
-				var ev = TagsChanged;
-				if (ev != null) ev(this, new SnapshotSpanEventArgs(new SnapshotSpan(_view.TextSnapshot, 0, _view.TextSnapshot.Length)));
-			}
-		}
-#endif
+//			if (_model.PerformCodeAnalysis())
+//			{
+//				var ev = TagsChanged;
+//				if (ev != null) ev(this, new SnapshotSpanEventArgs(new SnapshotSpan(_view.TextSnapshot, 0, _view.TextSnapshot.Length)));
+//			}
+//		}
+//#endif
 
 		private void EditorOptions_EditorRefreshRequired(object sender, EventArgs e)
 		{
@@ -159,10 +162,11 @@ namespace DkTools.ErrorTagging
 			if (ev != null) ev(this, new SnapshotSpanEventArgs(new SnapshotSpan(_view.TextSnapshot, 0, _view.TextSnapshot.Length)));
 		}
 
-		public BackgroundDeferrer AnalysisDeferrer
-		{
-			get { return _analysisDeferrer; }
-		}
+		// TODO: remove
+		//public BackgroundDeferrer AnalysisDeferrer
+		//{
+		//	get { return _analysisDeferrer; }
+		//}
 #endif
 
 		private void _backgroundFecDeferrer_Idle(object sender, BackgroundDeferrer.IdleEventArgs e)

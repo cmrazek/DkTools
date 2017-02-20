@@ -766,14 +766,9 @@ namespace DkTools
 				if (codeSource == null) return;
 
 				var store = new CodeModel.FileStore();
-				var reader = new CodeModel.CodeSource.CodeSourcePreprocessorReader(codeSource);
-				var dest = new CodeModel.CodeSource();
-				var fileContext = CodeModel.FileContextUtil.GetFileContextFromFileName(fileName);
-
-				var prep = new CodeModel.Preprocessor(store);
-				prep.Preprocess(reader, dest, fileName, null, fileContext);
-
-				Shell.OpenTempContent(dest.Text, Path.GetFileName(fileName), ".preprocessor.txt");
+				var model = store.CreatePreprocessedModel(codeSource, fileName, false, "Commands.Debug.ShowPreprocessor()", null);
+				
+				Shell.OpenTempContent(model.Source.Text, Path.GetFileName(fileName), ".preprocessor.txt");
 			}
 
 			public static void ShowPreprocessorDump()
@@ -816,6 +811,23 @@ namespace DkTools
 				var tracker = Classifier.TextBufferStateTracker.GetTrackerForTextBuffer(view.TextBuffer);
 				var state = tracker.GetStateForPosition(view.Caret.Position.BufferPosition, view.TextSnapshot);
 				Log.Debug("State at caret: 0x{0:X8}", state);
+			}
+
+			public static void RunCodeAnalysis()
+			{
+				var view = Shell.ActiveView;
+				if (view == null) return;
+
+				var fileStore = CodeModel.FileStore.GetOrCreateForTextBuffer(view.TextBuffer);
+				if (fileStore == null) return;
+				var model = fileStore.CreatePreprocessedModel(view.TextSnapshot, "Code Analysis");
+
+				var pane = Shell.CreateOutputPane(GuidList.guidCodeAnalysisPane, "DK Code Analysis");
+				pane.Clear();
+				pane.Show();
+
+				var ca = new CodeAnalysis.CodeAnalyzer(pane, model, view);
+				ca.Run();
 			}
 		}
 #endif

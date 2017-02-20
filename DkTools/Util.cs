@@ -282,5 +282,32 @@ namespace DkTools
 			}
 			return sb.ToString();
 		}
+
+		public static void CalcLineAndPosFromOffset(string source, int offset, out int lineNumOut, out int linePosOut)
+		{
+			var length = source.Length;
+			if (offset < 0 || offset > length) throw new ArgumentOutOfRangeException("offset");
+
+			int pos = 0;
+			int lineNum = 0;
+			int linePos = 0;
+
+			while (pos < length)
+			{
+				if (source[pos] == '\n')
+				{
+					lineNum++;
+					linePos = 0;
+				}
+				else
+				{
+					linePos++;
+				}
+				pos++;
+			}
+
+			lineNumOut = lineNum;
+			linePosOut = linePos;
+		}
 	}
 }

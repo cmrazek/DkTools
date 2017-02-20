@@ -25,6 +25,7 @@ namespace DkTools.CodeModel
 		private FileContext _fileContext;
 		private bool _visible;
 		private Preprocessor.IncludeDependency[] _includeDependencies;
+		private Preprocessor _prep;
 #if DEBUG
 		private List<KeyValuePair<int, Definition>> _localDefs = new List<KeyValuePair<int, Definition>>();
 #endif
@@ -818,6 +819,12 @@ namespace DkTools.CodeModel
 		public IEnumerable<Preprocessor.IncludeDependency> IncludeDependencies
 		{
 			get { return _includeDependencies; }
+		}
+
+		public Preprocessor Preprocessor
+		{
+			get { return _prep; }
+			set { _prep = value; }
 		}
 
 #if REPORT_ERRORS

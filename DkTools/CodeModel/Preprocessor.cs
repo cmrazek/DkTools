@@ -12,7 +12,7 @@ namespace DkTools.CodeModel
 	internal class Preprocessor
 	{
 		private FileStore _store;
-		private Dictionary<string, Define> _defines;
+		private Dictionary<string, PreprocessorDefine> _defines;
 		private List<IncludeDependency> _includeDependencies = new List<IncludeDependency>();
 		private List<Reference> _refs = new List<Reference>();
 
@@ -33,14 +33,16 @@ namespace DkTools.CodeModel
 		/// <returns>True if the preprocessor changed a part of the document and the document should be re-run through this function again.
 		/// False if the document has finished preprocessing.</returns>
 		public PreprocessorResult Preprocess(IPreprocessorReader reader, IPreprocessorWriter writer, string fileName,
-			IEnumerable<string> parentFiles, FileContext fileContext, string stopAtIncludeFile = null)
+			IEnumerable<string> parentFiles, FileContext fileContext, string stopAtIncludeFile = null,
+			IEnumerable<PreprocessorDefine> stdlibDefines = null)
 		{
 			if (reader == null) throw new ArgumentNullException("reader");
 
 			return Preprocess(new PreprocessorParams(reader, writer, fileName, parentFiles, fileContext,
 				ContentType.File, stopAtIncludeFile)
 			{
-				isMainSource = true
+				isMainSource = true,
+				stdlibDefines = stdlibDefines
 			});
 		}
 
@@ -50,8 +52,13 @@ namespace DkTools.CodeModel
 
 			if (_defines == null)
 			{
-				_defines = new Dictionary<string, Define>();
-				_defines["_WINDOWS"] = new Define("_WINDOWS", string.Empty, null, FilePosition.Empty);
+				_defines = new Dictionary<string, PreprocessorDefine>();
+				_defines["_WINDOWS"] = new PreprocessorDefine("_WINDOWS", string.Empty, null, FilePosition.Empty);
+			}
+
+			if (p.stdlibDefines != null)
+			{
+				foreach (var def in p.stdlibDefines) _defines[def.Name] = def;
 			}
 
 			string str;
@@ -319,7 +326,7 @@ namespace DkTools.CodeModel
 
 			if (!p.suppress)
 			{
-				var define = new Define(name, sb.ToString().Trim(), paramNames, linkFilePos);
+				var define = new PreprocessorDefine(name, sb.ToString().Trim(), paramNames, linkFilePos);
 				_defines[name] = define;
 				if (nameFilePos.IsInFile) _refs.Add(new Reference(define.Definition, nameFilePos));
 			}
@@ -335,7 +342,7 @@ namespace DkTools.CodeModel
 
 			if (!p.suppress)
 			{
-				Define define;
+				PreprocessorDefine define;
 				if (_defines.TryGetValue(name, out define))
 				{
 					define.Disabled = true;
@@ -359,7 +366,7 @@ namespace DkTools.CodeModel
 				return;
 			}
 
-			Define define = null;
+			PreprocessorDefine define = null;
 			if (p.args != null)
 			{
 				foreach (var arg in p.args)
@@ -457,14 +464,14 @@ namespace DkTools.CodeModel
 
 			var oldArgs = p.args;
 			
-			List<Define> args = null;
+			List<PreprocessorDefine> args = null;
 			if (paramList != null)
 			{
 				if (define.ParamNames == null || define.ParamNames.Count != paramList.Count) return;
-				if (args == null) args = new List<Define>();
+				if (args == null) args = new List<PreprocessorDefine>();
 				for (int i = 0, ii = paramList.Count; i < ii; i++)
 				{
-					args.Add(new Define(define.ParamNames[i], paramList[i], null, FilePosition.Empty));
+					args.Add(new PreprocessorDefine(define.ParamNames[i], paramList[i], null, FilePosition.Empty));
 				}
 			}
 
@@ -514,7 +521,7 @@ namespace DkTools.CodeModel
 			if (rdr.Peek() == ')') rdr.Ignore(1);
 		}
 
-		private string ResolveMacros(string source, IEnumerable<string> restrictedDefines, IEnumerable<Define> args, FileContext serverContext, ContentType contentType)
+		private string ResolveMacros(string source, IEnumerable<string> restrictedDefines, IEnumerable<PreprocessorDefine> args, FileContext serverContext, ContentType contentType)
 		{
 			var reader = new StringPreprocessorReader(source);
 			var writer = new StringPreprocessorWriter();
@@ -629,7 +636,7 @@ namespace DkTools.CodeModel
 			var nameFilePos = rdr.FilePosition;
 			if (nameFilePos.IsInFile)
 			{
-				Define define;
+				PreprocessorDefine define;
 				if (_defines.TryGetValue(name, out define))
 				{
 					_refs.Add(new Reference(define.Definition, nameFilePos));
@@ -859,7 +866,7 @@ namespace DkTools.CodeModel
 		{
 			if (p.args != null && p.args.Any(x => x.Name == name)) return true;
 
-			Define define;
+			PreprocessorDefine define;
 			if (_defines.TryGetValue(name, out define) && !define.Disabled) return true;
 
 			return false;
@@ -873,7 +880,7 @@ namespace DkTools.CodeModel
 			}
 		}
 
-		public IEnumerable<Definition> ActiveDefines
+		public IEnumerable<Definition> ActiveDefineDefinitions
 		{
 			get
 			{
@@ -882,6 +889,11 @@ namespace DkTools.CodeModel
 					if (!def.Disabled) yield return def.Definition;
 				}
 			}
+		}
+
+		public IEnumerable<PreprocessorDefine> Defines
+		{
+			get { return _defines.Values; }
 		}
 
 		private void ProcessReplace(PreprocessorParams p, string directiveName)
@@ -916,103 +928,6 @@ namespace DkTools.CodeModel
 		public IEnumerable<Reference> References
 		{
 			get { return _refs; }
-		}
-
-		private class Define
-		{
-			private string _name;
-			private string _content;
-			private List<string> _paramNames;
-			private FilePosition _filePos;
-			private bool _disabled;
-			private DataType _dataType;
-			private Definition _def;
-
-			public Define(string name, string content, List<string> paramNames, FilePosition filePos)
-			{
-				_name = name;
-				_content = content;
-				_paramNames = paramNames;
-				_filePos = filePos;
-
-				if (_paramNames == null)
-				{
-					var parser = new CodeParser(_content);
-					var dataType = DataType.TryParse(new DataType.ParseArgs
-					{
-						Code = parser,
-						TypeName = _name
-					});
-					if (dataType != null)
-					{
-						// If the data type does not consume the entire string, then this is not a data type definition.
-						if (parser.Read()) dataType = null;
-					}
-
-					_dataType = dataType;
-				}
-			}
-
-			public string Name
-			{
-				get { return _name; }
-			}
-
-			public string Content
-			{
-				get { return _content; }
-			}
-
-			public List<string> ParamNames
-			{
-				get { return _paramNames; }
-			}
-
-			public bool Disabled
-			{
-				get { return _disabled; }
-				set { _disabled = value; }
-			}
-
-			public Definition Definition
-			{
-				get
-				{
-					if (_def == null)
-					{
-						if (_paramNames == null)
-						{
-							if (_dataType != null)
-							{
-								_def = new Definitions.DataTypeDefinition(_name, _filePos, _dataType);
-							}
-							else
-							{
-								_def = new Definitions.ConstantDefinition(_name, _filePos, CodeParser.NormalizeText(_content));
-							}
-						}
-						else
-						{
-							var args = new List<ArgumentDescriptor>();
-							foreach (var paramName in _paramNames)
-							{
-								args.Add(new ArgumentDescriptor(paramName, DataType.Unknown));
-							}
-
-							var sig = new FunctionSignature(false, FunctionPrivacy.Public, DataType.Unknown, null, _name, null, args);
-
-							_def = new Definitions.MacroDefinition(_name, _filePos, sig, CodeParser.NormalizeText(_content));
-						}
-					}
-
-					return _def;
-				}
-			}
-
-			public bool IsDataType
-			{
-				get { return _dataType != null; }
-			}
 		}
 
 		public enum ConditionResult
@@ -1054,7 +969,7 @@ namespace DkTools.CodeModel
 			public bool allowDirectives = true;
 			public Stack<ConditionScope> ifStack = new Stack<ConditionScope>();
 			public bool suppress;
-			public IEnumerable<Define> args;
+			public IEnumerable<PreprocessorDefine> args;
 			public IEnumerable<string> restrictedDefines;
 			public ContentType contentType;
 			public bool replaceInEffect;
@@ -1063,6 +978,7 @@ namespace DkTools.CodeModel
 			public bool isMainSource;
 			public string stopAtIncludeFile;
 			public PreprocessorResult result = new PreprocessorResult();
+			public IEnumerable<PreprocessorDefine> stdlibDefines;
 
 			public PreprocessorParams(IPreprocessorReader reader, IPreprocessorWriter writer, string fileName,
 				IEnumerable<string> parentFiles, FileContext serverContext, ContentType contentType, string stopAtIncludeFile)

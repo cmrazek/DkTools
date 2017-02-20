@@ -16,8 +16,10 @@ namespace DkTools
 		//public const string strSnippets = "d0f51c68-15be-49ad-8716-cdbeb0b6dfcc";
 		public const string strSnippets = "38ad600c-15b8-4899-be00-9361f35cd8d9";
 		public const string strLanguageService = "38ad600c-15b8-4899-be00-9361f35cd8d9";
+		public const string strCodeAnalysisPane = "6a2b57ce-131c-4c8c-b70a-301d54c403c2";
 
 		public static readonly Guid guidProbeToolsCmdSet = new Guid(strProbeToolsCmdSet);
 		public static readonly Guid guidSnippets = new Guid(strSnippets);
+		public static readonly Guid guidCodeAnalysisPane = new Guid(strCodeAnalysisPane);
 	};
 }

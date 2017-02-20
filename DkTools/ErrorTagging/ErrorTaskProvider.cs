@@ -124,11 +124,11 @@ namespace DkTools.ErrorTagging
 			}
 		}
 
-		public IEnumerable<ITagSpan<ErrorTag>> GetErrorTagsForFile(string fileName, NormalizedSnapshotSpanCollection spans)
+		public IEnumerable<ITagSpan<ErrorTag>> GetErrorTagsForFile(string fileName, NormalizedSnapshotSpanCollection docSpans)
 		{
 			var tags = new List<TagSpan<ErrorTag>>();
 
-			var firstSpan = spans.FirstOrDefault();
+			var firstSpan = docSpans.FirstOrDefault();
 			if (firstSpan == null) return tags;
 			var snapshot = firstSpan.Snapshot;
 
@@ -140,26 +140,34 @@ namespace DkTools.ErrorTagging
 
 			foreach (var task in (from t in tasks where string.Equals(t.Document, fileName, StringComparison.OrdinalIgnoreCase) select t))
 			{
-				var line = task.GetSnapshot(snapshot).GetLineFromLineNumber(task.Line);
-				foreach (var span in spans)
+				var span = task.Span;
+				if (span.HasValue)
 				{
-					var spanLineStart = line.Start.TranslateTo(span.Snapshot, PointTrackingMode.Negative);
-					if (span.Contains(spanLineStart.Position))
+					tags.Add(new TagSpan<ErrorTag>(span.Value, new ErrorTag(task.Type == ErrorType.Warning ? ErrorTagger.CodeWarning : ErrorTagger.CodeError, task.Text)));
+				}
+				else
+				{
+					var line = task.GetSnapshot(snapshot).GetLineFromLineNumber(task.Line);
+					foreach (var docSpan in docSpans)
 					{
-						var errorCode = task.Type == ErrorType.Warning ? ErrorCode.Fec_Warning : ErrorCode.Fec_Error;
-
-						var spanLine = span.Snapshot.GetLineFromPosition(spanLineStart);
-						var startPos = spanLine.Start.Position;
-						var endPos = spanLine.End.Position;
-						if (startPos < endPos)
+						var spanLineStart = line.Start.TranslateTo(docSpan.Snapshot, PointTrackingMode.Negative);
+						if (docSpan.Contains(spanLineStart.Position))
 						{
-							var newStartPos = spanLine.Start.Position + spanLine.GetText().GetIndentOffset();
-							if (newStartPos < endPos) startPos = newStartPos;
-						}
+							var errorCode = task.Type == ErrorType.Warning ? ErrorCode.Fec_Warning : ErrorCode.Fec_Error;
 
-						tags.Add(new TagSpan<ErrorTag>(new SnapshotSpan(span.Snapshot, startPos, endPos - startPos),
-							new ErrorTag(task.Type == ErrorType.Warning ? ErrorTagger.CodeWarning : ErrorTagger.CodeError, task.Text)));
-						break;
+							var spanLine = docSpan.Snapshot.GetLineFromPosition(spanLineStart);
+							var startPos = spanLine.Start.Position;
+							var endPos = spanLine.End.Position;
+							if (startPos < endPos)
+							{
+								var newStartPos = spanLine.Start.Position + spanLine.GetText().GetIndentOffset();
+								if (newStartPos < endPos) startPos = newStartPos;
+							}
+
+							tags.Add(new TagSpan<ErrorTag>(new SnapshotSpan(docSpan.Snapshot, startPos, endPos - startPos),
+								new ErrorTag(task.Type == ErrorType.Warning ? ErrorTagger.CodeWarning : ErrorTagger.CodeError, task.Text)));
+							break;
+						}
 					}
 				}
 			}
@@ -171,11 +179,22 @@ namespace DkTools.ErrorTagging
 		{
 			foreach (var task in (from t in Tasks.Cast<ErrorTask>() where string.Equals(t.Document, fileName, StringComparison.OrdinalIgnoreCase) select t))
 			{
-				var taskLine = task.GetSnapshot(pt.Snapshot).GetLineFromLineNumber(task.Line);
-				var taskSpan = new SnapshotSpan(taskLine.Start, taskLine.End);
-				if (taskSpan.Contains(pt.TranslateTo(taskSpan.Snapshot, PointTrackingMode.Positive)))
+				var span = task.Span;
+				if (span.HasValue)
 				{
-					yield return task;
+					if (span.Value.Contains(pt.TranslateTo(span.Value.Snapshot, PointTrackingMode.Positive)))
+					{
+						yield return task;
+					}
+				}
+				else
+				{
+					var taskLine = task.GetSnapshot(pt.Snapshot).GetLineFromLineNumber(task.Line);
+					var taskSpan = new SnapshotSpan(taskLine.Start, taskLine.End);
+					if (taskSpan.Contains(pt.TranslateTo(taskSpan.Snapshot, PointTrackingMode.Positive)))
+					{
+						yield return task;
+					}
 				}
 			}
 		}

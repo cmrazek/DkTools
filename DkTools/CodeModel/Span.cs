@@ -96,9 +96,14 @@ namespace DkTools.CodeModel
 			}
 		}
 
-		public Microsoft.VisualStudio.Text.Span ToVsTextSpan()
+		public VsText.Span ToVsTextSpan()
 		{
-			return new Microsoft.VisualStudio.Text.Span(_start, _end - _start);
+			return new VsText.Span(_start, _end - _start);
+		}
+
+		public Microsoft.VisualStudio.Text.SnapshotSpan ToVsTextSnapshotSpan(VsText.ITextSnapshot snapshot)
+		{
+			return new VsText.SnapshotSpan(snapshot, new VsText.Span(_start, _end - _start));
 		}
 
 		public override bool Equals(object obj)
@@ -154,6 +159,18 @@ namespace DkTools.CodeModel
 		public static bool operator != (Span a, Span b)
 		{
 			return a._start != b._start || a._end != b._end;
+		}
+
+		public Span Offset(int offset)
+		{
+			return new Span(_start + offset, _end + offset);
+		}
+
+		public Span Envelope(Span span)
+		{
+			return new Span(
+				_start < span._start ? _start : span._start,
+				_end > span._end ? _end : span._end);
 		}
 	}
 }

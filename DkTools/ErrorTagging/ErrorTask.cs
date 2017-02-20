@@ -15,8 +15,10 @@ namespace DkTools.ErrorTagging
 		private string _sourceArg;
 		private ErrorType _type;
 		private VsText.ITextSnapshot _snapshot;
+		private VsText.SnapshotSpan? _span;
 
-		public ErrorTask(string fileName, int lineNum, string message, ErrorType type, ErrorTaskSource source, string sourceFileName, VsText.ITextSnapshot snapshot)
+		public ErrorTask(string fileName, int lineNum, string message, ErrorType type, ErrorTaskSource source,
+			string sourceFileName, VsText.ITextSnapshot snapshot, VsText.SnapshotSpan? span = null)
 		{
 			this.Document = fileName;
 			this.Line = lineNum;
@@ -38,6 +40,7 @@ namespace DkTools.ErrorTagging
 			_sourceArg = sourceFileName;
 			_type = type;
 			_snapshot = snapshot;
+			_span = span;
 
 			this.Navigate += ErrorTask_Navigate;
 		}
@@ -77,6 +80,8 @@ namespace DkTools.ErrorTagging
 
 		public VsText.SnapshotSpan GetSnapshotSpan(VsText.ITextSnapshot currentSnapshot)
 		{
+			if (_span.HasValue) return _span.Value;
+
 			if (_snapshot == null || _snapshot.TextBuffer != currentSnapshot.TextBuffer) _snapshot = currentSnapshot;
 
 			var line = _snapshot.GetLineFromLineNumber(Line);
@@ -88,13 +93,33 @@ namespace DkTools.ErrorTagging
 				if (newStartPos < endPos) startPos = newStartPos;
 			}
 
-			return new VsText.SnapshotSpan(_snapshot, new VsText.Span(startPos, endPos - startPos));
+			_span = new VsText.SnapshotSpan(_snapshot, new VsText.Span(startPos, endPos - startPos));
+			return _span.Value;
+		}
+
+		public VsText.SnapshotSpan? Span
+		{
+			get { return _span; }
+		}
+
+		public object QuickInfoContent
+		{
+			get
+			{
+				return new System.Windows.Controls.TextBlock
+				{
+					Text = this.Text,
+					Foreground = _type == ErrorType.Warning ? System.Windows.Media.Brushes.LimeGreen : System.Windows.Media.Brushes.Red,
+					FontWeight = System.Windows.FontWeights.Bold
+				};
+			}
 		}
 	}
 
 	enum ErrorTaskSource
 	{
 		Compile,
-		BackgroundFec
+		BackgroundFec,
+		CodeAnalysis
 	}
 }

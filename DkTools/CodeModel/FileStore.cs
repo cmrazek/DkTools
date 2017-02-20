@@ -21,6 +21,7 @@ namespace DkTools.CodeModel
 		private Guid _guid;
 
 		private static CodeModel _stdLibModel;
+		private static PreprocessorDefine[] _stdLibDefines;
 
 		public event EventHandler<ModelUpdatedEventArgs> ModelUpdated;
 		public static event EventHandler AllModelRebuildRequired;
@@ -323,7 +324,7 @@ namespace DkTools.CodeModel
 			var fileContext = FileContextUtil.GetFileContextFromFileName(fileName);
 			var prep = new Preprocessor(this);
 			if (includeDependencies != null) prep.AddIncludeDependencies(includeDependencies);
-			prep.Preprocess(reader, prepSource, fileName, new string[0], fileContext);
+			prep.Preprocess(reader, prepSource, fileName, new string[0], fileContext, stdlibDefines: _stdLibDefines);
 			prep.AddDefinitionsToProvider(defProvider);
 
 			if (fileContext == FileContext.Include && !string.IsNullOrEmpty(fileName))
@@ -336,7 +337,10 @@ namespace DkTools.CodeModel
 			var midTime1 = DateTime.Now;
 #endif
 
-			var prepModel = new PreprocessorModel(prepSource, defProvider, fileName, visible, prep.IncludeDependencies);
+			var prepModel = new PreprocessorModel(prepSource, defProvider, fileName, visible, prep.IncludeDependencies)
+			{
+				Preprocessor = prep
+			};
 
 #if DEBUG
 			var midTime2 = DateTime.Now;
@@ -416,6 +420,8 @@ namespace DkTools.CodeModel
 
 				_stdLibModel = tempStore.CreatePreprocessedModel(blankSource, "stdlib.i", false, "stdlib.i model (blank)", null);
 			}
+
+			_stdLibDefines = _stdLibModel.PreprocessorModel.Preprocessor.Defines.ToArray();
 		}
 
 		public static CodeModel StdLibModel
@@ -482,7 +488,7 @@ namespace DkTools.CodeModel
 					continue;
 				}
 
-				var defs = prep.ActiveDefines;
+				var defs = prep.ActiveDefineDefinitions;
 				if (!defs.Any())
 				{
 					// No defines will be common
