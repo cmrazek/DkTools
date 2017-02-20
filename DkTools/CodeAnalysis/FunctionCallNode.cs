@@ -12,17 +12,17 @@ namespace DkTools.CodeAnalysis
 	{
 		private string _name;
 		private Span _funcNameSpan;
-		private List<Node> _args = new List<Node>();
+		private List<GroupNode> _args = new List<GroupNode>();
 		private Definition _def;
 
-		public FunctionCallNode(Span funcNameSpan, string funcName)
-			: base(funcNameSpan)
+		public FunctionCallNode(Statement stmt, Span funcNameSpan, string funcName)
+			: base(stmt, funcNameSpan)
 		{
 			_name = funcName;
 			_funcNameSpan = funcNameSpan;
 		}
 
-		public void AddArgument(Node node)
+		public void AddArgument(GroupNode node)
 		{
 			_args.Add(node);
 		}
@@ -36,6 +36,44 @@ namespace DkTools.CodeAnalysis
 		{
 			get { return _def; }
 			set { _def = value; }
+		}
+
+		public override Value Value
+		{
+			get
+			{
+				Execute();
+				return new Value(_def.DataType, true);
+			}
+			set
+			{
+				base.Value = value;
+			}
+		}
+
+		public override bool CanAssignValue
+		{
+			get
+			{
+				return false;
+			}
+		}
+
+		public override int Precedence
+		{
+			get
+			{
+				return 0;
+			}
+		}
+
+		public override void Execute()
+		{
+			foreach (var arg in _args)
+			{
+				arg.Execute();
+				var value = arg.Value;	// To simulate a 'read' of the expression
+			}
 		}
 	}
 }

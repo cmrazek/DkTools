@@ -20,6 +20,8 @@ namespace DkTools.CodeAnalysis
 		private CodeParser _code;
 		private int _funcOffset;
 		private List<Statement> _stmts;
+		private Dictionary<string, Variable> _vars;
+		private Statement _stmt;
 
 		public CodeAnalyzer(OutputPane pane, CM.CodeModel model, Microsoft.VisualStudio.Text.Editor.ITextView view)
 		{
@@ -66,11 +68,29 @@ namespace DkTools.CodeAnalysis
 				_stmts.Add(stmt);
 			}
 
+			_vars = new Dictionary<string, Variable>();
+			foreach (var arg in func.Arguments)
+			{
+				if (!string.IsNullOrEmpty(arg.Name))
+				{
+					_vars[arg.Name] = new Variable(arg.Name, arg.DataType, new Value(arg.DataType, true), true);
+				}
+			}
+
+			foreach (var v in func.Variables)
+			{
+				_vars[v.Name] = new Variable(v.Name, v.DataType, new Value(v.DataType, false), false);
+			}
+
 			foreach (var stmt in _stmts)
 			{
 				if (stmt.IsEmpty && !stmt.EndSpan.IsEmpty)
 				{
-					//ReportError("Empty statement not allowed.", stmt.EndSpan, ErrorType.Error);
+					ReportError(stmt.EndSpan, CAError.CA0005);	// Empty statement not allowed.
+				}
+				else
+				{
+					stmt.Execute();
 				}
 			}
 		}
@@ -80,25 +100,25 @@ namespace DkTools.CodeAnalysis
 			_code.SkipWhiteSpace();
 			if (_code.EndOfFile) return null;
 
-			var stmt = new Statement();
+			_stmt = new Statement(this);
 
 			while (!_code.EndOfFile)
 			{
 				if (_code.ReadExact(';'))
 				{
-					stmt.EndSpan = _code.Span;
-					return stmt;
+					_stmt.EndSpan = _code.Span;
+					return _stmt;
 				}
 
 				var node = ReadExpression(";");
 				if (node == null) break;
-				stmt.AddNode(node);
+				_stmt.AddNode(node);
 			}
 
-			return stmt;
+			return _stmt;
 		}
 
-		private void ReportError(CM.Span span, ErrorType type, CAError errorCode, params object[] args)
+		public void ReportError(CM.Span span, ErrorType type, CAError errorCode, params object[] args)
 		{
 			var filePos = _prepModel.Source.GetFilePosition(span.Start + _funcOffset);
 			var primaryFileSpan = _prepModel.Source.GetPrimaryFileSpan(span.Offset(_funcOffset));
@@ -119,12 +139,12 @@ namespace DkTools.CodeAnalysis
 			}
 		}
 
-		private void ReportError(CM.Span span, CAError errorCode, params object[] args)
+		public void ReportError(CM.Span span, CAError errorCode, params object[] args)
 		{
 			ReportError(span, ErrorType.Error, errorCode, args);
 		}
 
-		private void ReportWarning(CM.Span span, CAError errorCode, params object[] args)
+		public void ReportWarning(CM.Span span, CAError errorCode, params object[] args)
 		{
 			ReportError(span, ErrorType.Warning, errorCode, args);
 		}
@@ -151,25 +171,34 @@ namespace DkTools.CodeAnalysis
 				}
 
 				if (!_code.Read()) break;
-				if (exp == null) exp = new ExpressionNode();
+				if (exp == null) exp = new ExpressionNode(_stmt);
 
 				switch (_code.Type)
 				{
 					case CodeType.Number:
-						exp.AddNode(new NumberNode(_code.Span, _code.Text));
+						exp.AddNode(new NumberNode(_stmt, _code.Span, _code.Text));
 						break;
 					case CodeType.StringLiteral:
-						exp.AddNode(new StringLiteralNode(_code.Span, _code.Text));
+						exp.AddNode(new StringLiteralNode(_stmt, _code.Span, _code.Text));
 						break;
 					case CodeType.Word:
 						exp.AddNode(ReadWord());
 						break;
 					case CodeType.Operator:
-						exp.AddNode(new OperatorNode(_code.Span, _code.Text));
+						switch (_code.Text)
+						{
+							case "(":
+							case "[":
+								exp.AddNode(ReadNestable(_code.Span, _code.Text, stopStrings));
+								break;
+							default:
+								exp.AddNode(new OperatorNode(_stmt, _code.Span, _code.Text));
+								break;
+						}
 						break;
 					default:
 						ReportError(_code.Span, ErrorType.Error, CAError.CA0001);	// Unknown '{0}'.
-						exp.AddNode(new UnknownNode(_code.Span, _code.Text));
+						exp.AddNode(new UnknownNode(_stmt, _code.Span, _code.Text));
 						break;
 				}
 			}
@@ -212,7 +241,7 @@ namespace DkTools.CodeAnalysis
 						}
 
 						ReportError(combinedSpan, CAError.CA0003, combinedWord);	// Function '{0}' not found.
-						return new UnknownNode(combinedSpan, combinedWord);
+						return new UnknownNode(_stmt, combinedSpan, combinedWord);
 					}
 					else // No opening bracket
 					{
@@ -223,18 +252,18 @@ namespace DkTools.CodeAnalysis
 							var childDef = parentDef.ChildDefinitions.FirstOrDefault(c => c.Name == childWord && !c.ArgumentsRequired);
 							if (childDef != null)
 							{
-								return new IdentifierNode(combinedSpan, combinedWord, childDef);
+								return new IdentifierNode(_stmt, combinedSpan, combinedWord, childDef);
 							}
 						}
 
 						ReportError(combinedSpan, CAError.CA0001, combinedWord);	// Unknown '{0}'.
-						return new UnknownNode(combinedSpan, combinedWord);
+						return new UnknownNode(_stmt, combinedSpan, combinedWord);
 					}
 				}
 				else // No word after dot
 				{
 					ReportError(dotSpan, CAError.CA0004);	// Expected identifier to follow '.'
-					return new UnknownNode(span.Envelope(dotSpan), string.Concat(word, "."));
+					return new UnknownNode(_stmt, span.Envelope(dotSpan), string.Concat(word, "."));
 				}
 			}
 			else // No dot after word
@@ -242,25 +271,33 @@ namespace DkTools.CodeAnalysis
 				var def = (from d in _prepModel.DefinitionProvider.GetAny(_code.Position + _funcOffset, word)
 						   where !d.RequiresChild && !d.ArgumentsRequired
 						   select d).FirstOrDefault();
-				if (def != null) return new IdentifierNode(span, word, def);
+				if (def != null) return new IdentifierNode(_stmt, span, word, def);
 
 				ReportError(span, CAError.CA0001, word);	// Unknown '{0}'.
-				return new UnknownNode(span, word);
+				return new UnknownNode(_stmt, span, word);
 			}
 		}
 
 		private FunctionCallNode ReadFunctionCall(CM.Span span, string funcName, Definition funcDef = null)
 		{
-			var funcCallNode = new FunctionCallNode(span, funcName);
+			var funcCallNode = new FunctionCallNode(_stmt, span, funcName);
+
+			GroupNode curArg = null;
 
 			while (!_code.EndOfFile)
 			{
-				if (_code.ReadExact(',')) funcCallNode.AddArgument(new EmptyNode());
+				if (_code.ReadExact(','))
+				{
+					if (curArg != null) funcCallNode.AddArgument(curArg);
+					curArg = null;
+				}
 				else if (_code.ReadExact(')')) break;
 				else if (_code.ReadExact(';')) break;
 
+				if (curArg == null) curArg = new GroupNode(_stmt);
+
 				var node = ReadExpression(",", ")", ";");
-				if (node != null) funcCallNode.AddArgument(node);
+				if (node != null) curArg.AddNode(node);
 			}
 
 			if (funcDef != null)
@@ -292,6 +329,71 @@ namespace DkTools.CodeAnalysis
 			}
 
 			return funcCallNode;
+		}
+
+		private Node ReadNestable(CM.Span openSpan, string text, string[] stopStrings)
+		{
+			GroupNode groupNode;
+			string endText;
+			switch (text)
+			{
+				case "(":
+					groupNode = new BracketsNode(_stmt, openSpan);
+					endText = ")";
+					break;
+				case "[":
+					groupNode = new ArrayNode(_stmt, openSpan);
+					endText = "]";
+					break;
+				default:
+					throw new ArgumentOutOfRangeException("text");
+			}
+
+			if (stopStrings == null) stopStrings = new string[] { endText };
+			else stopStrings = stopStrings.Concat(new string[] { endText }).ToArray();
+
+			while (!_code.EndOfFile)
+			{
+				if (_code.ReadExact(endText))
+				{
+					groupNode.Span = groupNode.Span.Envelope(_code.Span);
+					break;
+				}
+
+				var exp = ReadExpression(stopStrings);
+				if (exp == null) break;
+				groupNode.AddNode(exp);
+			}
+
+			return groupNode;
+		}
+
+		public Value GetVariable(string name)
+		{
+			Variable v;
+			if (_vars.TryGetValue(name, out v))
+			{
+				return v.Value;
+			}
+
+			return Value.Empty;
+		}
+
+		public void SetVariable(string name, Value value)
+		{
+			Variable v;
+			if (_vars.TryGetValue(name, out v))
+			{
+				v.Value = value;
+			}
+		}
+	}
+
+	class CAException : Exception
+	{
+		public CAException(string message)
+			: base(message)
+		{
 		}
 	}
 }

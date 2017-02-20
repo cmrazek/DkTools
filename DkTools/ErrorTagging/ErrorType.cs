@@ -11,4 +11,16 @@ namespace DkTools.ErrorTagging
 		Error,
 		Warning
 	}
+
+	static class ErrorTypeEx
+	{
+		public static ErrorType? Combine(this ErrorType? a, ErrorType? b)
+		{
+			if (!a.HasValue && !b.HasValue) return null;
+			if (a.HasValue && !b.HasValue) return a.Value;
+			if (!a.HasValue && b.HasValue) return b.Value;
+			if (a.Value == ErrorType.Error || b.Value == ErrorType.Error) return ErrorType.Error;
+			return ErrorType.Warning;
+		}
+	}
 }

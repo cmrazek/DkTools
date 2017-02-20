@@ -7,22 +7,25 @@ using DkTools.CodeModel;
 
 namespace DkTools.CodeAnalysis
 {
-	class StringLiteralNode : TextNode
+	class ResultNode : Node
 	{
-		public StringLiteralNode(Statement stmt, Span span, string text)
-			: base(stmt, span, text)
+		private Value _value;
+
+		public ResultNode(Statement stmt, Span span, Value value, ErrorTagging.ErrorType? errorReported)
+			: base(stmt, span)
 		{
+			ErrorReported = errorReported;
 		}
 
 		public override Value Value
 		{
 			get
 			{
-				return new Value(DataType.String, true);
+				return _value;
 			}
 			set
 			{
-				base.Value = value;
+				_value = value;
 			}
 		}
 	}

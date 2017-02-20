@@ -20,6 +20,27 @@ namespace DkTools.CodeAnalysis
 
 		[ErrorMessage("Expected identifier to follow '.'")]
 		CA0004,
+
+		[ErrorMessage("Empty statement not allowed.")]
+		CA0005,
+
+		[ErrorMessage("Unknown operator '{0}'.")]
+		CA0006,
+
+		[ErrorMessage("Operator '{0}' expects value on left.")]
+		CA0007,
+
+		[ErrorMessage("Operator '{0}' expects value on right.")]
+		CA0008,
+
+		[ErrorMessage("Use of uninitialized value.")]
+		CA0009,
+
+		[ErrorMessage("Operator '{0}' expects assignable value on left.")]
+		CA0010,
+
+		[ErrorMessage("Syntax error.")]
+		CA0011,
 	}
 
 	[AttributeUsage(AttributeTargets.Field, AllowMultiple = false)]

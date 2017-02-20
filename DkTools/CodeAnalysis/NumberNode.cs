@@ -9,9 +9,21 @@ namespace DkTools.CodeAnalysis
 {
 	class NumberNode : TextNode
 	{
-		public NumberNode(Span span, string text)
-			: base(span, text)
+		public NumberNode(Statement stmt, Span span, string text)
+			: base(stmt, span, text)
 		{
+		}
+
+		public override Value Value
+		{
+			get
+			{
+				return new Value(DataType.Numeric, true);
+			}
+			set
+			{
+				base.Value = value;
+			}
 		}
 	}
 }

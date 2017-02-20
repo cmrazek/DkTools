@@ -7,11 +7,19 @@ using DkTools.CodeModel;
 
 namespace DkTools.CodeAnalysis
 {
-	class UnknownNode : TextNode
+	class ArrayNode : GroupNode
 	{
-		public UnknownNode(Statement stmt, Span span, string text)
-			: base(stmt, span, text)
+		public ArrayNode(Statement stmt, Span openBracketSpan)
+			: base(stmt, openBracketSpan)
 		{
+		}
+
+		public override int Precedence
+		{
+			get
+			{
+				return 0;
+			}
 		}
 	}
 }

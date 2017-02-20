@@ -9,8 +9,8 @@ namespace DkTools.CodeAnalysis
 {
 	class EmptyNode : Node
 	{
-		public EmptyNode()
-			: base(Span.Empty)
+		public EmptyNode(Statement stmt)
+			: base(stmt, Span.Empty)
 		{
 		}
 	}

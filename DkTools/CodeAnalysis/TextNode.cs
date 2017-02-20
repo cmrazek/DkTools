@@ -11,10 +11,15 @@ namespace DkTools.CodeAnalysis
 	{
 		private string _text;
 
-		public TextNode(Span span, string text)
-			: base(span)
+		public TextNode(Statement stmt, Span span, string text)
+			: base(stmt, span)
 		{
 			_text = text;
+		}
+
+		public string Text
+		{
+			get { return _text; }
 		}
 	}
 }
