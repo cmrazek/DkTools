@@ -3,27 +3,27 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using CM=DkTools.CodeModel;
-using DkTools.ErrorTagging;
+using DkTools.CodeAnalysis.Nodes;
+using DkTools.CodeAnalysis.Statements;
+using DkTools.CodeModel;
 using DkTools.CodeModel.Definitions;
+using DkTools.ErrorTagging;
 
 namespace DkTools.CodeAnalysis
 {
 	class CodeAnalyzer
 	{
 		private OutputPane _pane;
-		private CM.CodeModel _codeModel;
-		private CM.PreprocessorModel _prepModel;
+		private DkTools.CodeModel.CodeModel _codeModel;
+		private PreprocessorModel _prepModel;
 		private string _fullSource;
 		private Microsoft.VisualStudio.Text.Editor.ITextView _view;
 
-		private CodeParser _code;
-		private int _funcOffset;
 		private List<Statement> _stmts;
-		private Dictionary<string, Variable> _vars;
-		private Statement _stmt;
+		private RunScope _scope;
+		private ReadParams _read;
 
-		public CodeAnalyzer(OutputPane pane, CM.CodeModel model, Microsoft.VisualStudio.Text.Editor.ITextView view)
+		public CodeAnalyzer(OutputPane pane, DkTools.CodeModel.CodeModel model, Microsoft.VisualStudio.Text.Editor.ITextView view)
 		{
 			if (pane == null) throw new ArgumentNullException("pane");
 			if (model == null) throw new ArgumentNullException("model");
@@ -56,82 +56,84 @@ namespace DkTools.CodeAnalysis
 			var body = _fullSource.Substring(func.StartPos, func.EndPos - func.StartPos);
 			if (body.EndsWith("}")) body = body.Substring(0, body.Length - 1);	// End pos is just after the closing brace
 
-			_code = new CodeParser(body);
-			_funcOffset = func.StartPos;
+			_read = new ReadParams
+			{
+				CodeAnalyzer = this,
+				Code = new CodeParser(body),
+				FuncOffset = func.StartPos
+			};
+
+			_scope = new RunScope();
 			_stmts = new List<Statement>();
 
 			// Parse the function body
-			while (!_code.EndOfFile)
+			while (!_read.Code.EndOfFile)
 			{
-				var stmt = ReadStatement();
+				var stmt = Statement.Read(_read);
 				if (stmt == null) break;
 				_stmts.Add(stmt);
 			}
 
-			_vars = new Dictionary<string, Variable>();
 			foreach (var arg in func.Arguments)
 			{
 				if (!string.IsNullOrEmpty(arg.Name))
 				{
-					_vars[arg.Name] = new Variable(arg.Name, arg.DataType, new Value(arg.DataType, true), true);
+					_scope.AddVariable(new Variable(arg.Name, arg.DataType, new Value(arg.DataType), true, true));
 				}
 			}
 
 			foreach (var v in func.Variables)
 			{
-				_vars[v.Name] = new Variable(v.Name, v.DataType, new Value(v.DataType, false), false);
+				_scope.AddVariable(new Variable(v.Name, v.DataType, new Value(v.DataType), false, false));
+			}
+
+			foreach (var v in _prepModel.DefinitionProvider.GetGlobalFromFile<VariableDefinition>())
+			{
+				_scope.AddVariable(new Variable(v.Name, v.DataType, new Value(v.DataType), false, true));
 			}
 
 			foreach (var stmt in _stmts)
 			{
-				if (stmt.IsEmpty && !stmt.EndSpan.IsEmpty)
-				{
-					ReportError(stmt.EndSpan, CAError.CA0005);	// Empty statement not allowed.
-				}
-				else
-				{
-					stmt.Execute();
-				}
+				stmt.Execute(_scope);
 			}
-		}
 
-		private Statement ReadStatement()
-		{
-			_code.SkipWhiteSpace();
-			if (_code.EndOfFile) return null;
-
-			_stmt = new Statement(this);
-
-			while (!_code.EndOfFile)
+			if (func.Definition.DataType.ValueType != ValType.Void && !_scope.Returned)
 			{
-				if (_code.ReadExact(';'))
-				{
-					_stmt.EndSpan = _code.Span;
-					return _stmt;
-				}
-
-				var node = ReadExpression(";");
-				if (node == null) break;
-				_stmt.AddNode(node);
+				ReportErrorAbsolute(func.NameSpan, CAError.CA0017);	// Function does not return a value.
 			}
-
-			return _stmt;
 		}
 
-		public void ReportError(CM.Span span, ErrorType type, CAError errorCode, params object[] args)
+		public void ReportError(Span span, CAError errorCode, params object[] args)
 		{
-			var filePos = _prepModel.Source.GetFilePosition(span.Start + _funcOffset);
-			var primaryFileSpan = _prepModel.Source.GetPrimaryFileSpan(span.Offset(_funcOffset));
+			ReportErrorAbsolute(span.Offset(_read.FuncOffset), errorCode, args);
+		}
 
-			int lineNum, linePos;
-			Util.CalcLineAndPosFromOffset(_fullSource, span.Start, out lineNum, out linePos);
+		public void ReportErrorAbsolute(Span span, CAError errorCode, params object[] args)
+		{
+			if (span.IsEmpty) return;
+
+			var filePos = _prepModel.Source.GetFilePosition(span.Start);
+			var primaryFileSpan = _prepModel.Source.GetPrimaryFileSpan(span);
+
+			int lineNum = 0, linePos = 0;
+			foreach (var incl in _prepModel.IncludeDependencies)
+			{
+				if (string.Equals(incl.FileName, filePos.FileName, StringComparison.OrdinalIgnoreCase))
+				{
+					Util.CalcLineAndPosFromOffset(incl.Content, filePos.Position, out lineNum, out linePos);
+					break;
+				}
+			}
 
 			var message = errorCode.GetText(args);
+			var type = errorCode.GetErrorType();
 
-			_pane.WriteLine(string.Format("{0}({1}) {2}", filePos.FileName, lineNum, message));
+			_pane.WriteLine(string.Format("{0}({1},{2}) : {3} : {4}", filePos.FileName, lineNum + 1, linePos + 1, type, message));
 
 			if (!primaryFileSpan.IsEmpty)
 			{
+				Log.Debug("Creating error tag {0} for span {1}", errorCode, primaryFileSpan);	// TODO: remove
+
 				var task = new ErrorTagging.ErrorTask(filePos.FileName, lineNum, message, type,
 					ErrorTaskSource.CodeAnalysis, _codeModel.FileName, _codeModel.Snapshot,
 					primaryFileSpan.ToVsTextSnapshotSpan(_codeModel.Snapshot));
@@ -139,253 +141,9 @@ namespace DkTools.CodeAnalysis
 			}
 		}
 
-		public void ReportError(CM.Span span, CAError errorCode, params object[] args)
+		public PreprocessorModel PreprocessorModel
 		{
-			ReportError(span, ErrorType.Error, errorCode, args);
-		}
-
-		public void ReportWarning(CM.Span span, CAError errorCode, params object[] args)
-		{
-			ReportError(span, ErrorType.Warning, errorCode, args);
-		}
-
-		private Node ReadExpression(params string[] stopStrings)
-		{
-			ExpressionNode exp = null;
-
-			while (!_code.EndOfFile)
-			{
-				if (stopStrings != null)
-				{
-					foreach (var str in stopStrings)
-					{
-						if (str.IsWord())
-						{
-							if (_code.PeekExactWholeWord(str)) return exp;
-						}
-						else
-						{
-							if (_code.PeekExact(str)) return exp;
-						}
-					}
-				}
-
-				if (!_code.Read()) break;
-				if (exp == null) exp = new ExpressionNode(_stmt);
-
-				switch (_code.Type)
-				{
-					case CodeType.Number:
-						exp.AddNode(new NumberNode(_stmt, _code.Span, _code.Text));
-						break;
-					case CodeType.StringLiteral:
-						exp.AddNode(new StringLiteralNode(_stmt, _code.Span, _code.Text));
-						break;
-					case CodeType.Word:
-						exp.AddNode(ReadWord());
-						break;
-					case CodeType.Operator:
-						switch (_code.Text)
-						{
-							case "(":
-							case "[":
-								exp.AddNode(ReadNestable(_code.Span, _code.Text, stopStrings));
-								break;
-							default:
-								exp.AddNode(new OperatorNode(_stmt, _code.Span, _code.Text));
-								break;
-						}
-						break;
-					default:
-						ReportError(_code.Span, ErrorType.Error, CAError.CA0001);	// Unknown '{0}'.
-						exp.AddNode(new UnknownNode(_stmt, _code.Span, _code.Text));
-						break;
-				}
-			}
-
-			return exp;
-		}
-
-		private Node ReadWord()
-		{
-			var word = _code.Text;
-			var span = _code.Span;
-
-			if (_code.ReadExact('('))
-			{
-				// This is a function call
-				return ReadFunctionCall(span, word);
-			}
-
-			if (_code.ReadExact('.'))
-			{
-				var dotSpan = _code.Span;
-
-				if (_code.ReadWord())
-				{
-					var childWord = _code.Text;
-					var combinedWord = string.Concat(word, ".", childWord);
-					var combinedSpan = span.Envelope(_code.Span);
-
-					if (_code.ReadExact('('))
-					{
-						foreach (var parentDef in (from d in _prepModel.DefinitionProvider.GetAny(_code.Position + _funcOffset, word)
-												   where d.AllowsChild
-												   select d))
-						{
-							var childDef = parentDef.ChildDefinitions.FirstOrDefault(c => c.Name == childWord && c.ArgumentsRequired);
-							if (childDef != null)
-							{
-								return ReadFunctionCall(combinedSpan, combinedWord, childDef);
-							}
-						}
-
-						ReportError(combinedSpan, CAError.CA0003, combinedWord);	// Function '{0}' not found.
-						return new UnknownNode(_stmt, combinedSpan, combinedWord);
-					}
-					else // No opening bracket
-					{
-						foreach (var parentDef in (from d in _prepModel.DefinitionProvider.GetAny(_code.Position + _funcOffset, word)
-												   where d.AllowsChild
-												   select d))
-						{
-							var childDef = parentDef.ChildDefinitions.FirstOrDefault(c => c.Name == childWord && !c.ArgumentsRequired);
-							if (childDef != null)
-							{
-								return new IdentifierNode(_stmt, combinedSpan, combinedWord, childDef);
-							}
-						}
-
-						ReportError(combinedSpan, CAError.CA0001, combinedWord);	// Unknown '{0}'.
-						return new UnknownNode(_stmt, combinedSpan, combinedWord);
-					}
-				}
-				else // No word after dot
-				{
-					ReportError(dotSpan, CAError.CA0004);	// Expected identifier to follow '.'
-					return new UnknownNode(_stmt, span.Envelope(dotSpan), string.Concat(word, "."));
-				}
-			}
-			else // No dot after word
-			{
-				var def = (from d in _prepModel.DefinitionProvider.GetAny(_code.Position + _funcOffset, word)
-						   where !d.RequiresChild && !d.ArgumentsRequired
-						   select d).FirstOrDefault();
-				if (def != null) return new IdentifierNode(_stmt, span, word, def);
-
-				ReportError(span, CAError.CA0001, word);	// Unknown '{0}'.
-				return new UnknownNode(_stmt, span, word);
-			}
-		}
-
-		private FunctionCallNode ReadFunctionCall(CM.Span span, string funcName, Definition funcDef = null)
-		{
-			var funcCallNode = new FunctionCallNode(_stmt, span, funcName);
-
-			GroupNode curArg = null;
-
-			while (!_code.EndOfFile)
-			{
-				if (_code.ReadExact(','))
-				{
-					if (curArg != null) funcCallNode.AddArgument(curArg);
-					curArg = null;
-				}
-				else if (_code.ReadExact(')')) break;
-				else if (_code.ReadExact(';')) break;
-
-				if (curArg == null) curArg = new GroupNode(_stmt);
-
-				var node = ReadExpression(",", ")", ";");
-				if (node != null) curArg.AddNode(node);
-			}
-
-			if (funcDef != null)
-			{
-				funcCallNode.Definition = funcDef;
-			}
-			else
-			{
-				var funcDefs = (from d in _prepModel.DefinitionProvider.GetAny(span.Start, funcName)
-								where d.ArgumentsRequired
-								select d).ToArray();
-				if (funcDefs.Length == 1)
-				{
-					funcCallNode.Definition = funcDefs[0];
-				}
-				else if (funcDefs.Length > 1)
-				{
-					var numArgs = funcCallNode.NumArguments;
-					funcDef = funcDefs.FirstOrDefault(f => f.Arguments.Count() == numArgs);
-					if (funcDef == null)
-					{
-						ReportError(span, CAError.CA0002, funcName, numArgs);	// Function '{0}' with {1} argument(s) not found.
-					}
-				}
-				else
-				{
-					ReportError(span, CAError.CA0003, funcName);	// Function '{0}' not found.
-				}
-			}
-
-			return funcCallNode;
-		}
-
-		private Node ReadNestable(CM.Span openSpan, string text, string[] stopStrings)
-		{
-			GroupNode groupNode;
-			string endText;
-			switch (text)
-			{
-				case "(":
-					groupNode = new BracketsNode(_stmt, openSpan);
-					endText = ")";
-					break;
-				case "[":
-					groupNode = new ArrayNode(_stmt, openSpan);
-					endText = "]";
-					break;
-				default:
-					throw new ArgumentOutOfRangeException("text");
-			}
-
-			if (stopStrings == null) stopStrings = new string[] { endText };
-			else stopStrings = stopStrings.Concat(new string[] { endText }).ToArray();
-
-			while (!_code.EndOfFile)
-			{
-				if (_code.ReadExact(endText))
-				{
-					groupNode.Span = groupNode.Span.Envelope(_code.Span);
-					break;
-				}
-
-				var exp = ReadExpression(stopStrings);
-				if (exp == null) break;
-				groupNode.AddNode(exp);
-			}
-
-			return groupNode;
-		}
-
-		public Value GetVariable(string name)
-		{
-			Variable v;
-			if (_vars.TryGetValue(name, out v))
-			{
-				return v.Value;
-			}
-
-			return Value.Empty;
-		}
-
-		public void SetVariable(string name, Value value)
-		{
-			Variable v;
-			if (_vars.TryGetValue(name, out v))
-			{
-				v.Value = value;
-			}
+			get { return _prepModel; }
 		}
 	}
 
@@ -394,6 +152,25 @@ namespace DkTools.CodeAnalysis
 		public CAException(string message)
 			: base(message)
 		{
+		}
+	}
+
+	class ReadParams
+	{
+		public CodeAnalyzer CodeAnalyzer { get; set; }
+		public CodeParser Code { get; set; }
+		public Statement Statement { get; set; }
+		public int FuncOffset { get; set; }
+
+		public ReadParams Clone(Statement stmt)
+		{
+			return new ReadParams
+			{
+				CodeAnalyzer = CodeAnalyzer,
+				Code = Code,
+				Statement = stmt,
+				FuncOffset = FuncOffset
+			};
 		}
 	}
 }

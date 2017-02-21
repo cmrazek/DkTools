@@ -3,10 +3,11 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using DkTools.CodeAnalysis.Statements;
 using DkTools.CodeModel;
 using DkTools.ErrorTagging;
 
-namespace DkTools.CodeAnalysis
+namespace DkTools.CodeAnalysis.Nodes
 {
 	class GroupNode : Node
 	{
@@ -80,7 +81,7 @@ namespace DkTools.CodeAnalysis
 			ReplaceNodes(new ResultNode(Statement, span, value, errRep), nodes);
 		}
 
-		public override void Execute()
+		public void Execute(RunScope scope)
 		{
 			while (true)
 			{
@@ -105,7 +106,7 @@ namespace DkTools.CodeAnalysis
 					{
 						if (node.Precedence == highestPrec)
 						{
-							node.Execute();
+							node.Simplify(scope);
 							break;
 						}
 					}
@@ -118,7 +119,7 @@ namespace DkTools.CodeAnalysis
 						var node = _nodes[i];
 						if (node.Precedence == highestPrec)
 						{
-							node.Execute();
+							node.Simplify(scope);
 							break;
 						}
 					}
@@ -156,19 +157,18 @@ namespace DkTools.CodeAnalysis
 			return null;
 		}
 
-		public override Value Value
+		public override Value ReadValue(RunScope scope)
 		{
-			get
-			{
-				Execute();
-				if (_nodes.Count == 1) return _nodes[0].Value;
+			Execute(scope);
+			if (_nodes.Count == 1) return _nodes[0].ReadValue(scope);
 
-				ReportError(Span, CAError.CA0011);	// Syntax error.
-				return Value.Empty;
-			}
-			set
-			{
-			}
+			ReportError(Span, CAError.CA0011);	// Syntax error.
+			return Value.Empty;
+		}
+
+		public override void WriteValue(RunScope scope, Value value)
+		{
+			base.WriteValue(scope, value);
 		}
 
 	}

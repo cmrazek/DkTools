@@ -3,9 +3,10 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using DkTools.CodeAnalysis.Statements;
 using DkTools.CodeModel;
 
-namespace DkTools.CodeAnalysis
+namespace DkTools.CodeAnalysis.Nodes
 {
 	class NumberNode : TextNode
 	{
@@ -14,16 +15,9 @@ namespace DkTools.CodeAnalysis
 		{
 		}
 
-		public override Value Value
+		public override Value ReadValue(RunScope scope)
 		{
-			get
-			{
-				return new Value(DataType.Numeric, true);
-			}
-			set
-			{
-				base.Value = value;
-			}
+			return new Value(DataType.Numeric);
 		}
 	}
 }

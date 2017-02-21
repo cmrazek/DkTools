@@ -607,12 +607,15 @@ namespace DkTools.CodeModel
 
 			p.writer.Append(includeSource);
 
-			AddIncludeDependency(includeNode.FullPathName, true, false);
+			foreach (var preMergeFileName in includeNode.PreMergeFileNames)
+			{
+				AddIncludeDependency(preMergeFileName, true, false, includeNode.GetPreMergeContent(preMergeFileName));
+			}
 		}
 
-		public void AddIncludeDependency(string fullPathName, bool include, bool localizedFile)
+		public void AddIncludeDependency(string fullPathName, bool include, bool localizedFile, string content)
 		{
-			_includeDependencies.Add(new IncludeDependency(fullPathName, include, localizedFile));
+			_includeDependencies.Add(new IncludeDependency(fullPathName, include, localizedFile, content));
 		}
 
 		public void AddIncludeDependencies(IEnumerable<IncludeDependency> includeDependencies)
@@ -1042,12 +1045,14 @@ namespace DkTools.CodeModel
 			private string _fileName;
 			private bool _include;
 			private bool _localizedFile;
+			private string _content;
 
-			public IncludeDependency(string fileName, bool include, bool localizedFile)
+			public IncludeDependency(string fileName, bool include, bool localizedFile, string content)
 			{
 				_fileName = fileName;
 				_include = include;
 				_localizedFile = localizedFile;
+				_content = content;
 			}
 
 			public string FileName
@@ -1063,6 +1068,11 @@ namespace DkTools.CodeModel
 			public bool LocalizedFile
 			{
 				get { return _localizedFile; }
+			}
+
+			public string Content
+			{
+				get { return _content; }
 			}
 		}
 

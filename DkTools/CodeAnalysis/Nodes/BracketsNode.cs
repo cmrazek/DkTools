@@ -3,14 +3,15 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using DkTools.CodeAnalysis.Statements;
 using DkTools.CodeModel;
 
-namespace DkTools.CodeAnalysis
+namespace DkTools.CodeAnalysis.Nodes
 {
-	class ExpressionNode : GroupNode
+	class BracketsNode : GroupNode
 	{
-		public ExpressionNode(Statement stmt)
-			: base(stmt)
+		public BracketsNode(Statement stmt, Span openBracketSpan)
+			: base(stmt, openBracketSpan)
 		{
 		}
 

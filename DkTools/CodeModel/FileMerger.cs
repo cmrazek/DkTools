@@ -24,6 +24,8 @@ namespace DkTools.CodeModel
 		private CodeSource _mergedContent;
 		private bool _showMergeComments;
 		private string _primaryFileName;
+		private string _origContent;
+		private Dictionary<string, string> _localFileContent = new Dictionary<string, string>();
 
 		private enum MergeMode
 		{
@@ -57,6 +59,7 @@ namespace DkTools.CodeModel
 			_origFileName = "";
 			_localFileNames.Clear();
 			_showMergeComments = showMergeComments;
+			_origContent = content;
 
 			if (Path.IsPathRooted(fileName)) fileName = UnrootFileName(fileName);
 			FindFiles(fileName);
@@ -233,6 +236,8 @@ namespace DkTools.CodeModel
 			_currentLocalLine = 1;
 
 			var fileText = File.ReadAllText(localFileName);
+			_localFileContent[localFileName.ToLower()] = fileText;
+
 			var pos = 0;
 			var linePos = pos;
 			var sb = new StringBuilder();
@@ -490,6 +495,15 @@ namespace DkTools.CodeModel
 		public bool IsMixed
 		{
 			get { return _localFileNames.Count != 0; }
+		}
+
+		public string GetFileContent(string localFileName)
+		{
+			if (string.Equals(_origFileName, localFileName, StringComparison.OrdinalIgnoreCase)) return _origContent;
+
+			string content;
+			if (_localFileContent.TryGetValue(localFileName.ToLower(), out content)) return content;
+			return null;
 		}
 	}
 }

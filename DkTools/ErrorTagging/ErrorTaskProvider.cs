@@ -35,9 +35,10 @@ namespace DkTools.ErrorTagging
 #endif
 
 			var taskLine = task.Line;
+			var taskColumn = task.Column;
 			var taskDocument = task.Document;
 			var taskText = task.Text;
-			if (Tasks.Cast<ErrorTask>().Any(t => t.Line == taskLine &&
+			if (Tasks.Cast<ErrorTask>().Any(t => t.Line == taskLine && t.Column == taskColumn &&
 				string.Equals(t.Document, taskDocument, StringComparison.OrdinalIgnoreCase) &&
 				t.Text == taskText))
 			{
@@ -143,7 +144,15 @@ namespace DkTools.ErrorTagging
 				var span = task.Span;
 				if (span.HasValue)
 				{
-					tags.Add(new TagSpan<ErrorTag>(span.Value, new ErrorTag(task.Type == ErrorType.Warning ? ErrorTagger.CodeWarning : ErrorTagger.CodeError, task.Text)));
+					foreach (var docSpan in docSpans)
+					{
+						var spanT = span.Value.TranslateTo(docSpan.Snapshot, SpanTrackingMode.EdgeExclusive);
+						if (docSpan.Contains(spanT.Start))
+						{
+							tags.Add(new TagSpan<ErrorTag>(spanT, new ErrorTag(task.Type == ErrorType.Warning ? ErrorTagger.CodeWarning : ErrorTagger.CodeError, task.Text)));
+							break;
+						}
+					}
 				}
 				else
 				{

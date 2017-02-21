@@ -292,7 +292,7 @@ namespace DkTools
 			int lineNum = 0;
 			int linePos = 0;
 
-			while (pos < length)
+			while (pos < offset)
 			{
 				if (source[pos] == '\n')
 				{

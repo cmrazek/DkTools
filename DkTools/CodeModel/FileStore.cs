@@ -301,7 +301,8 @@ namespace DkTools.CodeModel
 				merger.MergeFile(fileName, snapshot.GetText(), false, true);
 				source = merger.MergedContent;
 
-				includeDependencies = (from f in merger.LocalFileNames select new Preprocessor.IncludeDependency(f, false, true)).ToArray();
+				includeDependencies = (from f in merger.FileNames
+									   select new Preprocessor.IncludeDependency(f, false, true, merger.GetFileContent(f))).ToArray();
 			}
 
 			var model = CreatePreprocessedModel(source, fileName, visible, reason, includeDependencies);
@@ -525,6 +526,7 @@ namespace DkTools.CodeModel
 			private CodeFile _codeFile;
 			private DateTime _lastCheck;
 			private DateTime _lastModifiedDate;
+			private Dictionary<string, string> _preMergeContent = new Dictionary<string, string>();
 
 			public IncludeFile(FileStore store, string fileName)
 			{
@@ -554,14 +556,14 @@ namespace DkTools.CodeModel
 							merger.MergeFile(_fullPathName, null, false, false);
 							_source = merger.MergedContent;
 
-							//var content = File.ReadAllText(_fullPathName);
-							//_source = new CodeSource();
-							//_source.Append(content, _fullPathName, 0, content.Length, true, false, false);
-							//_source.Flush();
-
 							var fileInfo = new FileInfo(_fullPathName);
 							_lastModifiedDate = fileInfo.LastWriteTime;
 							_lastCheck = DateTime.Now;
+
+							foreach (var mergeFileName in merger.FileNames)
+							{
+								_preMergeContent[mergeFileName.ToLower()] = merger.GetFileContent(mergeFileName);
+							}
 						}
 						catch (Exception ex)
 						{
@@ -633,6 +635,21 @@ namespace DkTools.CodeModel
 			{
 				_source = null;
 				_codeFile = null;
+			}
+
+			public IEnumerable<string> PreMergeFileNames
+			{
+				get
+				{
+					return _preMergeContent.Keys;
+				}
+			}
+
+			public string GetPreMergeContent(string fileName)
+			{
+				string content;
+				if (_preMergeContent.TryGetValue(fileName.ToLower(), out content)) return content;
+				return null;
 			}
 		}
 

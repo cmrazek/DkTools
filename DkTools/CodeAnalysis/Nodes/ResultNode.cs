@@ -3,9 +3,10 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using DkTools.CodeAnalysis.Statements;
 using DkTools.CodeModel;
 
-namespace DkTools.CodeAnalysis
+namespace DkTools.CodeAnalysis.Nodes
 {
 	class ResultNode : Node
 	{
@@ -14,19 +15,13 @@ namespace DkTools.CodeAnalysis
 		public ResultNode(Statement stmt, Span span, Value value, ErrorTagging.ErrorType? errorReported)
 			: base(stmt, span)
 		{
+			_value = value;
 			ErrorReported = errorReported;
 		}
 
-		public override Value Value
+		public override Value ReadValue(RunScope scope)
 		{
-			get
-			{
-				return _value;
-			}
-			set
-			{
-				_value = value;
-			}
+			return _value;
 		}
 	}
 }

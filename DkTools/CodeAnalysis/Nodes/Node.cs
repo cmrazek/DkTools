@@ -3,9 +3,10 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using DkTools.CodeAnalysis.Statements;
 using DkTools.CodeModel;
 
-namespace DkTools.CodeAnalysis
+namespace DkTools.CodeAnalysis.Nodes
 {
 	abstract class Node
 	{
@@ -14,7 +15,7 @@ namespace DkTools.CodeAnalysis
 		private CodeModel.Span _span;
 		private ErrorTagging.ErrorType? _errorReported;
 
-		public Node(Statement stmt, CodeModel.Span span)
+		public Node(Statement stmt, Span span)
 		{
 			_stmt = stmt;
 			_span = span;
@@ -37,19 +38,25 @@ namespace DkTools.CodeAnalysis
 			set { _span = value; }
 		}
 
-		public virtual void Execute()
-		{
-		}
-
 		public virtual int Precedence
 		{
 			get { return 0; }
 		}
 
-		public virtual Value Value
+		public virtual void Simplify(RunScope scope)
 		{
-			get { return Value.Empty; }
-			set { }
+			throw new NotImplementedException();
+		}
+
+		public virtual Value ReadValue(RunScope scope)
+		{
+			ReportError(Span, CAError.CA0013);	// Cannot read from this identifier.
+			return Value.Empty;
+		}
+
+		public virtual void WriteValue(RunScope scope, Value value)
+		{
+			ReportError(Span, CAError.CA0012);	// Cannot write to this identifier.
 		}
 
 		public virtual bool CanAssignValue
@@ -65,12 +72,12 @@ namespace DkTools.CodeAnalysis
 			_errorReported = ErrorTagging.ErrorType.Error;
 		}
 
-		public void ReportWarning(Span span, CAError errorCode, params object[] args)
+		public void ReportErrorAbsolute(Span span, CAError errorCode, params object[] args)
 		{
-			if (_errorReported.HasValue) return;
+			if (_errorReported.HasValue && _errorReported.Value == ErrorTagging.ErrorType.Error) return;
 
-			Statement.CodeAnalyzer.ReportWarning(span, errorCode, args);
-			_errorReported = ErrorTagging.ErrorType.Warning;
+			Statement.CodeAnalyzer.ReportErrorAbsolute(span, errorCode, args);
+			_errorReported = ErrorTagging.ErrorType.Error;
 		}
 
 		public ErrorTagging.ErrorType? ErrorReported

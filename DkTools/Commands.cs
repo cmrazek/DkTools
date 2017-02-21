@@ -820,7 +820,7 @@ namespace DkTools
 
 				var fileStore = CodeModel.FileStore.GetOrCreateForTextBuffer(view.TextBuffer);
 				if (fileStore == null) return;
-				var model = fileStore.CreatePreprocessedModel(view.TextSnapshot, "Code Analysis");
+				var model = fileStore.CreatePreprocessedModel(view.TextSnapshot, false, "Code Analysis");
 
 				var pane = Shell.CreateOutputPane(GuidList.guidCodeAnalysisPane, "DK Code Analysis");
 				pane.Clear();

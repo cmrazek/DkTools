@@ -257,7 +257,8 @@ namespace DkTools.FunctionFileScanning
 
 				var merger = new FileMerger();
 				merger.MergeFile(scan.fileName, null, false, true);
-				var includeDependencies = (from f in merger.LocalFileNames select new Preprocessor.IncludeDependency(f, false, true)).ToArray();
+				var includeDependencies = (from f in merger.FileNames
+										   select new Preprocessor.IncludeDependency(f, false, true, merger.GetFileContent(f))).ToArray();
 
 				var model = fileStore.CreatePreprocessedModel(merger.MergedContent, scan.fileName, false, string.Concat("Function file processing: ", scan.fileName), includeDependencies);
 

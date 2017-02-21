@@ -4,6 +4,7 @@ using System.ComponentModel;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using DkTools.ErrorTagging;
 
 namespace DkTools.CodeAnalysis
 {
@@ -21,8 +22,8 @@ namespace DkTools.CodeAnalysis
 		[ErrorMessage("Expected identifier to follow '.'")]
 		CA0004,
 
-		[ErrorMessage("Empty statement not allowed.")]
-		CA0005,
+		//[ErrorMessage("Empty statement not allowed.")]
+		//CA0005,
 
 		[ErrorMessage("Unknown operator '{0}'.")]
 		CA0006,
@@ -34,6 +35,7 @@ namespace DkTools.CodeAnalysis
 		CA0008,
 
 		[ErrorMessage("Use of uninitialized value.")]
+		[Warning]
 		CA0009,
 
 		[ErrorMessage("Operator '{0}' expects assignable value on left.")]
@@ -41,6 +43,35 @@ namespace DkTools.CodeAnalysis
 
 		[ErrorMessage("Syntax error.")]
 		CA0011,
+
+		[ErrorMessage("Cannot write to this identifier.")]
+		CA0012,
+
+		[ErrorMessage("Cannot read from this identifier.")]
+		CA0013,
+
+		[ErrorMessage("Expected value after 'return'.")]
+		CA0014,
+
+		[ErrorMessage("Expected ';'.")]
+		CA0015,
+
+		[ErrorMessage("Unreachable code.")]
+		[Warning]
+		CA0016,
+
+		[ErrorMessage("Function does not return a value.")]
+		[Warning]
+		CA0017,
+
+		[ErrorMessage("Expected condition after '{0}'.")]
+		CA0018,
+
+		[ErrorMessage("Expected '{'.")]
+		CA0019,
+
+		[ErrorMessage("Array indexer requires variable on left.")]
+		CA0020,
 	}
 
 	[AttributeUsage(AttributeTargets.Field, AllowMultiple = false)]
@@ -59,6 +90,11 @@ namespace DkTools.CodeAnalysis
 		}
 	}
 
+	[AttributeUsage(AttributeTargets.Field, AllowMultiple = false)]
+	class WarningAttribute : Attribute
+	{
+	}
+
 	static class CAErrorEx
 	{
 		public static string GetText(this CAError code, object[] args)
@@ -74,6 +110,17 @@ namespace DkTools.CodeAnalysis
 			var message = ((ErrorMessageAttribute)attrib[0]).Message;
 			if (args != null && args.Length > 0) message = string.Format(message, args);
 			return string.Concat(codeString, ": ", message);
+		}
+
+		public static ErrorType GetErrorType(this CAError code)
+		{
+			var memInfo = typeof(CAError).GetMember(code.ToString());
+			if (memInfo == null || memInfo.Length == 0) return ErrorType.Error;
+
+			var attrib = memInfo[0].GetCustomAttributes(typeof(WarningAttribute), false);
+			if (attrib == null || attrib.Length == 0) return ErrorType.Error;
+
+			return ErrorType.Warning;
 		}
 	}
 }

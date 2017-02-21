@@ -279,6 +279,33 @@ namespace DkTools
 					return true;
 				}
 
+				if (ch == '-' && _pos + 1 < _length && (char.IsDigit(_source[_pos + 1]) || _source[_pos + 1] == '.'))
+				{
+					_tokenText.Append(ch);
+					_pos++;
+
+					var gotDot = false;
+					while (_pos < _length)
+					{
+						ch = _source[_pos];
+						if (char.IsDigit(ch))
+						{
+							_tokenText.Append(ch);
+							_pos++;
+						}
+						else if (ch == '.' && !gotDot)
+						{
+							_tokenText.Append('.');
+							_pos++;
+							gotDot = true;
+						}
+						else break;
+					}
+
+					_tokenType = CodeType.Number;
+					return true;
+				}
+
 				if (ch == '+' || ch == '-' || ch == '*' || ch == '%' || ch == '=' || ch == '!' || ch == '<' || ch == '>')
 				{
 					_tokenText.Append(ch);
@@ -917,7 +944,7 @@ namespace DkTools
 			var ch = _source[_pos];
 			if (ch == '-')
 			{
-				if (_pos + 1 >= _length || (!char.IsDigit(_source[_pos + 1]) && ch != '.')) return false;
+				if (_pos + 1 >= _length || (!char.IsDigit(_source[_pos + 1]) && _source[_pos + 1] != '.')) return false;
 			}
 			else if (ch == '.')
 			{
@@ -933,6 +960,12 @@ namespace DkTools
 			_tokenTextStr = null;
 			_tokenStartPos = Position;
 			_tokenType = CodeType.Number;
+
+			if (ch == '-')
+			{
+				_tokenText.Append(ch);
+				_pos++;
+			}
 
 			var gotDot = false;
 			while (_pos < _length)
