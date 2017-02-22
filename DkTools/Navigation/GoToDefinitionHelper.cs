@@ -247,8 +247,8 @@ namespace DkTools.Navigation
 			var db = new FunctionFileScanning.FFDatabase();
 			using (var cmd = db.CreateCommand(
 				"select file_.file_name, ref.pos, alt_file.file_name as true_file_name from ref"
-				+ " inner join file_ on file_.id = ref.file_id"
-				+ " left outer join alt_file on alt_file.id = ref.alt_file_id"
+				+ " inner join file_ on file_.rowid = ref.file_id"
+				+ " left outer join alt_file on alt_file.rowid = ref.alt_file_id"
 				+ " where ref.ext_ref_id = @ext_ref_id"
 				+ " and ref.app_id = @app_id"
 			)) {
@@ -257,13 +257,13 @@ namespace DkTools.Navigation
 
 				using (var rdr = cmd.ExecuteReader())
 				{
-					var ordFileId = rdr.GetOrdinal("file_name");
+					var ordFileName = rdr.GetOrdinal("file_name");
 					var ordPos = rdr.GetOrdinal("pos");
 					var ordTrueFileName = rdr.GetOrdinal("true_file_name");
 
 					while (rdr.Read())
 					{
-						var fileName = rdr.GetString(ordFileId);
+						var fileName = rdr.GetString(ordFileName);
 						var pos = rdr.GetInt32(ordPos);
 						var trueFileName = FunctionFileScanning.FFUtil.GetStringOrNull(rdr, ordTrueFileName);
 
