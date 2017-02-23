@@ -69,6 +69,11 @@ namespace DkTools.CodeAnalysis.Nodes
 			return null;
 		}
 
+		public void ReportError(CAError errorCode, params object[] args)
+		{
+			ReportError(Span, errorCode, args);
+		}
+
 		public void ReportError(Span span, CAError errorCode, params object[] args)
 		{
 			if (_errorReported.HasValue && _errorReported.Value == ErrorTagging.ErrorType.Error) return;

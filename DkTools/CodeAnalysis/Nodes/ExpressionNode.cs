@@ -203,9 +203,7 @@ namespace DkTools.CodeAnalysis.Nodes
 					endText = ")";
 					break;
 				case "[":
-					groupNode = new ArrayNode(p.Statement, openSpan);
-					endText = "]";
-					break;
+					return ArrayNode.Read(p, openSpan);
 				default:
 					throw new ArgumentOutOfRangeException("text");
 			}

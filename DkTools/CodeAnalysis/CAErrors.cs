@@ -75,6 +75,9 @@ namespace DkTools.CodeAnalysis
 
 		[ErrorMessage("Operator '?' expects ':' on right.")]
 		CA0021,
+
+		[ErrorMessage("Only 1 or 2 index accessors allowed.")]
+		CA0022,
 	}
 
 	[AttributeUsage(AttributeTargets.Field, AllowMultiple = false)]

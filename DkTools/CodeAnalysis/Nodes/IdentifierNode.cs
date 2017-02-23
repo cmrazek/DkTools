@@ -111,5 +111,11 @@ namespace DkTools.CodeAnalysis.Nodes
 
 			return _def;
 		}
+
+		public override DataType GetDataType(RunScope scope)
+		{
+			if (_def == null && !Resolve(scope)) return base.GetDataType(scope);
+			return _def.DataType;
+		}
 	}
 }

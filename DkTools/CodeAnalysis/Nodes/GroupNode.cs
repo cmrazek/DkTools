@@ -27,7 +27,11 @@ namespace DkTools.CodeAnalysis.Nodes
 		private void OnNodeAdded(Node node)
 		{
 			node.Parent = this;
+			IncludeNodeInSpan(node);
+		}
 
+		protected void IncludeNodeInSpan(Node node)
+		{
 			if (!node.Span.IsEmpty)
 			{
 				if (Span.IsEmpty) Span = node.Span;
