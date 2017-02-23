@@ -92,10 +92,10 @@ namespace DkTools.CodeAnalysis.Statements
 		{
 			if (_cond != null)
 			{
-				_cond.ReadValue(scope);
+				_cond.ReadValue(scope.Clone(dataTypeContext: DataType.Int));
 			}
 
-			var trueScope = scope.Clone();
+			var trueScope = scope.Clone(dataTypeContext: DataType.Void);
 			if (_trueBody != null)
 			{
 				foreach (var stmt in _trueBody)
@@ -104,7 +104,7 @@ namespace DkTools.CodeAnalysis.Statements
 				}
 			}
 
-			var falseScope = scope.Clone();
+			var falseScope = scope.Clone(dataTypeContext: DataType.Void);
 			if (_falseBody != null)
 			{
 				foreach (var stmt in _falseBody)

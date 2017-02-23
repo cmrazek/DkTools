@@ -72,6 +72,9 @@ namespace DkTools.CodeAnalysis
 
 		[ErrorMessage("Array indexer requires variable on left.")]
 		CA0020,
+
+		[ErrorMessage("Operator '?' expects ':' on right.")]
+		CA0021,
 	}
 
 	[AttributeUsage(AttributeTargets.Field, AllowMultiple = false)]

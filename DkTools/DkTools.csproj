@@ -277,6 +277,7 @@
     <Compile Include="CodeAnalysis\Nodes\BracketsNode.cs" />
     <Compile Include="CodeAnalysis\CAErrors.cs" />
     <Compile Include="CodeAnalysis\CodeAnalyzer.cs" />
+    <Compile Include="CodeAnalysis\Nodes\CastNode.cs" />
     <Compile Include="CodeAnalysis\Nodes\EmptyNode.cs" />
     <Compile Include="CodeAnalysis\Nodes\ExpressionNode.cs" />
     <Compile Include="CodeAnalysis\Nodes\FunctionCallNode.cs" />
@@ -286,6 +287,7 @@
     <Compile Include="CodeAnalysis\Nodes\NumberNode.cs" />
     <Compile Include="CodeAnalysis\Nodes\OperatorNode.cs" />
     <Compile Include="CodeAnalysis\Nodes\ResultNode.cs" />
+    <Compile Include="CodeAnalysis\Nodes\UnresolvedNode.cs" />
     <Compile Include="CodeAnalysis\Statements\IfStatement.cs" />
     <Compile Include="CodeAnalysis\Statements\ReturnStatement.cs" />
     <Compile Include="CodeAnalysis\RunScope.cs" />

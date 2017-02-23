@@ -7,6 +7,21 @@ using DkTools.CodeAnalysis.Statements;
 using DkTools.CodeModel;
 using DkTools.ErrorTagging;
 
+/*
+ * Precedence:
+ * 100	[]
+ * 24	* / %
+ * 22	+ -
+ * 20	< > <= >=
+ * 18	== !=
+ * 16	and
+ * 14	or
+ * 12	? :
+ * 10	conditional result
+ * 7	= *= /= %= += -=
+ * 2	unresolved nodes
+ * */
+
 namespace DkTools.CodeAnalysis.Nodes
 {
 	class OperatorNode : TextNode
@@ -55,7 +70,7 @@ namespace DkTools.CodeAnalysis.Nodes
 				case "%=":
 				case "+=":
 				case "-=":
-					_prec = 11;
+					_prec = 7;
 					break;
 				default:
 					Statement.CodeAnalyzer.ReportError(Span, CAError.CA0006, text);	// Unknown operator '{0}'.
@@ -117,14 +132,14 @@ namespace DkTools.CodeAnalysis.Nodes
 
 		private void ExecuteMath(RunScope scope)	// * / % + -
 		{
-			var leftNode = Parent.GetLeftSibling(this);
-			var rightNode = Parent.GetRightSibling(this);
+			var leftNode = Parent.GetLeftSibling(scope, this);
+			var rightNode = Parent.GetRightSibling(scope, this);
 			if (leftNode == null) ReportError(Span, CAError.CA0007, Text);			// Operator '{0}' expects value on left.
 			else if (rightNode == null) ReportError(Span, CAError.CA0008, Text);	// Operator '{0}' expects value on right.
 			if (leftNode != null && rightNode != null)
 			{
 				var leftValue = leftNode.ReadValue(scope);
-				var rightValue = rightNode.ReadValue(scope);
+				var rightValue = rightNode.ReadValue(scope.Clone(dataTypeContext: leftNode.GetDataType(scope)));
 				if (leftValue.IsVoid) leftNode.ReportError(leftNode.Span, CAError.CA0007, Text);		// Operator '{0}' expects value on left.
 				else if (rightValue.IsVoid) rightNode.ReportError(rightNode.Span, CAError.CA0008, Text);	// Operator '{0}' expects value on right.
 
@@ -141,14 +156,14 @@ namespace DkTools.CodeAnalysis.Nodes
 
 		private void ExecuteComparison(RunScope scope)	// < > <= >= == !=
 		{
-			var leftNode = Parent.GetLeftSibling(this);
-			var rightNode = Parent.GetRightSibling(this);
+			var leftNode = Parent.GetLeftSibling(scope, this);
+			var rightNode = Parent.GetRightSibling(scope, this);
 			if (leftNode == null) ReportError(Span, CAError.CA0007, Text);	// Operator '{0}' expects value on left.
 			else if (rightNode == null) ReportError(Span, CAError.CA0008, Text);	// Operator '{0}' expects value on right.
 			if (leftNode != null && rightNode != null)
 			{
 				var leftValue = leftNode.ReadValue(scope);
-				var rightValue = rightNode.ReadValue(scope);
+				var rightValue = rightNode.ReadValue(scope.Clone(dataTypeContext: leftNode.GetDataType(scope)));
 				if (leftValue.IsVoid) leftNode.ReportError(leftNode.Span, CAError.CA0007, Text);		// Operator '{0}' expects value on left.
 				else if (rightValue.IsVoid) rightNode.ReportError(rightNode.Span, CAError.CA0008, Text);	// Operator '{0}' expects value on right.
 
@@ -163,16 +178,16 @@ namespace DkTools.CodeAnalysis.Nodes
 			}
 		}
 
-		private void ExecuteAssignment(RunScope scope)
+		private void ExecuteAssignment(RunScope scope)	// = *= /= %= += -=
 		{
-			var leftNode = Parent.GetLeftSibling(this);
-			var rightNode = Parent.GetRightSibling(this);
+			var leftNode = Parent.GetLeftSibling(scope, this);
+			var rightNode = Parent.GetRightSibling(scope, this);
 			if (leftNode == null) ReportError(Span, CAError.CA0010, Text);			// Operator '{0}' expects assignable value on left.
 			else if (rightNode == null) ReportError(Span, CAError.CA0008, Text);	// Operator '{0}' expects value on right.
 			if (leftNode != null && rightNode != null)
 			{
-				var rightValue = rightNode.ReadValue(scope);
-				if (!leftNode.CanAssignValue) leftNode.ReportError(leftNode.Span, CAError.CA0010, Text);				// Operator '{0}' expects assignable value on left.
+				var rightValue = rightNode.ReadValue(scope.Clone(dataTypeContext: leftNode.GetDataType(scope)));
+				if (!leftNode.CanAssignValue(scope)) leftNode.ReportError(leftNode.Span, CAError.CA0010, Text);				// Operator '{0}' expects assignable value on left.
 				else if (rightValue.IsVoid) rightNode.ReportError(rightNode.Span, CAError.CA0008, Text);				// Operator '{0}' expects value on right.
 
 				leftNode.WriteValue(scope, rightValue);
@@ -188,44 +203,46 @@ namespace DkTools.CodeAnalysis.Nodes
 			}
 		}
 
-		private void ExecuteConditional1(RunScope scope)
+		private void ExecuteConditional1(RunScope scope)	// ?
 		{
-			var leftNode = Parent.GetLeftSibling(this);
+			var leftScope = scope.Clone(dataTypeContext: DataType.Int);
+			var leftNode = Parent.GetLeftSibling(leftScope, this);
 			if (leftNode == null)
 			{
 				ReportError(Span, CAError.CA0007, Text);	// Operator '{0}' expects value on left.
-				Parent.ReplaceWithResult(new Value(DataType.Int), this);
+				Parent.ReplaceWithResult(new Value(DataType.Int), ResultSource.Conditional1, this);
 			}
 			else
 			{
-				var leftValue = leftNode.ReadValue(scope);
+				var leftValue = leftNode.ReadValue(leftScope);
 				if (leftValue.IsVoid) leftNode.ReportError(Span, CAError.CA0007, Text);	// Operator '{0}' expects value on left.
 
-				Parent.ReplaceWithResult(new Value(DataType.Int), leftNode, this);
+				Parent.ReplaceWithResult(new Value(DataType.Int), ResultSource.Conditional1, leftNode, this);
 			}
 		}
 
-		private void ExecuteConditional2(RunScope scope)
+		private void ExecuteConditional2(RunScope scope)	// :
 		{
-			var leftNode = Parent.GetLeftSibling(this);
-			var rightNode = Parent.GetRightSibling(this);
+			var leftNode = Parent.GetLeftSibling(scope, this);
+			var rightNode = Parent.GetRightSibling(scope, this);
 			if (leftNode == null) ReportError(Span, CAError.CA0007, Text);	// Operator '{0}' expects value on left.
 			else if (rightNode == null) ReportError(Span, CAError.CA0008, Text);	// Operator '{0}' expects value on right.
 			if (leftNode != null && rightNode != null)
 			{
+				// TODO: The data type should be based on the value that is calling the entire conditional
 				var leftValue = leftNode.ReadValue(scope);
 				var rightValue = rightNode.ReadValue(scope);
 				if (leftValue.IsVoid) leftNode.ReportError(leftNode.Span, CAError.CA0007, Text);		// Operator '{0}' expects value on left.
 				else if (rightValue.IsVoid) rightNode.ReportError(rightNode.Span, CAError.CA0008, Text);	// Operator '{0}' expects value on right.
 
-				Parent.ReplaceWithResult(new Value(leftValue), leftNode, this, rightNode);
+				Parent.ReplaceWithResult(new Value(leftValue), ResultSource.Conditional2, leftNode, this, rightNode);
 			}
 			else
 			{
 				Value resultValue = Value.Empty;
 				if (leftNode != null && rightNode == null) resultValue = leftNode.ReadValue(scope);
 				else if (leftNode == null && rightNode != null) resultValue = rightNode.ReadValue(scope);
-				Parent.ReplaceWithResult(resultValue, leftNode, this, rightNode);
+				Parent.ReplaceWithResult(resultValue, ResultSource.Conditional2, leftNode, this, rightNode);
 			}
 		}
 	}

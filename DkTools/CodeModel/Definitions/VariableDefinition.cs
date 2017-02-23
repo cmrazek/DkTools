@@ -149,5 +149,21 @@ namespace DkTools.CodeModel.Definitions
 		{
 			get { return false; }
 		}
+
+		public override bool CanRead
+		{
+			get
+			{
+				return true;
+			}
+		}
+
+		public override bool CanWrite
+		{
+			get
+			{
+				return true;
+			}
+		}
 	}
 }

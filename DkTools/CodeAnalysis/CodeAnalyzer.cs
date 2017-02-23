@@ -63,7 +63,7 @@ namespace DkTools.CodeAnalysis
 				FuncOffset = func.StartPos
 			};
 
-			_scope = new RunScope();
+			_scope = new RunScope(func.Definition, func.StartPos);
 			_stmts = new List<Statement>();
 
 			// Parse the function body
@@ -132,8 +132,6 @@ namespace DkTools.CodeAnalysis
 
 			if (!primaryFileSpan.IsEmpty)
 			{
-				Log.Debug("Creating error tag {0} for span {1}", errorCode, primaryFileSpan);	// TODO: remove
-
 				var task = new ErrorTagging.ErrorTask(filePos.FileName, lineNum, message, type,
 					ErrorTaskSource.CodeAnalysis, _codeModel.FileName, _codeModel.Snapshot,
 					primaryFileSpan.ToVsTextSnapshotSpan(_codeModel.Snapshot));

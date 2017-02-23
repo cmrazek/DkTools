@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using DkTools.CodeAnalysis.Statements;
 using DkTools.CodeModel;
+using DkTools.CodeModel.Definitions;
 
 namespace DkTools.CodeAnalysis.Nodes
 {
@@ -63,6 +64,39 @@ namespace DkTools.CodeAnalysis.Nodes
 						switch (code.Text)
 						{
 							case "(":
+								{
+									var opText = code.Text;
+									var startPos = code.Span.Start;
+									var resumePos = code.Position;
+									var dataType = DataType.TryParse(new DataType.ParseArgs
+									{
+										Code = code,
+										Flags = DataType.ParseFlag.Strict,
+										DataTypeCallback = name =>
+											{
+												return p.Statement.CodeAnalyzer.PreprocessorModel.DefinitionProvider.
+													GetAny<DataTypeDefinition>(startPos + p.FuncOffset, name).FirstOrDefault();
+											},
+										VariableCallback = name =>
+											{
+												return p.Statement.CodeAnalyzer.PreprocessorModel.DefinitionProvider.
+													GetAny<VariableDefinition>(startPos + p.FuncOffset, name).FirstOrDefault();
+											},
+										VisibleModel = false
+									});
+									if (dataType != null && code.ReadExact(')'))
+									{
+										// This is a cast
+										var span = new Span(startPos, code.Span.End);
+										exp.AddNode(new CastNode(p.Statement, span, dataType, ExpressionNode.Read(p, stopStrings)));
+									}
+									else
+									{
+										code.Position = resumePos;
+										exp.AddNode(exp.ReadNestable(p, code.Span, opText, stopStrings));
+									}
+								}
+								break;
 							case "[":
 								exp.AddNode(exp.ReadNestable(p, code.Span, code.Text, stopStrings));
 								break;
@@ -72,7 +106,7 @@ namespace DkTools.CodeAnalysis.Nodes
 						}
 						break;
 					default:
-						exp.ReportError(code.Span, CAError.CA0001);	// Unknown '{0}'.
+						exp.ReportError(code.Span, CAError.CA0001, code.Text);	// Unknown '{0}'.
 						exp.AddNode(new UnknownNode(p.Statement, code.Span, code.Text));
 						break;
 				}
@@ -144,13 +178,17 @@ namespace DkTools.CodeAnalysis.Nodes
 			}
 			else // No dot after word
 			{
-				var def = (from d in p.CodeAnalyzer.PreprocessorModel.DefinitionProvider.GetAny(code.Position + p.FuncOffset, word)
-						   where !d.RequiresChild && !d.ArgumentsRequired
-						   select d).FirstOrDefault();
-				if (def != null) return new IdentifierNode(p.Statement, span, word, def);
+				// Single word. Don't attempt to find the definition now because it could be an enum option.
+				return new IdentifierNode(p.Statement, span, word, null);
 
-				ReportError(span, CAError.CA0001, word);	// Unknown '{0}'.
-				return new UnknownNode(p.Statement, span, word);
+				// TODO: remove
+				//var def = (from d in p.CodeAnalyzer.PreprocessorModel.DefinitionProvider.GetAny(code.Position + p.FuncOffset, word)
+				//		   where !d.RequiresChild && !d.ArgumentsRequired
+				//		   select d).FirstOrDefault();
+				//if (def != null) return new IdentifierNode(p.Statement, span, word, def);
+
+				//ReportError(span, CAError.CA0001, word);	// Unknown '{0}'.
+				//return new UnknownNode(p.Statement, span, word);
 			}
 		}
 

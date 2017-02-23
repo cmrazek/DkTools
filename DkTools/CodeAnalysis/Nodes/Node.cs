@@ -59,9 +59,14 @@ namespace DkTools.CodeAnalysis.Nodes
 			ReportError(Span, CAError.CA0012);	// Cannot write to this identifier.
 		}
 
-		public virtual bool CanAssignValue
+		public virtual bool CanAssignValue(RunScope scope)
 		{
-			get { return false; }
+			return false;
+		}
+
+		public virtual DataType GetDataType(RunScope scope)
+		{
+			return null;
 		}
 
 		public void ReportError(Span span, CAError errorCode, params object[] args)

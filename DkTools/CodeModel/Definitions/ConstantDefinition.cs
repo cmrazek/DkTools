@@ -71,5 +71,13 @@ namespace DkTools.CodeModel.Definitions
 				return string.Concat("const:", name);
 			}
 		}
+
+		public override bool CanRead
+		{
+			get
+			{
+				return true;
+			}
+		}
 	}
 }

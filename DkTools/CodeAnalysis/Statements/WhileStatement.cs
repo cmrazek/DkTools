@@ -44,7 +44,7 @@ namespace DkTools.CodeAnalysis.Statements
 
 		public override void Execute(RunScope scope)
 		{
-			if (_cond != null) _cond.ReadValue(scope);
+			if (_cond != null) _cond.ReadValue(scope.Clone(dataTypeContext: DataType.Int));
 
 			foreach (var stmt in _body)
 			{

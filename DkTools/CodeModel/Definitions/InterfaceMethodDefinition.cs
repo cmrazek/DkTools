@@ -105,5 +105,13 @@ namespace DkTools.CodeModel.Definitions
 				return _returnDataType;
 			}
 		}
+
+		public override bool CanRead
+		{
+			get
+			{
+				return _returnDataType != null && !_returnDataType.IsVoid;
+			}
+		}
 	}
 }

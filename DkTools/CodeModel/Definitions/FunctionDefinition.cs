@@ -162,5 +162,13 @@ namespace DkTools.CodeModel.Definitions
 				return true;
 			}
 		}
+
+		public override bool CanRead
+		{
+			get
+			{
+				return _sig.ReturnDataType != null && !_sig.ReturnDataType.IsVoid;
+			}
+		}
 	}
 }

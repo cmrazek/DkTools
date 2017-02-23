@@ -302,8 +302,20 @@ namespace DkTools.CodeModel.Definitions
 		{
 			get { return Definition.EmptyArray; }
 		}
+
 		public virtual FunctionSignature Signature
 		{
 			get { return null; }
-		}	}
+		}
+
+		public virtual bool CanRead
+		{
+			get { return false; }
+		}
+
+		public virtual bool CanWrite
+		{
+			get { return false; }
+		}
+	}
 }

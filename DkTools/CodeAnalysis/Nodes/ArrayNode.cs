@@ -25,7 +25,7 @@ namespace DkTools.CodeAnalysis.Nodes
 
 		public override void Simplify(RunScope scope)
 		{
-			var leftNode = Parent.GetLeftSibling(this) as IdentifierNode;
+			var leftNode = Parent.GetLeftSibling(scope, this) as IdentifierNode;
 			if (leftNode == null)
 			{
 				ReportError(Span, CAError.CA0020);	// Array indexer requires variable on left.
@@ -33,10 +33,10 @@ namespace DkTools.CodeAnalysis.Nodes
 			}
 
 			// Read the array indexer value
-			ReadValue(scope);
+			ReadValue(scope.Clone(dataTypeContext: DataType.Int));
 
 			// Combine with the variable on left to produce the result
-			var result = new ArrayAccessorNode(Statement, Span.Envelope(leftNode.Span), leftNode.Definition, leftNode.Text);
+			var result = new ArrayAccessorNode(Statement, Span.Envelope(leftNode.Span), leftNode.GetDefinition(scope), leftNode.Text);
 			Parent.ReplaceNodes(result, leftNode, this);
 		}
 	}

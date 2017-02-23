@@ -3,24 +3,35 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using DkTools.CodeModel;
+using DkTools.CodeModel.Definitions;
 
 namespace DkTools.CodeAnalysis
 {
 	class RunScope
 	{
 		private Dictionary<string, Variable> _vars = new Dictionary<string, Variable>();
+		private FunctionDefinition _funcDef;
+		private int _funcOffset;
+		private DataType _dataTypeContext;
+
 		private bool _returned;
 
-		public RunScope()
+		public RunScope(FunctionDefinition funcDef, int funcOffset)
 		{
+			_funcDef = funcDef;
+			_funcOffset = funcOffset;
 		}
 
-		public RunScope Clone()
+		public RunScope Clone(DataType dataTypeContext = null)
 		{
-			var scope = new RunScope()
+			var scope = new RunScope(_funcDef, _funcOffset)
 			{
-				_returned = _returned
+				_returned = _returned,
+				_dataTypeContext = _dataTypeContext
 			};
+
+			if (dataTypeContext != null) scope._dataTypeContext = dataTypeContext;
 
 			foreach (var v in _vars)
 			{
@@ -61,6 +72,21 @@ namespace DkTools.CodeAnalysis
 		{
 			get { return _returned; }
 			set { _returned = value; }
+		}
+
+		public int FuncOffset
+		{
+			get { return _funcOffset; }
+		}
+
+		public DataType DataTypeContext
+		{
+			get { return _dataTypeContext; }
+		}
+
+		public FunctionDefinition FunctionDefinition
+		{
+			get { return _funcDef; }
 		}
 	}
 }

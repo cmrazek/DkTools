@@ -36,7 +36,8 @@ namespace DkTools.CodeAnalysis.Statements
 
 		public override void Execute(RunScope scope)
 		{
-			base.Execute(scope);
+			var returnScope = scope.Clone(dataTypeContext: scope.FunctionDefinition.DataType);
+			base.Execute(returnScope);
 
 			scope.Returned = true;
 		}

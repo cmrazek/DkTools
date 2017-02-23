@@ -14,13 +14,5 @@ namespace DkTools.CodeAnalysis.Nodes
 			: base(stmt, openBracketSpan)
 		{
 		}
-
-		public override int Precedence
-		{
-			get
-			{
-				return 0;
-			}
-		}
 	}
 }

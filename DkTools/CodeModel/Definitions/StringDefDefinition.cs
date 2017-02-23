@@ -66,5 +66,13 @@ namespace DkTools.CodeModel.Definitions
 				return DataType.String;
 			}
 		}
+
+		public override bool CanRead
+		{
+			get
+			{
+				return true;
+			}
+		}
 	}
 }

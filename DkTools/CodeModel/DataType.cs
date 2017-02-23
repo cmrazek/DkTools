@@ -1550,5 +1550,10 @@ namespace DkTools.CodeModel
 					return .2f;
 			}
 		}
+
+		public bool IsVoid
+		{
+			get { return _valueType == ValType.Void || _valueType == ValType.Unknown; }
+		}
 	}
 }

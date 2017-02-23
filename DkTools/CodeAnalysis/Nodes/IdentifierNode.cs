@@ -19,16 +19,42 @@ namespace DkTools.CodeAnalysis.Nodes
 			_def = def;
 		}
 
-		public override bool CanAssignValue
+		private bool Resolve(RunScope scope)
 		{
-			get
+			if (_def != null) return true;
+
+			if (scope.DataTypeContext != null)
 			{
-				return _def is VariableDefinition;
+				if (scope.DataTypeContext.HasEnumOptions && scope.DataTypeContext.IsValidEnumOption(Text))
+				{
+					_def = new EnumOptionDefinition(Text, scope.DataTypeContext);
+					return true;
+				}
 			}
+
+			var def = (from d in Statement.CodeAnalyzer.PreprocessorModel.DefinitionProvider.GetAny(Span.Start + scope.FuncOffset, Text)
+					   where !d.RequiresChild && !d.ArgumentsRequired
+					   select d).FirstOrDefault();
+			if (def != null)
+			{
+				_def = def;
+				return true;
+			}
+
+			return false;
+		}
+
+		public override bool CanAssignValue(RunScope scope)
+		{
+			if (_def == null && !Resolve(scope)) return false;
+
+			return _def is VariableDefinition;
 		}
 
 		public override Value ReadValue(RunScope scope)
 		{
+			if (_def == null && !Resolve(scope)) return base.ReadValue(scope);
+
 			if (_def is VariableDefinition)
 			{
 				var v = scope.GetVariable(Text);
@@ -37,13 +63,27 @@ namespace DkTools.CodeAnalysis.Nodes
 					if (!v.IsInitialized) ReportError(Span, CAError.CA0009);	// Use of uninitialized value.
 					return v.Value;
 				}
-			}
 
-			return base.ReadValue(scope);
+				return base.ReadValue(scope);
+			}
+			else if (_def.CanRead && _def.DataType != null)
+			{
+				return new Value(_def.DataType);
+			}
+			else
+			{
+				return base.ReadValue(scope);
+			}
 		}
 
 		public override void WriteValue(RunScope scope, Value value)
 		{
+			if (_def == null && !Resolve(scope))
+			{
+				base.WriteValue(scope, value);
+				return;
+			}
+
 			if (_def is VariableDefinition)
 			{
 				var v = scope.GetVariable(Text);
@@ -53,14 +93,23 @@ namespace DkTools.CodeAnalysis.Nodes
 					v.IsInitialized = true;
 					return;
 				}
-			}
 
-			base.WriteValue(scope, value);
+				base.WriteValue(scope, value);
+			}
+			else if (_def.CanWrite)
+			{
+			}
+			else
+			{
+				base.WriteValue(scope, value);
+			}
 		}
 
-		public Definition Definition
+		public Definition GetDefinition(RunScope scope)
 		{
-			get { return _def; }
+			if (_def == null && !Resolve(scope)) return null;
+
+			return _def;
 		}
 	}
 }

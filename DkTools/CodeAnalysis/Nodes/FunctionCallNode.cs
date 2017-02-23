@@ -101,21 +101,22 @@ namespace DkTools.CodeAnalysis.Nodes
 
 		public override Value ReadValue(RunScope scope)
 		{
+			var defArgs = _def != null ? _def.Arguments.ToArray() : new ArgumentDescriptor[0];
+			var argIndex = 0;
 			foreach (var arg in _args)
 			{
-				arg.ReadValue(scope);
+				var dataType = argIndex < defArgs.Length ? defArgs[argIndex].DataType : null;
+				arg.ReadValue(scope.Clone(dataTypeContext: dataType));
+				argIndex++;
 			}
 
 			if (_def == null) return new Value(DataType.Void);
 			return new Value(_def.DataType);
 		}
 
-		public override bool CanAssignValue
+		public override bool CanAssignValue(RunScope scope)
 		{
-			get
-			{
-				return false;
-			}
+			return false;
 		}
 
 		public override int Precedence

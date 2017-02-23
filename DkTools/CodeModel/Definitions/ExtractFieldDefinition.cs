@@ -96,5 +96,21 @@ namespace DkTools.CodeModel.Definitions
 		{
 			_dataType = dataType;
 		}
+
+		public override bool CanRead
+		{
+			get
+			{
+				return true;
+			}
+		}
+
+		public override bool CanWrite
+		{
+			get
+			{
+				return true;
+			}
+		}
 	}
 }

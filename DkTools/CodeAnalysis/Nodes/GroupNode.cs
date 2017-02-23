@@ -21,6 +21,11 @@ namespace DkTools.CodeAnalysis.Nodes
 		public void AddNode(Node node)
 		{
 			_nodes.Add(node);
+			OnNodeAdded(node);
+		}
+
+		private void OnNodeAdded(Node node)
+		{
 			node.Parent = this;
 
 			if (!node.Span.IsEmpty)
@@ -57,10 +62,16 @@ namespace DkTools.CodeAnalysis.Nodes
 			{
 				if (insertIndex < 0) throw new ArgumentException("Cannot find old nodes to replace.");
 				_nodes.Insert(insertIndex, newNode);
+				OnNodeAdded(newNode);
 			}
 		}
 
 		public void ReplaceWithResult(Value value, params Node[] nodes)
+		{
+			ReplaceWithResult(value, ResultSource.Normal, nodes);
+		}
+
+		public void ReplaceWithResult(Value value, ResultSource source, params Node[] nodes)
 		{
 			ErrorType? errRep = null;
 			Span span = Span.Empty;
@@ -78,11 +89,13 @@ namespace DkTools.CodeAnalysis.Nodes
 				}
 			}
 
-			ReplaceNodes(new ResultNode(Statement, span, value, errRep), nodes);
+			ReplaceNodes(new ResultNode(Statement, span, value, source, errRep), nodes);
 		}
 
-		public void Execute(RunScope scope)
+		protected virtual void Execute(RunScope scope)
 		{
+			var reduceRetries = 3;
+
 			while (true)
 			{
 				// Find the highest precedence
@@ -127,11 +140,18 @@ namespace DkTools.CodeAnalysis.Nodes
 
 				// Sanity check to avoid infinite loop
 				var afterNum = _nodes.Count(n => n.Precedence != 0);
-				if (afterNum == numNodesWithPrec) throw new CAException("Number of nodes with precedence did not change during iteration.");
+				if (afterNum == numNodesWithPrec)
+				{
+					if (--reduceRetries == 0) throw new CAException("Number of nodes with precedence did not change during iteration.");
+				}
+				else
+				{
+					reduceRetries = 3;
+				}
 			}
 		}
 
-		public Node GetLeftSibling(Node node)
+		public Node GetLeftSibling(RunScope scope, Node node)
 		{
 			Node last = null;
 
@@ -144,7 +164,7 @@ namespace DkTools.CodeAnalysis.Nodes
 			return null;
 		}
 
-		public Node GetRightSibling(Node node)
+		public Node GetRightSibling(RunScope scope, Node node)
 		{
 			Node last = null;
 
