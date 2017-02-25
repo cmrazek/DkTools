@@ -84,6 +84,15 @@ namespace DkTools.CodeAnalysis
 
 		[ErrorMessage("'continue' is not valid here.")]
 		CA0024,
+
+		[ErrorMessage("Expected '('.")]
+		CA0025,
+
+		[ErrorMessage("Expected ';'.")]
+		CA0026,
+
+		[ErrorMessage("Expected ')'.")]
+		CA0027,
 	}
 
 	[AttributeUsage(AttributeTargets.Field, AllowMultiple = false)]
