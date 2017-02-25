@@ -17,14 +17,15 @@ namespace DkTools.CodeAnalysis.Statements
 
 		public override void Execute(RunScope scope)
 		{
+			base.Execute(scope);
+
 			if (!scope.CanContinue)
 			{
 				ReportError(Span, CAError.CA0024);	// 'continue' is not valid here.
 				return;
 			}
 
-			scope.Continued = true;
-			base.Execute(scope);
+			scope.Continued = TriState.True;
 		}
 	}
 }

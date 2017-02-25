@@ -9,8 +9,8 @@ namespace DkTools
 	enum TriState
 	{
 		False,
-		True,
-		Indeterminate
+		Indeterminate,
+		True
 	}
 
 	class TriStateUtil

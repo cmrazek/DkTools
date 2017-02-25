@@ -17,14 +17,15 @@ namespace DkTools.CodeAnalysis.Statements
 
 		public override void Execute(RunScope scope)
 		{
+			base.Execute(scope);
+
 			if (!scope.CanBreak)
 			{
 				ReportError(Span, CAError.CA0023);	// 'break' is not valid here.
 				return;
 			}
 
-			scope.Breaked = true;
-			base.Execute(scope);
+			scope.Breaked = TriState.True;
 		}
 	}
 }

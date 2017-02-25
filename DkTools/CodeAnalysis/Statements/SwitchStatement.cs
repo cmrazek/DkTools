@@ -19,6 +19,8 @@ namespace DkTools.CodeAnalysis.Statements
 		{
 			public ExpressionNode value;
 			public List<Statement> body = new List<Statement>();
+			public Span caseSpan;
+			public bool safeFallThrough;
 		}
 
 		public SwitchStatement(ReadParams p, Span keywordSpan)
@@ -56,7 +58,19 @@ namespace DkTools.CodeAnalysis.Statements
 				{
 					errorSpan = code.Span;
 
-					_cases.Add(new Case());
+					if (_cases.Count > 0)
+					{
+						var lastCase = _cases[_cases.Count - 1];
+						if (lastCase != null && lastCase.body.Count == 0)
+						{
+							lastCase.safeFallThrough = true;
+						}
+					}
+
+					_cases.Add(new Case
+					{
+						caseSpan = code.Span
+					});
 					insideDefault = false;
 
 					var exp = ExpressionNode.Read(p, ":", "}", ";");
@@ -96,15 +110,6 @@ namespace DkTools.CodeAnalysis.Statements
 					else ReportError(stmt.Span, CAError.CA0030);	// Statement is not valid here.
 				}
 			}
-
-			// Check for fall-throughs
-			foreach (var c in _cases)
-			{
-				if (c.body.Count > 0 && !c.body.Any(x => x is BreakStatement || x is ReturnStatement))
-				{
-					ReportError(c.body.Last().Span, CAError.CA0031);	// Switch fall-throughs are inadvisable.
-				}
-			}
 		}
 
 		public override void Execute(RunScope scope)
@@ -125,10 +130,21 @@ namespace DkTools.CodeAnalysis.Statements
 					scope.Merge(valueScope);
 				}
 
-				var bodyScope = scope.Clone();
-				bodyScope.CanBreak = true;
-				foreach (var stmt in cas.body) stmt.Execute(bodyScope);
-				bodyScopes.Add(bodyScope);
+				if (!cas.safeFallThrough)
+				{
+					var bodyScope = scope.Clone();
+					bodyScope.CanBreak = true;
+					foreach (var stmt in cas.body)
+					{
+						stmt.Execute(bodyScope);
+					}
+					bodyScopes.Add(bodyScope);
+
+					if (bodyScope.Breaked == TriState.False && bodyScope.Returned == TriState.False && cas.body.Any())
+					{
+						ReportError(cas.caseSpan, CAError.CA0031);	// Switch fall-throughs are inadvisable.
+					}
+				}
 			}
 
 			if (_default != null)

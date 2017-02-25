@@ -16,8 +16,8 @@ namespace DkTools.CodeAnalysis
 		private DataType _dataTypeContext;
 
 		private TriState _returned;
-		private bool _breaked;
-		private bool _continued;
+		private TriState _breaked;
+		private TriState _continued;
 		private bool _canBreak;
 		private bool _canContinue;
 
@@ -47,24 +47,29 @@ namespace DkTools.CodeAnalysis
 			return scope;
 		}
 
-		public void Merge(params RunScope[] scopes)
+		public void Merge(RunScope scope)
 		{
-			MergeChildScopes(scopes);
+			if (scope.Returned > _returned) _returned = scope.Returned;
+			if (!_canBreak && scope.Breaked > _breaked) _breaked = scope.Breaked;
+			if (!_canContinue && scope.Continued > _continued) _continued = scope.Continued;
+
+			foreach (var myVar in _vars.Values)
+			{
+				Variable otherVar;
+				if (scope._vars.TryGetValue(myVar.Name, out otherVar))
+				{
+					if (otherVar.IsInitialized) myVar.IsInitialized = true;
+				}
+			}
 		}
 
 		public void Merge(IEnumerable<RunScope> scopes)
 		{
-			MergeChildScopes(scopes);
-		}
-
-		private void MergeChildScopes(IEnumerable<RunScope> scopes)
-		{
 			if (!scopes.Any(x => x != null)) return;
 
-			if (_returned != TriState.True)
-			{
-				_returned = TriStateUtil.Combine(from s in scopes select s.Returned);
-			}
+			if (_returned != TriState.True) _returned = TriStateUtil.Combine(from s in scopes select s.Returned);
+			if (!_canBreak && _breaked != TriState.True) _breaked = TriStateUtil.Combine(from s in scopes select s.Breaked);
+			if (!_canContinue && _continued != TriState.True) _continued = TriStateUtil.Combine(from s in scopes select s.Continued);
 
 			foreach (var v in _vars)
 			{
@@ -93,13 +98,13 @@ namespace DkTools.CodeAnalysis
 			set { _returned = value; }
 		}
 
-		public bool Breaked
+		public TriState Breaked
 		{
 			get { return _breaked; }
 			set { _breaked = value; }
 		}
 
-		public bool Continued
+		public TriState Continued
 		{
 			get { return _continued; }
 			set { _continued = value; }
