@@ -16,7 +16,7 @@ namespace DkTools.CodeAnalysis.Statements
 		private List<Statement> _body = new List<Statement>();
 
 		public ForStatement(ReadParams p, Span keywordSpan)
-			: base(p.CodeAnalyzer)
+			: base(p.CodeAnalyzer, keywordSpan)
 		{
 			p = p.Clone(this);
 			var code = p.Code;

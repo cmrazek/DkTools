@@ -17,7 +17,7 @@ namespace DkTools.CodeAnalysis.Nodes
 		{
 			_dataType = dataType;
 
-			if (exp != null) AddNode(exp);
+			if (exp != null) AddChild(exp);
 		}
 
 		protected override void Execute(RunScope scope)

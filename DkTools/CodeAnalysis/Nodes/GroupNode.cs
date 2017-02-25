@@ -18,7 +18,7 @@ namespace DkTools.CodeAnalysis.Nodes
 		{
 		}
 
-		public void AddNode(Node node)
+		public void AddChild(Node node)
 		{
 			_nodes.Add(node);
 			OnNodeAdded(node);
@@ -28,6 +28,14 @@ namespace DkTools.CodeAnalysis.Nodes
 		{
 			node.Parent = this;
 			IncludeNodeInSpan(node);
+		}
+
+		public void RemoveChild(Node node)
+		{
+			if (_nodes.Remove(node))
+			{
+				if (node.Parent == this) node.Parent = null;
+			}
 		}
 
 		protected void IncludeNodeInSpan(Node node)
@@ -193,6 +201,16 @@ namespace DkTools.CodeAnalysis.Nodes
 		public override void WriteValue(RunScope scope, Value value)
 		{
 			base.WriteValue(scope, value);
+		}
+
+		public Node FirstChild
+		{
+			get { return _nodes.Count > 0 ? _nodes[0] : null; }
+		}
+
+		public Node LastChild
+		{
+			get { return _nodes.Count > 0 ? _nodes[_nodes.Count - 1] : null; }
 		}
 
 	}

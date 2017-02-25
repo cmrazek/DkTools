@@ -15,14 +15,18 @@ namespace DkTools.CodeAnalysis.Statements
 		{
 			p = p.Clone(this);
 
-			var exp = ExpressionNode.Read(p, ";");
-			if (exp == null)
+			var retDataType = p.FuncDef.DataType;
+			if (retDataType != null && !retDataType.IsVoid)
 			{
-				ReportError(keywordSpan, CAError.CA0014);	// Expected value after 'return'.
-			}
-			else
-			{
-				AddNode(exp);
+				var exp = ExpressionNode.Read(p, ";");
+				if (exp == null)
+				{
+					ReportError(keywordSpan, CAError.CA0014);	// Expected value after 'return'.
+				}
+				else
+				{
+					AddNode(exp);
+				}
 			}
 
 			if (!p.Code.ReadExact(';')) ReportError(p.Code.Span, CAError.CA0015);	// Expected ';'.

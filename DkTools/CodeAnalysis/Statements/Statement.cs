@@ -47,6 +47,8 @@ namespace DkTools.CodeAnalysis.Statements
 						return new IfStatement(p, p.Code.MovePeekedSpan());
 					case "return":
 						return new ReturnStatement(p, p.Code.MovePeekedSpan());
+					case "switch":
+						return new SwitchStatement(p, p.Code.MovePeekedSpan());
 					case "while":
 						return new WhileStatement(p, p.Code.MovePeekedSpan());
 				}
@@ -74,7 +76,7 @@ namespace DkTools.CodeAnalysis.Statements
 
 		public void AddNode(Node node)
 		{
-			_root.AddNode(node);
+			_root.AddChild(node);
 		}
 
 		public virtual void Execute(RunScope scope)

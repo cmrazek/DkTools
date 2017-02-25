@@ -93,6 +93,22 @@ namespace DkTools.CodeAnalysis
 
 		[ErrorMessage("Expected ')'.")]
 		CA0027,
+
+		[ErrorMessage("Expected case value.")]
+		CA0028,
+
+		[ErrorMessage("Expected ':'.")]
+		CA0029,
+
+		[ErrorMessage("Statement is not valid here.")]
+		CA0030,
+
+		[ErrorMessage("Switch fall-throughs are inadvisable.")]
+		[Warning]
+		CA0031,
+
+		[ErrorMessage("Duplicate default case.")]
+		CA0032,
 	}
 
 	[AttributeUsage(AttributeTargets.Field, AllowMultiple = false)]

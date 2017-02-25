@@ -43,7 +43,7 @@ namespace DkTools.CodeAnalysis.Nodes
 				if (curArg == null) curArg = new GroupNode(p.Statement);
 
 				var node = ExpressionNode.Read(p, ",", ")", ";");
-				if (node != null) curArg.AddNode(node);
+				if (node != null) curArg.AddChild(node);
 			}
 
 			if (curArg != null) funcCallNode.AddArgument(curArg);

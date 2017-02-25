@@ -78,6 +78,8 @@ namespace DkTools.CodeAnalysis.Statements
 
 		public override void Execute(RunScope scope)
 		{
+			base.Execute(scope);
+
 			var scopes = new List<RunScope>();
 
 			for (int i = 0, ii = _conditions.Count > _trueBodies.Count ? _conditions.Count : _trueBodies.Count; i < ii; i++)
@@ -111,8 +113,6 @@ namespace DkTools.CodeAnalysis.Statements
 			scopes.Add(falseScope);
 
 			scope.Merge(scopes);
-
-			base.Execute(scope);
 		}
 	}
 }

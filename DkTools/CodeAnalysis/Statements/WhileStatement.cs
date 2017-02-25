@@ -14,7 +14,7 @@ namespace DkTools.CodeAnalysis.Statements
 		private List<Statement> _body = new List<Statement>();
 
 		public WhileStatement(ReadParams p, Span keywordSpan)
-			: base(p.CodeAnalyzer)
+			: base(p.CodeAnalyzer, keywordSpan)
 		{
 			p = p.Clone(this);
 
@@ -31,19 +31,18 @@ namespace DkTools.CodeAnalysis.Statements
 				return;
 			}
 
-			while (!p.Code.EndOfFile)
+			while (!p.Code.EndOfFile && !p.Code.ReadExact("}"))
 			{
-				while (!p.Code.EndOfFile && !p.Code.ReadExact("}"))
-				{
-					var stmt = Statement.Read(p);
-					if (stmt == null) break;
-					_body.Add(stmt);
-				}
+				var stmt = Statement.Read(p);
+				if (stmt == null) break;
+				_body.Add(stmt);
 			}
 		}
 
 		public override void Execute(RunScope scope)
 		{
+			base.Execute(scope);
+
 			if (_cond != null)
 			{
 				var condScope = scope.Clone(dataTypeContext: DataType.Int);
@@ -59,8 +58,6 @@ namespace DkTools.CodeAnalysis.Statements
 				stmt.Execute(bodyScope);
 			}
 			scope.Merge(bodyScope);
-
-			base.Execute(scope);
 		}
 	}
 }

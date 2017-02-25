@@ -65,7 +65,8 @@ namespace DkTools.CodeAnalysis
 			{
 				CodeAnalyzer = this,
 				Code = new CodeParser(body),
-				FuncOffset = func.StartPos
+				FuncOffset = func.StartPos,
+				FuncDef = func.Definition
 			};
 
 			_scope = new RunScope(func.Definition, func.StartPos);
@@ -167,6 +168,7 @@ namespace DkTools.CodeAnalysis
 		public CodeParser Code { get; set; }
 		public Statement Statement { get; set; }
 		public int FuncOffset { get; set; }
+		public FunctionDefinition FuncDef { get; set; }
 
 		public ReadParams Clone(Statement stmt)
 		{
@@ -175,7 +177,8 @@ namespace DkTools.CodeAnalysis
 				CodeAnalyzer = CodeAnalyzer,
 				Code = Code,
 				Statement = stmt,
-				FuncOffset = FuncOffset
+				FuncOffset = FuncOffset,
+				FuncDef = FuncDef
 			};
 		}
 	}

@@ -52,13 +52,13 @@ namespace DkTools.CodeAnalysis.Nodes
 				switch (code.Type)
 				{
 					case CodeType.Number:
-						exp.AddNode(new NumberNode(p.Statement, code.Span, code.Text));
+						exp.AddChild(new NumberNode(p.Statement, code.Span, code.Text));
 						break;
 					case CodeType.StringLiteral:
-						exp.AddNode(new StringLiteralNode(p.Statement, code.Span, code.Text));
+						exp.AddChild(new StringLiteralNode(p.Statement, code.Span, code.Text));
 						break;
 					case CodeType.Word:
-						exp.AddNode(exp.ReadWord(p));
+						exp.AddChild(exp.ReadWord(p));
 						break;
 					case CodeType.Operator:
 						switch (code.Text)
@@ -88,26 +88,26 @@ namespace DkTools.CodeAnalysis.Nodes
 									{
 										// This is a cast
 										var span = new Span(startPos, code.Span.End);
-										exp.AddNode(new CastNode(p.Statement, span, dataType, ExpressionNode.Read(p, stopStrings)));
+										exp.AddChild(new CastNode(p.Statement, span, dataType, ExpressionNode.Read(p, stopStrings)));
 									}
 									else
 									{
 										code.Position = resumePos;
-										exp.AddNode(exp.ReadNestable(p, code.Span, opText, stopStrings));
+										exp.AddChild(exp.ReadNestable(p, code.Span, opText, stopStrings));
 									}
 								}
 								break;
 							case "[":
-								exp.AddNode(exp.ReadNestable(p, code.Span, code.Text, stopStrings));
+								exp.AddChild(exp.ReadNestable(p, code.Span, code.Text, stopStrings));
 								break;
 							default:
-								exp.AddNode(new OperatorNode(p.Statement, code.Span, code.Text));
+								exp.AddChild(new OperatorNode(p.Statement, code.Span, code.Text));
 								break;
 						}
 						break;
 					default:
 						exp.ReportError(code.Span, CAError.CA0001, code.Text);	// Unknown '{0}'.
-						exp.AddNode(new UnknownNode(p.Statement, code.Span, code.Text));
+						exp.AddChild(new UnknownNode(p.Statement, code.Span, code.Text));
 						break;
 				}
 			}
@@ -221,7 +221,7 @@ namespace DkTools.CodeAnalysis.Nodes
 
 				var exp = ExpressionNode.Read(p, stopStrings);
 				if (exp == null) break;
-				groupNode.AddNode(exp);
+				groupNode.AddChild(exp);
 			}
 
 			return groupNode;

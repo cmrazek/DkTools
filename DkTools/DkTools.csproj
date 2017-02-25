@@ -298,6 +298,7 @@
     <Compile Include="CodeAnalysis\Nodes\StringLiteralNode.cs" />
     <Compile Include="CodeAnalysis\Nodes\TextNode.cs" />
     <Compile Include="CodeAnalysis\Nodes\UnknownNode.cs" />
+    <Compile Include="CodeAnalysis\Statements\SwitchStatement.cs" />
     <Compile Include="CodeAnalysis\Statements\WhileStatement.cs" />
     <Compile Include="CodeAnalysis\Value.cs" />
     <Compile Include="CodeAnalysis\Variable.cs" />
