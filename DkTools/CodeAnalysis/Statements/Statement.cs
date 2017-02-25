@@ -79,7 +79,7 @@ namespace DkTools.CodeAnalysis.Statements
 
 		public virtual void Execute(RunScope scope)
 		{
-			if (scope.Returned)
+			if (scope.Returned == TriState.True)
 			{
 				ReportError(Span, CAError.CA0016);	// Unreachable code.
 			}

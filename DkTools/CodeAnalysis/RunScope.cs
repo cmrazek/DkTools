@@ -15,7 +15,7 @@ namespace DkTools.CodeAnalysis
 		private int _funcOffset;
 		private DataType _dataTypeContext;
 
-		private bool _returned;
+		private TriState _returned;
 		private bool _breaked;
 		private bool _continued;
 		private bool _canBreak;
@@ -61,7 +61,10 @@ namespace DkTools.CodeAnalysis
 		{
 			if (!scopes.Any(x => x != null)) return;
 
-			if (!_returned) _returned = scopes.All(x => x == null || x._returned);
+			if (_returned != TriState.True)
+			{
+				_returned = TriStateUtil.Combine(from s in scopes select s.Returned);
+			}
 
 			foreach (var v in _vars)
 			{
@@ -84,7 +87,7 @@ namespace DkTools.CodeAnalysis
 			return null;
 		}
 
-		public bool Returned
+		public TriState Returned
 		{
 			get { return _returned; }
 			set { _returned = value; }

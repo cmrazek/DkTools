@@ -585,6 +585,7 @@
     <Compile Include="TextFilter.cs" />
     <Compile Include="CodeParser.cs" />
     <Compile Include="CodeType.cs" />
+    <Compile Include="TriState.cs" />
     <Compile Include="TypeUtil.cs" />
     <Compile Include="Util.cs" />
     <Compile Include="VsTextUtil.cs" />

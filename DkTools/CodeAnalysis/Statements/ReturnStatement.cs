@@ -33,7 +33,7 @@ namespace DkTools.CodeAnalysis.Statements
 			var returnScope = scope.Clone(dataTypeContext: scope.FunctionDefinition.DataType);
 			base.Execute(returnScope);
 
-			scope.Returned = true;
+			scope.Returned = TriState.True;
 		}
 	}
 }
