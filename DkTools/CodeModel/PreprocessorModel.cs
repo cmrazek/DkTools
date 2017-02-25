@@ -313,7 +313,7 @@ namespace DkTools.CodeModel
 				{
 					continue;
 				}
-				if (TryReadFunctionArgument(argScope, localArgStartPos.PrimaryFile, args, argDefList)) continue;
+				if (TryReadFunctionArgument(argScope, !_visible || localArgStartPos.PrimaryFile, args, argDefList)) continue;
 
 #if REPORT_ERRORS
 				_code.Peek();
@@ -342,7 +342,7 @@ namespace DkTools.CodeModel
 			var localBodyStartPos = _source.GetFilePosition(bodyStartPos);
 			CodeScope funcScope = null;
 			var varList = new List<Definition>();
-			if (localBodyStartPos.PrimaryFile)	// Don't worry about saving variables if this function isn't in this file anyway.
+			if (!_visible || localBodyStartPos.PrimaryFile)	// Don't worry about saving variables if this function isn't in this file anyway.
 			{
 				funcScope = new CodeScope(argScope, bodyStartPos);
 				while (!_code.EndOfFile)
@@ -593,7 +593,7 @@ namespace DkTools.CodeModel
 				var localPos = _source.GetFilePosition(_code.TokenStartPostion);
 				var def = new VariableDefinition(_code.Text, localPos, dataType, true, arrayLength);
 				scope.AddDefinition(def);
-				if (localPos.PrimaryFile)
+				if (!_visible || localPos.PrimaryFile)
 				{
 					newDefList.Add(def);
 #if DEBUG
@@ -628,7 +628,7 @@ namespace DkTools.CodeModel
 
 				var def = new VariableDefinition(varName, localPos, dataType, false, arrayLength);
 				scope.AddDefinition(def);
-				if (localPos.PrimaryFile)
+				if (!_visible || localPos.PrimaryFile)
 				{
 					newDefList.Add(def);
 #if DEBUG
