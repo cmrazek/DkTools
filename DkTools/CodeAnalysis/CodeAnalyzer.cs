@@ -22,6 +22,8 @@ namespace DkTools.CodeAnalysis
 		private List<Statement> _stmts;
 		private RunScope _scope;
 		private ReadParams _read;
+		private int _numErrors;
+		private int _numWarnings;
 
 		public CodeAnalyzer(OutputPane pane, DkTools.CodeModel.CodeModel model, Microsoft.VisualStudio.Text.Editor.ITextView view)
 		{
@@ -47,11 +49,14 @@ namespace DkTools.CodeAnalysis
 			{
 				AnalyzeFunction(func);
 			}
+
+			_pane.WriteLine("Code analysis complete:");
+			_pane.WriteLine(string.Format("{0} error(s), {1} warning(s)", _numErrors, _numWarnings));
 		}
 
 		private void AnalyzeFunction(CodeModel.PreprocessorModel.LocalFunction func)
 		{
-			_pane.WriteLine(string.Format("Analyzing function '{0}'", func.Definition.Name));	// TODO: remove
+			//_pane.WriteLine(string.Format("Analyzing function '{0}'", func.Definition.Name));	// TODO: remove
 
 			var body = _fullSource.Substring(func.StartPos, func.EndPos - func.StartPos);
 			if (body.EndsWith("}")) body = body.Substring(0, body.Length - 1);	// End pos is just after the closing brace
@@ -127,6 +132,9 @@ namespace DkTools.CodeAnalysis
 
 			var message = errorCode.GetText(args);
 			var type = errorCode.GetErrorType();
+
+			if (type == ErrorType.Warning) _numWarnings++;
+			else _numErrors++;
 
 			_pane.WriteLine(string.Format("{0}({1},{2}) : {3} : {4}", filePos.FileName, lineNum + 1, linePos + 1, type, message));
 

@@ -44,12 +44,23 @@ namespace DkTools.CodeAnalysis.Statements
 
 		public override void Execute(RunScope scope)
 		{
-			if (_cond != null) _cond.ReadValue(scope.Clone(dataTypeContext: DataType.Int));
+			if (_cond != null)
+			{
+				var condScope = scope.Clone(dataTypeContext: DataType.Int);
+				_cond.ReadValue(condScope);
+				scope.Merge(condScope);
+			}
 
+			var bodyScope = scope.Clone();
+			bodyScope.CanBreak = true;
+			bodyScope.CanContinue = true;
 			foreach (var stmt in _body)
 			{
-				stmt.Execute(scope);
+				stmt.Execute(bodyScope);
 			}
+			scope.Merge(bodyScope);
+
+			base.Execute(scope);
 		}
 	}
 }

@@ -10,97 +10,93 @@ namespace DkTools.CodeAnalysis.Statements
 {
 	class IfStatement : Statement
 	{
-		private ExpressionNode _cond;
-		private List<Statement> _trueBody;
+		private List<ExpressionNode> _conditions = new List<ExpressionNode>();
+		private List<List<Statement>> _trueBodies = new List<List<Statement>>();
 		private List<Statement> _falseBody;
 
-		public IfStatement(CodeAnalyzer ca, Span keywordSpan)
-			: base(ca, keywordSpan)
+		public IfStatement(ReadParams p, Span keywordSpan)
+			: base(p.CodeAnalyzer, keywordSpan)
 		{
-		}
-
-		public static IfStatement Read(ReadParams p, Span keywordSpan)
-		{
-			var ret = new IfStatement(p.CodeAnalyzer, keywordSpan);
-			p = p.Clone(ret);
+			p = p.Clone(this);
 			var code = p.Code;
+			var stmtSpan = keywordSpan;
 
-			var condition = ExpressionNode.Read(p, "{", ";");
-			if (condition == null)
+			while (!code.EndOfFile)
 			{
-				ret.ReportError(keywordSpan, CAError.CA0018, "if");	// Expected condition after '{0}'.
-			}
-			else
-			{
-				ret.AddNode(condition);
-				ret.ConditionNode = condition;
+				var condition = ExpressionNode.Read(p, "{", ";");
+				if (condition == null)
+				{
+					ReportError(stmtSpan, CAError.CA0018, "if");	// Expected condition after '{0}'.
+					break;
+				}
+
+				_conditions.Add(condition);
 
 				if (!code.ReadExact("{"))
 				{
-					ret.ReportError(keywordSpan, CAError.CA0019);	// Expected '{'.
+					ReportError(stmtSpan, CAError.CA0019);	// Expected '{'.
+					break;
 				}
-				else
+
+				var trueBody = new List<Statement>();
+				while (!code.EndOfFile && !code.ReadExact("}"))
 				{
+					var stmt = Statement.Read(p);
+					if (stmt == null) break;
+					trueBody.Add(stmt);
+				}
+				_trueBodies.Add(trueBody);
+
+				if (code.ReadExactWholeWord("else"))
+				{
+					stmtSpan = code.Span;
+
+					if (code.ReadExactWholeWord("if"))
+					{
+						stmtSpan = code.Span;
+						continue;
+					}
+
+					if (!code.ReadExact("{"))
+					{
+						ReportError(stmtSpan, CAError.CA0019);	// Expected '{'.
+						break;
+					}
+
+					_falseBody = new List<Statement>();
 					while (!code.EndOfFile && !code.ReadExact("}"))
 					{
 						var stmt = Statement.Read(p);
 						if (stmt == null) break;
-						ret.AddTrueStatement(stmt);
-					}
-
-					if (code.ReadExactWholeWord("else"))
-					{
-						if (!code.ReadExact("{"))
-						{
-							ret.ReportError(keywordSpan, CAError.CA0019);	// Expected '{'.
-						}
-						else
-						{
-							while (!code.EndOfFile && !code.ReadExact("}"))
-							{
-								var stmt = Statement.Read(p);
-								if (stmt == null) break;
-								ret.AddFalseStatement(stmt);
-							}
-						}
+						_falseBody.Add(stmt);
 					}
 				}
+
+				break;
 			}
-
-			return ret;
-		}
-
-		public ExpressionNode ConditionNode
-		{
-			get { return _cond; }
-			set { _cond = value; }
-		}
-
-		public void AddTrueStatement(Statement stmt)
-		{
-			if (_trueBody == null) _trueBody = new List<Statement>();
-			_trueBody.Add(stmt);
-		}
-
-		public void AddFalseStatement(Statement stmt)
-		{
-			if (_falseBody == null) _falseBody = new List<Statement>();
-			_falseBody.Add(stmt);
 		}
 
 		public override void Execute(RunScope scope)
 		{
-			if (_cond != null)
-			{
-				_cond.ReadValue(scope.Clone(dataTypeContext: DataType.Int));
-			}
+			var scopes = new List<RunScope>();
 
-			var trueScope = scope.Clone(dataTypeContext: DataType.Void);
-			if (_trueBody != null)
+			for (int i = 0, ii = _conditions.Count > _trueBodies.Count ? _conditions.Count : _trueBodies.Count; i < ii; i++)
 			{
-				foreach (var stmt in _trueBody)
+				if (i < _conditions.Count)
 				{
-					stmt.Execute(trueScope);
+					var condScope = scope.Clone(dataTypeContext: DataType.Int);
+					_conditions[i].ReadValue(condScope);
+					scopes.Add(condScope);
+				}
+
+				if (i < _trueBodies.Count)
+				{
+					var trueScope = scope.Clone(dataTypeContext: DataType.Void);
+					foreach (var stmt in _trueBodies[i])
+					{
+						stmt.Execute(trueScope);
+					}
+					scopes.Add(trueScope);
 				}
 			}
 
@@ -112,8 +108,11 @@ namespace DkTools.CodeAnalysis.Statements
 					stmt.Execute(falseScope);
 				}
 			}
+			scopes.Add(falseScope);
 
-			scope.Merge(trueScope, falseScope);
+			scope.Merge(scopes);
+
+			base.Execute(scope);
 		}
 	}
 }

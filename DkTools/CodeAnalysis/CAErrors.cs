@@ -78,6 +78,12 @@ namespace DkTools.CodeAnalysis
 
 		[ErrorMessage("Only 1 or 2 index accessors allowed.")]
 		CA0022,
+
+		[ErrorMessage("'break' is not valid here.")]
+		CA0023,
+
+		[ErrorMessage("'continue' is not valid here.")]
+		CA0024,
 	}
 
 	[AttributeUsage(AttributeTargets.Field, AllowMultiple = false)]

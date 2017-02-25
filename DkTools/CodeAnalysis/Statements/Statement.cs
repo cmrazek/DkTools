@@ -37,10 +37,14 @@ namespace DkTools.CodeAnalysis.Statements
 			{
 				switch (word)
 				{
+					case "break":
+						return new BreakStatement(p, p.Code.MovePeekedSpan());
+					case "continue":
+						return new ContinueStatement(p, p.Code.MovePeekedSpan());
 					case "if":
-						return IfStatement.Read(p, p.Code.MovePeekedSpan());
+						return new IfStatement(p, p.Code.MovePeekedSpan());
 					case "return":
-						return ReturnStatement.Read(p, p.Code.MovePeekedSpan());
+						return new ReturnStatement(p, p.Code.MovePeekedSpan());
 					case "while":
 						return new WhileStatement(p, p.Code.MovePeekedSpan());
 				}
@@ -78,7 +82,7 @@ namespace DkTools.CodeAnalysis.Statements
 				ReportError(Span, CAError.CA0016);	// Unreachable code.
 			}
 
-			_root.ReadValue(scope);
+			if (_root.NumChildren > 0) _root.ReadValue(scope);
 		}
 
 		public CodeAnalyzer CodeAnalyzer

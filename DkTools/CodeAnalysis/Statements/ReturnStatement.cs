@@ -10,28 +10,22 @@ namespace DkTools.CodeAnalysis.Statements
 {
 	class ReturnStatement : Statement
 	{
-		public ReturnStatement(CodeAnalyzer ca, Span span)
-			: base(ca, span)
+		public ReturnStatement(ReadParams p, Span keywordSpan)
+			: base(p.CodeAnalyzer, keywordSpan)
 		{
-		}
-
-		public static ReturnStatement Read(ReadParams p, Span keywordSpan)
-		{
-			var ret = new ReturnStatement(p.CodeAnalyzer, keywordSpan);
-			p = p.Clone(ret);
+			p = p.Clone(this);
 
 			var exp = ExpressionNode.Read(p, ";");
 			if (exp == null)
 			{
-				ret.ReportError(keywordSpan, CAError.CA0014);	// Expected value after 'return'.
+				ReportError(keywordSpan, CAError.CA0014);	// Expected value after 'return'.
 			}
 			else
 			{
-				ret.AddNode(exp);
+				AddNode(exp);
 			}
 
-			if (!p.Code.ReadExact(';')) ret.ReportError(p.Code.Span, CAError.CA0015);	// Expected ';'.
-			return ret;
+			if (!p.Code.ReadExact(';')) ReportError(p.Code.Span, CAError.CA0015);	// Expected ';'.
 		}
 
 		public override void Execute(RunScope scope)

@@ -288,6 +288,8 @@
     <Compile Include="CodeAnalysis\Nodes\OperatorNode.cs" />
     <Compile Include="CodeAnalysis\Nodes\ResultNode.cs" />
     <Compile Include="CodeAnalysis\Nodes\UnresolvedNode.cs" />
+    <Compile Include="CodeAnalysis\Statements\BreakStatement.cs" />
+    <Compile Include="CodeAnalysis\Statements\ContinueStatement.cs" />
     <Compile Include="CodeAnalysis\Statements\IfStatement.cs" />
     <Compile Include="CodeAnalysis\Statements\ReturnStatement.cs" />
     <Compile Include="CodeAnalysis\RunScope.cs" />

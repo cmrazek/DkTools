@@ -16,6 +16,10 @@ namespace DkTools.CodeAnalysis
 		private DataType _dataTypeContext;
 
 		private bool _returned;
+		private bool _breaked;
+		private bool _continued;
+		private bool _canBreak;
+		private bool _canContinue;
 
 		public RunScope(FunctionDefinition funcDef, int funcOffset)
 		{
@@ -28,7 +32,9 @@ namespace DkTools.CodeAnalysis
 			var scope = new RunScope(_funcDef, _funcOffset)
 			{
 				_returned = _returned,
-				_dataTypeContext = _dataTypeContext
+				_dataTypeContext = _dataTypeContext,
+				_canBreak = _canBreak,
+				_canContinue = _canContinue
 			};
 
 			if (dataTypeContext != null) scope._dataTypeContext = dataTypeContext;
@@ -42,6 +48,16 @@ namespace DkTools.CodeAnalysis
 		}
 
 		public void Merge(params RunScope[] scopes)
+		{
+			MergeChildScopes(scopes);
+		}
+
+		public void Merge(IEnumerable<RunScope> scopes)
+		{
+			MergeChildScopes(scopes);
+		}
+
+		private void MergeChildScopes(IEnumerable<RunScope> scopes)
 		{
 			if (!scopes.Any(x => x != null)) return;
 
@@ -72,6 +88,30 @@ namespace DkTools.CodeAnalysis
 		{
 			get { return _returned; }
 			set { _returned = value; }
+		}
+
+		public bool Breaked
+		{
+			get { return _breaked; }
+			set { _breaked = value; }
+		}
+
+		public bool Continued
+		{
+			get { return _continued; }
+			set { _continued = value; }
+		}
+
+		public bool CanBreak
+		{
+			get { return _canBreak; }
+			set { _canBreak = value; }
+		}
+
+		public bool CanContinue
+		{
+			get { return _canContinue; }
+			set { _canContinue = value; }
 		}
 
 		public int FuncOffset
