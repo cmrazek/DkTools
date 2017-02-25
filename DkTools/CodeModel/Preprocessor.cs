@@ -1049,6 +1049,9 @@ namespace DkTools.CodeModel
 
 			public IncludeDependency(string fileName, bool include, bool localizedFile, string content)
 			{
+#if DEBUG
+				if (content == null) throw new ArgumentNullException("content");
+#endif
 				_fileName = fileName;
 				_include = include;
 				_localizedFile = localizedFile;

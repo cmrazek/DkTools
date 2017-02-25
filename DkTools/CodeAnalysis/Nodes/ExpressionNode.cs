@@ -100,8 +100,15 @@ namespace DkTools.CodeAnalysis.Nodes
 							case "[":
 								exp.AddChild(exp.ReadNestable(p, code.Span, code.Text, stopStrings));
 								break;
+							case "-":
+								{
+									var lastNode = exp.LastChild;
+									if (lastNode == null || lastNode is OperatorNode) exp.AddChild(new OperatorNode(p.Statement, code.Span, code.Text, SpecialOperator.UnaryMinus));
+									else exp.AddChild(new OperatorNode(p.Statement, code.Span, code.Text, null));
+								}
+								break;
 							default:
-								exp.AddChild(new OperatorNode(p.Statement, code.Span, code.Text));
+								exp.AddChild(new OperatorNode(p.Statement, code.Span, code.Text, null));
 								break;
 						}
 						break;

@@ -105,5 +105,21 @@ namespace DkTools.CodeModel.Definitions
 		{
 			get { return false; }
 		}
+
+		public override bool CanRead
+		{
+			get
+			{
+				return true;
+			}
+		}
+
+		public override DataType DataType
+		{
+			get
+			{
+				return DataType.IndRel;
+			}
+		}
 	}
 }

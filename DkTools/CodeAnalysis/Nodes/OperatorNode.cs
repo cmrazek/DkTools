@@ -10,6 +10,7 @@ using DkTools.ErrorTagging;
 /*
  * Precedence:
  * 100	[]
+ * 26   - (unary)
  * 24	* / %
  * 22	+ -
  * 20	< > <= >=
@@ -27,10 +28,13 @@ namespace DkTools.CodeAnalysis.Nodes
 	class OperatorNode : TextNode
 	{
 		private int _prec;
+		private SpecialOperator? _special;
 
-		public OperatorNode(Statement stmt, Span span, string text)
+		public OperatorNode(Statement stmt, Span span, string text, SpecialOperator? special)
 			: base(stmt, span, text)
 		{
+			_special = special;
+
 			// Determine the operator precedence
 			// Even numbers are left-to-right, odd are right-to-left
 			switch (text)
@@ -41,8 +45,10 @@ namespace DkTools.CodeAnalysis.Nodes
 					_prec = 24;
 					break;
 				case "+":
-				case "-":
 					_prec = 22;
+					break;
+				case "-":
+					_prec = _special == SpecialOperator.UnaryMinus ? 26 : 22;
 					break;
 				case "<":
 				case ">":
@@ -55,9 +61,11 @@ namespace DkTools.CodeAnalysis.Nodes
 					_prec = 18;
 					break;
 				case "and":
+				case "&&":
 					_prec = 16;
 					break;
 				case "or":
+				case "||":
 					_prec = 14;
 					break;
 				case "?":
@@ -97,8 +105,12 @@ namespace DkTools.CodeAnalysis.Nodes
 				case "/":
 				case "%":
 				case "+":
-				case "-":
 					ExecuteMath(scope);
+					break;
+
+				case "-":
+					if (_special == SpecialOperator.UnaryMinus) ExecuteMinus(scope);
+					else ExecuteMath(scope);
 					break;
 
 				case "<":
@@ -108,7 +120,9 @@ namespace DkTools.CodeAnalysis.Nodes
 				case "==":
 				case "!=":
 				case "and":
+				case "&&":
 				case "or":
+				case "||":
 					ExecuteComparison(scope);
 					break;
 
@@ -151,6 +165,19 @@ namespace DkTools.CodeAnalysis.Nodes
 				if (leftNode != null && rightNode == null) resultValue = leftNode.ReadValue(scope);
 				else if (leftNode == null && rightNode != null) resultValue = rightNode.ReadValue(scope);
 				Parent.ReplaceWithResult(resultValue, leftNode, this, rightNode);
+			}
+		}
+
+		private void ExecuteMinus(RunScope scope)
+		{
+			var rightNode = Parent.GetRightSibling(scope, this);
+			if (rightNode == null) ReportError(Span, CAError.CA0008, Text);	// Operator '{0}' expects value on right.
+			else
+			{
+				var rightValue = rightNode.ReadValue(scope);
+				if (rightValue.IsVoid) rightNode.ReportError(rightNode.Span, CAError.CA0008, Text);	// Operator '{0}' expects value on right.
+
+				Parent.ReplaceWithResult(rightValue, this, rightNode);
 			}
 		}
 
@@ -245,5 +272,11 @@ namespace DkTools.CodeAnalysis.Nodes
 				Parent.ReplaceWithResult(resultValue, ResultSource.Conditional2, leftNode, this, rightNode);
 			}
 		}
+	}
+
+	enum SpecialOperator
+	{
+		None,
+		UnaryMinus
 	}
 }

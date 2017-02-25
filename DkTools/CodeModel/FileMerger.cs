@@ -59,7 +59,6 @@ namespace DkTools.CodeModel
 			_origFileName = "";
 			_localFileNames.Clear();
 			_showMergeComments = showMergeComments;
-			_origContent = content;
 
 			if (Path.IsPathRooted(fileName)) fileName = UnrootFileName(fileName);
 			FindFiles(fileName);
@@ -69,8 +68,11 @@ namespace DkTools.CodeModel
 				throw new FileMergeException(string.Format("Could not find base file for '{0}'.", fileName));
 			}
 
+			if (content == null) _origContent = File.ReadAllText(_origFileName);
+			else _origContent = content;
+
 			// Perform localization
-			CreateLineDataFromOrigFile(content);
+			CreateLineDataFromOrigFile(_origContent);
 			foreach (string localFileName in _localFileNames)
 			{
 				try
@@ -203,8 +205,6 @@ namespace DkTools.CodeModel
 
 		private void CreateLineDataFromOrigFile(string fileText)
 		{
-			if (fileText == null) fileText = File.ReadAllText(_origFileName);
-
 			var pos = 0;
 			var linePos = pos;
 			var sb = new StringBuilder();
@@ -503,7 +503,8 @@ namespace DkTools.CodeModel
 
 			string content;
 			if (_localFileContent.TryGetValue(localFileName.ToLower(), out content)) return content;
-			return null;
+
+			throw new ArgumentOutOfRangeException(string.Format("File name '{0}' does not exist."));
 		}
 	}
 }

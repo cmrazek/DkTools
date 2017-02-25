@@ -100,7 +100,7 @@ namespace DkTools.CodeAnalysis.Statements
 			// Check for fall-throughs
 			foreach (var c in _cases)
 			{
-				if (c.body.Count > 0 && !c.body.Any(x => x is BreakStatement))
+				if (c.body.Count > 0 && !c.body.Any(x => x is BreakStatement || x is ReturnStatement))
 				{
 					ReportError(c.body.Last().Span, CAError.CA0031);	// Switch fall-throughs are inadvisable.
 				}

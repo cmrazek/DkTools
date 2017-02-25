@@ -562,7 +562,9 @@ namespace DkTools.CodeModel
 
 							foreach (var mergeFileName in merger.FileNames)
 							{
-								_preMergeContent[mergeFileName.ToLower()] = merger.GetFileContent(mergeFileName);
+								var content = merger.GetFileContent(mergeFileName);
+								if (content == null) throw new InvalidOperationException("Merger content is null.");
+								_preMergeContent[mergeFileName.ToLower()] = content;
 							}
 						}
 						catch (Exception ex)
