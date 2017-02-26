@@ -115,6 +115,9 @@ namespace DkTools.CodeAnalysis.Nodes
 									else exp.AddChild(new OperatorNode(p.Statement, code.Span, code.Text, null));
 								}
 								break;
+							case "?":
+								exp.AddChild(ConditionalNode.Read(p, code.Span, stopStrings));
+								break;
 							default:
 								exp.AddChild(new OperatorNode(p.Statement, code.Span, code.Text, null));
 								break;

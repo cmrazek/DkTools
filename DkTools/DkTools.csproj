@@ -278,6 +278,7 @@
     <Compile Include="CodeAnalysis\CAErrors.cs" />
     <Compile Include="CodeAnalysis\CodeAnalyzer.cs" />
     <Compile Include="CodeAnalysis\Nodes\CastNode.cs" />
+    <Compile Include="CodeAnalysis\Nodes\ConditionalNode.cs" />
     <Compile Include="CodeAnalysis\Nodes\EmptyNode.cs" />
     <Compile Include="CodeAnalysis\Nodes\ExpressionNode.cs" />
     <Compile Include="CodeAnalysis\Nodes\FunctionCallNode.cs" />

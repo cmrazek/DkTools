@@ -133,6 +133,15 @@ namespace DkTools.CodeAnalysis
 
 		[ErrorMessage("Table '{0}' has no column '{1}'.")]
 		CA0040,
+
+		[ErrorMessage("Expected ':' to follow conditional result.")]
+		CA0041,
+
+		[ErrorMessage("Expected value to follow conditional '?'.")]
+		CA0042,
+
+		[ErrorMessage("Expected value to follow conditional ':'.")]
+		CA0043,
 	}
 
 	[AttributeUsage(AttributeTargets.Field, AllowMultiple = false)]

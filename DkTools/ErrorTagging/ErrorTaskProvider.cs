@@ -192,10 +192,6 @@ namespace DkTools.ErrorTagging
 			if (firstSpan == null) return tags;
 			var snapshot = firstSpan.Snapshot;
 
-			//// TODO: remove
-			//Log.Debug("Getting tags for spans:");
-			//foreach (var span in docSpans) Log.Debug(span.ToString());
-
 			ErrorTask[] tasks;
 			lock (_tasksLock)
 			{
@@ -207,21 +203,15 @@ namespace DkTools.ErrorTagging
 				var span = task.Span;
 				if (span.HasValue)
 				{
-					//var reported = false;	// TODO: remove
-					foreach (var docSpan in docSpans)
-					{
-						var spanT = span.Value.TranslateTo(docSpan.Snapshot, SpanTrackingMode.EdgeExclusive);
-						if (docSpan.Contains(spanT.Start))
-						{
-							tags.Add(new TagSpan<ErrorTag>(spanT, new ErrorTag(task.Type == ErrorType.Warning ? ErrorTagger.CodeWarning : ErrorTagger.CodeError, task.Text)));
-							//reported = true;
-							break;
-						}
-					}
-
-					//if (!reported)
+					//foreach (var docSpan in docSpans)
 					//{
-					//	Log.Debug("Error task not reported because it's not in any spans: {0}", task.Text);	// TODO: remove
+						//var spanT = span.Value.TranslateTo(docSpan.Snapshot, SpanTrackingMode.EdgeExclusive);
+						//if (docSpan.Contains(spanT.Start))
+						//{
+							tags.Add(new TagSpan<ErrorTag>(span.Value, new ErrorTag(task.Type == ErrorType.Warning ?
+								ErrorTagger.CodeWarning : ErrorTagger.CodeError, task.Text)));
+							//break;
+						//}
 					//}
 				}
 				else

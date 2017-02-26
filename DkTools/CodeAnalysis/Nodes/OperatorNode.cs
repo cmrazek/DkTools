@@ -68,10 +68,10 @@ namespace DkTools.CodeAnalysis.Nodes
 				case "||":
 					_prec = 14;
 					break;
-				case "?":
-				case ":":
-					_prec = 12;
-					break;
+				//case "?":
+				//case ":":
+				//	_prec = 12;
+				//	break;
 				case "=":
 				case "*=":
 				case "/=":
@@ -126,12 +126,12 @@ namespace DkTools.CodeAnalysis.Nodes
 					ExecuteComparison(scope);
 					break;
 
-				case "?":
-					ExecuteConditional1(scope);
-					break;
-				case ":":
-					ExecuteConditional2(scope);
-					break;
+				//case "?":
+				//	ExecuteConditional1(scope);
+				//	break;
+				//case ":":
+				//	ExecuteConditional2(scope);
+				//	break;
 
 				case "=":
 				case "*=":
@@ -237,49 +237,49 @@ namespace DkTools.CodeAnalysis.Nodes
 			}
 		}
 
-		private void ExecuteConditional1(RunScope scope)	// ?
-		{
-			var leftScope = scope.Clone(dataTypeContext: DataType.Int);
-			var leftNode = Parent.GetLeftSibling(leftScope, this);
-			scope.Merge(leftScope);
-			if (leftNode == null)
-			{
-				ReportError(Span, CAError.CA0007, Text);	// Operator '{0}' expects value on left.
-				Parent.ReplaceWithResult(new Value(DataType.Int), ResultSource.Conditional1, this);
-			}
-			else
-			{
-				var leftValue = leftNode.ReadValue(leftScope);
-				if (leftValue.IsVoid) leftNode.ReportError(Span, CAError.CA0007, Text);	// Operator '{0}' expects value on left.
+		//private void ExecuteConditional1(RunScope scope)	// ?
+		//{
+		//	var leftScope = scope.Clone(dataTypeContext: DataType.Int);
+		//	var leftNode = Parent.GetLeftSibling(leftScope, this);
+		//	scope.Merge(leftScope);
+		//	if (leftNode == null)
+		//	{
+		//		ReportError(Span, CAError.CA0007, Text);	// Operator '{0}' expects value on left.
+		//		Parent.ReplaceWithResult(new Value(DataType.Int), ResultSource.Conditional1, this);
+		//	}
+		//	else
+		//	{
+		//		var leftValue = leftNode.ReadValue(leftScope);
+		//		if (leftValue.IsVoid) leftNode.ReportError(Span, CAError.CA0007, Text);	// Operator '{0}' expects value on left.
 
-				Parent.ReplaceWithResult(new Value(DataType.Int), ResultSource.Conditional1, leftNode, this);
-			}
-		}
+		//		Parent.ReplaceWithResult(new Value(DataType.Int), ResultSource.Conditional1, leftNode, this);
+		//	}
+		//}
 
-		private void ExecuteConditional2(RunScope scope)	// :
-		{
-			var leftNode = Parent.GetLeftSibling(scope, this);
-			var rightNode = Parent.GetRightSibling(scope, this);
-			if (leftNode == null) ReportError(Span, CAError.CA0007, Text);	// Operator '{0}' expects value on left.
-			else if (rightNode == null) ReportError(Span, CAError.CA0008, Text);	// Operator '{0}' expects value on right.
-			if (leftNode != null && rightNode != null)
-			{
-				// TODO: The data type should be based on the value that is calling the entire conditional
-				var leftValue = leftNode.ReadValue(scope);
-				var rightValue = rightNode.ReadValue(scope);
-				if (leftValue.IsVoid) leftNode.ReportError(leftNode.Span, CAError.CA0007, Text);		// Operator '{0}' expects value on left.
-				else if (rightValue.IsVoid) rightNode.ReportError(rightNode.Span, CAError.CA0008, Text);	// Operator '{0}' expects value on right.
+		//private void ExecuteConditional2(RunScope scope)	// :
+		//{
+		//	var leftNode = Parent.GetLeftSibling(scope, this);
+		//	var rightNode = Parent.GetRightSibling(scope, this);
+		//	if (leftNode == null) ReportError(Span, CAError.CA0007, Text);	// Operator '{0}' expects value on left.
+		//	else if (rightNode == null) ReportError(Span, CAError.CA0008, Text);	// Operator '{0}' expects value on right.
+		//	if (leftNode != null && rightNode != null)
+		//	{
+		//		// TODO: The data type should be based on the value that is calling the entire conditional
+		//		var leftValue = leftNode.ReadValue(scope);
+		//		var rightValue = rightNode.ReadValue(scope);
+		//		if (leftValue.IsVoid) leftNode.ReportError(leftNode.Span, CAError.CA0007, Text);		// Operator '{0}' expects value on left.
+		//		else if (rightValue.IsVoid) rightNode.ReportError(rightNode.Span, CAError.CA0008, Text);	// Operator '{0}' expects value on right.
 
-				Parent.ReplaceWithResult(new Value(leftValue), ResultSource.Conditional2, leftNode, this, rightNode);
-			}
-			else
-			{
-				Value resultValue = Value.Empty;
-				if (leftNode != null && rightNode == null) resultValue = leftNode.ReadValue(scope);
-				else if (leftNode == null && rightNode != null) resultValue = rightNode.ReadValue(scope);
-				Parent.ReplaceWithResult(resultValue, ResultSource.Conditional2, leftNode, this, rightNode);
-			}
-		}
+		//		Parent.ReplaceWithResult(new Value(leftValue), ResultSource.Conditional2, leftNode, this, rightNode);
+		//	}
+		//	else
+		//	{
+		//		Value resultValue = Value.Empty;
+		//		if (leftNode != null && rightNode == null) resultValue = leftNode.ReadValue(scope);
+		//		else if (leftNode == null && rightNode != null) resultValue = rightNode.ReadValue(scope);
+		//		Parent.ReplaceWithResult(resultValue, ResultSource.Conditional2, leftNode, this, rightNode);
+		//	}
+		//}
 	}
 
 	enum SpecialOperator
