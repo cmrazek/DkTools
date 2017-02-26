@@ -127,13 +127,12 @@ namespace DkTools.CodeAnalysis.Statements
 				{
 					var valueScope = scope.Clone(dataTypeContext: dataType);
 					cas.value.ReadValue(valueScope);
-					scope.Merge(valueScope);
+					scope.Merge(valueScope, true, true);
 				}
 
 				if (!cas.safeFallThrough)
 				{
-					var bodyScope = scope.Clone();
-					bodyScope.CanBreak = true;
+					var bodyScope = scope.Clone(canBreak: true);
 					foreach (var stmt in cas.body)
 					{
 						stmt.Execute(bodyScope);
@@ -149,13 +148,12 @@ namespace DkTools.CodeAnalysis.Statements
 
 			if (_default != null)
 			{
-				var bodyScope = scope.Clone();
-				bodyScope.CanBreak = true;
+				var bodyScope = scope.Clone(canBreak: true);
 				foreach (var stmt in _default) stmt.Execute(bodyScope);
 				bodyScopes.Add(bodyScope);
 			}
 
-			scope.Merge(bodyScopes);
+			scope.Merge(bodyScopes, false, true);
 		}
 	}
 }

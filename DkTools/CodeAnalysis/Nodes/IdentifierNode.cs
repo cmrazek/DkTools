@@ -48,7 +48,7 @@ namespace DkTools.CodeAnalysis.Nodes
 		{
 			if (_def == null && !Resolve(scope)) return false;
 
-			return _def is VariableDefinition;
+			return _def.CanWrite;
 		}
 
 		public override Value ReadValue(RunScope scope)

@@ -88,7 +88,7 @@ namespace DkTools.CodeAnalysis.Statements
 				{
 					var condScope = scope.Clone(dataTypeContext: DataType.Int);
 					_conditions[i].ReadValue(condScope);
-					scope.Merge(condScope);
+					scope.Merge(condScope, true, true);
 				}
 
 				if (i < _trueBodies.Count)
@@ -112,7 +112,7 @@ namespace DkTools.CodeAnalysis.Statements
 			}
 			scopes.Add(falseScope);
 
-			scope.Merge(scopes);
+			scope.Merge(scopes, true, true);
 		}
 	}
 }

@@ -27,7 +27,7 @@ namespace DkTools.CodeAnalysis
 			_funcOffset = funcOffset;
 		}
 
-		public RunScope Clone(DataType dataTypeContext = null)
+		public RunScope Clone(DataType dataTypeContext = null, bool? canBreak = null, bool? canContinue = null)
 		{
 			var scope = new RunScope(_funcDef, _funcOffset)
 			{
@@ -38,6 +38,8 @@ namespace DkTools.CodeAnalysis
 			};
 
 			if (dataTypeContext != null) scope._dataTypeContext = dataTypeContext;
+			if (canBreak.HasValue) scope._canBreak = canBreak.Value;
+			if (canContinue.HasValue) scope._canContinue = canContinue.Value;
 
 			foreach (var v in _vars)
 			{
@@ -47,11 +49,11 @@ namespace DkTools.CodeAnalysis
 			return scope;
 		}
 
-		public void Merge(RunScope scope)
+		public void Merge(RunScope scope, bool promoteBreak, bool promoteContinue)
 		{
 			if (scope.Returned > _returned) _returned = scope.Returned;
-			if (!_canBreak && scope.Breaked > _breaked) _breaked = scope.Breaked;
-			if (!_canContinue && scope.Continued > _continued) _continued = scope.Continued;
+			if (promoteBreak && scope.Breaked > _breaked) _breaked = scope.Breaked;
+			if (promoteContinue && scope.Continued > _continued) _continued = scope.Continued;
 
 			foreach (var myVar in _vars.Values)
 			{
@@ -63,13 +65,21 @@ namespace DkTools.CodeAnalysis
 			}
 		}
 
-		public void Merge(IEnumerable<RunScope> scopes)
+		public void Merge(IEnumerable<RunScope> scopes, bool promoteBreak, bool promoteContinue)
 		{
 			if (!scopes.Any(x => x != null)) return;
 
 			if (_returned != TriState.True) _returned = TriStateUtil.Combine(from s in scopes select s.Returned);
-			if (!_canBreak && _breaked != TriState.True) _breaked = TriStateUtil.Combine(from s in scopes select s.Breaked);
-			if (!_canContinue && _continued != TriState.True) _continued = TriStateUtil.Combine(from s in scopes select s.Continued);
+			if (promoteBreak && _breaked != TriState.True)
+			{
+				var breaked = TriStateUtil.Combine(from s in scopes select s.Breaked);
+				if (breaked > _breaked) _breaked = breaked;
+			}
+			if (promoteContinue && _continued != TriState.True)
+			{
+				var continued = TriStateUtil.Combine(from s in scopes select s.Continued);
+				if (continued > _continued) _continued = continued;
+			}
 
 			foreach (var v in _vars)
 			{

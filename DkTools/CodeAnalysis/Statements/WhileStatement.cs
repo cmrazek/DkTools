@@ -47,17 +47,15 @@ namespace DkTools.CodeAnalysis.Statements
 			{
 				var condScope = scope.Clone(dataTypeContext: DataType.Int);
 				_cond.ReadValue(condScope);
-				scope.Merge(condScope);
+				scope.Merge(condScope, true, true);
 			}
 
-			var bodyScope = scope.Clone();
-			bodyScope.CanBreak = true;
-			bodyScope.CanContinue = true;
+			var bodyScope = scope.Clone(canBreak: true, canContinue: true);
 			foreach (var stmt in _body)
 			{
 				stmt.Execute(bodyScope);
 			}
-			scope.Merge(bodyScope);
+			scope.Merge(bodyScope, false, false);
 		}
 	}
 }

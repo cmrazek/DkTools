@@ -81,31 +81,29 @@ namespace DkTools.CodeAnalysis.Statements
 			{
 				var initScope = scope.Clone(dataTypeContext: DataType.Void);
 				_initExp.ReadValue(initScope);
-				scope.Merge(initScope);
+				scope.Merge(initScope, true, true);
 			}
 
 			if (_condExp != null)
 			{
 				var condScope = scope.Clone(dataTypeContext: DataType.Int);
 				_condExp.ReadValue(condScope);
-				scope.Merge(condScope);
+				scope.Merge(condScope, true, true);
 			}
 
 			if (_incExp != null)
 			{
 				var incScope = scope.Clone(dataTypeContext: DataType.Void);
 				_incExp.ReadValue(incScope);
-				scope.Merge(incScope);
+				scope.Merge(incScope, true, true);
 			}
 
-			var bodyScope = scope.Clone();
-			bodyScope.CanBreak = true;
-			bodyScope.CanContinue = true;
+			var bodyScope = scope.Clone(canBreak: true, canContinue: true);
 			foreach (var stmt in _body)
 			{
 				stmt.Execute(bodyScope);
 			}
-			scope.Merge(bodyScope);
+			scope.Merge(bodyScope, false, false);
 		}
 	}
 }
