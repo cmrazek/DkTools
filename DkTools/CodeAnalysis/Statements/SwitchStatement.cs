@@ -152,6 +152,12 @@ namespace DkTools.CodeAnalysis.Statements
 				foreach (var stmt in _default) stmt.Execute(bodyScope);
 				bodyScopes.Add(bodyScope);
 			}
+			else
+			{
+				// Because there's no default, this switch doesn't cover all code branches.
+				// Add a dummy scope to indicate that.
+				bodyScopes.Add(scope.Clone());
+			}
 
 			scope.Merge(bodyScopes, false, true);
 		}
