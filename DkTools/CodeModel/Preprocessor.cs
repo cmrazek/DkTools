@@ -422,7 +422,10 @@ namespace DkTools.CodeModel
 					if (ch == ',')
 					{
 						rdr.Ignore(1);
-						paramList.Add(sb.ToString().Trim());
+
+						var resolvedParamText = ResolveMacros(sb.ToString(), p.restrictedDefines, p.args, p.fileContext, p.contentType);
+						paramList.Add(resolvedParamText.Trim());
+
 						sb.Clear();
 					}
 					else if (ch == ')')
@@ -457,7 +460,11 @@ namespace DkTools.CodeModel
 						sb.Append(ch);
 					}
 				}
-				if (sb.Length > 0) paramList.Add(sb.ToString().Trim());
+				if (sb.Length > 0)
+				{
+					var resolvedParamText = ResolveMacros(sb.ToString(), p.restrictedDefines, p.args, p.fileContext, p.contentType);
+					paramList.Add(resolvedParamText.Trim());
+				}
 
 				if (define.ParamNames.Count != paramList.Count) return;
 			}
