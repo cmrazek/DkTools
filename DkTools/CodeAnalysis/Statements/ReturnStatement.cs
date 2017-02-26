@@ -36,6 +36,7 @@ namespace DkTools.CodeAnalysis.Statements
 		{
 			var returnScope = scope.Clone(dataTypeContext: scope.FunctionDefinition.DataType);
 			base.Execute(returnScope);
+			scope.Merge(returnScope);
 
 			scope.Returned = TriState.True;
 		}

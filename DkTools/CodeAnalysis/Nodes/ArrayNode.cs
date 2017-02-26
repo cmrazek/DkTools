@@ -68,7 +68,9 @@ namespace DkTools.CodeAnalysis.Nodes
 			// Read the array indexer value
 			foreach (var ix in _indexNodes)
 			{
-				ix.ReadValue(scope.Clone(dataTypeContext: DataType.Int));
+				var readScope = scope.Clone(dataTypeContext: DataType.Int);
+				ix.ReadValue(readScope);
+				scope.Merge(readScope);
 			}
 
 			// Combine with the variable on left to produce the result

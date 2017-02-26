@@ -200,7 +200,15 @@ namespace DkTools.CodeAnalysis.Nodes
 
 		public override void WriteValue(RunScope scope, Value value)
 		{
-			base.WriteValue(scope, value);
+			Execute(scope);
+			if (_nodes.Count == 1)
+			{
+				_nodes[0].WriteValue(scope, value);
+			}
+			else
+			{
+				base.WriteValue(scope, value);
+			}
 		}
 
 		public Node FirstChild

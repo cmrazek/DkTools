@@ -49,7 +49,7 @@ namespace DkTools.CodeAnalysis
 			return scope;
 		}
 
-		public void Merge(RunScope scope, bool promoteBreak, bool promoteContinue)
+		public void Merge(RunScope scope, bool promoteBreak = true, bool promoteContinue = true)
 		{
 			if (scope.Returned > _returned) _returned = scope.Returned;
 			if (promoteBreak && scope.Breaked > _breaked) _breaked = scope.Breaked;
@@ -65,7 +65,7 @@ namespace DkTools.CodeAnalysis
 			}
 		}
 
-		public void Merge(IEnumerable<RunScope> scopes, bool promoteBreak, bool promoteContinue)
+		public void Merge(IEnumerable<RunScope> scopes, bool promoteBreak = true, bool promoteContinue = true)
 		{
 			if (!scopes.Any(x => x != null)) return;
 

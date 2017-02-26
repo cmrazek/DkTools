@@ -105,8 +105,26 @@ namespace DkTools.CodeAnalysis.Nodes
 			var argIndex = 0;
 			foreach (var arg in _args)
 			{
-				var dataType = argIndex < defArgs.Length ? defArgs[argIndex].DataType : null;
-				arg.ReadValue(scope.Clone(dataTypeContext: dataType));
+				var defArg = argIndex < defArgs.Length ? defArgs[argIndex] : null;
+				if (defArg != null)
+				{
+					if (defArg.PassByMethod == PassByMethod.Reference || defArg.PassByMethod == PassByMethod.ReferencePlus)
+					{
+						var writeScope = scope.Clone(dataTypeContext: defArg.DataType);
+						arg.WriteValue(writeScope, new Value(defArg.DataType));
+						scope.Merge(writeScope);
+					}
+					else
+					{
+						var readScope = scope.Clone(dataTypeContext: defArg.DataType);
+						arg.ReadValue(readScope);
+						scope.Merge(readScope);
+					}
+				}
+				else
+				{
+					arg.ReadValue(scope);
+				}
 				argIndex++;
 			}
 

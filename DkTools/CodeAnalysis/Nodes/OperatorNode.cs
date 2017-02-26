@@ -153,7 +153,9 @@ namespace DkTools.CodeAnalysis.Nodes
 			if (leftNode != null && rightNode != null)
 			{
 				var leftValue = leftNode.ReadValue(scope);
-				var rightValue = rightNode.ReadValue(scope.Clone(dataTypeContext: leftNode.GetDataType(scope)));
+				var rightScope = scope.Clone(dataTypeContext: leftNode.GetDataType(scope));
+				var rightValue = rightNode.ReadValue(rightScope);
+				scope.Merge(rightScope);
 				if (leftValue.IsVoid) leftNode.ReportError(leftNode.Span, CAError.CA0007, Text);		// Operator '{0}' expects value on left.
 				else if (rightValue.IsVoid) rightNode.ReportError(rightNode.Span, CAError.CA0008, Text);	// Operator '{0}' expects value on right.
 
@@ -190,7 +192,9 @@ namespace DkTools.CodeAnalysis.Nodes
 			if (leftNode != null && rightNode != null)
 			{
 				var leftValue = leftNode.ReadValue(scope);
-				var rightValue = rightNode.ReadValue(scope.Clone(dataTypeContext: leftNode.GetDataType(scope)));
+				var rightScope = scope.Clone(dataTypeContext: leftNode.GetDataType(scope));
+				var rightValue = rightNode.ReadValue(rightScope);
+				scope.Merge(rightScope);
 				if (leftValue.IsVoid) leftNode.ReportError(leftNode.Span, CAError.CA0007, Text);		// Operator '{0}' expects value on left.
 				else if (rightValue.IsVoid) rightNode.ReportError(rightNode.Span, CAError.CA0008, Text);	// Operator '{0}' expects value on right.
 
@@ -213,7 +217,9 @@ namespace DkTools.CodeAnalysis.Nodes
 			else if (rightNode == null) ReportError(Span, CAError.CA0008, Text);	// Operator '{0}' expects value on right.
 			if (leftNode != null && rightNode != null)
 			{
-				var rightValue = rightNode.ReadValue(scope.Clone(dataTypeContext: leftNode.GetDataType(scope)));
+				var rightScope = scope.Clone(dataTypeContext: leftNode.GetDataType(scope));
+				var rightValue = rightNode.ReadValue(rightScope);
+				scope.Merge(rightScope);
 				if (!leftNode.CanAssignValue(scope)) leftNode.ReportError(leftNode.Span, CAError.CA0010, Text);				// Operator '{0}' expects assignable value on left.
 				else if (rightValue.IsVoid) rightNode.ReportError(rightNode.Span, CAError.CA0008, Text);				// Operator '{0}' expects value on right.
 
@@ -234,6 +240,7 @@ namespace DkTools.CodeAnalysis.Nodes
 		{
 			var leftScope = scope.Clone(dataTypeContext: DataType.Int);
 			var leftNode = Parent.GetLeftSibling(leftScope, this);
+			scope.Merge(leftScope);
 			if (leftNode == null)
 			{
 				ReportError(Span, CAError.CA0007, Text);	// Operator '{0}' expects value on left.

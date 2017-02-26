@@ -22,12 +22,17 @@ namespace DkTools.CodeAnalysis.Nodes
 
 		protected override void Execute(RunScope scope)
 		{
-			base.Execute(scope.Clone(dataTypeContext: _dataType));
+			var castScope = scope.Clone(dataTypeContext: _dataType);
+			base.Execute(castScope);
+			scope.Merge(castScope);
 		}
 
 		public override Value ReadValue(RunScope scope)
 		{
-			return base.ReadValue(scope.Clone(dataTypeContext: _dataType));
+			var castScope = scope.Clone(dataTypeContext: _dataType);
+			var value = base.ReadValue(castScope);
+			scope.Merge(castScope);
+			return value;
 		}
 	}
 }
