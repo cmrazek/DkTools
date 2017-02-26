@@ -28,7 +28,7 @@ namespace DkTools.ErrorTagging
 			Instance = this;
 		}
 
-		public void Add(ErrorTask task)
+		public void Add(ErrorTask task, bool dontSignalTagsChanged = false)
 		{
 #if DEBUG
 			if (task == null) throw new ArgumentNullException("task");
@@ -50,8 +50,11 @@ namespace DkTools.ErrorTagging
 				Tasks.Add(task);
 			}
 
-			var ev = ErrorTagsChangedForFile;
-			if (ev != null) ev(this, new ErrorTaskEventArgs { FileName = task.Document });
+			if (!dontSignalTagsChanged)
+			{
+				var ev = ErrorTagsChangedForFile;
+				if (ev != null) ev(this, new ErrorTaskEventArgs { FileName = task.Document });
+			}
 		}
 
 		public void Clear()
@@ -67,6 +70,26 @@ namespace DkTools.ErrorTagging
 			{
 				var ev = ErrorTagsChangedForFile;
 				if (ev != null) ev(this, new ErrorTaskEventArgs { FileName = task.Document });
+			}
+		}
+
+		public void FireTagsChangedEvent()
+		{
+			var fileNames = new List<string>();
+
+			foreach (var task in Tasks)
+			{
+				if (!(task is ErrorTask)) continue;
+				var errorTask = task as ErrorTask;
+
+
+				if (!fileNames.Contains(errorTask.Document))
+				{
+					var ev = ErrorTagsChangedForFile;
+					if (ev != null) ev(this, new ErrorTaskEventArgs { FileName = errorTask.Document });
+
+					fileNames.Add(errorTask.Document);
+				}
 			}
 		}
 

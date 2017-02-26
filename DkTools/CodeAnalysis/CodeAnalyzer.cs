@@ -50,6 +50,8 @@ namespace DkTools.CodeAnalysis
 				AnalyzeFunction(func);
 			}
 
+			ErrorTaskProvider.Instance.FireTagsChangedEvent();
+
 			_pane.WriteLine("Code analysis complete:");
 			_pane.WriteLine(string.Format("{0} error(s), {1} warning(s)", _numErrors, _numWarnings));
 		}
@@ -144,7 +146,7 @@ namespace DkTools.CodeAnalysis
 				var task = new ErrorTagging.ErrorTask(filePos.FileName, lineNum, message, type,
 					ErrorTaskSource.CodeAnalysis, _codeModel.FileName, _codeModel.Snapshot,
 					primaryFileSpan.ToVsTextSnapshotSpan(_codeModel.Snapshot));
-				ErrorTaskProvider.Instance.Add(task);
+				ErrorTaskProvider.Instance.Add(task, true);
 			}
 		}
 
