@@ -48,13 +48,16 @@ namespace DkTools.CodeAnalysis.Nodes
 					return;
 				}
 			}
-
-			base.WriteValue(scope, value);
+			else if (_def.CanWrite) { }
+			else
+			{
+				base.WriteValue(scope, value);
+			}
 		}
 
 		public override bool CanAssignValue(RunScope scope)
 		{
-			if (_def is VariableDefinition) return true;
+			if (_def.CanWrite) return true;
 
 			return base.CanAssignValue(scope);
 		}
