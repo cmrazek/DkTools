@@ -189,6 +189,14 @@ namespace DkTools.CodeAnalysis.Nodes
 			return null;
 		}
 
+		public override DataType GetDataType(RunScope scope)
+		{
+			Execute(scope);
+			if (_nodes.Count == 1) return _nodes[0].GetDataType(scope);
+
+			return base.GetDataType(scope);
+		}
+
 		public override Value ReadValue(RunScope scope)
 		{
 			Execute(scope);

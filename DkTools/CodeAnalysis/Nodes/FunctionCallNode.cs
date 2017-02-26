@@ -101,6 +101,8 @@ namespace DkTools.CodeAnalysis.Nodes
 
 		public override Value ReadValue(RunScope scope)
 		{
+			if (_name == "oldvalue" && _args.Count == 1) return Read_oldvalue(scope);
+
 			var defArgs = _def != null ? _def.Arguments.ToArray() : new ArgumentDescriptor[0];
 			var argIndex = 0;
 			foreach (var arg in _args)
@@ -149,6 +151,11 @@ namespace DkTools.CodeAnalysis.Nodes
 		{
 			if (_def != null) return _def.DataType;
 			return DataType.Void;
+		}
+
+		private Value Read_oldvalue(RunScope scope)
+		{
+			return new Value(_args[0].GetDataType(scope));
 		}
 	}
 }
