@@ -32,6 +32,12 @@ namespace DkTools.CodeAnalysis.Statements
 			var bodyStarted = false;
 			while (!code.EndOfFile && !bodyStarted)
 			{
+				if (code.ReadExact('{'))
+				{
+					bodyStarted = true;
+					break;
+				}
+
 				#region from
 				if (code.ReadExact("from"))
 				{
@@ -45,6 +51,12 @@ namespace DkTools.CodeAnalysis.Statements
 
 						if (code.ReadWord())
 						{
+							if (code.Text == "where" || code.Text == "order")
+							{
+								code.Position = code.TokenStartPostion;
+								break;
+							}
+
 							if (code.Text == "of")
 							{
 								if (!code.ReadWord())
@@ -79,7 +91,7 @@ namespace DkTools.CodeAnalysis.Statements
 				#region where
 				else if (code.ReadExact("where"))
 				{
-					_whereExp = ExpressionNode.Read(p, "select", "from", "where", "order");
+					_whereExp = ExpressionNode.Read(p, "from", "where", "order");
 
 					if (code.ReadExact(';'))
 					{
@@ -107,17 +119,21 @@ namespace DkTools.CodeAnalysis.Statements
 
 						if (code.ReadExact(',')) continue;
 
-						if (!ReadTableColOrRelInd(p)) return;
+						if (code.ReadExactWholeWord("from") || code.ReadExactWholeWord("where"))
+						{
+							code.Position = code.TokenStartPostion;
+							break;
+						}
+
+						if (!ReadTableColOrRelInd(p, true)) return;
 						if (!code.ReadExactWholeWord("asc")) code.ReadExactWholeWord("desc");
 					}
 				}
 				#endregion
 			}
 
-			while (!code.EndOfFile)
+			while (!code.EndOfFile && !code.ReadExact('}'))
 			{
-				if (code.ReadExact('}')) break;
-
 				if (code.ReadExactWholeWord("before") || code.ReadExactWholeWord("after"))
 				{
 					if (!code.ReadExactWholeWord("group"))
@@ -127,7 +143,7 @@ namespace DkTools.CodeAnalysis.Statements
 					}
 
 					if (code.ReadExactWholeWord("all")) { }
-					else if (!ReadTableColOrRelInd(p)) return;
+					else if (!ReadTableColOrRelInd(p, false)) return;
 
 					if (!code.ReadExact(':'))
 					{
@@ -167,7 +183,7 @@ namespace DkTools.CodeAnalysis.Statements
 			}
 		}
 
-		private bool ReadTableColOrRelInd(ReadParams p)
+		private bool ReadTableColOrRelInd(ReadParams p, bool allowIndexes)
 		{
 			var code = p.Code;
 
@@ -180,8 +196,12 @@ namespace DkTools.CodeAnalysis.Statements
 			var def = _tables.FirstOrDefault(x => x.Name == code.Text);
 			if (def == null)
 			{
-				ReportError(code.Span, CAError.CA0037, code.Text);	// Table or relationship '{0}' is not referenced in the 'from' clause.
-				return false;
+				def = CodeAnalyzer.PreprocessorModel.DefinitionProvider.GetGlobalFromAnywhere<RelIndDefinition>(code.Text).FirstOrDefault();
+				if (def == null && allowIndexes)
+				{
+					ReportError(code.Span, CAError.CA0037, code.Text);	// Table or relationship '{0}' is not referenced in the 'from' clause.
+					return false;
+				}
 			}
 
 			var tableDef = def as TableDefinition;
@@ -217,7 +237,7 @@ namespace DkTools.CodeAnalysis.Statements
 
 			_groups.Add(body);
 
-			while (!code.EndOfFile && !p.Code.ReadExact("}"))
+			while (!code.EndOfFile && !p.Code.PeekExact("}"))
 			{
 				var resetPos = code.Position;
 				if (code.ReadExactWholeWord("before") || code.ReadExactWholeWord("after"))

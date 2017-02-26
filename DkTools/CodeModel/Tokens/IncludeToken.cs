@@ -50,8 +50,9 @@ namespace DkTools.CodeModel.Tokens
 				fileNameToken = new StringLiteralToken(scope, code.Span, code.Text);
 				includeSpan = new Span(prepToken.Span.Start, fileNameToken.Span.End);
 
-				if ((fileName.StartsWith("\"") && fileName.EndsWith("\"")) ||
-					(fileName.StartsWith("<") && fileName.EndsWith(">")))
+				if (fileName.Length >= 2 &&
+					((fileName.StartsWith("\"") && fileName.EndsWith("\"")) ||
+					(fileName.StartsWith("<") && fileName.EndsWith(">"))))
 				{
 					fileName = fileName.Substring(1, fileName.Length - 2);
 				}

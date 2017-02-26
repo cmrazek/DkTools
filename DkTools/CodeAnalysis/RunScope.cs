@@ -69,12 +69,18 @@ namespace DkTools.CodeAnalysis
 		{
 			if (!scopes.Any(x => x != null)) return;
 
-			if (_returned != TriState.True) _returned = TriStateUtil.Combine(from s in scopes select s.Returned);
+			if (_returned != TriState.True)
+			{
+				var returned = TriStateUtil.Combine(from s in scopes select s.Returned);
+				if (returned > _returned) _returned = returned;
+			}
+
 			if (promoteBreak && _breaked != TriState.True)
 			{
 				var breaked = TriStateUtil.Combine(from s in scopes select s.Breaked);
 				if (breaked > _breaked) _breaked = breaked;
 			}
+
 			if (promoteContinue && _continued != TriState.True)
 			{
 				var continued = TriStateUtil.Combine(from s in scopes select s.Continued);
