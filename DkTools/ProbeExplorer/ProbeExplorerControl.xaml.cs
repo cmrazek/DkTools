@@ -828,11 +828,6 @@ namespace DkTools.ProbeExplorer
 				var menu = new ContextMenu();
 
 				var menuItem = new MenuItem();
-				menuItem.Header = "Run Code Analysis";
-				menuItem.Click += RunCodeAnalysis_Click;
-				menu.Items.Add(menuItem);
-
-				menuItem = new MenuItem();
 				menuItem.Header = "Show Code Model";
 				menuItem.Click += ShowCodeModelDump_Click;
 				menu.Items.Add(menuItem);
@@ -974,18 +969,6 @@ namespace DkTools.ProbeExplorer
 			try
 			{
 				Commands.DebugCommands.ShowStateAtCaret();
-			}
-			catch (Exception ex)
-			{
-				this.ShowError(ex);
-			}
-		}
-
-		private void RunCodeAnalysis_Click(object sender, RoutedEventArgs e)
-		{
-			try
-			{
-				Commands.DebugCommands.RunCodeAnalysis();
 			}
 			catch (Exception ex)
 			{

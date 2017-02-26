@@ -45,7 +45,8 @@ namespace DkTools
 		ShowErrors = 0x0124,
 		GoToNextReference = 0x0125,
 		GoToPrevReference = 0x0126,
-		ShowFunctions = 0x0127
+		ShowFunctions = 0x0127,
+		RunCodeAnalysis = 0x0128
 	}
 
 	internal static class Commands
@@ -80,6 +81,7 @@ namespace DkTools
 			AddCommand(mcs, CommandId.GoToNextReference, GoToNextReference);
 			AddCommand(mcs, CommandId.GoToPrevReference, GoToPrevReference);
 			AddCommand(mcs, CommandId.ShowFunctions, ShowFunctions);
+			AddCommand(mcs, CommandId.RunCodeAnalysis, RunCodeAnalysis);
 		}
 
 		private class CommandInstance
@@ -688,6 +690,30 @@ namespace DkTools
 			}
 		}
 
+		private static void RunCodeAnalysis(object sender, EventArgs e)
+		{
+			try
+			{
+				var view = Shell.ActiveView;
+				if (view == null) return;
+
+				var fileStore = CodeModel.FileStore.GetOrCreateForTextBuffer(view.TextBuffer);
+				if (fileStore == null) return;
+				var model = fileStore.CreatePreprocessedModel(view.TextSnapshot, false, "Code Analysis");
+
+				var pane = Shell.CreateOutputPane(GuidList.guidCodeAnalysisPane, "DK Code Analysis");
+				pane.Clear();
+				pane.Show();
+
+				var ca = new CodeAnalysis.CodeAnalyzer(pane, model, view);
+				ca.Run();
+			}
+			catch (Exception ex)
+			{
+				Shell.ShowError(ex);
+			}
+		}
+
 #if DEBUG
 		internal static class DebugCommands
 		{
@@ -811,23 +837,6 @@ namespace DkTools
 				var tracker = Classifier.TextBufferStateTracker.GetTrackerForTextBuffer(view.TextBuffer);
 				var state = tracker.GetStateForPosition(view.Caret.Position.BufferPosition, view.TextSnapshot);
 				Log.Debug("State at caret: 0x{0:X8}", state);
-			}
-
-			public static void RunCodeAnalysis()
-			{
-				var view = Shell.ActiveView;
-				if (view == null) return;
-
-				var fileStore = CodeModel.FileStore.GetOrCreateForTextBuffer(view.TextBuffer);
-				if (fileStore == null) return;
-				var model = fileStore.CreatePreprocessedModel(view.TextSnapshot, false, "Code Analysis");
-
-				var pane = Shell.CreateOutputPane(GuidList.guidCodeAnalysisPane, "DK Code Analysis");
-				pane.Clear();
-				pane.Show();
-
-				var ca = new CodeAnalysis.CodeAnalyzer(pane, model, view);
-				ca.Run();
 			}
 		}
 #endif
