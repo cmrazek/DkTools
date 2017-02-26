@@ -291,7 +291,9 @@
     <Compile Include="CodeAnalysis\Statements\BreakStatement.cs" />
     <Compile Include="CodeAnalysis\Statements\ColStatement.cs" />
     <Compile Include="CodeAnalysis\Statements\ContinueStatement.cs" />
+    <Compile Include="CodeAnalysis\Statements\FormatStatement.cs" />
     <Compile Include="CodeAnalysis\Statements\ForStatement.cs" />
+    <Compile Include="CodeAnalysis\Statements\HeaderStatement.cs" />
     <Compile Include="CodeAnalysis\Statements\IfStatement.cs" />
     <Compile Include="CodeAnalysis\Statements\ReturnStatement.cs" />
     <Compile Include="CodeAnalysis\RunScope.cs" />

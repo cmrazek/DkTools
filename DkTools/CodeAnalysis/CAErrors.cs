@@ -109,6 +109,9 @@ namespace DkTools.CodeAnalysis
 
 		[ErrorMessage("Duplicate default case.")]
 		CA0032,
+
+		[ErrorMessage("Expected '='.")]
+		CA0033,
 	}
 
 	[AttributeUsage(AttributeTargets.Field, AllowMultiple = false)]

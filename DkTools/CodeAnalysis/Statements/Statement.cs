@@ -45,6 +45,10 @@ namespace DkTools.CodeAnalysis.Statements
 						return new ContinueStatement(p, p.Code.MovePeekedSpan());
 					case "for":
 						return new ForStatement(p, p.Code.MovePeekedSpan());
+					case "format":
+						return new FormatStatement(p, p.Code.MovePeekedSpan());
+					case "header":
+						return new HeaderStatement(p, p.Code.MovePeekedSpan());
 					case "if":
 						return new IfStatement(p, p.Code.MovePeekedSpan());
 					case "return":
