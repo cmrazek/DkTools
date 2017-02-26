@@ -89,7 +89,7 @@ namespace DkTools.CodeAnalysis.Nodes
 				var v = scope.GetVariable(Text);
 				if (v != null)
 				{
-					v.Value = value;
+					v.Value = new Value(v.DataType);	// Keep the variable's data type the same
 					v.IsInitialized = true;
 					return;
 				}
