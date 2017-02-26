@@ -55,6 +55,8 @@ namespace DkTools.CodeAnalysis.Statements
 						return new ReturnStatement(p, p.Code.MovePeekedSpan());
 					case "row":
 						return new RowStatement(p, p.Code.MovePeekedSpan());
+					case "select":
+						return new SelectStatement(p, p.Code.MovePeekedSpan());
 					case "switch":
 						return new SwitchStatement(p, p.Code.MovePeekedSpan());
 					case "while":

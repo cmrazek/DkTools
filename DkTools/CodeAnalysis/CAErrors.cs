@@ -112,6 +112,27 @@ namespace DkTools.CodeAnalysis
 
 		[ErrorMessage("Expected '='.")]
 		CA0033,
+
+		[ErrorMessage("Expected '{0}'.")]	// Used for select statements
+		CA0034,
+
+		[ErrorMessage("Table or relationship '{0}' does not exist.")]
+		CA0035,
+
+		[ErrorMessage("Expected table name after 'of'.")]
+		CA0036,
+
+		[ErrorMessage("Table or relationship '{0}' is not referenced in the 'from' clause.")]
+		CA0037,
+
+		[ErrorMessage("Expected table or relationship name.")]
+		CA0038,
+
+		[ErrorMessage("Expected column name to follow table name.")]
+		CA0039,
+
+		[ErrorMessage("Table '{0}' has no column '{1}'.")]
+		CA0040,
 	}
 
 	[AttributeUsage(AttributeTargets.Field, AllowMultiple = false)]
