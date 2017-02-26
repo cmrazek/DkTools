@@ -18,7 +18,7 @@ namespace DkTools.CodeAnalysis.Statements
 		{
 			p = p.Clone(this);
 
-			_cond = ExpressionNode.Read(p, "{", ";");
+			_cond = ExpressionNode.Read(p);
 			if (_cond == null)
 			{
 				ReportError(keywordSpan, CAError.CA0018, "if");	// Expected condition after '{0}'.

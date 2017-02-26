@@ -31,6 +31,14 @@ namespace DkTools.CodeAnalysis.Nodes
 
 			while (!code.EndOfFile)
 			{
+				switch (code.PeekChar())
+				{
+					case ';':
+					case '{':
+					case '}':
+						return exp;
+				}
+
 				if (stopStrings != null)
 				{
 					foreach (var str in stopStrings)

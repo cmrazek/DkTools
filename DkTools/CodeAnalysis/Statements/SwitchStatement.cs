@@ -29,7 +29,7 @@ namespace DkTools.CodeAnalysis.Statements
 			p = p.Clone(this);
 			var code = p.Code;
 
-			_condExp = ExpressionNode.Read(p, "{", ";");
+			_condExp = ExpressionNode.Read(p);
 			if (_condExp == null)
 			{
 				ReportError(keywordSpan, CAError.CA0018, "switch");	// Expected condition after '{0}'.
@@ -73,7 +73,7 @@ namespace DkTools.CodeAnalysis.Statements
 					});
 					insideDefault = false;
 
-					var exp = ExpressionNode.Read(p, ":", "}", ";");
+					var exp = ExpressionNode.Read(p, ":");
 					if (exp == null) ReportError(errorSpan, CAError.CA0028);	// Expected case value.
 					else
 					{

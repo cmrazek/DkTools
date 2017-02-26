@@ -39,6 +39,8 @@ namespace DkTools.CodeAnalysis.Statements
 				{
 					case "break":
 						return new BreakStatement(p, p.Code.MovePeekedSpan());
+					case "col":
+						return new ColStatement(p, p.Code.MovePeekedSpan());
 					case "continue":
 						return new ContinueStatement(p, p.Code.MovePeekedSpan());
 					case "for":
@@ -47,6 +49,8 @@ namespace DkTools.CodeAnalysis.Statements
 						return new IfStatement(p, p.Code.MovePeekedSpan());
 					case "return":
 						return new ReturnStatement(p, p.Code.MovePeekedSpan());
+					case "row":
+						return new RowStatement(p, p.Code.MovePeekedSpan());
 					case "switch":
 						return new SwitchStatement(p, p.Code.MovePeekedSpan());
 					case "while":
@@ -61,11 +65,12 @@ namespace DkTools.CodeAnalysis.Statements
 			{
 				if (p.Code.ReadExact(';')) return stmt;
 
-				var node = ExpressionNode.Read(p, ";");
+				var node = ExpressionNode.Read(p);
 				if (node == null) break;
 				stmt.AddNode(node);
 			}
 
+			if (stmt._root.NumChildren == 0) return null;
 			return stmt;
 		}
 

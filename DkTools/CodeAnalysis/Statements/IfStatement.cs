@@ -23,7 +23,7 @@ namespace DkTools.CodeAnalysis.Statements
 
 			while (!code.EndOfFile)
 			{
-				var condition = ExpressionNode.Read(p, "{", ";");
+				var condition = ExpressionNode.Read(p);
 				if (condition == null)
 				{
 					ReportError(stmtSpan, CAError.CA0018, "if");	// Expected condition after '{0}'.

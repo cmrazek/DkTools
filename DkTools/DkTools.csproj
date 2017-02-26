@@ -289,11 +289,13 @@
     <Compile Include="CodeAnalysis\Nodes\ResultNode.cs" />
     <Compile Include="CodeAnalysis\Nodes\UnresolvedNode.cs" />
     <Compile Include="CodeAnalysis\Statements\BreakStatement.cs" />
+    <Compile Include="CodeAnalysis\Statements\ColStatement.cs" />
     <Compile Include="CodeAnalysis\Statements\ContinueStatement.cs" />
     <Compile Include="CodeAnalysis\Statements\ForStatement.cs" />
     <Compile Include="CodeAnalysis\Statements\IfStatement.cs" />
     <Compile Include="CodeAnalysis\Statements\ReturnStatement.cs" />
     <Compile Include="CodeAnalysis\RunScope.cs" />
+    <Compile Include="CodeAnalysis\Statements\RowStatement.cs" />
     <Compile Include="CodeAnalysis\Statements\Statement.cs" />
     <Compile Include="CodeAnalysis\Nodes\StringLiteralNode.cs" />
     <Compile Include="CodeAnalysis\Nodes\TextNode.cs" />

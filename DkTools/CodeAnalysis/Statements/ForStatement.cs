@@ -27,7 +27,7 @@ namespace DkTools.CodeAnalysis.Statements
 			}
 			var errSpan = code.Span;
 
-			_initExp = ExpressionNode.Read(p, ";", ")", "{");
+			_initExp = ExpressionNode.Read(p, ")");
 			if (errSpan != null) errSpan = _initExp.Span;
 
 			if (!code.ReadExact(';'))
@@ -37,7 +37,7 @@ namespace DkTools.CodeAnalysis.Statements
 			}
 			errSpan = code.Span;
 
-			_condExp = ExpressionNode.Read(p, ";", ")", "{");
+			_condExp = ExpressionNode.Read(p, ")");
 			if (_condExp != null) errSpan = _condExp.Span;
 
 			if (!code.ReadExact(';'))
@@ -47,7 +47,7 @@ namespace DkTools.CodeAnalysis.Statements
 			}
 			errSpan = code.Span;
 
-			_incExp = ExpressionNode.Read(p, ")", "{");
+			_incExp = ExpressionNode.Read(p, ")");
 			if (_incExp != null) errSpan = _incExp.Span;
 
 			if (!code.ReadExact(')'))

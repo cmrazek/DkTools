@@ -18,7 +18,7 @@ namespace DkTools.CodeAnalysis.Statements
 			var retDataType = p.FuncDef.DataType;
 			if (retDataType != null && !retDataType.IsVoid)
 			{
-				var exp = ExpressionNode.Read(p, ";");
+				var exp = ExpressionNode.Read(p);
 				if (exp == null)
 				{
 					ReportError(keywordSpan, CAError.CA0014);	// Expected value after 'return'.

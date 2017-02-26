@@ -32,12 +32,13 @@ namespace DkTools.CodeAnalysis.Nodes
 				if (code.ReadExact(',')) continue;
 				if (code.ReadExact(';')) break;
 
-				var exp = ExpressionNode.Read(p, "]", ",", ";");
+				var exp = ExpressionNode.Read(p, "]", ",");
 				if (exp != null)
 				{
 					ret._indexNodes.Add(exp);
 					ret.IncludeNodeInSpan(exp);
 				}
+				else break;
 			}
 
 			if (ret._indexNodes.Count == 0 || ret._indexNodes.Count > 2)

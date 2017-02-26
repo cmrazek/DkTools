@@ -1167,6 +1167,12 @@ namespace DkTools
 			return true;
 		}
 
+		public char PeekChar()
+		{
+			if (!SkipWhiteSpace()) return '\0';
+			return _source[_pos];
+		}
+
 		public int DocumentOffset
 		{
 			get { return _documentOffset; }
