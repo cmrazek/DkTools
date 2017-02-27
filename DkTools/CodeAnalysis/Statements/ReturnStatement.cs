@@ -10,6 +10,8 @@ namespace DkTools.CodeAnalysis.Statements
 {
 	class ReturnStatement : Statement
 	{
+		private ExpressionNode _exp;
+
 		public ReturnStatement(ReadParams p, Span keywordSpan)
 			: base(p.CodeAnalyzer, keywordSpan)
 		{
@@ -18,14 +20,10 @@ namespace DkTools.CodeAnalysis.Statements
 			var retDataType = p.FuncDef.DataType;
 			if (retDataType != null && !retDataType.IsVoid)
 			{
-				var exp = ExpressionNode.Read(p);
-				if (exp == null)
+				_exp = ExpressionNode.Read(p);
+				if (_exp == null)
 				{
 					ReportError(keywordSpan, CAError.CA0014);	// Expected value after 'return'.
-				}
-				else
-				{
-					AddNode(exp);
 				}
 			}
 
@@ -34,9 +32,14 @@ namespace DkTools.CodeAnalysis.Statements
 
 		public override void Execute(RunScope scope)
 		{
-			var returnScope = scope.Clone(dataTypeContext: scope.FunctionDefinition.DataType);
-			base.Execute(returnScope);
-			scope.Merge(returnScope);
+			base.Execute(scope);
+
+			if (_exp != null)
+			{
+				var returnScope = scope.Clone(dataTypeContext: scope.FunctionDefinition.DataType);
+				_exp.ReadValue(returnScope);
+				scope.Merge(returnScope);
+			}
 
 			scope.Returned = TriState.True;
 		}

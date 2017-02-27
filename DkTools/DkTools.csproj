@@ -300,6 +300,7 @@
     <Compile Include="CodeAnalysis\RunScope.cs" />
     <Compile Include="CodeAnalysis\Statements\RowStatement.cs" />
     <Compile Include="CodeAnalysis\Statements\SelectStatement.cs" />
+    <Compile Include="CodeAnalysis\Statements\SimpleStatement.cs" />
     <Compile Include="CodeAnalysis\Statements\Statement.cs" />
     <Compile Include="CodeAnalysis\Nodes\StringLiteralNode.cs" />
     <Compile Include="CodeAnalysis\Nodes\TextNode.cs" />

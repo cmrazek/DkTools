@@ -8,22 +8,20 @@ using DkTools.CodeModel;
 
 namespace DkTools.CodeAnalysis.Statements
 {
-	class Statement
+	abstract class Statement
 	{
 		private CodeAnalyzer _ca;
-		private GroupNode _root;
+		
 		private Span _span;
 
 		public Statement(CodeAnalyzer ca)
 		{
 			_ca = ca;
-			_root = new GroupNode(this);
 		}
 
 		public Statement(CodeAnalyzer ca, Span span)
 		{
 			_ca = ca;
-			_root = new GroupNode(this);
 			_span = span;
 		}
 
@@ -65,7 +63,7 @@ namespace DkTools.CodeAnalysis.Statements
 				}
 			}
 
-			var stmt = new Statement(p.CodeAnalyzer);
+			var stmt = new SimpleStatement(p.CodeAnalyzer);
 			p = p.Clone(stmt);
 
 			while (!p.Code.EndOfFile)
@@ -77,19 +75,11 @@ namespace DkTools.CodeAnalysis.Statements
 				stmt.AddNode(node);
 			}
 
-			if (stmt._root.NumChildren == 0) return null;
+			if (stmt.NumChildren == 0) return null;
 			return stmt;
 		}
 
-		public bool IsEmpty
-		{
-			get { return _root.NumChildren == 0; }
-		}
 
-		public void AddNode(Node node)
-		{
-			_root.AddChild(node);
-		}
 
 		public virtual void Execute(RunScope scope)
 		{
@@ -99,18 +89,11 @@ namespace DkTools.CodeAnalysis.Statements
 			{
 				ReportError(Span, CAError.CA0016);	// Unreachable code.
 			}
-
-			if (_root.NumChildren > 0) _root.ReadValue(scope);
 		}
 
 		public CodeAnalyzer CodeAnalyzer
 		{
 			get { return _ca; }
-		}
-
-		public void ReplaceNodes(Node newNode, params Node[] oldNodes)
-		{
-			_root.ReplaceNodes(newNode, oldNodes);
 		}
 
 		public void ReportError(CodeModel.Span span, CAError errorCode, params object[] args)
@@ -120,12 +103,8 @@ namespace DkTools.CodeAnalysis.Statements
 
 		public CodeModel.Span Span
 		{
-			get
-			{
-				if (_span.IsEmpty) return _root.Span;
-				else if (!_root.Span.IsEmpty) return _span.Envelope(_root.Span);
-				else return _span;
-			}
+			get { return _span; }
+			set { _span = value; }
 		}
 	}
 }
