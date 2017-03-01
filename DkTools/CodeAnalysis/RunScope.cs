@@ -55,12 +55,15 @@ namespace DkTools.CodeAnalysis
 			if (promoteBreak && scope.Breaked > _breaked) _breaked = scope.Breaked;
 			if (promoteContinue && scope.Continued > _continued) _continued = scope.Continued;
 
-			foreach (var myVar in _vars.Values)
+			if (scope.Returned != TriState.True)	// Don't initialize variables if the branch returned before this point
 			{
-				Variable otherVar;
-				if (scope._vars.TryGetValue(myVar.Name, out otherVar))
+				foreach (var myVar in _vars.Values)
 				{
-					if (otherVar.IsInitialized) myVar.IsInitialized = true;
+					Variable otherVar;
+					if (scope._vars.TryGetValue(myVar.Name, out otherVar))
+					{
+						if (otherVar.IsInitialized) myVar.IsInitialized = true;
+					}
 				}
 			}
 		}
@@ -91,7 +94,7 @@ namespace DkTools.CodeAnalysis
 			{
 				if (!v.Value.IsInitialized)
 				{
-					v.Value.IsInitialized = scopes.All(x => x == null || x.GetVariable(v.Key).IsInitialized);
+					v.Value.IsInitialized = scopes.All(x => x == null || x.Returned == TriState.True || x.GetVariable(v.Key).IsInitialized);
 				}
 			}
 		}
