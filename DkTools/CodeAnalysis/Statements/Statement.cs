@@ -37,6 +37,8 @@ namespace DkTools.CodeAnalysis.Statements
 				{
 					case "break":
 						return new BreakStatement(p, p.Code.MovePeekedSpan());
+					case "center":
+						return new CenterStatement(p, p.Code.MovePeekedSpan());
 					case "col":
 					case "colff":
 						return new ColStatement(p, p.Code.MovePeekedSpan());

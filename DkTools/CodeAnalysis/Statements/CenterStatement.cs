@@ -8,18 +8,12 @@ using DkTools.CodeModel;
 
 namespace DkTools.CodeAnalysis.Statements
 {
-	class RowStatement : Statement
+	class CenterStatement : Statement
 	{
-		public RowStatement(ReadParams p, Span keywordSpan)
+		public CenterStatement(ReadParams p, Span keywordSpan)
 			: base(p.CodeAnalyzer, keywordSpan)
 		{
-			p = p.Clone(this);
-			var code = p.Code;
-
-			if (!code.ReadExact('+')) code.ReadExact('-');
-			code.ReadNumber();
-
-			code.ReadExact(';');	// Optional
+			p.Code.ReadExact(';');	// Optional
 		}
 	}
 }

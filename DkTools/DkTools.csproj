@@ -287,6 +287,7 @@
     <Compile Include="CodeAnalysis\Nodes\OperatorNode.cs" />
     <Compile Include="CodeAnalysis\Nodes\ResultNode.cs" />
     <Compile Include="CodeAnalysis\Statements\BreakStatement.cs" />
+    <Compile Include="CodeAnalysis\Statements\CenterStatement.cs" />
     <Compile Include="CodeAnalysis\Statements\ColStatement.cs" />
     <Compile Include="CodeAnalysis\Statements\ContinueStatement.cs" />
     <Compile Include="CodeAnalysis\Statements\FormatStatement.cs" />
