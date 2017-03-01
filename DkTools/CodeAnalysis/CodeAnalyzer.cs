@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using DkTools.CodeAnalysis.Nodes;
 using DkTools.CodeAnalysis.Statements;
@@ -116,6 +117,8 @@ namespace DkTools.CodeAnalysis
 			ReportErrorAbsolute(span.Offset(_read.FuncOffset), errorCode, args);
 		}
 
+		private static readonly Regex _rxExclusion = new Regex(@"CA\d{4}");
+
 		public void ReportErrorAbsolute(Span span, CAError errorCode, params object[] args)
 		{
 			if (span.IsEmpty)
@@ -129,12 +132,34 @@ namespace DkTools.CodeAnalysis
 			var fileSpan = _prepModel.Source.GetFileSpan(span, out fileName, out isPrimary);
 
 			int lineNum = 0, linePos = 0;
+			string fileContent = null;
 			foreach (var incl in _prepModel.IncludeDependencies)
 			{
 				if (string.Equals(incl.FileName, fileName, StringComparison.OrdinalIgnoreCase))
 				{
-					Util.CalcLineAndPosFromOffset(incl.Content, fileSpan.Start, out lineNum, out linePos);
+					fileContent = incl.Content;
+					Util.CalcLineAndPosFromOffset(fileContent, fileSpan.Start, out lineNum, out linePos);
 					break;
+				}
+			}
+
+			if (fileContent != null)
+			{
+				// Check for any exclusions on this line
+				var lineText = GetLineText(fileContent, fileSpan.Start);
+				var code = new CodeParser(lineText) { ReturnComments = true };
+				while (code.Read())
+				{
+					if (code.Type != CodeType.Comment) continue;
+
+					foreach (Match match in _rxExclusion.Matches(code.Text))
+					{
+						CAError excludedErrorCode;
+						if (Enum.TryParse<CAError>(match.Value, true, out excludedErrorCode) && excludedErrorCode == errorCode)
+						{
+							return;
+						}
+					}
 				}
 			}
 
@@ -155,6 +180,35 @@ namespace DkTools.CodeAnalysis
 		public PreprocessorModel PreprocessorModel
 		{
 			get { return _prepModel; }
+		}
+
+		private string GetLineText(string source, int pos)
+		{
+			if (pos < 0 || pos >= source.Length) return string.Empty;
+
+			// Find the line start
+			var lineStart = 0;
+			for (int i = pos; i > 0; i--)
+			{
+				if (source[i] == '\n')
+				{
+					lineStart = i + 1;
+					break;
+				}
+			}
+
+			// Find the line end
+			var lineEnd = source.Length;
+			for (int i = lineStart; i < source.Length; i++)
+			{
+				if (source[i] == '\r' || source[i] == '\n')
+				{
+					lineEnd = i;
+					break;
+				}
+			}
+
+			return source.Substring(lineStart, lineEnd - lineStart);
 		}
 	}
 
