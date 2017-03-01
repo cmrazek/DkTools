@@ -165,5 +165,10 @@ namespace DkTools.CodeModel.Definitions
 				return true;
 			}
 		}
+
+		public int[] ArrayLengths
+		{
+			get { return _arrayLengths; }
+		}
 	}
 }

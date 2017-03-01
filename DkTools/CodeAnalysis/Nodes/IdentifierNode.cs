@@ -12,11 +12,24 @@ namespace DkTools.CodeAnalysis.Nodes
 	class IdentifierNode : TextNode
 	{
 		private Definition _def;
+		private ExpressionNode[] _arrayAccessExps;
+		private ExpressionNode[] _subscriptAccessExps;
+		private DataType _dataType;
 
-		public IdentifierNode(Statement stmt, Span span, string name, Definition def)
+		public IdentifierNode(Statement stmt, Span span, string name, Definition def, IEnumerable<ExpressionNode> arrayAccessExps = null,
+			IEnumerable<ExpressionNode> subscriptAccessExps = null)
 			: base(stmt, span, name)
 		{
 			_def = def;
+			_dataType = def != null ? def.DataType : null;
+
+			if (arrayAccessExps != null && arrayAccessExps.Any()) _arrayAccessExps = arrayAccessExps.ToArray();
+			if (subscriptAccessExps != null && subscriptAccessExps.Any())
+			{
+				_subscriptAccessExps = subscriptAccessExps.ToArray();
+
+				if (_dataType != null && _dataType.AllowsSubscript) _dataType = _dataType.GetSubscriptDataType(_subscriptAccessExps.Length);
+			}
 		}
 
 		private bool Resolve(RunScope scope)
@@ -28,6 +41,7 @@ namespace DkTools.CodeAnalysis.Nodes
 				if (scope.DataTypeContext.HasEnumOptions && scope.DataTypeContext.IsValidEnumOption(Text))
 				{
 					_def = new EnumOptionDefinition(Text, scope.DataTypeContext);
+					_dataType = scope.DataTypeContext;
 					return true;
 				}
 			}
@@ -38,6 +52,7 @@ namespace DkTools.CodeAnalysis.Nodes
 			if (def != null)
 			{
 				_def = def;
+				_dataType = def.DataType;
 				return true;
 			}
 
@@ -54,6 +69,26 @@ namespace DkTools.CodeAnalysis.Nodes
 		public override Value ReadValue(RunScope scope)
 		{
 			if (_def == null && !Resolve(scope)) return base.ReadValue(scope);
+
+			if (_arrayAccessExps != null)
+			{
+				foreach (var exp in _arrayAccessExps)
+				{
+					var accessScope = scope.Clone(dataTypeContext: DataType.Int);
+					exp.ReadValue(accessScope);
+					scope.Merge(accessScope);
+				}
+			}
+
+			if (_subscriptAccessExps != null)
+			{
+				foreach (var exp in _subscriptAccessExps)
+				{
+					var accessScope = scope.Clone(dataTypeContext: DataType.Int);
+					exp.ReadValue(accessScope);
+					scope.Merge(accessScope);
+				}
+			}
 
 			if (_def is VariableDefinition)
 			{
@@ -115,7 +150,7 @@ namespace DkTools.CodeAnalysis.Nodes
 		public override DataType GetDataType(RunScope scope)
 		{
 			if (_def == null && !Resolve(scope)) return base.GetDataType(scope);
-			return _def.DataType;
+			return _dataType;
 		}
 	}
 }

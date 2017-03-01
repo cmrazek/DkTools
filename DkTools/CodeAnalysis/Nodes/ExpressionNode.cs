@@ -105,9 +105,9 @@ namespace DkTools.CodeAnalysis.Nodes
 									}
 								}
 								break;
-							case "[":
-								exp.AddChild(exp.ReadNestable(p, code.Span, code.Text, stopStrings));
-								break;
+							//case "[":
+							//	exp.AddChild(exp.ReadNestable(p, code.Span, code.Text, stopStrings));
+							//	break;
 							case "-":
 								{
 									var lastNode = exp.LastChild;
@@ -137,12 +137,12 @@ namespace DkTools.CodeAnalysis.Nodes
 		{
 			var code = p.Code;
 			var word = code.Text;
-			var span = code.Span;
+			var wordSpan = code.Span;
 
 			if (code.ReadExact('('))
 			{
 				// This is a function call
-				return FunctionCallNode.Read(p, span, word);
+				return FunctionCallNode.Read(p, wordSpan, word);
 			}
 
 			if (code.ReadExact('.'))
@@ -153,7 +153,7 @@ namespace DkTools.CodeAnalysis.Nodes
 				{
 					var childWord = code.Text;
 					var combinedWord = string.Concat(word, ".", childWord);
-					var combinedSpan = span.Envelope(code.Span);
+					var combinedSpan = wordSpan.Envelope(code.Span);
 
 					if (code.ReadExact('('))
 					{
@@ -191,23 +191,100 @@ namespace DkTools.CodeAnalysis.Nodes
 				else // No word after dot
 				{
 					ReportError(dotSpan, CAError.CA0004);	// Expected identifier to follow '.'
-					return new UnknownNode(p.Statement, span.Envelope(dotSpan), string.Concat(word, "."));
+					return new UnknownNode(p.Statement, wordSpan.Envelope(dotSpan), string.Concat(word, "."));
 				}
 			}
-			else // No dot after word
+
+			// Try to read array accessor
+			if (code.PeekExact('['))
 			{
-				// Single word. Don't attempt to find the definition now because it could be an enum option.
-				return new IdentifierNode(p.Statement, span, word, null);
+				// Read a list of array accessors with a single expression
+				var arrayResetPos = code.TokenStartPostion;
+				var arrayExps = new List<ExpressionNode>();
+				ExpressionNode arrayExp = null;
+				var lastArrayStartPos = code.Position;
+				while (!code.EndOfFile)
+				{
+					lastArrayStartPos = code.Position;
+					if (code.ReadExact('[') &&
+						(arrayExp = ExpressionNode.Read(p, "]", ",")) != null &&
+						code.ReadExact(']'))
+					{
+						arrayExps.Add(arrayExp);
+					}
+					else
+					{
+						code.Position = lastArrayStartPos;
+						break;
+					}
+				}
 
-				// TODO: remove
-				//var def = (from d in p.CodeAnalyzer.PreprocessorModel.DefinitionProvider.GetAny(code.Position + p.FuncOffset, word)
-				//		   where !d.RequiresChild && !d.ArgumentsRequired
-				//		   select d).FirstOrDefault();
-				//if (def != null) return new IdentifierNode(p.Statement, span, word, def);
+				var defs = p.CodeAnalyzer.PreprocessorModel.DefinitionProvider.GetAny(code.Position + p.FuncOffset, word).ToArray();
 
-				//ReportError(span, CAError.CA0001, word);	// Unknown '{0}'.
-				//return new UnknownNode(p.Statement, span, word);
+				// Try to match to a variable defined as an array
+				if (arrayExps.Count > 0)
+				{
+					// Check if it's a variable being accessed
+					foreach (var def in defs)
+					{
+						if (def is VariableDefinition)
+						{
+							var vardef = def as VariableDefinition;
+							var arrayLengths = vardef.ArrayLengths;
+							if (arrayLengths == null) continue;
+
+							if (arrayLengths.Length == arrayExps.Count)
+							{
+								return new IdentifierNode(p.Statement, wordSpan, word, def, arrayExps);
+							}
+							else if (arrayLengths.Length == arrayExps.Count - 1 &&
+								vardef.DataType != null && vardef.DataType.AllowsSubscript)
+							{
+								// Last array accessor is a string subscript
+								return new IdentifierNode(p.Statement, wordSpan, word, def, arrayExps.Take(arrayExps.Count - 1),
+									new ExpressionNode[] { arrayExps.Last() });
+							}
+						}
+					}
+				}
+
+				// Try to match to a string that allows a subscript with 1 or 2 arguments
+				code.Position = arrayResetPos;
+				var subDef = (from d in defs where d.DataType != null && d.DataType.AllowsSubscript select d).FirstOrDefault();
+				if (subDef != null)
+				{
+					if (code.ReadExact('['))
+					{
+						var exp1 = ExpressionNode.Read(p, "]", ",");
+						if (exp1 != null)
+						{
+							if (code.ReadExact(','))
+							{
+								var exp2 = ExpressionNode.Read(p, "]", ",");
+								if (exp2 != null)
+								{
+									if (code.ReadExact(']'))
+									{
+										return new IdentifierNode(p.Statement, wordSpan, word, subDef,
+											subscriptAccessExps: new ExpressionNode[] { exp1, exp2 });
+									}
+								}
+							}
+							else if (code.ReadExact(']'))
+							{
+								return new IdentifierNode(p.Statement, wordSpan, word, subDef,
+									subscriptAccessExps: new ExpressionNode[] { exp1 });
+							}
+						}
+					}
+
+					// No match; reset back to before the array accessors started
+					code.Position = arrayResetPos;
+				}
 			}
+
+			// Single word. Don't attempt to find the definition now because it could be an enum option.
+			return new IdentifierNode(p.Statement, wordSpan, word, null);
 		}
 
 		private Node ReadNestable(ReadParams p, Span openSpan, string text, string[] stopStrings)
@@ -220,8 +297,8 @@ namespace DkTools.CodeAnalysis.Nodes
 					groupNode = new BracketsNode(p.Statement, openSpan);
 					endText = ")";
 					break;
-				case "[":
-					return ArrayNode.Read(p, openSpan);
+				//case "[":
+				//	return ArrayNode.Read(p, openSpan);
 				default:
 					throw new ArgumentOutOfRangeException("text");
 			}

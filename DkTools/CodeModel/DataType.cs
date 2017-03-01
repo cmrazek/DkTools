@@ -1555,5 +1555,22 @@ namespace DkTools.CodeModel
 		{
 			get { return _valueType == ValType.Void || _valueType == ValType.Unknown; }
 		}
+
+		public bool AllowsSubscript
+		{
+			get { return _valueType == ValType.String; }
+		}
+
+		public DataType GetSubscriptDataType(int numArgs)
+		{
+			if (_valueType == ValType.String)
+			{
+				if (numArgs == 1) return DataType.Char;
+				else if (numArgs == 2) return DataType.String;
+				else return DataType.Unknown;
+			}
+
+			return DataType.Unknown;
+		}
 	}
 }

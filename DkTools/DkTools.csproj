@@ -272,8 +272,6 @@
     <Compile Include="Classifier\ProbeClassifierType.cs" />
     <Compile Include="Classifier\State.cs" />
     <Compile Include="Classifier\TextBufferStateTracker.cs" />
-    <Compile Include="CodeAnalysis\Nodes\ArrayAccessorNode.cs" />
-    <Compile Include="CodeAnalysis\Nodes\ArrayNode.cs" />
     <Compile Include="CodeAnalysis\Nodes\BracketsNode.cs" />
     <Compile Include="CodeAnalysis\CAErrors.cs" />
     <Compile Include="CodeAnalysis\CodeAnalyzer.cs" />
@@ -288,7 +286,6 @@
     <Compile Include="CodeAnalysis\Nodes\NumberNode.cs" />
     <Compile Include="CodeAnalysis\Nodes\OperatorNode.cs" />
     <Compile Include="CodeAnalysis\Nodes\ResultNode.cs" />
-    <Compile Include="CodeAnalysis\Nodes\UnresolvedNode.cs" />
     <Compile Include="CodeAnalysis\Statements\BreakStatement.cs" />
     <Compile Include="CodeAnalysis\Statements\ColStatement.cs" />
     <Compile Include="CodeAnalysis\Statements\ContinueStatement.cs" />
