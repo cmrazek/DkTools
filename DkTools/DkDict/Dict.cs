@@ -1515,6 +1515,16 @@ namespace DkTools.DkDict
 				masterTable.AddColumn(new Column(masterTable.Name, string.Concat("has_", name, "_", historyTable.Name),
 					DataType.Unsigned2, nameFilePos));
 
+				if (masterTable.GetColumn("entered") == null)
+				{
+					masterTable.AddColumn(new Column(masterTable.Name, "entered", DataType.Date, nameFilePos));
+				}
+
+				if (masterTable.GetColumn("next_effective") == null)
+				{
+					masterTable.AddColumn(new Column(masterTable.Name, "next_effective", DataType.Date, nameFilePos));
+				}
+
 				var sb = new StringBuilder();
 				sb.Append("enum { \" \"");
 				var completionOptions = new List<string>();

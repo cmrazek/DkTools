@@ -67,7 +67,7 @@ namespace DkTools.CodeAnalysis.Statements
 							}
 
 							var def = (from d in CodeAnalyzer.PreprocessorModel.DefinitionProvider.GetGlobalFromAnywhere(code.Text)
-									   where d is TableDefinition || d is RelIndDefinition
+									   where d is TableDefinition || d is RelIndDefinition || d is ExtractTableDefinition
 									   select d).FirstOrDefault();
 							if (def == null)
 							{
@@ -204,7 +204,8 @@ namespace DkTools.CodeAnalysis.Statements
 				}
 			}
 
-			var tableDef = def as TableDefinition;
+			Definition tableDef = def as TableDefinition;
+			if (tableDef == null) tableDef = def as ExtractTableDefinition;
 			if (tableDef != null)
 			{
 				if (!code.ReadExact('.'))
