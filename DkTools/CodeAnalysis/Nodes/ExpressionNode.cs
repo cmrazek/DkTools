@@ -180,7 +180,7 @@ namespace DkTools.CodeAnalysis.Nodes
 							var childDef = parentDef.ChildDefinitions.FirstOrDefault(c => c.Name == childWord && !c.ArgumentsRequired);
 							if (childDef != null)
 							{
-								return new IdentifierNode(p.Statement, combinedSpan, combinedWord, childDef);
+								return TryReadSubscript(p, combinedSpan, combinedWord, childDef);
 							}
 						}
 
@@ -253,33 +253,7 @@ namespace DkTools.CodeAnalysis.Nodes
 				var subDef = (from d in defs where d.DataType != null && d.DataType.AllowsSubscript select d).FirstOrDefault();
 				if (subDef != null)
 				{
-					if (code.ReadExact('['))
-					{
-						var exp1 = ExpressionNode.Read(p, "]", ",");
-						if (exp1 != null)
-						{
-							if (code.ReadExact(','))
-							{
-								var exp2 = ExpressionNode.Read(p, "]", ",");
-								if (exp2 != null)
-								{
-									if (code.ReadExact(']'))
-									{
-										return new IdentifierNode(p.Statement, wordSpan, word, subDef,
-											subscriptAccessExps: new ExpressionNode[] { exp1, exp2 });
-									}
-								}
-							}
-							else if (code.ReadExact(']'))
-							{
-								return new IdentifierNode(p.Statement, wordSpan, word, subDef,
-									subscriptAccessExps: new ExpressionNode[] { exp1 });
-							}
-						}
-					}
-
-					// No match; reset back to before the array accessors started
-					code.Position = arrayResetPos;
+					return TryReadSubscript(p, wordSpan, word, subDef);
 				}
 			}
 
@@ -320,6 +294,47 @@ namespace DkTools.CodeAnalysis.Nodes
 			}
 
 			return groupNode;
+		}
+
+		private IdentifierNode TryReadSubscript(ReadParams p, Span nameSpan, string name, Definition def)
+		{
+			if (def.DataType == null || def.DataType.AllowsSubscript == false)
+			{
+				return new IdentifierNode(p.Statement, nameSpan, name, def);
+			}
+
+			var code = p.Code;
+			var resetPos = code.Position;
+
+			if (code.ReadExact('['))
+			{
+				var exp1 = ExpressionNode.Read(p, "]", ",");
+				if (exp1 != null)
+				{
+					if (code.ReadExact(','))
+					{
+						var exp2 = ExpressionNode.Read(p, "]", ",");
+						if (exp2 != null)
+						{
+							if (code.ReadExact(']'))
+							{
+								return new IdentifierNode(p.Statement, nameSpan, name, def,
+									subscriptAccessExps: new ExpressionNode[] { exp1, exp2 });
+							}
+						}
+					}
+					else if (code.ReadExact(']'))
+					{
+						return new IdentifierNode(p.Statement, nameSpan, name, def,
+							subscriptAccessExps: new ExpressionNode[] { exp1 });
+					}
+				}
+			}
+
+			// No match; reset back to before the array accessors started
+			code.Position = resetPos;
+
+			return new IdentifierNode(p.Statement, nameSpan, name, def);
 		}
 	}
 }
