@@ -15,13 +15,14 @@ namespace DkTools.ErrorTagging
 		private string _sourceArg;
 		private ErrorType _type;
 		private VsText.ITextSnapshot _snapshot;
-		private VsText.SnapshotSpan? _span;
+		private CodeModel.Span? _span;
 
-		public ErrorTask(string fileName, int lineNum, string message, ErrorType type, ErrorTaskSource source,
-			string sourceFileName, VsText.ITextSnapshot snapshot, VsText.SnapshotSpan? span = null)
+		public ErrorTask(string fileName, int lineNum, int lineCol, string message, ErrorType type, ErrorTaskSource source,
+			string sourceFileName, VsText.ITextSnapshot snapshot, CodeModel.Span? span = null)
 		{
 			this.Document = fileName;
 			this.Line = lineNum;
+			this.Column = lineCol;
 
 			if (string.IsNullOrEmpty(sourceFileName) || string.Equals(sourceFileName, fileName, StringComparison.OrdinalIgnoreCase))
 			{
@@ -80,9 +81,13 @@ namespace DkTools.ErrorTagging
 
 		public VsText.SnapshotSpan GetSnapshotSpan(VsText.ITextSnapshot currentSnapshot)
 		{
-			if (_span.HasValue) return _span.Value;
+			if (_span.HasValue)
+			{
+				if (_snapshot == null) _snapshot = currentSnapshot;
+				return new VsText.SnapshotSpan(_snapshot, _span.Value.Start, _span.Value.Length);
+			}
 
-			if (_snapshot == null || _snapshot.TextBuffer != currentSnapshot.TextBuffer) _snapshot = currentSnapshot;
+			//if (_snapshot == null || _snapshot.TextBuffer != currentSnapshot.TextBuffer) _snapshot = currentSnapshot;
 
 			var line = _snapshot.GetLineFromLineNumber(Line);
 			var startPos = line.Start.Position;
@@ -93,11 +98,12 @@ namespace DkTools.ErrorTagging
 				if (newStartPos < endPos) startPos = newStartPos;
 			}
 
-			_span = new VsText.SnapshotSpan(_snapshot, new VsText.Span(startPos, endPos - startPos));
-			return _span.Value;
+			if (_snapshot == null) _snapshot = currentSnapshot;
+			_span = new CodeModel.Span(startPos, endPos);
+			return new VsText.SnapshotSpan(_snapshot, _span.Value.Start, _span.Value.End);
 		}
 
-		public VsText.SnapshotSpan? Span
+		public CodeModel.Span? Span
 		{
 			get { return _span; }
 		}

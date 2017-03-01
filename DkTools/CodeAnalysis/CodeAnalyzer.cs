@@ -118,17 +118,22 @@ namespace DkTools.CodeAnalysis
 
 		public void ReportErrorAbsolute(Span span, CAError errorCode, params object[] args)
 		{
-			if (span.IsEmpty) return;
+			if (span.IsEmpty)
+			{
+				Log.Debug("Error {0} not reported because the span is empty.", errorCode);
+				return;
+			}
 
-			var filePos = _prepModel.Source.GetFilePosition(span.Start);
-			var primaryFileSpan = _prepModel.Source.GetPrimaryFileSpan(span);
+			string fileName;
+			bool isPrimary;
+			var fileSpan = _prepModel.Source.GetFileSpan(span, out fileName, out isPrimary);
 
 			int lineNum = 0, linePos = 0;
 			foreach (var incl in _prepModel.IncludeDependencies)
 			{
-				if (string.Equals(incl.FileName, filePos.FileName, StringComparison.OrdinalIgnoreCase))
+				if (string.Equals(incl.FileName, fileName, StringComparison.OrdinalIgnoreCase))
 				{
-					Util.CalcLineAndPosFromOffset(incl.Content, filePos.Position, out lineNum, out linePos);
+					Util.CalcLineAndPosFromOffset(incl.Content, fileSpan.Start, out lineNum, out linePos);
 					break;
 				}
 			}
@@ -139,15 +144,12 @@ namespace DkTools.CodeAnalysis
 			if (type == ErrorType.Warning) _numWarnings++;
 			else _numErrors++;
 
-			_pane.WriteLine(string.Format("{0}({1},{2}) : {3} : {4}", filePos.FileName, lineNum + 1, linePos + 1, type, message));
+			_pane.WriteLine(string.Format("{0}({1},{2}) : {3} : {4}", fileName, lineNum + 1, linePos + 1, type, message));
 
-			if (!primaryFileSpan.IsEmpty)
-			{
-				var task = new ErrorTagging.ErrorTask(filePos.FileName, lineNum, message, type,
-					ErrorTaskSource.CodeAnalysis, _codeModel.FileName, _codeModel.Snapshot,
-					primaryFileSpan.ToVsTextSnapshotSpan(_codeModel.Snapshot));
-				ErrorTaskProvider.Instance.Add(task, true);
-			}
+			var task = new ErrorTagging.ErrorTask(fileName, lineNum, linePos, message, type,
+				ErrorTaskSource.CodeAnalysis, _codeModel.FileName,
+				isPrimary ? _codeModel.Snapshot : null, fileSpan);
+			ErrorTaskProvider.Instance.Add(task, true);
 		}
 
 		public PreprocessorModel PreprocessorModel

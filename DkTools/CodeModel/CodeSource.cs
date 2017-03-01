@@ -22,9 +22,9 @@ namespace DkTools.CodeModel
 		private class CodeSegment
 		{
 			public string fileName;
-			public int fileStartPos;
+			public int fileStartPos;	// Starting position of the segment within the full combined source
 			public int length;
-			public int startPos;
+			public int startPos;		// Starting position of the segment without the individual file
 			public int endPos;
 			public bool actualContent;
 			public bool primaryFile;
@@ -229,7 +229,7 @@ namespace DkTools.CodeModel
 
 		public FilePosition GetFilePosition(int sourceOffset)
 		{
-			if (sourceOffset < 0 || sourceOffset > _length) throw new ArgumentOutOfRangeException("offset");
+			if (sourceOffset < 0 || sourceOffset > _length) throw new ArgumentOutOfRangeException("sourceOffset");
 
 			var segIndex = FindSegmentIndexForOffset(sourceOffset);
 			if (segIndex < 0)
@@ -242,6 +242,55 @@ namespace DkTools.CodeModel
 			if (seg.actualContent) pos += sourceOffset - seg.fileStartPos;
 
 			return new FilePosition(seg.fileName, pos, seg.primaryFile);
+		}
+
+		public Span GetFileSpan(Span sourceSpan, out string fileNameOut, out bool isInPrimaryFile)
+		{
+			var startFilePos = GetFilePosition(sourceSpan.Start);
+
+			if (sourceSpan.Start < 0 || sourceSpan.Start >= _length) throw new ArgumentOutOfRangeException("sourceSpan");
+
+			var startSegIndex = FindSegmentIndexForOffset(sourceSpan.Start);
+			if (startSegIndex < 0)
+			{
+				fileNameOut = null;
+				isInPrimaryFile = false;
+				return Span.Empty;
+			}
+
+			var endSegIndex = FindSegmentIndexForOffset(sourceSpan.End);
+			if (endSegIndex < 0)
+			{
+				fileNameOut = null;
+				isInPrimaryFile = false;
+				return Span.Empty;
+			}
+
+			var seg = _segments[startSegIndex];
+			fileNameOut = seg.fileName;
+			isInPrimaryFile = seg.primaryFile;
+
+			var startPos = sourceSpan.Start - seg.fileStartPos + seg.startPos;
+
+			if (seg.fileStartPos + seg.length >= sourceSpan.End)
+			{
+				// All fits within one segment
+				return new Span(startPos, startPos + sourceSpan.Length);
+			}
+
+			var endPos = seg.startPos + seg.length;
+
+			for (int s = startSegIndex + 1; s <= endSegIndex; s++)
+			{
+				seg = _segments[s];
+				if (seg.fileName != fileNameOut) continue;
+
+				if (seg.fileStartPos > sourceSpan.End) return new Span(startPos, endPos);
+				if (seg.fileStartPos + seg.length >= sourceSpan.End) return new Span(startPos, seg.startPos + (sourceSpan.End - seg.fileStartPos));
+				endPos = seg.startPos + seg.length;
+			}
+
+			return new Span(startPos, endPos);
 		}
 
 		/// <summary>

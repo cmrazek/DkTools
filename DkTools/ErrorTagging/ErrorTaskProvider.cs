@@ -42,12 +42,16 @@ namespace DkTools.ErrorTagging
 				string.Equals(t.Document, taskDocument, StringComparison.OrdinalIgnoreCase) &&
 				t.Text == taskText))
 			{
+				Log.Debug("Task for {0}({1}) ignored because it is a duplicate.", task.Document, task.Line);
 				return;
 			}
+
+			Log.Debug("Adding task for {0}({1})", task.Document, task.Line);	// TODO: remove
 
 			lock (_tasksLock)
 			{
 				Tasks.Add(task);
+				Log.Debug("{0} task(s) exist.", Tasks.Count);	// TODO: remove
 			}
 
 			if (!dontSignalTagsChanged)
@@ -59,11 +63,14 @@ namespace DkTools.ErrorTagging
 
 		public void Clear()
 		{
+			Log.Debug("Clearing all tasks.");
+
 			var tasks = Tasks.Cast<ErrorTask>().ToArray();
 
 			lock (_tasksLock)
 			{
 				Tasks.Clear();
+				Log.Debug("{0} task(s) exist.", Tasks.Count);	// TODO: remove
 			}
 
 			foreach (ErrorTask task in tasks)
@@ -106,6 +113,8 @@ namespace DkTools.ErrorTagging
 
 		public void RemoveAllForSource(ErrorTaskSource source, string sourceFileName)
 		{
+			Log.Debug("Removing tasks for source: {0}", source);
+
 			var filesToNotify = new List<string>();
 
 			lock (_tasksLock)
@@ -118,6 +127,8 @@ namespace DkTools.ErrorTagging
 					Tasks.Remove(task);
 					if (!filesToNotify.Contains(task.Document)) filesToNotify.Add(task.Document);
 				}
+
+				Log.Debug("{0} task(s) exist.", Tasks.Count);	// TODO: remove
 			}
 
 			foreach (var file in filesToNotify)
@@ -129,6 +140,8 @@ namespace DkTools.ErrorTagging
 
 		public void RemoveAllForFile(string fileName)
 		{
+			Log.Debug("Removing tasks for file: {0}", fileName);
+
 			var filesToNotify = new List<string>();
 
 			lock (_tasksLock)
@@ -141,6 +154,8 @@ namespace DkTools.ErrorTagging
 					Tasks.Remove(task);
 					if (!filesToNotify.Contains(task.Document)) filesToNotify.Add(task.Document);
 				}
+
+				Log.Debug("{0} task(s) exist.", Tasks.Count);	// TODO: remove
 			}
 
 			foreach (var file in filesToNotify)
@@ -152,6 +167,8 @@ namespace DkTools.ErrorTagging
 
 		public void RemoveAllForSourceAndFile(ErrorTaskSource source, string sourceFileName, string fileName)
 		{
+			Log.Debug("Removing tasks for source {0} {1} and file {2}", source, sourceFileName, fileName);
+
 			var filesToNotify = new List<string>();
 
 			lock (_tasksLock)
@@ -165,6 +182,8 @@ namespace DkTools.ErrorTagging
 					Tasks.Remove(task);
 					if (!filesToNotify.Contains(task.Document)) filesToNotify.Add(task.Document);
 				}
+
+				Log.Debug("{0} task(s) exist.", Tasks.Count);	// TODO: remove
 			}
 
 			foreach (var file in filesToNotify)
@@ -198,21 +217,23 @@ namespace DkTools.ErrorTagging
 				tasks = Tasks.Cast<ErrorTask>().ToArray();
 			}
 
+			//Log.Debug("Getting tasks for filename: {0} ({1} in full list)", fileName, tasks.Length);	// TODO: remove
+
 			foreach (var task in (from t in tasks where string.Equals(t.Document, fileName, StringComparison.OrdinalIgnoreCase) select t))
 			{
 				var span = task.Span;
 				if (span.HasValue)
 				{
-					//foreach (var docSpan in docSpans)
-					//{
-						//var spanT = span.Value.TranslateTo(docSpan.Snapshot, SpanTrackingMode.EdgeExclusive);
-						//if (docSpan.Contains(spanT.Start))
-						//{
-							tags.Add(new TagSpan<ErrorTag>(span.Value, new ErrorTag(task.Type == ErrorType.Warning ?
+					foreach (var docSpan in docSpans)
+					{
+						var spanT = new SnapshotSpan(task.GetSnapshot(snapshot), span.Value.Start, span.Value.Length).TranslateTo(docSpan.Snapshot, SpanTrackingMode.EdgeExclusive);
+						if (docSpan.Contains(spanT.Start))
+						{
+							tags.Add(new TagSpan<ErrorTag>(task.GetSnapshotSpan(snapshot), new ErrorTag(task.Type == ErrorType.Warning ?
 								ErrorTagger.CodeWarning : ErrorTagger.CodeError, task.Text)));
-							//break;
-						//}
-					//}
+							break;
+						}
+					}
 				}
 				else
 				{
@@ -251,7 +272,7 @@ namespace DkTools.ErrorTagging
 				var span = task.Span;
 				if (span.HasValue)
 				{
-					if (span.Value.Contains(pt.TranslateTo(span.Value.Snapshot, PointTrackingMode.Positive)))
+					if (span.Value.Contains(pt.TranslateTo(task.GetSnapshot(pt.Snapshot), PointTrackingMode.Positive)))
 					{
 						yield return task;
 					}
