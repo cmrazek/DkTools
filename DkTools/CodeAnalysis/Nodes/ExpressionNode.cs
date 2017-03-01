@@ -26,8 +26,14 @@ namespace DkTools.CodeAnalysis.Nodes
 
 		public static ExpressionNode Read(ReadParams p, params string[] stopStrings)
 		{
+			return Read(p, false, stopStrings);
+		}
+
+		public static ExpressionNode Read(ReadParams p, bool stayOnSameLine, params string[] stopStrings)
+		{
 			ExpressionNode exp = null;
 			var code = p.Code;
+			var lastPos = code.Position;
 
 			while (!code.EndOfFile)
 			{
@@ -55,6 +61,17 @@ namespace DkTools.CodeAnalysis.Nodes
 				}
 
 				if (!code.Read()) break;
+
+				if (stayOnSameLine)
+				{
+					if (code.PositionsAreOnDifferentLines(lastPos, code.TokenStartPostion))
+					{
+						code.Position = code.TokenStartPostion;
+						break;
+					}
+					lastPos = code.Position;
+				}
+
 				if (exp == null) exp = new ExpressionNode(p.Statement);
 
 				switch (code.Type)

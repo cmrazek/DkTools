@@ -142,6 +142,21 @@ namespace DkTools.CodeAnalysis
 
 		[ErrorMessage("Expected value to follow conditional ':'.")]
 		CA0043,
+
+		[ErrorMessage("Expected extract table name to follow 'extract'.")]
+		CA0044,
+
+		[ErrorMessage("Extract table '{0}' does not exist.")]
+		CA0045,
+
+		[ErrorMessage("Expected extract column name.")]
+		CA0046,
+
+		[ErrorMessage("Expected '=' to follow extract column name.")]
+		CA0047,
+
+		[ErrorMessage("Expected extract column expression.")]
+		CA0048,
 	}
 
 	[AttributeUsage(AttributeTargets.Field, AllowMultiple = false)]

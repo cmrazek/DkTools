@@ -1365,5 +1365,25 @@ namespace DkTools
 				}
 			}
 		}
+
+		public bool PositionsAreOnDifferentLines(int pos1, int pos2)
+		{
+			if (pos1 < 0 || pos1 > _length) throw new ArgumentOutOfRangeException("pos1");
+			if (pos2 < 0 || pos2 > _length) throw new ArgumentOutOfRangeException("pos2");
+
+			if (pos1 > pos2)
+			{
+				var tmp = pos1;
+				pos1 = pos2;
+				pos2 = tmp;
+			}
+
+			for (int i = pos1; i < pos2; i++)
+			{
+				if (_source[i] == '\n') return true;
+			}
+
+			return false;
+		}
 	}
 }
