@@ -30,12 +30,13 @@ namespace DkTools.CodeModel
 				var dataType = DataType.TryParse(new DataType.ParseArgs
 				{
 					Code = parser,
-					TypeName = _name
+					//TypeName = _name
 				});
 				if (dataType != null)
 				{
 					// If the data type does not consume the entire string, then this is not a data type definition.
 					if (parser.Read()) dataType = null;
+					else if (dataType.Name == null) dataType.Name = _name;
 				}
 
 				_dataType = dataType;
@@ -101,6 +102,11 @@ namespace DkTools.CodeModel
 		public bool IsDataType
 		{
 			get { return _dataType != null; }
+		}
+
+		public DataType DataType
+		{
+			get { return _dataType; }
 		}
 	}
 }

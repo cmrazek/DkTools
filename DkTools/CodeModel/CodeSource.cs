@@ -275,10 +275,11 @@ namespace DkTools.CodeModel
 			if (seg.fileStartPos + seg.length >= sourceSpan.End)
 			{
 				// All fits within one segment
-				return new Span(startPos, startPos + sourceSpan.Length);
+				if (seg.actualContent) return new Span(startPos, startPos + sourceSpan.Length);
+				else return new Span(seg.startPos, seg.startPos);
 			}
 
-			var endPos = seg.startPos + seg.length;
+			var endPos = seg.actualContent ? seg.startPos + seg.length : seg.startPos;
 
 			for (int s = startSegIndex + 1; s <= endSegIndex; s++)
 			{
@@ -286,8 +287,12 @@ namespace DkTools.CodeModel
 				if (seg.fileName != fileNameOut) continue;
 
 				if (seg.fileStartPos > sourceSpan.End) return new Span(startPos, endPos);
-				if (seg.fileStartPos + seg.length >= sourceSpan.End) return new Span(startPos, seg.startPos + (sourceSpan.End - seg.fileStartPos));
-				endPos = seg.startPos + seg.length;
+				if (seg.fileStartPos + seg.length >= sourceSpan.End)
+				{
+					return new Span(startPos, seg.actualContent ? seg.startPos + (sourceSpan.End - seg.fileStartPos) : seg.startPos);
+				}
+
+				endPos = seg.actualContent ? seg.startPos + seg.length : seg.startPos;
 			}
 
 			return new Span(startPos, endPos);

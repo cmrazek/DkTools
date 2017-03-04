@@ -388,16 +388,12 @@ namespace DkTools.CodeModel
 			var nameFilePos = rdr.FilePosition;
 			if (nameFilePos.IsInFile) _refs.Add(new Reference(define.Definition, nameFilePos));
 
-			if (define.IsDataType)
+			if (define.DataType != null && name == define.DataType.Name)
 			{
 				// Insert the data type name before the data type, so that it's available in the quick info and database.
 				rdr.Insert(string.Format("@{0} ", DataType.NormalizeEnumOption(name)));
-				rdr.Ignore(name.Length);
 			}
-			else
-			{
-				rdr.Ignore(name.Length);
-			}
+			rdr.Ignore(name.Length);
 
 			p.result.DocumentAltered = true;
 
@@ -480,6 +476,11 @@ namespace DkTools.CodeModel
 				{
 					args.Add(new PreprocessorDefine(define.ParamNames[i], paramList[i], null, FilePosition.Empty));
 				}
+			}
+			if (p.args != null && p.args.Any())
+			{
+				if (args == null) args = new List<PreprocessorDefine>();
+				args.AddRange(p.args);
 			}
 
 			string[] restrictedDefines = null;
