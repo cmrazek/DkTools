@@ -6,6 +6,7 @@ using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using DkTools.CodeAnalysis.Nodes;
 using DkTools.CodeAnalysis.Statements;
+using DkTools.CodeAnalysis.Values;
 using DkTools.CodeModel;
 using DkTools.CodeModel.Definitions;
 using DkTools.ErrorTagging;
@@ -72,7 +73,7 @@ namespace DkTools.CodeAnalysis
 				FuncDef = func.Definition
 			};
 
-			_scope = new RunScope(func.Definition, func.StartPos);
+			_scope = new RunScope(this, func.Definition, func.StartPos);
 			_stmts = new List<Statement>();
 
 			// Parse the function body
@@ -87,18 +88,18 @@ namespace DkTools.CodeAnalysis
 			{
 				if (!string.IsNullOrEmpty(arg.Name))
 				{
-					_scope.AddVariable(new Variable(arg.Name, arg.DataType, new Value(arg.DataType), true, true));
+					_scope.AddVariable(new Variable(arg.Name, arg.DataType, Value.CreateUnknownFromDataType(arg.DataType), true, true));
 				}
 			}
 
 			foreach (var v in func.Variables)
 			{
-				_scope.AddVariable(new Variable(v.Name, v.DataType, new Value(v.DataType), false, false));
+				_scope.AddVariable(new Variable(v.Name, v.DataType, Value.CreateUnknownFromDataType(v.DataType), false, false));
 			}
 
 			foreach (var v in _prepModel.DefinitionProvider.GetGlobalFromFile<VariableDefinition>())
 			{
-				_scope.AddVariable(new Variable(v.Name, v.DataType, new Value(v.DataType), false, true));
+				_scope.AddVariable(new Variable(v.Name, v.DataType, Value.CreateUnknownFromDataType(v.DataType), false, true));
 			}
 
 			foreach (var stmt in _stmts)

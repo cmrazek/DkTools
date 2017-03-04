@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using DkTools.CodeAnalysis.Nodes;
 using DkTools.CodeModel;
+using DkTools.CodeModel.Definitions;
 
 namespace DkTools.CodeAnalysis.Statements
 {
@@ -17,7 +18,7 @@ namespace DkTools.CodeAnalysis.Statements
 
 		private class Case
 		{
-			public ExpressionNode value;
+			public ExpressionNode exp;
 			public List<Statement> body = new List<Statement>();
 			public Span caseSpan;
 			public bool safeFallThrough;
@@ -77,7 +78,7 @@ namespace DkTools.CodeAnalysis.Statements
 					if (exp == null) ReportError(errorSpan, CAError.CA0028);	// Expected case value.
 					else
 					{
-						_cases.Last().value = exp;
+						_cases.Last().exp = exp;
 						errorSpan = exp.Span;
 					}
 
@@ -117,16 +118,43 @@ namespace DkTools.CodeAnalysis.Statements
 			base.Execute(scope);
 
 			DataType dataType = null;
-			if (_condExp != null) dataType = _condExp.ReadValue(scope).DataType;
+			List<Definition> enumOptions = null;
+			if (_condExp != null)
+			{
+				dataType = _condExp.ReadValue(scope).DataType;
+				if (dataType != null && dataType.HasCompletionOptions)
+				{
+					enumOptions = dataType.CompletionOptions.ToList();
+				}
+			}
 
 			var bodyScopes = new List<RunScope>();
 
 			foreach (var cas in _cases)
 			{
-				if (cas.value != null)
+				if (cas.exp != null)
 				{
 					var valueScope = scope.Clone(dataTypeContext: dataType);
-					cas.value.ReadValue(valueScope);
+					var itemValue = cas.exp.ReadValue(valueScope);
+
+					if (enumOptions != null)
+					{
+						// Remove this option from the list
+						var itemStr = itemValue.ToStringValue(valueScope, cas.exp.Span);
+						if (!string.IsNullOrEmpty(itemStr))
+						{
+							itemStr = DataType.NormalizeEnumOption(itemStr);
+							foreach (var enumItem in enumOptions)
+							{
+								if (enumItem.Name == itemStr)
+								{
+									enumOptions.Remove(enumItem);
+									break;
+								}
+							}
+						}
+					}
+
 					scope.Merge(valueScope, true, true);
 				}
 
@@ -151,6 +179,11 @@ namespace DkTools.CodeAnalysis.Statements
 				var bodyScope = scope.Clone(canBreak: true);
 				foreach (var stmt in _default) stmt.Execute(bodyScope);
 				bodyScopes.Add(bodyScope);
+			}
+			else if (enumOptions != null && enumOptions.Count == 0)
+			{
+				// There is no default, but all the enum options have been covered off.
+				// This is ok.
 			}
 			else
 			{

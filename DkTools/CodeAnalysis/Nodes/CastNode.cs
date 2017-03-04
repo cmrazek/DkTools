@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using DkTools.CodeAnalysis.Statements;
+using DkTools.CodeAnalysis.Values;
 using DkTools.CodeModel;
 
 namespace DkTools.CodeAnalysis.Nodes

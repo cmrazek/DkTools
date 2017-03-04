@@ -1383,6 +1383,37 @@ namespace DkTools.CodeModel
 			return false;
 		}
 
+		public EnumOptionDefinition GetEnumOption(int index)
+		{
+			if (_completionOptionsType != CompletionOptionsType.EnumOptionsList) return null;
+			if (index < 0 || index >= _completionOptions.Length) return null;
+			return _completionOptions[index] as EnumOptionDefinition;
+		}
+
+		public int? GetEnumOrdinal(string value)
+		{
+			if (_completionOptionsType != CompletionOptionsType.EnumOptionsList) return null;
+			if (string.IsNullOrEmpty(value)) return null;
+			value = NormalizeEnumOption(value);
+
+			var index = 0;
+			foreach (var option in _completionOptions)
+			{
+				if (NormalizeEnumOption(option.Name) == value) return index;
+				index++;
+			}
+
+			return null;
+		}
+
+		public int NumEnumOptions
+		{
+			get
+			{
+				return _completionOptionsType == CompletionOptionsType.EnumOptionsList ? _completionOptions.Length : 0;
+			}
+		}
+
 		public ValType ValueType
 		{
 			get { return _valueType; }

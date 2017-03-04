@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using DkTools.CodeAnalysis.Statements;
+using DkTools.CodeAnalysis.Values;
 using DkTools.CodeModel;
 using DkTools.CodeModel.Definitions;
 
@@ -113,7 +114,7 @@ namespace DkTools.CodeAnalysis.Nodes
 					if (defArg.PassByMethod == PassByMethod.Reference || defArg.PassByMethod == PassByMethod.ReferencePlus)
 					{
 						var writeScope = scope.Clone(dataTypeContext: defArg.DataType);
-						arg.WriteValue(writeScope, new Value(defArg.DataType));
+						arg.WriteValue(writeScope, Value.CreateUnknownFromDataType(defArg.DataType));
 						scope.Merge(writeScope);
 					}
 					else
@@ -130,8 +131,8 @@ namespace DkTools.CodeAnalysis.Nodes
 				argIndex++;
 			}
 
-			if (_def == null) return new Value(DataType.Void);
-			return new Value(_def.DataType);
+			if (_def == null) return Value.Void;
+			return Value.CreateUnknownFromDataType(_def.DataType);
 		}
 
 		public override bool CanAssignValue(RunScope scope)
@@ -155,7 +156,7 @@ namespace DkTools.CodeAnalysis.Nodes
 
 		private Value Read_oldvalue(RunScope scope)
 		{
-			return new Value(_args[0].GetDataType(scope));
+			return Value.CreateUnknownFromDataType(_args[0].GetDataType(scope));
 		}
 	}
 }

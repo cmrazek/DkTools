@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using DkTools.CodeAnalysis.Statements;
+using DkTools.CodeAnalysis.Values;
 using DkTools.CodeModel;
 using DkTools.ErrorTagging;
 
@@ -203,7 +204,7 @@ namespace DkTools.CodeAnalysis.Nodes
 			if (_nodes.Count == 1) return _nodes[0].ReadValue(scope);
 
 			ReportError(Span, CAError.CA0011);	// Syntax error.
-			return Value.Empty;
+			return Value.Void;
 		}
 
 		public override void WriteValue(RunScope scope, Value value)

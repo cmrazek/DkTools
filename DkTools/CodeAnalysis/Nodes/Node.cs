@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using DkTools.CodeAnalysis.Statements;
+using DkTools.CodeAnalysis.Values;
 using DkTools.CodeModel;
 
 namespace DkTools.CodeAnalysis.Nodes
@@ -51,7 +52,7 @@ namespace DkTools.CodeAnalysis.Nodes
 		public virtual Value ReadValue(RunScope scope)
 		{
 			ReportError(Span, CAError.CA0013);	// Cannot read from this identifier.
-			return Value.Empty;
+			return Value.Void;
 		}
 
 		public virtual void WriteValue(RunScope scope, Value value)

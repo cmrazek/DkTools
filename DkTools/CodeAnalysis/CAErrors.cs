@@ -157,6 +157,33 @@ namespace DkTools.CodeAnalysis
 
 		[ErrorMessage("Expected extract column expression.")]
 		CA0048,
+
+		[ErrorMessage("{0} cannot be used with this value.")]
+		CA0050,
+
+		[ErrorMessage("Division by zero.")]
+		[Warning]
+		CA0051,
+
+		[ErrorMessage("Date math results in an out-of-bounds value.")]
+		[Warning]
+		CA0052,
+
+		[ErrorMessage("Enum math results in an out-of-bounds value.")]
+		[Warning]
+		CA0053,
+
+		[ErrorMessage("Time math results in an out-of-bounds value.")]
+		[Warning]
+		CA0054,
+
+		[ErrorMessage("Converting {0} to {1}.")]
+		[Warning]
+		CA0055,
+
+		[ErrorMessage("Char math results in an out-of-bounds value.")]
+		[Warning]
+		CA0056,
 	}
 
 	[AttributeUsage(AttributeTargets.Field, AllowMultiple = false)]

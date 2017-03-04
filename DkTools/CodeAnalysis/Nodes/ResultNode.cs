@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using DkTools.CodeAnalysis.Statements;
+using DkTools.CodeAnalysis.Values;
 using DkTools.CodeModel;
 
 namespace DkTools.CodeAnalysis.Nodes
@@ -50,7 +51,7 @@ namespace DkTools.CodeAnalysis.Nodes
 				if (rightNode == null || rightNode.Source != ResultSource.Conditional2)
 				{
 					ReportError(Span, CAError.CA0021);	// Operator '?' expects ':' on right.
-					Parent.ReplaceWithResult(Value.Empty, this);
+					Parent.ReplaceWithResult(Value.Void, this);
 				}
 
 				Parent.ReplaceWithResult(rightNode.ReadValue(scope), this, rightNode);

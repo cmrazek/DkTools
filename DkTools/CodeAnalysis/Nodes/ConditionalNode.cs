@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using DkTools.CodeAnalysis.Statements;
+using DkTools.CodeAnalysis.Values;
 using DkTools.CodeModel;
 using DkTools.ErrorTagging;
 
@@ -84,26 +85,39 @@ namespace DkTools.CodeAnalysis.Nodes
 			if (leftNode == null)
 			{
 				ReportError(_opSpan, CAError.CA0007, "?");	// Operator '{0}' expects value on left.
-				Parent.ReplaceWithResult(new Value(DataType.Int), ResultSource.Conditional1, this);
+				Parent.ReplaceWithResult(Value.Void, ResultSource.Conditional1, this);
 			}
 			else
 			{
 				var leftValue = leftNode.ReadValue(leftScope);
 				if (leftValue.IsVoid) leftNode.ReportError(_opSpan, CAError.CA0007, "?");	// Operator '{0}' expects value on left.
 
-				var value = Value.Empty;
-				if (_trueExp != null)
+				Value result = null;
+				if (leftValue.IsTrue)
 				{
-					value = _trueExp.ReadValue(scope);
+					if (_trueExp != null) result = _trueExp.ReadValue(scope);
+					else result = Value.Void;
+				}
+				else if (leftValue.IsFalse)
+				{
+					if (_falseExp != null) result = _falseExp.ReadValue(scope);
+					else result = Value.Void;
+				}
+				else
+				{
+					if (_trueExp != null)
+					{
+						result = _trueExp.ReadValue(scope);
+					}
+					if (_falseExp != null)
+					{
+						var value = _falseExp.ReadValue(scope);
+						if (result == null) result = value;
+					}
+					if (result == null) result = Value.Void;
 				}
 
-				if (_falseExp != null)
-				{
-					var falseValue = _falseExp.ReadValue(scope);
-					if (value.IsVoid) value = falseValue;
-				}
-
-				Parent.ReplaceWithResult(value, leftNode, this);
+				Parent.ReplaceWithResult(result, leftNode, this);
 			}
 		}
 	}

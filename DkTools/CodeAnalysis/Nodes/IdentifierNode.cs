@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using DkTools.CodeAnalysis.Statements;
+using DkTools.CodeAnalysis.Values;
 using DkTools.CodeModel;
 using DkTools.CodeModel.Definitions;
 
@@ -101,9 +102,13 @@ namespace DkTools.CodeAnalysis.Nodes
 
 				return base.ReadValue(scope);
 			}
+			else if (_def is EnumOptionDefinition)
+			{
+				return new EnumValue(_def.DataType, _def.Name);
+			}
 			else if (_def.CanRead && _def.DataType != null)
 			{
-				return new Value(_def.DataType);
+				return Value.CreateUnknownFromDataType(_def.DataType);
 			}
 			else
 			{
@@ -124,7 +129,7 @@ namespace DkTools.CodeAnalysis.Nodes
 				var v = scope.GetVariable(Text);
 				if (v != null)
 				{
-					v.Value = new Value(v.DataType);	// Keep the variable's data type the same
+					v.Value = value;
 					v.IsInitialized = true;
 					return;
 				}

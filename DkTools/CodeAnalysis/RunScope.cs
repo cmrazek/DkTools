@@ -10,6 +10,7 @@ namespace DkTools.CodeAnalysis
 {
 	class RunScope
 	{
+		private CodeAnalyzer _ca;
 		private Dictionary<string, Variable> _vars = new Dictionary<string, Variable>();
 		private FunctionDefinition _funcDef;
 		private int _funcOffset;
@@ -21,15 +22,16 @@ namespace DkTools.CodeAnalysis
 		private bool _canBreak;
 		private bool _canContinue;
 
-		public RunScope(FunctionDefinition funcDef, int funcOffset)
+		public RunScope(CodeAnalyzer ca, FunctionDefinition funcDef, int funcOffset)
 		{
+			_ca = ca;
 			_funcDef = funcDef;
 			_funcOffset = funcOffset;
 		}
 
 		public RunScope Clone(DataType dataTypeContext = null, bool? canBreak = null, bool? canContinue = null)
 		{
-			var scope = new RunScope(_funcDef, _funcOffset)
+			var scope = new RunScope(_ca, _funcDef, _funcOffset)
 			{
 				_returned = _returned,
 				_dataTypeContext = _dataTypeContext,
@@ -154,6 +156,11 @@ namespace DkTools.CodeAnalysis
 		public FunctionDefinition FunctionDefinition
 		{
 			get { return _funcDef; }
+		}
+
+		public CodeAnalyzer CodeAnalyzer
+		{
+			get { return _ca; }
 		}
 	}
 }
