@@ -113,12 +113,12 @@ namespace DkTools.CodeAnalysis.Nodes
 									{
 										// This is a cast
 										var span = new Span(startPos, code.Span.End);
-										exp.AddChild(new CastNode(p.Statement, span, dataType, ExpressionNode.Read(p, stopStrings)));
+										exp.AddChild(new CastNode(p.Statement, span, dataType, ExpressionNode.Read(p, stayOnSameLine, stopStrings)));
 									}
 									else
 									{
 										code.Position = resumePos;
-										exp.AddChild(exp.ReadNestable(p, code.Span, opText, stopStrings));
+										exp.AddChild(exp.ReadNestable(p, code.Span, opText, null));
 									}
 								}
 								break;
@@ -288,8 +288,6 @@ namespace DkTools.CodeAnalysis.Nodes
 					groupNode = new BracketsNode(p.Statement, openSpan);
 					endText = ")";
 					break;
-				//case "[":
-				//	return ArrayNode.Read(p, openSpan);
 				default:
 					throw new ArgumentOutOfRangeException("text");
 			}

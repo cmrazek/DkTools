@@ -108,6 +108,10 @@ namespace DkTools.CodeAnalysis.Nodes
 					return Read_abs(scope);
 				case "count":
 					return Read_count(scope);
+				case "max":
+					return Read_max(scope);
+				case "min":
+					return Read_min(scope);
 				case "oldvalue":
 					return Read_oldvalue(scope);
 				case "sum":
@@ -202,6 +206,26 @@ namespace DkTools.CodeAnalysis.Nodes
 			}
 
 			return Value.CreateUnknownFromDataType(DataType.Int);
+		}
+
+		private Value Read_max(RunScope scope)
+		{
+			if (_args.Count != 1)
+			{
+				ReportError(_funcNameSpan, CAError.CA0057, 1);	// Function expects {0} argument(s).
+			}
+
+			return Value.CreateUnknownFromDataType(_args[0].GetDataType(scope));
+		}
+
+		private Value Read_min(RunScope scope)
+		{
+			if (_args.Count != 1)
+			{
+				ReportError(_funcNameSpan, CAError.CA0057, 1);	// Function expects {0} argument(s).
+			}
+
+			return Value.CreateUnknownFromDataType(_args[0].GetDataType(scope));
 		}
 	}
 }
