@@ -22,6 +22,7 @@ namespace DkTools.CodeAnalysis
 		private bool _canBreak;
 		private bool _canContinue;
 		private bool _suppressInitializedCheck;
+		private bool _removeHeaderString;			// Does not inherit on clone
 
 		public RunScope(CodeAnalyzer ca, FunctionDefinition funcDef, int funcOffset)
 		{
@@ -208,6 +209,12 @@ namespace DkTools.CodeAnalysis
 		{
 			get { return _suppressInitializedCheck; }
 			set { _suppressInitializedCheck = value; }
+		}
+
+		public bool RemoveHeaderString
+		{
+			get { return _removeHeaderString; }
+			set { _removeHeaderString = value; }
 		}
 	}
 }

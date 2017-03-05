@@ -15,6 +15,11 @@ namespace DkTools
 			List<V> list;
 			if (_dict.TryGetValue(key, out list))
 			{
+				if (list == null)
+				{
+					list = new List<V>();
+					_dict[key] = list;
+				}
 				list.Add(value);
 			}
 			else
@@ -30,7 +35,7 @@ namespace DkTools
 			get
 			{
 				List<V> list;
-				if (_dict.TryGetValue(key, out list)) return list;
+				if (_dict.TryGetValue(key, out list) && list != null) return list;
 				return new V[0];
 			}
 		}
@@ -39,9 +44,10 @@ namespace DkTools
 		{
 			get
 			{
-				foreach (var node in _dict)
+				foreach (var node in _dict.Values)
 				{
-					foreach (var value in node.Value)
+					if (node == null) continue;
+					foreach (var value in node)
 					{
 						yield return value;
 					}

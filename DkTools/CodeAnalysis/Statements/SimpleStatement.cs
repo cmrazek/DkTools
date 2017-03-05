@@ -39,7 +39,13 @@ namespace DkTools.CodeAnalysis.Statements
 		{
 			base.Execute(scope);
 
-			if (_root.NumChildren > 0) _root.ReadValue(scope);
+			if (_root.NumChildren > 0)
+			{
+				var readScope = scope.Clone();
+				readScope.RemoveHeaderString = true;
+				_root.ReadValue(readScope);
+				scope.Merge(readScope);
+			}
 		}
 	}
 }

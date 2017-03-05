@@ -201,6 +201,17 @@ namespace DkTools.CodeAnalysis.Nodes
 		public override Value ReadValue(RunScope scope)
 		{
 			Execute(scope);
+
+			if (_nodes.Count == 2 && scope.RemoveHeaderString)
+			{
+				var lastNode = _nodes.Last() as StringLiteralNode;
+				if (lastNode != null)
+				{
+					RemoveChild(lastNode);
+					scope.RemoveHeaderString = false;
+				}
+			}
+
 			if (_nodes.Count == 1) return _nodes[0].ReadValue(scope);
 
 			ReportError(Span, CAError.CA0101);	// Syntax error.
@@ -229,6 +240,5 @@ namespace DkTools.CodeAnalysis.Nodes
 		{
 			get { return _nodes.Count > 0 ? _nodes[_nodes.Count - 1] : null; }
 		}
-
 	}
 }
