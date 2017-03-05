@@ -738,6 +738,10 @@ namespace DkTools.CodeModel
 			var lastTokenPos = 0;
 			var fields = new List<string>();
 
+			var rownoDef = new ExtractFieldDefinition("rowno", exDef.FilePosition, exDef);
+			rownoDef.SetDataType(DataType.Unsigned9);
+			exDef.AddField(rownoDef);
+
 			var done = false;
 			while (!_code.EndOfFile && !done)
 			{

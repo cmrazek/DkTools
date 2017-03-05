@@ -107,7 +107,12 @@ namespace DkTools.CodeModel.Tokens.Statements
 				}
 			}
 
-			ret._fields = (from f in fieldTokens select f.SourceDefinition as ExtractFieldDefinition).ToArray();
+			var fields = new List<ExtractFieldDefinition>();
+			var rownoDef = new ExtractFieldDefinition("rowno", exDef.FilePosition, exDef);
+			rownoDef.SetDataType(DataType.Unsigned9);
+			fields.Add(rownoDef);
+			fields.AddRange(from f in fieldTokens select f.SourceDefinition as ExtractFieldDefinition);
+			ret._fields = fields.ToArray();
 
 			return ret;
 		}
