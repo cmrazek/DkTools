@@ -272,7 +272,7 @@ namespace DkTools.CodeAnalysis.Nodes
 		{
 			var leftNode = Parent.GetLeftSibling(scope, this);
 			var rightNode = Parent.GetRightSibling(scope, this);
-			if (leftNode == null) ReportError(Span, CAError.CA0010, Text);			// Operator '{0}' expects assignable value on left.
+			if (leftNode == null) ReportError(Span, CAError.CA0100, Text);			// Operator '{0}' expects assignable value on left.
 			else if (rightNode == null) ReportError(Span, CAError.CA0008, Text);	// Operator '{0}' expects value on right.
 			if (leftNode != null && rightNode != null)
 			{
@@ -290,7 +290,7 @@ namespace DkTools.CodeAnalysis.Nodes
 				var rightValue = rightNode.ReadValue(rightScope);
 				scope.Merge(rightScope);
 
-				if (!leftNode.CanAssignValue(scope)) leftNode.ReportError(leftNode.Span, CAError.CA0010, Text);				// Operator '{0}' expects assignable value on left.
+				if (!leftNode.CanAssignValue(scope)) leftNode.ReportError(leftNode.Span, CAError.CA0100, Text);				// Operator '{0}' expects assignable value on left.
 				else if (rightValue.IsVoid) rightNode.ReportError(rightNode.Span, CAError.CA0008, Text);				// Operator '{0}' expects value on right.
 
 				Value result = null;

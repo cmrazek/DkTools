@@ -10,6 +10,7 @@ namespace DkTools.CodeAnalysis
 {
 	enum CAError
 	{
+		#region General Parsing
 		[ErrorMessage("Unknown '{0}'.")]
 		CA0001,
 
@@ -21,6 +22,7 @@ namespace DkTools.CodeAnalysis
 
 		[ErrorMessage("Expected identifier to follow '.'")]
 		CA0004,
+		#endregion
 
 		//[ErrorMessage("Empty statement not allowed.")]
 		//CA0005,
@@ -34,21 +36,33 @@ namespace DkTools.CodeAnalysis
 		[ErrorMessage("Operator '{0}' expects value on right.")]
 		CA0008,
 
-		[ErrorMessage("Use of uninitialized value.")]
-		[Warning]
-		CA0009,
-
+		#region Operator Simplification (0100-0109)
 		[ErrorMessage("Operator '{0}' expects assignable value on left.")]
-		CA0010,
+		CA0100,
 
 		[ErrorMessage("Syntax error.")]
-		CA0011,
+		CA0101,
 
 		[ErrorMessage("Cannot write to this identifier.")]
-		CA0012,
+		CA0102,
 
 		[ErrorMessage("Cannot read from this identifier.")]
-		CA0013,
+		CA0103,
+		#endregion
+
+		#region Variable Usage (0110-0119)
+		[ErrorMessage("Use of uninitialized value.")]
+		[Warning]
+		CA0110,
+
+		[ErrorMessage("Variable is assigned a value, but is never used.")]
+		[Warning]
+		CA0111,
+
+		[ErrorMessage("Variable is not used.")]
+		[Warning]
+		CA0112,
+		#endregion
 
 		[ErrorMessage("Expected value after 'return'.")]
 		CA0014,

@@ -203,7 +203,7 @@ namespace DkTools.CodeAnalysis.Nodes
 			Execute(scope);
 			if (_nodes.Count == 1) return _nodes[0].ReadValue(scope);
 
-			ReportError(Span, CAError.CA0011);	// Syntax error.
+			ReportError(Span, CAError.CA0101);	// Syntax error.
 			return Value.Void;
 		}
 

@@ -283,6 +283,11 @@ namespace DkTools.CodeAnalysis.Statements
 		{
 			base.Execute(scope);
 
+			if (_whereExp != null)
+			{
+				_whereExp.ReadValue(scope);
+			}
+
 			var foundScope = scope.Clone(canBreak: true, canContinue: true);
 			foreach (var group in _groups)
 			{

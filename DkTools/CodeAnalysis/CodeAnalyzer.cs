@@ -88,18 +88,18 @@ namespace DkTools.CodeAnalysis
 			{
 				if (!string.IsNullOrEmpty(arg.Name))
 				{
-					_scope.AddVariable(new Variable(arg.Name, arg.DataType, Value.CreateUnknownFromDataType(arg.DataType), true, true));
+					_scope.AddVariable(new Variable(arg, arg.Name, arg.DataType, Value.CreateUnknownFromDataType(arg.DataType), true, TriState.True, true));
 				}
 			}
 
 			foreach (var v in func.Variables)
 			{
-				_scope.AddVariable(new Variable(v.Name, v.DataType, Value.CreateUnknownFromDataType(v.DataType), false, false));
+				_scope.AddVariable(new Variable(v, v.Name, v.DataType, Value.CreateUnknownFromDataType(v.DataType), false, TriState.False, false));
 			}
 
 			foreach (var v in _prepModel.DefinitionProvider.GetGlobalFromFile<VariableDefinition>())
 			{
-				_scope.AddVariable(new Variable(v.Name, v.DataType, Value.CreateUnknownFromDataType(v.DataType), false, true));
+				_scope.AddVariable(new Variable(v, v.Name, v.DataType, Value.CreateUnknownFromDataType(v.DataType), false, TriState.True, true));
 			}
 
 			foreach (var stmt in _stmts)
@@ -110,6 +110,25 @@ namespace DkTools.CodeAnalysis
 			if (func.Definition.DataType.ValueType != ValType.Void && _scope.Returned != TriState.True)
 			{
 				ReportErrorAbsolute(func.NameSpan, CAError.CA0017);	// Function does not return a value.
+			}
+
+			foreach (var v in _scope.Variables)
+			{
+				if (!v.IsUsed)
+				{
+					if (v.IsInitialized != TriState.False)
+					{
+						var def = v.Definition;
+						ReportErrorLocal(def.SourceFileName, new Span(def.SourceStartPos, def.SourceStartPos + def.Name.Length),
+							false, null, CAError.CA0111);	// Variable is assigned a value, but is never used.
+					}
+					else
+					{
+						var def = v.Definition;
+						ReportErrorLocal(def.SourceFileName, new Span(def.SourceStartPos, def.SourceStartPos + def.Name.Length),
+							false, null, CAError.CA0112);	// Variable is not used.
+					}
+				}
 			}
 		}
 
@@ -131,21 +150,41 @@ namespace DkTools.CodeAnalysis
 			string fileName;
 			bool isPrimary;
 			var fileSpan = _prepModel.Source.GetFileSpan(span, out fileName, out isPrimary);
-
-			int lineNum = 0, linePos = 0;
+			
 			string fileContent = null;
 			foreach (var incl in _prepModel.IncludeDependencies)
 			{
 				if (string.Equals(incl.FileName, fileName, StringComparison.OrdinalIgnoreCase))
 				{
 					fileContent = incl.Content;
-					Util.CalcLineAndPosFromOffset(fileContent, fileSpan.Start, out lineNum, out linePos);
 					break;
+				}
+			}
+
+			ReportErrorLocal(fileName, fileSpan, isPrimary, fileContent, errorCode, args);
+		}
+
+		public void ReportErrorLocal(string fileName, Span fileSpan, bool isPrimary, string fileContent, CAError errorCode, params object[] args)
+		{
+			int lineNum = 0, linePos = 0;
+
+			if (fileContent == null)
+			{
+				foreach (var incl in _prepModel.IncludeDependencies)
+				{
+					if (string.Equals(incl.FileName, fileName, StringComparison.OrdinalIgnoreCase))
+					{
+						fileContent = incl.Content;
+						isPrimary = string.Equals(fileName, _codeModel.FileName, StringComparison.OrdinalIgnoreCase);
+						break;
+					}
 				}
 			}
 
 			if (fileContent != null)
 			{
+				Util.CalcLineAndPosFromOffset(fileContent, fileSpan.Start, out lineNum, out linePos);
+
 				// Check for any exclusions on this line
 				var lineText = GetLineText(fileContent, fileSpan.Start);
 				var code = new CodeParser(lineText) { ReturnComments = true };

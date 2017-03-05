@@ -96,7 +96,8 @@ namespace DkTools.CodeAnalysis.Nodes
 				var v = scope.GetVariable(Text);
 				if (v != null)
 				{
-					if (!v.IsInitialized) ReportError(Span, CAError.CA0009);	// Use of uninitialized value.
+					v.IsUsed = true;
+					if (v.IsInitialized != TriState.True && !scope.SuppressInitializedCheck) ReportError(Span, CAError.CA0110);	// Use of uninitialized value.
 					return v.Value;
 				}
 
@@ -130,7 +131,7 @@ namespace DkTools.CodeAnalysis.Nodes
 				if (v != null)
 				{
 					v.Value = v.Value.Convert(scope, Span, value);
-					v.IsInitialized = true;
+					v.IsInitialized = TriState.True;
 					return;
 				}
 

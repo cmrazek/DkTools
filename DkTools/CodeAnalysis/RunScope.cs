@@ -21,6 +21,7 @@ namespace DkTools.CodeAnalysis
 		private TriState _continued;
 		private bool _canBreak;
 		private bool _canContinue;
+		private bool _suppressInitializedCheck;
 
 		public RunScope(CodeAnalyzer ca, FunctionDefinition funcDef, int funcOffset)
 		{
@@ -36,7 +37,8 @@ namespace DkTools.CodeAnalysis
 				_returned = _returned,
 				_dataTypeContext = _dataTypeContext,
 				_canBreak = _canBreak,
-				_canContinue = _canContinue
+				_canContinue = _canContinue,
+				_suppressInitializedCheck = _suppressInitializedCheck
 			};
 
 			if (dataTypeContext != null) scope._dataTypeContext = dataTypeContext;
@@ -57,15 +59,18 @@ namespace DkTools.CodeAnalysis
 			if (promoteBreak && scope.Breaked > _breaked) _breaked = scope.Breaked;
 			if (promoteContinue && scope.Continued > _continued) _continued = scope.Continued;
 
-			if (scope.Returned != TriState.True)	// Don't initialize variables if the branch returned before this point
+			
+			foreach (var myVar in _vars.Values)
 			{
-				foreach (var myVar in _vars.Values)
+				Variable otherVar;
+				if (scope._vars.TryGetValue(myVar.Name, out otherVar))
 				{
-					Variable otherVar;
-					if (scope._vars.TryGetValue(myVar.Name, out otherVar))
+					if (scope.Returned != TriState.True)	// Don't initialize variables if the branch returned before this point
 					{
-						if (otherVar.IsInitialized) myVar.IsInitialized = true;
+						if (otherVar.IsInitialized > myVar.IsInitialized) myVar.IsInitialized = otherVar.IsInitialized;
 					}
+
+					if (otherVar.IsUsed) myVar.IsUsed = true;
 				}
 			}
 		}
@@ -94,9 +99,40 @@ namespace DkTools.CodeAnalysis
 
 			foreach (var v in _vars)
 			{
-				if (!v.Value.IsInitialized)
+				if (v.Value.IsInitialized != TriState.True)
 				{
-					v.Value.IsInitialized = scopes.All(x => x == null || x.Returned == TriState.True || x.GetVariable(v.Key).IsInitialized);
+					var numScopes = 0;
+					var numInitScopes = 0;
+					var numMaybeInitScopes = 0;
+					foreach (var scope in scopes)
+					{
+						if (scope == null || scope.Returned == TriState.True) continue;
+						numScopes++;
+						switch (scope.GetVariable(v.Key).IsInitialized)
+						{
+							case TriState.True:
+								numInitScopes++;
+								break;
+							case TriState.Indeterminate:
+								numMaybeInitScopes++;
+								break;
+						}
+					}
+
+					if (numScopes > 0)
+					{
+						if (numInitScopes == numScopes) v.Value.IsInitialized = TriState.True;
+						else if (numInitScopes > 0 || numMaybeInitScopes > 0) v.Value.IsInitialized = TriState.Indeterminate;
+					}
+				}
+
+				if (!v.Value.IsUsed)
+				{
+					foreach (var scope in scopes)
+					{
+						if (scope == null) continue;
+						if (scope.GetVariable(v.Key).IsUsed) v.Value.IsUsed = true;
+					}
 				}
 			}
 		}
@@ -111,6 +147,11 @@ namespace DkTools.CodeAnalysis
 			Variable v;
 			if (_vars.TryGetValue(name, out v)) return v;
 			return null;
+		}
+
+		public IEnumerable<Variable> Variables
+		{
+			get { return _vars.Values; }
 		}
 
 		public TriState Returned
@@ -161,6 +202,12 @@ namespace DkTools.CodeAnalysis
 		public CodeAnalyzer CodeAnalyzer
 		{
 			get { return _ca; }
+		}
+
+		public bool SuppressInitializedCheck
+		{
+			get { return _suppressInitializedCheck; }
+			set { _suppressInitializedCheck = value; }
 		}
 	}
 }

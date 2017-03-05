@@ -127,6 +127,11 @@ namespace DkTools.CodeAnalysis.Nodes
 				{
 					if (defArg.PassByMethod == PassByMethod.Reference || defArg.PassByMethod == PassByMethod.ReferencePlus)
 					{
+						var readScope = scope.Clone(dataTypeContext: defArg.DataType);
+						readScope.SuppressInitializedCheck = true;
+						arg.ReadValue(readScope);
+						scope.Merge(readScope);
+
 						var writeScope = scope.Clone(dataTypeContext: defArg.DataType);
 						arg.WriteValue(writeScope, Value.CreateUnknownFromDataType(defArg.DataType));
 						scope.Merge(writeScope);

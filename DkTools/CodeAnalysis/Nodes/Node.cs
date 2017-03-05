@@ -51,13 +51,13 @@ namespace DkTools.CodeAnalysis.Nodes
 
 		public virtual Value ReadValue(RunScope scope)
 		{
-			ReportError(Span, CAError.CA0013);	// Cannot read from this identifier.
+			ReportError(Span, CAError.CA0103);	// Cannot read from this identifier.
 			return Value.Void;
 		}
 
 		public virtual void WriteValue(RunScope scope, Value value)
 		{
-			ReportError(Span, CAError.CA0012);	// Cannot write to this identifier.
+			ReportError(Span, CAError.CA0102);	// Cannot write to this identifier.
 		}
 
 		public virtual bool CanAssignValue(RunScope scope)
