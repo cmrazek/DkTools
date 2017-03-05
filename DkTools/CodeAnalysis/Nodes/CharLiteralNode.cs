@@ -9,21 +9,24 @@ using DkTools.CodeModel;
 
 namespace DkTools.CodeAnalysis.Nodes
 {
-	class StringLiteralNode : TextNode
+	class CharLiteralNode : TextNode
 	{
-		public StringLiteralNode(Statement stmt, Span span, string text)
+		private char? _char;
+
+		public CharLiteralNode(Statement stmt, Span span, string text)
 			: base(stmt, span, text)
 		{
+			if (text != null && text.Length >= 1) _char = text[0];
 		}
 
 		public override Value ReadValue(RunScope scope)
 		{
-			return new StringValue(DataType.String, CodeParser.StringLiteralToString(Text));
+			return new CharValue(DataType.Char, _char);
 		}
 
 		public override DataType GetDataType(RunScope scope)
 		{
-			return DataType.String;
+			return DataType.Char;
 		}
 	}
 }

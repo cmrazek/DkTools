@@ -547,8 +547,13 @@ namespace DkTools.CodeModel
 			parms.resolvingMacros = true;
 			parms.preResolvePass = true;
 
+			string lastText = source;
+
 			while (Preprocess(parms).DocumentAltered || parms.preResolvePass)
 			{
+				if (!parms.preResolvePass && writer.Text == lastText) break;
+				lastText = writer.Text;
+
 				parms.result.DocumentAltered = false;
 				parms.args = null;	// Only apply the arguments to the first round
 				parms.reader = new StringPreprocessorReader(writer.Text);

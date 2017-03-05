@@ -54,8 +54,7 @@ namespace DkTools.CodeAnalysis
 
 			ErrorTaskProvider.Instance.FireTagsChangedEvent();
 
-			_pane.WriteLine("Code analysis complete:");
-			_pane.WriteLine(string.Format("{0} error(s), {1} warning(s)", _numErrors, _numWarnings));
+			_pane.WriteLine(string.Format("Code analysis complete: {0} error(s), {1} warning(s)", _numErrors, _numWarnings));
 		}
 
 		private void AnalyzeFunction(CodeModel.PreprocessorModel.LocalFunction func)

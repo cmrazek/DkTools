@@ -80,7 +80,14 @@ namespace DkTools.CodeAnalysis.Nodes
 						exp.AddChild(new NumberNode(p.Statement, code.Span, code.Text));
 						break;
 					case CodeType.StringLiteral:
-						exp.AddChild(new StringLiteralNode(p.Statement, code.Span, code.Text));
+						if (code.Text.StartsWith("'"))
+						{
+							exp.AddChild(new CharLiteralNode(p.Statement, code.Span, CodeParser.StringLiteralToString(code.Text)));
+						}
+						else
+						{
+							exp.AddChild(new StringLiteralNode(p.Statement, code.Span, CodeParser.StringLiteralToString(code.Text)));
+						}
 						break;
 					case CodeType.Word:
 						exp.AddChild(exp.ReadWord(p));

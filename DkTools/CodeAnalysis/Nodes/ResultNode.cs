@@ -30,6 +30,11 @@ namespace DkTools.CodeAnalysis.Nodes
 			return _value;
 		}
 
+		public override DataType GetDataType(RunScope scope)
+		{
+			return _value.DataType;
+		}
+
 		public ResultSource Source
 		{
 			get { return _source; }

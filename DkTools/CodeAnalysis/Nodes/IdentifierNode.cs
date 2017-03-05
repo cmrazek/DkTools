@@ -107,14 +107,28 @@ namespace DkTools.CodeAnalysis.Nodes
 			{
 				return new EnumValue(_def.DataType, _def.Name);
 			}
+			else if (_def is TableDefinition || _def is ExtractTableDefinition)
+			{
+				if (scope.DataTypeContext != null && scope.DataTypeContext.ValueType == ValType.Table)
+				{
+					return new TableValue(_def.DataType, _def.Name);
+				}
+			}
+			else if (_def is RelIndDefinition)
+			{
+				if (scope.DataTypeContext != null &&
+					(scope.DataTypeContext.ValueType == ValType.IndRel ||
+						scope.DataTypeContext.ValueType == ValType.Table))
+				{
+					return new IndRelValue(_def.DataType, _def.Name);
+				}
+			}
 			else if (_def.CanRead && _def.DataType != null)
 			{
 				return Value.CreateUnknownFromDataType(_def.DataType);
 			}
-			else
-			{
-				return base.ReadValue(scope);
-			}
+
+			return base.ReadValue(scope);
 		}
 
 		public override void WriteValue(RunScope scope, Value value)
@@ -123,6 +137,26 @@ namespace DkTools.CodeAnalysis.Nodes
 			{
 				base.WriteValue(scope, value);
 				return;
+			}
+
+			if (_arrayAccessExps != null)
+			{
+				foreach (var exp in _arrayAccessExps)
+				{
+					var accessScope = scope.Clone(dataTypeContext: DataType.Int);
+					exp.ReadValue(accessScope);
+					scope.Merge(accessScope);
+				}
+			}
+
+			if (_subscriptAccessExps != null)
+			{
+				foreach (var exp in _subscriptAccessExps)
+				{
+					var accessScope = scope.Clone(dataTypeContext: DataType.Int);
+					exp.ReadValue(accessScope);
+					scope.Merge(accessScope);
+				}
 			}
 
 			if (_def is VariableDefinition)

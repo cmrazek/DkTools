@@ -28,5 +28,10 @@ namespace DkTools.CodeAnalysis.Nodes
 		{
 			return new NumberValue(DataType.Numeric, _value);
 		}
+
+		public override DataType GetDataType(RunScope scope)
+		{
+			return DataType.Numeric;
+		}
 	}
 }
