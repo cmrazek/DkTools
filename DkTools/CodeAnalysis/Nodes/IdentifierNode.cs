@@ -129,7 +129,7 @@ namespace DkTools.CodeAnalysis.Nodes
 				var v = scope.GetVariable(Text);
 				if (v != null)
 				{
-					v.Value = value;
+					v.Value = v.Value.Convert(scope, Span, value);
 					v.IsInitialized = true;
 					return;
 				}

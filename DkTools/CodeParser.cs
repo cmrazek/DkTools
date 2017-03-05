@@ -109,7 +109,7 @@ namespace DkTools
 					return true;
 				}
 
-				if (char.IsDigit(ch))
+				if (char.IsDigit(ch) || (ch == '.' && _pos + 1 < _length && char.IsDigit(_source[_pos + 1])))
 				{
 					var gotDot = false;
 					while (_pos < _length)

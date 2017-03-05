@@ -41,5 +41,10 @@ namespace DkTools.CodeAnalysis.Values
 		{
 			return null;
 		}
+
+		public override Value Convert(RunScope scope, Span span, Value value)
+		{
+			return new VoidValue();
+		}
 	}
 }

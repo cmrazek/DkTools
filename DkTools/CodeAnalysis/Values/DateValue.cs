@@ -308,6 +308,11 @@ namespace DkTools.CodeAnalysis.Values
 				return false;
 			}
 		}
+
+		public override Value Convert(RunScope scope, Span span, Value value)
+		{
+			return new DateValue(DataType, value.ToDate(scope, span));
+		}
 	}
 
 	struct DkDate

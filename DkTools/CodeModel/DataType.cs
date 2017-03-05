@@ -1375,6 +1375,8 @@ namespace DkTools.CodeModel
 			if (_completionOptionsType != CompletionOptionsType.EnumOptionsList) return false;
 			if (_completionOptions == null) return false;
 
+			optionText = NormalizeEnumOption(optionText);
+
 			foreach (var opt in _completionOptions)
 			{
 				if (opt.Name == optionText) return true;
@@ -1385,14 +1387,28 @@ namespace DkTools.CodeModel
 
 		public EnumOptionDefinition GetEnumOption(int index)
 		{
-			if (_completionOptionsType != CompletionOptionsType.EnumOptionsList) return null;
+			if (_completionOptionsType != CompletionOptionsType.EnumOptionsList || _completionOptions == null) return null;
 			if (index < 0 || index >= _completionOptions.Length) return null;
 			return _completionOptions[index] as EnumOptionDefinition;
 		}
 
+		public EnumOptionDefinition GetEnumOption(string name)
+		{
+			if (_completionOptionsType != CompletionOptionsType.EnumOptionsList || _completionOptions == null) return null;
+
+			name = NormalizeEnumOption(name);
+
+			foreach (var opt in _completionOptions)
+			{
+				if (opt.Name == name) return opt as EnumOptionDefinition;
+			}
+
+			return null;
+		}
+
 		public int? GetEnumOrdinal(string value)
 		{
-			if (_completionOptionsType != CompletionOptionsType.EnumOptionsList) return null;
+			if (_completionOptionsType != CompletionOptionsType.EnumOptionsList || _completionOptions == null) return null;
 			if (string.IsNullOrEmpty(value)) return null;
 			value = NormalizeEnumOption(value);
 

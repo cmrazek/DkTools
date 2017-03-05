@@ -274,6 +274,11 @@ namespace DkTools.CodeAnalysis.Values
 			if (_time.HasValue) return (char)_time.Value.Ticks;
 			return null;
 		}
+
+		public override Value Convert(RunScope scope, Span span, Value value)
+		{
+			return new TimeValue(DataType, value.ToTime(scope, span));
+		}
 	}
 
 	struct DkTime

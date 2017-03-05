@@ -274,5 +274,12 @@ namespace DkTools.CodeAnalysis.Values
 				return false;
 			}
 		}
+
+		public override Value Convert(RunScope scope, Span span, Value value)
+		{
+			var str = value.ToStringValue(scope, span);
+			if (str != null && str.Length == 1) return new CharValue(DataType, str[0]);
+			return new CharValue(DataType, null);
+		}
 	}
 }

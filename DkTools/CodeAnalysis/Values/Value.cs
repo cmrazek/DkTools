@@ -18,6 +18,7 @@ namespace DkTools.CodeAnalysis.Values
 		public abstract DkDate? ToDate(RunScope scope, Span span);
 		public abstract DkTime? ToTime(RunScope scope, Span span);
 		public abstract char? ToChar(RunScope scope, Span span);
+		public abstract Value Convert(RunScope scope, Span span, Value value);
 
 		protected Value(DataType dataType)
 		{
