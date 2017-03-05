@@ -133,6 +133,12 @@ namespace DkTools.CodeModel
 		{
 			// This function is called after the '#' has been read from the file.
 
+			if (p.preResolvePass)
+			{
+				p.reader.Use(directiveName.Length);
+				return;
+			}
+
 			p.result.DocumentAltered = true;
 
 			switch (directiveName)
@@ -529,7 +535,8 @@ namespace DkTools.CodeModel
 			if (rdr.Peek() == ')') rdr.Ignore(1);
 		}
 
-		private string ResolveMacros(string source, IEnumerable<string> restrictedDefines, IEnumerable<PreprocessorDefine> args, FileContext serverContext, ContentType contentType)
+		private string ResolveMacros(string source, IEnumerable<string> restrictedDefines, IEnumerable<PreprocessorDefine> args,
+			FileContext serverContext, ContentType contentType)
 		{
 			var reader = new StringPreprocessorReader(source);
 			var writer = new StringPreprocessorWriter();
@@ -538,13 +545,15 @@ namespace DkTools.CodeModel
 			parms.restrictedDefines = restrictedDefines;
 			parms.args = args;
 			parms.resolvingMacros = true;
+			parms.preResolvePass = true;
 
-			while (Preprocess(parms).DocumentAltered)
+			while (Preprocess(parms).DocumentAltered || parms.preResolvePass)
 			{
 				parms.result.DocumentAltered = false;
 				parms.args = null;	// Only apply the arguments to the first round
 				parms.reader = new StringPreprocessorReader(writer.Text);
 				parms.writer = writer = new StringPreprocessorWriter();
+				parms.preResolvePass = false;
 			}
 			return writer.Text;
 		}
@@ -990,6 +999,7 @@ namespace DkTools.CodeModel
 			public string stopAtIncludeFile;
 			public PreprocessorResult result = new PreprocessorResult();
 			public IEnumerable<PreprocessorDefine> stdlibDefines;
+			public bool preResolvePass;
 
 			public PreprocessorParams(IPreprocessorReader reader, IPreprocessorWriter writer, string fileName,
 				IEnumerable<string> parentFiles, FileContext serverContext, ContentType contentType, string stopAtIncludeFile)

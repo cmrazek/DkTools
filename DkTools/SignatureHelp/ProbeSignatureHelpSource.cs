@@ -115,7 +115,7 @@ namespace DkTools.SignatureHelp
 				var modelPos = (new VsText.SnapshotPoint(snapshot, triggerPos)).TranslateTo(model.Snapshot, VsText.PointTrackingMode.Negative).Position;
 
 				var argsToken = model.File.FindDownward<ArgsToken>().Where(t => t.Span.Start < modelPos && (t.Span.End > modelPos || !t.IsTerminated)).LastOrDefault();
-				if (argsToken != null)
+				if (argsToken != null && argsToken.Signature != null)
 				{
 					var modelSpan = new VsText.SnapshotSpan(model.Snapshot, argsToken.Span.ToVsTextSpan());
 					var snapshotSpan = modelSpan.TranslateTo(snapshot, VsText.SpanTrackingMode.EdgeInclusive);
