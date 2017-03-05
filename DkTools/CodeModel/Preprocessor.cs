@@ -133,12 +133,6 @@ namespace DkTools.CodeModel
 		{
 			// This function is called after the '#' has been read from the file.
 
-			if (p.preResolvePass)
-			{
-				p.reader.Use(directiveName.Length);
-				return;
-			}
-
 			p.result.DocumentAltered = true;
 
 			switch (directiveName)
@@ -425,7 +419,8 @@ namespace DkTools.CodeModel
 					{
 						rdr.Ignore(1);
 
-						var resolvedParamText = ResolveMacros(sb.ToString(), p.restrictedDefines, p.args, p.fileContext, p.contentType);
+						var argText = ApplySubstitutions(sb.ToString(), p.args);
+						var resolvedParamText = ResolveMacros(argText, p.restrictedDefines, null, p.fileContext, p.contentType);
 						paramList.Add(resolvedParamText.Trim());
 
 						sb.Clear();
@@ -464,7 +459,8 @@ namespace DkTools.CodeModel
 				}
 				if (sb.Length > 0)
 				{
-					var resolvedParamText = ResolveMacros(sb.ToString(), p.restrictedDefines, p.args, p.fileContext, p.contentType);
+					var argText = ApplySubstitutions(sb.ToString(), p.args);
+					var resolvedParamText = ResolveMacros(argText, p.restrictedDefines, null, p.fileContext, p.contentType);
 					paramList.Add(resolvedParamText.Trim());
 				}
 
@@ -493,7 +489,8 @@ namespace DkTools.CodeModel
 			if (p.restrictedDefines != null) restrictedDefines = p.restrictedDefines.Concat(new string[] { name }).ToArray();
 			else restrictedDefines = new string[] { name };
 
-			var textToAdd = ResolveMacros(define.Content, restrictedDefines, args, p.fileContext, p.contentType);
+			var textToAdd = ApplySubstitutions(define.Content, args);
+			textToAdd = ResolveMacros(textToAdd, restrictedDefines, null, p.fileContext, p.contentType);
 			rdr.Insert(textToAdd);
 
 			p.args = oldArgs;
@@ -510,7 +507,8 @@ namespace DkTools.CodeModel
 			rdr.IgnoreWhiteSpaceAndComments(true);
 
 			var content = rdr.ReadAndIgnoreNestableContent(")");
-			content = ResolveMacros(content, p.restrictedDefines, p.args, p.fileContext, p.contentType);
+			content = ApplySubstitutions(content, p.args);
+			content = ResolveMacros(content, p.restrictedDefines, null, p.fileContext, p.contentType);
 
 			p.reader.Insert(EscapeString(content));
 		}
@@ -545,23 +543,120 @@ namespace DkTools.CodeModel
 			parms.restrictedDefines = restrictedDefines;
 			parms.args = args;
 			parms.resolvingMacros = true;
-			parms.preResolvePass = true;
 
-			string lastText = source;
+			var lastText = source;
 
-			while (Preprocess(parms).DocumentAltered || parms.preResolvePass)
+			while (Preprocess(parms).DocumentAltered)
 			{
-				if (!parms.preResolvePass && writer.Text == lastText) break;
-				lastText = writer.Text;
+				var newText = writer.Text;
+				if (newText == lastText) break;
+				lastText = newText;
 
 				parms.result.DocumentAltered = false;
 				parms.args = null;	// Only apply the arguments to the first round
-				parms.reader = new StringPreprocessorReader(writer.Text);
+				parms.reader = new StringPreprocessorReader(newText);
 				parms.writer = writer = new StringPreprocessorWriter();
-				parms.preResolvePass = false;
 			}
 			return writer.Text;
 		}
+
+		private string ApplySubstitutions(string source, IEnumerable<PreprocessorDefine> args)
+		{
+			if (args == null) return source;
+
+			var code = new CodeParser(source);
+			code.ReturnWhiteSpace = true;
+
+			var sb = new StringBuilder();
+
+			while (code.Read())
+			{
+				if (code.Type == CodeType.Word)
+				{
+					var word = code.Text;
+					var found = false;
+					foreach (var arg in args)
+					{
+						if (arg.Name == word)
+						{
+							sb.Append(arg.Content);
+							found = true;
+							break;
+						}
+					}
+
+					if (!found) sb.Append(word);
+				}
+				else
+				{
+					sb.Append(code.Text);
+				}
+			}
+
+			return sb.ToString();
+		}
+
+		// TODO: remove
+		//private string ApplySubstitutions(string source, IEnumerable<string> restrictedDefines, IEnumerable<PreprocessorDefine> args)
+		//{
+		//	var code = new CodeParser(source);
+		//	code.ReturnWhiteSpace = true;
+
+		//	var sb = new StringBuilder();
+
+		//	while (code.Read())
+		//	{
+		//		if (code.Type == CodeType.Word)
+		//		{
+		//			var word = code.Text;
+		//			if (restrictedDefines != null && restrictedDefines.Contains(word))
+		//			{
+		//				sb.Append(word);
+		//				continue;
+		//			}
+
+		//			if (args != null)
+		//			{
+		//				var found = false;
+		//				foreach (var arg in args)
+		//				{
+		//					if (arg.Name == word && arg.Name != arg.Content)
+		//					{
+		//						var subRestrictedDefines = new List<string>();
+		//						if (restrictedDefines != null) subRestrictedDefines.AddRange(restrictedDefines);
+		//						if (args != null) subRestrictedDefines.AddRange(from a in args select a.Name);
+
+		//						sb.Append(ApplySubstitutions(arg.Content, subRestrictedDefines, null));
+
+		//						found = true;
+		//						break;
+		//					}
+		//				}
+		//				if (found) continue;
+		//			}
+
+		//			PreprocessorDefine define;
+		//			if (_defines.TryGetValue(word, out define) && define.Name != define.Content)
+		//			{
+		//				var subRestrictedDefines = new List<string>();
+		//				if (restrictedDefines != null) subRestrictedDefines.AddRange(restrictedDefines);
+		//				if (args != null) subRestrictedDefines.AddRange(from a in args select a.Name);
+		//				subRestrictedDefines.Add(define.Name);
+
+		//				sb.Append(ApplySubstitutions(define.Content, subRestrictedDefines, null));
+		//				continue;
+		//			}
+
+		//			sb.Append(word);
+		//		}
+		//		else
+		//		{
+		//			sb.Append(code.Text);
+		//		}
+		//	}
+
+		//	return sb.ToString();
+		//}
 
 		private void ProcessInclude(PreprocessorParams p)
 		{
@@ -1004,7 +1099,6 @@ namespace DkTools.CodeModel
 			public string stopAtIncludeFile;
 			public PreprocessorResult result = new PreprocessorResult();
 			public IEnumerable<PreprocessorDefine> stdlibDefines;
-			public bool preResolvePass;
 
 			public PreprocessorParams(IPreprocessorReader reader, IPreprocessorWriter writer, string fileName,
 				IEnumerable<string> parentFiles, FileContext serverContext, ContentType contentType, string stopAtIncludeFile)
