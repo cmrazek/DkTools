@@ -364,7 +364,7 @@ namespace DkTools.DkDict
 			_tables[tableName] = table;
 
 			// Implicit columns
-			table.AddColumn(new Column(tableName, "rowno", DataType.Unsigned9, nameFilePos));
+			table.AddColumn(new Column(tableName, "rowno", DataType.Unsigned9, nameFilePos, true));
 
 			// Table attributes
 			ReadTableAttributes(table, "(", "{");
@@ -683,13 +683,13 @@ namespace DkTools.DkDict
 			}
 
 			// Special implicit columns for updates
-			updates.AddColumn(new Column("updates", "column", new DataType(ValType.String, null, "char(30)"), updatesFilePos));
-			updates.AddColumn(new Column("updates", "tablename", new DataType(ValType.String, null, "char(8)"), updatesFilePos));
-			updates.AddColumn(new Column("updates", "urowno", DataType.Unsigned9, updatesFilePos));
-			updates.AddColumn(new Column("updates", "entered", DataType.Date, updatesFilePos));
-			updates.AddColumn(new Column("updates", "new", DataType.Char255, updatesFilePos));
-			updates.AddColumn(new Column("updates", "old", DataType.Char255, updatesFilePos));
-			updates.AddColumn(new Column("updates", "seqno_updatesix", DataType.Unsigned9, updatesFilePos));
+			updates.AddColumn(new Column("updates", "column", new DataType(ValType.String, null, "char(30)"), updatesFilePos, true));
+			updates.AddColumn(new Column("updates", "tablename", new DataType(ValType.String, null, "char(8)"), updatesFilePos, true));
+			updates.AddColumn(new Column("updates", "urowno", DataType.Unsigned9, updatesFilePos, true));
+			updates.AddColumn(new Column("updates", "entered", DataType.Date, updatesFilePos, true));
+			updates.AddColumn(new Column("updates", "new", DataType.Char255, updatesFilePos, true));
+			updates.AddColumn(new Column("updates", "old", DataType.Char255, updatesFilePos, true));
+			updates.AddColumn(new Column("updates", "seqno_updatesix", DataType.Unsigned9, updatesFilePos, true));
 
 			if (!_relinds.ContainsKey("updatesix"))
 			{
@@ -730,7 +730,7 @@ namespace DkTools.DkDict
 				return null;
 			}
 
-			var col = new Column(tableName, colName, dataType, _source.GetFilePosition(colNamePos));
+			var col = new Column(tableName, colName, dataType, _source.GetFilePosition(colNamePos), false);
 
 			ReadColumnAttributes(col);
 
@@ -1372,28 +1372,28 @@ namespace DkTools.DkDict
 					// child must be many if parent is many
 
 					parentTable.AddColumn(new Column(parentTable.Name, string.Concat("has_", name, "_", childTable.Name),
-						DataType.Unsigned2, nameFilePos));
+						DataType.Unsigned2, nameFilePos, true));
 
 					childTable.AddColumn(new Column(childTable.Name, string.Concat("rowno_", name, "_", parentTable.Name),
-						DataType.Unsigned9, nameFilePos));
+						DataType.Unsigned9, nameFilePos, true));
 				}
 				else // one parent
 				{
 					if (childMany)
 					{
 						parentTable.AddColumn(new Column(parentTable.Name, string.Concat("has_", name, "_", childTable.Name),
-							DataType.Unsigned2, nameFilePos));
+							DataType.Unsigned2, nameFilePos, true));
 
 						childTable.AddColumn(new Column(childTable.Name, string.Concat("rowno_", name, "_", parentTable.Name),
-							DataType.Unsigned9, nameFilePos));
+							DataType.Unsigned9, nameFilePos, true));
 					}
 					else // one child
 					{
 						parentTable.AddColumn(new Column(parentTable.Name, string.Concat("rowno_", name, "_", childTable.Name),
-							DataType.Unsigned2, nameFilePos));
+							DataType.Unsigned2, nameFilePos, true));
 
 						childTable.AddColumn(new Column(childTable.Name, string.Concat("rowno_", name, "_", parentTable.Name),
-							DataType.Unsigned9, nameFilePos));
+							DataType.Unsigned9, nameFilePos, true));
 					}
 				}
 			}
@@ -1513,16 +1513,16 @@ namespace DkTools.DkDict
 				masterTable.AddRelInd(relind);
 
 				masterTable.AddColumn(new Column(masterTable.Name, string.Concat("has_", name, "_", historyTable.Name),
-					DataType.Unsigned2, nameFilePos));
+					DataType.Unsigned2, nameFilePos, true));
 
 				if (masterTable.GetColumn("entered") == null)
 				{
-					masterTable.AddColumn(new Column(masterTable.Name, "entered", DataType.Date, nameFilePos));
+					masterTable.AddColumn(new Column(masterTable.Name, "entered", DataType.Date, nameFilePos, true));
 				}
 
 				if (masterTable.GetColumn("next_effective") == null)
 				{
-					masterTable.AddColumn(new Column(masterTable.Name, "next_effective", DataType.Date, nameFilePos));
+					masterTable.AddColumn(new Column(masterTable.Name, "next_effective", DataType.Date, nameFilePos, true));
 				}
 
 				var sb = new StringBuilder();
@@ -1539,15 +1539,58 @@ namespace DkTools.DkDict
 				var fieldDataType = sb.ToString();
 				historyTable.AddColumn(new Column(historyTable.Name, "field",
 					new DataType(ValType.Enum, string.Format("like {0}.field", historyTable.Name), fieldDataType, completionOptions),
-					nameFilePos));
+					nameFilePos, true));
 
-				historyTable.AddColumn(new Column(historyTable.Name, "value", new DataType(ValType.String, "char(255)", "char(255)"), nameFilePos));
+				historyTable.AddColumn(new Column(historyTable.Name, "value", new DataType(ValType.String, "char(255)", "char(255)"), nameFilePos, true));
 
-				historyTable.AddColumn(new Column(historyTable.Name, string.Concat("rowno_", name, "_", masterTable.Name), DataType.Unsigned9, nameFilePos));
+				historyTable.AddColumn(new Column(historyTable.Name, string.Concat("rowno_", name, "_", masterTable.Name), DataType.Unsigned9, nameFilePos, true));
 
-				historyTable.AddColumn(new Column(historyTable.Name, string.Concat("seqno_", name, "_", historyTable.Name), DataType.Unsigned9, nameFilePos));
+				historyTable.AddColumn(new Column(historyTable.Name, string.Concat("seqno_", name, "_", historyTable.Name), DataType.Unsigned9, nameFilePos, true));
 
-				historyTable.AddColumn(new Column(historyTable.Name, "tdm_flags", DataType.Unsigned2, nameFilePos));
+				historyTable.AddColumn(new Column(historyTable.Name, "tdm_flags", DataType.Unsigned2, nameFilePos, true));
+
+				// Create snapshot table
+				var snapName = string.Concat(masterTable.Name, "s");
+				if (!_tables.ContainsKey(snapName))
+				{
+					var snapTable = new Table(snapName, 0, 0, masterTable.FilePosition);
+
+					snapTable.AddColumn(new Column(snapName, "rowno", DataType.Unsigned9, nameFilePos, true));
+
+					foreach (var col in masterTable.Columns)
+					{
+						if (!col.Implicit)
+						{
+							snapTable.AddColumn(new Column(snapName, col.Name, col.DataType, col.FilePosition, false));
+						}
+					}
+
+					if (snapTable.GetColumn("entered") == null)
+					{
+						snapTable.AddColumn(new Column(snapName, "entered", DataType.Date, nameFilePos, true));
+					}
+
+					if (snapTable.GetColumn("next_effective") == null)
+					{
+						snapTable.AddColumn(new Column(snapName, "next_effective", DataType.Date, nameFilePos, true));
+					}
+
+					if (snapTable.GetColumn("snap_option") == null)
+					{
+						snapTable.AddColumn(new Column(snapName, "snap_option", DataType.Unsigned2, nameFilePos, true));
+					}
+
+					snapTable.AddColumn(new Column(snapName, string.Concat("dmd_", masterTable.Name, "r_", masterTable.Name), DataType.Unsigned9, nameFilePos, true));
+
+					_tables[snapName] = snapTable;
+
+					var snapRelName = string.Concat(masterTable.Name, "r");
+					if (!_relinds.ContainsKey(snapRelName))
+					{
+						_relinds.Add(snapRelName, new RelInd(RelIndType.TimeRelationship, snapRelName, 0, string.Empty, nameFilePos));
+					}
+				}
+
 			}
 		}
 

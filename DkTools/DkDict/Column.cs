@@ -30,6 +30,7 @@ namespace DkTools.DkDict
 		private ColumnDefinition _def;
 		private string _fullName;
 		private FilePosition _filePos;
+		private bool _implicitCol;
 
 		public enum PersistMode
 		{
@@ -39,13 +40,14 @@ namespace DkTools.DkDict
 			ZoomNoPersist
 		}
 
-		public Column(string tableName, string colName, DataType dataType, FilePosition filePos)
+		public Column(string tableName, string colName, DataType dataType, FilePosition filePos, bool implicitCol)
 		{
 			_tableName = tableName;
 			_name = colName;
 			_dataType = dataType;
 			_fullName = string.Concat(tableName, ".", colName);
 			_filePos = filePos;
+			_implicitCol = implicitCol;
 		}
 
 		public void AddTag(Tag tag)
@@ -90,6 +92,16 @@ namespace DkTools.DkDict
 		public string FullName
 		{
 			get { return _fullName; }
+		}
+
+		public bool Implicit
+		{
+			get { return _implicitCol; }
+		}
+
+		public FilePosition FilePosition
+		{
+			get { return _filePos; }
 		}
 	}
 }

@@ -8,6 +8,7 @@ Version 1.4 - (WIP):
 - When using 'go to definition' on an extern function, it will now go directly to the function
   definition instead of prompting with a list including the externs.
 - Searching in the Dictionary tab of DK Explorer now works with indexes and relationships.
+- Added missing snapshot tables.
 
 ____________________________________________________________________________________________________
 Version 1.3.5 - Feb 17, 2017:
