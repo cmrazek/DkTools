@@ -52,7 +52,7 @@ namespace DkTools.ErrorTagging
 		{
 			_model = _store.GetMostRecentModel(_view.TextSnapshot, "ErrorTagger.GetTags()");
 
-			if (!ProbeToolsPackage.Instance.EditorOptions.ShowErrors) return new TagSpan<ErrorTag>[0];
+			//if (!ProbeToolsPackage.Instance.EditorOptions.ShowErrors) return new TagSpan<ErrorTag>[0];
 
 			return ErrorTaskProvider.Instance.GetErrorTagsForFile(_model.FileName, spans);
 		}
