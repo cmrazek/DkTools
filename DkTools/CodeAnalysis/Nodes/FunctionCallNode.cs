@@ -102,7 +102,17 @@ namespace DkTools.CodeAnalysis.Nodes
 
 		public override Value ReadValue(RunScope scope)
 		{
-			if (_name == "oldvalue" && _args.Count == 1) return Read_oldvalue(scope);
+			switch (_name)
+			{
+				case "abs":
+					return Read_abs(scope);
+				case "count":
+					return Read_count(scope);
+				case "oldvalue":
+					return Read_oldvalue(scope);
+				case "sum":
+					return Read_sum(scope);
+			}
 
 			var defArgs = _def != null ? _def.Arguments.ToArray() : new ArgumentDescriptor[0];
 			var argIndex = 0;
@@ -156,7 +166,42 @@ namespace DkTools.CodeAnalysis.Nodes
 
 		private Value Read_oldvalue(RunScope scope)
 		{
+			if (_args.Count != 1)
+			{
+				ReportError(_funcNameSpan, CAError.CA0057, 1);	// Function expects {0} argument(s).
+			}
+
 			return Value.CreateUnknownFromDataType(_args[0].GetDataType(scope));
+		}
+
+		private Value Read_abs(RunScope scope)
+		{
+			if (_args.Count != 1)
+			{
+				ReportError(_funcNameSpan, CAError.CA0057, 1);	// Function expects {0} argument(s).
+			}
+
+			return Value.CreateUnknownFromDataType(_args[0].GetDataType(scope));
+		}
+
+		private Value Read_count(RunScope scope)
+		{
+			if (_args.Count < 1 || _args.Count > 2)
+			{
+				ReportError(_funcNameSpan, CAError.CA0057, "1 or 2");	// Function expects {0} argument(s).
+			}
+
+			return Value.CreateUnknownFromDataType(DataType.Int);
+		}
+
+		private Value Read_sum(RunScope scope)
+		{
+			if (_args.Count < 1 || _args.Count > 2)
+			{
+				ReportError(_funcNameSpan, CAError.CA0057, "1 or 2");	// Function expects {0} argument(s).
+			}
+
+			return Value.CreateUnknownFromDataType(DataType.Int);
 		}
 	}
 }

@@ -184,6 +184,9 @@ namespace DkTools.CodeAnalysis
 		[ErrorMessage("Char math results in an out-of-bounds value.")]
 		[Warning]
 		CA0056,
+
+		[ErrorMessage("Function expects {0} argument(s).")]
+		CA0057,
 	}
 
 	[AttributeUsage(AttributeTargets.Field, AllowMultiple = false)]
