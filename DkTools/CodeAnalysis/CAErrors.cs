@@ -113,6 +113,7 @@ namespace DkTools.CodeAnalysis
 		[ErrorMessage("Expected '='.")]
 		CA0033,
 
+		#region Select Statements
 		[ErrorMessage("Expected '{0}'.")]	// Used for select statements
 		CA0034,
 
@@ -133,7 +134,9 @@ namespace DkTools.CodeAnalysis
 
 		[ErrorMessage("Table '{0}' has no column '{1}'.")]
 		CA0040,
+		#endregion
 
+		#region Conditional Statements
 		[ErrorMessage("Expected ':' to follow conditional result.")]
 		CA0041,
 
@@ -142,7 +145,9 @@ namespace DkTools.CodeAnalysis
 
 		[ErrorMessage("Expected value to follow conditional ':'.")]
 		CA0043,
+		#endregion
 
+		#region Extract Statements
 		[ErrorMessage("Expected extract table name to follow 'extract'.")]
 		CA0044,
 
@@ -157,7 +162,9 @@ namespace DkTools.CodeAnalysis
 
 		[ErrorMessage("Expected extract column expression.")]
 		CA0048,
+		#endregion
 
+		#region Values
 		[ErrorMessage("{0} cannot be used with this value.")]
 		CA0050,
 
@@ -187,6 +194,36 @@ namespace DkTools.CodeAnalysis
 
 		[ErrorMessage("Function expects {0} argument(s).")]
 		CA0057,
+		#endregion
+
+		#region Aggregate Functions
+		[ErrorMessage("Expected '*' in count().")]
+		CA0060,
+
+		[ErrorMessage("Expected aggregate expression.")]
+		CA0061,
+
+		[ErrorMessage("Expected expression to follow '{0}'.")]
+		CA0062,
+
+		[ErrorMessage("Expected ')'.")]
+		CA0063,
+
+		[ErrorMessage("Table '{0}' does not exist.")]
+		CA0064,
+
+		[ErrorMessage("Expected table name to follow 'group'.")]
+		CA0065,
+
+		[ErrorMessage("Expected '.'")]
+		CA0066,
+
+		[ErrorMessage("Expected column name.")]
+		CA0067,
+
+		[ErrorMessage("Expected select name to follow 'in'.")]
+		CA0068,
+		#endregion
 	}
 
 	[AttributeUsage(AttributeTargets.Field, AllowMultiple = false)]

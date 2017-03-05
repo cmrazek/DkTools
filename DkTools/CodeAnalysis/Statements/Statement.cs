@@ -54,6 +54,8 @@ namespace DkTools.CodeAnalysis.Statements
 						return new HeaderStatement(p, p.Code.MovePeekedSpan());
 					case "if":
 						return new IfStatement(p, p.Code.MovePeekedSpan());
+					case "page":
+						return new PageStatement(p, p.Code.MovePeekedSpan());
 					case "return":
 						return new ReturnStatement(p, p.Code.MovePeekedSpan());
 					case "row":

@@ -159,6 +159,17 @@ namespace DkTools.CodeAnalysis.Nodes
 			if (code.ReadExact('('))
 			{
 				// This is a function call
+
+				switch (word)
+				{
+					case "avg":
+					case "count":
+					case "sum":
+					case "max":
+					case "min":
+						return AggregateFunctionCallNode.Read(p, wordSpan, word);
+				}
+
 				return FunctionCallNode.Read(p, wordSpan, word);
 			}
 

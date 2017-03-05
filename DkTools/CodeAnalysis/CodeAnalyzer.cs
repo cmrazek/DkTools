@@ -122,11 +122,11 @@ namespace DkTools.CodeAnalysis
 
 		public void ReportErrorAbsolute(Span span, CAError errorCode, params object[] args)
 		{
-			if (span.IsEmpty)
-			{
-				Log.Debug("Error {0} not reported because the span is empty.", errorCode);
-				return;
-			}
+			//if (span.IsEmpty)
+			//{
+			//	Log.Debug("Error {0} not reported because the span is empty.", errorCode);
+			//	return;
+			//}
 
 			string fileName;
 			bool isPrimary;
