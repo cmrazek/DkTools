@@ -46,7 +46,8 @@ namespace DkTools
 		GoToNextReference = 0x0125,
 		GoToPrevReference = 0x0126,
 		ShowFunctions = 0x0127,
-		RunCodeAnalysis = 0x0128
+		RunCodeAnalysis = 0x0128,
+		ShowCodeAnalysis = 0x0129
 	}
 
 	internal static class Commands
@@ -82,6 +83,7 @@ namespace DkTools
 			AddCommand(mcs, CommandId.GoToPrevReference, GoToPrevReference);
 			AddCommand(mcs, CommandId.ShowFunctions, ShowFunctions);
 			AddCommand(mcs, CommandId.RunCodeAnalysis, RunCodeAnalysis);
+			AddCommand(mcs, CommandId.ShowCodeAnalysis, ShowCodeAnalysis, checkedCallback: ShowCodeAnalysis_Checked);
 		}
 
 		private class CommandInstance
@@ -650,7 +652,7 @@ namespace DkTools
 			try
 			{
 				var options = ProbeToolsPackage.Instance.EditorOptions;
-				options.ShowErrors = !options.ShowErrors;
+				options.RunBackgroundFecOnSave = !options.RunBackgroundFecOnSave;
 				options.SaveSettingsToStorage();
 			}
 			catch (Exception ex)
@@ -661,7 +663,26 @@ namespace DkTools
 
 		private static bool ShowErrors_Checked(CommandId id)
 		{
-			return ProbeToolsPackage.Instance.EditorOptions.ShowErrors;
+			return ProbeToolsPackage.Instance.EditorOptions.RunBackgroundFecOnSave;
+		}
+
+		private static void ShowCodeAnalysis(object sender, EventArgs e)
+		{
+			try
+			{
+				var options = ProbeToolsPackage.Instance.EditorOptions;
+				options.RunCodeAnalysisOnSave = !options.RunCodeAnalysisOnSave;
+				options.SaveSettingsToStorage();
+			}
+			catch (Exception ex)
+			{
+				Shell.ShowError(ex);
+			}
+		}
+
+		private static bool ShowCodeAnalysis_Checked(CommandId id)
+		{
+			return ProbeToolsPackage.Instance.EditorOptions.RunCodeAnalysisOnSave;
 		}
 
 		private static void GoToNextReference(object sender, EventArgs e)
@@ -705,7 +726,7 @@ namespace DkTools
 				pane.Clear();
 				pane.Show();
 
-				var ca = new CodeAnalysis.CodeAnalyzer(pane, model, view);
+				var ca = new CodeAnalysis.CodeAnalyzer(pane, model);
 				ca.Run();
 			}
 			catch (Exception ex)

@@ -19,7 +19,6 @@ namespace DkTools.CodeAnalysis
 		private DkTools.CodeModel.CodeModel _codeModel;
 		private PreprocessorModel _prepModel;
 		private string _fullSource;
-		private Microsoft.VisualStudio.Text.Editor.ITextView _view;
 
 		private List<Statement> _stmts;
 		private RunScope _scope;
@@ -27,20 +26,20 @@ namespace DkTools.CodeAnalysis
 		private int _numErrors;
 		private int _numWarnings;
 
-		public CodeAnalyzer(OutputPane pane, DkTools.CodeModel.CodeModel model, Microsoft.VisualStudio.Text.Editor.ITextView view)
+		public CodeAnalyzer(OutputPane pane, DkTools.CodeModel.CodeModel model)
 		{
-			if (pane == null) throw new ArgumentNullException("pane");
 			if (model == null) throw new ArgumentNullException("model");
-			if (view == null) throw new ArgumentNullException("view");
 
 			_pane = pane;
 			_codeModel = model;
-			_view = view;
 		}
 
 		public void Run()
 		{
-			_pane.WriteLine(string.Format("Starting code analysis on file: {0}", _codeModel.FileName));
+			if (_pane != null)
+			{
+				_pane.WriteLine(string.Format("Starting code analysis on file: {0}", _codeModel.FileName));
+			}
 
 			_prepModel = _codeModel.PreprocessorModel;
 			_fullSource = _codeModel.Source.Text;
@@ -54,7 +53,10 @@ namespace DkTools.CodeAnalysis
 
 			ErrorTaskProvider.Instance.FireTagsChangedEvent();
 
-			_pane.WriteLine(string.Format("Code analysis complete: {0} error(s), {1} warning(s)", _numErrors, _numWarnings));
+			if (_pane != null)
+			{
+				_pane.WriteLine(string.Format("Code analysis complete: {0} error(s), {1} warning(s)", _numErrors, _numWarnings));
+			}
 		}
 
 		private void AnalyzeFunction(CodeModel.PreprocessorModel.LocalFunction func)
@@ -208,9 +210,12 @@ namespace DkTools.CodeAnalysis
 			if (type == ErrorType.Warning) _numWarnings++;
 			else _numErrors++;
 
-			_pane.WriteLine(string.Format("{0}({1},{2}) : {3} : {4}", fileName, lineNum + 1, linePos + 1, type, message));
+			if (_pane != null)
+			{
+				_pane.WriteLine(string.Format("{0}({1},{2}) : {3} : {4}", fileName, lineNum + 1, linePos + 1, type, message));
+			}
 
-			var task = new ErrorTagging.ErrorTask(fileName, lineNum, linePos, message, type,
+			var task = new ErrorTagging.ErrorTask(fileName, lineNum, linePos, message, ErrorType.CodeAnalysisError,
 				ErrorTaskSource.CodeAnalysis, _codeModel.FileName,
 				isPrimary ? _codeModel.Snapshot : null, fileSpan);
 			ErrorTaskProvider.Instance.Add(task, true);

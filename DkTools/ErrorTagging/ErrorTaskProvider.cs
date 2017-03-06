@@ -217,8 +217,6 @@ namespace DkTools.ErrorTagging
 				tasks = Tasks.Cast<ErrorTask>().ToArray();
 			}
 
-			//Log.Debug("Getting tasks for filename: {0} ({1} in full list)", fileName, tasks.Length);	// TODO: remove
-
 			foreach (var task in (from t in tasks where string.Equals(t.Document, fileName, StringComparison.OrdinalIgnoreCase) select t))
 			{
 				var span = task.Span;
@@ -229,8 +227,20 @@ namespace DkTools.ErrorTagging
 						var spanT = new SnapshotSpan(task.GetSnapshot(snapshot), span.Value.Start, span.Value.Length).TranslateTo(docSpan.Snapshot, SpanTrackingMode.EdgeExclusive);
 						if (docSpan.Contains(spanT.Start))
 						{
-							tags.Add(new TagSpan<ErrorTag>(task.GetSnapshotSpan(snapshot), new ErrorTag(task.Type == ErrorType.Warning ?
-								ErrorTagger.CodeWarning : ErrorTagger.CodeError, task.Text)));
+							string tagType;
+							switch (task.Type)
+							{
+								case ErrorType.Warning:
+									tagType = VSTheme.CurrentTheme == VSThemeMode.Light ? ErrorTagger.CodeWarningLight : ErrorTagger.CodeWarningDark;
+									break;
+								case ErrorType.CodeAnalysisError:
+									tagType = VSTheme.CurrentTheme == VSThemeMode.Light ? ErrorTagger.CodeAnalysisErrorLight : ErrorTagger.CodeAnalysisErrorDark;
+									break;
+								default:
+									tagType = VSTheme.CurrentTheme == VSThemeMode.Light ? ErrorTagger.CodeErrorLight : ErrorTagger.CodeErrorDark;
+									break;
+							}
+							tags.Add(new TagSpan<ErrorTag>(task.GetSnapshotSpan(snapshot), new ErrorTag(tagType, task.Text)));
 							break;
 						}
 					}
@@ -254,8 +264,22 @@ namespace DkTools.ErrorTagging
 								if (newStartPos < endPos) startPos = newStartPos;
 							}
 
+							string tagType;
+							switch (task.Type)
+							{
+								case ErrorType.Warning:
+									tagType = VSTheme.CurrentTheme == VSThemeMode.Light ? ErrorTagger.CodeWarningLight : ErrorTagger.CodeWarningDark;
+									break;
+								case ErrorType.CodeAnalysisError:
+									tagType = VSTheme.CurrentTheme == VSThemeMode.Light ? ErrorTagger.CodeAnalysisErrorLight : ErrorTagger.CodeAnalysisErrorDark;
+									break;
+								default:
+									tagType = VSTheme.CurrentTheme == VSThemeMode.Light ? ErrorTagger.CodeErrorLight : ErrorTagger.CodeErrorDark;
+									break;
+							}
+
 							tags.Add(new TagSpan<ErrorTag>(new SnapshotSpan(docSpan.Snapshot, startPos, endPos - startPos),
-								new ErrorTag(task.Type == ErrorType.Warning ? ErrorTagger.CodeWarning : ErrorTagger.CodeError, task.Text)));
+								new ErrorTag(tagType, task.Text)));
 							break;
 						}
 					}

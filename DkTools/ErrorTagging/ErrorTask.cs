@@ -35,7 +35,7 @@ namespace DkTools.ErrorTagging
 				this.Text = string.Format("{0}: {1}", sourceFileTitle, message);
 			}
 			
-			this.Priority = type == ErrorType.Warning ? TaskPriority.Normal : TaskPriority.High;
+			this.Priority = type == ErrorType.Warning || type == ErrorType.CodeAnalysisError ? TaskPriority.Normal : TaskPriority.High;
 			this.Category = TaskCategory.BuildCompile;
 			_source = source;
 			_sourceArg = sourceFileName;
@@ -110,10 +110,27 @@ namespace DkTools.ErrorTagging
 		{
 			get
 			{
+				System.Windows.Media.Brush brush;
+				switch (_type)
+				{
+					case ErrorType.Warning:
+						if (VSTheme.CurrentTheme == VSThemeMode.Light) brush = System.Windows.Media.Brushes.LimeGreen;
+						else brush = System.Windows.Media.Brushes.Chartreuse;
+						break;
+					case ErrorType.CodeAnalysisError:
+						if (VSTheme.CurrentTheme == VSThemeMode.Light) brush = System.Windows.Media.Brushes.Blue;
+						else brush = System.Windows.Media.Brushes.SkyBlue;
+						break;
+					default:
+						if (VSTheme.CurrentTheme == VSThemeMode.Light) brush = System.Windows.Media.Brushes.Red;
+						else brush = System.Windows.Media.Brushes.OrangeRed;
+						break;
+				}
+
 				return new System.Windows.Controls.TextBlock
 				{
 					Text = this.Text,
-					Foreground = _type == ErrorType.Warning ? System.Windows.Media.Brushes.LimeGreen : System.Windows.Media.Brushes.Red,
+					Foreground = brush,
 					FontWeight = System.Windows.FontWeights.Bold
 				};
 			}

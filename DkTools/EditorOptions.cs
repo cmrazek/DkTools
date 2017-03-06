@@ -18,9 +18,14 @@ namespace DkTools
 		public bool DisableDeadCode { get; set; }
 
 		[Category("Editor Options")]
-		[DisplayName("Show Errors")]
-		[Description("Show detected errors and warnings in the source code.")]
-		public bool ShowErrors { get; set; }
+		[DisplayName("Show FEC Errors")]
+		[Description("When a file is saved, run FEC in the background and show detected errors and warnings.")]
+		public bool RunBackgroundFecOnSave { get; set; }
+
+		[Category("Editor Options")]
+		[DisplayName("Show Code Analysis Automatically")]
+		[Description("When a file is saved, run code analysis and show detected errors and warnings.")]
+		public bool RunCodeAnalysisOnSave { get; set; }
 
 		[Category("Editor Options")]
 		[DisplayName("Disable Background Scanning")]
@@ -32,10 +37,8 @@ namespace DkTools
 		public EditorOptions()
 		{
 			DisableDeadCode = true;
-
-#if REPORT_ERRORS
-			ShowErrors = false;
-#endif
+			RunBackgroundFecOnSave = true;
+			RunCodeAnalysisOnSave = true;
 		}
 
 		public override void SaveSettingsToStorage()

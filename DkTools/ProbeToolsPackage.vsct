@@ -168,13 +168,23 @@
         </Strings>
       </Button>
 
-      <!-- DK Menu -> Editor -> Disable Dead Code -->
+      <!-- DK Menu -> Editor -> Show FEC Errors -->
 			<Button guid="guidProbeToolsCmdSet" id="cmdShowErrors" priority="0x0020" type="Button">
         <Parent guid="guidProbeToolsCmdSet" id="grpEditorOptionsMenu" />
         <Icon guid="guidImages" id="bmpShowErrors" />
         <Strings>
           <CommandName>cmdShowErrors</CommandName>
-          <ButtonText>Show &amp;Errors</ButtonText>
+          <ButtonText>Show FEC &amp;Errors</ButtonText>
+        </Strings>
+      </Button>
+
+      <!-- DK Menu -> Editor -> Show Code Analysis -->
+      <Button guid="guidProbeToolsCmdSet" id="cmdShowCodeAnalysis" priority="0x0028" type="Button">
+        <Parent guid="guidProbeToolsCmdSet" id="grpEditorOptionsMenu" />
+        <Icon guid="guidImages" id="bmpShowCodeAnalysis" />
+        <Strings>
+          <CommandName>cmdShowCodeAnalysis</CommandName>
+          <ButtonText>Show Code &amp;Analysis</ButtonText>
         </Strings>
       </Button>
 
@@ -501,13 +511,23 @@
         </Strings>
       </Button>
 
-      <!-- DK Toolbar -> Show Errors -->
+      <!-- DK Toolbar -> Show FEC Errors -->
       <Button guid="guidProbeToolsCmdSet" id="cmdShowErrors" priority="0x0020" type="Button">
         <Parent guid="guidProbeToolsCmdSet" id="tbEditorOptionsGroup" />
         <Icon guid="guidImages" id="bmpShowErrors" />
         <Strings>
           <CommandName>cmdShowErrors</CommandName>
-          <ButtonText>Show Errors (WIP)</ButtonText>
+          <ButtonText>Show FEC Errors</ButtonText>
+        </Strings>
+      </Button>
+
+      <!-- DK Toolbar -> Show Code Analysis -->
+      <Button guid="guidProbeToolsCmdSet" id="cmdShowCodeAnalysis" priority="0x0028" type="Button">
+        <Parent guid="guidProbeToolsCmdSet" id="tbEditorOptionsGroup" />
+        <Icon guid="guidImages" id="bmpShowCodeAnalysis" />
+        <Strings>
+          <CommandName>cmdShowCodeAnalysis</CommandName>
+          <ButtonText>Show Code Analysis</ButtonText>
         </Strings>
       </Button>
 
@@ -575,7 +595,7 @@
 
 		<Bitmaps>
 			<Bitmap guid="guidImages" href="Images\ProbeToolsCommandIcons.png" resID="bmpCompile"
-              usedList="bmpCompile, bmpKillCompile, bmpProbeExplorer, bmpFindInProbeFiles, bmpFecFile, bmpPstTable, bmpMergeFile, bmpRun, bmpInsertTag, bmpInsertDiag, bmpInsertDate, bmpInsertFileHeader, bmpSettings, bmpPSelect, bmpDccmp, bmpCredelix, bmpTableListing, bmpCompileToVisualC, bmpShowHelp, bmpShowDrv, bmpDisableDeadCode, bmpProbeNV, bmpShowErrors, bmpGoToNextReference, bmpGoToPrevReference, bmpShowFunctions, bmpRunCodeAnalysis" />
+              usedList="bmpCompile, bmpKillCompile, bmpProbeExplorer, bmpFindInProbeFiles, bmpFecFile, bmpPstTable, bmpMergeFile, bmpRun, bmpInsertTag, bmpInsertDiag, bmpInsertDate, bmpInsertFileHeader, bmpSettings, bmpPSelect, bmpDccmp, bmpCredelix, bmpTableListing, bmpCompileToVisualC, bmpShowHelp, bmpShowDrv, bmpDisableDeadCode, bmpProbeNV, bmpShowErrors, bmpGoToNextReference, bmpGoToPrevReference, bmpShowFunctions, bmpRunCodeAnalysis, bmpShowCodeAnalysis" />
 		</Bitmaps>
 
 		<Menus>
@@ -717,6 +737,7 @@
       <IDSymbol name="cmdGoToPrevReference" value="0x0126"/>
 			<IDSymbol name="cmdShowFunctions" value="0x0127"/>
 			<IDSymbol name="cmdRunCodeAnalysis" value="0x0128"/>
+      <IDSymbol name="cmdShowCodeAnalysis" value="0x0129"/>
 
 			<IDSymbol name="tbProbeToolbar" value="0x2000" />
 			<IDSymbol name="tbFileOperationsGroup" value="0x2001" />
@@ -756,6 +777,7 @@
       <IDSymbol name="bmpGoToPrevReference" value="0x0019"/>
 			<IDSymbol name="bmpShowFunctions" value="0x001a"/>
 			<IDSymbol name="bmpRunCodeAnalysis" value="0x001b"/>
+      <IDSymbol name="bmpShowCodeAnalysis" value="0x001c"/>
 		</GuidSymbol>
 	</Symbols>
 	

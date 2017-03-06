@@ -17,13 +17,12 @@ namespace DkTools.ErrorTagging
 		private CodeModel.CodeModel _model;
 		private BackgroundDeferrer _backgroundFecDeferrer;
 
-		// TODO: remove
-		//#if REPORT_ERRORS
-		//		private BackgroundDeferrer _analysisDeferrer;
-		//#endif
-
-		public const string CodeError = "Code Error";
-		public const string CodeWarning = "Code Warning";
+		public const string CodeErrorLight = "DkCodeError.Light";
+		public const string CodeErrorDark = "DkCodeError.Dark";
+		public const string CodeWarningLight = "DkCodeWarning.Light";
+		public const string CodeWarningDark = "DkCodeWarning.Dark";
+		public const string CodeAnalysisErrorLight = "DkCodeAnalysisError.Light";
+		public const string CodeAnalysisErrorDark = "DkCodeAnalysisError.Dark";
 
 		public ErrorTagger(ITextView view)
 		{
@@ -65,20 +64,6 @@ namespace DkTools.ErrorTagging
 			_analysisDeferrer.OnActivity();
 #endif
 		}
-
-		// TODO: remove
-//#if REPORT_ERRORS
-//		private void _analysisDeferrer_Idle(object sender, BackgroundDeferrer.IdleEventArgs e)
-//		{
-//			_model = _store.GetMostRecentModel(_view.TextSnapshot, "ErrorTagger._analysisDeferrer_Idle()");
-
-//			if (_model.PerformCodeAnalysis())
-//			{
-//				var ev = TagsChanged;
-//				if (ev != null) ev(this, new SnapshotSpanEventArgs(new SnapshotSpan(_view.TextSnapshot, 0, _view.TextSnapshot.Length)));
-//			}
-//		}
-//#endif
 
 		private void EditorOptions_EditorRefreshRequired(object sender, EventArgs e)
 		{
@@ -155,30 +140,28 @@ namespace DkTools.ErrorTagging
 			}
 		}
 
-#if REPORT_ERRORS
-		public void OnCodeAnalysisFinished(CodeModel.CodeModel model)
-		{
-			var ev = TagsChanged;
-			if (ev != null) ev(this, new SnapshotSpanEventArgs(new SnapshotSpan(_view.TextSnapshot, 0, _view.TextSnapshot.Length)));
-		}
-
-		// TODO: remove
-		//public BackgroundDeferrer AnalysisDeferrer
-		//{
-		//	get { return _analysisDeferrer; }
-		//}
-#endif
-
 		private void _backgroundFecDeferrer_Idle(object sender, BackgroundDeferrer.IdleEventArgs e)
 		{
 			try
 			{
 				if (_model != null &&
 					_model.FileContext != FileContext.Include &&
-					ProbeToolsPackage.Instance.EditorOptions.ShowErrors &&
 					ProbeEnvironment.FileExistsInApp(_model.FileName))
 				{
-					Compiler.BackgroundFec.Run(_model.FileName, _model.Snapshot.TextBuffer.CurrentSnapshot);
+					if (ProbeToolsPackage.Instance.EditorOptions.RunBackgroundFecOnSave)
+					{
+						Compiler.BackgroundFec.Run(_model.FileName, _model.Snapshot.TextBuffer.CurrentSnapshot);
+					}
+					if (ProbeToolsPackage.Instance.EditorOptions.RunCodeAnalysisOnSave)
+					{
+						var textBuffer = _model.Snapshot.TextBuffer;
+						var fileStore = CodeModel.FileStore.GetOrCreateForTextBuffer(textBuffer);
+						if (fileStore == null) return;
+						var preprocessedModel = fileStore.CreatePreprocessedModel(textBuffer.CurrentSnapshot, false, "Background Code Analysis");
+
+						var ca = new CodeAnalysis.CodeAnalyzer(null, preprocessedModel);
+						ca.Run();
+					}
 				}
 			}
 			catch (Exception ex)

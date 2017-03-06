@@ -9,7 +9,8 @@ namespace DkTools.ErrorTagging
 	enum ErrorType
 	{
 		Error,
-		Warning
+		Warning,
+		CodeAnalysisError
 	}
 
 	static class ErrorTypeEx
@@ -20,7 +21,7 @@ namespace DkTools.ErrorTagging
 			if (a.HasValue && !b.HasValue) return a.Value;
 			if (!a.HasValue && b.HasValue) return b.Value;
 			if (a.Value == ErrorType.Error || b.Value == ErrorType.Error) return ErrorType.Error;
-			return ErrorType.Warning;
+			return a.Value;
 		}
 	}
 }
