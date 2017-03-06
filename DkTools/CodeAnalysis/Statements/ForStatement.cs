@@ -28,7 +28,7 @@ namespace DkTools.CodeAnalysis.Statements
 			var errSpan = code.Span;
 
 			_initExp = ExpressionNode.Read(p, ")");
-			if (errSpan != null) errSpan = _initExp.Span;
+			if (_initExp != null) errSpan = _initExp.Span;
 
 			if (!code.ReadExact(';'))
 			{

@@ -319,8 +319,8 @@ namespace DkTools.CodeAnalysis.Nodes
 				}
 
 				leftNode.WriteValue(scope, rightValue);
-
-				Parent.ReplaceWithResult(rightValue, leftNode, this, rightNode);
+				Parent.ReplaceNodes(null, this, rightNode);
+				//Parent.ReplaceWithResult(rightValue, leftNode, this, rightNode);
 			}
 			else
 			{

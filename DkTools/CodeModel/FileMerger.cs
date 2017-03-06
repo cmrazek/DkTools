@@ -127,7 +127,11 @@ namespace DkTools.CodeModel
 				}
 			}
 
-			throw new FileMergeException(string.Format("File '{0}' does not belong to a Probe source or include directory.", fileName));
+			// If this file is not in any source/include directory, then just use the file name without any path.
+			// This can happen during code QA, where the code is kept in another folder.
+			return Path.GetFileName(fileName);
+
+			//throw new FileMergeException(string.Format("File '{0}' does not belong to a Probe source or include directory.", fileName));
 		}
 
 		private void FindFiles(string fileName)
