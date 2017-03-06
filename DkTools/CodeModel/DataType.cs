@@ -224,6 +224,11 @@ namespace DkTools.CodeModel
 			/// </summary>
 			public Token FirstToken { get; set; }
 
+			/// <summary>
+			/// (in) 
+			/// </summary>
+			public bool AllowTags { get; set; }
+
 #if REPORT_ERRORS
 			/// <summary>
 			/// (optional) An ErrorProvider to receive errors detected by this parsing function.
@@ -1220,6 +1225,7 @@ namespace DkTools.CodeModel
 						return true;
 
 					case "tag":
+						if (a.AllowTags)
 						{
 							sb.Append(" tag");
 							a.OnDataTypeKeyword(code.Span, code.Text, null);
@@ -1250,8 +1256,14 @@ namespace DkTools.CodeModel
 									code.Position = resetPos;
 								}
 							}
+
+							return true;
 						}
-						return true;
+						else
+						{
+							code.Position = startPos;
+							return false;
+						}
 
 					default:
 						if (word.StartsWith("INTENSITY_") || extraTokens.Contains(word))

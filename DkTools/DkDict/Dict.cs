@@ -575,7 +575,8 @@ namespace DkTools.DkDict
 									Typedef td;
 									if (_typedefs.TryGetValue(name, out td)) return td.Definition;
 									return null;
-								}
+								},
+							AllowTags = true
 						});
 						if (dataType == null)
 						{
@@ -722,7 +723,8 @@ namespace DkTools.DkDict
 					Typedef td;
 					if (_typedefs.TryGetValue(name, out td)) return td.Definition;
 					return null;
-				}
+				},
+				AllowTags = true
 			});
 			if (dataType == null)
 			{
@@ -979,7 +981,8 @@ namespace DkTools.DkDict
 
 			var dataType = DataType.TryParse(new DataType.ParseArgs
 			{
-				Code = _code
+				Code = _code,
+				AllowTags = true
 			});
 			if (dataType == null)
 			{

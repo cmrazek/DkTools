@@ -304,7 +304,8 @@ namespace DkTools.CodeModel.Tokens.Statements
 					{
 						AddToken(token);
 					},
-					VisibleModel = true
+					VisibleModel = true,
+					AllowTags = true
 				});
 			}
 
@@ -762,7 +763,8 @@ namespace DkTools.CodeModel.Tokens.Statements
 					{
 						AddToken(token);
 					},
-					VisibleModel = true
+					VisibleModel = true,
+					AllowTags = true
 				});
 				if (dt != null)
 				{
