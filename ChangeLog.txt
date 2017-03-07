@@ -1,7 +1,7 @@
 DkTools ChangeLog
 
 ____________________________________________________________________________________________________
-Version 1.4 - (WIP):
+Version 1.4 - Mar 7, 2017:
 
 - Added static code analysis
 - Changed database from SQLCE to SQLite since SQLCE is no longer supported by Microsoft.
