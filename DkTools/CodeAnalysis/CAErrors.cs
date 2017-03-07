@@ -71,7 +71,7 @@ namespace DkTools.CodeAnalysis
 		[Warning]
 		CA0016,
 
-		[ErrorMessage("Function does not return a value.")]
+		[ErrorMessage("Not all code branches return a value.")]
 		[Warning]
 		CA0017,
 

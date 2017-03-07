@@ -127,6 +127,11 @@ namespace DkTools.ErrorTagging
 					{
 						Compiler.BackgroundFec.Run(_model.FileName, _model.Snapshot.TextBuffer.CurrentSnapshot);
 					}
+					else
+					{
+						ErrorTaskProvider.Instance.RemoveAllForSource(ErrorTaskSource.BackgroundFec, _model.FileName);
+					}
+
 					if (ProbeToolsPackage.Instance.EditorOptions.RunCodeAnalysisOnSave)
 					{
 						var textBuffer = _model.Snapshot.TextBuffer;
@@ -136,6 +141,10 @@ namespace DkTools.ErrorTagging
 
 						var ca = new CodeAnalysis.CodeAnalyzer(null, preprocessedModel);
 						ca.Run();
+					}
+					else
+					{
+						ErrorTaskProvider.Instance.RemoveAllForSource(ErrorTaskSource.CodeAnalysis, _model.FileName);
 					}
 				}
 			}
