@@ -32,8 +32,15 @@ namespace DkTools.CodeAnalysis.Nodes
 		{
 			var castScope = scope.Clone(dataTypeContext: _dataType);
 			var value = base.ReadValue(castScope);
+			var dataTypeValue = Value.CreateUnknownFromDataType(_dataType);
+			value = dataTypeValue.Convert(scope, Span, value);
 			scope.Merge(castScope);
 			return value;
+		}
+
+		public override DataType GetDataType(RunScope scope)
+		{
+			return _dataType;
 		}
 	}
 }
