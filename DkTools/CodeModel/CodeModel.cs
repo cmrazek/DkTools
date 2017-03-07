@@ -25,11 +25,6 @@ namespace DkTools.CodeModel
 		private FileContext _fileContext;
 		private Preprocessor.Reference[] _prepRefs;
 
-		// TODO: remove
-//#if REPORT_ERRORS
-//		private Analysis _analysis;
-//#endif
-
 		private CodeModel()
 		{ }
 
@@ -244,29 +239,6 @@ namespace DkTools.CodeModel
 		{
 			get { return _prepModel.Source; }
 		}
-
-		// TODO: remove
-//#if REPORT_ERRORS
-//		public bool PerformCodeAnalysis()
-//		{
-//			if (_analysis == null)
-//			{
-//				var analyzer = new Analysis(this);
-//				analyzer.Perform();
-//				_analysis = analyzer;
-//				return true;
-//			}
-//			else
-//			{
-//				return false;
-//			}
-//		}
-
-//		public Analysis Analysis
-//		{
-//			get { return _analysis; }
-//		}
-//#endif
 	}
 
 	internal enum ModelType

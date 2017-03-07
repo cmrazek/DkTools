@@ -28,13 +28,6 @@ namespace DkTools.ErrorTagging
 		{
 			_view = view;
 			_store = FileStore.GetOrCreateForTextBuffer(_view.TextBuffer);
-			_store.ModelUpdated += OnModelUpdated;
-
-#if REPORT_ERRORS
-			_analysisDeferrer = new BackgroundDeferrer();
-			_analysisDeferrer.Idle += _analysisDeferrer_Idle;
-			_analysisDeferrer.OnActivity();
-#endif
 
 			ProbeToolsPackage.Instance.EditorOptions.EditorRefreshRequired += EditorOptions_EditorRefreshRequired;
 			Shell.FileSaved += Shell_FileSaved;
@@ -56,28 +49,10 @@ namespace DkTools.ErrorTagging
 			return ErrorTaskProvider.Instance.GetErrorTagsForFile(_model.FileName, spans);
 		}
 
-		private void OnModelUpdated(object sender, FileStore.ModelUpdatedEventArgs e)
-		{
-			//var ev = TagsChanged;
-			//if (ev != null) ev(this, new SnapshotSpanEventArgs(new SnapshotSpan(_view.TextSnapshot, 0, _view.TextSnapshot.Length)));
-#if REPORT_ERRORS
-			_analysisDeferrer.OnActivity();
-#endif
-		}
-
 		private void EditorOptions_EditorRefreshRequired(object sender, EventArgs e)
 		{
 			try
 			{
-#if REPORT_ERRORS
-				if (ProbeToolsPackage.Instance.EditorOptions.ShowErrors &&
-					_model != null &&
-					!_model.PreprocessorModel.ReportErrors)
-				{
-					_model.FileStore.RegenerateModel(_model.Snapshot.TextBuffer.CurrentSnapshot, "ErrorTagger detected ShowErrors switched on.");
-				}
-#endif
-
 				if (_model != null &&
 					_model.FileContext != FileContext.Include &&
 					ProbeEnvironment.FileExistsInApp(_model.FileName))

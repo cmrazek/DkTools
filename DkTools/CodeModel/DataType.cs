@@ -229,13 +229,6 @@ namespace DkTools.CodeModel
 			/// </summary>
 			public bool AllowTags { get; set; }
 
-#if REPORT_ERRORS
-			/// <summary>
-			/// (optional) An ErrorProvider to receive errors detected by this parsing function.
-			/// </summary>
-			public ErrorTagging.ErrorProvider ErrorProvider { get; set; }
-#endif
-
 			public void OnKeyword(Span span, string text)
 			{
 				if (TokenCreateCallback != null)
@@ -900,13 +893,7 @@ namespace DkTools.CodeModel
 				var expectingComma = false;
 				while (!code.EndOfFile)
 				{
-					if (!code.Read())
-					{
-#if REPORT_ERRORS
-						if (args.ErrorProvider != null) args.ErrorProvider.ReportError(code, code.TokenSpan, ErrorTagging.ErrorCode.Enum_UnexpectedEndOfFile);
-#endif
-						break;
-					}
+					if (!code.Read()) break;
 
 					if (code.Type == CodeType.Operator)
 					{
@@ -918,17 +905,7 @@ namespace DkTools.CodeModel
 						if (code.Text == ",")
 						{
 							if (braces != null) braces.AddToken(new DelimiterToken(a.Scope, code.Span));
-
-							if (!expectingComma)
-							{
-#if REPORT_ERRORS
-								if (args.ErrorProvider != null) args.ErrorProvider.ReportError(code, code.TokenSpan, ErrorTagging.ErrorCode.Enum_UnexpectedComma);
-#endif
-							}
-							else
-							{
-								expectingComma = false;
-							}
+							if (expectingComma) expectingComma = false;
 						}
 					}
 					else if (code.Type == CodeType.StringLiteral || code.Type == CodeType.Word)
@@ -936,19 +913,7 @@ namespace DkTools.CodeModel
 						if (braces != null) braces.AddToken(new EnumOptionToken(a.Scope, code.Span, code.Text, null));
 
 						var str = NormalizeEnumOption(code.Text);
-						if (expectingComma)
-						{
-#if REPORT_ERRORS
-							if (args.ErrorProvider != null) args.ErrorProvider.ReportError(code, code.TokenSpan, ErrorTagging.ErrorCode.Enum_NoComma);
-#endif
-						}
-						else if (options.Any(x => x.Name == str))
-						{
-#if REPORT_ERRORS
-							if (args.ErrorProvider != null) args.ErrorProvider.ReportError(code, code.TokenSpan, ErrorTagging.ErrorCode.Enum_DuplicateOption, str);
-#endif
-						}
-						else
+						if (!expectingComma && !options.Any(x => x.Name == str))
 						{
 							options.Add(new EnumOptionDefinition(str, null));
 						}

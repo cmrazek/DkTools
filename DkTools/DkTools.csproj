@@ -42,7 +42,7 @@
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
     <OutputPath>bin\Debug\</OutputPath>
-    <DefineConstants>TRACE;DEBUG;REPORT_ERRORS_NOPE</DefineConstants>
+    <DefineConstants>TRACE;DEBUG</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <PlatformTarget>x86</PlatformTarget>
@@ -389,7 +389,6 @@
       <SubType>Component</SubType>
     </Compile>
     <Compile Include="ErrorTagging\ErrorCode.cs" />
-    <Compile Include="ErrorTagging\ErrorProvider.cs" />
     <Compile Include="CodeModel\FunctionPrivacy.cs" />
     <Compile Include="CodeModel\FilePosition.cs" />
     <Compile Include="CodeModel\Preprocessor.cs" />

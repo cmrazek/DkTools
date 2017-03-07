@@ -251,7 +251,7 @@
 				<Icon guid="guidImages" id="bmpRunCodeAnalysis" />
 				<Strings>
 					<CommandName>cmdRunCodeAnalysis</CommandName>
-					<ButtonText>Code &amp;Analysis (beta)</ButtonText>
+					<ButtonText>Code &amp;Analysis</ButtonText>
 				</Strings>
 			</Button>
 
@@ -487,7 +487,7 @@
 				<Icon guid="guidImages" id="bmpRunCodeAnalysis" />
 				<Strings>
 					<CommandName>cmdRunCodeAnalysis</CommandName>
-					<ButtonText>Code &amp;Analysis (beta)</ButtonText>
+					<ButtonText>Code &amp;Analysis</ButtonText>
 				</Strings>
 			</Button>
 

@@ -24,9 +24,6 @@ namespace DkTools.CodeAnalysis
 		CA0004,
 		#endregion
 
-		//[ErrorMessage("Empty statement not allowed.")]
-		//CA0005,
-
 		[ErrorMessage("Unknown operator '{0}'.")]
 		CA0006,
 

@@ -35,7 +35,7 @@ namespace DkTools.CodeAnalysis.Nodes
 			{
 				if (code.ReadExact(','))
 				{
-					if (curArg != null) funcCallNode.AddArgument(curArg);
+					if (curArg != null && curArg.NumChildren > 0) funcCallNode.AddArgument(curArg);
 					curArg = null;
 				}
 				else if (code.ReadExact(')')) break;
@@ -47,7 +47,7 @@ namespace DkTools.CodeAnalysis.Nodes
 				if (node != null) curArg.AddChild(node);
 			}
 
-			if (curArg != null) funcCallNode.AddArgument(curArg);
+			if (curArg != null && curArg.NumChildren > 0) funcCallNode.AddArgument(curArg);
 
 			if (funcDef != null)
 			{

@@ -59,18 +59,6 @@ namespace DkTools.QuickInfo
 						applicableToSpan = model.Snapshot.CreateTrackingSpan(info.Value.token.Span.ToVsTextSpan(), SpanTrackingMode.EdgeInclusive);
 					}
 
-#if REPORT_ERRORS
-					foreach (var error in model.PreprocessorModel.ErrorProvider.GetErrorsForPos(modelPos))
-					{
-						quickInfoContent.Add(error.Message);
-						if (applicableToSpan == null)
-						{
-							var snapSpan = new SnapshotSpan(model.Snapshot, error.Span.Start, error.Span.Length);
-							applicableToSpan = model.Snapshot.CreateTrackingSpan(snapSpan, SpanTrackingMode.EdgeInclusive);
-						}
-					}
-#endif
-
 					foreach (var task in ErrorTagging.ErrorTaskProvider.Instance.GetErrorMessagesAtPoint(model.FileName, snapshotPoint))
 					{
 						quickInfoContent.Add(task.QuickInfoContent);
