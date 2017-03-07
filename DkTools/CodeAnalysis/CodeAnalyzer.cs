@@ -121,13 +121,13 @@ namespace DkTools.CodeAnalysis
 					{
 						var def = v.Definition;
 						ReportErrorLocal(def.SourceFileName, new Span(def.SourceStartPos, def.SourceStartPos + def.Name.Length),
-							false, null, CAError.CA0111);	// Variable is assigned a value, but is never used.
+							false, null, CAError.CA0111, v.Name);	// Variable '{0}' is assigned a value, but is never used.
 					}
 					else
 					{
 						var def = v.Definition;
 						ReportErrorLocal(def.SourceFileName, new Span(def.SourceStartPos, def.SourceStartPos + def.Name.Length),
-							false, null, CAError.CA0112);	// Variable is not used.
+							false, null, CAError.CA0112, v.Name);	// Variable '{0}' is not used.
 					}
 				}
 			}

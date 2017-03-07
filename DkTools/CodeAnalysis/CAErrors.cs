@@ -48,15 +48,15 @@ namespace DkTools.CodeAnalysis
 		#endregion
 
 		#region Variable Usage (0110-0119)
-		[ErrorMessage("Use of uninitialized value.")]
+		[ErrorMessage("Use of uninitialized variable '{0}'.")]
 		[Warning]
 		CA0110,
 
-		[ErrorMessage("Variable is assigned a value, but is never used.")]
+		[ErrorMessage("Variable '{0}' is assigned a value, but is never used.")]
 		[Warning]
 		CA0111,
 
-		[ErrorMessage("Variable is not used.")]
+		[ErrorMessage("Variable '{0}' is not used.")]
 		[Warning]
 		CA0112,
 		#endregion
