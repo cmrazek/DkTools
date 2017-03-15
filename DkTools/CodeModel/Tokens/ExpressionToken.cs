@@ -173,6 +173,9 @@ namespace DkTools.CodeModel.Tokens
 									exp.AddToken(new OperatorToken(scope, code.Span, code.Text));
 								}
 								break;
+							case "?":
+								exp.AddToken(ConditionalOperator.Parse(scope, exp.LastChild, new OperatorToken(scope, code.Span, code.Text), endTokens));
+								break;
 							default:
 								exp.AddToken(new OperatorToken(scope, code.Span, code.Text));
 								break;

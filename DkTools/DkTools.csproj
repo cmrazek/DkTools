@@ -327,6 +327,7 @@
     <Compile Include="CodeModel\SignatureDocumentor.cs" />
     <Compile Include="CodeModel\Tokens\ArgsToken.cs" />
     <Compile Include="CodeModel\Tokens\Operators\AssignmentOperator.cs" />
+    <Compile Include="CodeModel\Tokens\Operators\ConditionalOperator.cs" />
     <Compile Include="CodeModel\Tokens\Statements\BreakStatement.cs" />
     <Compile Include="CodeModel\Tokens\Operators\ComparisonOperator.cs" />
     <Compile Include="CodeModel\Tokens\CompositeToken.cs" />
