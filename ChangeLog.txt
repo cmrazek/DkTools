@@ -5,6 +5,7 @@ Version 1.4.1 - (WIP):
 
 - Code Analysis - Fixed casting not changing the data type properly.
 - Fixed intellisense data types detected from ternary statements.
+- Fixed SQL bug in background scanning which prevented old ACM profiles from being purged.
 
 ____________________________________________________________________________________________________
 Version 1.4 - Mar 7, 2017:

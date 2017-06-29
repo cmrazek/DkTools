@@ -462,7 +462,7 @@ namespace DkTools.FunctionFileScanning
 					cmd.ExecuteNonQuery();
 				}
 
-				using (var cmd = db.CreateCommand("delete from app where id = @app_id"))
+				using (var cmd = db.CreateCommand("delete from app where rowid = @app_id"))
 				{
 					cmd.Parameters.AddWithValue("@app_id", appId);
 					cmd.ExecuteNonQuery();
