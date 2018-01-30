@@ -1,7 +1,7 @@
 DkTools ChangeLog
 
 ____________________________________________________________________________________________________
-Version 1.4.1 - (WIP):
+Version 1.4.1 - Jan 30, 2018:
 
 - Code Analysis - Fixed casting not changing the data type properly.
 - Code Analysis - Fixed infinite loop for function calls that are not terminated properly.
