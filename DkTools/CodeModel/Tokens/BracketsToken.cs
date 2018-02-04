@@ -11,7 +11,7 @@ namespace DkTools.CodeModel.Tokens
 		private List<Token> _innerTokens = new List<Token>();
 		private BracketToken _openToken;
 		private BracketToken _closeToken;
-		private bool _cast;
+		private DataType _cast;
 
 		public BracketsToken(Scope scope)
 			: base(scope)
@@ -81,7 +81,7 @@ namespace DkTools.CodeModel.Tokens
 			});
 			if (dataType != null && code.ReadExact(')'))
 			{
-				ret._cast = true;
+				ret._cast = dataType;
 				if (dataTypeTokens != null)
 				{
 					foreach (var token in dataTypeTokens) ret.AddToken(token);
@@ -163,7 +163,7 @@ namespace DkTools.CodeModel.Tokens
 		{
 			get
 			{
-				return _innerTokens.Count == 1 && _innerTokens[0].IsDataTypeDeclaration;
+				return _cast != null;
 			}
 		}
 
@@ -171,11 +171,7 @@ namespace DkTools.CodeModel.Tokens
 		{
 			get
 			{
-				if (_innerTokens.Count == 1 && _innerTokens[0].IsDataTypeDeclaration)
-				{
-					return _innerTokens[0].ValueDataType;
-				}
-				return null;
+				return _cast;
 			}
 		}
 	}

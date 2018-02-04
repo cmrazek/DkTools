@@ -244,6 +244,15 @@
 					<ButtonText>&amp;Kill Compile</ButtonText>
 				</Strings>
 			</Button>
+			<!-- DK Menu -> Compile -> Clear Errors -->
+			<Button guid="guidProbeToolsCmdSet" id="cmdClearErrors" priority="0x0070" type="Button">
+				<Parent guid="guidProbeToolsCmdSet" id="CompileMenuGroup" />
+				<Icon guid="guidImages" id="bmpClearErrors" />
+				<Strings>
+					<CommandName>cmdClearErrors</CommandName>
+					<ButtonText>Clear &amp;Errors</ButtonText>
+				</Strings>
+			</Button>
 
 			<!-- DK Menu -> Code Analysis -->
 			<Button guid="guidProbeToolsCmdSet" id="cmdRunCodeAnalysis" priority="0x0045" type="Button">
@@ -481,6 +490,16 @@
 				</Strings>
 			</Button>
 
+			<!-- DK Toolbar -> Clear Errors -->
+			<Button guid="guidProbeToolsCmdSet" id="cmdClearErrors" priority="0x0060" type="Button">
+				<Parent guid="guidProbeToolsCmdSet" id="tbCompileGroup" />
+				<Icon guid="guidImages" id="bmpClearErrors" />
+				<Strings>
+					<CommandName>cmdClearErrors</CommandName>
+					<ButtonText>Clear &amp;Errors</ButtonText>
+				</Strings>
+			</Button>
+
 			<!-- DK Toolbar -> Code Analysis -->
 			<Button guid="guidProbeToolsCmdSet" id="cmdRunCodeAnalysis" priority="0x0050" type="Button">
 				<Parent guid="guidProbeToolsCmdSet" id="tbCompileGroup" />
@@ -595,7 +614,7 @@
 
 		<Bitmaps>
 			<Bitmap guid="guidImages" href="Images\ProbeToolsCommandIcons.png" resID="bmpCompile"
-              usedList="bmpCompile, bmpKillCompile, bmpProbeExplorer, bmpFindInProbeFiles, bmpFecFile, bmpPstTable, bmpMergeFile, bmpRun, bmpInsertTag, bmpInsertDiag, bmpInsertDate, bmpInsertFileHeader, bmpSettings, bmpPSelect, bmpDccmp, bmpCredelix, bmpTableListing, bmpCompileToVisualC, bmpShowHelp, bmpShowDrv, bmpDisableDeadCode, bmpProbeNV, bmpShowErrors, bmpGoToNextReference, bmpGoToPrevReference, bmpShowFunctions, bmpRunCodeAnalysis, bmpShowCodeAnalysis" />
+              usedList="bmpCompile, bmpKillCompile, bmpProbeExplorer, bmpFindInProbeFiles, bmpFecFile, bmpPstTable, bmpMergeFile, bmpRun, bmpInsertTag, bmpInsertDiag, bmpInsertDate, bmpInsertFileHeader, bmpSettings, bmpPSelect, bmpDccmp, bmpCredelix, bmpTableListing, bmpCompileToVisualC, bmpShowHelp, bmpShowDrv, bmpDisableDeadCode, bmpProbeNV, bmpShowErrors, bmpGoToNextReference, bmpGoToPrevReference, bmpShowFunctions, bmpRunCodeAnalysis, bmpShowCodeAnalysis, bmpClearErrors" />
 		</Bitmaps>
 
 		<Menus>
@@ -660,6 +679,7 @@
 		Compile:              Alt+O, C
 		Kill Compile:         Alt+O, K
 		Run Code Analysis:		Alt+O, A
+		Clear Errors:					Alt+O, E
 		Add File Header:      Alt+O, H
 		Insert Tag:           Alt+O, T
 		Insert Date:          Alt+O, Y
@@ -688,6 +708,7 @@
     <KeyBinding guid="guidProbeToolsCmdSet" id="cmdGoToPrevReference" key1="VK_OEM_4" mod1="ALT" editor="guidVSStd97" />
 		<KeyBinding guid="guidProbeToolsCmdSet" id="cmdShowFunctions" key1="O" mod1="Alt" key2="F" mod2="Alt" editor="guidVSStd97"/>
 		<KeyBinding guid="guidProbeToolsCmdSet" id="cmdRunCodeAnalysis" key1="O" mod1="Alt" key2="A" mod2="Alt" editor="guidVSStd97"/>
+		<KeyBinding guid="guidProbeToolsCmdSet" id="cmdClearErrors" key1="O" mod1="Alt" key2="E" mod2="Alt" editor="guidVSStd97"/>
 	</KeyBindings>
 	
 	<Symbols>
@@ -738,6 +759,7 @@
 			<IDSymbol name="cmdShowFunctions" value="0x0127"/>
 			<IDSymbol name="cmdRunCodeAnalysis" value="0x0128"/>
       <IDSymbol name="cmdShowCodeAnalysis" value="0x0129"/>
+			<IDSymbol name="cmdClearErrors" value="0x012a"/>
 
 			<IDSymbol name="tbProbeToolbar" value="0x2000" />
 			<IDSymbol name="tbFileOperationsGroup" value="0x2001" />
@@ -778,6 +800,7 @@
 			<IDSymbol name="bmpShowFunctions" value="0x001a"/>
 			<IDSymbol name="bmpRunCodeAnalysis" value="0x001b"/>
       <IDSymbol name="bmpShowCodeAnalysis" value="0x001c"/>
+			<IDSymbol name="bmpClearErrors" value="0x001d"/>
 		</GuidSymbol>
 	</Symbols>
 	

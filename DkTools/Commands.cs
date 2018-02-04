@@ -47,7 +47,8 @@ namespace DkTools
 		GoToPrevReference = 0x0126,
 		ShowFunctions = 0x0127,
 		RunCodeAnalysis = 0x0128,
-		ShowCodeAnalysis = 0x0129
+		ShowCodeAnalysis = 0x0129,
+		ClearErrors = 0x012a
 	}
 
 	internal static class Commands
@@ -84,6 +85,7 @@ namespace DkTools
 			AddCommand(mcs, CommandId.ShowFunctions, ShowFunctions);
 			AddCommand(mcs, CommandId.RunCodeAnalysis, RunCodeAnalysis);
 			AddCommand(mcs, CommandId.ShowCodeAnalysis, ShowCodeAnalysis, checkedCallback: ShowCodeAnalysis_Checked);
+			AddCommand(mcs, CommandId.ClearErrors, ClearErrors);
 		}
 
 		private class CommandInstance
@@ -245,6 +247,11 @@ namespace DkTools
 		private static void KillCompile(object sender, EventArgs e)
 		{
 			ProbeCompiler.Instance.Kill();
+		}
+
+		private static void ClearErrors(object sender, EventArgs e)
+		{
+			ErrorTagging.ErrorTaskProvider.Instance.Clear();
 		}
 
 		private static void FecFile(object sender, EventArgs e)
