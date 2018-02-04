@@ -1594,7 +1594,7 @@ namespace DkTools.DkDict
 						snapTable.AddColumn(new Column(snapName, "snap_option", DataType.Unsigned2, nameFilePos, true));
 					}
 
-					snapTable.AddColumn(new Column(snapName, string.Concat("dmd_", masterTable.Name, "r_", masterTable.Name), DataType.Unsigned9, nameFilePos, true));
+					snapTable.AddColumn(new Column(snapName, string.Concat("rowno_", masterTable.Name, "r_", masterTable.Name), DataType.Unsigned9, nameFilePos, true));
 
 					_tables[snapName] = snapTable;
 
