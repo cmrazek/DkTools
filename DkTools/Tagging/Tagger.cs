@@ -293,9 +293,11 @@ namespace DkTools.Tagging
 				}
 
 				var sb = new StringBuilder();
+				var first = true;
 				foreach (var line in lines)
 				{
-					if (sb.Length > 0) sb.AppendLine();
+					if (first) first = false;
+					else sb.AppendLine();
 					sb.Append(line);
 				}
 
@@ -348,6 +350,7 @@ namespace DkTools.Tagging
 				var startLineNumber = snapshot.GetLineNumberFromPosition(startPt.Position);
 				var endLineNumber = snapshot.GetLineNumberFromPosition(endPt.Position);
 				var sb = new StringBuilder();
+				var first = true;
 				for (var lineNumber = startLineNumber; lineNumber <= endLineNumber; lineNumber++)
 				{
 					var line = snapshot.GetLineFromLineNumber(lineNumber);
@@ -355,7 +358,8 @@ namespace DkTools.Tagging
 
 					UncommentLine(ref lineText);
 
-					if (sb.Length > 0) sb.AppendLine();
+					if (first) first = false;
+					else sb.AppendLine();
 					sb.Append(lineText);
 				}
 
@@ -428,7 +432,7 @@ namespace DkTools.Tagging
 				else if (ch == '\t')
 				{
 					charsRemoved++;
-					indentRemoved += ((indentRemoved / tabSize) + 1) * tabSize;
+					indentRemoved = ((indentRemoved / tabSize) + 1) * tabSize;
 				}
 				else break;
 			}
