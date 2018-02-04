@@ -1,6 +1,11 @@
 DkTools ChangeLog
 
 ____________________________________________________________________________________________________
+Version 1.4.2 - (WIP):
+
+- Added missing implicit columns on relationship tables (e.g. custjnt)
+
+____________________________________________________________________________________________________
 Version 1.4.1 - Jan 30, 2018:
 
 - Code Analysis - Fixed casting not changing the data type properly.

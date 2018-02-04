@@ -1361,9 +1361,11 @@ namespace DkTools.DkDict
 				}
 			}
 
+			var hasTable = false;
 			if (relind.Columns.Any())
 			{
 				_tables[relind.Name] = relind;
+				hasTable = true;
 			}
 
 			if (parentTable != null && childTable != null)
@@ -1379,6 +1381,15 @@ namespace DkTools.DkDict
 
 					childTable.AddColumn(new Column(childTable.Name, string.Concat("rowno_", name, "_", parentTable.Name),
 						DataType.Unsigned9, nameFilePos, true));
+
+					if (hasTable)
+					{
+						relind.AddColumn(new Column(name, string.Concat("rowno_", name, "_", parentTable.Name),
+							DataType.Unsigned9, nameFilePos, true));
+
+						relind.AddColumn(new Column(name, string.Concat("rowno_", name, "_", childTable.Name, "2"),
+							DataType.Unsigned9, nameFilePos, true));
+					}
 				}
 				else // one parent
 				{
