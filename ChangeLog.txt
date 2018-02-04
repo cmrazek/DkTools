@@ -8,6 +8,8 @@ Version 1.4.2 - (WIP):
 - Fixed comment/uncomment block which would sometimes remove empty lines or mess up indenting.
 - Code Analysis - Stop reporting 'Function does not return a value' on staticinitialize()
 - Added support for 'footer' statements
+- Added support for 'like' casting that use temporary extracts
+- Fixed preprocessor bug when #define has trailing spaces
 
 ____________________________________________________________________________________________________
 Version 1.4.1 - Jan 30, 2018:

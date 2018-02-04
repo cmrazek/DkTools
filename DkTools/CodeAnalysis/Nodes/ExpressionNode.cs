@@ -114,6 +114,21 @@ namespace DkTools.CodeAnalysis.Nodes
 												return p.Statement.CodeAnalyzer.PreprocessorModel.DefinitionProvider.
 													GetAny<VariableDefinition>(startPos + p.FuncOffset, name).FirstOrDefault();
 											},
+										TableFieldCallback = (tableName, fieldName) =>
+											{
+												foreach (var tableDef in p.Statement.CodeAnalyzer.PreprocessorModel.DefinitionProvider.GetGlobalFromFile(tableName))
+												{
+													if (tableDef.AllowsChild)
+													{
+														foreach (var fieldDef in tableDef.GetChildDefinitions(fieldName))
+														{
+															return new Definition[] { tableDef, fieldDef };
+														}
+													}
+												}
+
+												return null;
+											},
 										VisibleModel = false
 									});
 									if (dataType != null && code.ReadExact(')'))

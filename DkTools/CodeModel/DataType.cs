@@ -49,6 +49,7 @@ namespace DkTools.CodeModel
 
 		public delegate DataTypeDefinition GetDataTypeDelegate(string name);
 		public delegate VariableDefinition GetVariableDelegate(string name);
+		public delegate Definition[] GetTableFieldDelegate(string tableName, string fieldName);
 		public delegate void TokenCreateDelegate(Token token);
 
 		/// <summary>
@@ -197,6 +198,12 @@ namespace DkTools.CodeModel
 			/// (optional) A callback function used to look up existing variables.
 			/// </summary>
 			public GetVariableDelegate VariableCallback { get; set; }
+
+			/// <summary>
+			/// (optional) A callback function used to look up table/fields (like extracts).
+			/// The dict will automatically be searched first before calling this function.
+			/// </summary>
+			public GetTableFieldDelegate TableFieldCallback { get; set; }
 
 			/// <summary>
 			/// (optional) A name to be given to the data type. If null or blank, the actual text will be used as the name.
@@ -1020,6 +1027,21 @@ namespace DkTools.CodeModel
 									a.OnToken(tableAndFieldToken);
 								}
 								return field.DataType;
+							}
+						}
+						else if (a.TableFieldCallback != null)
+						{
+							var tfDefs = a.TableFieldCallback(word1, word2);
+							if (tfDefs != null && tfDefs.Length == 2)
+							{
+								if (a.TokenCreateCallback != null)
+								{
+									a.OnToken(new IdentifierToken(a.Scope, word1Span, word1, tfDefs[0]));
+									a.OnToken(new DotToken(a.Scope, dotSpan));
+									a.OnToken(new IdentifierToken(a.Scope, word2Span, word2, tfDefs[1]));
+								}
+								if (tfDefs[1].DataType != null) return tfDefs[1].DataType;
+								else return new DataType(ValType.Unknown, a.TypeName, string.Concat("like ", word1, ".", word2));
 							}
 						}
 

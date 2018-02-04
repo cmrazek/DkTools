@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using Defs = DkTools.CodeModel.Definitions;
 
 namespace DkTools.CodeModel.Tokens
 {
@@ -10,6 +11,7 @@ namespace DkTools.CodeModel.Tokens
 		private List<Token> _innerTokens = new List<Token>();
 		private BracketToken _openToken;
 		private BracketToken _closeToken;
+		private bool _cast;
 
 		public BracketsToken(Scope scope)
 			: base(scope)
@@ -43,21 +45,67 @@ namespace DkTools.CodeModel.Tokens
 			var ret = new BracketsToken(scope);
 			ret.AddToken(ret._openToken = new OpenBracketToken(scope, openBracketSpan, ret));
 
-			while (!code.EndOfFile)
+			List<Token> dataTypeTokens = null;
+			var dataType = DataType.TryParse(new DataType.ParseArgs
 			{
-				if (code.ReadExact(')'))
+				Code = code,
+				DataTypeCallback = name =>
 				{
-					ret.AddToken(ret._closeToken = new CloseBracketToken(scope, code.Span, ret));
-					break;
-				}
+					return indentScope.DefinitionProvider.GetAny<Defs.DataTypeDefinition>(openBracketSpan.End, name).FirstOrDefault();
+				},
+				VariableCallback = name =>
+				{
+					return indentScope.DefinitionProvider.GetAny<Defs.VariableDefinition>(openBracketSpan.End, name).FirstOrDefault();
+				},
+				TableFieldCallback = (tableName, fieldName) =>
+				{
+					foreach (var tableDef in indentScope.DefinitionProvider.GetGlobalFromFile(tableName))
+					{
+						if (tableDef.AllowsChild)
+						{
+							foreach (var fieldDef in tableDef.GetChildDefinitions(fieldName))
+							{
+								return new Defs.Definition[] { tableDef, fieldDef };
+							}
+						}
+					}
 
-				var exp = ExpressionToken.TryParse(indentScope, _endTokens);
-				if (exp != null)
+					return null;
+				},
+				TokenCreateCallback = token =>
 				{
-					ret._innerTokens.Add(exp);
-					ret.AddToken(exp);
+					if (dataTypeTokens == null) dataTypeTokens = new List<Token>();
+					dataTypeTokens.Add(token);
+				},
+				VisibleModel = scope.Visible
+			});
+			if (dataType != null && code.ReadExact(')'))
+			{
+				ret._cast = true;
+				if (dataTypeTokens != null)
+				{
+					foreach (var token in dataTypeTokens) ret.AddToken(token);
 				}
-				else break;
+				ret.AddToken(ret._closeToken = new CloseBracketToken(scope, code.Span, ret));
+			}
+			else
+			{
+				while (!code.EndOfFile)
+				{
+					if (code.ReadExact(')'))
+					{
+						ret.AddToken(ret._closeToken = new CloseBracketToken(scope, code.Span, ret));
+						break;
+					}
+
+					var exp = ExpressionToken.TryParse(indentScope, _endTokens);
+					if (exp != null)
+					{
+						ret._innerTokens.Add(exp);
+						ret.AddToken(exp);
+					}
+					else break;
+				}
 			}
 
 			return ret;

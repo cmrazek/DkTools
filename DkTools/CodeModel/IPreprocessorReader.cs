@@ -36,6 +36,7 @@ namespace DkTools.CodeModel
 	{
 		public static readonly HashSet<char> LineEndChars = Util.ParseCharList("\r\n");
 		public static readonly HashSet<char> WhiteChars = Util.ParseCharList(" \t\r\n");
+		public static readonly HashSet<char> WhiteNonEolChars = Util.ParseCharList(" \t");
 
 		private static readonly HashSet<char> _multiLineCommentBreakChars = Util.ParseCharList("/*\r\n");
 
@@ -218,8 +219,7 @@ namespace DkTools.CodeModel
 
 				if (char.IsWhiteSpace(ch))
 				{
-					//rdr.IgnoreUntil(c => char.IsWhiteSpace(c));
-					rdr.IgnoreWhile(WhiteChars);
+					rdr.IgnoreWhile(stayOnSameLine ? WhiteNonEolChars : WhiteChars);
 					continue;
 				}
 

@@ -234,6 +234,11 @@ namespace DkTools.CodeModel
 		{
 			return _fileGlobalDefs.Get<T>(name);
 		}
+
+		public IEnumerable<Definition> GetGlobalFromFile(string name)
+		{
+			return _fileGlobalDefs.Get(name);
+		}
 		#endregion
 
 		#region Local Definitions
