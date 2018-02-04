@@ -74,5 +74,10 @@ namespace DkTools.ProbeExplorer
 		{
 			_exp.FocusFunctionFilter();
 		}
+
+		public void FocusDictFilter()
+		{
+			_exp.FocusDictFilter();
+		}
 	}
 }

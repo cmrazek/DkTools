@@ -17,6 +17,14 @@ namespace DkTools.ProbeExplorer
 {
 	public sealed partial class ProbeExplorerControl
 	{
+		public void FocusDictFilter()
+		{
+			c_dictTab.IsSelected = true;
+			this.UpdateLayout();
+			c_dictTreeFilter.Focus();
+			c_dictTreeFilter.SelectAll();
+		}
+
 		private void RefreshDictTree()
 		{
 			Log.Write(LogLevel.Info, "Refreshing DK Explorer dictionary view...");

@@ -101,6 +101,16 @@
 					<ButtonText>F&amp;ind in DK Files</ButtonText>
 				</Strings>
 			</Button>
+
+			<!-- DK Menu -> Show Dictionary -->
+			<Button guid="guidProbeToolsCmdSet" id="cmdShowDict" priority="0x0028" type="Button">
+				<Parent guid="guidProbeToolsCmdSet" id="FileOperationsGroup" />
+				<Icon guid="guidImages" id="bmpShowDict" />
+				<Strings>
+					<CommandName>cmdShowDict</CommandName>
+					<ButtonText>Show Dictionary</ButtonText>
+				</Strings>
+			</Button>
 			
 			<!-- DK Menu -> Show Functions -->
 			<Button guid="guidProbeToolsCmdSet" id="cmdShowFunctions" priority="0x0030" type="Button">
@@ -379,7 +389,17 @@
 					<ButtonText>F&amp;ind in DK Files</ButtonText>
 				</Strings>
 			</Button>
-			
+
+			<!-- DK Toolbar -> Show Dictionary -->
+			<Button guid="guidProbeToolsCmdSet" id="cmdShowDict" priority="0x0028" type="Button">
+				<Parent guid="guidProbeToolsCmdSet" id="tbFileOperationsGroup" />
+				<Icon guid="guidImages" id="bmpShowDict" />
+				<Strings>
+					<CommandName>cmdShowDict</CommandName>
+					<ButtonText>Show Dictionary</ButtonText>
+				</Strings>
+			</Button>
+
 			<!-- DK Toolbar -> Show Functions -->
 			<Button guid="guidProbeToolsCmdSet" id="cmdShowFunctions" priority="0x0030" type="Button">
 				<Parent guid="guidProbeToolsCmdSet" id="tbFileOperationsGroup" />
@@ -614,7 +634,12 @@
 
 		<Bitmaps>
 			<Bitmap guid="guidImages" href="Images\ProbeToolsCommandIcons.png" resID="bmpCompile"
-              usedList="bmpCompile, bmpKillCompile, bmpProbeExplorer, bmpFindInProbeFiles, bmpFecFile, bmpPstTable, bmpMergeFile, bmpRun, bmpInsertTag, bmpInsertDiag, bmpInsertDate, bmpInsertFileHeader, bmpSettings, bmpPSelect, bmpDccmp, bmpCredelix, bmpTableListing, bmpCompileToVisualC, bmpShowHelp, bmpShowDrv, bmpDisableDeadCode, bmpProbeNV, bmpShowErrors, bmpGoToNextReference, bmpGoToPrevReference, bmpShowFunctions, bmpRunCodeAnalysis, bmpShowCodeAnalysis, bmpClearErrors" />
+              usedList="bmpCompile, bmpKillCompile, bmpProbeExplorer, bmpFindInProbeFiles, bmpFecFile,
+								bmpPstTable, bmpMergeFile, bmpRun, bmpInsertTag, bmpInsertDiag, bmpInsertDate,
+								bmpInsertFileHeader, bmpSettings, bmpPSelect, bmpDccmp, bmpCredelix, bmpTableListing,
+								bmpCompileToVisualC, bmpShowHelp, bmpShowDrv, bmpDisableDeadCode, bmpProbeNV,
+								bmpShowErrors, bmpGoToNextReference, bmpGoToPrevReference, bmpShowFunctions,
+								bmpRunCodeAnalysis, bmpShowCodeAnalysis, bmpClearErrors, bmpShowDict" />
 		</Bitmaps>
 
 		<Menus>
@@ -627,7 +652,7 @@
 				</Strings>
 			</Menu>
 
-			<Menu guid="guidProbeToolsCmdSet" id="menuTagging" priority="0x0030" type="Menu">
+			<Menu guid="guidProbeToolsCmdSet" id="menuTagging" priority="0x0034" type="Menu">
 				<Parent guid="guidProbeToolsCmdSet" id="FileOperationsGroup" />
 				<CommandFlag>AlwaysCreate</CommandFlag>
 				<Strings>
@@ -670,6 +695,7 @@
 		<!--
 		Probe Explorer:       Alt+O, O
 		Find in Probe Files:  Alt+O, I
+		Show Dictionary				Alt+O, N
 		Show Functions				Alt+O, F
 		FEC File:             Alt+O, L
 		Merge File:           Alt+O, M
@@ -709,6 +735,7 @@
 		<KeyBinding guid="guidProbeToolsCmdSet" id="cmdShowFunctions" key1="O" mod1="Alt" key2="F" mod2="Alt" editor="guidVSStd97"/>
 		<KeyBinding guid="guidProbeToolsCmdSet" id="cmdRunCodeAnalysis" key1="O" mod1="Alt" key2="A" mod2="Alt" editor="guidVSStd97"/>
 		<KeyBinding guid="guidProbeToolsCmdSet" id="cmdClearErrors" key1="O" mod1="Alt" key2="E" mod2="Alt" editor="guidVSStd97"/>
+		<KeyBinding guid="guidProbeToolsCmdSet" id="cmdShowDict" key1="O" mod1="Alt" key2="N" mod2="Alt" editor="guidVSStd97"/>
 	</KeyBindings>
 	
 	<Symbols>
@@ -760,6 +787,7 @@
 			<IDSymbol name="cmdRunCodeAnalysis" value="0x0128"/>
       <IDSymbol name="cmdShowCodeAnalysis" value="0x0129"/>
 			<IDSymbol name="cmdClearErrors" value="0x012a"/>
+			<IDSymbol name="cmdShowDict" value="0x012b"/>
 
 			<IDSymbol name="tbProbeToolbar" value="0x2000" />
 			<IDSymbol name="tbFileOperationsGroup" value="0x2001" />
@@ -801,6 +829,7 @@
 			<IDSymbol name="bmpRunCodeAnalysis" value="0x001b"/>
       <IDSymbol name="bmpShowCodeAnalysis" value="0x001c"/>
 			<IDSymbol name="bmpClearErrors" value="0x001d"/>
+			<IDSymbol name="bmpShowDict" value="0x001e"/>
 		</GuidSymbol>
 	</Symbols>
 	

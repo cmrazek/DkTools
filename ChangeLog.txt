@@ -4,6 +4,7 @@ ________________________________________________________________________________
 Version 1.4.2 - (WIP):
 
 - Added new DK menu command "Clear Errors"
+- Added toolbar button and keyboard shortcut to get to this dictionary viewer.
 - Added missing implicit columns on relationship tables (e.g. custjnt)
 - Fix incorrectly named implicit column on snapshot tables (e.g. rowno_dmdr_dmd)
 - Fixed comment/uncomment block which would sometimes remove empty lines or mess up indenting.

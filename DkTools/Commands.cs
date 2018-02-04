@@ -48,7 +48,8 @@ namespace DkTools
 		ShowFunctions = 0x0127,
 		RunCodeAnalysis = 0x0128,
 		ShowCodeAnalysis = 0x0129,
-		ClearErrors = 0x012a
+		ClearErrors = 0x012a,
+		ShowDict = 0x012b
 	}
 
 	internal static class Commands
@@ -86,6 +87,7 @@ namespace DkTools
 			AddCommand(mcs, CommandId.RunCodeAnalysis, RunCodeAnalysis);
 			AddCommand(mcs, CommandId.ShowCodeAnalysis, ShowCodeAnalysis, checkedCallback: ShowCodeAnalysis_Checked);
 			AddCommand(mcs, CommandId.ClearErrors, ClearErrors);
+			AddCommand(mcs, CommandId.ShowDict, ShowDict);
 		}
 
 		private class CommandInstance
@@ -647,6 +649,19 @@ namespace DkTools
 			{
 				var window = Shell.ShowProbeExplorerToolWindow();
 				window.FocusFunctionFilter();
+			}
+			catch (Exception ex)
+			{
+				Shell.ShowError(ex);
+			}
+		}
+
+		private static void ShowDict(object sender, EventArgs e)
+		{
+			try
+			{
+				var window = Shell.ShowProbeExplorerToolWindow();
+				window.FocusDictFilter();
 			}
 			catch (Exception ex)
 			{
