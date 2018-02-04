@@ -108,7 +108,8 @@ namespace DkTools.CodeAnalysis
 				stmt.Execute(_scope);
 			}
 
-			if (func.Definition.DataType.ValueType != ValType.Void && _scope.Returned != TriState.True)
+			if (func.Definition.DataType.ValueType != ValType.Void && _scope.Returned != TriState.True &&
+				func.Definition.Name != "staticinitialize")
 			{
 				ReportErrorAbsolute(func.NameSpan, CAError.CA0017);	// Function does not return a value.
 			}
