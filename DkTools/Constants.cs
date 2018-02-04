@@ -45,7 +45,7 @@ namespace DkTools
 
 		public static readonly HashSet<string> GlobalKeywords = Util.ParseWordList(
 			"after alter and BEGINHLP before break button comment col colff cols continue create display description each else endgroup ENDHLP extern extract",
-			"for form formonly format group header if index interface",
+			"footer for form formonly format group header if index interface",
 			"many nomenu nopick nopersist on one onerror or order outfile permanent physical private prompt protected public relationship return row rows select snapshot static switch",
 			"table tag to tool typedef unique updates where while widthof zoom");
 

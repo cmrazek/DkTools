@@ -293,6 +293,7 @@
     <Compile Include="CodeAnalysis\Statements\ColStatement.cs" />
     <Compile Include="CodeAnalysis\Statements\ContinueStatement.cs" />
     <Compile Include="CodeAnalysis\Statements\ExtractStatement.cs" />
+    <Compile Include="CodeAnalysis\Statements\FooterStatement.cs" />
     <Compile Include="CodeAnalysis\Statements\FormatStatement.cs" />
     <Compile Include="CodeAnalysis\Statements\ForStatement.cs" />
     <Compile Include="CodeAnalysis\Statements\HeaderStatement.cs" />
@@ -339,6 +340,7 @@
     <Compile Include="CodeModel\Tokens\IBreakOwner.cs" />
     <Compile Include="CodeModel\Tokens\IContinueOwner.cs" />
     <Compile Include="CodeModel\Tokens\Statements\CreateStatement.cs" />
+    <Compile Include="CodeModel\Tokens\Statements\FooterStatement.cs" />
     <Compile Include="CodeModel\Tokens\Statements\FormatStatement.cs" />
     <Compile Include="CodeModel\Tokens\Statements\ForStatement.cs" />
     <Compile Include="CodeModel\Tokens\Statements\HeaderStatement.cs" />

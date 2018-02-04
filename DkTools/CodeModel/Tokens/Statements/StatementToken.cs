@@ -131,6 +131,14 @@ namespace DkTools.CodeModel.Tokens
 								if (callback != null) callback(token);
 								return ret;
 							}
+						case "footer":
+							{
+								var keywordToken = new KeywordToken(scope, code.MovePeekedSpan(), code.Text);
+								var token = FooterStatement.Parse(scope, keywordToken);
+								ret.AddToken(token);
+								if (callback != null) callback(token);
+								return ret;
+							}
 						case "for":
 							{
 								var keywordToken = new KeywordToken(scope, code.MovePeekedSpan(), code.Text);

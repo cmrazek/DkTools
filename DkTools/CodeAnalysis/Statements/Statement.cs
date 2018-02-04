@@ -46,6 +46,8 @@ namespace DkTools.CodeAnalysis.Statements
 						return new ContinueStatement(p, p.Code.MovePeekedSpan());
 					case "extract":
 						return new ExtractStatement(p, p.Code.MovePeekedSpan());
+					case "footer":
+						return new FooterStatement(p, p.Code.MovePeekedSpan());
 					case "for":
 						return new ForStatement(p, p.Code.MovePeekedSpan());
 					case "format":
