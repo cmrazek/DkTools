@@ -35,11 +35,7 @@ namespace DkTools
 
 				lock (_lock)
 				{
-					var logFileName = Path.Combine(ProbeToolsPackage.LogDir, string.Format(Constants.LogFileNameFormat, DateTime.Now));
-					_writer = new StreamWriter(logFileName);
-					_initialized = true;
-
-					Write(LogLevel.Info, "Created log file: {0}", logFileName);
+					CheckStream();
 				}
 
 				PurgeOldLogFiles();
@@ -48,6 +44,18 @@ namespace DkTools
 			{
 				System.Diagnostics.Debug.WriteLine(ex.ToString());
 				_initialized = false;
+			}
+		}
+
+		public static void CheckStream()
+		{
+			if (_writer == null)
+			{
+				var logFileName = Path.Combine(ProbeToolsPackage.LogDir, string.Format(Constants.LogFileNameFormat, DateTime.Now));
+				_writer = new StreamWriter(logFileName);
+				_initialized = true;
+
+				Write(LogLevel.Info, "Created log file: {0}", logFileName);
 			}
 		}
 
@@ -121,6 +129,7 @@ namespace DkTools
 				lock (_lock)
 				{
 					if (!_initialized) Initialize();
+					CheckStream();
 
 					_sb.Clear();
 					_sb.Append("[");
@@ -139,6 +148,16 @@ namespace DkTools
 			catch (Exception ex)
 			{
 				System.Diagnostics.Debug.WriteLine(ex.ToString());
+				try
+				{
+					if (_writer != null)
+					{
+						_writer.Close();
+						_writer = null;
+					}
+				}
+				catch (Exception)
+				{ }
 			}
 		}
 

@@ -60,12 +60,13 @@ namespace DkTools.CodeModel
 			_localFileNames.Clear();
 			_showMergeComments = showMergeComments;
 
+			var rawFileName = fileName;
 			if (Path.IsPathRooted(fileName)) fileName = UnrootFileName(fileName);
 			FindFiles(fileName);
 
 			if (string.IsNullOrEmpty(_origFileName))
 			{
-				throw new FileMergeException(string.Format("Could not find base file for '{0}'.", fileName));
+				throw new FileMergeException(string.Format("Could not find base file for '{0}'.", rawFileName));
 			}
 
 			if (content == null) _origContent = File.ReadAllText(_origFileName);
@@ -109,7 +110,8 @@ namespace DkTools.CodeModel
 
 			foreach (var dir in ProbeEnvironment.SourceDirs)
 			{
-				if (fileName.StartsWith(dir, StringComparison.OrdinalIgnoreCase))
+				if ((dir.EndsWith("\\") && fileName.StartsWith(dir, StringComparison.OrdinalIgnoreCase)) ||
+					(!dir.EndsWith("\\") && fileName.StartsWith(dir + "\\", StringComparison.OrdinalIgnoreCase)))
 				{
 					fileName = fileName.Substring(dir.Length).Trim();
 					while (fileName.StartsWith("\\")) fileName = fileName.Substring(1);
@@ -119,7 +121,8 @@ namespace DkTools.CodeModel
 
 			foreach (var dir in ProbeEnvironment.IncludeDirs)
 			{
-				if (fileName.StartsWith(dir, StringComparison.OrdinalIgnoreCase))
+				if ((dir.EndsWith("\\") && fileName.StartsWith(dir, StringComparison.OrdinalIgnoreCase)) ||
+					(!dir.EndsWith("\\") && fileName.StartsWith(dir + "\\", StringComparison.OrdinalIgnoreCase)))
 				{
 					fileName = fileName.Substring(dir.Length).Trim();
 					while (fileName.StartsWith("\\")) fileName = fileName.Substring(1);
@@ -130,8 +133,6 @@ namespace DkTools.CodeModel
 			// If this file is not in any source/include directory, then just use the file name without any path.
 			// This can happen during code QA, where the code is kept in another folder.
 			return Path.GetFileName(fileName);
-
-			//throw new FileMergeException(string.Format("File '{0}' does not belong to a Probe source or include directory.", fileName));
 		}
 
 		private void FindFiles(string fileName)

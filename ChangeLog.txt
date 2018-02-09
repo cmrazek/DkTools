@@ -12,6 +12,7 @@ Version 1.4.2 - (WIP):
 - Added support for 'footer' statements
 - Added support for 'like' casting that use temporary extracts
 - Fixed preprocessor bug when #define has trailing spaces
+- Fixed null reference bug in background scanning
 
 ____________________________________________________________________________________________________
 Version 1.4.1 - Jan 30, 2018:

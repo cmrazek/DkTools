@@ -438,7 +438,9 @@ namespace DkTools.FunctionFileScanning
 			{
 				// Get all references in the file.
 				var refList = new List<Reference>();
-				foreach (var token in model.File.FindDownward(t => t.SourceDefinition != null && !string.IsNullOrEmpty(t.SourceDefinition.ExternalRefId)))
+				foreach (var token in model.File.FindDownward(t => t.SourceDefinition != null &&
+					!string.IsNullOrEmpty(t.SourceDefinition.ExternalRefId) &&
+					t.File != null))
 				{
 					var localPos = token.File.CodeSource.GetFilePosition(token.Span.Start);
 

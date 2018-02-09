@@ -84,18 +84,26 @@ namespace DkTools.ErrorTagging
 		{
 			var fileNames = new List<string>();
 
-			foreach (var task in Tasks)
+			lock (_tasksLock)
 			{
-				if (!(task is ErrorTask)) continue;
-				var errorTask = task as ErrorTask;
+				foreach (var task in Tasks)
+				{
+					if (!(task is ErrorTask)) continue;
+					var errorTask = task as ErrorTask;
 
+					if (!fileNames.Contains(errorTask.Document))
+					{
+						fileNames.Add(errorTask.Document);
+					}
+				}
+			}
 
-				if (!fileNames.Contains(errorTask.Document))
+			if (fileNames.Any())
+			{
+				foreach (var fileName in fileNames)
 				{
 					var ev = ErrorTagsChangedForFile;
-					if (ev != null) ev(this, new ErrorTaskEventArgs { FileName = errorTask.Document });
-
-					fileNames.Add(errorTask.Document);
+					if (ev != null) ev(this, new ErrorTaskEventArgs { FileName = fileName });
 				}
 			}
 		}

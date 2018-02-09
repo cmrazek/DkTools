@@ -21,7 +21,10 @@ namespace DkTools.CodeModel
 
 		public Scope(CodeModel model)
 		{
-			_file = null;
+#if DEBUG
+			if (model == null) throw new ArgumentNullException("model");
+#endif
+			_file = model.File;
 			_hint = default(ScopeHint);
 			_depth = 0;
 			_visible = false;
@@ -36,6 +39,7 @@ namespace DkTools.CodeModel
 		public Scope(CodeFile file, int depth, ScopeHint hint, bool visible, DefinitionProvider defProvider)
 		{
 #if DEBUG
+			if (file == null) throw new ArgumentNullException("file");
 			if (defProvider == null) throw new InvalidOperationException("Model has no definition provider.");
 #endif
 			_file = file;
