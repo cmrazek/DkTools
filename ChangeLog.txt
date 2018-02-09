@@ -1,7 +1,7 @@
 DkTools ChangeLog
 
 ____________________________________________________________________________________________________
-Version 1.4.2 - (WIP):
+Version 1.4.2 - Feb 9, 2018:
 
 - Added new DK menu command "Clear Errors"
 - Added toolbar button and keyboard shortcut to get to this dictionary viewer.
