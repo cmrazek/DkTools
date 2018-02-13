@@ -1,6 +1,11 @@
 DkTools ChangeLog
 
 ____________________________________________________________________________________________________
+Version 1.4.3 - (WIP):
+
+- Code Analysis - Fixed bug when accessing a substring [x,y] for an array of strings.
+
+____________________________________________________________________________________________________
 Version 1.4.2 - Feb 9, 2018:
 
 - Added new DK menu command "Clear Errors"
