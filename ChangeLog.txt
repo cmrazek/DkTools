@@ -4,6 +4,7 @@ ________________________________________________________________________________
 Version 1.4.3 - (WIP):
 
 - Code Analysis - Fixed bug when accessing a substring [x,y] for an array of strings.
+- Fixed bug in regions which would break a region if it was surrounded by comments.
 
 ____________________________________________________________________________________________________
 Version 1.4.2 - Feb 9, 2018:

@@ -229,15 +229,17 @@ namespace DkTools.CodeModel.Tokens
 							EndUserRegion(parser.Span.End);
 						}
 					}
-
-					if (insideComment)
-					{
-						commentSpan.End = parser.Span.End;
-					}
 					else
 					{
-						insideComment = true;
-						commentSpan = parser.Span;
+						if (insideComment)
+						{
+							commentSpan.End = parser.Span.End;
+						}
+						else
+						{
+							insideComment = true;
+							commentSpan = parser.Span;
+						}
 					}
 				}
 				else
