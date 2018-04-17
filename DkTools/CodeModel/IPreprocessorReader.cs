@@ -301,5 +301,52 @@ namespace DkTools.CodeModel
 
 			return sb.ToString();
 		}
+
+		public static string ReadAndIgnoreStringLiteral(this IPreprocessorReader rdr)
+		{
+			// This function assumes the next character to read is either " or '.
+
+			char quote = rdr.Peek();
+			rdr.Ignore(1);
+
+			char ch;
+			var sb = new StringBuilder();
+			sb.Append(quote);
+
+			while (!rdr.EOF)
+			{
+				ch = rdr.Peek();
+				if (ch == quote)
+				{
+					sb.Append(ch);
+					rdr.Ignore(1);
+
+					if (quote == '"' && rdr.Peek() == '"')
+					{
+						// Double "" means keep going
+						sb.Append('"');
+						rdr.Ignore(1);
+					}
+					else break;
+				}
+				else if (ch == '\\')
+				{
+					sb.Append('\\');
+					rdr.Ignore(1);
+					if (!rdr.EOF)
+					{
+						sb.Append(rdr.Peek());
+						rdr.Ignore(1);
+					}
+				}
+				else
+				{
+					sb.Append(ch);
+					rdr.Ignore(1);
+				}
+			}
+
+			return sb.ToString();
+		}
 	}
 }

@@ -451,12 +451,17 @@ namespace DkTools.CodeModel
 						sb.Append(rdr.ReadAndIgnoreNestableContent("]"));
 						sb.Append(']');
 					}
+					else if (ch == '\'' || ch == '\"')
+					{
+						sb.Append(rdr.ReadAndIgnoreStringLiteral());
+					}
 					else
 					{
 						rdr.Ignore(1);
 						sb.Append(ch);
 					}
 				}
+
 				if (sb.Length > 0)
 				{
 					var argText = ApplySubstitutions(sb.ToString(), p.args);
