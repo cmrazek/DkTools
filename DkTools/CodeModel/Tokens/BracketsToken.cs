@@ -33,7 +33,7 @@ namespace DkTools.CodeModel.Tokens
 
 		private static readonly string[] _endTokens = new string[] { ")" };
 
-		public static BracketsToken Parse(Scope scope)
+		public static BracketsToken Parse(Scope scope, DataType expectedDataType)
 		{
 			var code = scope.Code;
 			if (!code.ReadExact('(')) throw new InvalidOperationException("BracketsToken.Parse expected next char to be '('.");
@@ -49,6 +49,7 @@ namespace DkTools.CodeModel.Tokens
 			var dataType = DataType.TryParse(new DataType.ParseArgs
 			{
 				Code = code,
+				Scope = scope,
 				DataTypeCallback = name =>
 				{
 					return indentScope.DefinitionProvider.GetAny<Defs.DataTypeDefinition>(openBracketSpan.End, name).FirstOrDefault();
@@ -98,7 +99,7 @@ namespace DkTools.CodeModel.Tokens
 						break;
 					}
 
-					var exp = ExpressionToken.TryParse(indentScope, _endTokens);
+					var exp = ExpressionToken.TryParse(indentScope, _endTokens, expectedDataType: expectedDataType);
 					if (exp != null)
 					{
 						ret._innerTokens.Add(exp);

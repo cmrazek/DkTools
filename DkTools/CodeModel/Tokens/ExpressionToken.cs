@@ -17,7 +17,8 @@ namespace DkTools.CodeModel.Tokens
 
 		public delegate Token WordTokenCallback(string word, Span wordSpan);
 
-		public static ExpressionToken TryParse(Scope scope, IEnumerable<string> endTokens, WordTokenCallback wordCallback = null, DataType expectedDataType = null)
+		public static ExpressionToken TryParse(Scope scope, IEnumerable<string> endTokens,
+			WordTokenCallback wordCallback = null, DataType expectedDataType = null)
 		{
 			var code = scope.Code;
 			code.SkipWhiteSpace();
@@ -55,6 +56,7 @@ namespace DkTools.CodeModel.Tokens
 			};
 
 			var abortParsing = false;
+			var parseDataType = expectedDataType;
 
 			while (!code.EndOfFile && !abortParsing)
 			{
@@ -76,9 +78,9 @@ namespace DkTools.CodeModel.Tokens
 							{
 								exp.AddToken(token);
 							}
-							else if (expectedDataType != null && expectedDataType.HasCompletionOptions && expectedDataType.IsValidEnumOption(word))
+							else if (parseDataType != null && parseDataType.HasCompletionOptions && parseDataType.IsValidEnumOption(word))
 							{
-								exp.AddToken(new EnumOptionToken(scope, wordSpan, word, expectedDataType));
+								exp.AddToken(new EnumOptionToken(scope, wordSpan, word, parseDataType));
 							}
 							else
 							{
@@ -105,9 +107,9 @@ namespace DkTools.CodeModel.Tokens
 						break;
 
 					case CodeType.StringLiteral:
-						if (expectedDataType != null && expectedDataType.HasCompletionOptions && expectedDataType.IsValidEnumOption(code.Text))
+						if (parseDataType != null && parseDataType.HasCompletionOptions && parseDataType.IsValidEnumOption(code.Text))
 						{
-							exp.AddToken(new EnumOptionToken(scope, code.Span, code.Text, expectedDataType));
+							exp.AddToken(new EnumOptionToken(scope, code.Span, code.Text, parseDataType));
 						}
 						else
 						{
@@ -121,7 +123,7 @@ namespace DkTools.CodeModel.Tokens
 							case "(":
 								{
 									code.Position = code.Span.Start;
-									var bracketsToken = BracketsToken.Parse(scope);
+									var bracketsToken = BracketsToken.Parse(scope, parseDataType);
 									if (bracketsToken.IsCast) exp.AddToken(Statements.CastStatement.Parse(scope, bracketsToken, endTokens));
 									else exp.AddToken(bracketsToken);
 								}
@@ -151,6 +153,11 @@ namespace DkTools.CodeModel.Tokens
 							case ">=":
 								if ((scope.Hint & ScopeHint.SuppressLogic) == 0)
 								{
+									if (exp.ChildrenCount > 0)
+									{
+										var dataType = exp.LastChild.ValueDataType;
+										if (dataType != null) parseDataType = dataType;
+									}
 									exp.AddToken(ComparisonOperator.Parse(scope, exp.LastChild, new OperatorToken(scope, code.Span, code.Text), endTokens));
 								}
 								else
@@ -159,6 +166,20 @@ namespace DkTools.CodeModel.Tokens
 								}
 								break;
 							case "=":
+								if ((scope.Hint & ScopeHint.SuppressLogic) == 0)
+								{
+									if (exp.ChildrenCount > 0)
+									{
+										var dataType = exp.LastChild.ValueDataType;
+										if (dataType != null) parseDataType = dataType;
+									}
+									exp.AddToken(AssignmentOperator.Parse(scope, exp.LastChild, new OperatorToken(scope, code.Span, code.Text), endTokens));
+								}
+								else
+								{
+									exp.AddToken(new OperatorToken(scope, code.Span, code.Text));
+								}
+								break;
 							case "+=":
 							case "-=":
 							case "*=":
@@ -174,7 +195,9 @@ namespace DkTools.CodeModel.Tokens
 								}
 								break;
 							case "?":
-								exp.AddToken(ConditionalOperator.Parse(scope, exp.LastChild, new OperatorToken(scope, code.Span, code.Text), endTokens));
+								parseDataType = expectedDataType;
+								exp.AddToken(ConditionalOperator.Parse(scope, exp.LastChild, new OperatorToken(scope, code.Span, code.Text),
+									endTokens, parseDataType));
 								break;
 							default:
 								exp.AddToken(new OperatorToken(scope, code.Span, code.Text));

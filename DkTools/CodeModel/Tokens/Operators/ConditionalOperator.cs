@@ -17,7 +17,7 @@ namespace DkTools.CodeModel.Tokens.Operators
 
 		private static readonly string[] _endTokens = new string[] { ":" };
 
-		public static ConditionalOperator Parse(Scope scope, Token lastToken, OperatorToken opToken, IEnumerable<string> endTokens)
+		public static ConditionalOperator Parse(Scope scope, Token lastToken, OperatorToken opToken, IEnumerable<string> endTokens, DataType expectedDataType)
 		{
 			var ret = new ConditionalOperator(scope);
 
@@ -27,7 +27,7 @@ namespace DkTools.CodeModel.Tokens.Operators
 			if (endTokens == null) endTokens = _endTokens;
 			else endTokens = endTokens.Concat(_endTokens).ToArray();
 
-			var leftResultExp = ExpressionToken.TryParse(scope, endTokens);
+			var leftResultExp = ExpressionToken.TryParse(scope, endTokens, expectedDataType: expectedDataType);
 			if (leftResultExp != null)
 			{
 				ret.AddToken(leftResultExp);
@@ -35,7 +35,7 @@ namespace DkTools.CodeModel.Tokens.Operators
 
 				if (scope.Code.ReadExact(':'))
 				{
-					var rightResultExp = ExpressionToken.TryParse(scope, endTokens);
+					var rightResultExp = ExpressionToken.TryParse(scope, endTokens, expectedDataType: expectedDataType);
 					if (rightResultExp != null)
 					{
 						ret.AddToken(rightResultExp);

@@ -888,7 +888,7 @@ namespace DkTools.CodeModel.Tokens.Statements
 
 			if (code.PeekExact('('))
 			{
-				AddToken(BracketsToken.Parse(Scope));
+				AddToken(BracketsToken.Parse(Scope, expectedDataType: null));
 			}
 		}
 
