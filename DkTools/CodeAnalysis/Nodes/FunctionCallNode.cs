@@ -17,71 +17,96 @@ namespace DkTools.CodeAnalysis.Nodes
 		private List<GroupNode> _args = new List<GroupNode>();
 		private Definition _def;
 
-		public FunctionCallNode(Statement stmt, Span funcNameSpan, string funcName)
-			: base(stmt, funcNameSpan)
+		public FunctionCallNode(Statement stmt, Span funcNameSpan, string funcName, Definition funcDef)
+			: base(stmt, funcDef != null ? funcDef.DataType : DataType.Void, funcNameSpan)
 		{
 			_name = funcName;
 			_funcNameSpan = funcNameSpan;
+			_def = funcDef;
+		}
+
+		private static FunctionCallNode ParseArguments(ReadParams p, Span funcNameSpan, string funcName, Definition funcDef)
+		{
+			var funcCallNode = new FunctionCallNode(p.Statement, funcNameSpan, funcName, funcDef);
+			var code = p.Code;
+			var resetPos = code.Position;
+			var commaExpected = false;
+			var closed = false;
+			var argIndex = 0;
+			var args = new List<GroupNode>();
+			var argDefs = funcDef.Arguments.ToArray();
+
+			if (code.ReadExact(')'))
+			{
+				closed = true;
+			}
+			else
+			{
+				while (!code.EndOfFile)
+				{
+					if (commaExpected)
+					{
+						if (code.ReadExact(')'))
+						{
+							closed = true;
+							break;
+						}
+						if (!code.ReadExact(','))
+						{
+							code.Position = resetPos;
+							return null;
+						}
+						commaExpected = false;
+					}
+					else
+					{
+						var argDef = argDefs != null && argIndex < argDefs.Length ? argDefs[argIndex] : null;
+
+						var arg = ExpressionNode.Read(p, argDef != null ? argDef.DataType : null, ",", ")");
+						if (arg != null) funcCallNode.AddArgument(arg);
+						commaExpected = true;
+						argIndex++;
+					}
+				}
+			}
+
+			if (!closed)
+			{
+				code.Position = resetPos;
+				return null;
+			}
+
+			//if (argDefs.Length != funcCallNode.NumArguments)
+			//{
+			//	code.Position = resetPos;
+			//	return null;
+			//}
+			
+			return funcCallNode;
 		}
 
 		public static FunctionCallNode Read(ReadParams p, Span funcNameSpan, string funcName, Definition funcDef = null)
 		{
-			var funcCallNode = new FunctionCallNode(p.Statement, funcNameSpan, funcName);
-
-			GroupNode curArg = null;
-			var code = p.Code;
-
-			while (!code.EndOfFile)
-			{
-				if (code.ReadExact(','))
-				{
-					if (curArg != null && curArg.NumChildren > 0) funcCallNode.AddArgument(curArg);
-					curArg = null;
-				}
-				else if (code.ReadExact(')')) break;
-				else if (code.ReadExact(';')) break;
-
-				if (curArg == null) curArg = new GroupNode(p.Statement);
-
-				var node = ExpressionNode.Read(p, ",", ")");
-				if (node != null) curArg.AddChild(node);
-				else break;
-			}
-
-			if (curArg != null && curArg.NumChildren > 0) funcCallNode.AddArgument(curArg);
-
 			if (funcDef != null)
 			{
-				funcCallNode.Definition = funcDef;
-			}
-			else
-			{
-				var funcDefs = (from d in p.Statement.CodeAnalyzer.PreprocessorModel.DefinitionProvider.GetAny(funcNameSpan.Start, funcName)
-								where d.ArgumentsRequired
-								select d).ToArray();
-				if (funcDefs.Length == 1)
-				{
-					funcCallNode.Definition = funcDefs[0];
-				}
-				else if (funcDefs.Length > 1)
-				{
-					var numArgs = funcCallNode.NumArguments;
-					funcDef = funcDefs.FirstOrDefault(f => f.Arguments.Count() == numArgs);
-					if (funcDef == null)
-					{
-						funcCallNode.ReportError(funcNameSpan, CAError.CA0002, funcName, numArgs);	// Function '{0}' with {1} argument(s) not found.
-					}
-					else
-					{
-						funcCallNode.Definition = funcDef;
-					}
-				}
-				else
-				{
-					funcCallNode.ReportError(funcNameSpan, CAError.CA0003, funcName);	// Function '{0}' not found.
-				}
+				var node = ParseArguments(p, funcNameSpan, funcName, funcDef);
+				if (node != null) return node;
 			}
 
+			var funcDefs = (from d in p.Statement.CodeAnalyzer.PreprocessorModel.DefinitionProvider.GetAny(funcNameSpan.Start, funcName)
+							where d.ArgumentsRequired
+							select d).ToArray();
+			foreach (var def in funcDefs)
+			{
+				var fd = def as FunctionDefinition;
+				if (fd == null) continue;
+
+				var node = ParseArguments(p, funcNameSpan, funcName, fd);
+				if (node != null) return node;
+			}
+
+			var funcCallNode = new FunctionCallNode(p.Statement, funcNameSpan, funcName, null);
+			funcCallNode.ReportError(funcNameSpan, CAError.CA0003, funcName);	// Function '{0}' not found.
 			return funcCallNode;
 		}
 
@@ -99,6 +124,26 @@ namespace DkTools.CodeAnalysis.Nodes
 		{
 			get { return _def; }
 			set { _def = value; }
+		}
+
+		public override DataType DataType
+		{
+			get
+			{
+				switch (_name)
+				{
+					case "abs":
+					case "max":
+					case "min":
+					case "oldvalue":
+					case "sum":
+						return _args.Count > 0 ? _args[0].DataType : DataType.Void;
+					case "count":
+						return DataType.Int;
+					default:
+						return base.DataType;
+				}
+			}
 		}
 
 		public override Value ReadValue(RunScope scope)
@@ -128,18 +173,18 @@ namespace DkTools.CodeAnalysis.Nodes
 				{
 					if (defArg.PassByMethod == PassByMethod.Reference || defArg.PassByMethod == PassByMethod.ReferencePlus)
 					{
-						var readScope = scope.Clone(dataTypeContext: defArg.DataType);
+						var readScope = scope.Clone();
 						readScope.SuppressInitializedCheck = true;
 						arg.ReadValue(readScope);
 						scope.Merge(readScope);
 
-						var writeScope = scope.Clone(dataTypeContext: defArg.DataType);
+						var writeScope = scope.Clone();
 						arg.WriteValue(writeScope, Value.CreateUnknownFromDataType(defArg.DataType));
 						scope.Merge(writeScope);
 					}
 					else
 					{
-						var readScope = scope.Clone(dataTypeContext: defArg.DataType);
+						var readScope = scope.Clone();
 						arg.ReadValue(readScope);
 						scope.Merge(readScope);
 					}
@@ -162,16 +207,7 @@ namespace DkTools.CodeAnalysis.Nodes
 
 		public override int Precedence
 		{
-			get
-			{
-				return 0;
-			}
-		}
-
-		public override DataType GetDataType(RunScope scope)
-		{
-			if (_def != null) return _def.DataType;
-			return DataType.Void;
+			get { return 0; }
 		}
 
 		private Value Read_oldvalue(RunScope scope)
@@ -181,7 +217,7 @@ namespace DkTools.CodeAnalysis.Nodes
 				ReportError(_funcNameSpan, CAError.CA0057, 1);	// Function expects {0} argument(s).
 			}
 
-			return Value.CreateUnknownFromDataType(_args[0].GetDataType(scope));
+			return Value.CreateUnknownFromDataType(_args[0].DataType);
 		}
 
 		private Value Read_abs(RunScope scope)
@@ -191,7 +227,7 @@ namespace DkTools.CodeAnalysis.Nodes
 				ReportError(_funcNameSpan, CAError.CA0057, 1);	// Function expects {0} argument(s).
 			}
 
-			return Value.CreateUnknownFromDataType(_args[0].GetDataType(scope));
+			return Value.CreateUnknownFromDataType(_args[0].DataType);
 		}
 
 		private Value Read_count(RunScope scope)
@@ -221,7 +257,7 @@ namespace DkTools.CodeAnalysis.Nodes
 				ReportError(_funcNameSpan, CAError.CA0057, 1);	// Function expects {0} argument(s).
 			}
 
-			return Value.CreateUnknownFromDataType(_args[0].GetDataType(scope));
+			return Value.CreateUnknownFromDataType(_args[0].DataType);
 		}
 
 		private Value Read_min(RunScope scope)
@@ -231,7 +267,7 @@ namespace DkTools.CodeAnalysis.Nodes
 				ReportError(_funcNameSpan, CAError.CA0057, 1);	// Function expects {0} argument(s).
 			}
 
-			return Value.CreateUnknownFromDataType(_args[0].GetDataType(scope));
+			return Value.CreateUnknownFromDataType(_args[0].DataType);
 		}
 	}
 }

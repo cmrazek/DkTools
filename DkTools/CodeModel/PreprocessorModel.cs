@@ -127,14 +127,14 @@ namespace DkTools.CodeModel
 				else if (_code.ReadExact(';'))
 				{
 					var localPos = _source.GetFilePosition(nameSpan.Start);
-					var def = new VariableDefinition(name, localPos, dataType, false, arrayLength);
+					var def = new VariableDefinition(name, localPos, dataType, false, arrayLength, VariableType.Global);
 					_globalVars[name] = def;
 					AddGlobalDefinition(def);
 				}
 				else if (_code.ReadExact(','))
 				{
 					var localPos = _source.GetFilePosition(nameSpan.Start);
-					var def = new VariableDefinition(name, localPos, dataType, false, arrayLength);
+					var def = new VariableDefinition(name, localPos, dataType, false, arrayLength, VariableType.Global);
 					_globalVars[name] = def;
 					AddGlobalDefinition(def);
 					AfterRootDataType(dataType, dataTypeStartPos, privacy, isExtern);
@@ -513,7 +513,7 @@ namespace DkTools.CodeModel
 				var arrayLength = TryReadArrayDecl();
 
 				var localPos = _source.GetFilePosition(_code.TokenStartPostion);
-				var def = new VariableDefinition(_code.Text, localPos, dataType, true, arrayLength);
+				var def = new VariableDefinition(_code.Text, localPos, dataType, true, arrayLength, VariableType.Argument);
 				scope.AddDefinition(def);
 				if (!_visible || localPos.PrimaryFile)
 				{
@@ -545,7 +545,7 @@ namespace DkTools.CodeModel
 
 				var arrayLength = TryReadArrayDecl();
 
-				var def = new VariableDefinition(varName, localPos, dataType, false, arrayLength);
+				var def = new VariableDefinition(varName, localPos, dataType, false, arrayLength, VariableType.Local);
 				scope.AddDefinition(def);
 				if (!_visible || localPos.PrimaryFile)
 				{

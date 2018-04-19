@@ -14,7 +14,7 @@ namespace DkTools.CodeAnalysis.Nodes
 		private decimal _value;
 
 		public NumberNode(Statement stmt, Span span, string text)
-			: base(stmt, span, text)
+			: base(stmt, DataType.Numeric, span, text)
 		{
 			if (!decimal.TryParse(text, out _value))
 			{
@@ -27,11 +27,6 @@ namespace DkTools.CodeAnalysis.Nodes
 		public override Value ReadValue(RunScope scope)
 		{
 			return new NumberValue(DataType.Numeric, _value);
-		}
-
-		public override DataType GetDataType(RunScope scope)
-		{
-			return DataType.Numeric;
 		}
 	}
 }

@@ -11,7 +11,7 @@ namespace DkTools.CodeAnalysis.Nodes
 	class UnknownNode : TextNode
 	{
 		public UnknownNode(Statement stmt, Span span, string text)
-			: base(stmt, span, text)
+			: base(stmt, null, span, text)
 		{
 		}
 	}

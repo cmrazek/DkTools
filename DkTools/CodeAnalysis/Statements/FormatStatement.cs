@@ -37,7 +37,7 @@ namespace DkTools.CodeAnalysis.Statements
 						}
 						else errorSpan = code.Span;
 
-						_rowsExp = ExpressionNode.Read(p, "rows", "cols", "genpages", "outfile");
+						_rowsExp = ExpressionNode.Read(p, null, "rows", "cols", "genpages", "outfile");
 						if (_rowsExp != null) errorSpan = _rowsExp.Span;
 						break;
 					case "cols":
@@ -49,7 +49,7 @@ namespace DkTools.CodeAnalysis.Statements
 						}
 						else errorSpan = code.Span;
 
-						_colsExp = ExpressionNode.Read(p, "rows", "cols", "genpages", "outfile");
+						_colsExp = ExpressionNode.Read(p, null, "rows", "cols", "genpages", "outfile");
 						if (_colsExp != null) errorSpan = _colsExp.Span;
 						break;
 					case "genpages":
@@ -61,7 +61,7 @@ namespace DkTools.CodeAnalysis.Statements
 						}
 						else errorSpan = code.Span;
 
-						_genpagesExp = ExpressionNode.Read(p, "rows", "cols", "genpages", "outfile");
+						_genpagesExp = ExpressionNode.Read(p, null, "rows", "cols", "genpages", "outfile");
 						if (_genpagesExp != null) errorSpan = _genpagesExp.Span;
 						break;
 					case "outfile":
@@ -73,7 +73,7 @@ namespace DkTools.CodeAnalysis.Statements
 						}
 						else errorSpan = code.Span;
 
-						_outfileExp = ExpressionNode.Read(p, "rows", "cols", "genpages", "outfile");
+						_outfileExp = ExpressionNode.Read(p, null, "rows", "cols", "genpages", "outfile");
 						if (_outfileExp != null) errorSpan = _outfileExp.Span;
 						break;
 					default:

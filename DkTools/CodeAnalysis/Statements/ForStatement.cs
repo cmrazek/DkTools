@@ -27,7 +27,7 @@ namespace DkTools.CodeAnalysis.Statements
 			}
 			var errSpan = code.Span;
 
-			_initExp = ExpressionNode.Read(p, ")");
+			_initExp = ExpressionNode.Read(p, null, ")");
 			if (_initExp != null) errSpan = _initExp.Span;
 
 			if (!code.ReadExact(';'))
@@ -37,7 +37,7 @@ namespace DkTools.CodeAnalysis.Statements
 			}
 			errSpan = code.Span;
 
-			_condExp = ExpressionNode.Read(p, ")");
+			_condExp = ExpressionNode.Read(p, null, ")");
 			if (_condExp != null) errSpan = _condExp.Span;
 
 			if (!code.ReadExact(';'))
@@ -47,7 +47,7 @@ namespace DkTools.CodeAnalysis.Statements
 			}
 			errSpan = code.Span;
 
-			_incExp = ExpressionNode.Read(p, ")");
+			_incExp = ExpressionNode.Read(p, null, ")");
 			if (_incExp != null) errSpan = _incExp.Span;
 
 			if (!code.ReadExact(')'))
@@ -79,21 +79,21 @@ namespace DkTools.CodeAnalysis.Statements
 
 			if (_initExp != null)
 			{
-				var initScope = scope.Clone(dataTypeContext: DataType.Void);
+				var initScope = scope.Clone();
 				_initExp.ReadValue(initScope);
 				scope.Merge(initScope);
 			}
 
 			if (_condExp != null)
 			{
-				var condScope = scope.Clone(dataTypeContext: DataType.Int);
+				var condScope = scope.Clone();
 				_condExp.ReadValue(condScope);
 				scope.Merge(condScope);
 			}
 
 			if (_incExp != null)
 			{
-				var incScope = scope.Clone(dataTypeContext: DataType.Void);
+				var incScope = scope.Clone();
 				_incExp.ReadValue(incScope);
 				scope.Merge(incScope);
 			}

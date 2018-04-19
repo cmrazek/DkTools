@@ -303,6 +303,14 @@ namespace DkTools.CodeModel.Definitions
 			get { return Definition.EmptyArray; }
 		}
 
+		/// <summary>
+		/// If true, this definition may only be detected as a single word when the reference data type calls for this type of object.
+		/// </summary>
+		public virtual bool RequiresRefDataType
+		{
+			get { return false; }
+		}
+
 		public virtual FunctionSignature Signature
 		{
 			get { return null; }
@@ -316,6 +324,18 @@ namespace DkTools.CodeModel.Definitions
 		public virtual bool CanWrite
 		{
 			get { return false; }
+		}
+
+		/*
+		 * Selection Orders:
+		 * Column	10
+		 * Global	20
+		 * Argument	30
+		 * Local	40
+		 */
+		public virtual int SelectionOrder
+		{
+			get { return 0; }
 		}
 	}
 }

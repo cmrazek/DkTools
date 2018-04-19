@@ -14,7 +14,6 @@ namespace DkTools.CodeAnalysis
 		private Dictionary<string, Variable> _vars = new Dictionary<string, Variable>();
 		private FunctionDefinition _funcDef;
 		private int _funcOffset;
-		private DataType _dataTypeContext;
 
 		private TriState _returned;
 		private TriState _breaked;
@@ -31,18 +30,16 @@ namespace DkTools.CodeAnalysis
 			_funcOffset = funcOffset;
 		}
 
-		public RunScope Clone(DataType dataTypeContext = null, bool? canBreak = null, bool? canContinue = null)
+		public RunScope Clone(bool? canBreak = null, bool? canContinue = null)
 		{
 			var scope = new RunScope(_ca, _funcDef, _funcOffset)
 			{
 				_returned = _returned,
-				_dataTypeContext = _dataTypeContext,
 				_canBreak = _canBreak,
 				_canContinue = _canContinue,
 				_suppressInitializedCheck = _suppressInitializedCheck
 			};
 
-			if (dataTypeContext != null) scope._dataTypeContext = dataTypeContext;
 			if (canBreak.HasValue) scope._canBreak = canBreak.Value;
 			if (canContinue.HasValue) scope._canContinue = canContinue.Value;
 
@@ -188,11 +185,6 @@ namespace DkTools.CodeAnalysis
 		public int FuncOffset
 		{
 			get { return _funcOffset; }
-		}
-
-		public DataType DataTypeContext
-		{
-			get { return _dataTypeContext; }
 		}
 
 		public FunctionDefinition FunctionDefinition

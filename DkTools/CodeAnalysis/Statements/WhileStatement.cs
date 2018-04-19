@@ -18,7 +18,7 @@ namespace DkTools.CodeAnalysis.Statements
 		{
 			p = p.Clone(this);
 
-			_cond = ExpressionNode.Read(p);
+			_cond = ExpressionNode.Read(p, null);
 			if (_cond == null)
 			{
 				ReportError(keywordSpan, CAError.CA0018, "if");	// Expected condition after '{0}'.
@@ -45,7 +45,7 @@ namespace DkTools.CodeAnalysis.Statements
 
 			if (_cond != null)
 			{
-				var condScope = scope.Clone(dataTypeContext: DataType.Int);
+				var condScope = scope.Clone();
 				_cond.ReadValue(condScope);
 				scope.Merge(condScope, true, true);
 			}

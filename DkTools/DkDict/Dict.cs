@@ -62,6 +62,8 @@ namespace DkTools.DkDict
 				_code = new CodeParser(dictContent);
 				ReadDict();
 
+				_relinds.Add("physical", new RelInd(RelIndType.Index, "physical", 0, string.Empty, FilePosition.Empty));
+
 				_source = null;	// So it can be GC'd
 
 				elapsed = DateTime.Now.Subtract(curTime);

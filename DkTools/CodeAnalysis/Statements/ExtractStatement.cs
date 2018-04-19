@@ -55,7 +55,7 @@ namespace DkTools.CodeAnalysis.Statements
 					return;
 				}
 
-				var exp = ExpressionNode.Read(p, true);
+				var exp = ExpressionNode.Read(p, null, true);
 				if (exp == null)
 				{
 					ReportError(new Span(code.Position, code.Position + 1), CAError.CA0048);	// Expected extract column expression.

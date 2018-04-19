@@ -143,5 +143,13 @@ namespace DkTools.CodeModel.Definitions
 				return true;
 			}
 		}
+
+		public override int SelectionOrder
+		{
+			get
+			{
+				return 10;
+			}
+		}
 	}
 }

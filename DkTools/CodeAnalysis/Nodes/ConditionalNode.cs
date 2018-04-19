@@ -17,20 +17,20 @@ namespace DkTools.CodeAnalysis.Nodes
 		private Span _opSpan;
 
 		private ConditionalNode(Statement stmt, Span opSpan)
-			: base(stmt, opSpan)
+			: base(stmt, null, opSpan)
 		{
 			_opSpan = opSpan;
 		}
 
 		private static string[] s_stopStrings = new string[] { "?", ":" };
 
-		public static ConditionalNode Read(ReadParams p, Span opSpan, string[] stopStrings)
+		public static ConditionalNode Read(ReadParams p, DataType refDataType, Span opSpan, string[] stopStrings)
 		{
 			var code = p.Code;
 			var ret = new ConditionalNode(p.Statement, opSpan);
 
 			var condStopStrings = stopStrings == null || stopStrings.Length == 0 ? s_stopStrings : stopStrings.Concat(s_stopStrings).ToArray();
-			var trueExp = ExpressionNode.Read(p, condStopStrings);
+			var trueExp = ExpressionNode.Read(p, refDataType, condStopStrings);
 			if (trueExp == null)
 			{
 				p.Statement.ReportError(new Span(code.Position, code.Position + 1), CAError.CA0042);	// Expected value to follow conditional '?'.
@@ -44,7 +44,7 @@ namespace DkTools.CodeAnalysis.Nodes
 				return ret;
 			}
 
-			var falseExp = ExpressionNode.Read(p, condStopStrings);
+			var falseExp = ExpressionNode.Read(p, refDataType, condStopStrings);
 			if (falseExp == null)
 			{
 				p.Statement.ReportError(new Span(code.Position, code.Position + 1), CAError.CA0043);	// Expected value to follow conditional ':'.
@@ -54,9 +54,9 @@ namespace DkTools.CodeAnalysis.Nodes
 			if (code.ReadExact('?'))
 			{
 				// Stacked conditional
-				var group = new GroupNode(p.Statement);
+				var group = new GroupNode(p.Statement, null);
 				group.AddChild(falseExp);
-				group.AddChild(ConditionalNode.Read(p, code.Span, stopStrings));
+				group.AddChild(ConditionalNode.Read(p, refDataType, code.Span, stopStrings));
 				ret._falseExp = group;
 			}
 			else
@@ -79,7 +79,7 @@ namespace DkTools.CodeAnalysis.Nodes
 		{
 			if (Parent == null) throw new InvalidOperationException("Conditional operator must have a parent.");
 
-			var leftScope = scope.Clone(dataTypeContext: DataType.Int);
+			var leftScope = scope.Clone();
 			var leftNode = Parent.GetLeftSibling(leftScope, this);
 			scope.Merge(leftScope);
 			if (leftNode == null)

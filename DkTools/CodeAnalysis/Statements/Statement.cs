@@ -78,7 +78,7 @@ namespace DkTools.CodeAnalysis.Statements
 			{
 				if (p.Code.ReadExact(';')) return stmt;
 
-				var node = ExpressionNode.Read(p);
+				var node = ExpressionNode.Read(p, null);
 				if (node == null) break;
 				stmt.AddNode(node);
 			}

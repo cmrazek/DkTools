@@ -15,10 +15,12 @@ namespace DkTools.CodeAnalysis.Nodes
 		private GroupNode _parent;
 		private CodeModel.Span _span;
 		private ErrorTagging.ErrorType? _errorReported;
+		private DataType _dataType;
 
-		public Node(Statement stmt, Span span)
+		public Node(Statement stmt, DataType dataType, Span span)
 		{
 			_stmt = stmt;
+			_dataType = dataType;
 			_span = span;
 		}
 
@@ -65,9 +67,9 @@ namespace DkTools.CodeAnalysis.Nodes
 			return false;
 		}
 
-		public virtual DataType GetDataType(RunScope scope)
+		public virtual DataType DataType
 		{
-			return null;
+			get { return _dataType; }
 		}
 
 		public void ReportError(CAError errorCode, params object[] args)

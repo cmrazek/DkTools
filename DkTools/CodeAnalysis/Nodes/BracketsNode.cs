@@ -11,8 +11,17 @@ namespace DkTools.CodeAnalysis.Nodes
 	class BracketsNode : GroupNode
 	{
 		public BracketsNode(Statement stmt, Span openBracketSpan)
-			: base(stmt, openBracketSpan)
+			: base(stmt, null, openBracketSpan)
 		{
+		}
+
+		public override DataType DataType
+		{
+			get
+			{
+				if (NumChildren == 1) return FirstChild.DataType;
+				return base.DataType;
+			}
 		}
 	}
 }

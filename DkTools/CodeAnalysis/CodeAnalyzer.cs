@@ -61,8 +61,6 @@ namespace DkTools.CodeAnalysis
 
 		private void AnalyzeFunction(CodeModel.PreprocessorModel.LocalFunction func)
 		{
-			//_pane.WriteLine(string.Format("Analyzing function '{0}'", func.Definition.Name));	// TODO: remove
-
 			var body = _fullSource.Substring(func.StartPos, func.EndPos - func.StartPos);
 			if (body.EndsWith("}")) body = body.Substring(0, body.Length - 1);	// End pos is just after the closing brace
 

@@ -11,36 +11,27 @@ namespace DkTools.CodeAnalysis.Nodes
 {
 	class CastNode : GroupNode
 	{
-		private DataType _dataType;
-
 		public CastNode(Statement stmt, Span span, DataType dataType, ExpressionNode exp)
-			: base(stmt, span)
+			: base(stmt, dataType, span)
 		{
-			_dataType = dataType;
-
 			if (exp != null) AddChild(exp);
 		}
 
 		protected override void Execute(RunScope scope)
 		{
-			var castScope = scope.Clone(dataTypeContext: _dataType);
+			var castScope = scope.Clone();
 			base.Execute(castScope);
 			scope.Merge(castScope);
 		}
 
 		public override Value ReadValue(RunScope scope)
 		{
-			var castScope = scope.Clone(dataTypeContext: _dataType);
+			var castScope = scope.Clone();
 			var value = base.ReadValue(castScope);
-			var dataTypeValue = Value.CreateUnknownFromDataType(_dataType);
+			var dataTypeValue = Value.CreateUnknownFromDataType(DataType);
 			value = dataTypeValue.Convert(scope, Span, value);
 			scope.Merge(castScope);
 			return value;
-		}
-
-		public override DataType GetDataType(RunScope scope)
-		{
-			return _dataType;
 		}
 	}
 }

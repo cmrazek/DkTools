@@ -4,8 +4,10 @@ ________________________________________________________________________________
 Version 1.4.3 - (WIP):
 
 - Code Analysis - Fixed bug when accessing a substring [x,y] for an array of strings.
+- Code Analysis - Fixed enum parsing errors
 - Fixed bug in regions which would break a region if it was surrounded by comments.
 - Fixed null reference bug in casting
+- Fixed bug in preprocessor when passing string literals into macros.
 
 ____________________________________________________________________________________________________
 Version 1.4.2 - Feb 9, 2018:

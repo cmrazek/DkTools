@@ -20,7 +20,7 @@ namespace DkTools.CodeAnalysis.Statements
 			var retDataType = p.FuncDef.DataType;
 			if (retDataType != null && !retDataType.IsVoid)
 			{
-				_exp = ExpressionNode.Read(p);
+				_exp = ExpressionNode.Read(p, retDataType);
 				if (_exp == null)
 				{
 					ReportError(keywordSpan, CAError.CA0014);	// Expected value after 'return'.
@@ -36,7 +36,7 @@ namespace DkTools.CodeAnalysis.Statements
 
 			if (_exp != null)
 			{
-				var returnScope = scope.Clone(dataTypeContext: scope.FunctionDefinition.DataType);
+				var returnScope = scope.Clone();
 				_exp.ReadValue(returnScope);
 				scope.Merge(returnScope);
 			}

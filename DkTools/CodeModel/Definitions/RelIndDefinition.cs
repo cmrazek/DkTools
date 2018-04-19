@@ -108,18 +108,17 @@ namespace DkTools.CodeModel.Definitions
 
 		public override bool CanRead
 		{
-			get
-			{
-				return true;
-			}
+			get { return true; }
 		}
 
 		public override DataType DataType
 		{
-			get
-			{
-				return DataType.IndRel;
-			}
+			get { return DataType.IndRel; }
+		}
+
+		public override bool RequiresRefDataType
+		{
+			get { return true; }
 		}
 	}
 }

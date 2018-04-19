@@ -14,8 +14,8 @@ namespace DkTools.CodeAnalysis.Nodes
 	{
 		private List<Node> _nodes = new List<Node>();
 
-		public GroupNode(Statement stmt, Span? span = null)
-			: base(stmt, span.HasValue ? span.Value : Span.Empty)
+		public GroupNode(Statement stmt, DataType dataType, Span? span = null)
+			: base(stmt, dataType, span.HasValue ? span.Value : Span.Empty)
 		{
 		}
 
@@ -190,14 +190,6 @@ namespace DkTools.CodeAnalysis.Nodes
 			return null;
 		}
 
-		public override DataType GetDataType(RunScope scope)
-		{
-			Execute(scope);
-			if (_nodes.Count == 1) return _nodes[0].GetDataType(scope);
-
-			return base.GetDataType(scope);
-		}
-
 		public override Value ReadValue(RunScope scope)
 		{
 			Execute(scope);
@@ -239,6 +231,15 @@ namespace DkTools.CodeAnalysis.Nodes
 		public Node LastChild
 		{
 			get { return _nodes.Count > 0 ? _nodes[_nodes.Count - 1] : null; }
+		}
+
+		public override DataType DataType
+		{
+			get
+			{
+				if (_nodes.Count == 1) return _nodes[0].DataType;
+				return null;
+			}
 		}
 	}
 }

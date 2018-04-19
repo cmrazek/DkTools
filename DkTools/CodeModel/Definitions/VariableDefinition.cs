@@ -7,14 +7,22 @@ using DkTools.CodeModel.Tokens;
 
 namespace DkTools.CodeModel.Definitions
 {
+	enum VariableType
+	{
+		Global,
+		Argument,
+		Local
+	}
+
 	internal class VariableDefinition : Definition
 	{
 		private DataType _dataType;
 		private bool _arg;
 		private int[] _arrayLengths;
 		private string _declText;
+		private VariableType _varType;
 
-		public VariableDefinition(string name, FilePosition filePos, DataType dataType, bool arg, int[] arrayLengths)
+		public VariableDefinition(string name, FilePosition filePos, DataType dataType, bool arg, int[] arrayLengths, VariableType varType)
 			: base(name, filePos, null)
 		{
 #if DEBUG
@@ -23,6 +31,7 @@ namespace DkTools.CodeModel.Definitions
 			_dataType = dataType;
 			_arg = arg;
 			_arrayLengths = arrayLengths;
+			_varType = varType;
 
 			// Build the declaration text
 			var sb = new StringBuilder();
@@ -169,6 +178,24 @@ namespace DkTools.CodeModel.Definitions
 		public int[] ArrayLengths
 		{
 			get { return _arrayLengths; }
+		}
+
+		public override int SelectionOrder
+		{
+			get
+			{
+				switch (_varType)
+				{
+					case VariableType.Global:
+						return 20;
+					case VariableType.Argument:
+						return 30;
+					case VariableType.Local:
+						return 40;
+					default:
+						return 0;
+				}
+			}
 		}
 	}
 }

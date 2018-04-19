@@ -23,7 +23,7 @@ namespace DkTools.CodeAnalysis.Statements
 
 			while (!code.EndOfFile)
 			{
-				var condition = ExpressionNode.Read(p);
+				var condition = ExpressionNode.Read(p, null);
 				if (condition == null)
 				{
 					ReportError(stmtSpan, CAError.CA0018, "if");	// Expected condition after '{0}'.
@@ -86,14 +86,14 @@ namespace DkTools.CodeAnalysis.Statements
 			{
 				if (i < _conditions.Count)
 				{
-					var condScope = scope.Clone(dataTypeContext: DataType.Int);
+					var condScope = scope.Clone();
 					_conditions[i].ReadValue(condScope);
 					scope.Merge(condScope, true, true);
 				}
 
 				if (i < _trueBodies.Count)
 				{
-					var trueScope = scope.Clone(dataTypeContext: DataType.Void);
+					var trueScope = scope.Clone();
 					foreach (var stmt in _trueBodies[i])
 					{
 						stmt.Execute(trueScope);
@@ -102,7 +102,7 @@ namespace DkTools.CodeAnalysis.Statements
 				}
 			}
 
-			var falseScope = scope.Clone(dataTypeContext: DataType.Void);
+			var falseScope = scope.Clone();
 			if (_falseBody != null)
 			{
 				foreach (var stmt in _falseBody)

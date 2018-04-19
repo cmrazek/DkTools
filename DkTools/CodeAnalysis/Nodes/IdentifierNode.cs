@@ -19,10 +19,10 @@ namespace DkTools.CodeAnalysis.Nodes
 
 		public IdentifierNode(Statement stmt, Span span, string name, Definition def, IEnumerable<ExpressionNode> arrayAccessExps = null,
 			IEnumerable<ExpressionNode> subscriptAccessExps = null)
-			: base(stmt, span, name)
+			: base(stmt, def.DataType, span, name)
 		{
 			_def = def;
-			_dataType = def != null ? def.DataType : null;
+			_dataType = def.DataType;
 
 			if (arrayAccessExps != null && arrayAccessExps.Any()) _arrayAccessExps = arrayAccessExps.ToArray();
 			if (subscriptAccessExps != null && subscriptAccessExps.Any())
@@ -33,49 +33,46 @@ namespace DkTools.CodeAnalysis.Nodes
 			}
 		}
 
-		private bool Resolve(RunScope scope)
-		{
-			if (_def != null) return true;
+		// TODO: remove
+		//private bool Resolve(RunScope scope)
+		//{
+		//	if (_def != null) return true;
 
-			if (scope.DataTypeContext != null)
-			{
-				if (scope.DataTypeContext.HasEnumOptions && scope.DataTypeContext.IsValidEnumOption(Text))
-				{
-					_def = new EnumOptionDefinition(Text, scope.DataTypeContext);
-					_dataType = scope.DataTypeContext;
-					return true;
-				}
-			}
+		//	if (scope.DataTypeContext != null)
+		//	{
+		//		if (scope.DataTypeContext.HasEnumOptions && scope.DataTypeContext.IsValidEnumOption(Text))
+		//		{
+		//			_def = new EnumOptionDefinition(Text, scope.DataTypeContext);
+		//			_dataType = scope.DataTypeContext;
+		//			return true;
+		//		}
+		//	}
 
-			var def = (from d in Statement.CodeAnalyzer.PreprocessorModel.DefinitionProvider.GetAny(Span.Start + scope.FuncOffset, Text)
-					   where !d.RequiresChild && !d.ArgumentsRequired
-					   select d).FirstOrDefault();
-			if (def != null)
-			{
-				_def = def;
-				_dataType = def.DataType;
-				return true;
-			}
+		//	var def = (from d in Statement.CodeAnalyzer.PreprocessorModel.DefinitionProvider.GetAny(Span.Start + scope.FuncOffset, Text)
+		//			   where !d.RequiresChild && !d.ArgumentsRequired
+		//			   select d).FirstOrDefault();
+		//	if (def != null)
+		//	{
+		//		_def = def;
+		//		_dataType = def.DataType;
+		//		return true;
+		//	}
 
-			return false;
-		}
+		//	return false;
+		//}
 
 		public override bool CanAssignValue(RunScope scope)
 		{
-			if (_def == null && !Resolve(scope)) return false;
-
 			return _def.CanWrite;
 		}
 
 		public override Value ReadValue(RunScope scope)
 		{
-			if (_def == null && !Resolve(scope)) return base.ReadValue(scope);
-
 			if (_arrayAccessExps != null)
 			{
 				foreach (var exp in _arrayAccessExps)
 				{
-					var accessScope = scope.Clone(dataTypeContext: DataType.Int);
+					var accessScope = scope.Clone();
 					exp.ReadValue(accessScope);
 					scope.Merge(accessScope);
 				}
@@ -85,7 +82,7 @@ namespace DkTools.CodeAnalysis.Nodes
 			{
 				foreach (var exp in _subscriptAccessExps)
 				{
-					var accessScope = scope.Clone(dataTypeContext: DataType.Int);
+					var accessScope = scope.Clone();
 					exp.ReadValue(accessScope);
 					scope.Merge(accessScope);
 				}
@@ -109,19 +106,11 @@ namespace DkTools.CodeAnalysis.Nodes
 			}
 			else if (_def is TableDefinition || _def is ExtractTableDefinition)
 			{
-				if (scope.DataTypeContext != null && scope.DataTypeContext.ValueType == ValType.Table)
-				{
-					return new TableValue(_def.DataType, _def.Name);
-				}
+				return new TableValue(_def.DataType, _def.Name);
 			}
 			else if (_def is RelIndDefinition)
 			{
-				if (scope.DataTypeContext != null &&
-					(scope.DataTypeContext.ValueType == ValType.IndRel ||
-						scope.DataTypeContext.ValueType == ValType.Table))
-				{
-					return new IndRelValue(_def.DataType, _def.Name);
-				}
+				return new IndRelValue(_def.DataType, _def.Name);
 			}
 			else if (_def.CanRead && _def.DataType != null)
 			{
@@ -133,17 +122,11 @@ namespace DkTools.CodeAnalysis.Nodes
 
 		public override void WriteValue(RunScope scope, Value value)
 		{
-			if (_def == null && !Resolve(scope))
-			{
-				base.WriteValue(scope, value);
-				return;
-			}
-
 			if (_arrayAccessExps != null)
 			{
 				foreach (var exp in _arrayAccessExps)
 				{
-					var accessScope = scope.Clone(dataTypeContext: DataType.Int);
+					var accessScope = scope.Clone();
 					exp.ReadValue(accessScope);
 					scope.Merge(accessScope);
 				}
@@ -153,7 +136,7 @@ namespace DkTools.CodeAnalysis.Nodes
 			{
 				foreach (var exp in _subscriptAccessExps)
 				{
-					var accessScope = scope.Clone(dataTypeContext: DataType.Int);
+					var accessScope = scope.Clone();
 					exp.ReadValue(accessScope);
 					scope.Merge(accessScope);
 				}
@@ -182,15 +165,12 @@ namespace DkTools.CodeAnalysis.Nodes
 
 		public Definition GetDefinition(RunScope scope)
 		{
-			if (_def == null && !Resolve(scope)) return null;
-
 			return _def;
 		}
 
-		public override DataType GetDataType(RunScope scope)
+		public override DataType DataType
 		{
-			if (_def == null && !Resolve(scope)) return base.GetDataType(scope);
-			return _dataType;
+			get { return _def.DataType; }
 		}
 	}
 }

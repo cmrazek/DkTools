@@ -12,18 +12,13 @@ namespace DkTools.CodeAnalysis.Nodes
 	class StringLiteralNode : TextNode
 	{
 		public StringLiteralNode(Statement stmt, Span span, string text)
-			: base(stmt, span, text)
+			: base(stmt, DataType.String, span, text)
 		{
 		}
 
 		public override Value ReadValue(RunScope scope)
 		{
 			return new StringValue(DataType.String, CodeParser.StringLiteralToString(Text));
-		}
-
-		public override DataType GetDataType(RunScope scope)
-		{
-			return DataType.String;
 		}
 	}
 }

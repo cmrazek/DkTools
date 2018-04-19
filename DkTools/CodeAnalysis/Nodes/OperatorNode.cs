@@ -32,7 +32,7 @@ namespace DkTools.CodeAnalysis.Nodes
 		private SpecialOperator? _special;
 
 		public OperatorNode(Statement stmt, Span span, string text, SpecialOperator? special)
-			: base(stmt, span, text)
+			: base(stmt, null, span, text)
 		{
 			_special = special;
 
@@ -147,7 +147,7 @@ namespace DkTools.CodeAnalysis.Nodes
 			if (leftNode != null && rightNode != null)
 			{
 				var leftValue = leftNode.ReadValue(scope);
-				var rightScope = scope.Clone(dataTypeContext: leftValue.DataType);
+				var rightScope = scope.Clone();
 				var rightValue = rightNode.ReadValue(rightScope);
 				scope.Merge(rightScope);
 				if (leftValue.IsVoid) leftNode.ReportError(leftNode.Span, CAError.CA0007, Text);		// Operator '{0}' expects value on left.
@@ -208,7 +208,7 @@ namespace DkTools.CodeAnalysis.Nodes
 			if (leftNode != null && rightNode != null)
 			{
 				var leftValue = leftNode.ReadValue(scope);
-				var rightScope = scope.Clone(dataTypeContext: leftValue.DataType);
+				var rightScope = scope.Clone();
 				var rightValue = rightNode.ReadValue(rightScope);
 				scope.Merge(rightScope);
 				if (leftValue.IsVoid) leftNode.ReportError(leftNode.Span, CAError.CA0007, Text);		// Operator '{0}' expects value on left.
@@ -276,8 +276,6 @@ namespace DkTools.CodeAnalysis.Nodes
 			else if (rightNode == null) ReportError(Span, CAError.CA0008, Text);	// Operator '{0}' expects value on right.
 			if (leftNode != null && rightNode != null)
 			{
-				var leftDataType = leftNode.GetDataType(scope);
-				
 				Value leftValue = null;
 				if (Text != "=")
 				{
@@ -286,7 +284,7 @@ namespace DkTools.CodeAnalysis.Nodes
 					scope.Merge(leftScope);
 				}
 
-				var rightScope = scope.Clone(dataTypeContext: leftDataType);
+				var rightScope = scope.Clone();
 				var rightValue = rightNode.ReadValue(rightScope);
 				scope.Merge(rightScope);
 

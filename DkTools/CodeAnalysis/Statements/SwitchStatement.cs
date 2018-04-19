@@ -30,7 +30,7 @@ namespace DkTools.CodeAnalysis.Statements
 			p = p.Clone(this);
 			var code = p.Code;
 
-			_condExp = ExpressionNode.Read(p);
+			_condExp = ExpressionNode.Read(p, null);
 			if (_condExp == null)
 			{
 				ReportError(keywordSpan, CAError.CA0018, "switch");	// Expected condition after '{0}'.
@@ -74,7 +74,7 @@ namespace DkTools.CodeAnalysis.Statements
 					});
 					insideDefault = false;
 
-					var exp = ExpressionNode.Read(p, ":");
+					var exp = ExpressionNode.Read(p, _condExp.DataType, ":");
 					if (exp == null) ReportError(errorSpan, CAError.CA0028);	// Expected case value.
 					else
 					{
@@ -134,7 +134,7 @@ namespace DkTools.CodeAnalysis.Statements
 			{
 				if (cas.exp != null)
 				{
-					var valueScope = scope.Clone(dataTypeContext: dataType);
+					var valueScope = scope.Clone();
 					var itemValue = cas.exp.ReadValue(valueScope);
 
 					if (enumOptions != null)

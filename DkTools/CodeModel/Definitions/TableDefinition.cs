@@ -145,5 +145,10 @@ namespace DkTools.CodeModel.Definitions
 				return DataType.Table;
 			}
 		}
+
+		public override bool RequiresRefDataType
+		{
+			get { return true; }
+		}
 	}
 }

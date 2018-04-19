@@ -12,7 +12,7 @@ namespace DkTools.CodeAnalysis.Nodes
 	class ExpressionNode : GroupNode
 	{
 		public ExpressionNode(Statement stmt)
-			: base(stmt)
+			: base(stmt, null)
 		{
 		}
 
@@ -24,16 +24,17 @@ namespace DkTools.CodeAnalysis.Nodes
 			}
 		}
 
-		public static ExpressionNode Read(ReadParams p, params string[] stopStrings)
+		public static ExpressionNode Read(ReadParams p, DataType refDataType, params string[] stopStrings)
 		{
-			return Read(p, false, stopStrings);
+			return Read(p, refDataType, false, stopStrings);
 		}
 
-		public static ExpressionNode Read(ReadParams p, bool stayOnSameLine, params string[] stopStrings)
+		public static ExpressionNode Read(ReadParams p, DataType refDataType, bool stayOnSameLine, params string[] stopStrings)
 		{
 			ExpressionNode exp = null;
 			var code = p.Code;
 			var lastPos = code.Position;
+			var parseDataType = refDataType;
 
 			while (!code.EndOfFile)
 			{
@@ -90,7 +91,7 @@ namespace DkTools.CodeAnalysis.Nodes
 						}
 						break;
 					case CodeType.Word:
-						exp.AddChild(exp.ReadWord(p));
+						exp.AddChild(exp.ReadWord(p, parseDataType));
 						break;
 					case CodeType.Operator:
 						switch (code.Text)
@@ -135,12 +136,12 @@ namespace DkTools.CodeAnalysis.Nodes
 									{
 										// This is a cast
 										var span = new Span(startPos, code.Span.End);
-										exp.AddChild(new CastNode(p.Statement, span, dataType, ExpressionNode.Read(p, stayOnSameLine, stopStrings)));
+										exp.AddChild(new CastNode(p.Statement, span, dataType, ExpressionNode.Read(p, dataType, stayOnSameLine, stopStrings)));
 									}
 									else
 									{
 										code.Position = resumePos;
-										exp.AddChild(exp.ReadNestable(p, code.Span, opText, null));
+										exp.AddChild(exp.ReadNestable(p, parseDataType, code.Span, opText, null));
 									}
 								}
 								break;
@@ -155,7 +156,30 @@ namespace DkTools.CodeAnalysis.Nodes
 								}
 								break;
 							case "?":
-								exp.AddChild(ConditionalNode.Read(p, code.Span, stopStrings));
+								parseDataType = refDataType;
+								exp.AddChild(ConditionalNode.Read(p, parseDataType, code.Span, stopStrings));
+								break;
+							case "=":
+								{
+									var rDataType = exp.NumChildren > 0 ? exp.LastChild.DataType : null;
+									exp.AddChild(new OperatorNode(p.Statement, code.Span, code.Text, null));
+									exp.AddChild(ExpressionNode.Read(p, rDataType, stopStrings));
+								}
+								break;
+							case "==":
+							case "!=":
+							case "<":
+							case "<=":
+							case ">":
+							case ">=":
+								{
+									if (exp.NumChildren > 0)
+									{
+										var dt = exp.LastChild.DataType;
+										if (dt != null) parseDataType = dt;
+									}
+									exp.AddChild(new OperatorNode(p.Statement, code.Span, code.Text, null));
+								}
 								break;
 							default:
 								exp.AddChild(new OperatorNode(p.Statement, code.Span, code.Text, null));
@@ -172,7 +196,7 @@ namespace DkTools.CodeAnalysis.Nodes
 			return exp;
 		}
 
-		private Node ReadWord(ReadParams p)
+		private Node ReadWord(ReadParams p, DataType refDataType)
 		{
 			var code = p.Code;
 			var word = code.Text;
@@ -257,7 +281,7 @@ namespace DkTools.CodeAnalysis.Nodes
 					lastArrayStartPos = code.Position;
 					if (code.ReadExact('['))
 					{
-						var exp1 = ExpressionNode.Read(p, "]", ",");
+						var exp1 = ExpressionNode.Read(p, null, "]", ",");
 						if (exp1 != null)
 						{
 							if (code.ReadExact(']'))
@@ -267,7 +291,7 @@ namespace DkTools.CodeAnalysis.Nodes
 							}
 							else if (code.ReadExact(','))
 							{
-								var exp2 = ExpressionNode.Read(p, "]");
+								var exp2 = ExpressionNode.Read(p, null, "]");
 								if (exp2 != null)
 								{
 									if (code.ReadExact(']'))
@@ -345,11 +369,50 @@ namespace DkTools.CodeAnalysis.Nodes
 				}
 			}
 
+			if (refDataType != null)
+			{
+				if (refDataType.HasCompletionOptions)
+				{
+					var enumOptDef = refDataType.GetEnumOption(word);
+					if (enumOptDef != null) return new IdentifierNode(p.Statement, wordSpan, word, enumOptDef);
+				}
+
+				switch (refDataType.ValueType)
+				{
+					case ValType.Table:
+						{
+							var table = DkDict.Dict.GetTable(word);
+							if (table != null) return new IdentifierNode(p.Statement, wordSpan, word, table.Definition);
+
+							var indrel = DkDict.Dict.GetRelInd(word);
+							if (indrel != null) return new IdentifierNode(p.Statement, wordSpan, word, indrel.Definition);
+						}
+						break;
+					case ValType.IndRel:
+						{
+							var indrel = DkDict.Dict.GetRelInd(word);
+							if (indrel != null) return new IdentifierNode(p.Statement, wordSpan, word, indrel.Definition);
+						}
+						break;
+				}
+			}
+
+			var wordDefs = (from d in p.CodeAnalyzer.PreprocessorModel.DefinitionProvider.GetAny(code.Position + p.FuncOffset, word)
+							where !d.RequiresChild && !d.ArgumentsRequired && !d.RequiresRefDataType
+							orderby d.SelectionOrder descending
+							select d).ToArray();
+			if (wordDefs.Length > 0)
+			{
+				return new IdentifierNode(p.Statement, wordSpan, word, wordDefs[0]);
+			}
+
+			return new UnknownNode(p.Statement, wordSpan, word);
+
 			// Single word. Don't attempt to find the definition now because it could be an enum option.
-			return new IdentifierNode(p.Statement, wordSpan, word, null);
+			//return new IdentifierNode(p.Statement, wordSpan, word, null);
 		}
 
-		private Node ReadNestable(ReadParams p, Span openSpan, string text, string[] stopStrings)
+		private Node ReadNestable(ReadParams p, DataType refDataType, Span openSpan, string text, string[] stopStrings)
 		{
 			GroupNode groupNode;
 			string endText;
@@ -374,7 +437,7 @@ namespace DkTools.CodeAnalysis.Nodes
 					break;
 				}
 
-				var exp = ExpressionNode.Read(p, stopStrings);
+				var exp = ExpressionNode.Read(p, refDataType, stopStrings);
 				if (exp == null) break;
 				groupNode.AddChild(exp);
 			}
@@ -394,12 +457,12 @@ namespace DkTools.CodeAnalysis.Nodes
 
 			if (code.ReadExact('['))
 			{
-				var exp1 = ExpressionNode.Read(p, "]", ",");
+				var exp1 = ExpressionNode.Read(p, null, "]", ",");
 				if (exp1 != null)
 				{
 					if (code.ReadExact(','))
 					{
-						var exp2 = ExpressionNode.Read(p, "]", ",");
+						var exp2 = ExpressionNode.Read(p, null, "]", ",");
 						if (exp2 != null)
 						{
 							if (code.ReadExact(']'))

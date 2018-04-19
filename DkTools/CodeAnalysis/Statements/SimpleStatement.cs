@@ -14,7 +14,7 @@ namespace DkTools.CodeAnalysis.Statements
 		public SimpleStatement(CodeAnalyzer ca)
 			: base(ca)
 		{
-			_root = new GroupNode(this);
+			_root = new GroupNode(this, null);
 		}
 
 		public int NumChildren

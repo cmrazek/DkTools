@@ -14,7 +14,7 @@ namespace DkTools.CodeAnalysis.Nodes
 		private char? _char;
 
 		public CharLiteralNode(Statement stmt, Span span, string text)
-			: base(stmt, span, text)
+			: base(stmt, DataType.Char, span, text)
 		{
 			if (text != null && text.Length >= 1) _char = text[0];
 		}
@@ -22,11 +22,6 @@ namespace DkTools.CodeAnalysis.Nodes
 		public override Value ReadValue(RunScope scope)
 		{
 			return new CharValue(DataType.Char, _char);
-		}
-
-		public override DataType GetDataType(RunScope scope)
-		{
-			return DataType.Char;
 		}
 	}
 }

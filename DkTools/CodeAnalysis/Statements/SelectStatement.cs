@@ -91,7 +91,7 @@ namespace DkTools.CodeAnalysis.Statements
 				#region where
 				else if (code.ReadExact("where"))
 				{
-					_whereExp = ExpressionNode.Read(p, "from", "where", "order");
+					_whereExp = ExpressionNode.Read(p, null, "from", "where", "order");
 
 					if (code.ReadExact(';'))
 					{

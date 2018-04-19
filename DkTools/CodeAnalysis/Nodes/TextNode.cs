@@ -12,8 +12,8 @@ namespace DkTools.CodeAnalysis.Nodes
 	{
 		private string _text;
 
-		public TextNode(Statement stmt, Span span, string text)
-			: base(stmt, span)
+		public TextNode(Statement stmt, DataType dataType, Span span, string text)
+			: base(stmt, dataType, span)
 		{
 			_text = text;
 		}

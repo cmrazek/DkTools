@@ -16,7 +16,7 @@ namespace DkTools.CodeAnalysis.Nodes
 		private int _prec;
 
 		public ResultNode(Statement stmt, Span span, Value value, ResultSource source, ErrorTagging.ErrorType? errorReported)
-			: base(stmt, span)
+			: base(stmt, value.DataType, span)
 		{
 			_value = value;
 			_source = source;
@@ -28,11 +28,6 @@ namespace DkTools.CodeAnalysis.Nodes
 		public override Value ReadValue(RunScope scope)
 		{
 			return _value;
-		}
-
-		public override DataType GetDataType(RunScope scope)
-		{
-			return _value.DataType;
 		}
 
 		public ResultSource Source
