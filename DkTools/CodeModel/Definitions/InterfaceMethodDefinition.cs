@@ -113,5 +113,13 @@ namespace DkTools.CodeModel.Definitions
 				return _returnDataType != null && !_returnDataType.IsVoid;
 			}
 		}
+
+		public override bool RequiresParent
+		{
+			get
+			{
+				return true;
+			}
+		}
 	}
 }

@@ -170,5 +170,13 @@ namespace DkTools.CodeModel.Definitions
 				return _sig.ReturnDataType != null && !_sig.ReturnDataType.IsVoid;
 			}
 		}
+
+		public override bool RequiresParent
+		{
+			get
+			{
+				return !string.IsNullOrEmpty(_sig.ClassName);
+			}
+		}
 	}
 }

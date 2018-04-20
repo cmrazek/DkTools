@@ -94,7 +94,7 @@ namespace DkTools.CodeAnalysis.Nodes
 			}
 
 			var funcDefs = (from d in p.Statement.CodeAnalyzer.PreprocessorModel.DefinitionProvider.GetAny(funcNameSpan.Start, funcName)
-							where d.ArgumentsRequired
+							where d.ArgumentsRequired && !d.RequiresParent
 							select d).ToArray();
 			foreach (var def in funcDefs)
 			{
@@ -217,7 +217,7 @@ namespace DkTools.CodeAnalysis.Nodes
 				ReportError(_funcNameSpan, CAError.CA0057, 1);	// Function expects {0} argument(s).
 			}
 
-			return Value.CreateUnknownFromDataType(_args[0].DataType);
+			return Value.CreateUnknownFromDataType(_args[0].ReadValue(scope).DataType);
 		}
 
 		private Value Read_abs(RunScope scope)
@@ -227,7 +227,8 @@ namespace DkTools.CodeAnalysis.Nodes
 				ReportError(_funcNameSpan, CAError.CA0057, 1);	// Function expects {0} argument(s).
 			}
 
-			return Value.CreateUnknownFromDataType(_args[0].DataType);
+			return _args[0].ReadValue(scope);
+			//return Value.CreateUnknownFromDataType(_args[0].DataType);
 		}
 
 		private Value Read_count(RunScope scope)
@@ -257,7 +258,7 @@ namespace DkTools.CodeAnalysis.Nodes
 				ReportError(_funcNameSpan, CAError.CA0057, 1);	// Function expects {0} argument(s).
 			}
 
-			return Value.CreateUnknownFromDataType(_args[0].DataType);
+			return Value.CreateUnknownFromDataType(_args[0].ReadValue(scope).DataType);
 		}
 
 		private Value Read_min(RunScope scope)
@@ -267,7 +268,7 @@ namespace DkTools.CodeAnalysis.Nodes
 				ReportError(_funcNameSpan, CAError.CA0057, 1);	// Function expects {0} argument(s).
 			}
 
-			return Value.CreateUnknownFromDataType(_args[0].DataType);
+			return Value.CreateUnknownFromDataType(_args[0].ReadValue(scope).DataType);
 		}
 	}
 }

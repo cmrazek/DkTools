@@ -151,5 +151,13 @@ namespace DkTools.CodeModel.Definitions
 				return 10;
 			}
 		}
+
+		public override bool RequiresParent
+		{
+			get
+			{
+				return true;
+			}
+		}
 	}
 }

@@ -293,6 +293,11 @@ namespace DkTools.CodeModel.Definitions
 			get { return false; }
 		}
 
+		public virtual bool RequiresParent
+		{
+			get { return false; }
+		}
+
 		public virtual IEnumerable<Definition> GetChildDefinitions(string name)
 		{
 			return Definition.EmptyArray;
