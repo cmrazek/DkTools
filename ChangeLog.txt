@@ -1,7 +1,7 @@
 DkTools ChangeLog
 
 ____________________________________________________________________________________________________
-Version 1.4.3 - (WIP):
+Version 1.4.3 - Apr 23, 2018:
 
 - Code Analysis - Fixed bug when accessing a substring [x,y] for an array of strings.
 - Code Analysis - Fixed enum parsing errors
