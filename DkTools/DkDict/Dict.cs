@@ -62,7 +62,7 @@ namespace DkTools.DkDict
 				_code = new CodeParser(dictContent);
 				ReadDict();
 
-				_relinds.Add("physical", new RelInd(RelIndType.Index, "physical", 0, string.Empty, FilePosition.Empty));
+				if (!_relinds.ContainsKey("physical")) _relinds.Add("physical", new RelInd(RelIndType.Index, "physical", 0, string.Empty, FilePosition.Empty));
 
 				_source = null;	// So it can be GC'd
 

@@ -550,8 +550,9 @@ namespace DkTools.CodeModel
 			parms.resolvingMacros = true;
 
 			var lastText = source;
+			var counter = 32;	// To prevent infinite loop with recursive define
 
-			while (Preprocess(parms).DocumentAltered)
+			while (Preprocess(parms).DocumentAltered && counter <= 32)
 			{
 				var newText = writer.Text;
 				if (newText == lastText) break;
@@ -561,6 +562,8 @@ namespace DkTools.CodeModel
 				parms.args = null;	// Only apply the arguments to the first round
 				parms.reader = new StringPreprocessorReader(newText);
 				parms.writer = writer = new StringPreprocessorWriter();
+
+				counter++;
 			}
 			return writer.Text;
 		}

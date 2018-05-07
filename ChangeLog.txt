@@ -1,6 +1,11 @@
 DkTools ChangeLog
 
 ____________________________________________________________________________________________________
+Version 1.4.4 - WIP:
+
+- Fixed infinite loop in preprocessor when using recursive #defines with missing definitions.
+
+____________________________________________________________________________________________________
 Version 1.4.3 - Apr 23, 2018:
 
 - Code Analysis - Fixed bug when accessing a substring [x,y] for an array of strings.
