@@ -253,6 +253,11 @@ namespace DkTools.CodeAnalysis
 
 			return source.Substring(lineStart, lineEnd - lineStart);
 		}
+
+		public CodeModel.CodeModel CodeModel
+		{
+			get { return _codeModel; }
+		}
 	}
 
 	class CAException : Exception

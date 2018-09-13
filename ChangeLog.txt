@@ -4,6 +4,8 @@ ________________________________________________________________________________
 Version 1.4.4 - WIP:
 
 - Fixed infinite loop in preprocessor when using recursive #defines with missing definitions.
+- Class names are no longer case sensitive.
+- Code Analysis - Fixed class methods not detected when used in the same class file.
 
 ____________________________________________________________________________________________________
 Version 1.4.3 - Apr 23, 2018:

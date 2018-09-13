@@ -122,6 +122,16 @@ namespace DkTools
 			return str.Substring(0, index);
 		}
 
+		public static bool HasUpper(this string str)
+		{
+			if (str == null) return false;
+			foreach (var ch in str)
+			{
+				if (char.IsUpper(ch)) return true;
+			}
+			return false;
+		}
+
 		public static void ShowError(this System.Windows.Controls.UserControl ctrl, Exception ex)
 		{
 			Log.WriteEx(ex);

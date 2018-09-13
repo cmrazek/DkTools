@@ -171,11 +171,19 @@ namespace DkTools.CodeModel.Definitions
 			}
 		}
 
-		public override bool RequiresParent
+		public override bool RequiresParent(string curClassName)
 		{
-			get
+			if (string.IsNullOrEmpty(_sig.ClassName)) return false;
+
+			if (_sig.ClassName.Equals(curClassName, StringComparison.OrdinalIgnoreCase))
 			{
-				return !string.IsNullOrEmpty(_sig.ClassName);
+				// Processing the same class file, so can call methods without specifying the class name first
+				return false;
+			}
+			else
+			{
+				// In a different class file, so class name is required
+				return true;
 			}
 		}
 	}

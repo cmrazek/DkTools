@@ -86,5 +86,10 @@ namespace DkTools.CodeModel.Definitions
 		{
 			get { return false; }
 		}
+
+		public override bool CaseSensitive
+		{
+			get { return false; }
+		}
 	}
 }

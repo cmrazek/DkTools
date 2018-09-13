@@ -94,7 +94,7 @@ namespace DkTools.CodeAnalysis.Nodes
 			}
 
 			var funcDefs = (from d in p.Statement.CodeAnalyzer.PreprocessorModel.DefinitionProvider.GetAny(funcNameSpan.Start, funcName)
-							where d.ArgumentsRequired && !d.RequiresParent
+							where d.ArgumentsRequired && !d.RequiresParent(p.CodeAnalyzer.CodeModel.ClassName)
 							select d).ToArray();
 			foreach (var def in funcDefs)
 			{

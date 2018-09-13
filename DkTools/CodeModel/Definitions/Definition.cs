@@ -293,9 +293,9 @@ namespace DkTools.CodeModel.Definitions
 			get { return false; }
 		}
 
-		public virtual bool RequiresParent
+		public virtual bool RequiresParent(string curClassName)
 		{
-			get { return false; }
+			return false;
 		}
 
 		public virtual IEnumerable<Definition> GetChildDefinitions(string name)
@@ -341,6 +341,11 @@ namespace DkTools.CodeModel.Definitions
 		public virtual int SelectionOrder
 		{
 			get { return 0; }
+		}
+
+		public virtual bool CaseSensitive
+		{
+			get { return true; }
 		}
 	}
 }

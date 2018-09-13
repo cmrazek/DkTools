@@ -114,12 +114,9 @@ namespace DkTools.CodeModel.Definitions
 			}
 		}
 
-		public override bool RequiresParent
+		public override bool RequiresParent(string curClassName)
 		{
-			get
-			{
-				return true;
-			}
+			return true;
 		}
 	}
 }

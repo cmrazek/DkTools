@@ -36,6 +36,20 @@ namespace DkTools.CodeModel.Definitions
 
 			list.AddFirst(item);
 			_count++;
+
+			// Case-insensitive items should be added again as lowercase
+			if (!item.CaseSensitive && item.Name.HasUpper())
+			{
+				var nameLower = item.Name.ToLower();
+				if (!_defs.TryGetValue(nameLower, out list))
+				{
+					list = new LinkedList<Definition>();
+					_defs[nameLower] = list;
+				}
+
+				list.AddFirst(item);
+				_count++;
+			}
 		}
 
 		public void Add(IEnumerable<Definition> defs)
@@ -71,20 +85,23 @@ namespace DkTools.CodeModel.Definitions
 			}
 		}
 
-		public bool Remove(Definition item)
-		{
-			LinkedList<Definition> list;
-			if (_defs.TryGetValue(item.Name, out list)) return list.Remove(item);
-			return false;
-		}
-
 		public IEnumerable<Definition> this[string name]
 		{
 			get
 			{
 				LinkedList<Definition> list;
-				if (_defs.TryGetValue(name, out list)) return list;
-				return new Definition[0];
+				if (_defs.TryGetValue(name, out list))
+				{
+					foreach (var item in list) yield return item;
+				}
+
+				if (name.HasUpper() && _defs.TryGetValue(name.ToLower(), out list))
+				{
+					foreach (var item in list)
+					{
+						if (!item.CaseSensitive) yield return item;
+					}
+				}
 			}
 		}
 
@@ -102,8 +119,18 @@ namespace DkTools.CodeModel.Definitions
 		public IEnumerable<Definition> Get(string name)
 		{
 			LinkedList<Definition> list;
-			if (_defs.TryGetValue(name, out list)) return list;
-			return new Definition[0];
+			if (_defs.TryGetValue(name, out list))
+			{
+				foreach (var item in list) yield return item;
+			}
+
+			if (name.HasUpper() && _defs.TryGetValue(name.ToLower(), out list))
+			{
+				foreach (var item in list)
+				{
+					if (!item.CaseSensitive) yield return item;
+				}
+			}
 		}
 
 		public IEnumerable<T> Get<T>(string name) where T: Definition
@@ -114,6 +141,14 @@ namespace DkTools.CodeModel.Definitions
 				foreach (var def in list)
 				{
 					if (def is T) yield return def as T;
+				}
+			}
+
+			if (name.HasUpper() && _defs.TryGetValue(name.ToLower(), out list))
+			{
+				foreach (var def in list)
+				{
+					if (def is T && !def.CaseSensitive) yield return def as T;
 				}
 			}
 		}
