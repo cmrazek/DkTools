@@ -173,7 +173,7 @@ namespace DkTools.FunctionFileScanning
 		{
 			CheckConsolidatedLists();
 
-			return _consolidatedClasses[name];
+			return _consolidatedClasses[name.ToLower()];
 		}
 
 		public IEnumerable<FFPermEx> GetPermExs(string name)

@@ -1,7 +1,7 @@
 DkTools ChangeLog
 
 ____________________________________________________________________________________________________
-Version 1.4.4 - WIP:
+Version 1.4.4 - Oct 5, 2018:
 
 - Fixed infinite loop in preprocessor when using recursive #defines with missing definitions.
 - Class names are no longer case sensitive.
