@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Editor;
 using DkTools.CodeModel.Definitions;
@@ -16,6 +17,8 @@ namespace DkTools.Navigation
 		{
 			try
 			{
+				ThreadHelper.ThrowIfNotOnUIThread();
+
 				// Get caret point
 				var caretPtTest = textView.Caret.Position.Point.GetPoint(textBuffer => (!textBuffer.ContentType.IsOfType("projection")), PositionAffinity.Predecessor);
 				if (!caretPtTest.HasValue) return;
@@ -24,7 +27,8 @@ namespace DkTools.Navigation
 				var fileStore = CodeModel.FileStore.GetOrCreateForTextBuffer(textView.TextBuffer);
 				if (fileStore == null) return;
 
-				var model = fileStore.GetCurrentModel(caretPt.Snapshot, "Go to definition");
+				var fileName = VsTextUtil.TryGetDocumentFileName(textView.TextBuffer);
+				var model = fileStore.GetCurrentModel(fileName, caretPt.Snapshot, "Go to definition");
 				var modelPos = model.AdjustPosition(caretPt.Position, caretPt.Snapshot);
 				var selTokens = model.File.FindDownwardTouching(modelPos).ToArray();
 				if (selTokens.Length == 0)
@@ -145,18 +149,21 @@ namespace DkTools.Navigation
 		{
 			try
 			{
+				ThreadHelper.ThrowIfNotOnUIThread();
+
 				var snapPt = textView.Caret.Position.BufferPosition;
 
 				var fileStore = CodeModel.FileStore.GetOrCreateForTextBuffer(snapPt.Snapshot.TextBuffer);
 				if (fileStore == null) return;
 
-				var fullModel = fileStore.CreatePreprocessedModel(snapPt.Snapshot, false, "Find Local References");
+				var fileName = VsTextUtil.TryGetDocumentFileName(textView.TextBuffer);
+				var fullModel = fileStore.CreatePreprocessedModel(fileName, snapPt.Snapshot, false, "Find Local References");
 				var fullModelPos = fullModel.PreprocessorModel.Source.PrimaryFilePositionToSource(fullModel.AdjustPosition(snapPt));
 
 				var fullToken = fullModel.File.FindDownward(fullModelPos, t => t.SourceDefinition != null).FirstOrDefault();
 				if (fullToken == null)
 				{
-					var model = fileStore.GetMostRecentModel(snapPt.Snapshot, "Find Local References (fallback)");
+					var model = fileStore.GetMostRecentModel(fileName, snapPt.Snapshot, "Find Local References (fallback)");
 					var modelPos = model.AdjustPosition(snapPt);
 					var token = model.File.FindDownward(modelPos, t => t.SourceDefinition != null).FirstOrDefault();
 					if (token == null)
@@ -204,6 +211,8 @@ namespace DkTools.Navigation
 
 		private static OutputPane StartFindReferences(string refName)
 		{
+			ThreadHelper.ThrowIfNotOnUIThread();
+
 			var pane = Shell.CreateOutputPane(_findReferencesPaneGuid, Constants.FindReferencesOutputPaneTitle);
 			pane.Clear();
 			pane.Show();

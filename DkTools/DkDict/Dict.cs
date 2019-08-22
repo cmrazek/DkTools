@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
 using DkTools.CodeModel;
@@ -82,11 +83,13 @@ namespace DkTools.DkDict
 			Log.Info("Loading WBDK Repository.");
 			var startTime = DateTime.Now;
 
+			DICTSRVRLib.PRepository repo = null;
+			DICTSRVRLib.PDictionary dict = null;
 			try
 			{
 				var appName = ProbeEnvironment.CurrentApp;
-				var repo = new DICTSRVRLib.PRepository();
-				var dict = repo.LoadDictionary(appName, string.Empty, DICTSRVRLib.PDS_Access.Access_READ);
+				repo = new DICTSRVRLib.PRepository();
+				dict = repo.LoadDictionary(appName, string.Empty, DICTSRVRLib.PDS_Access.Access_READ);
 				if (dict == null)
 				{
 					Log.Info("The WBDK repository for app '{0}' does not exist.", appName);
@@ -114,6 +117,19 @@ namespace DkTools.DkDict
 			catch (Exception ex)
 			{
 				Log.Error(ex, "Error when loading WBDK repository.");
+			}
+			finally
+			{
+				if (dict != null)
+				{
+					Marshal.ReleaseComObject(dict);
+					dict = null;
+				}
+				if (repo != null)
+				{
+					Marshal.ReleaseComObject(repo);
+					repo = null;
+				}
 			}
 
 			var elapsed = DateTime.Now.Subtract(startTime);

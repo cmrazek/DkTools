@@ -50,24 +50,10 @@ namespace DkTools.CodeModel.Definitions
 			}
 		}
 
-		public override System.Windows.UIElement QuickInfoTextWpf
-		{
-			get
-			{
-				if (string.IsNullOrEmpty(_devDesc))
-				{
-					return _intType.DataType.QuickInfoWpf;
-				}
-				else
-				{
-					return WpfDivs
-					(
-						_intType.DataType.QuickInfoWpf,
-						WpfInfoLine(_devDesc)
-					);
-				}
-			}
-		}
+		public override object QuickInfoElements => QuickInfoStack(
+			_intType.DataType.QuickInfoElements,
+			string.IsNullOrWhiteSpace(_devDesc) ? null : QuickInfoDescription(_devDesc)
+		);
 
 		public DkDict.Interface DictInterfaceType
 		{

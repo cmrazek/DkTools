@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Microsoft.VisualStudio.Language.StandardClassification;
 using DkTools.CodeModel.Tokens;
 
 namespace DkTools.CodeModel.Definitions
@@ -34,12 +35,9 @@ namespace DkTools.CodeModel.Definitions
 			get { return string.Concat("Class: ", Name); }
 		}
 
-		public override System.Windows.UIElement QuickInfoTextWpf
+		public override object QuickInfoElements
 		{
-			get
-			{
-				return WpfAttribute("Class", Name);
-			}
+			get { return QuickInfoAttributeElement("Class", QuickInfoClassified(QuickInfoRun(Classifier.ProbeClassifierType.TableName, Name))); }
 		}
 
 		public override string PickText

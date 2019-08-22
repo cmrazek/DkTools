@@ -1,9 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
-//using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.ComponentModel.Composition;
+using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Text.Outlining;
 using Microsoft.VisualStudio.Text.Tagging;
 using Microsoft.VisualStudio.Utilities;
@@ -31,6 +31,8 @@ namespace DkTools.Outlining
 
 		public OutliningTagger(ITextBuffer buffer)
 		{
+			ThreadHelper.ThrowIfNotOnUIThread();
+
 			_buffer = buffer;
 			_snapshot = buffer.CurrentSnapshot;
 
@@ -62,20 +64,28 @@ namespace DkTools.Outlining
 
 		void _defer_Idle(object sender, BackgroundDeferrer.IdleEventArgs e)
 		{
-			Reparse();
+			ThreadHelper.JoinableTaskFactory.RunAsync(async () =>
+			{
+				await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
 
-			var ev = TagsChanged;
-			if (ev != null) ev(this, new SnapshotSpanEventArgs(new SnapshotSpan(_snapshot, 0, _snapshot.Length)));
+				Reparse();
+
+				var ev = TagsChanged;
+				if (ev != null) ev(this, new SnapshotSpanEventArgs(new SnapshotSpan(_snapshot, 0, _snapshot.Length)));
+			});
 		}
 
 		private void Reparse()
 		{
+			ThreadHelper.ThrowIfNotOnUIThread();
+
 			_modelRegions.Clear();
 			_snapshot = _buffer.CurrentSnapshot;
 			var fileStore = CodeModel.FileStore.GetOrCreateForTextBuffer(_buffer);
 			if (fileStore != null)
 			{
-				var model = fileStore.GetCurrentModel(_snapshot, "OutliningTagger.Reparse()");
+				var fileName = VsTextUtil.TryGetDocumentFileName(_buffer);
+				var model = fileStore.GetCurrentModel(fileName, _snapshot, "OutliningTagger.Reparse()");
 
 				foreach (var region in model.OutliningRegions.OrderBy(r => r.Span.Start))
 				{

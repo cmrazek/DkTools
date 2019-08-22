@@ -135,36 +135,42 @@ namespace DkTools.BraceHighlighting
 
 		private void WordSelectDeferrer_Idle(object sender, BackgroundDeferrer.IdleEventArgs e)
 		{
-			var snapPt = (SnapshotPoint)e.Value;
-			if (_sourceBuffer.CurrentSnapshot != snapPt.Snapshot)
+			ThreadHelper.JoinableTaskFactory.RunAsync(async () =>
 			{
-				Update(snapPt, null);
-				return;
-			}
+				await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
 
-			var snapshot = snapPt.Snapshot;
-
-			var fileStore = CodeModel.FileStore.GetOrCreateForTextBuffer(_sourceBuffer);
-			if (fileStore != null)
-			{
-				var model = fileStore.GetCurrentModel(_sourceBuffer.CurrentSnapshot, "Word select idle");
-				var modelPos = model.AdjustPosition(snapPt);
-				var caretToken = model.File.FindDownwardTouching(modelPos).LastOrDefault(t => t.SourceDefinition != null);
-				if (caretToken == null)
+				var snapPt = (SnapshotPoint)e.Value;
+				if (_sourceBuffer.CurrentSnapshot != snapPt.Snapshot)
 				{
 					Update(snapPt, null);
 					return;
 				}
 
-				var sourceDef = caretToken.SourceDefinition;
-				var file = model.File;
-				var matchingTokens = file.FindDownward(t => t.SourceDefinition == sourceDef);
+				var snapshot = snapPt.Snapshot;
 
-				var wordSpans = new NormalizedSnapshotSpanCollection(from t in matchingTokens select new SnapshotSpan(snapshot, VsTextUtil.ModelSpanToVsSnapshotSpan(model.Snapshot, t.Span, snapshot)));
-				if (!wordSpans.Any()) wordSpans = null;
+				var fileStore = CodeModel.FileStore.GetOrCreateForTextBuffer(_sourceBuffer);
+				if (fileStore != null)
+				{
+					var fileName = VsTextUtil.TryGetDocumentFileName(_sourceBuffer);
+					var model = fileStore.GetCurrentModel(fileName, _sourceBuffer.CurrentSnapshot, "Word select idle");
+					var modelPos = model.AdjustPosition(snapPt);
+					var caretToken = model.File.FindDownwardTouching(modelPos).LastOrDefault(t => t.SourceDefinition != null);
+					if (caretToken == null)
+					{
+						Update(snapPt, null);
+						return;
+					}
 
-				Update(snapPt, wordSpans);
-			}
+					var sourceDef = caretToken.SourceDefinition;
+					var file = model.File;
+					var matchingTokens = file.FindDownward(t => t.SourceDefinition == sourceDef);
+
+					var wordSpans = new NormalizedSnapshotSpanCollection(from t in matchingTokens select new SnapshotSpan(snapshot, VsTextUtil.ModelSpanToVsSnapshotSpan(model.Snapshot, t.Span, snapshot)));
+					if (!wordSpans.Any()) wordSpans = null;
+
+					Update(snapPt, wordSpans);
+				}
+			});
 		}
 	}
 }

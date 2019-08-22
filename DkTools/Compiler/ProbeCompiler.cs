@@ -6,6 +6,7 @@ using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
+using Microsoft.VisualStudio.Shell;
 using DkTools.ErrorTagging;
 
 namespace DkTools.Compiler
@@ -57,6 +58,8 @@ namespace DkTools.Compiler
 		{
 			try
 			{
+				ThreadHelper.ThrowIfNotOnUIThread();
+
 				_method = method;
 
 				if (_compileThread == null || !_compileThread.IsAlive)
@@ -532,7 +535,7 @@ namespace DkTools.Compiler
 				if (ParseFileNameAndLine(line.Substring(0, index), out fileName, out lineNum))
 				{
 					var message = line.Substring(index + ": error :".Length).Trim();
-					var task = new ErrorTask(fileName, lineNum - 1, -1, message, ErrorType.Error, ErrorTaskSource.Compile, null, null);
+					var task = new DkTools.ErrorTagging.ErrorTask(fileName, lineNum - 1, -1, message, ErrorType.Error, ErrorTaskSource.Compile, null, null);
 					ErrorTaskProvider.Instance.Add(task);
 				}
 				_pane.WriteLine(line);
@@ -548,7 +551,7 @@ namespace DkTools.Compiler
 				if (ParseFileNameAndLine(line.Substring(0, index), out fileName, out lineNum))
 				{
 					var message = line.Substring(index + ": warning :".Length).Trim();
-					var task = new ErrorTask(fileName, lineNum - 1, -1, message, ErrorType.Warning, ErrorTaskSource.Compile, null, null);
+					var task = new DkTools.ErrorTagging.ErrorTask(fileName, lineNum - 1, -1, message, ErrorType.Warning, ErrorTaskSource.Compile, null, null);
 					ErrorTaskProvider.Instance.Add(task);
 				}
 				_pane.WriteLine(line);
@@ -559,7 +562,7 @@ namespace DkTools.Compiler
 			if (line.StartsWith("LINK : fatal error"))
 			{
 				var message = line.Substring("LINK : fatal error".Length).Trim();
-				var task = new ErrorTask(string.Empty, 0, -1, message, ErrorType.Error, ErrorTaskSource.Compile, null, null);
+				var task = new DkTools.ErrorTagging.ErrorTask(string.Empty, 0, -1, message, ErrorType.Error, ErrorTaskSource.Compile, null, null);
 				_pane.WriteLine(line);
 				_numErrors++;
 				return;
@@ -567,7 +570,7 @@ namespace DkTools.Compiler
 
 			if (line.Equals("Build failed."))
 			{
-				var task = new ErrorTask(string.Empty, 0, -1, "Build failed.", ErrorType.Error, ErrorTaskSource.Compile, null, null);
+				var task = new DkTools.ErrorTagging.ErrorTask(string.Empty, 0, -1, "Build failed.", ErrorType.Error, ErrorTaskSource.Compile, null, null);
 				ErrorTaskProvider.Instance.Add(task);
 				_buildFailed = true;
 				_pane.WriteLine(line);
@@ -576,7 +579,7 @@ namespace DkTools.Compiler
 
 			if (line.IndexOf("Compile failed", StringComparison.OrdinalIgnoreCase) >= 0)
 			{
-				var task = new ErrorTask(string.Empty, 0, -1, line, ErrorType.Error, ErrorTaskSource.Compile, null, null);
+				var task = new DkTools.ErrorTagging.ErrorTask(string.Empty, 0, -1, line, ErrorType.Error, ErrorTaskSource.Compile, null, null);
 				ErrorTaskProvider.Instance.Add(task);
 				_buildFailed = true;
 				_pane.WriteLine(line);

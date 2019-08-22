@@ -39,30 +39,27 @@ namespace DkTools.CodeModel.Definitions
 			}
 		}
 
-		public override System.Windows.UIElement QuickInfoTextWpf
+		public override object QuickInfoElements
 		{
 			get
 			{
 				if (_ex == null)
 				{
-					return WpfDivs(
-						WpfMainLine(Name),
-						WpfInfoLine(_ex.Permanent ? "Permanent extract" : "Temporary extract"));
+					return QuickInfoStack(
+						QuickInfoClassified(QuickInfoRun(Classifier.ProbeClassifierType.TableField, Name)),
+						QuickInfoDescription(_ex.Permanent ? "Permanent extract" : "Temporary extract")
+					);
 				}
 
-				if (_dataType != null)
-				{
-					return WpfDivs(
-						WpfMainLine(string.Concat(_ex.Name, ".", Name)),
-						WpfInfoLine(_ex.Permanent ? "Permanent extract" : "Temporary extract"),
-						WpfInfoLine(_dataType.InfoText));
-				}
-				else
-				{
-					return WpfDivs(
-						WpfMainLine(string.Concat(_ex.Name, ".", Name)),
-						WpfInfoLine(_ex.Permanent ? "Permanent extract" : "Temporary extract"));
-				}
+				return QuickInfoStack(
+					QuickInfoClassified(
+						QuickInfoRun(Classifier.ProbeClassifierType.TableName, _ex.Name),
+						QuickInfoRun(Classifier.ProbeClassifierType.Delimiter, "."),
+						QuickInfoRun(Classifier.ProbeClassifierType.TableField, Name)
+					),
+					QuickInfoDescription(_ex.Permanent ? "Permanent extract" : "Temporary extract"),
+					_dataType != null ? _dataType.QuickInfoElements : null
+				);
 			}
 		}
 

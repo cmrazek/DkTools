@@ -33,51 +33,53 @@ namespace DkTools.ErrorTagging
 #if DEBUG
 			if (task == null) throw new ArgumentNullException("task");
 #endif
-
-			var taskLine = task.Line;
-			var taskColumn = task.Column;
-			var taskDocument = task.Document;
-			var taskText = task.Text;
-			if (Tasks.Cast<ErrorTask>().Any(t => t.Line == taskLine && t.Column == taskColumn &&
-				string.Equals(t.Document, taskDocument, StringComparison.OrdinalIgnoreCase) &&
-				t.Text == taskText))
+			ThreadHelper.JoinableTaskFactory.RunAsync(async () =>
 			{
-				Log.Debug("Task for {0}({1}) ignored because it is a duplicate.", task.Document, task.Line);
-				return;
-			}
+				await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
 
-			Log.Debug("Adding task for {0}({1})", task.Document, task.Line);	// TODO: remove
+				var taskLine = task.Line;
+				var taskColumn = task.Column;
+				var taskDocument = task.Document;
+				var taskText = task.Text;
+				if (Tasks.Cast<ErrorTask>().Any(t => t.Line == taskLine && t.Column == taskColumn &&
+					string.Equals(t.Document, taskDocument, StringComparison.OrdinalIgnoreCase) &&
+					t.Text == taskText))
+				{
+					return;
+				}
 
-			lock (_tasksLock)
-			{
-				Tasks.Add(task);
-				Log.Debug("{0} task(s) exist.", Tasks.Count);	// TODO: remove
-			}
+				lock (_tasksLock)
+				{
+					Tasks.Add(task);
+				}
 
-			if (!dontSignalTagsChanged)
-			{
-				var ev = ErrorTagsChangedForFile;
-				if (ev != null) ev(this, new ErrorTaskEventArgs { FileName = task.Document });
-			}
+				if (!dontSignalTagsChanged)
+				{
+					var ev = ErrorTagsChangedForFile;
+					if (ev != null) ev(this, new ErrorTaskEventArgs { FileName = task.Document });
+				}
+			});
 		}
 
 		public void Clear()
 		{
-			Log.Debug("Clearing all tasks.");
-
-			var tasks = Tasks.Cast<ErrorTask>().ToArray();
-
-			lock (_tasksLock)
+			ThreadHelper.JoinableTaskFactory.RunAsync(async () =>
 			{
-				Tasks.Clear();
-				Log.Debug("{0} task(s) exist.", Tasks.Count);	// TODO: remove
-			}
+				await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
 
-			foreach (ErrorTask task in tasks)
-			{
-				var ev = ErrorTagsChangedForFile;
-				if (ev != null) ev(this, new ErrorTaskEventArgs { FileName = task.Document });
-			}
+				var tasks = Tasks.Cast<ErrorTask>().ToArray();
+
+				lock (_tasksLock)
+				{
+					Tasks.Clear();
+				}
+
+				foreach (ErrorTask task in tasks)
+				{
+					var ev = ErrorTagsChangedForFile;
+					if (ev != null) ev(this, new ErrorTaskEventArgs { FileName = task.Document });
+				}
+			});
 		}
 
 		public void FireTagsChangedEvent()
@@ -121,8 +123,6 @@ namespace DkTools.ErrorTagging
 
 		public void RemoveAllForSource(ErrorTaskSource source, string sourceFileName)
 		{
-			Log.Debug("Removing tasks for source: {0}", source);
-
 			var filesToNotify = new List<string>();
 
 			lock (_tasksLock)
@@ -135,8 +135,6 @@ namespace DkTools.ErrorTagging
 					Tasks.Remove(task);
 					if (!filesToNotify.Contains(task.Document)) filesToNotify.Add(task.Document);
 				}
-
-				Log.Debug("{0} task(s) exist.", Tasks.Count);	// TODO: remove
 			}
 
 			foreach (var file in filesToNotify)
@@ -148,8 +146,6 @@ namespace DkTools.ErrorTagging
 
 		public void RemoveAllForFile(string fileName)
 		{
-			Log.Debug("Removing tasks for file: {0}", fileName);
-
 			var filesToNotify = new List<string>();
 
 			lock (_tasksLock)
@@ -162,8 +158,6 @@ namespace DkTools.ErrorTagging
 					Tasks.Remove(task);
 					if (!filesToNotify.Contains(task.Document)) filesToNotify.Add(task.Document);
 				}
-
-				Log.Debug("{0} task(s) exist.", Tasks.Count);	// TODO: remove
 			}
 
 			foreach (var file in filesToNotify)
@@ -175,8 +169,6 @@ namespace DkTools.ErrorTagging
 
 		public void RemoveAllForSourceAndFile(ErrorTaskSource source, string sourceFileName, string fileName)
 		{
-			Log.Debug("Removing tasks for source {0} {1} and file {2}", source, sourceFileName, fileName);
-
 			var filesToNotify = new List<string>();
 
 			lock (_tasksLock)
@@ -190,8 +182,6 @@ namespace DkTools.ErrorTagging
 					Tasks.Remove(task);
 					if (!filesToNotify.Contains(task.Document)) filesToNotify.Add(task.Document);
 				}
-
-				Log.Debug("{0} task(s) exist.", Tasks.Count);	// TODO: remove
 			}
 
 			foreach (var file in filesToNotify)
@@ -203,12 +193,18 @@ namespace DkTools.ErrorTagging
 
 		public void OnDocumentClosed(ITextView textView)
 		{
-			var fileStore = CodeModel.FileStore.GetOrCreateForTextBuffer(textView.TextBuffer);
-			if (fileStore != null)
+			ThreadHelper.JoinableTaskFactory.RunAsync(async () =>
 			{
-				var model = fileStore.GetMostRecentModel(textView.TextSnapshot, "ErrorTaskProvider.OnDocumentClosed()");
-				RemoveAllForSource(ErrorTaskSource.BackgroundFec, model.FileName);
-			}
+				await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
+
+				var fileStore = CodeModel.FileStore.GetOrCreateForTextBuffer(textView.TextBuffer);
+				if (fileStore != null)
+				{
+					var fileName = VsTextUtil.TryGetDocumentFileName(textView.TextBuffer);
+					var model = fileStore.GetMostRecentModel(fileName, textView.TextSnapshot, "ErrorTaskProvider.OnDocumentClosed()");
+					RemoveAllForSource(ErrorTaskSource.BackgroundFec, model.FileName);
+				}
+			});
 		}
 
 		public IEnumerable<ITagSpan<ErrorTag>> GetErrorTagsForFile(string fileName, NormalizedSnapshotSpanCollection docSpans)

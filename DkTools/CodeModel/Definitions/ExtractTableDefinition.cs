@@ -41,14 +41,10 @@ namespace DkTools.CodeModel.Definitions
 			}
 		}
 
-		public override System.Windows.UIElement QuickInfoTextWpf
-		{
-			get
-			{
-				return WpfDivs(WpfMainLine(Name),
-					WpfInfoLine(_permanent ? "Permanent extract" : "Temporary extract"));
-			}
-		}
+		public override object QuickInfoElements => QuickInfoStack(
+			QuickInfoClassified(QuickInfoRun(Classifier.ProbeClassifierType.TableName, Name)),
+			QuickInfoDescription(_permanent ? "Permanent extract" : "Temporary extract")
+		);
 
 		public void AddField(ExtractFieldDefinition field)
 		{

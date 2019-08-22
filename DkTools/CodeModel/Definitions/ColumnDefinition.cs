@@ -88,18 +88,17 @@ namespace DkTools.CodeModel.Definitions
 			}
 		}
 
-		public override System.Windows.UIElement QuickInfoTextWpf
+		public override object QuickInfoElements
 		{
 			get
 			{
-				var items = new List<System.Windows.UIElement>();
-				items.Add(WpfMainLine(string.Concat(_tableName, ".", _fieldName)));
-				if (!string.IsNullOrWhiteSpace(_prompt)) items.Add(WpfAttribute("Prompt", _prompt));
-				if (!string.IsNullOrWhiteSpace(_comment)) items.Add(WpfAttribute("Comment", _comment));
-				if (_dataType != null) items.Add(WpfAttribute("Data Type", _dataType.QuickInfoWpf));
-				if (!string.IsNullOrWhiteSpace(_repoDesc)) items.Add(WpfInfoLine(_repoDesc));
-
-				return WpfDivs(items);
+				return QuickInfoStack(
+					QuickInfoMainLine(string.Concat(_tableName, ".", _fieldName)),
+					string.IsNullOrWhiteSpace(_prompt) ? null : QuickInfoAttributeString("Prompt", _prompt),
+					string.IsNullOrWhiteSpace(_comment) ? null : QuickInfoAttributeString("Comment", _comment),
+					_dataType != null ? QuickInfoAttributeElement("Data Type", _dataType.QuickInfoElements) : null,
+					string.IsNullOrWhiteSpace(_repoDesc) ? null : QuickInfoDescription(_repoDesc)
+				);
 			}
 		}
 

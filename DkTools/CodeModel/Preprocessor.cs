@@ -604,68 +604,6 @@ namespace DkTools.CodeModel
 			return sb.ToString();
 		}
 
-		// TODO: remove
-		//private string ApplySubstitutions(string source, IEnumerable<string> restrictedDefines, IEnumerable<PreprocessorDefine> args)
-		//{
-		//	var code = new CodeParser(source);
-		//	code.ReturnWhiteSpace = true;
-
-		//	var sb = new StringBuilder();
-
-		//	while (code.Read())
-		//	{
-		//		if (code.Type == CodeType.Word)
-		//		{
-		//			var word = code.Text;
-		//			if (restrictedDefines != null && restrictedDefines.Contains(word))
-		//			{
-		//				sb.Append(word);
-		//				continue;
-		//			}
-
-		//			if (args != null)
-		//			{
-		//				var found = false;
-		//				foreach (var arg in args)
-		//				{
-		//					if (arg.Name == word && arg.Name != arg.Content)
-		//					{
-		//						var subRestrictedDefines = new List<string>();
-		//						if (restrictedDefines != null) subRestrictedDefines.AddRange(restrictedDefines);
-		//						if (args != null) subRestrictedDefines.AddRange(from a in args select a.Name);
-
-		//						sb.Append(ApplySubstitutions(arg.Content, subRestrictedDefines, null));
-
-		//						found = true;
-		//						break;
-		//					}
-		//				}
-		//				if (found) continue;
-		//			}
-
-		//			PreprocessorDefine define;
-		//			if (_defines.TryGetValue(word, out define) && define.Name != define.Content)
-		//			{
-		//				var subRestrictedDefines = new List<string>();
-		//				if (restrictedDefines != null) subRestrictedDefines.AddRange(restrictedDefines);
-		//				if (args != null) subRestrictedDefines.AddRange(from a in args select a.Name);
-		//				subRestrictedDefines.Add(define.Name);
-
-		//				sb.Append(ApplySubstitutions(define.Content, subRestrictedDefines, null));
-		//				continue;
-		//			}
-
-		//			sb.Append(word);
-		//		}
-		//		else
-		//		{
-		//			sb.Append(code.Text);
-		//		}
-		//	}
-
-		//	return sb.ToString();
-		//}
-
 		private void ProcessInclude(PreprocessorParams p)
 		{
 			string includeName = null;

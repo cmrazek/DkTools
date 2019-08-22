@@ -2,6 +2,7 @@
 *.csproj.user
 *.suo
 
+/.vs/
 /DkTools/bin/
 /DkTools/obj/
 /TestResults/

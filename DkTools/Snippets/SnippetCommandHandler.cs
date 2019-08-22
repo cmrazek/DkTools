@@ -35,6 +35,8 @@ namespace DkTools.Snippets
 
 		public int Exec(ref Guid pguidCmdGroup, uint nCmdID, uint nCmdexecopt, IntPtr pvaIn, IntPtr pvaOut)
 		{
+			ThreadHelper.ThrowIfNotOnUIThread();
+
 			char typedChar = '\0';
 
 			if (pguidCmdGroup == VSConstants.VSStd2K && nCmdID == (uint)VSConstants.VSStd2KCmdID.TYPECHAR)
@@ -92,6 +94,8 @@ namespace DkTools.Snippets
 
 		public int QueryStatus(ref Guid pguidCmdGroup, uint cCmds, OLECMD[] prgCmds, IntPtr pCmdText)
 		{
+			ThreadHelper.ThrowIfNotOnUIThread();
+
 			if (!VsShellUtilities.IsInAutomationFunction(ProbeToolsPackage.Instance))
 			{
 				if (pguidCmdGroup == VSConstants.VSStd2K && cCmds > 0)

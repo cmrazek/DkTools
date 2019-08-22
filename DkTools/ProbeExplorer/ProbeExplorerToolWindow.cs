@@ -41,13 +41,18 @@ namespace DkTools.ProbeExplorer
 
 		public override void OnToolWindowCreated()
 		{
-			base.OnToolWindowCreated();
-
-			var windowFrame = base.Frame as IVsWindowFrame;
-			if (windowFrame != null)
+			ThreadHelper.JoinableTaskFactory.RunAsync(async () =>
 			{
-				windowFrame.SetProperty((int)__VSFPROPID4.VSFPROPID_TabImage, Res.ProbeExplorerImg.GetHbitmap());
-			}
+				await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
+
+				base.OnToolWindowCreated();
+
+				var windowFrame = base.Frame as IVsWindowFrame;
+				if (windowFrame != null)
+				{
+					windowFrame.SetProperty((int)__VSFPROPID4.VSFPROPID_TabImage, Res.ProbeExplorerImg.GetHbitmap());
+				}
+			});
 		}
 
 		public void FocusTable(string tableName)

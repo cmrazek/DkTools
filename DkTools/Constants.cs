@@ -16,16 +16,17 @@ namespace DkTools
 		public const string FindReferencesOutputPaneTitle = "DK References";
 		public const string ErrorCaption = "Error";
 		public const string DkContentType = "DK";
+        public const string ThemeRegKey = @"Software\Microsoft\VisualStudio\15.0";
 
-		/// <summary>
-		/// Directory name where log files will be stored (under AppDataDir)
-		/// </summary>
-		public const string LogDir = "Logs";
+        /// <summary>
+        /// Directory name where log files will be stored (under AppDataDir)
+        /// </summary>
+        public const string LogDir = "Logs";
 
 		/// <summary>
 		/// Log file naming format. {0} is the date the log file is created.
 		/// </summary>
-		public const string LogFileNameFormat = "DkTools2012_{0:yyyyMMdd_HHmmss}.log";
+		public const string LogFileNameFormat = "DkTools_{0:yyyyMMdd_HHmmss}.log";
 
 		/// <summary>
 		/// Number of days log files will be kept before they are purged.

@@ -42,12 +42,9 @@ namespace DkTools.CodeModel.Definitions
 			get { return _text; }
 		}
 
-		public override System.Windows.UIElement QuickInfoTextWpf
+		public override object QuickInfoElements
 		{
-			get
-			{
-				return WpfMainLine(_text);
-			}
+			get { return QuickInfoMainLine(_text); }
 		}
 
 		public override string PickText

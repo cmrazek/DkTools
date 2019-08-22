@@ -51,16 +51,10 @@ namespace DkTools.CodeModel.Definitions
 			}
 		}
 
-		public override System.Windows.UIElement QuickInfoTextWpf
-		{
-			get
-			{
-				var items = new List<System.Windows.UIElement>();
-				items.Add(WpfMainLine(_relText));
-				if (!string.IsNullOrEmpty(_devDesc)) items.Add(WpfInfoLine(_devDesc));
-				return WpfDivs(items);
-			}
-		}
+		public override object QuickInfoElements => QuickInfoStack(
+			QuickInfoMainLine(_relText),
+			string.IsNullOrWhiteSpace(_devDesc) ? null : QuickInfoDescription(_devDesc)
+		);
 
 		public string BaseTableName
 		{

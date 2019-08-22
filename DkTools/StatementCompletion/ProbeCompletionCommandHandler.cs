@@ -45,6 +45,8 @@ namespace DkTools.StatementCompletion
 
 		int IOleCommandTarget.QueryStatus(ref Guid pguidCmdGroup, uint cCmds, OLECMD[] prgCmds, IntPtr pCmdText)
 		{
+			ThreadHelper.ThrowIfNotOnUIThread();
+
 			var status = _nextCommandHandler.QueryStatus(ref pguidCmdGroup, cCmds, prgCmds, pCmdText);
 
 			if (pguidCmdGroup == typeof(VSConstants.VSStd97CmdID).GUID)
@@ -70,6 +72,8 @@ namespace DkTools.StatementCompletion
 		{
 			try
 			{
+				ThreadHelper.ThrowIfNotOnUIThread();
+
 				if (VsShellUtilities.IsInAutomationFunction(_provider.ServiceProvider))
 				{
 					return _nextCommandHandler.Exec(ref pguidCmdGroup, nCmdID, nCmdexecopt, pvaIn, pvaOut);
@@ -251,6 +255,8 @@ namespace DkTools.StatementCompletion
 
 		private bool TriggerCompletion(bool modelRebuildRequired, bool allowInsideString = false)
 		{
+			ThreadHelper.ThrowIfNotOnUIThread();
+
 			var caretPtTest = _textView.Caret.Position.Point.GetPoint(textBuffer => (!textBuffer.ContentType.IsOfType("projection")), PositionAffinity.Predecessor);
 			if (!caretPtTest.HasValue) return false;
 			var caretPt = caretPtTest.Value;
@@ -267,7 +273,8 @@ namespace DkTools.StatementCompletion
 				{
 					ProbeToolsPackage.Instance.StartBackgroundWorkItem(() =>
 						{
-							fileStore.GetCurrentModel(caretPt.Snapshot, "Auto-completion deferred model build");
+							var fileName = VsTextUtil.TryGetDocumentFileName(caretPt.Snapshot.TextBuffer);
+							fileStore.GetCurrentModel(fileName, caretPt.Snapshot, "Auto-completion deferred model build");
 						}, ex =>
 						{
 							if (ex != null) return;

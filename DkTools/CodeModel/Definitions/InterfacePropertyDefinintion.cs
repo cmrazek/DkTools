@@ -56,17 +56,11 @@ namespace DkTools.CodeModel.Definitions
 			}
 		}
 
-		public override System.Windows.UIElement QuickInfoTextWpf
-		{
-			get
-			{
-				return WpfDivs(
-					WpfAttribute("Name", Name),
-					WpfAttribute("Data Type", _dataType.InfoText),
-					WpfAttribute("Interface", _intTypeDef.Name));
-					
-			}
-		}
+		public override object QuickInfoElements => QuickInfoStack(
+			QuickInfoAttributeString("Name", Name),
+			QuickInfoAttributeElement("Data Type", _dataType.QuickInfoElements),
+			QuickInfoAttributeString("Interface", _intTypeDef.Name)
+		);
 
 		public override DataType DataType
 		{

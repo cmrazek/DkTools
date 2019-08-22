@@ -213,7 +213,7 @@ namespace DkTools.CodeModel
 			return false;
 		}
 
-		public CodeModel GetCurrentModel(VsText.ITextSnapshot snapshot, string reason)
+		public CodeModel GetCurrentModel(string fileName, VsText.ITextSnapshot snapshot, string reason)
 		{
 #if DEBUG
 			if (snapshot == null) throw new ArgumentNullException("snapshot");
@@ -223,7 +223,7 @@ namespace DkTools.CodeModel
 			{
 				if (snapshot != null && _model.Snapshot.Version.VersionNumber < snapshot.Version.VersionNumber)
 				{
-					_model = CreatePreprocessedModel(snapshot, reason);
+					_model = CreatePreprocessedModel(fileName, snapshot, reason);
 
 					var ev = ModelUpdated;
 					if (ev != null) ev(this, new ModelUpdatedEventArgs(_model));
@@ -231,7 +231,7 @@ namespace DkTools.CodeModel
 			}
 			else
 			{
-				_model = CreatePreprocessedModel(snapshot, reason);
+				_model = CreatePreprocessedModel(fileName, snapshot, reason);
 
 				var ev = ModelUpdated;
 				if (ev != null) ev(this, new ModelUpdatedEventArgs(_model));
@@ -240,14 +240,14 @@ namespace DkTools.CodeModel
 			return _model;
 		}
 
-		public CodeModel GetMostRecentModel(VsText.ITextSnapshot snapshot, string reason)
+		public CodeModel GetMostRecentModel(string fileName, VsText.ITextSnapshot snapshot, string reason)
 		{
 #if DEBUG
 			if (snapshot == null) throw new ArgumentNullException("snapshot");
 #endif
 			if (_model == null)
 			{
-				_model = CreatePreprocessedModel(snapshot, reason);
+				_model = CreatePreprocessedModel(fileName, snapshot, reason);
 
 				var ev = ModelUpdated;
 				if (ev != null) ev(this, new ModelUpdatedEventArgs(_model));
@@ -256,13 +256,13 @@ namespace DkTools.CodeModel
 			return _model;
 		}
 
-		public CodeModel RegenerateModel(VsText.ITextSnapshot snapshot, string reason)
+		public CodeModel RegenerateModel(string fileName, VsText.ITextSnapshot snapshot, string reason)
 		{
 #if DEBUG
 			if (snapshot == null) throw new ArgumentNullException("snapshot");
 #endif
 
-			_model = CreatePreprocessedModel(snapshot, reason);
+			_model = CreatePreprocessedModel(fileName, snapshot, reason);
 
 			var ev = ModelUpdated;
 			if (ev != null) ev(this, new ModelUpdatedEventArgs(_model));
@@ -270,10 +270,8 @@ namespace DkTools.CodeModel
 			return _model;
 		}
 
-		public CodeModel CreatePreprocessedModel(VsText.ITextSnapshot snapshot, string reason)
+		public CodeModel CreatePreprocessedModel(string fileName, VsText.ITextSnapshot snapshot, string reason)
 		{
-			var fileName = snapshot.TextBuffer.TryGetFileName();
-
 			var source = new CodeSource();
 			source.Append(snapshot.GetText(), fileName, 0, snapshot.Length, true, true, false);
 			source.Flush();
@@ -283,10 +281,8 @@ namespace DkTools.CodeModel
 			return model;
 		}
 
-		public CodeModel CreatePreprocessedModel(VsText.ITextSnapshot snapshot, bool visible, string reason)
+		public CodeModel CreatePreprocessedModel(string fileName, VsText.ITextSnapshot snapshot, bool visible, string reason)
 		{
-			var fileName = snapshot.TextBuffer.TryGetFileName();
-
 			CodeSource source;
 			IEnumerable<Preprocessor.IncludeDependency> includeDependencies = null;
 			if (visible)
@@ -379,9 +375,9 @@ namespace DkTools.CodeModel
 			get { return _model; }
 		}
 
-		public IEnumerable<FunctionDropDownItem> GetFunctionDropDownList(VsText.ITextSnapshot snapshot)
+		public IEnumerable<FunctionDropDownItem> GetFunctionDropDownList(string fileName, VsText.ITextSnapshot snapshot)
 		{
-			var model = GetMostRecentModel(snapshot, "Function drop-down list.");
+			var model = GetMostRecentModel(fileName, snapshot, "Function drop-down list.");
 
 			var prepModel = model.PreprocessorModel;
 			if (prepModel == null) yield break;

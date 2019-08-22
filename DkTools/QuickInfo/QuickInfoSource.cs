@@ -3,9 +3,12 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel.Composition;
 using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 using System.Windows;
 using Microsoft.VisualStudio.Language.Intellisense;
 using Microsoft.VisualStudio.Text;
+using Microsoft.VisualStudio.Text.Adornments;
 using Microsoft.VisualStudio.Text.Editor;
 using Microsoft.VisualStudio.Text.Operations;
 using Microsoft.VisualStudio.Text.Tagging;
@@ -13,7 +16,7 @@ using Microsoft.VisualStudio.Utilities;
 
 namespace DkTools.QuickInfo
 {
-	internal class QuickInfoSource : IQuickInfoSource
+	internal class QuickInfoSource : IAsyncQuickInfoSource
 	{
 		private QuickInfoSourceProvider _provider;
 		private ITextBuffer _subjectBuffer;
@@ -21,7 +24,7 @@ namespace DkTools.QuickInfo
 		private struct TokenInfo
 		{
 			public CodeModel.Tokens.Token token;
-			public UIElement infoElements;
+			public object infoElements;
 		}
 
 		public QuickInfoSource(QuickInfoSourceProvider provider, ITextBuffer subjectBuffer)
@@ -30,14 +33,12 @@ namespace DkTools.QuickInfo
 			_subjectBuffer = subjectBuffer;
 		}
 
-		void IQuickInfoSource.AugmentQuickInfoSession(IQuickInfoSession session, IList<object> quickInfoContent, out ITrackingSpan applicableToSpan)
+		Task<QuickInfoItem> IAsyncQuickInfoSource.GetQuickInfoItemAsync(IAsyncQuickInfoSession session, CancellationToken cancellationToken)
 		{
-			applicableToSpan = null;
-
-			quickInfoContent.Clear();
+			// https://github.com/microsoft/VSSDK-Extensibility-Samples/blob/master/AsyncQuickInfo/src/LineAsyncQuickInfoSource.cs
 
 			var subjectTriggerPoint = session.GetTriggerPoint(_subjectBuffer.CurrentSnapshot);
-			if (!subjectTriggerPoint.HasValue) return;
+			if (!subjectTriggerPoint.HasValue) return Task.FromResult<QuickInfoItem>(null);
 			var snapshotPoint = subjectTriggerPoint.Value;
 			var currentSnapshot = snapshotPoint.Snapshot;
 
@@ -49,11 +50,15 @@ namespace DkTools.QuickInfo
 				{
 					var modelPos = model.AdjustPosition(snapshotPoint.Position, snapshotPoint.Snapshot);
 
+					object elements = null;
+					ITrackingSpan applicableToSpan = null;
+
 					var tokens = model.FindTokens(modelPos).ToArray();
 					var info = GetQuickInfoForTokens(tokens);
 					if (info.HasValue)
 					{
-						quickInfoContent.Add(info.Value.infoElements);
+						elements = info.Value.infoElements;
+
 						var tokenSpan = info.Value.token.Span;
 						var snapSpan = new SnapshotSpan(model.Snapshot, tokenSpan.Start, tokenSpan.Length);
 						applicableToSpan = model.Snapshot.CreateTrackingSpan(info.Value.token.Span.ToVsTextSpan(), SpanTrackingMode.EdgeInclusive);
@@ -61,14 +66,26 @@ namespace DkTools.QuickInfo
 
 					foreach (var task in ErrorTagging.ErrorTaskProvider.Instance.GetErrorMessagesAtPoint(model.FileName, snapshotPoint))
 					{
-						quickInfoContent.Add(task.QuickInfoContent);
+						if (elements != null)
+						{
+							elements = new ContainerElement(ContainerElementStyle.Stacked, elements, task.QuickInfoContent);
+						}
+						else
+						{
+							elements = task.QuickInfoContent;
+						}
+
 						if (applicableToSpan == null)
 						{
 							applicableToSpan = model.Snapshot.CreateTrackingSpan(task.GetSnapshotSpan(snapshotPoint.Snapshot), SpanTrackingMode.EdgeInclusive);
 						}
 					}
+
+					if (elements != null) return Task.FromResult<QuickInfoItem>(new QuickInfoItem(applicableToSpan, elements));
 				}
 			}
+
+			return Task.FromResult<QuickInfoItem>(null);
 		}
 
 		private bool _disposed;
@@ -86,7 +103,7 @@ namespace DkTools.QuickInfo
 			if (tokens.Length == 0) return null;
 
 			var lastToken = tokens.Last();
-			var infoElements = lastToken.GetQuickInfoWpf();
+			var infoElements = lastToken.GetQuickInfoElements();
 			if (infoElements != null)
 			{
 				return new TokenInfo { infoElements = infoElements, token = lastToken };

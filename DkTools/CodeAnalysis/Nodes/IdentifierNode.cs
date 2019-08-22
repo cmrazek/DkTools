@@ -33,34 +33,6 @@ namespace DkTools.CodeAnalysis.Nodes
 			}
 		}
 
-		// TODO: remove
-		//private bool Resolve(RunScope scope)
-		//{
-		//	if (_def != null) return true;
-
-		//	if (scope.DataTypeContext != null)
-		//	{
-		//		if (scope.DataTypeContext.HasEnumOptions && scope.DataTypeContext.IsValidEnumOption(Text))
-		//		{
-		//			_def = new EnumOptionDefinition(Text, scope.DataTypeContext);
-		//			_dataType = scope.DataTypeContext;
-		//			return true;
-		//		}
-		//	}
-
-		//	var def = (from d in Statement.CodeAnalyzer.PreprocessorModel.DefinitionProvider.GetAny(Span.Start + scope.FuncOffset, Text)
-		//			   where !d.RequiresChild && !d.ArgumentsRequired
-		//			   select d).FirstOrDefault();
-		//	if (def != null)
-		//	{
-		//		_def = def;
-		//		_dataType = def.DataType;
-		//		return true;
-		//	}
-
-		//	return false;
-		//}
-
 		public override bool CanAssignValue(RunScope scope)
 		{
 			return _def.CanWrite;

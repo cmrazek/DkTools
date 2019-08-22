@@ -7,6 +7,7 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Windows.Media;
 using Microsoft.VisualStudio.Language.Intellisense;
+using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Operations;
 using Microsoft.VisualStudio.Utilities;
@@ -277,6 +278,8 @@ namespace DkTools.StatementCompletion
 		{
 			// Typing a table.field.
 
+			ThreadHelper.ThrowIfNotOnUIThread();
+
 			// Table and field
 			var table = DkDict.Dict.GetTable(word1);
 			if (table != null)
@@ -301,7 +304,8 @@ namespace DkTools.StatementCompletion
 			var store = CodeModel.FileStore.GetOrCreateForTextBuffer(_textBuffer);
 			if (store != null)
 			{
-				var model = store.GetMostRecentModel(completionSpan.Snapshot, "Extract table.field completion.");
+				var fileName = VsTextUtil.TryGetDocumentFileName(_textBuffer);
+				var model = store.GetMostRecentModel(fileName, completionSpan.Snapshot, "Extract table.field completion.");
 				var exDef = model.DefinitionProvider.GetGlobalFromFile<ExtractTableDefinition>(word1).FirstOrDefault();
 				if (exDef != null)
 				{
@@ -334,7 +338,8 @@ namespace DkTools.StatementCompletion
 			var fileStore = CodeModel.FileStore.GetOrCreateForTextBuffer(_textBuffer);
 			if (fileStore != null)
 			{
-				var model = fileStore.GetMostRecentModel(completionSpan.Snapshot, "Interface auto-completion");
+				var fileName = VsTextUtil.TryGetDocumentFileName(_textBuffer);
+				var model = fileStore.GetMostRecentModel(fileName, completionSpan.Snapshot, "Interface auto-completion");
 				var modelSpan = completionSpan.TranslateTo(model.Snapshot, SpanTrackingMode.EdgeInclusive);
 
 				foreach (var def in model.DefinitionProvider.GetAny(modelSpan.Start.Position, word1))
@@ -353,10 +358,13 @@ namespace DkTools.StatementCompletion
 
 		private IEnumerable<Completion> HandleAfterAssignOrCompare(SnapshotSpan completionSpan, string operatorText, SnapshotPoint operatorPt)
 		{
+			ThreadHelper.ThrowIfNotOnUIThread();
+
 			var store = CodeModel.FileStore.GetOrCreateForTextBuffer(_textBuffer);
 			if (store != null)
 			{
-				var model = store.GetCurrentModel(completionSpan.Snapshot, "Auto-completion after assign or compare");
+				var fileName = VsTextUtil.TryGetDocumentFileName(_textBuffer);
+				var model = store.GetCurrentModel(fileName, completionSpan.Snapshot, "Auto-completion after assign or compare");
 				var modelPos = operatorPt.TranslateTo(model.Snapshot, PointTrackingMode.Negative);
 				var opToken = model.File.FindDownward<CompletionOperator>(modelPos.Position).LastOrDefault();
 				if (opToken != null)
@@ -375,10 +383,13 @@ namespace DkTools.StatementCompletion
 
 		private IEnumerable<Completion> HandleAfterIfDef(SnapshotSpan completionSpan)
 		{
+			ThreadHelper.ThrowIfNotOnUIThread();
+
 			var fileStore = CodeModel.FileStore.GetOrCreateForTextBuffer(_textBuffer);
 			if (fileStore != null)
 			{
-				var model = fileStore.GetCurrentModel(_textBuffer.CurrentSnapshot, "Auto-completion after #ifdef");
+				var fileName = VsTextUtil.TryGetDocumentFileName(_textBuffer);
+				var model = fileStore.GetCurrentModel(fileName, _textBuffer.CurrentSnapshot, "Auto-completion after #ifdef");
 
 				foreach (var def in model.DefinitionProvider.GetGlobalFromAnywhere<ConstantDefinition>())
 				{
@@ -423,10 +434,13 @@ namespace DkTools.StatementCompletion
 
 		private IEnumerable<Completion> HandleAfterReturn(SnapshotSpan completionSpan)
 		{
+			ThreadHelper.ThrowIfNotOnUIThread();
+
 			var fileStore = CodeModel.FileStore.GetOrCreateForTextBuffer(_textBuffer);
 			if (fileStore != null)
 			{
-				var model = fileStore.GetMostRecentModel(_textBuffer.CurrentSnapshot, "Auto-completion after return");
+				var fileName = VsTextUtil.TryGetDocumentFileName(_textBuffer);
+				var model = fileStore.GetMostRecentModel(fileName, _textBuffer.CurrentSnapshot, "Auto-completion after return");
 				var modelPos = completionSpan.Start.TranslateTo(model.Snapshot, PointTrackingMode.Positive);
 
 				var funcDef = model.PreprocessorModel.LocalFunctions.FirstOrDefault(f => f.Definition.EntireSpan.Contains(modelPos));
@@ -443,8 +457,11 @@ namespace DkTools.StatementCompletion
 
 		private IEnumerable<Completion> HandleAfterCase(SnapshotSpan completionSpan)
 		{
+			ThreadHelper.ThrowIfNotOnUIThread();
+
+			var fileName = VsTextUtil.TryGetDocumentFileName(_textBuffer);
 			var store = CodeModel.FileStore.GetOrCreateForTextBuffer(_textBuffer);
-			var model = store.GetMostRecentModel(_textBuffer.CurrentSnapshot, "Auto-completion after case");
+			var model = store.GetMostRecentModel(fileName, _textBuffer.CurrentSnapshot, "Auto-completion after case");
 			var modelPos = completionSpan.Start.TranslateTo(model.Snapshot, PointTrackingMode.Positive);
 
 			var switchToken = (from t in model.FindTokens(modelPos) where t is SwitchStatement select t as SwitchStatement).LastOrDefault();
@@ -463,6 +480,8 @@ namespace DkTools.StatementCompletion
 
 		private IEnumerable<Completion> HandleAfterExtract(SnapshotSpan completionSpan, string permWord)
 		{
+			ThreadHelper.ThrowIfNotOnUIThread();
+
 			if (string.IsNullOrEmpty(permWord))
 			{
 				yield return CreateCompletion("permanent", "permanent extract", CompletionType.Keyword);
@@ -471,7 +490,8 @@ namespace DkTools.StatementCompletion
 			var store = CodeModel.FileStore.GetOrCreateForTextBuffer(_textBuffer);
 			if (store != null)
 			{
-				var model = store.GetMostRecentModel(_textBuffer.CurrentSnapshot, "Auto-completion after 'extract'");
+				var fileName = VsTextUtil.TryGetDocumentFileName(_textBuffer);
+				var model = store.GetMostRecentModel(fileName, _textBuffer.CurrentSnapshot, "Auto-completion after 'extract'");
 
 				foreach (var exDef in model.DefinitionProvider.GetGlobalFromFile<ExtractTableDefinition>())
 				{
@@ -482,12 +502,14 @@ namespace DkTools.StatementCompletion
 
 		private IEnumerable<Completion> HandleAfterInclude(SnapshotSpan completionSpan, string startCh)
 		{
+			ThreadHelper.ThrowIfNotOnUIThread();
+
 			string endCh;
 			if (startCh == "<") endCh = ">";
 			else if (startCh == "\"") endCh = "\"";
 			else endCh = string.Empty;
 
-			var curFileName = _textBuffer.TryGetFileName();
+			var curFileName = VsTextUtil.TryGetDocumentFileName(_textBuffer);
 			var curDir = System.IO.Path.GetDirectoryName(curFileName);
 
 			IEnumerable<string> fileList;
@@ -574,9 +596,13 @@ namespace DkTools.StatementCompletion
 
 		private IEnumerable<Completion> GetOptionsForFunctionArg(string className, string funcName, int argIndex, SnapshotPoint snapPt)
 		{
+			ThreadHelper.ThrowIfNotOnUIThread();
+
 			var fileStore = CodeModel.FileStore.GetOrCreateForTextBuffer(_textBuffer);
 			if (fileStore == null) yield break;
-			var model = fileStore.GetMostRecentModel(_textBuffer.CurrentSnapshot, "Signature help get options for arg");
+
+			var fileName = VsTextUtil.TryGetDocumentFileName(_textBuffer);
+			var model = fileStore.GetMostRecentModel(fileName, _textBuffer.CurrentSnapshot, "Signature help get options for arg");
 			var modelPos = model.AdjustPosition(snapPt);
 
 			var sigInfos = SignatureHelp.ProbeSignatureHelpSource.GetAllSignaturesForFunction(model, modelPos, className, funcName).ToArray();
@@ -654,9 +680,13 @@ namespace DkTools.StatementCompletion
 
 		private IEnumerable<Completion> GetWordCompletions(int curPos, int wordStartPos, ITextSnapshot snapshot)
 		{
+			ThreadHelper.ThrowIfNotOnUIThread();
+
 			var fileStore = CodeModel.FileStore.GetOrCreateForTextBuffer(_textBuffer);
 			if (fileStore == null) yield break;
-			var model = fileStore.GetMostRecentModel(snapshot, "Auto-completion get word completions");
+
+			var fileName = VsTextUtil.TryGetDocumentFileName(_textBuffer);
+			var model = fileStore.GetMostRecentModel(fileName, snapshot, "Auto-completion get word completions");
 			var modelPos = model.AdjustPosition(curPos, snapshot);
 
 			var tokens = model.FindTokens(modelPos).ToArray();
@@ -674,11 +704,6 @@ namespace DkTools.StatementCompletion
 			}
 
 			// Dictionary definitions are already provided by the DefinitionProvider.
-			//foreach (var t in ProbeEnvironment.DictDefinitions)
-			//{
-			//	if (!t.CompletionVisible) continue;
-			//	yield return CreateCompletion(t);
-			//}
 
 			foreach (var d in Constants.DataTypeKeywords)
 			{

@@ -271,29 +271,6 @@ namespace DkTools.CodeModel.Tokens
 								if (argsToken != null) compToken.AddToken(argsToken);
 								return compToken;
 							}
-
-							// TODO: remove
-							//foreach (var childDef in def.GetChildDefinitions(word2))
-							//{
-							//	var childRequiresArgs = childDef.ArgumentsRequired;
-							//	if (childRequiresArgs && (scope.Hint & ScopeHint.SuppressFunctionCall) != 0) childRequiresArgs = false;
-
-							//	var word1Token = new IdentifierToken(scope, wordSpan, word, def);
-							//	var dotToken = new DotToken(scope, dotSpan);
-							//	var word2Token = new IdentifierToken(scope, word2Span, word2, childDef);
-							//	var compToken = new CompositeToken(scope, childDef.DataType);
-							//	compToken.AddToken(word1Token);
-							//	compToken.AddToken(dotToken);
-							//	compToken.AddToken(word2Token);
-
-							//	if (argsPresent && childRequiresArgs)
-							//	{
-							//		var openBracketToken = new OperatorToken(scope, argsOpenBracketSpan, "(");
-							//		compToken.AddToken(ArgsToken.Parse(scope, openBracketToken, childDef.Arguments));
-							//	}
-
-							//	return compToken;
-							//}
 						}
 					}
 				}

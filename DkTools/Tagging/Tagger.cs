@@ -5,6 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using EnvDTE;
+using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Text;
 
 namespace DkTools.Tagging
@@ -13,17 +14,19 @@ namespace DkTools.Tagging
 	{
 		public static void InsertDate()
 		{
-			var dte = Shell.DTE;
-			var activeDoc = dte.ActiveDocument;
-			if (activeDoc != null)
-			{
-				var options = ProbeToolsPackage.Instance.TaggingOptions;
-				var dateFormat = options.DateFormat;
-				if (string.IsNullOrWhiteSpace(dateFormat)) dateFormat = Constants.DefaultDateFormat;
+			ThreadHelper.ThrowIfNotOnUIThread();
 
-				var sel = activeDoc.Selection as TextSelection;
-				sel.Insert(DateTime.Now.ToString(options.DateFormat));
-			}
+            var dte = Shell.DTE;
+            var activeDoc = dte.ActiveDocument;
+            if (activeDoc != null)
+            {
+                var options = ProbeToolsPackage.Instance.TaggingOptions;
+                var dateFormat = options.DateFormat;
+                if (string.IsNullOrWhiteSpace(dateFormat)) dateFormat = Constants.DefaultDateFormat;
+
+                var sel = activeDoc.Selection as TextSelection;
+                sel.Insert(DateTime.Now.ToString(options.DateFormat));
+            }
 		}
 
 		public static string GetFileHeaderText(string fileName)
@@ -73,6 +76,8 @@ namespace DkTools.Tagging
 
 		public static void InsertFileHeader()
 		{
+			ThreadHelper.ThrowIfNotOnUIThread();
+
 			var dte = Shell.DTE;
 			var activeDoc = dte.ActiveDocument;
 			if (activeDoc != null)
@@ -87,6 +92,8 @@ namespace DkTools.Tagging
 
 		public static void InsertDiag()
 		{
+			ThreadHelper.ThrowIfNotOnUIThread();
+
 			var dte = Shell.DTE;
 			var activeDoc = dte.ActiveDocument;
 			if (activeDoc != null)
@@ -120,8 +127,9 @@ namespace DkTools.Tagging
 						var fileStore = CodeModel.FileStore.GetOrCreateForTextBuffer(buf);
 						if (fileStore != null)
 						{
-							var funcs = fileStore.GetFunctionDropDownList(buf.CurrentSnapshot);
-							var model = fileStore.GetMostRecentModel(buf.CurrentSnapshot, "Insert diag");
+							var fileName = VsTextUtil.TryGetDocumentFileName(buf);
+							var funcs = fileStore.GetFunctionDropDownList(fileName, buf.CurrentSnapshot);
+							var model = fileStore.GetMostRecentModel(fileName, buf.CurrentSnapshot, "Insert diag");
 							var modelPos = model.AdjustPosition(Shell.ActiveView.Caret.Position.BufferPosition.Position, model.Snapshot);
 							foreach (var func in funcs)
 							{
@@ -165,6 +173,8 @@ namespace DkTools.Tagging
 
 		public static void InsertTag()
 		{
+			ThreadHelper.ThrowIfNotOnUIThread();
+
 			var dte = Shell.DTE;
 			var activeDoc = dte.ActiveDocument;
 			if (activeDoc == null) return;

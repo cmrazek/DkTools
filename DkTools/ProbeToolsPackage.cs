@@ -121,6 +121,8 @@ namespace DkTools
 			Snippets.SnippetDeploy.DeploySnippets();
 			CodeModel.SignatureDocumentor.Initialize();
 
+			ThreadHelper.ThrowIfNotOnUIThread();
+
 			// Proffer the service.	http://msdn.microsoft.com/en-us/library/bb166498.aspx
 			var langService = new ProbeLanguageService(this);
 			langService.SetSite(this);
@@ -157,12 +159,22 @@ namespace DkTools
 
 		protected override void Dispose(bool disposing)
 		{
-			if (_componentId != 0)
+			try
 			{
-				var mgr = GetService(typeof(SOleComponentManager)) as IOleComponentManager;
-				if (mgr != null) mgr.FRevokeComponent(_componentId);
-				_componentId = 0;
+				ThreadHelper.ThrowIfNotOnUIThread();
+
+				if (_componentId != 0)
+				{
+					var mgr = GetService(typeof(SOleComponentManager)) as IOleComponentManager;
+					if (mgr != null) mgr.FRevokeComponent(_componentId);
+					_componentId = 0;
+				}
 			}
+			catch (Exception ex)
+			{
+				System.Diagnostics.Debug.WriteLine(ex);
+			}
+			
 
 			if (_functionScanner != null)
 			{
@@ -182,6 +194,8 @@ namespace DkTools
 
 		public int FDoIdle(uint grfidlef)
 		{
+			ThreadHelper.ThrowIfNotOnUIThread();
+
 			bool bPeriodic = (grfidlef & (uint)_OLEIDLEF.oleidlefPeriodic) != 0;
 			// Use typeof(TestLanguageService) because we need to reference the GUID for our language service.
 			var service = GetService(typeof(ProbeLanguageService)) as ProbeLanguageService;
@@ -283,14 +297,19 @@ namespace DkTools
 
 		private void DocumentEvents_DocumentSaved(EnvDTE.Document Document)
 		{
-			try
+			ThreadHelper.JoinableTaskFactory.RunAsync(async () =>
 			{
-				Shell.OnFileSaved(Document.FullName);
-			}
-			catch (Exception ex)
-			{
-				Shell.ShowError(ex);
-			}
+				await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
+
+				try
+				{
+					Shell.OnFileSaved(Document.FullName);
+				}
+				catch (Exception ex)
+				{
+					Shell.ShowError(ex);
+				}
+			});
 		}
 
 		private void VSColorTheme_ThemeChanged(Microsoft.VisualStudio.PlatformUI.ThemeChangedEventArgs e)
@@ -420,9 +439,13 @@ namespace DkTools
 		{
 			get
 			{
+				ThreadHelper.ThrowIfNotOnUIThread();
+
 				if (_editorAdaptersService == null)
 				{
 					var model = ProbeToolsPackage.Instance.GetService(typeof(Microsoft.VisualStudio.ComponentModelHost.SComponentModel)) as Microsoft.VisualStudio.ComponentModelHost.IComponentModel;
+					if (model == null) throw new InvalidOperationException("Unable to get service 'Microsoft.VisualStudio.ComponentModelHost.SComponentModel'.");
+
 					_editorAdaptersService = model.GetService<Microsoft.VisualStudio.Editor.IVsEditorAdaptersFactoryService>() as Microsoft.VisualStudio.Editor.IVsEditorAdaptersFactoryService;
 					if (_editorAdaptersService == null) throw new InvalidOperationException("Unable to get service 'Microsoft.VisualStudio.Editor.IVsEditorAdaptersFactoryService'.");
 				}
@@ -435,6 +458,8 @@ namespace DkTools
 		{
 			get
 			{
+				ThreadHelper.ThrowIfNotOnUIThread();
+
 				if (_textManagerService == null)
 				{
 					_textManagerService = ProbeToolsPackage.Instance.GetService(typeof(Microsoft.VisualStudio.TextManager.Interop.SVsTextManager)) as Microsoft.VisualStudio.TextManager.Interop.IVsTextManager;
@@ -449,6 +474,8 @@ namespace DkTools
 		{
 			get
 			{
+				ThreadHelper.ThrowIfNotOnUIThread();
+
 				if (_textManager2Service == null)
 				{
 					_textManager2Service = ProbeToolsPackage.Instance.GetService(typeof(Microsoft.VisualStudio.TextManager.Interop.SVsTextManager)) as Microsoft.VisualStudio.TextManager.Interop.IVsTextManager2;
@@ -463,6 +490,8 @@ namespace DkTools
 		{
 			get
 			{
+				ThreadHelper.ThrowIfNotOnUIThread();
+
 				if (_outputWindowService == null)
 				{
 					_outputWindowService = this.GetService(typeof(SVsOutputWindow)) as IVsOutputWindow;
@@ -477,6 +506,8 @@ namespace DkTools
 		{
 			get
 			{
+				ThreadHelper.ThrowIfNotOnUIThread();
+
 				if (_errorListService == null)
 				{
 					_errorListService = this.GetService(typeof(SVsErrorList)) as IVsErrorList;
@@ -491,6 +522,8 @@ namespace DkTools
 		{
 			get
 			{
+				ThreadHelper.ThrowIfNotOnUIThread();
+
 				if (_taskListService == null)
 				{
 					_taskListService = this.GetService(typeof(SVsTaskList)) as IVsTaskList;
@@ -505,6 +538,8 @@ namespace DkTools
 		{
 			get
 			{
+				ThreadHelper.ThrowIfNotOnUIThread();
+
 				if (_statusBarService == null)
 				{
 					_statusBarService = this.GetService(typeof(SVsStatusbar)) as IVsStatusbar;

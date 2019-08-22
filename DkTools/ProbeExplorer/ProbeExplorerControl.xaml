@@ -4,12 +4,12 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
 			 xmlns:local="clr-namespace:DkTools.ProbeExplorer"
-			 xmlns:vs_shell="clr-namespace:Microsoft.VisualStudio.PlatformUI;assembly=Microsoft.VisualStudio.Shell.11.0"
+			 xmlns:vs_shell="clr-namespace:Microsoft.VisualStudio.PlatformUI;assembly=Microsoft.VisualStudio.Shell.15.0"
              mc:Ignorable="d" d:DesignHeight="300" d:DesignWidth="300" Loaded="UserControl_Loaded">
 	<UserControl.Resources>
 		<ResourceDictionary>
 			<ResourceDictionary.MergedDictionaries>
-				<ResourceDictionary Source="/DkTools2012;component/ProbeExplorer/DkToolsControlStyles.xaml"/>
+				<ResourceDictionary Source="/DkTools;component/ProbeExplorer/DkToolsControlStyles.xaml"/>
 			</ResourceDictionary.MergedDictionaries>
 		</ResourceDictionary>
 	</UserControl.Resources>
@@ -33,7 +33,7 @@
         <Button Height="23" Width="23" HorizontalAlignment="Right" Margin="0,2,0,0" Name="c_refreshButton" VerticalAlignment="Top" Click="RefreshButton_Click"
 				ToolTip="Reloads all data from the WBDK environment (app names, files, dictionary)" Template="{DynamicResource DkToolsButtonControlTemplate}">
             <Button.Content>
-                <Image Source="/DkTools2012;component/Images/ico_refresh.gif" />
+                <Image Source="/DkTools;component/Images/ico_refresh.gif" />
             </Button.Content>
         </Button>
 		<TabControl HorizontalAlignment="Stretch" Margin="0,31,0,0" Name="c_tabControl" VerticalAlignment="Stretch" SelectionChanged="TabControl_SelectionChanged" Template="{DynamicResource DkToolsTabControlControlTemplate}">

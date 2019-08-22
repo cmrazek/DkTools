@@ -12,6 +12,7 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
+using Microsoft.VisualStudio.Shell;
 using IO = System.IO;
 using VsText=Microsoft.VisualStudio.Text;
 using VsTextEditor=Microsoft.VisualStudio.Text.Editor;
@@ -114,6 +115,8 @@ namespace DkTools.ProbeExplorer
 
 		public void OnDocumentActivated(VsTextEditor.IWpfTextView view)
 		{
+			ThreadHelper.ThrowIfNotOnUIThread();
+
 			RefreshFunctionList(view);
 		}
 		#endregion
@@ -142,16 +145,15 @@ namespace DkTools.ProbeExplorer
 		{
 			try
 			{
-				if (!c_appCombo.Dispatcher.CheckAccess())
+				ThreadHelper.JoinableTaskFactory.RunAsync(async () =>
 				{
-					c_appCombo.Dispatcher.BeginInvoke(new Action(() => { Probe_AppChanged(sender, e); }));
-					return;
-				}
+					await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
 
-				var currentApp = ProbeEnvironment.CurrentApp;
-				c_appCombo.SelectedItem = (from a in c_appCombo.Items.Cast<string>() where a == currentApp select a).FirstOrDefault();
+					var currentApp = ProbeEnvironment.CurrentApp;
+					c_appCombo.SelectedItem = (from a in c_appCombo.Items.Cast<string>() where a == currentApp select a).FirstOrDefault();
 
-				RefreshForEnvironment();
+					RefreshForEnvironment();
+				});
 			}
 			catch (Exception ex)
 			{
@@ -458,6 +460,8 @@ namespace DkTools.ProbeExplorer
 		{
 			try
 			{
+				ThreadHelper.ThrowIfNotOnUIThread();
+
 				var menuItem = sender as MenuItem;
 				if (menuItem != null)
 				{
@@ -1003,6 +1007,8 @@ namespace DkTools.ProbeExplorer
 
 		private void RefreshFunctionList(VsTextEditor.IWpfTextView view)
 		{
+			ThreadHelper.ThrowIfNotOnUIThread();
+
 			if (!c_functionTab.IsSelected) return;
 
 			if (view != null)
@@ -1016,7 +1022,8 @@ namespace DkTools.ProbeExplorer
 						_activeView = view;
 						_activeSnapshot = snapshot;
 
-						_activeFunctions = (from f in fileStore.GetFunctionDropDownList(snapshot)
+						var fileName = VsTextUtil.TryGetDocumentFileName(view.TextBuffer);
+						_activeFunctions = (from f in fileStore.GetFunctionDropDownList(fileName, snapshot)
 											orderby f.Name.ToLower()
 											select new FunctionListItem(f)).ToArray();
 						ApplyFunctionFilter();
@@ -1116,6 +1123,8 @@ namespace DkTools.ProbeExplorer
 
 		public void FocusFunctionFilter()
 		{
+			ThreadHelper.ThrowIfNotOnUIThread();
+
 			RefreshFunctionList(Shell.ActiveView);
 
 			c_functionTab.IsSelected = true;

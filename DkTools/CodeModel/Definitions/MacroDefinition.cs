@@ -45,13 +45,10 @@ namespace DkTools.CodeModel.Definitions
 			}
 		}
 
-		public override System.Windows.UIElement QuickInfoTextWpf
-		{
-			get
-			{
-				return WpfDivs(WpfMainLine(_signature.PrettySignature), WpfInfoLine(_body.Trim()));
-			}
-		}
+		public override object QuickInfoElements => QuickInfoStack(
+			_signature.QuickInfoElements,
+			QuickInfoDescription(_body.Trim())
+		);
 
 		public override string PickText
 		{

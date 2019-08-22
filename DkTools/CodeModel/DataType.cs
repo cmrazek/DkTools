@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
+using Microsoft.VisualStudio.Text;
+using Microsoft.VisualStudio.Text.Adornments;
 using DkTools.CodeModel.Definitions;
 using DkTools.CodeModel.Tokens;
 
@@ -1176,12 +1178,6 @@ namespace DkTools.CodeModel
 
 					return intf.DataType;
 				}
-
-				// TODO: remove
-				//return new DataType(ValType.Interface, a.TypeName, intfName, Definition.EmptyArray, CompletionOptionsType.InterfaceMembers)
-				//{
-				//	Interface = intf
-				//};
 			}
 
 			return new DataType(ValType.Interface, a.TypeName, "interface");
@@ -1317,19 +1313,31 @@ namespace DkTools.CodeModel
 			return _source;
 		}
 
-		public System.Windows.UIElement QuickInfoWpf
+		public object QuickInfoElements
 		{
 			get
 			{
-				if (!string.IsNullOrEmpty(_name))
+				return Definition.QuickInfoStack(
+					string.IsNullOrEmpty(_name) ? null : Definition.QuickInfoMainLine(_name),
+					Definition.QuickInfoClassified(Definition.QuickInfoRun(Classifier.ProbeClassifierType.DataType, _source))
+				);
+			}
+		}
+
+		/// <summary>
+		/// Gets the data type as it would appear if being displayed as code.
+		/// </summary>
+		public IEnumerable<ClassifiedTextRun> QuickInfoRuns
+		{
+			get
+			{
+				if (!string.IsNullOrWhiteSpace(_name))
 				{
-					return Definition.WpfDivs(
-						Definition.WpfMainLine(_name),
-						Definition.WpfInfoLine(_source));
+					yield return Definition.QuickInfoRun(Classifier.ProbeClassifierType.DataType, _name);
 				}
 				else
 				{
-					return Definition.WpfMainLine(_source);
+					yield return Definition.QuickInfoRun(Classifier.ProbeClassifierType.DataType, _source);
 				}
 			}
 		}

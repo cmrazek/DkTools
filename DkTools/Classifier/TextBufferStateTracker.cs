@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Text;
 
 namespace DkTools.Classifier
@@ -62,6 +63,8 @@ namespace DkTools.Classifier
 
 		public int GetStateForPosition(int pos, ITextSnapshot snapshot)
 		{
+			ThreadHelper.ThrowIfNotOnUIThread();
+
 			_snapshot = snapshot;
 
 			var line = _snapshot.GetLineFromPosition(pos);
@@ -70,7 +73,9 @@ namespace DkTools.Classifier
 
 			var fileStore = CodeModel.FileStore.GetOrCreateForTextBuffer(snapshot.TextBuffer);
 			if (fileStore == null) return 0;
-			var model = fileStore.GetMostRecentModel(snapshot, "GetStateForPosition");
+
+			var fileName = VsTextUtil.TryGetDocumentFileName(snapshot.TextBuffer);
+			var model = fileStore.GetMostRecentModel(fileName, snapshot, "GetStateForPosition");
 
 			if (lineStartPos <= pos)
 			{
@@ -88,6 +93,8 @@ namespace DkTools.Classifier
 
 		public int GetStateForLineStart(int lineNum, ITextSnapshot snapshot)
 		{
+			ThreadHelper.ThrowIfNotOnUIThread();
+
 			if (_states.Count <= lineNum)
 			{
 				if (_states.Count == 0)
@@ -101,7 +108,9 @@ namespace DkTools.Classifier
 
 				var fileStore = CodeModel.FileStore.GetOrCreateForTextBuffer(snapshot.TextBuffer);
 				if (fileStore == null) return 0;
-				var model = fileStore.GetMostRecentModel(snapshot, "GetStateForLine()");
+
+				var fileName = VsTextUtil.TryGetDocumentFileName(snapshot.TextBuffer);
+				var model = fileStore.GetMostRecentModel(fileName, snapshot, "GetStateForLine()");
 				_snapshot = snapshot;
 
 				var tokenInfo = new ProbeClassifierScanner.TokenInfo();

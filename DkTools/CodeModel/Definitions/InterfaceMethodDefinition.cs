@@ -49,13 +49,7 @@ namespace DkTools.CodeModel.Definitions
 			}
 		}
 
-		public override System.Windows.UIElement QuickInfoTextWpf
-		{
-			get
-			{
-				return WpfMainLine(_sig.PrettySignature);
-			}
-		}
+		public override object QuickInfoElements => _sig.QuickInfoElements;
 
 		public override FunctionSignature Signature
 		{

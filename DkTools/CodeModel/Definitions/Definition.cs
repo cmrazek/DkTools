@@ -5,7 +5,9 @@ using System.Text;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
-using VsText = Microsoft.VisualStudio.Text;
+using Microsoft.VisualStudio.Language.StandardClassification;
+using Microsoft.VisualStudio.Text;
+using Microsoft.VisualStudio.Text.Adornments;
 using VsUI = Microsoft.VisualStudio.PlatformUI;
 using DkTools.CodeModel.Tokens;
 
@@ -21,7 +23,7 @@ namespace DkTools.CodeModel.Definitions
 		public abstract StatementCompletion.CompletionType CompletionType { get; }
 		public abstract Classifier.ProbeClassifierType ClassifierType { get; }
 		public abstract string QuickInfoTextStr { get; }
-		public abstract UIElement QuickInfoTextWpf { get; }
+		public abstract object QuickInfoElements { get; }
 		public abstract string PickText { get; }
 
 		private const int k_maxWpfWidth = 600;
@@ -109,134 +111,57 @@ namespace DkTools.CodeModel.Definitions
 		}
 #endif
 
-		#region WPF Quick Info
-		private static Brush _textForegroundBrush;
-		private static Brush TextForegroundBrush
+		#region Quick Info (VS2017 API)
+		public static object QuickInfoAttributeString(string label, string value)
 		{
-			get
-			{
-				if (_textForegroundBrush == null)
-				{
-					var color = VsUI.VSColorTheme.GetThemedColor(VsUI.EnvironmentColors.ToolTipTextColorKey);
-					_textForegroundBrush = new SolidColorBrush(Color.FromArgb(color.A, color.R, color.G, color.B));
-				}
-				return _textForegroundBrush;
-			}
+			return new ClassifiedTextElement(
+				new ClassifiedTextRun(PredefinedClassificationTypeNames.Comment, label + ": "),
+				new ClassifiedTextRun(PredefinedClassificationTypeNames.NaturalLanguage, value)
+			);
 		}
 
-		public static void OnThemeChanged()
+		public static object QuickInfoAttributeElements(string label, params object[] elements)
 		{
-			_textForegroundBrush = null;
+			return new ContainerElement(ContainerElementStyle.Wrapped,
+				new object[] {
+					new ClassifiedTextElement(QuickInfoRun(Classifier.ProbeClassifierType.Comment, label + ": "))
+				}.Concat(elements).Where(e => e != null).ToArray()
+			);
 		}
 
-		public static UIElement WpfDivs(params UIElement[] items)
+		public static object QuickInfoAttributeElement(string label, object element)
 		{
-			var panel = new StackPanel
-			{
-				Orientation = Orientation.Vertical,
-				HorizontalAlignment = HorizontalAlignment.Left,
-				MaxWidth = k_maxWpfWidth
-			};
-
-			foreach (var item in items)
-			{
-				if (item != null) panel.Children.Add(item);
-			}
-
-			return panel;
+			return new ContainerElement(ContainerElementStyle.Wrapped, new object[] {
+				new ClassifiedTextElement(QuickInfoRun(Classifier.ProbeClassifierType.Comment, label + ": ")),
+				element }.Where(x => x != null).ToArray());
 		}
 
-		public static UIElement WpfDivs(IEnumerable<UIElement> items)
+		public static ClassifiedTextElement QuickInfoClassified(params ClassifiedTextRun[] runs)
 		{
-			return WpfDivs(items.ToArray());
+			return new ClassifiedTextElement(runs.Where(x => x != null).ToArray());
 		}
 
-		public static UIElement WpfAttribute(string label, string value)
+		public static ClassifiedTextRun QuickInfoRun(Classifier.ProbeClassifierType type, string text)
 		{
-			var panel = new StackPanel
-			{
-				Orientation = Orientation.Horizontal,
-				HorizontalAlignment = HorizontalAlignment.Left,
-				MaxWidth = k_maxWpfWidth
-			};
-			panel.Children.Add(new TextBlock
-			{
-				Text = label + ":",
-				FontWeight = FontWeights.Bold,
-				MinWidth = 75,
-				HorizontalAlignment = HorizontalAlignment.Left,
-				Foreground = TextForegroundBrush
-			});
-			panel.Children.Add(new TextBlock
-			{
-				Text = value,
-				FontStyle = FontStyles.Normal,
-				HorizontalAlignment = HorizontalAlignment.Left,
-				TextWrapping = TextWrapping.Wrap,
-				Foreground = TextForegroundBrush
-			});
-
-			return panel;
+			var typeName = Classifier.ProbeClassifier.GetClassificationTypeName(type, PredefinedClassificationTypeNames.NaturalLanguage);
+			return new ClassifiedTextRun(typeName, text);
 		}
 
-		public static UIElement WpfAttribute(string label, UIElement value)
+		public static ContainerElement QuickInfoStack(params object[] lines)
 		{
-			var panel = new StackPanel
-			{
-				Orientation = Orientation.Horizontal,
-				HorizontalAlignment = HorizontalAlignment.Left,
-				MaxWidth = k_maxWpfWidth
-			};
-			panel.Children.Add(new TextBlock
-			{
-				Text = label + ":",
-				FontWeight = FontWeights.Bold,
-				MinWidth = 75,
-				HorizontalAlignment = HorizontalAlignment.Left,
-				Foreground = TextForegroundBrush
-			});
-			panel.Children.Add(value);
-
-			return panel;
+			return new ContainerElement(ContainerElementStyle.Stacked, lines.Where(x => x != null).ToArray());
 		}
 
-		public static UIElement WpfMainLine(string text)
+		public static ClassifiedTextElement QuickInfoDescription(string desc)
 		{
-			return new TextBlock
-			{
-				Text = text,
-				HorizontalAlignment = HorizontalAlignment.Left,
-				Margin = new Thickness(0, 0, 0, 4),
-				MaxWidth = k_maxWpfWidth,
-				TextWrapping = TextWrapping.Wrap,
-				Foreground = TextForegroundBrush
-			};
+			return new ClassifiedTextElement(QuickInfoRun(Classifier.ProbeClassifierType.Comment, desc));
 		}
 
-		public static UIElement WpfInfoLine(string text)
+		public static object QuickInfoMainLine(string text)
 		{
-			return new TextBlock
-			{
-				Text = text,
-				FontStyle = FontStyles.Italic,
-				HorizontalAlignment = HorizontalAlignment.Left,
-				Margin = new Thickness(0, 4, 0, 0),
-				MaxWidth = k_maxWpfWidth,
-				TextWrapping = TextWrapping.Wrap,
-				Foreground = TextForegroundBrush
-			};
-		}
-
-		public static UIElement WpfIndent(UIElement child)
-		{
-			var panel = new StackPanel
-			{
-				Orientation = System.Windows.Controls.Orientation.Vertical,
-				Margin = new Thickness(0, 16, 0, 0),
-				HorizontalAlignment = HorizontalAlignment.Left
-			};
-			panel.Children.Add(child);
-			return panel;
+			return new ClassifiedTextElement(
+				new ClassifiedTextRun(PredefinedClassificationTypeNames.NaturalLanguage, text)
+			);
 		}
 		#endregion
 

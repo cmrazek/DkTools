@@ -31,69 +31,91 @@ namespace DkTools
 
 		internal static void OpenDocument(string fileName)
 		{
-			VsShellUtilities.OpenDocument(ProbeToolsPackage.Instance, fileName);
+			ThreadHelper.JoinableTaskFactory.RunAsync(async () =>
+			{
+				await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
+
+				VsShellUtilities.OpenDocument(ProbeToolsPackage.Instance, fileName);
+			});
 		}
 
 		internal static void OpenDocument(string fileName, CodeModel.Span selectSpan)
 		{
-			try
+			ThreadHelper.JoinableTaskFactory.RunAsync(async () =>
 			{
-				IVsTextView view;
-				IVsWindowFrame windowFrame;
-				OpenDocument(fileName, out view, out windowFrame);
-				ErrorHandler.ThrowOnFailure(windowFrame.Show());
+				await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
 
-				if (selectSpan.End > selectSpan.Start)
+				try
 				{
-					int startLine, startCol;
-					view.GetLineAndColumn(selectSpan.Start, out startLine, out startCol);
+					IVsTextView view;
+					IVsWindowFrame windowFrame;
+					OpenDocument(fileName, out view, out windowFrame);
+					ErrorHandler.ThrowOnFailure(windowFrame.Show());
 
-					int endLine, endCol;
-					view.GetLineAndColumn(selectSpan.End, out endLine, out endCol);
+					if (selectSpan.End > selectSpan.Start)
+					{
+						int startLine, startCol;
+						view.GetLineAndColumn(selectSpan.Start, out startLine, out startCol);
 
-					view.SetSelection(startLine, startCol, endLine, endCol);
-					view.CenterLines(startLine, 1);
+						int endLine, endCol;
+						view.GetLineAndColumn(selectSpan.End, out endLine, out endCol);
+
+						view.SetSelection(startLine, startCol, endLine, endCol);
+						view.CenterLines(startLine, 1);
+					}
+					else
+					{
+						int startLine, startCol;
+						view.GetLineAndColumn(selectSpan.Start, out startLine, out startCol);
+						view.SetSelection(startLine, startCol, startLine, startCol);
+						view.CenterLines(startLine, 1);
+					}
 				}
-				else
+				catch (Exception ex)
 				{
-					int startLine, startCol;
-					view.GetLineAndColumn(selectSpan.Start, out startLine, out startCol);
-					view.SetSelection(startLine, startCol, startLine, startCol);
-					view.CenterLines(startLine, 1);
+					ShowError(ex);
 				}
-			}
-			catch (Exception ex)
-			{
-				ShowError(ex);
-			}
+			});
 		}
 
 		internal static void OpenDocumentAndLine(string fileName, int lineNum)
 		{
-			try
+			ThreadHelper.JoinableTaskFactory.RunAsync(async () =>
 			{
-				IVsTextView view;
-				IVsWindowFrame windowFrame;
-				OpenDocument(fileName, out view, out windowFrame);
-				ErrorHandler.ThrowOnFailure(windowFrame.Show());
+				await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
 
-				view.SetSelection(lineNum, 0, lineNum, 0);
-				view.CenterLines(lineNum, 1);
-			}
-			catch (Exception ex)
-			{
-				ShowError(ex);
-			}
+				try
+				{
+					IVsTextView view;
+					IVsWindowFrame windowFrame;
+					OpenDocument(fileName, out view, out windowFrame);
+					ErrorHandler.ThrowOnFailure(windowFrame.Show());
+
+					view.SetSelection(lineNum, 0, lineNum, 0);
+					view.CenterLines(lineNum, 1);
+				}
+				catch (Exception ex)
+				{
+					ShowError(ex);
+				}
+			});
 		}
 
 		internal static void OpenDocument(string fileName, int pos)
 		{
-			if (pos < 0) pos = 0;
-			OpenDocument(fileName, new CodeModel.Span(pos, pos));
+			ThreadHelper.JoinableTaskFactory.RunAsync(async () =>
+			{
+				await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
+
+				if (pos < 0) pos = 0;
+				OpenDocument(fileName, new CodeModel.Span(pos, pos));
+			});
 		}
 
 		private static void OpenDocument(string fileName, out IVsTextView view, out IVsWindowFrame windowFrame)
 		{
+			ThreadHelper.ThrowIfNotOnUIThread();
+
 			try
 			{
 				IVsUIHierarchy uiHierarchy;
@@ -123,6 +145,8 @@ namespace DkTools
 		{
 			get
 			{
+				ThreadHelper.ThrowIfNotOnUIThread();
+
 				if (_dte == null)
 				{
 					_dte = Package.GetGlobalService(typeof(EnvDTE.DTE)) as EnvDTE.DTE;
@@ -135,6 +159,8 @@ namespace DkTools
 		internal static OutputPane CreateOutputPane(Guid paneGuid, string name)
 		{
 			// http://msdn.microsoft.com/en-us/library/bb187346%28v=vs.80%29.aspx
+
+			ThreadHelper.ThrowIfNotOnUIThread();
 
 			var output = ProbeToolsPackage.Instance.OutputWindowService;
 			if (output == null) throw new InvalidOperationException("Unable to get SVsOutputWindow service.");
@@ -156,13 +182,23 @@ namespace DkTools
 
 		internal static void ShowErrorList()
 		{
-			ProbeToolsPackage.Instance.ErrorListService.BringToFront();
+			ThreadHelper.JoinableTaskFactory.RunAsync(async () =>
+			{
+				await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
+
+				ProbeToolsPackage.Instance.ErrorListService.BringToFront();
+			});
 		}
 
 		internal static void SetStatusText(string text)
 		{
-			Log.Debug("Status: {0}", text);
-			ProbeToolsPackage.Instance.StatusBarService.SetText(text);
+			ThreadHelper.JoinableTaskFactory.RunAsync(async () =>
+			{
+				await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
+
+				Log.Debug("Status: {0}", text);
+				ProbeToolsPackage.Instance.StatusBarService.SetText(text);
+			});
 		}
 
 		internal static ITextBuffer ActiveBuffer
@@ -199,6 +235,8 @@ namespace DkTools
 
 		internal static void ShowFindInFiles(IEnumerable<string> searchDirs)
 		{
+			ThreadHelper.ThrowIfNotOnUIThread();
+
 			var dte = Shell.DTE;
 			dte.ExecuteCommand("Edit.FindinFiles");
 
@@ -231,6 +269,8 @@ namespace DkTools
 
 		internal static ProbeExplorer.ProbeExplorerToolWindow ShowProbeExplorerToolWindow()
 		{
+			ThreadHelper.ThrowIfNotOnUIThread();
+
 			var window = GetProbeExplorerToolWindow();
 			ErrorHandler.ThrowOnFailure((window.Frame as IVsWindowFrame).Show());
 			return window;
@@ -259,10 +299,12 @@ namespace DkTools
 
 		public static void ShowNotificationAsync(string message, string caption)
 		{
-			System.Threading.ThreadPool.QueueUserWorkItem((obj) =>
-				{
-					System.Windows.MessageBox.Show(message, caption, System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Information);
-				});
+			ThreadHelper.JoinableTaskFactory.RunAsync(async () =>
+			{
+				await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
+
+				System.Windows.MessageBox.Show(message, caption, System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Information);
+			});
 		}
 	}
 }

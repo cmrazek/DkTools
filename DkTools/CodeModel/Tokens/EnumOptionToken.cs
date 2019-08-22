@@ -26,16 +26,12 @@ namespace DkTools.CodeModel.Tokens
 			}
 		}
 
-		public override string GetQuickInfoStr(Token token = null)
+		public override object GetQuickInfoElements(Token token = null)
 		{
-			return string.Concat(Text, ": ", _dataType.InfoText);
-		}
-
-		public override System.Windows.UIElement GetQuickInfoWpf(Token token = null)
-		{
-			return Definition.WpfDivs(
-				Definition.WpfAttribute("Name", Text),
-				Definition.WpfAttribute("Data Type", _dataType.QuickInfoWpf));
+			return Definition.QuickInfoStack(
+				Definition.QuickInfoAttributeString("Name", Text),
+				Definition.QuickInfoAttributeElement("Data Type", _dataType.QuickInfoElements)
+			);
 		}
 
 		public void SetEnumDataType(DataType dataType)

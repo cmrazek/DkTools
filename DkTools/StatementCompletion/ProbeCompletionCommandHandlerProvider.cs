@@ -40,11 +40,16 @@ namespace DkTools.StatementCompletion
 
 		void textView_GotAggregateFocus(object sender, EventArgs e)
 		{
-			var view = sender as IWpfTextView;
-			if (view != null)
+			ThreadHelper.JoinableTaskFactory.RunAsync(async () =>
 			{
-				Shell.OnTextViewActivated(view);
-			}
+				await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
+
+				var view = sender as IWpfTextView;
+				if (view != null)
+				{
+					Shell.OnTextViewActivated(view);
+				}
+			});
 		}
     }
 }

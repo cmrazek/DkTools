@@ -1,4 +1,17 @@
 DkTools ChangeLog
+____________________________________________________________________________________________________
+Version 1.5.2 - (WIP):
+
+- Fixed issue with Visual Studio putting a lock on the dictionary.
+  (caused compile to fail if there are dictionary changes)
+- Improved the colors of some text in dark mode.
+- QuickInfo (hover text) now uses the new asynchronous API.
+- Fixed many warnings which would potentially cause deadlocks.
+
+____________________________________________________________________________________________________
+Version 1.5.1 - Aug 14, 2019:
+
+- Migrated to Visual Studio 2017
 
 ____________________________________________________________________________________________________
 Version 1.4.4 - Oct 5, 2018:

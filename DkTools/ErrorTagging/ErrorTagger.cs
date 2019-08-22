@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Editor;
 using Microsoft.VisualStudio.Text.Tagging;
@@ -42,9 +43,10 @@ namespace DkTools.ErrorTagging
 
 		public IEnumerable<ITagSpan<ErrorTag>> GetTags(NormalizedSnapshotSpanCollection spans)
 		{
-			_model = _store.GetMostRecentModel(_view.TextSnapshot, "ErrorTagger.GetTags()");
+			ThreadHelper.ThrowIfNotOnUIThread();
 
-			//if (!ProbeToolsPackage.Instance.EditorOptions.ShowErrors) return new TagSpan<ErrorTag>[0];
+			var fileName = VsTextUtil.TryGetDocumentFileName(_view.TextBuffer);
+			_model = _store.GetMostRecentModel(fileName, _view.TextSnapshot, "ErrorTagger.GetTags()");
 
 			return ErrorTaskProvider.Instance.GetErrorTagsForFile(_model.FileName, spans);
 		}
@@ -117,41 +119,48 @@ namespace DkTools.ErrorTagging
 
 		private void _backgroundFecDeferrer_Idle(object sender, BackgroundDeferrer.IdleEventArgs e)
 		{
-			try
+			ThreadHelper.JoinableTaskFactory.RunAsync(async () =>
 			{
-				if (_model != null &&
-					_model.FileContext != FileContext.Include &&
-					ProbeEnvironment.FileExistsInApp(_model.FileName))
+				await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
+
+				try
 				{
-					if (ProbeToolsPackage.Instance.EditorOptions.RunBackgroundFecOnSave)
+					if (_model != null &&
+						_model.FileContext != FileContext.Include &&
+						ProbeEnvironment.FileExistsInApp(_model.FileName))
 					{
-						Compiler.BackgroundFec.Run(_model.FileName, _model.Snapshot.TextBuffer.CurrentSnapshot);
-					}
-					else
-					{
-						ErrorTaskProvider.Instance.RemoveAllForSource(ErrorTaskSource.BackgroundFec, _model.FileName);
-					}
+						if (ProbeToolsPackage.Instance.EditorOptions.RunBackgroundFecOnSave)
+						{
+							Compiler.BackgroundFec.Run(_model.FileName, _model.Snapshot.TextBuffer.CurrentSnapshot);
+						}
+						else
+						{
+							ErrorTaskProvider.Instance.RemoveAllForSource(ErrorTaskSource.BackgroundFec, _model.FileName);
+						}
 
-					if (ProbeToolsPackage.Instance.EditorOptions.RunCodeAnalysisOnSave)
-					{
-						var textBuffer = _model.Snapshot.TextBuffer;
-						var fileStore = CodeModel.FileStore.GetOrCreateForTextBuffer(textBuffer);
-						if (fileStore == null) return;
-						var preprocessedModel = fileStore.CreatePreprocessedModel(textBuffer.CurrentSnapshot, false, "Background Code Analysis");
+						if (ProbeToolsPackage.Instance.EditorOptions.RunCodeAnalysisOnSave)
+						{
+							var textBuffer = _model.Snapshot.TextBuffer;
+							var fileStore = CodeModel.FileStore.GetOrCreateForTextBuffer(textBuffer);
+							if (fileStore == null) return;
 
-						var ca = new CodeAnalysis.CodeAnalyzer(null, preprocessedModel);
-						ca.Run();
-					}
-					else
-					{
-						ErrorTaskProvider.Instance.RemoveAllForSource(ErrorTaskSource.CodeAnalysis, _model.FileName);
+							var fileName = VsTextUtil.TryGetDocumentFileName(textBuffer);
+							var preprocessedModel = fileStore.CreatePreprocessedModel(fileName, textBuffer.CurrentSnapshot, false, "Background Code Analysis");
+
+							var ca = new CodeAnalysis.CodeAnalyzer(null, preprocessedModel);
+							ca.Run();
+						}
+						else
+						{
+							ErrorTaskProvider.Instance.RemoveAllForSource(ErrorTaskSource.CodeAnalysis, _model.FileName);
+						}
 					}
 				}
-			}
-			catch (Exception ex)
-			{
-				Log.WriteEx(ex);
-			}
+				catch (Exception ex)
+				{
+					Log.WriteEx(ex);
+				}
+			});
 		}
 	}
 }

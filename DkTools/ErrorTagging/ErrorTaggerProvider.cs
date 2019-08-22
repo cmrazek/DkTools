@@ -4,6 +4,7 @@ using System.ComponentModel.Composition;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Editor;
 using Microsoft.VisualStudio.Text.Tagging;
@@ -28,18 +29,23 @@ namespace DkTools.ErrorTagging
 
 		void textView_Closed(object sender, EventArgs e)
 		{
-			try
+			ThreadHelper.JoinableTaskFactory.RunAsync(async () =>
 			{
-				var textView = sender as ITextView;
-				if (textView != null)
+				await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
+
+				try
 				{
-					ErrorTaskProvider.Instance.OnDocumentClosed(textView);
+					var textView = sender as ITextView;
+					if (textView != null)
+					{
+						ErrorTaskProvider.Instance.OnDocumentClosed(textView);
+					}
 				}
-			}
-			catch (Exception ex)
-			{
-				Log.WriteEx(ex);
-			}
+				catch (Exception ex)
+				{
+					Log.WriteEx(ex);
+				}
+			});
 		}
 	}
 }

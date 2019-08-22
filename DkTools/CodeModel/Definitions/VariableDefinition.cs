@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Microsoft.VisualStudio.Text;
+using Microsoft.VisualStudio.Text.Adornments;
 using DkTools.CodeModel.Tokens;
 
 namespace DkTools.CodeModel.Definitions
@@ -94,18 +96,30 @@ namespace DkTools.CodeModel.Definitions
 			}
 		}
 
-		public override System.Windows.UIElement QuickInfoTextWpf
+		public override object QuickInfoElements
 		{
 			get
 			{
-				if (_dataType != null && !string.IsNullOrEmpty(_dataType.InfoText))
+				var runs = new List<ClassifiedTextRun>();
+
+				if (_dataType != null)
 				{
-					return WpfDivs(WpfMainLine(_declText), WpfInfoLine(_dataType.InfoText));
+					runs.AddRange(_dataType.QuickInfoRuns);
+					runs.Add(QuickInfoRun(Classifier.ProbeClassifierType.Normal, " "));
 				}
-				else
+				runs.Add(QuickInfoRun(Classifier.ProbeClassifierType.Variable, Name));
+
+				if (_arrayLengths != null)
 				{
-					return WpfMainLine(_declText);
+					foreach (var len in _arrayLengths)
+					{
+						runs.Add(QuickInfoRun(Classifier.ProbeClassifierType.Operator, "["));
+						runs.Add(QuickInfoRun(Classifier.ProbeClassifierType.Number, len.ToString()));
+						runs.Add(QuickInfoRun(Classifier.ProbeClassifierType.Operator, "]"));
+					}
 				}
+
+				return new ClassifiedTextElement(runs);
 			}
 		}
 

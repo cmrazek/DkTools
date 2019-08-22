@@ -190,452 +190,546 @@ namespace DkTools
 
 		internal static void SaveProbeFiles()
 		{
-			List<string> srcDirs = null;
-
-			foreach (EnvDTE.Document doc in Shell.DTE.Documents)
+			ThreadHelper.JoinableTaskFactory.Run(async () =>
 			{
-				if (!doc.Saved)
+				await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
+
+				List<string> srcDirs = null;
+
+				foreach (EnvDTE.Document doc in Shell.DTE.Documents)
 				{
-					Log.Debug(string.Concat("Doc Path: ", Path.GetFullPath(doc.Path)));
-
-					var docFileName = doc.FullName;
-					var saveFile = false;
-
-					if (srcDirs == null) srcDirs = ProbeEnvironment.SourceIncludeDirs.ToList();
-					foreach (var dir in srcDirs)
+					if (!doc.Saved)
 					{
-						var srcDirPath = dir;
-						if (!srcDirPath.EndsWith("\\")) srcDirPath += "\\";
+						Log.Debug(string.Concat("Doc Path: ", Path.GetFullPath(doc.Path)));
 
-						if (docFileName.Length >= srcDirPath.Length &&
-							docFileName.Substring(0, srcDirPath.Length).Equals(srcDirPath, StringComparison.OrdinalIgnoreCase))
-						{
-							saveFile = true;
-							break;
-						}
-					}
+						var docFileName = doc.FullName;
+						var saveFile = false;
 
-					if (saveFile)
-					{
-						try
+						if (srcDirs == null) srcDirs = ProbeEnvironment.SourceIncludeDirs.ToList();
+						foreach (var dir in srcDirs)
 						{
-							Log.Debug("Saving document: {0}", doc.FullName);
-							doc.Save();
+							var srcDirPath = dir;
+							if (!srcDirPath.EndsWith("\\")) srcDirPath += "\\";
+
+							if (docFileName.Length >= srcDirPath.Length &&
+								docFileName.Substring(0, srcDirPath.Length).Equals(srcDirPath, StringComparison.OrdinalIgnoreCase))
+							{
+								saveFile = true;
+								break;
+							}
 						}
-						catch (Exception ex)
+
+						if (saveFile)
 						{
-							Log.Error(ex, string.Format("Unable to save document '{0}'.", doc.FullName));
+							try
+							{
+								Log.Debug("Saving document: {0}", doc.FullName);
+								doc.Save();
+							}
+							catch (Exception ex)
+							{
+								Log.Error(ex, string.Format("Unable to save document '{0}'.", doc.FullName));
+							}
 						}
 					}
 				}
-			}
+			});
 		}
 
 		private static void Compile(object sender, EventArgs e)
 		{
-			ProbeCompiler.Instance.Compile(ProbeCompiler.CompileMethod.Compile);
+			ThreadHelper.JoinableTaskFactory.RunAsync(async () =>
+			{
+				await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
+				ProbeCompiler.Instance.Compile(ProbeCompiler.CompileMethod.Compile);
+			});
 		}
 
 		private static void Compile_Dccmp(object sender, EventArgs e)
 		{
-			ProbeCompiler.Instance.Compile(ProbeCompiler.CompileMethod.Dccmp);
+			ThreadHelper.JoinableTaskFactory.RunAsync(async () =>
+			{
+				await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
+				ProbeCompiler.Instance.Compile(ProbeCompiler.CompileMethod.Dccmp);
+			});
 		}
 
 		private static void Compile_Credelix(object sender, EventArgs e)
 		{
-			ProbeCompiler.Instance.Compile(ProbeCompiler.CompileMethod.Credelix);
+			ThreadHelper.JoinableTaskFactory.RunAsync(async () =>
+			{
+				await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
+				ProbeCompiler.Instance.Compile(ProbeCompiler.CompileMethod.Credelix);
+			});
 		}
 
 		private static void KillCompile(object sender, EventArgs e)
 		{
-			ProbeCompiler.Instance.Kill();
+			ThreadHelper.JoinableTaskFactory.RunAsync(async () =>
+			{
+				await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
+				ProbeCompiler.Instance.Kill();
+			});
 		}
 
 		private static void ClearErrors(object sender, EventArgs e)
 		{
-			ErrorTagging.ErrorTaskProvider.Instance.Clear();
+			ThreadHelper.JoinableTaskFactory.RunAsync(async () =>
+			{
+				await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
+				ErrorTagging.ErrorTaskProvider.Instance.Clear();
+			});
 		}
 
 		private static void FecFile(object sender, EventArgs e)
 		{
-			try
+			ThreadHelper.JoinableTaskFactory.RunAsync(async () =>
 			{
-				var activeDoc = Shell.DTE.ActiveDocument;
-				if (activeDoc == null)
-				{
-					Shell.ShowError("No file is open.");
-					return;
-				}
+				await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
 
-				string baseFileName = ProbeEnvironment.FindBaseFile(activeDoc.FullName);
-				if (string.IsNullOrEmpty(baseFileName))
+				try
 				{
-					Shell.ShowError("Base file could not be found.");
-					return;
-				}
-
-				string fileName;
-				using (TempFileOutput output = new TempFileOutput(
-					Path.GetFileNameWithoutExtension(baseFileName) + "_fec",
-					Path.GetExtension(baseFileName)))
-				{
-					using (ProcessRunner pr = new ProcessRunner())
+					var activeDoc = Shell.DTE.ActiveDocument;
+					if (activeDoc == null)
 					{
-						int exitCode = pr.CaptureProcess("fec.exe", "/p \"" + baseFileName + "\"",
-							Path.GetDirectoryName(baseFileName), output);
-
-						if (exitCode != 0)
-						{
-							Shell.ShowError(string.Format("FEC returned exit code {0}.", exitCode));
-							return;
-						}
+						Shell.ShowError("No file is open.");
+						return;
 					}
 
-					fileName = output.FileName;
-				}
+					string baseFileName = ProbeEnvironment.FindBaseFile(activeDoc.FullName);
+					if (string.IsNullOrEmpty(baseFileName))
+					{
+						Shell.ShowError("Base file could not be found.");
+						return;
+					}
 
-				Shell.OpenDocument(fileName);
-			}
-			catch (Exception ex)
-			{
-				Shell.ShowError(ex);
-			}
+					string fileName;
+					using (TempFileOutput output = new TempFileOutput(
+						Path.GetFileNameWithoutExtension(baseFileName) + "_fec",
+						Path.GetExtension(baseFileName)))
+					{
+						using (ProcessRunner pr = new ProcessRunner())
+						{
+							int exitCode = pr.CaptureProcess("fec.exe", "/p \"" + baseFileName + "\"",
+								Path.GetDirectoryName(baseFileName), output);
+
+							if (exitCode != 0)
+							{
+								Shell.ShowError(string.Format("FEC returned exit code {0}.", exitCode));
+								return;
+							}
+						}
+
+						fileName = output.FileName;
+					}
+
+					Shell.OpenDocument(fileName);
+				}
+				catch (Exception ex)
+				{
+					Shell.ShowError(ex);
+				}
+			});
 		}
 
 		private static void FecFileToVisualC(object sender, EventArgs e)
 		{
-			try
+			ThreadHelper.JoinableTaskFactory.RunAsync(async () =>
 			{
-				var activeDoc = Shell.DTE.ActiveDocument;
-				if (activeDoc == null)
+				await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
+				try
 				{
-					Shell.ShowError("No file is open.");
-					return;
-				}
-
-				string baseFileName = ProbeEnvironment.FindBaseFile(activeDoc.FullName);
-				if (string.IsNullOrEmpty(baseFileName))
-				{
-					Shell.ShowError("Base file could not be found.");
-					return;
-				}
-
-				using (var pr = new ProcessRunner())
-				{
-					var args = string.Concat("\"", baseFileName, "\"");
-
-					var output = new StringOutput();
-
-					var exitCode = pr.CaptureProcess("fec.exe", args, Path.GetDirectoryName(baseFileName), output);
-
-					if (exitCode != 0)
+					var activeDoc = Shell.DTE.ActiveDocument;
+					if (activeDoc == null)
 					{
-						Shell.ShowError(string.Format("FEC returned exit code {0}\r\n\r\n{1}", exitCode, output.Text));
+						Shell.ShowError("No file is open.");
 						return;
 					}
-				}
 
-				var cFileName = Path.Combine(Path.GetDirectoryName(baseFileName),
-					string.Concat(Path.GetFileNameWithoutExtension(baseFileName), ".c"));
-				if (!File.Exists(cFileName))
+					string baseFileName = ProbeEnvironment.FindBaseFile(activeDoc.FullName);
+					if (string.IsNullOrEmpty(baseFileName))
+					{
+						Shell.ShowError("Base file could not be found.");
+						return;
+					}
+
+					using (var pr = new ProcessRunner())
+					{
+						var args = string.Concat("\"", baseFileName, "\"");
+
+						var output = new StringOutput();
+
+						var exitCode = pr.CaptureProcess("fec.exe", args, Path.GetDirectoryName(baseFileName), output);
+
+						if (exitCode != 0)
+						{
+							Shell.ShowError(string.Format("FEC returned exit code {0}\r\n\r\n{1}", exitCode, output.Text));
+							return;
+						}
+					}
+
+					var cFileName = Path.Combine(Path.GetDirectoryName(baseFileName),
+						string.Concat(Path.GetFileNameWithoutExtension(baseFileName), ".c"));
+					if (!File.Exists(cFileName))
+					{
+						Shell.ShowError("Unable to find .c file produced by FEC.");
+						return;
+					}
+
+					Shell.OpenDocument(cFileName);
+				}
+				catch (Exception ex)
 				{
-					Shell.ShowError("Unable to find .c file produced by FEC.");
-					return;
+					Shell.ShowError(ex);
 				}
-
-				Shell.OpenDocument(cFileName);
-			}
-			catch (Exception ex)
-			{
-				Shell.ShowError(ex);
-			}
+			});
 		}
 
 		private static void MergeFile(object sender, EventArgs e)
 		{
-			try
+			ThreadHelper.JoinableTaskFactory.RunAsync(async () =>
 			{
-				var activeDoc = Shell.DTE.ActiveDocument;
-				if (activeDoc == null)
+				await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
+				try
 				{
-					Shell.ShowError("No file is open.");
-					return;
-				}
-				var fileName = activeDoc.FullName;
-
-				var cp = new CodeProcessing.CodeProcessor();
-				cp.ShowMergeComments = true;
-				cp.ProcessFile(fileName);
-
-				string tempFileName = string.Empty;
-				using (var tempFileOutput = new TempFileOutput(string.Concat(Path.GetFileNameWithoutExtension(fileName), "_merge"),
-					Path.GetExtension(fileName)))
-				{
-					var errors = cp.Errors;
-					if (errors.Any())
+					var activeDoc = Shell.DTE.ActiveDocument;
+					if (activeDoc == null)
 					{
-						tempFileOutput.WriteLine("// Errors encountered during processing:");
-						foreach (var error in errors)
+						Shell.ShowError("No file is open.");
+						return;
+					}
+					var fileName = activeDoc.FullName;
+
+					var cp = new CodeProcessing.CodeProcessor();
+					cp.ShowMergeComments = true;
+					cp.ProcessFile(fileName);
+
+					string tempFileName = string.Empty;
+					using (var tempFileOutput = new TempFileOutput(string.Concat(Path.GetFileNameWithoutExtension(fileName), "_merge"),
+						Path.GetExtension(fileName)))
+					{
+						var errors = cp.Errors;
+						if (errors.Any())
 						{
-							if (error.Line != null && error.Line.File != null) tempFileOutput.WriteLine(string.Format("// {0}({1}): {2}", error.Line.FileName, error.Line.LineNum, error.Message));
-							else tempFileOutput.WriteLine(error.Message);
+							tempFileOutput.WriteLine("// Errors encountered during processing:");
+							foreach (var error in errors)
+							{
+								if (error.Line != null && error.Line.File != null) tempFileOutput.WriteLine(string.Format("// {0}({1}): {2}", error.Line.FileName, error.Line.LineNum, error.Message));
+								else tempFileOutput.WriteLine(error.Message);
+							}
+							tempFileOutput.WriteLine(string.Empty);
 						}
-						tempFileOutput.WriteLine(string.Empty);
+
+						foreach (var line in cp.Lines)
+						{
+							tempFileOutput.WriteLine(line.Text);
+						}
+
+						tempFileName = tempFileOutput.FileName;
 					}
 
-					foreach (var line in cp.Lines)
-					{
-						tempFileOutput.WriteLine(line.Text);
-					}
-
-					tempFileName = tempFileOutput.FileName;
+					Shell.OpenDocument(tempFileName);
 				}
-
-				Shell.OpenDocument(tempFileName);
-			}
-			catch (Exception ex)
-			{
-				Shell.ShowError(ex);
-			}
+				catch (Exception ex)
+				{
+					Shell.ShowError(ex);
+				}
+			});
 		}
 
 		private static void TableListing(object sender, EventArgs e)
 		{
-			try
+			ThreadHelper.JoinableTaskFactory.RunAsync(async () =>
 			{
-				var output = new StringOutput();
-				int exitCode;
+				await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
+				try
+				{
+					var output = new StringOutput();
+					int exitCode;
 
-				using (var pr = new ProcessRunner())
-				{
-					exitCode = pr.CaptureProcess("ptd.exe", "", ProbeEnvironment.TempDir, output);
+					using (var pr = new ProcessRunner())
+					{
+						exitCode = pr.CaptureProcess("ptd.exe", "", ProbeEnvironment.TempDir, output);
+					}
+					if (exitCode != 0)
+					{
+						Shell.ShowError(string.Format("PTD returned exit code {0}.", exitCode));
+					}
+					else
+					{
+						var tempFileName = TempManager.GetNewTempFileName("ptd", ".txt");
+						File.WriteAllText(tempFileName, output.Text);
+						Shell.OpenDocument(tempFileName);
+					}
 				}
-				if (exitCode != 0)
+				catch (Exception ex)
 				{
-					Shell.ShowError(string.Format("PTD returned exit code {0}.", exitCode));
+					Shell.ShowError(ex);
 				}
-				else
-				{
-					var tempFileName = TempManager.GetNewTempFileName("ptd", ".txt");
-					File.WriteAllText(tempFileName, output.Text);
-					Shell.OpenDocument(tempFileName);
-				}
-			}
-			catch (Exception ex)
-			{
-				Shell.ShowError(ex);
-			}
+			});
 		}
 
 		private static void FindInProbeFiles(object sender, EventArgs e)
 		{
-			try
+			ThreadHelper.JoinableTaskFactory.RunAsync(async () =>
 			{
-				var dirs = new StringBuilder();
-				var dirList = new List<string>();
+				await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
+				try
+				{
+					var dirs = new StringBuilder();
+					var dirList = new List<string>();
 
-				foreach (var sourceDir in ProbeEnvironment.SourceDirs) dirList.Add(sourceDir);
-				foreach (var includeDir in ProbeEnvironment.IncludeDirs) dirList.Add(includeDir);
+					foreach (var sourceDir in ProbeEnvironment.SourceDirs) dirList.Add(sourceDir);
+					foreach (var includeDir in ProbeEnvironment.IncludeDirs) dirList.Add(includeDir);
 
-				Shell.ShowFindInFiles(dirList);
-			}
-			catch (Exception ex)
-			{
-				Shell.ShowError(ex);
-			}
+					Shell.ShowFindInFiles(dirList);
+				}
+				catch (Exception ex)
+				{
+					Shell.ShowError(ex);
+				}
+			});
 		}
 
 		private static void ProbeSettings(object sender, EventArgs e)
 		{
-			try
+			ThreadHelper.JoinableTaskFactory.RunAsync(async () =>
 			{
-				Shell.DTE.ExecuteCommand("Tools.Options", GuidList.strProbeExplorerOptions);
-			}
-			catch (Exception ex)
-			{
-				Shell.ShowError(ex);
-			}
+				await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
+				try
+				{
+					Shell.DTE.ExecuteCommand("Tools.Options", GuidList.strProbeExplorerOptions);
+				}
+				catch (Exception ex)
+				{
+					Shell.ShowError(ex);
+				}
+			});
 		}
 
 		private static void RunSamCam(object sender, EventArgs e)
 		{
-			try
+			ThreadHelper.JoinableTaskFactory.RunAsync(async () =>
 			{
-				using (var form = new Run.RunForm())
+				await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
+				try
 				{
-					form.ShowDialog();
+					using (var form = new Run.RunForm())
+					{
+						form.ShowDialog();
+					}
 				}
-			}
-			catch (Exception ex)
-			{
-				Shell.ShowError(ex);
-			}
+				catch (Exception ex)
+				{
+					Shell.ShowError(ex);
+				}
+			});
 		}
 
 		private static void InsertFileHeader(object sender, EventArgs e)
 		{
-			try
+			ThreadHelper.JoinableTaskFactory.RunAsync(async () =>
 			{
-				Tagging.Tagger.InsertFileHeader();
-			}
-			catch (Exception ex)
-			{
-				Shell.ShowError(ex);
-			}
+				await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
+				try
+				{
+					Tagging.Tagger.InsertFileHeader();
+				}
+				catch (Exception ex)
+				{
+					Shell.ShowError(ex);
+				}
+			});
 		}
 
 		private static void InsertTag(object sender, EventArgs e)
 		{
-			try
+			ThreadHelper.JoinableTaskFactory.RunAsync(async () =>
 			{
-				Tagging.Tagger.InsertTag();
-			}
-			catch (Exception ex)
-			{
-				Shell.ShowError(ex);
-			}
+				await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
+				try
+				{
+					Tagging.Tagger.InsertTag();
+				}
+				catch (Exception ex)
+				{
+					Shell.ShowError(ex);
+				}
+			});
 		}
 
 		private static void InsertDiag(object sender, EventArgs e)
 		{
-			try
+			ThreadHelper.JoinableTaskFactory.RunAsync(async () =>
 			{
-				Tagging.Tagger.InsertDiag();
-			}
-			catch (Exception ex)
-			{
-				Shell.ShowError(ex);
-			}
+				await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
+				try
+				{
+					Tagging.Tagger.InsertDiag();
+				}
+				catch (Exception ex)
+				{
+					Shell.ShowError(ex);
+				}
+			});
 		}
 
 		private static void InsertDate(object sender, EventArgs e)
 		{
-			try
+			ThreadHelper.JoinableTaskFactory.RunAsync(async () =>
 			{
-				Tagging.Tagger.InsertDate();
-			}
-			catch (Exception ex)
-			{
-				Shell.ShowError(ex);
-			}
+				await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
+				try
+				{
+					Tagging.Tagger.InsertDate();
+				}
+				catch (Exception ex)
+				{
+					Shell.ShowError(ex);
+				}
+			});
 		}
 
 		private static void ShowTaggingOptions(object sender, EventArgs e)
 		{
-			try
+			ThreadHelper.JoinableTaskFactory.RunAsync(async () =>
 			{
-				Shell.DTE.ExecuteCommand("Tools.Options", GuidList.strTaggingOptions);
-			}
-			catch (Exception ex)
-			{
-				Shell.ShowError(ex);
-			}
+				await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
+				try
+				{
+					Shell.DTE.ExecuteCommand("Tools.Options", GuidList.strTaggingOptions);
+				}
+				catch (Exception ex)
+				{
+					Shell.ShowError(ex);
+				}
+			});
 		}
 
 		private static void LaunchPSelect(object sender, EventArgs e)
 		{
-			try
+			ThreadHelper.JoinableTaskFactory.RunAsync(async () =>
 			{
-				if (!string.IsNullOrEmpty(ProbeEnvironment.PlatformPath))
+				await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
+				try
 				{
-					var pathName = Path.Combine(ProbeEnvironment.PlatformPath, "ACM.msc");
-					if (File.Exists(pathName))
+					if (!string.IsNullOrEmpty(ProbeEnvironment.PlatformPath))
 					{
-						Process.Start(pathName);
-					}
-					else
-					{
-						Shell.ShowError("Unable to locate 'ACM.msc'");
+						var pathName = Path.Combine(ProbeEnvironment.PlatformPath, "ACM.msc");
+						if (File.Exists(pathName))
+						{
+							Process.Start(pathName);
+						}
+						else
+						{
+							Shell.ShowError("Unable to locate 'ACM.msc'");
+						}
 					}
 				}
-			}
-			catch (Exception ex)
-			{
-				Shell.ShowError(ex);
-			}
+				catch (Exception ex)
+				{
+					Shell.ShowError(ex);
+				}
+			});
 		}
 
 		private static void ShowHelp(object sender, EventArgs e)
 		{
-			try
+			ThreadHelper.JoinableTaskFactory.RunAsync(async () =>
 			{
-				if (!string.IsNullOrEmpty(ProbeEnvironment.PlatformPath))
+				await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
+				try
 				{
-					var pathName = Path.Combine(ProbeEnvironment.PlatformPath, "..\\Documentation\\platform.chm");
-					if (File.Exists(pathName))
+					if (!string.IsNullOrEmpty(ProbeEnvironment.PlatformPath))
 					{
-						Process.Start(pathName);
-					}
-					else
-					{
-						Shell.ShowError("Unable to locate 'platform.chm'");
+						var pathName = Path.Combine(ProbeEnvironment.PlatformPath, "..\\Documentation\\platform.chm");
+						if (File.Exists(pathName))
+						{
+							Process.Start(pathName);
+						}
+						else
+						{
+							Shell.ShowError("Unable to locate 'platform.chm'");
+						}
 					}
 				}
-			}
-			catch (Exception ex)
-			{
-				Shell.ShowError(ex);
-			}
+				catch (Exception ex)
+				{
+					Shell.ShowError(ex);
+				}
+			});
 		}
 
 		private static void ShowDrv(object sender, EventArgs e)
 		{
-			try
+			ThreadHelper.JoinableTaskFactory.RunAsync(async () =>
 			{
-				if (!string.IsNullOrEmpty(ProbeEnvironment.PlatformPath))
+				await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
+				try
 				{
-					var pathName = Path.Combine(ProbeEnvironment.PlatformPath, "DRV.msc");
-					if (File.Exists(pathName))
+					if (!string.IsNullOrEmpty(ProbeEnvironment.PlatformPath))
 					{
-						Process.Start(pathName);
-					}
-					else
-					{
-						Shell.ShowError("Unable to locate 'DRV.msc'");
+						var pathName = Path.Combine(ProbeEnvironment.PlatformPath, "DRV.msc");
+						if (File.Exists(pathName))
+						{
+							Process.Start(pathName);
+						}
+						else
+						{
+							Shell.ShowError("Unable to locate 'DRV.msc'");
+						}
 					}
 				}
-			}
-			catch (Exception ex)
-			{
-				Shell.ShowError(ex);
-			}
+				catch (Exception ex)
+				{
+					Shell.ShowError(ex);
+				}
+			});
 		}
 
 		private static void ShowProbeNV(object sender, EventArgs e)
 		{
-			try
+			ThreadHelper.JoinableTaskFactory.RunAsync(async () =>
 			{
-				if (!string.IsNullOrEmpty(ProbeEnvironment.PlatformPath))
+				await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
+				try
 				{
-					var pathName = Path.Combine(ProbeEnvironment.PlatformPath, "probenv.exe");
-					if (File.Exists(pathName))
+					if (!string.IsNullOrEmpty(ProbeEnvironment.PlatformPath))
 					{
-						Process.Start(pathName);
-					}
-					else
-					{
-						Shell.ShowError("Unable to locate 'ProbeNV.exe'");
+						var pathName = Path.Combine(ProbeEnvironment.PlatformPath, "probenv.exe");
+						if (File.Exists(pathName))
+						{
+							Process.Start(pathName);
+						}
+						else
+						{
+							Shell.ShowError("Unable to locate 'ProbeNV.exe'");
+						}
 					}
 				}
-			}
-			catch (Exception ex)
-			{
-				Shell.ShowError(ex);
-			}
+				catch (Exception ex)
+				{
+					Shell.ShowError(ex);
+				}
+			});
 		}
 
 		private static void DisableDeadCode(object sender, EventArgs e)
 		{
-			try
+			ThreadHelper.JoinableTaskFactory.RunAsync(async () =>
 			{
-				var options = ProbeToolsPackage.Instance.EditorOptions;
-				options.DisableDeadCode = !options.DisableDeadCode;
-				options.SaveSettingsToStorage();
-			}
-			catch (Exception ex)
-			{
-				Shell.ShowError(ex);
-			}
+				await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
+				try
+				{
+					var options = ProbeToolsPackage.Instance.EditorOptions;
+					options.DisableDeadCode = !options.DisableDeadCode;
+					options.SaveSettingsToStorage();
+				}
+				catch (Exception ex)
+				{
+					Shell.ShowError(ex);
+				}
+			});
 		}
 
 		private static bool DisableDeadCode_Checked(CommandId id)
@@ -645,42 +739,54 @@ namespace DkTools
 
 		private static void ShowFunctions(object sender, EventArgs e)
 		{
-			try
+			ThreadHelper.JoinableTaskFactory.RunAsync(async () =>
 			{
-				var window = Shell.ShowProbeExplorerToolWindow();
-				window.FocusFunctionFilter();
-			}
-			catch (Exception ex)
-			{
-				Shell.ShowError(ex);
-			}
+				await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
+				try
+				{
+					var window = Shell.ShowProbeExplorerToolWindow();
+					window.FocusFunctionFilter();
+				}
+				catch (Exception ex)
+				{
+					Shell.ShowError(ex);
+				}
+			});
 		}
 
 		private static void ShowDict(object sender, EventArgs e)
 		{
-			try
+			ThreadHelper.JoinableTaskFactory.RunAsync(async () =>
 			{
-				var window = Shell.ShowProbeExplorerToolWindow();
-				window.FocusDictFilter();
-			}
-			catch (Exception ex)
-			{
-				Shell.ShowError(ex);
-			}
+				await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
+				try
+				{
+					var window = Shell.ShowProbeExplorerToolWindow();
+					window.FocusDictFilter();
+				}
+				catch (Exception ex)
+				{
+					Shell.ShowError(ex);
+				}
+			});
 		}
 
 		private static void ShowErrors(object sender, EventArgs e)
 		{
-			try
+			ThreadHelper.JoinableTaskFactory.RunAsync(async () =>
 			{
-				var options = ProbeToolsPackage.Instance.EditorOptions;
-				options.RunBackgroundFecOnSave = !options.RunBackgroundFecOnSave;
-				options.SaveSettingsToStorage();
-			}
-			catch (Exception ex)
-			{
-				Shell.ShowError(ex);
-			}
+				await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
+				try
+				{
+					var options = ProbeToolsPackage.Instance.EditorOptions;
+					options.RunBackgroundFecOnSave = !options.RunBackgroundFecOnSave;
+					options.SaveSettingsToStorage();
+				}
+				catch (Exception ex)
+				{
+					Shell.ShowError(ex);
+				}
+			});
 		}
 
 		private static bool ShowErrors_Checked(CommandId id)
@@ -690,16 +796,20 @@ namespace DkTools
 
 		private static void ShowCodeAnalysis(object sender, EventArgs e)
 		{
-			try
+			ThreadHelper.JoinableTaskFactory.RunAsync(async () =>
 			{
-				var options = ProbeToolsPackage.Instance.EditorOptions;
-				options.RunCodeAnalysisOnSave = !options.RunCodeAnalysisOnSave;
-				options.SaveSettingsToStorage();
-			}
-			catch (Exception ex)
-			{
-				Shell.ShowError(ex);
-			}
+				await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
+				try
+				{
+					var options = ProbeToolsPackage.Instance.EditorOptions;
+					options.RunCodeAnalysisOnSave = !options.RunCodeAnalysisOnSave;
+					options.SaveSettingsToStorage();
+				}
+				catch (Exception ex)
+				{
+					Shell.ShowError(ex);
+				}
+			});
 		}
 
 		private static bool ShowCodeAnalysis_Checked(CommandId id)
@@ -709,52 +819,66 @@ namespace DkTools
 
 		private static void GoToNextReference(object sender, EventArgs e)
 		{
-			try
+			ThreadHelper.JoinableTaskFactory.RunAsync(async () =>
 			{
-				var nav = Navigation.Navigator.TryGetForView(Shell.ActiveView);
-				if (nav != null) nav.GoToNextOrPrevReference(true);
-			}
-			catch (Exception ex)
-			{
-				Shell.ShowError(ex);
-			}
+				await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
+				try
+				{
+					var nav = Navigation.Navigator.TryGetForView(Shell.ActiveView);
+					if (nav != null) nav.GoToNextOrPrevReference(true);
+				}
+				catch (Exception ex)
+				{
+					Shell.ShowError(ex);
+				}
+			});
 		}
 
 		private static void GoToPrevReference(object sender, EventArgs e)
 		{
-			try
+			ThreadHelper.JoinableTaskFactory.RunAsync(async () =>
 			{
-				var nav = Navigation.Navigator.TryGetForView(Shell.ActiveView);
-				if (nav != null) nav.GoToNextOrPrevReference(false);
-			}
-			catch (Exception ex)
-			{
-				Shell.ShowError(ex);
-			}
+				await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
+				try
+				{
+					var nav = Navigation.Navigator.TryGetForView(Shell.ActiveView);
+					if (nav != null) nav.GoToNextOrPrevReference(false);
+				}
+				catch (Exception ex)
+				{
+					Shell.ShowError(ex);
+				}
+			});
 		}
 
 		private static void RunCodeAnalysis(object sender, EventArgs e)
 		{
-			try
+			ThreadHelper.JoinableTaskFactory.RunAsync(async () =>
 			{
-				var view = Shell.ActiveView;
-				if (view == null) return;
+				await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
+				try
+				{
+					var view = Shell.ActiveView;
+					if (view == null) return;
 
-				var fileStore = CodeModel.FileStore.GetOrCreateForTextBuffer(view.TextBuffer);
-				if (fileStore == null) return;
-				var model = fileStore.CreatePreprocessedModel(view.TextSnapshot, false, "Code Analysis");
+					var fileName = VsTextUtil.TryGetDocumentFileName(view.TextBuffer);
 
-				var pane = Shell.CreateOutputPane(GuidList.guidCodeAnalysisPane, "DK Code Analysis");
-				pane.Clear();
-				pane.Show();
+					var fileStore = CodeModel.FileStore.GetOrCreateForTextBuffer(view.TextBuffer);
+					if (fileStore == null) return;
+					var model = fileStore.CreatePreprocessedModel(fileName, view.TextSnapshot, false, "Code Analysis");
 
-				var ca = new CodeAnalysis.CodeAnalyzer(pane, model);
-				ca.Run();
-			}
-			catch (Exception ex)
-			{
-				Shell.ShowError(ex);
-			}
+					var pane = Shell.CreateOutputPane(GuidList.guidCodeAnalysisPane, "DK Code Analysis");
+					pane.Clear();
+					pane.Show();
+
+					var ca = new CodeAnalysis.CodeAnalyzer(pane, model);
+					ca.Run();
+				}
+				catch (Exception ex)
+				{
+					Shell.ShowError(ex);
+				}
+			});
 		}
 
 #if DEBUG
@@ -762,48 +886,71 @@ namespace DkTools
 		{
 			private static CodeModel.CodeModel GetModelForActiveDoc()
 			{
+				ThreadHelper.ThrowIfNotOnUIThread();
+
 				var view = Shell.ActiveView;
 				if (view == null) return null;
 
 				var store = CodeModel.FileStore.GetOrCreateForTextBuffer(view.TextBuffer);
 				if (store == null) return null;
-				return store.GetMostRecentModel(view.TextSnapshot, "Debug Commands");
+
+				var fileName = VsTextUtil.TryGetDocumentFileName(view.TextBuffer);
+				return store.GetMostRecentModel(fileName, view.TextSnapshot, "Debug Commands");
 			}
 
 			public static void ShowCodeModelDump()
 			{
-				var view = Shell.ActiveView;
-				if (view == null) return;
+				ThreadHelper.JoinableTaskFactory.RunAsync(async () =>
+				{
+					await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
 
-				var fileStore = CodeModel.FileStore.GetOrCreateForTextBuffer(view.TextBuffer);
-				if (fileStore == null) return;
-				var model = fileStore.GetCurrentModel(view.TextSnapshot, "Debug:ShowCodeModelDump");
+					var view = Shell.ActiveView;
+					if (view == null) return;
 
-				Shell.OpenTempContent(model.DumpTree(), Path.GetFileName(model.FileName), ".model.xml");
+					var fileStore = CodeModel.FileStore.GetOrCreateForTextBuffer(view.TextBuffer);
+					if (fileStore == null) return;
+
+					var fileName = VsTextUtil.TryGetDocumentFileName(view.TextBuffer);
+					var model = fileStore.GetCurrentModel(fileName, view.TextSnapshot, "Debug:ShowCodeModelDump");
+
+					Shell.OpenTempContent(model.DumpTree(), Path.GetFileName(model.FileName), ".model.xml");
+				});
 			}
 
 			public static void ShowStdLibCodeModelDump()
 			{
-				var model = CodeModel.FileStore.StdLibModel;
+				ThreadHelper.JoinableTaskFactory.RunAsync(async () =>
+				{
+					await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
 
-				Shell.OpenTempContent(model.DumpTree(), "stdlib", ".model.xml");
+					var model = CodeModel.FileStore.StdLibModel;
+
+					Shell.OpenTempContent(model.DumpTree(), "stdlib", ".model.xml");
+				});
 			}
 
 			public static void ShowDefinitions()
 			{
-				var model = GetModelForActiveDoc();
-				if (model != null)
+				ThreadHelper.JoinableTaskFactory.RunAsync(async () =>
 				{
-					Shell.OpenTempContent(model.DefinitionProvider.DumpDefinitions(), Path.GetFileName(model.FileName), ".txt");
-				}
+					await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
+
+					var model = GetModelForActiveDoc();
+					if (model != null)
+					{
+						Shell.OpenTempContent(model.DefinitionProvider.DumpDefinitions(), Path.GetFileName(model.FileName), ".txt");
+					}
+				});
 			}
 
 			private static CodeModel.CodeSource GetCodeSourceForActiveView(out string fileName)
 			{
+				ThreadHelper.ThrowIfNotOnUIThread();
+
 				var view = Shell.ActiveView;
 				if (view != null)
 				{
-					fileName = VsTextUtil.TryGetFileName(view.TextBuffer);
+					fileName = VsTextUtil.TryGetDocumentFileName(view.TextBuffer);
 					var content = view.TextBuffer.CurrentSnapshot.GetText();
 
 					try
@@ -830,56 +977,78 @@ namespace DkTools
 
 			public static void ShowPreprocessor()
 			{
-				string fileName;
-				var codeSource = GetCodeSourceForActiveView(out fileName);
-				if (codeSource == null) return;
+				ThreadHelper.JoinableTaskFactory.RunAsync(async () =>
+				{
+					await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
 
-				var store = new CodeModel.FileStore();
-				var model = store.CreatePreprocessedModel(codeSource, fileName, false, "Commands.Debug.ShowPreprocessor()", null);
-				
-				Shell.OpenTempContent(model.Source.Text, Path.GetFileName(fileName), ".preprocessor.txt");
+					string fileName;
+					var codeSource = GetCodeSourceForActiveView(out fileName);
+					if (codeSource == null) return;
+
+					var store = new CodeModel.FileStore();
+					var model = store.CreatePreprocessedModel(codeSource, fileName, false, "Commands.Debug.ShowPreprocessor()", null);
+
+					Shell.OpenTempContent(model.Source.Text, Path.GetFileName(fileName), ".preprocessor.txt");
+				});
 			}
 
 			public static void ShowPreprocessorDump()
 			{
-				var model = GetModelForActiveDoc();
-				if (model == null)
+				ThreadHelper.JoinableTaskFactory.RunAsync(async () =>
 				{
-					Shell.ShowError("No model found.");
-					return;
-				}
+					await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
 
-				var prepModel = model.PreprocessorModel;
-				if (prepModel == null)
-				{
-					Shell.ShowError("No preprocessor model found.");
-					return;
-				}
+					var model = GetModelForActiveDoc();
+					if (model == null)
+					{
+						Shell.ShowError("No model found.");
+						return;
+					}
 
-				//Shell.OpenTempContent(prepModel.File.CodeSource.Dump(), Path.GetFileName(model.FileName), ".ppsegs.txt");
-				Shell.OpenTempContent(prepModel.Dump(), Path.GetFileName(model.FileName), ".prep.txt");
+					var prepModel = model.PreprocessorModel;
+					if (prepModel == null)
+					{
+						Shell.ShowError("No preprocessor model found.");
+						return;
+					}
+
+					//Shell.OpenTempContent(prepModel.File.CodeSource.Dump(), Path.GetFileName(model.FileName), ".ppsegs.txt");
+					Shell.OpenTempContent(prepModel.Dump(), Path.GetFileName(model.FileName), ".prep.txt");
+				});
 			}
 
 			public static void ShowPreprocessorFullModelDump()
 			{
-				var view = Shell.ActiveView;
-				if (view == null) return;
+				ThreadHelper.JoinableTaskFactory.RunAsync(async () =>
+				{
+					await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
 
-				var fileStore = CodeModel.FileStore.GetOrCreateForTextBuffer(view.TextBuffer);
-				if (fileStore == null) return;
-				var model = fileStore.CreatePreprocessedModel(view.TextSnapshot, false, "Debug:ShowPreprocessorFullModelDump");
+					var view = Shell.ActiveView;
+					if (view == null) return;
 
-				Shell.OpenTempContent(model.DumpTree(), Path.GetFileName(model.FileName), ".prepmodel.xml");
+					var fileName = VsTextUtil.TryGetDocumentFileName(view.TextBuffer);
+
+					var fileStore = CodeModel.FileStore.GetOrCreateForTextBuffer(view.TextBuffer);
+					if (fileStore == null) return;
+					var model = fileStore.CreatePreprocessedModel(fileName, view.TextSnapshot, false, "Debug:ShowPreprocessorFullModelDump");
+
+					Shell.OpenTempContent(model.DumpTree(), Path.GetFileName(model.FileName), ".prepmodel.xml");
+				});
 			}
 
 			public static void ShowStateAtCaret()
 			{
-				var view = Shell.ActiveView;
-				if (view == null) return;
+				ThreadHelper.JoinableTaskFactory.RunAsync(async () =>
+				{
+					await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
 
-				var tracker = Classifier.TextBufferStateTracker.GetTrackerForTextBuffer(view.TextBuffer);
-				var state = tracker.GetStateForPosition(view.Caret.Position.BufferPosition, view.TextSnapshot);
-				Log.Debug("State at caret: 0x{0:X8}", state);
+					var view = Shell.ActiveView;
+					if (view == null) return;
+
+					var tracker = Classifier.TextBufferStateTracker.GetTrackerForTextBuffer(view.TextBuffer);
+					var state = tracker.GetStateForPosition(view.Caret.Position.BufferPosition, view.TextSnapshot);
+					Log.Debug("State at caret: 0x{0:X8}", state);
+				});
 			}
 		}
 #endif

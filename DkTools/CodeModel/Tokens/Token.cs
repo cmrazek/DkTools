@@ -461,32 +461,15 @@ namespace DkTools.CodeModel.Tokens
 		}
 		#endregion
 
-		/// <summary>
-		/// Attempts to locate tooltip text for the token, or will ask the parent for text.
-		/// </summary>
-		/// <param name="token">If not null, then the mouse is hovering over this sub-token; otherwise the mouse is hovering over this token.</param>
-		/// <returns>Tooltip text for this token.</returns>
-		public virtual string GetQuickInfoStr(Token token = null)
+		public virtual object GetQuickInfoElements(Token token = null)
 		{
 			if (_sourceDefinition != null)
 			{
-				var defText = _sourceDefinition.QuickInfoTextStr;
-				if (!string.IsNullOrWhiteSpace(defText)) return defText;
+				var elements = _sourceDefinition.QuickInfoElements;
+				if (elements != null) return elements;
 			}
 
-			if (_parent != null) return _parent.GetQuickInfoStr(token != null ? token : this);
-			return string.Empty;
-		}
-
-		public virtual System.Windows.UIElement GetQuickInfoWpf(Token token = null)
-		{
-			if (_sourceDefinition != null)
-			{
-				var defText = _sourceDefinition.QuickInfoTextWpf;
-				if (defText != null) return defText;
-			}
-
-			if (_parent != null) return _parent.GetQuickInfoWpf(token != null ? token : this);
+			if (_parent != null) return _parent.GetQuickInfoElements(token != null ? token : this);
 			return null;
 		}
 

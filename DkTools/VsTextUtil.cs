@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Editor;
@@ -99,9 +100,17 @@ namespace DkTools
 			return spans.EncompassingSpan();
 		}
 
-		public static string TryGetFileName(this ITextBuffer buffer)
+		/// <summary>
+		/// Gets the file name for the text buffer.
+		/// This must be run on the UI thread.
+		/// </summary>
+		/// <param name="buffer">The text buffer for the document.</param>
+		/// <returns>The file name if it could be retrieved; otherwise null.</returns>
+		public static string TryGetDocumentFileName(this ITextBuffer buffer)
 		{
 			// http://social.msdn.microsoft.com/Forums/vstudio/en-US/ef5cd137-56e4-4077-8e31-6d282668e8ad/filename-from-itextbuffer-or-itextbuffer-from-projectitem
+
+			ThreadHelper.ThrowIfNotOnUIThread();
 
 			IVsTextBuffer bufferAdapter;
 			if (!buffer.Properties.TryGetProperty(typeof(IVsTextBuffer), out bufferAdapter) || bufferAdapter == null) return null;

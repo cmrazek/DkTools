@@ -5,6 +5,7 @@ using System.Linq;
 using System.Text;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Package;
+using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.TextManager.Interop;
 
 namespace DkTools.LanguageSvc
@@ -20,6 +21,8 @@ namespace DkTools.LanguageSvc
 		public override bool OnSynchronizeDropdowns(LanguageService languageService, IVsTextView textView, int line, int col,
 			ArrayList dropDownTypes, ArrayList dropDownMembers, ref int selectedType, ref int selectedMember)
 		{
+			ThreadHelper.ThrowIfNotOnUIThread();
+
 			if (languageService.GetType() != typeof(ProbeLanguageService)) return false;
 
 			if (textView == null) return false;
@@ -37,7 +40,8 @@ namespace DkTools.LanguageSvc
 
 			var index = 0;
 
-			foreach (var func in (from f in fileStore.GetFunctionDropDownList(buf.CurrentSnapshot)
+			var fileName = VsTextUtil.TryGetDocumentFileName(buf);
+			foreach (var func in (from f in fileStore.GetFunctionDropDownList(fileName, buf.CurrentSnapshot)
 								  orderby f.Name.ToLower()
 								  select f))
 			{

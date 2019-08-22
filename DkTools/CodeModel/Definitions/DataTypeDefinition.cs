@@ -51,13 +51,7 @@ namespace DkTools.CodeModel.Definitions
 			get { return !string.IsNullOrEmpty(_dataType.InfoText) ? _dataType.InfoText : _dataType.Name; }
 		}
 
-		public override System.Windows.UIElement QuickInfoTextWpf
-		{
-			get
-			{
-				return _dataType.QuickInfoWpf;
-			}
-		}
+		public override object QuickInfoElements => _dataType.QuickInfoElements;
 
 		public override string PickText
 		{

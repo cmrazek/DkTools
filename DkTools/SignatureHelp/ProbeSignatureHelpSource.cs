@@ -7,6 +7,7 @@ using System.Runtime.InteropServices;
 using System.Text;
 using System.Text.RegularExpressions;
 using Microsoft.VisualStudio.Language.Intellisense;
+using Microsoft.VisualStudio.Shell;
 using VsText = Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Editor;
 using Microsoft.VisualStudio.Utilities;
@@ -55,6 +56,8 @@ namespace DkTools.SignatureHelp
 
 		private IEnumerable<ISignature> HandleOpenBracket(VsText.ITextSnapshot snapshot, int triggerPos)
 		{
+			ThreadHelper.ThrowIfNotOnUIThread();
+
 			var lineText = snapshot.GetLineTextUpToPosition(triggerPos);
 
 			var match = _rxFuncBeforeBracket.Match(lineText);
@@ -73,7 +76,8 @@ namespace DkTools.SignatureHelp
 					{
 						VsText.ITrackingSpan applicableToSpan = null;
 
-						var model = fileStore.GetMostRecentModel(snapshot, "Signature help after '(' - dot separated words");
+						var fileName = VsTextUtil.TryGetDocumentFileName(snapshot.TextBuffer);
+						var model = fileStore.GetMostRecentModel(fileName, snapshot, "Signature help after '(' - dot separated words");
 						var modelPos = model.AdjustPosition(word1Start, snapshot);
 
 						foreach (var word1Def in model.DefinitionProvider.GetAny(modelPos, word1))
@@ -91,7 +95,8 @@ namespace DkTools.SignatureHelp
 					{
 						VsText.ITrackingSpan applicableToSpan = null;
 
-						var model = fileStore.GetMostRecentModel(snapshot, "Signature help after '('");
+						var fileName = VsTextUtil.TryGetDocumentFileName(snapshot.TextBuffer);
+						var model = fileStore.GetMostRecentModel(fileName, snapshot, "Signature help after '('");
 						var modelPos = model.AdjustPosition(funcNameStart, snapshot);
 						foreach (var def in model.DefinitionProvider.GetAny(modelPos, funcName))
 						{
@@ -108,10 +113,13 @@ namespace DkTools.SignatureHelp
 
 		private IEnumerable<ISignature> HandleComma(VsText.ITextSnapshot snapshot, int triggerPos)
 		{
+			ThreadHelper.ThrowIfNotOnUIThread();
+
 			var fileStore = CodeModel.FileStore.GetOrCreateForTextBuffer(_textBuffer);
 			if (fileStore != null)
 			{
-				var model = fileStore.GetMostRecentModel(snapshot, "Signature help after ','");
+				var fileName = VsTextUtil.TryGetDocumentFileName(_textBuffer);
+				var model = fileStore.GetMostRecentModel(fileName, snapshot, "Signature help after ','");
 				var modelPos = (new VsText.SnapshotPoint(snapshot, triggerPos)).TranslateTo(model.Snapshot, VsText.PointTrackingMode.Negative).Position;
 
 				var argsToken = model.File.FindDownward<ArgsToken>().Where(t => t.Span.Start < modelPos && (t.Span.End > modelPos || !t.IsTerminated)).LastOrDefault();

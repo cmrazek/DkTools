@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Editor;
 using Microsoft.VisualStudio.Text.Outlining;
@@ -58,13 +59,17 @@ namespace DkTools.Navigation
 
 		public void GoToNextOrPrevReference(bool next)
 		{
+			ThreadHelper.ThrowIfNotOnUIThread();
+
 			var fileStore = CodeModel.FileStore.GetOrCreateForTextBuffer(_view.TextBuffer);
 			if (fileStore == null)
 			{
 				Log.Debug("No file store available.");
 				return;
 			}
-			var model = fileStore.GetMostRecentModel(_view.TextSnapshot, "ReferenceScroller.GoToNextReference()");
+
+			var fileName = VsTextUtil.TryGetDocumentFileName(_view.TextBuffer);
+			var model = fileStore.GetMostRecentModel(fileName, _view.TextSnapshot, "ReferenceScroller.GoToNextReference()");
 
 			// Get the caret position
 			var caretPtTest = _view.Caret.Position.Point.GetPoint(buf => (!buf.ContentType.IsOfType("projection")), Microsoft.VisualStudio.Text.PositionAffinity.Predecessor);

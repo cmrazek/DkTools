@@ -36,13 +36,7 @@ namespace DkTools.CodeModel.Definitions
 			get { return Name; }
 		}
 
-		public override System.Windows.UIElement QuickInfoTextWpf
-		{
-			get
-			{
-				return WpfMainLine(Name);
-			}
-		}
+		public override object QuickInfoElements => QuickInfoClassified(QuickInfoRun(Classifier.ProbeClassifierType.Constant, Name));
 
 		public override string PickText
 		{

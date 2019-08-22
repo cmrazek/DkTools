@@ -84,15 +84,10 @@ namespace DkTools.CodeModel.Definitions
 			}
 		}
 
-		public override System.Windows.UIElement QuickInfoTextWpf
-		{
-			get
-			{
-				return WpfDivs(
-					WpfMainLine(_sig.PrettySignature),
-					string.IsNullOrEmpty(_sig.Description) ? null : WpfInfoLine(_sig.Description));
-			}
-		}
+		public override object QuickInfoElements => QuickInfoStack(
+			_sig.QuickInfoElements,
+			string.IsNullOrWhiteSpace(_sig.Description) ? null : QuickInfoDescription(_sig.Description)
+		);
 
 		public int BodyStartPosition
 		{

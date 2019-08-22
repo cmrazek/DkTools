@@ -5,7 +5,8 @@ using System.Text;
 using System.Threading.Tasks;
 using Microsoft.VisualStudio.Shell;
 using VsShell = Microsoft.VisualStudio.Shell;
-using VsText = Microsoft.VisualStudio.Text;
+using Microsoft.VisualStudio.Text;
+using Microsoft.VisualStudio.Text.Adornments;
 
 namespace DkTools.ErrorTagging
 {
@@ -14,11 +15,11 @@ namespace DkTools.ErrorTagging
 		private ErrorTaskSource _source;
 		private string _sourceArg;
 		private ErrorType _type;
-		private VsText.ITextSnapshot _snapshot;
+		private ITextSnapshot _snapshot;
 		private CodeModel.Span? _span;
 
 		public ErrorTask(string fileName, int lineNum, int lineCol, string message, ErrorType type, ErrorTaskSource source,
-			string sourceFileName, VsText.ITextSnapshot snapshot, CodeModel.Span? span = null)
+			string sourceFileName, ITextSnapshot snapshot, CodeModel.Span? span = null)
 		{
 			this.Document = fileName;
 			this.Line = lineNum;
@@ -73,18 +74,18 @@ namespace DkTools.ErrorTagging
 			get { return _type; }
 		}
 
-		public VsText.ITextSnapshot GetSnapshot(VsText.ITextSnapshot currentSnapshot)
+		public ITextSnapshot GetSnapshot(ITextSnapshot currentSnapshot)
 		{
 			if (_snapshot == null || _snapshot.TextBuffer != currentSnapshot.TextBuffer) _snapshot = currentSnapshot;
 			return _snapshot;
 		}
 
-		public VsText.SnapshotSpan GetSnapshotSpan(VsText.ITextSnapshot currentSnapshot)
+		public SnapshotSpan GetSnapshotSpan(ITextSnapshot currentSnapshot)
 		{
 			if (_span.HasValue)
 			{
 				if (_snapshot == null) _snapshot = currentSnapshot;
-				return new VsText.SnapshotSpan(_snapshot, _span.Value.Start, _span.Value.Length);
+				return new SnapshotSpan(_snapshot, _span.Value.Start, _span.Value.Length);
 			}
 
 			var line = _snapshot.GetLineFromLineNumber(Line);
@@ -98,7 +99,7 @@ namespace DkTools.ErrorTagging
 
 			if (_snapshot == null) _snapshot = currentSnapshot;
 			_span = new CodeModel.Span(startPos, endPos);
-			return new VsText.SnapshotSpan(_snapshot, _span.Value.Start, _span.Value.Length);
+			return new SnapshotSpan(_snapshot, _span.Value.Start, _span.Value.Length);
 		}
 
 		public CodeModel.Span? Span
@@ -110,29 +111,21 @@ namespace DkTools.ErrorTagging
 		{
 			get
 			{
-				System.Windows.Media.Brush brush;
+				string type;
 				switch (_type)
 				{
 					case ErrorType.Warning:
-						if (VSTheme.CurrentTheme == VSThemeMode.Light) brush = System.Windows.Media.Brushes.LimeGreen;
-						else brush = System.Windows.Media.Brushes.Chartreuse;
+						type = PredefinedErrorTypeNames.Warning;
 						break;
 					case ErrorType.CodeAnalysisError:
-						if (VSTheme.CurrentTheme == VSThemeMode.Light) brush = System.Windows.Media.Brushes.Blue;
-						else brush = System.Windows.Media.Brushes.SkyBlue;
+						type = PredefinedErrorTypeNames.OtherError;
 						break;
 					default:
-						if (VSTheme.CurrentTheme == VSThemeMode.Light) brush = System.Windows.Media.Brushes.Red;
-						else brush = System.Windows.Media.Brushes.OrangeRed;
+						type = PredefinedErrorTypeNames.CompilerError;
 						break;
 				}
 
-				return new System.Windows.Controls.TextBlock
-				{
-					Text = this.Text,
-					Foreground = brush,
-					FontWeight = System.Windows.FontWeights.Bold
-				};
+				return new ClassifiedTextElement(new ClassifiedTextRun(type, this.Text));
 			}
 		}
 	}

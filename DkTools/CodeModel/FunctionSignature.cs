@@ -3,6 +3,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Microsoft.VisualStudio.Text;
+using Microsoft.VisualStudio.Text.Adornments;
+using DkTools.CodeModel.Definitions;
 
 namespace DkTools.CodeModel
 {
@@ -144,6 +147,65 @@ namespace DkTools.CodeModel
 			{
 				CheckPrettySignature();
 				return _prettySignature;
+			}
+		}
+
+		public ClassifiedTextElement QuickInfoElements
+		{
+			get
+			{
+				var runs = new List<ClassifiedTextRun>();
+				var spaceRequired = false;
+
+				Action addSpace = () =>
+				{
+					if (spaceRequired)
+					{
+						runs.Add(Definition.QuickInfoRun(Classifier.ProbeClassifierType.Normal, " "));
+						spaceRequired = false;
+					}
+				};
+
+				if (_privacy != FunctionPrivacy.Public)
+				{
+					runs.Add(Definition.QuickInfoRun(Classifier.ProbeClassifierType.Keyword, _privacy.ToString().ToLower()));
+					spaceRequired = true;
+				}
+
+				if (_extern)
+				{
+					addSpace();
+					runs.Add(Definition.QuickInfoRun(Classifier.ProbeClassifierType.Keyword, "extern"));
+					spaceRequired = true;
+				}
+
+				if (_returnDataType != null)
+				{
+					addSpace();
+					runs.Add(Definition.QuickInfoRun(Classifier.ProbeClassifierType.DataType, _returnDataType.ToPrettyString()));
+					spaceRequired = true;
+				}
+
+				addSpace();
+				runs.Add(Definition.QuickInfoRun(Classifier.ProbeClassifierType.Function, _funcName));
+				runs.Add(Definition.QuickInfoRun(Classifier.ProbeClassifierType.Operator, "("));
+
+				var firstArg = true;
+				foreach (var arg in _args)
+				{
+					if (firstArg) firstArg = false;
+					else
+					{
+						runs.Add(Definition.QuickInfoRun(Classifier.ProbeClassifierType.Delimiter, ","));
+						runs.Add(Definition.QuickInfoRun(Classifier.ProbeClassifierType.Normal, " "));
+					}
+
+					runs.AddRange(arg.QuickInfoRuns);
+				}
+
+				runs.Add(Definition.QuickInfoRun(Classifier.ProbeClassifierType.Operator, ")"));
+
+				return new ClassifiedTextElement(runs.Where(r => r != null).ToArray());
 			}
 		}
 

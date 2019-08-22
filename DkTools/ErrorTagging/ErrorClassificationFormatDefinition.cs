@@ -28,7 +28,6 @@ namespace DkTools.ErrorTagging
 
 			[Export(typeof(ErrorTypeDefinition))]
 			[Name(ErrorTagger.CodeErrorLight)]
-			[Microsoft.VisualStudio.Utilities.DisplayName(ErrorTagger.CodeErrorLight)]
 			internal static ErrorTypeDefinition CodeErrorTypeDefinition = null;
 		}
 
@@ -47,7 +46,6 @@ namespace DkTools.ErrorTagging
 
 			[Export(typeof(ErrorTypeDefinition))]
 			[Name(ErrorTagger.CodeErrorDark)]
-			[Microsoft.VisualStudio.Utilities.DisplayName(ErrorTagger.CodeErrorDark)]
 			internal static ErrorTypeDefinition CodeErrorTypeDefinition = null;
 		}
 
@@ -66,7 +64,6 @@ namespace DkTools.ErrorTagging
 
 			[Export(typeof(ErrorTypeDefinition))]
 			[Name(ErrorTagger.CodeWarningLight)]
-			[Microsoft.VisualStudio.Utilities.DisplayName(ErrorTagger.CodeWarningLight)]
 			internal static ErrorTypeDefinition CodeWarningTypeDefinition = null;
 		}
 
@@ -85,7 +82,6 @@ namespace DkTools.ErrorTagging
 
 			[Export(typeof(ErrorTypeDefinition))]
 			[Name(ErrorTagger.CodeWarningDark)]
-			[Microsoft.VisualStudio.Utilities.DisplayName(ErrorTagger.CodeWarningDark)]
 			internal static ErrorTypeDefinition CodeWarningTypeDefinition = null;
 		}
 
@@ -104,7 +100,6 @@ namespace DkTools.ErrorTagging
 
 			[Export(typeof(ErrorTypeDefinition))]
 			[Name(ErrorTagger.CodeAnalysisErrorLight)]
-			[Microsoft.VisualStudio.Utilities.DisplayName(ErrorTagger.CodeAnalysisErrorLight)]
 			internal static ErrorTypeDefinition CodeAnalysisErrorTypeDefinition = null;
 		}
 
@@ -123,7 +118,6 @@ namespace DkTools.ErrorTagging
 
 			[Export(typeof(ErrorTypeDefinition))]
 			[Name(ErrorTagger.CodeAnalysisErrorDark)]
-			[Microsoft.VisualStudio.Utilities.DisplayName(ErrorTagger.CodeAnalysisErrorDark)]
 			internal static ErrorTypeDefinition CodeAnalysisErrorTypeDefinition = null;
 		}
 	}

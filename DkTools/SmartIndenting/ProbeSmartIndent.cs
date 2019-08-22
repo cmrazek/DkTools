@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
+using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Editor;
 using Microsoft.VisualStudio.Utilities;
@@ -38,6 +39,8 @@ namespace DkTools.SmartIndenting
 
 		public static int? GetDesiredIndentation(ITextBuffer buffer, ITextSnapshotLine line, int tabSize, bool keepTabs)
 		{
+			ThreadHelper.ThrowIfNotOnUIThread();
+
 			if (line.LineNumber == 0) return 0;
 
 			var lineText = line.GetText();
@@ -71,7 +74,8 @@ namespace DkTools.SmartIndenting
 				var fileStore = CodeModel.FileStore.GetOrCreateForTextBuffer(buffer);
 				if (fileStore != null)
 				{
-					var model = fileStore.GetCurrentModel(buffer.CurrentSnapshot, "Smart indenting - case inside switch");
+					var fileName = VsTextUtil.TryGetDocumentFileName(buffer);
+					var model = fileStore.GetCurrentModel(fileName, buffer.CurrentSnapshot, "Smart indenting - case inside switch");
 					var offset = line.Snapshot.TranslateOffsetToSnapshot(line.Start.Position, model.Snapshot);
 					var bracesToken = model.File.FindDownward(offset, t => t is CodeModel.Tokens.BracesToken).LastOrDefault() as CodeModel.Tokens.BracesToken;
 					if (bracesToken != null)

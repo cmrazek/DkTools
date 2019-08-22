@@ -12,6 +12,7 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
+using Microsoft.VisualStudio.Shell;
 
 namespace DkTools.ProbeExplorer
 {
@@ -94,7 +95,7 @@ namespace DkTools.ProbeExplorer
 		#region Table
 		private TreeViewItem CreateTableTvi(DkDict.Table table)
 		{
-			var tvi = CreateStandardTvi(_tableImg, table.Name, table.Prompt, table.Definition.QuickInfoTextWpf, true);
+			var tvi = CreateStandardTvi(_tableImg, table.Name, table.Prompt, new TextBox { Text = table.Definition.QuickInfoTextStr }, true);
 			tvi.Expanded += TableTvi_Expanded;
 			tvi.Tag = table;
 			tvi.MouseRightButtonDown += TableTvi_MouseRightButtonDown;
@@ -212,7 +213,7 @@ namespace DkTools.ProbeExplorer
 		#region Field
 		private TreeViewItem CreateFieldTvi(DkDict.Column field)
 		{
-			var tvi = CreateStandardTvi(_fieldImg, field.Name, field.Prompt, field.Definition.QuickInfoTextWpf, true);
+			var tvi = CreateStandardTvi(_fieldImg, field.Name, field.Prompt, new TextBox { Text = field.Definition.QuickInfoTextStr }, true);
 			tvi.Tag = field;
 			tvi.Expanded += FieldTvi_Expanded;
 			tvi.MouseRightButtonDown += FieldTvi_MouseRightButtonDown;
@@ -329,7 +330,8 @@ namespace DkTools.ProbeExplorer
 		#region RelInd
 		private TreeViewItem CreateRelIndTreeViewItem(DkDict.RelInd relind)
 		{
-			var tvi = CreateStandardTvi(relind.Type == DkDict.RelIndType.Index ? _indexImg : _relationshipImg, relind.Name, relind.Prompt, relind.Definition.QuickInfoTextWpf, true);
+			var tvi = CreateStandardTvi(relind.Type == DkDict.RelIndType.Index ? _indexImg : _relationshipImg, relind.Name, relind.Prompt,
+				new TextBox { Text = relind.Definition.QuickInfoTextStr }, true);
 			tvi.Tag = relind;
 			tvi.Expanded += RelIndTvi_Expanded;
 			tvi.MouseRightButtonDown += RelIndTvi_MouseRightButtonDown;
@@ -559,71 +561,70 @@ namespace DkTools.ProbeExplorer
 		#region Filter
 		private void ApplyDictTreeFilter()
 		{
-			if (!c_dictTree.Dispatcher.CheckAccess())
+			ThreadHelper.JoinableTaskFactory.RunAsync(async () =>
 			{
-				c_dictTree.Dispatcher.BeginInvoke(new Action(() => { ApplyDictTreeFilter(); }));
-				return;
-			}
+				await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
 
-			_dictFilter.Filter = c_dictTreeFilter.Text;
-			var empty = _dictFilter.IsEmpty;
+				_dictFilter.Filter = c_dictTreeFilter.Text;
+				var empty = _dictFilter.IsEmpty;
 
-			foreach (TreeViewItem tableNode in c_dictTree.Items)
-			{
-				var table = tableNode.Tag as DkDict.Table;
-				if (table == null) continue;
-
-				if (empty)
+				foreach (TreeViewItem tableNode in c_dictTree.Items)
 				{
-					tableNode.Visibility = System.Windows.Visibility.Visible;
-					tableNode.IsExpanded = false;
-				}
-				else
-				{
-					var showTable = false;
-					var expandTable = false;
-					if (_dictFilter.Match(table.Name) || _dictFilter.Match(table.Prompt))
+					var table = tableNode.Tag as DkDict.Table;
+					if (table == null) continue;
+
+					if (empty)
 					{
-						showTable = true;
+						tableNode.Visibility = System.Windows.Visibility.Visible;
+						tableNode.IsExpanded = false;
 					}
-
-					if (!showTable)
+					else
 					{
-						foreach (var field in table.Columns)
+						var showTable = false;
+						var expandTable = false;
+						if (_dictFilter.Match(table.Name) || _dictFilter.Match(table.Prompt))
 						{
-							if (_dictFilter.Match(field.FullName))
-							{
-								showTable = true;
-								expandTable = true;
-								break;
-							}
+							showTable = true;
 						}
 
 						if (!showTable)
 						{
-							foreach (var relind in table.RelInds)
+							foreach (var field in table.Columns)
 							{
-								if (_dictFilter.Match(relind.Name))
+								if (_dictFilter.Match(field.FullName))
 								{
 									showTable = true;
 									expandTable = true;
+									break;
+								}
+							}
+
+							if (!showTable)
+							{
+								foreach (var relind in table.RelInds)
+								{
+									if (_dictFilter.Match(relind.Name))
+									{
+										showTable = true;
+										expandTable = true;
+									}
 								}
 							}
 						}
-					}
 
-					tableNode.Visibility = showTable ? System.Windows.Visibility.Visible : System.Windows.Visibility.Collapsed;
+						tableNode.Visibility = showTable ? System.Windows.Visibility.Visible : System.Windows.Visibility.Collapsed;
 
-					if (expandTable)
-					{
-						if (tableNode.IsExpanded) tableNode.IsExpanded = false;
-						tableNode.IsExpanded = true;
+						if (expandTable)
+						{
+							if (tableNode.IsExpanded) tableNode.IsExpanded = false;
+							tableNode.IsExpanded = true;
+						}
 					}
 				}
-			}
 
-			var selItem = c_dictTree.SelectedItem as TreeViewItem;
-			if (selItem != null) selItem.BringIntoView();
+				var selItem = c_dictTree.SelectedItem as TreeViewItem;
+				if (selItem != null) selItem.BringIntoView();
+			});
 		}
 
 		private void DictTreeFilter_TextChanged(object sender, TextChangedEventArgs e)

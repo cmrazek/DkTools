@@ -11,13 +11,13 @@ using Microsoft.VisualStudio.Utilities;
 
 namespace DkTools.QuickInfo
 {
-	[Export(typeof(IQuickInfoSourceProvider))]
+	[Export(typeof(IAsyncQuickInfoSourceProvider))]
 	[Name("ToolTip QuickInfo Source")]
 	[Order(Before = "Default Quick Info Presenter")]
 	[ContentType(Constants.DkContentType)]
-	internal class QuickInfoSourceProvider : IQuickInfoSourceProvider
+	internal class QuickInfoSourceProvider : IAsyncQuickInfoSourceProvider
 	{
-		IQuickInfoSource IQuickInfoSourceProvider.TryCreateQuickInfoSource(ITextBuffer textBuffer)
+		IAsyncQuickInfoSource IAsyncQuickInfoSourceProvider.TryCreateQuickInfoSource(ITextBuffer textBuffer)
 		{
 			return new QuickInfoSource(this, textBuffer);
 		}

@@ -20,34 +20,14 @@ namespace DkTools
 				{
 					try
 					{
-						using (var key = Microsoft.Win32.Registry.CurrentUser.OpenSubKey(@"Software\Microsoft\VisualStudio\11.0\General"))
+						var color = Microsoft.VisualStudio.PlatformUI.VSColorTheme.GetThemedColor(Microsoft.VisualStudio.PlatformUI.EnvironmentColors.SystemWindowTextColorKey);
+						if ((color.R + color.G + color.B) / 3 > 192)
 						{
-							var obj = key.GetValue("CurrentTheme");
-							if (obj == null)
-							{
-								_mode = VSThemeMode.Light;
-							}
-							else
-							{
-								var guid = obj.ToString();
-								if (guid.Equals("de3dbbcd-f642-433c-8353-8f1df4370aba", StringComparison.OrdinalIgnoreCase))
-								{
-									_mode = VSThemeMode.Light;
-								}
-								else if (guid.Equals("1ded0138-47ce-435e-84ef-9ec1f439b749", StringComparison.OrdinalIgnoreCase))
-								{
-									_mode = VSThemeMode.Dark;
-								}
-								else if (guid.Equals("a4d6a176-b948-4b29-8c66-53c97a1ed7d0", StringComparison.OrdinalIgnoreCase))
-								{
-									_mode = VSThemeMode.Light;
-								}
-								else
-								{
-									Log.Debug("Unknown theme: {0}", guid);
-									_mode = VSThemeMode.Light;
-								}
-							}
+							_mode = VSThemeMode.Dark;
+						}
+						else
+						{
+							_mode = VSThemeMode.Light;
 						}
 					}
 					catch (Exception ex)
@@ -68,8 +48,6 @@ namespace DkTools
 
 			var ev = ThemeChanged;
 			if (ev != null) ev(null, EventArgs.Empty);
-
-			CodeModel.Definitions.Definition.OnThemeChanged();
 		}
 	}
 
