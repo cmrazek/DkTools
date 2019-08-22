@@ -83,7 +83,8 @@ namespace DkTools.FunctionFileScanning
 							if (dataType == null)
 							{
 								Log.Debug("Failed to parse permanent extract data type from database: {0}", dataTypeString);
-								dataType = new CodeModel.DataType(ValType.Unknown, null, dataTypeString);
+								dataType = new CodeModel.DataType(ValType.Unknown, null,
+									new Classifier.ProbeClassifiedString(Classifier.ProbeClassifierType.DataType, dataTypeString));
 							}
 							fieldDef.SetDataType(dataType);
 						}

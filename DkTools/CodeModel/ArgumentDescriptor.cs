@@ -129,7 +129,7 @@ namespace DkTools.CodeModel
 
 					if (_dataType != null)
 					{
-						sb.Append(_dataType.ToPrettyString());
+						sb.Append(_dataType.ToSourceString());
 						spaceRequired = true;
 					}
 
@@ -168,7 +168,10 @@ namespace DkTools.CodeModel
 
 				if (_dataType != null)
 				{
-					yield return Definition.QuickInfoRun(Classifier.ProbeClassifierType.DataType, _dataType.ToPrettyString());
+					foreach (var run in _dataType.Source.Runs)
+					{
+						yield return run.ToClassifiedTextRun();
+					}
 					spaceRequired = true;
 				}
 

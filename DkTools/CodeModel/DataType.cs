@@ -5,6 +5,7 @@ using System.Text;
 using System.Text.RegularExpressions;
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Adornments;
+using DkTools.Classifier;
 using DkTools.CodeModel.Definitions;
 using DkTools.CodeModel.Tokens;
 
@@ -13,7 +14,7 @@ namespace DkTools.CodeModel
 	internal class DataType
 	{
 		private string _name;
-		private string _source;
+		private ProbeClassifiedString _source;
 		private Definition[] _completionOptions;
 		private CompletionOptionsType _completionOptionsType;
 		private ValType _valueType;
@@ -28,26 +29,67 @@ namespace DkTools.CodeModel
 			InterfaceMembers
 		}
 
-		public static readonly DataType Boolean_t = new DataType(ValType.Enum, null, "Boolean_t", new string[] { "FALSE", "TRUE" });
-		public static readonly DataType Char = new DataType(ValType.Char, null, "char");
-		public static readonly DataType Char255 = new DataType(ValType.String, null, "char(255)");
-		public static readonly DataType Command = new DataType(ValType.Command, null, "command");
-		public static readonly DataType Date = new DataType(ValType.Date, null, "date");
-		public static readonly DataType Enum = new DataType(ValType.Enum, null, "enum");
-		public static readonly DataType IndRel = new DataType(ValType.IndRel, null, "indrel") { _completionOptionsType = CompletionOptionsType.RelInds };
-		public static readonly DataType Int = new DataType(ValType.Numeric, null, "int");
-		public static readonly DataType Numeric = new DataType(ValType.Numeric, null, "numeric");
-		public static readonly DataType OleObject = new DataType(ValType.Interface, null, "oleobject");
-		public static readonly DataType String = new DataType(ValType.String, null, "string");
-		public static readonly DataType StringVarying = new DataType(ValType.String, null, "string varying");
-		public static readonly DataType Table = new DataType(ValType.Table, null, "table") { _completionOptionsType = CompletionOptionsType.Tables };
-		public static readonly DataType Ulong = new DataType(ValType.Numeric, null, "ulong");
-		public static readonly DataType Unknown = new DataType(ValType.Unknown, null, string.Empty);
-		public static readonly DataType Unsigned = new DataType(ValType.Numeric, null, "unsigned");
-		public static readonly DataType Unsigned2 = new DataType(ValType.Numeric, null, "numeric(2) unsigned");
-		public static readonly DataType Unsigned9 = new DataType(ValType.Numeric, null, "numeric(9) unsigned");
-		public static readonly DataType Variant = new DataType(ValType.Interface, null, "variant");
-		public static readonly DataType Void = new DataType(ValType.Void, null, "void");
+		public static readonly DataType Boolean_t = new DataType(ValType.Enum, null,
+			new ProbeClassifiedString(new ProbeClassifiedRun(ProbeClassifierType.DataType, "Boolean_t")), new string[] { "FALSE", "TRUE" });
+		public static readonly DataType Char = new DataType(ValType.Char, null,
+			new ProbeClassifiedString(new ProbeClassifiedRun(ProbeClassifierType.DataType, "char")));
+		public static readonly DataType Char255 = new DataType(ValType.String, null,
+			new ProbeClassifiedString(
+				new ProbeClassifiedRun(ProbeClassifierType.DataType, "char"),
+				new ProbeClassifiedRun(ProbeClassifierType.Operator, "("),
+				new ProbeClassifiedRun(ProbeClassifierType.Number, "255"),
+				new ProbeClassifiedRun(ProbeClassifierType.Operator, ")")
+			));
+		public static readonly DataType Command = new DataType(ValType.Command, null,
+			new ProbeClassifiedString(new ProbeClassifiedRun(ProbeClassifierType.DataType, "command")));
+		public static readonly DataType Date = new DataType(ValType.Date, null,
+			new ProbeClassifiedString(new ProbeClassifiedRun(ProbeClassifierType.DataType, "date")));
+		public static readonly DataType Enum = new DataType(ValType.Enum, null,
+			new ProbeClassifiedString(new ProbeClassifiedRun(ProbeClassifierType.DataType, "enum")));
+		public static readonly DataType IndRel = new DataType(ValType.IndRel, null,
+			new ProbeClassifiedString(new ProbeClassifiedRun(ProbeClassifierType.DataType, "indrel")))
+			{ _completionOptionsType = CompletionOptionsType.RelInds };
+		public static readonly DataType Int = new DataType(ValType.Numeric, null,
+			new ProbeClassifiedString(new ProbeClassifiedRun(ProbeClassifierType.DataType, "int")));
+		public static readonly DataType Numeric = new DataType(ValType.Numeric, null,
+			new ProbeClassifiedString(new ProbeClassifiedRun(ProbeClassifierType.DataType, "numeric")));
+		public static readonly DataType OleObject = new DataType(ValType.Interface, null,
+			new ProbeClassifiedString(new ProbeClassifiedRun(ProbeClassifierType.DataType, "oleobject")));
+		public static readonly DataType String = new DataType(ValType.String, null,
+			new ProbeClassifiedString(new ProbeClassifiedRun(ProbeClassifierType.DataType, "string")));
+		public static readonly DataType StringVarying = new DataType(ValType.String, null,
+			new ProbeClassifiedString(new ProbeClassifiedRun(ProbeClassifierType.DataType, "string varying")));
+		public static readonly DataType Table = new DataType(ValType.Table, null,
+			new ProbeClassifiedString(new ProbeClassifiedRun(ProbeClassifierType.DataType, "table")))
+			{ _completionOptionsType = CompletionOptionsType.Tables };
+		public static readonly DataType Ulong = new DataType(ValType.Numeric, null,
+			new ProbeClassifiedString(new ProbeClassifiedRun(ProbeClassifierType.DataType, "ulong")));
+		public static readonly DataType Unknown = new DataType(ValType.Unknown, null,
+			new ProbeClassifiedString());
+		public static readonly DataType Unsigned = new DataType(ValType.Numeric, null,
+			new ProbeClassifiedString(new ProbeClassifiedRun(ProbeClassifierType.DataType, "unsigned")));
+		public static readonly DataType Unsigned2 = new DataType(ValType.Numeric, null,
+			new ProbeClassifiedString(
+				new ProbeClassifiedRun(ProbeClassifierType.DataType, "numeric"),
+				new ProbeClassifiedRun(ProbeClassifierType.Operator, "("),
+				new ProbeClassifiedRun(ProbeClassifierType.Number, "2"),
+				new ProbeClassifiedRun(ProbeClassifierType.Operator, ")"),
+				new ProbeClassifiedRun(ProbeClassifierType.Normal, " "),
+				new ProbeClassifiedRun(ProbeClassifierType.DataType, "unsigned")
+			));
+		public static readonly DataType Unsigned9 = new DataType(ValType.Numeric, null,
+			new ProbeClassifiedString(
+				new ProbeClassifiedRun(ProbeClassifierType.DataType, "numeric"),
+				new ProbeClassifiedRun(ProbeClassifierType.Operator, "("),
+				new ProbeClassifiedRun(ProbeClassifierType.Number, "9"),
+				new ProbeClassifiedRun(ProbeClassifierType.Operator, ")"),
+				new ProbeClassifiedRun(ProbeClassifierType.Normal, " "),
+				new ProbeClassifiedRun(ProbeClassifierType.DataType, "unsigned")
+			));
+		public static readonly DataType Variant = new DataType(ValType.Interface, null,
+			new ProbeClassifiedString(new ProbeClassifiedRun(ProbeClassifierType.DataType, "variant")));
+		public static readonly DataType Void = new DataType(ValType.Void, null,
+			new ProbeClassifiedString(new ProbeClassifiedRun(ProbeClassifierType.DataType, "void")));
 
 		public delegate DataTypeDefinition GetDataTypeDelegate(string name);
 		public delegate VariableDefinition GetVariableDelegate(string name);
@@ -59,9 +101,9 @@ namespace DkTools.CodeModel
 		/// </summary>
 		/// <param name="name">(optional) name of the data type</param>
 		/// <param name="source">(required) source code that defines the data type.</param>
-		public DataType(ValType valueType, string name, string source)
+		public DataType(ValType valueType, string name, ProbeClassifiedString source)
 		{
-			if (string.IsNullOrWhiteSpace(source) && valueType != ValType.Unknown) throw new ArgumentNullException("source");
+			if ((source == null || source.IsEmpty) && valueType != ValType.Unknown) throw new ArgumentNullException("source");
 
 			_valueType = valueType;
 			_name = name;
@@ -75,9 +117,9 @@ namespace DkTools.CodeModel
 		/// <param name="source">(required) Source code that defines the data type</param>
 		/// <param name="completionOptions">(required) A list of hardcoded options for this data type.</param>
 		/// <param name="optionsType">(required) The type of completion options</param>
-		public DataType(ValType valueType, string name, string source, IEnumerable<Definition> completionOptions, CompletionOptionsType optionsType)
+		public DataType(ValType valueType, string name, ProbeClassifiedString source, IEnumerable<Definition> completionOptions, CompletionOptionsType optionsType)
 		{
-			if (string.IsNullOrWhiteSpace(source)) throw new ArgumentNullException("source");
+			if (source == null || source.IsEmpty) throw new ArgumentNullException("source");
 			if (completionOptions == null) throw new ArgumentNullException("completionOptions");
 
 			_valueType = valueType;
@@ -93,9 +135,9 @@ namespace DkTools.CodeModel
 		/// <param name="name">(optional) Name of the data type</param>
 		/// <param name="source">(required) Source code that defines the data type</param>
 		/// <param name="enumOptions">A list of enum options for this data type.</param>
-		public DataType(ValType valueType, string name, string source, IEnumerable<string> enumOptions)
+		public DataType(ValType valueType, string name, ProbeClassifiedString source, IEnumerable<string> enumOptions)
 		{
-			if (string.IsNullOrWhiteSpace(source)) throw new ArgumentNullException("source");
+			if (source == null || source.IsEmpty) throw new ArgumentNullException("source");
 			if (enumOptions == null) throw new ArgumentNullException("completionOptions");
 
 			_valueType = valueType;
@@ -111,7 +153,7 @@ namespace DkTools.CodeModel
 			set { _name = value; }
 		}
 
-		public string Source
+		public ProbeClassifiedString Source
 		{
 			get { return _source; }
 			set { _source = value; }
@@ -120,7 +162,7 @@ namespace DkTools.CodeModel
 		public override string ToString()
 		{
 			if (!string.IsNullOrEmpty(_name)) return string.Concat(_name, " (", _source, ")");
-			else return _source;
+			else return _source.ToString();
 		}
 
 		public DkDict.Interface Interface
@@ -493,14 +535,14 @@ namespace DkTools.CodeModel
 
 		private static DataType ProcessNumeric(ParseArgs a, string tokenText)
 		{
-			var sb = new StringBuilder();
-			sb.Append(tokenText);
+			var pcs = new ProbeClassifiedStringBuilder();
+			pcs.AddDataType(tokenText);
 
 			var code = a.Code;
 
 			if (code.ReadExact('('))
 			{
-				sb.Append('(');
+				pcs.AddOperator("(");
 
 				BracketsToken brackets = null;
 				if (a.TokenCreateCallback != null)
@@ -511,17 +553,18 @@ namespace DkTools.CodeModel
 
 				if (code.ReadNumber())
 				{
-					sb.Append(code.Text);
+					pcs.AddNumber(code.Text);
 					if (brackets != null) brackets.AddToken(new NumberToken(a.Scope, code.Span, code.Text));
 
 					if (code.ReadExact(','))
 					{
-						sb.Append(',');
+						pcs.AddDelimiter(",");
 						if (brackets != null) brackets.AddToken(new DelimiterToken(a.Scope, code.Span));
 
 						if (code.ReadNumber())
 						{
-							sb.Append(code.Text);
+							pcs.AddSpace();
+							pcs.AddNumber(code.Text);
 							if (brackets != null) brackets.AddToken(new NumberToken(a.Scope, code.Span, code.Text));
 						}
 					}
@@ -533,51 +576,51 @@ namespace DkTools.CodeModel
 				}
 				if (code.ReadExact(')'))
 				{
-					sb.Append(')');
+					pcs.AddOperator(")");
 					if (brackets != null)
 					{
 						brackets.AddClose(code.Span);
 						a.OnToken(brackets);
 					}
 				}
-				else return new DataType(ValType.Numeric, a.TypeName, sb.ToString());
+				else return new DataType(ValType.Numeric, a.TypeName, pcs.ToClassifiedString());
 			}
 
 			var done = false;
 			var gotMask = false;
 			while (!done && !code.EndOfFile)
 			{
-				if (ReadAttribute(a, code, sb, "unsigned", "currency", "local_currency")) { }
+				if (ReadAttribute(a, code, pcs, "unsigned", "currency", "local_currency")) { }
 				else if (!gotMask && code.ReadStringLiteral())
 				{
-					sb.Append(' ');
-					sb.Append(code.Text);
+					pcs.AddSpace();
+					pcs.AddDataType(code.Text);
 					a.OnStringLiteral(code.Span, code.Text);
 					gotMask = true;
 				}
 				else break;
 			}
 
-			return new DataType(ValType.Numeric, a.TypeName, sb.ToString());
+			return new DataType(ValType.Numeric, a.TypeName, pcs.ToClassifiedString());
 		}
 
 		private static DataType ProcessSignedUnsigned(ParseArgs a, string tokenText)
 		{
-			var sb = new StringBuilder();
-			sb.Append(tokenText);
+			var pcs = new ProbeClassifiedStringBuilder();
+			pcs.AddDataType(tokenText);
 
 			var code = a.Code;
 
 			if (code.ReadNumber())
 			{
 				// width
-				sb.Append(' ');
-				sb.Append(code.Type);
+				pcs.AddSpace();
+				pcs.AddNumber(code.Text);
 				a.OnNumber(code.Span, code.Text);
 			}
 			else if (code.ReadExact('('))
 			{
-				sb.Append('(');
+				pcs.AddOperator("(");
 
 				BracketsToken brackets = null;
 				if (a.TokenCreateCallback != null)
@@ -588,17 +631,17 @@ namespace DkTools.CodeModel
 
 				if (code.ReadNumber())
 				{
-					sb.Append(code.Text);
+					pcs.AddNumber(code.Text);
 					if (brackets != null) brackets.AddToken(new NumberToken(a.Scope, code.Span, code.Text));
 
 					if (code.ReadExact(','))
 					{
-						sb.Append(',');
+						pcs.AddDelimiter(",");
 						if (brackets != null) brackets.AddToken(new DelimiterToken(a.Scope, code.Span));
 
 						if (code.ReadNumber())
 						{
-							sb.Append(code.Text);
+							pcs.AddNumber(code.Text);
 							if (brackets != null) brackets.AddToken(new NumberToken(a.Scope, code.Span, code.Text));
 						}
 					}
@@ -611,86 +654,92 @@ namespace DkTools.CodeModel
 
 				if (code.ReadExact(')'))
 				{
-					sb.Append(')');
+					pcs.AddOperator(")");
 					if (brackets != null)
 					{
 						brackets.AddClose(code.Span);
 						a.OnToken(brackets);
 					}
 				}
-				else return new DataType(ValType.Numeric, a.TypeName, sb.ToString());
+				else return new DataType(ValType.Numeric, a.TypeName, pcs.ToClassifiedString());
 			}
 
 			if (code.ReadExact("int"))
 			{
-				sb.Append(" int");
+				pcs.AddSpace();
+				pcs.AddDataType("int");
 				a.OnDataTypeKeyword(code.Span, code.Text, null);
 			}
 			else if (code.ReadExact("short"))
 			{
-				sb.Append(" short");
+				pcs.AddSpace();
+				pcs.AddDataType("short");
 				a.OnDataTypeKeyword(code.Span, code.Text, null);
 			}
 			else if (code.ReadExact("long"))
 			{
-				sb.Append(" long");
+				pcs.AddSpace();
+				pcs.AddDataType("long");
 				a.OnDataTypeKeyword(code.Span, code.Text, null);
 			}
 			else if (code.ReadExact("char"))
 			{
-				sb.Append(" char");
+				pcs.AddSpace();
+				pcs.AddDataType("char");
 				a.OnDataTypeKeyword(code.Span, code.Text, null);
 			}
 
 			var gotMask = false;
 			while (!code.EndOfFile)
 			{
-				if (ReadAttribute(a, code, sb)) { }
+				if (ReadAttribute(a, code, pcs)) { }
 				else if (!gotMask && code.ReadStringLiteral())
 				{
 					gotMask = true;
-					sb.Append(' ');
-					sb.Append(code.Text);
+					pcs.AddSpace();
+					pcs.AddStringLiteral(code.Text);
 					a.OnStringLiteral(code.Span, code.Text);
 				}
 				else break;
 			}
 
-			return new DataType(ValType.Numeric, a.TypeName, sb.ToString());
+			return new DataType(ValType.Numeric, a.TypeName, pcs.ToClassifiedString());
 		}
 
 		private static DataType ProcessInt(ParseArgs a, string tokenText)
 		{
-			var sb = new StringBuilder();
-			sb.Append(tokenText);
+			var pcs = new ProbeClassifiedStringBuilder();
+			pcs.AddDataType(tokenText);
 
 			var code = a.Code;
 
 			if (code.ReadExact("unsigned"))
 			{
-				sb.Append(" unsigned");
+				pcs.AddSpace();
+				pcs.AddDataType("unsigned");
 				a.OnDataTypeKeyword(code.Span, code.Text, null);
 			}
 			else if (code.ReadExact("signed"))
 			{
-				sb.Append(" signed");
+				pcs.AddSpace();
+				pcs.AddDataType("signed");
 				a.OnDataTypeKeyword(code.Span, code.Text, null);
 			}
 
 			if (code.ReadNumber())
 			{
 				// width
-				sb.Append(' ');
-				sb.Append(code.Text);
+				pcs.AddSpace();
+				pcs.AddNumber(code.Text);
 				a.OnNumber(code.Span, code.Text);
 			}
 
 			while (!code.EndOfFile)
 			{
-				if (!ReadAttribute(a, code, sb)) break;
+				if (!ReadAttribute(a, code, pcs)) break;
 			}
 
-			return new DataType(ValType.Numeric, a.TypeName, sb.ToString());
+			return new DataType(ValType.Numeric, a.TypeName, pcs.ToClassifiedString());
 		}
 
 		private static DataType ProcessChar(ParseArgs a, string tokenText)
@@ -707,52 +756,52 @@ namespace DkTools.CodeModel
 
 			if (code.ReadNumber())
 			{
-				var sb = new StringBuilder();
-				sb.Append(tokenText);
-				sb.Append('(');
-				sb.Append(code.Text);
+				var pcs = new ProbeClassifiedStringBuilder();
+				pcs.AddDataType(tokenText);
+				pcs.AddOperator("(");
+				pcs.AddNumber(code.Text);
 				if (brackets != null) brackets.AddToken(new NumberToken(a.Scope, code.Span, code.Text));
 				if (code.ReadExact(')'))
 				{
-					sb.Append(')');
+					pcs.AddOperator(")");
 					if (brackets != null)
 					{
 						brackets.AddClose(code.Span);
 						a.OnToken(brackets);
 					}
 				}
-				else return new DataType(ValType.String, a.TypeName, sb.ToString());
+				else return new DataType(ValType.String, a.TypeName, pcs.ToClassifiedString());
 
 				var done = false;
 				var gotMask = false;
 				while (!done && !code.EndOfFile)
 				{
-					if (ReadAttribute(a, code, sb)) { }
+					if (ReadAttribute(a, code, pcs)) { }
 					else if (!gotMask && code.ReadStringLiteral())
 					{
 						gotMask = true;
-						sb.Append(' ');
-						sb.Append(code.Text);
+						pcs.AddSpace();
+						pcs.AddStringLiteral(code.Text);
 						a.OnStringLiteral(code.Span, code.Text);
 					}
 					else break;
 				}
 
-				return new DataType(ValType.String, a.TypeName, sb.ToString());
+				return new DataType(ValType.String, a.TypeName, pcs.ToClassifiedString());
 			}
 			else if (a.VisibleModel)
 			{
 				var exp = ExpressionToken.TryParse(a.Scope, _bracketsEndTokens);
 				if (exp != null)
 				{
-					var sb = new StringBuilder();
-					sb.Append(tokenText);
-					sb.Append('(');
-					sb.Append(code.Text);
+					var pcs = new ProbeClassifiedStringBuilder();
+					pcs.AddDataType(tokenText);
+					pcs.AddOperator("(");
+					pcs.AddNumber(code.Text);
 					if (brackets != null) brackets.AddToken(exp);
 					if (code.ReadExact(')'))
 					{
-						sb.Append(')');
+						pcs.AddOperator(")");
 						if (brackets != null)
 						{
 							brackets.AddClose(code.Span);
@@ -760,65 +809,66 @@ namespace DkTools.CodeModel
 						}
 					}
 
-					return new DataType(ValType.String, a.TypeName, sb.ToString());
+					return new DataType(ValType.String, a.TypeName, pcs.ToClassifiedString());
 				}
 				else
 				{
-					return new DataType(ValType.String, a.TypeName, tokenText);
+					return new DataType(ValType.String, a.TypeName, new ProbeClassifiedString(ProbeClassifierType.DataType, tokenText));
 				}
 			}
 			else
 			{
-				return new DataType(ValType.String, a.TypeName, tokenText);
+				return new DataType(ValType.String, a.TypeName, new ProbeClassifiedString(ProbeClassifierType.DataType, tokenText));
 			}
 		}
 
 		private static DataType ProcessString(ParseArgs a, string tokenText)
 		{
-			var sb = new StringBuilder();
-			sb.Append(tokenText);
+			var pcs = new ProbeClassifiedStringBuilder();
+			pcs.AddDataType(tokenText);
 
 			var code = a.Code;
 
 			if (code.ReadExact("varying"))
 			{
-				sb.Append(" varying");
+				pcs.AddSpace();
+				pcs.AddDataType("varying");
 				a.OnDataTypeKeyword(code.Span, code.Text, null);
 			}
 			else if (code.ReadNumber())
 			{
-				sb.Append(' ');
-				sb.Append(code.Text);
+				pcs.AddSpace();
+				pcs.AddNumber(code.Text);
 				a.OnNumber(code.Span, code.Text);
 			}
 
 			while (!code.EndOfFile)
 			{
-				if (ReadAttribute(a, code, sb)) { }
+				if (ReadAttribute(a, code, pcs)) { }
 				else if (code.ReadStringLiteral())
 				{
-					sb.Append(' ');
-					sb.Append(code.Text);
+					pcs.AddSpace();
+					pcs.AddStringLiteral(code.Text);
 					a.OnStringLiteral(code.Span, code.Text);
 				}
 				else break;
 			}
 
-			return new DataType(ValType.String, a.TypeName, sb.ToString());
+			return new DataType(ValType.String, a.TypeName, pcs.ToClassifiedString());
 		}
 
 		private static DataType ProcessDate(ParseArgs a, string tokenText)
 		{
-			var sb = new StringBuilder();
-			sb.Append(tokenText);
+			var pcs = new ProbeClassifiedStringBuilder();
+			pcs.AddDataType(tokenText);
 
 			var code = a.Code;
 
 			if (code.ReadNumber())
 			{
 				// width
-				sb.Append(' ');
-				sb.Append(code.Text);
+				pcs.AddSpace();
+				pcs.AddNumber(code.Text);
 				a.OnNumber(code.Span, code.Text);
 			}
 
@@ -826,48 +876,49 @@ namespace DkTools.CodeModel
 			var done = false;
 			while (!done && !code.EndOfFile)
 			{
-				if (ReadAttribute(a, code, sb, "shortform", "longform", "alternate")) { }
+				if (ReadAttribute(a, code, pcs, "shortform", "longform", "alternate")) { }
 				else if (!gotMask && code.ReadStringLiteral())
 				{
-					sb.Append(' ');
-					sb.Append(code.Text);
+					pcs.AddSpace();
+					pcs.AddStringLiteral(code.Text);
 					a.OnStringLiteral(code.Span, code.Text);
 				}
 				else break;
 			}
 
-			return new DataType(ValType.Date, a.TypeName, sb.ToString());
+			return new DataType(ValType.Date, a.TypeName, pcs.ToClassifiedString());
 		}
 
 		private static DataType ProcessTime(ParseArgs a, string tokenText)
 		{
-			var sb = new StringBuilder();
-			sb.Append(tokenText);
+			var pcs = new ProbeClassifiedStringBuilder();
+			pcs.AddDataType(tokenText);
 
 			var code = a.Code;
 
 			var gotMask = false;
 			while (!code.EndOfFile)
 			{
-				if (ReadAttribute(a, code, sb)) { }
+				if (ReadAttribute(a, code, pcs)) { }
 				else if (!gotMask && code.ReadNumber())
 				{
 					gotMask = true;
-					sb.Append(' ');
-					sb.Append(code.Text);
+					pcs.AddSpace();
+					pcs.AddNumber(code.Text);
 					a.OnNumber(code.Span, code.Text);
 				}
 				else break;
 			}
 
-			return new DataType(ValType.Time, a.TypeName, sb.ToString());
+			return new DataType(ValType.Time, a.TypeName, pcs.ToClassifiedString());
 		}
 
 		private static DataType ProcessEnum(ParseArgs a)
 		{
 			var options = new List<Definition>();
-			var sb = new StringBuilder();
-			sb.Append("enum");
+
+			var pcs = new ProbeClassifiedStringBuilder();
+			pcs.AddDataType("enum");
 
 			var code = a.Code;
 			BracesToken braces = null;
@@ -885,15 +936,15 @@ namespace DkTools.CodeModel
 					}
 					break;
 				}
-				else if (ReadAttribute(a, code, sb, "alterable", "required", "nowarn", "numeric")) { }
+				else if (ReadAttribute(a, code, pcs, "alterable", "required", "nowarn", "numeric")) { }
 				else if (!gotWidth && code.ReadNumber())
 				{
-					sb.Append(' ');
-					sb.Append(code.Text);
+					pcs.AddSpace();
+					pcs.AddNumber(code.Text);
 					a.OnNumber(code.Span, code.Text);
 					gotWidth = true;
 				}
-				else return new DataType(ValType.Enum, a.TypeName, sb.ToString());
+				else return new DataType(ValType.Enum, a.TypeName, pcs.ToClassifiedString());
 			}
 
 			// Read the option list
@@ -959,26 +1010,30 @@ namespace DkTools.CodeModel
 				}
 			}
 
-			sb.Append(" {");
+			pcs.AddSpace();
+			pcs.AddOperator("{");
 			var first = true;
 			foreach (var option in options)
 			{
 				if (first)
 				{
 					first = false;
-					sb.Append(' ');
+					pcs.AddSpace();
 				}
 				else
 				{
-					sb.Append(", ");
+					pcs.AddDelimiter(",");
+					pcs.AddSpace();
 				}
-				sb.Append(option.Name);
+				if (option.Name.StartsWith("\"")) pcs.AddStringLiteral(option.Name);
+				else pcs.AddConstant(option.Name);
 			}
-			sb.Append(" }");
+			pcs.AddSpace();
+			pcs.AddOperator("}");
 
-			while (ReadAttribute(a, code, sb)) ;
+			while (ReadAttribute(a, code, pcs)) ;
 
-			var dataType = new DataType(ValType.Enum, a.TypeName, sb.ToString())
+			var dataType = new DataType(ValType.Enum, a.TypeName, pcs.ToClassifiedString())
 			{
 				_completionOptions = options.ToArray(),
 				_completionOptionsType = CompletionOptionsType.EnumOptionsList
@@ -1043,7 +1098,13 @@ namespace DkTools.CodeModel
 									a.OnToken(new IdentifierToken(a.Scope, word2Span, word2, tfDefs[1]));
 								}
 								if (tfDefs[1].DataType != null) return tfDefs[1].DataType;
-								else return new DataType(ValType.Unknown, a.TypeName, string.Concat("like ", word1, ".", word2));
+								else return new DataType(ValType.Unknown, a.TypeName, new ProbeClassifiedString(
+									new ProbeClassifiedRun(ProbeClassifierType.DataType, "like"),
+									new ProbeClassifiedRun(ProbeClassifierType.Normal, " "),
+									new ProbeClassifiedRun(ProbeClassifierType.TableName, word1),
+									new ProbeClassifiedRun(ProbeClassifierType.Delimiter, "."),
+									new ProbeClassifiedRun(ProbeClassifierType.TableField, word2)
+								));
 							}
 						}
 
@@ -1054,7 +1115,13 @@ namespace DkTools.CodeModel
 							a.OnToken(new UnknownToken(a.Scope, word2Span, word2));
 						}
 
-						return new DataType(ValType.Unknown, a.TypeName, string.Concat("like ", word1, ".", word2));
+						return new DataType(ValType.Unknown, a.TypeName, new ProbeClassifiedString(
+							new ProbeClassifiedRun(ProbeClassifierType.DataType, "like"),
+							new ProbeClassifiedRun(ProbeClassifierType.Normal, " "),
+							new ProbeClassifiedRun(ProbeClassifierType.TableName, word1),
+							new ProbeClassifiedRun(ProbeClassifierType.Delimiter, "."),
+							new ProbeClassifiedRun(ProbeClassifierType.TableField, word2)
+						));
 					}
 					else
 					{
@@ -1064,7 +1131,12 @@ namespace DkTools.CodeModel
 							a.OnToken(new UnknownToken(a.Scope, dotSpan, "."));
 						}
 
-						return new DataType(ValType.Unknown, a.TypeName, string.Concat("like ", word1, "."));
+						return new DataType(ValType.Unknown, a.TypeName, new ProbeClassifiedString(
+							new ProbeClassifiedRun(ProbeClassifierType.DataType, "like"),
+							new ProbeClassifiedRun(ProbeClassifierType.Normal, " "),
+							new ProbeClassifiedRun(ProbeClassifierType.TableName, word1),
+							new ProbeClassifiedRun(ProbeClassifierType.Delimiter, ".")
+						));
 					}
 				}
 
@@ -1080,85 +1152,90 @@ namespace DkTools.CodeModel
 
 				if (a.TokenCreateCallback != null) a.OnToken(new UnknownToken(a.Scope, word1Span, word1));
 
-				return new DataType(ValType.Unknown, a.TypeName, string.Concat("like ", word1));
+				return new DataType(ValType.Unknown, a.TypeName, new ProbeClassifiedString(
+					new ProbeClassifiedRun(ProbeClassifierType.DataType, "like"),
+					new ProbeClassifiedRun(ProbeClassifierType.Normal, " "),
+					new ProbeClassifiedRun(ProbeClassifierType.TableName, word1)
+				));
 			}
 			else return null;
 		}
 
 		private static DataType ProcessSection(ParseArgs a)
 		{
-			var sb = new StringBuilder();
-			sb.Append("Section");
+			var pcs = new ProbeClassifiedStringBuilder();
+			pcs.AddDataType("Section");
 
 			var code = a.Code;
 
 			if (code.ReadExact("Level"))
 			{
-				sb.Append(" Level");
+				pcs.AddSpace();
+				pcs.AddDataType("Level");
 				a.OnDataTypeKeyword(code.Span, code.Text, null);
 				if (code.ReadNumber())
 				{
-					sb.Append(' ');
-					sb.Append(code.Text);
+					pcs.AddSpace();
+					pcs.AddNumber(code.Text);
 					a.OnNumber(code.Span, code.Text);
 				}
 			}
 
-			while (ReadAttribute(a, code, sb)) ;
+			while (ReadAttribute(a, code, pcs)) ;
 
-			return new DataType(ValType.Section, a.TypeName, sb.ToString());
+			return new DataType(ValType.Section, a.TypeName, pcs.ToClassifiedString());
 		}
 
 		private static DataType ProcessScroll(ParseArgs a)
 		{
-			var sb = new StringBuilder();
-			sb.Append("scroll");
+			var pcs = new ProbeClassifiedStringBuilder();
+			pcs.AddDataType("scroll");
 
 			var code = a.Code;
 
 			if (code.ReadNumber())
 			{
-				sb.Append(' ');
-				sb.Append(code.Text);
+				pcs.AddSpace();
+				pcs.AddNumber(code.Text);
 				a.OnNumber(code.Span, code.Text);
 			}
 
-			while (ReadAttribute(a, code, sb)) ;
+			while (ReadAttribute(a, code, pcs)) ;
 
-			return new DataType(ValType.Scroll, a.TypeName, sb.ToString());
+			return new DataType(ValType.Scroll, a.TypeName, pcs.ToClassifiedString());
 		}
 
 		private static DataType ProcessGraphic(ParseArgs a)
 		{
-			var sb = new StringBuilder();
-			sb.Append("graphic");
+			var pcs = new ProbeClassifiedStringBuilder();
+			pcs.AddDataType("graphic");
 
 			var code = a.Code;
 
 			if (code.ReadNumber())	// rows
 			{
-				sb.Append(' ');
-				sb.Append(code.Text);
+				pcs.AddSpace();
+				pcs.AddNumber(code.Text);
 				a.OnNumber(code.Span, code.Text);
 
 				if (code.ReadNumber())	// columns
 				{
-					sb.Append(' ');
-					sb.Append(code.Text);
+					pcs.AddSpace();
+					pcs.AddNumber(code.Text);
 					a.OnNumber(code.Span, code.Text);
 
 					if (code.ReadNumber())	// bytes
 					{
-						sb.Append(' ');
-						sb.Append(code.Text);
+						pcs.AddSpace();
+						pcs.AddNumber(code.Text);
 						a.OnNumber(code.Span, code.Text);
 					}
 				}
 			}
 
-			while (ReadAttribute(a, code, sb)) ;
+			while (ReadAttribute(a, code, pcs)) ;
 
-			return new DataType(ValType.Graphic, a.TypeName, sb.ToString());
+			return new DataType(ValType.Graphic, a.TypeName, pcs.ToClassifiedString());
 		}
 
 		private static DataType ProcessInterface(ParseArgs a)
@@ -1180,10 +1257,10 @@ namespace DkTools.CodeModel
 				}
 			}
 
-			return new DataType(ValType.Interface, a.TypeName, "interface");
+			return new DataType(ValType.Interface, a.TypeName, new ProbeClassifiedString(ProbeClassifierType.Interface, "interface"));
 		}
 
-		private static bool ReadAttribute(ParseArgs a, CodeParser code, StringBuilder sb, params string[] extraTokens)
+		private static bool ReadAttribute(ParseArgs a, CodeParser code, ProbeClassifiedStringBuilder pcs, params string[] extraTokens)
 		{
 			var startPos = code.Position;
 			if (code.ReadWord())
@@ -1203,14 +1280,15 @@ namespace DkTools.CodeModel
 					case "REQUIRED":
 					case "PROBE":
 						a.OnDataTypeKeyword(code.Span, code.Text, null);
-						sb.Append(' ');
-						sb.Append(word);
+						pcs.AddSpace();
+						pcs.AddDataType(word);
 						return true;
 
 					case "tag":
 						if (a.AllowTags)
 						{
-							sb.Append(" tag");
+							pcs.AddSpace();
+							pcs.AddKeyword("tag");
 							a.OnDataTypeKeyword(code.Span, code.Text, null);
 
 							var resetPos = code.Position;
@@ -1218,19 +1296,19 @@ namespace DkTools.CodeModel
 							{
 								if (ProbeEnvironment.IsValidTagName(code.Text))
 								{
-									sb.Append(' ');
-									sb.Append(code.Text);
+									pcs.AddSpace();
+									pcs.AddKeyword(code.Text);
 									a.OnKeyword(code.Span, code.Text);
 									if (code.ReadStringLiteral())
 									{
-										sb.Append(' ');
-										sb.Append(code.Text);
+										pcs.AddSpace();
+										pcs.AddStringLiteral(code.Text);
 										a.OnStringLiteral(code.Span, code.Text);
 									}
 									else if (code.ReadWord())
 									{
-										sb.Append(' ');
-										sb.Append(code.Text);
+										pcs.AddSpace();
+										pcs.AddStringLiteral(code.Text);
 										a.OnDataTypeKeyword(code.Span, code.Text, null);
 									}
 								}
@@ -1251,8 +1329,8 @@ namespace DkTools.CodeModel
 					default:
 						if (word.StartsWith("INTENSITY_") || extraTokens.Contains(word))
 						{
-							sb.Append(' ');
-							sb.Append(word);
+							pcs.AddSpace();
+							pcs.AddDataType(word);
 							a.OnDataTypeKeyword(code.Span, code.Text, null);
 							return true;
 						}
@@ -1265,7 +1343,8 @@ namespace DkTools.CodeModel
 			}
 			else if (code.ReadExact("@neutral"))
 			{
-				sb.Append(" @neutral");
+				pcs.AddSpace();
+				pcs.AddDataType("@neutral");
 				a.OnDataTypeKeyword(code.Span, code.Text, null);
 				return true;
 			}
@@ -1302,15 +1381,19 @@ namespace DkTools.CodeModel
 				}
 				else
 				{
-					return _source;
+					return _source.ToString();
 				}
 			}
 		}
 
-		public string ToPrettyString()
+		/// <summary>
+		/// Returns a string of the data type as it would appear as source code.
+		/// </summary>
+		/// <returns></returns>
+		public string ToSourceString()
 		{
 			if (!string.IsNullOrEmpty(_name)) return _name;
-			return _source;
+			return _source.ToString();
 		}
 
 		public object QuickInfoElements
@@ -1319,7 +1402,7 @@ namespace DkTools.CodeModel
 			{
 				return Definition.QuickInfoStack(
 					string.IsNullOrEmpty(_name) ? null : Definition.QuickInfoMainLine(_name),
-					Definition.QuickInfoClassified(Definition.QuickInfoRun(Classifier.ProbeClassifierType.DataType, _source))
+					_source.ToClassifiedTextElement()
 				);
 			}
 		}
@@ -1333,11 +1416,11 @@ namespace DkTools.CodeModel
 			{
 				if (!string.IsNullOrWhiteSpace(_name))
 				{
-					yield return Definition.QuickInfoRun(Classifier.ProbeClassifierType.DataType, _name);
+					return new ClassifiedTextRun[] { new ClassifiedTextRun(Classifier.ProbeClassifier.GetClassificationTypeName(Classifier.ProbeClassifierType.DataType), _name) };
 				}
 				else
 				{
-					yield return Definition.QuickInfoRun(Classifier.ProbeClassifierType.DataType, _source);
+					return _source.ToClassifiedTextRuns();
 				}
 			}
 		}
@@ -1442,6 +1525,10 @@ namespace DkTools.CodeModel
 			get { return _valueType; }
 		}
 
+		/// <summary>
+		/// Returns a string of code with extra info embedded to be saved to the database.
+		/// This string is normally not displayed to the user.
+		/// </summary>
 		public string ToCodeString()
 		{
 			if (!string.IsNullOrEmpty(_name))
@@ -1450,7 +1537,7 @@ namespace DkTools.CodeModel
 			}
 			else
 			{
-				return _source;
+				return _source.ToString();
 			}
 		}
 

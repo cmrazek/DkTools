@@ -116,7 +116,7 @@ namespace DkTools.CodeModel
 				if (_returnDataType != null)
 				{
 					if (spaceRequired) sb.Append(' ');
-					sb.Append(_returnDataType.ToPrettyString());
+					sb.Append(_returnDataType.ToSourceString());
 					spaceRequired = true;
 				}
 
@@ -182,7 +182,7 @@ namespace DkTools.CodeModel
 				if (_returnDataType != null)
 				{
 					addSpace();
-					runs.Add(Definition.QuickInfoRun(Classifier.ProbeClassifierType.DataType, _returnDataType.ToPrettyString()));
+					runs.AddRange(_returnDataType.Source.Runs.Select(r => r.ToClassifiedTextRun()));
 					spaceRequired = true;
 				}
 
@@ -304,7 +304,8 @@ namespace DkTools.CodeModel
 							if (returnDataType == null)
 							{
 								Log.Debug("Unable to parse return data type from: {0}", dtString);
-								returnDataType = new DataType(ValType.Unknown, null, dtString);
+								returnDataType = new DataType(ValType.Unknown, null,
+									new Classifier.ProbeClassifiedString(Classifier.ProbeClassifierType.DataType, dtString));
 							}
 						}
 						break;

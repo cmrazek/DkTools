@@ -5,6 +5,7 @@ using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
+using DkTools.Classifier;
 using DkTools.CodeModel;
 using DkTools.CodeModel.Definitions;
 
@@ -702,8 +703,19 @@ namespace DkTools.DkDict
 			}
 
 			// Special implicit columns for updates
-			updates.AddColumn(new Column("updates", "column", new DataType(ValType.String, null, "char(30)"), updatesFilePos, true));
-			updates.AddColumn(new Column("updates", "tablename", new DataType(ValType.String, null, "char(8)"), updatesFilePos, true));
+			updates.AddColumn(new Column("updates", "column", new DataType(ValType.String, null,
+				new ProbeClassifiedString(
+					new ProbeClassifiedRun(ProbeClassifierType.DataType, "char"),
+					new ProbeClassifiedRun(ProbeClassifierType.Operator, "("),
+					new ProbeClassifiedRun(ProbeClassifierType.Number, "30"),
+					new ProbeClassifiedRun(ProbeClassifierType.Operator, ")")
+				)), updatesFilePos, true));
+			updates.AddColumn(new Column("updates", "tablename", new DataType(ValType.String, null, new ProbeClassifiedString(
+					new ProbeClassifiedRun(ProbeClassifierType.DataType, "char"),
+					new ProbeClassifiedRun(ProbeClassifierType.Operator, "("),
+					new ProbeClassifiedRun(ProbeClassifierType.Number, "8"),
+					new ProbeClassifiedRun(ProbeClassifierType.Operator, ")")
+				)), updatesFilePos, true));
 			updates.AddColumn(new Column("updates", "urowno", DataType.Unsigned9, updatesFilePos, true));
 			updates.AddColumn(new Column("updates", "entered", DataType.Date, updatesFilePos, true));
 			updates.AddColumn(new Column("updates", "new", DataType.Char255, updatesFilePos, true));
@@ -1557,27 +1569,34 @@ namespace DkTools.DkDict
 					masterTable.AddColumn(new Column(masterTable.Name, "next_effective", DataType.Date, nameFilePos, true));
 				}
 
-				var sb = new StringBuilder();
-				sb.Append("enum { \" \"");
+				var pcs = new ProbeClassifiedStringBuilder();
+				pcs.AddDataType("enum");
+				pcs.AddSpace();
+				pcs.AddOperator("{");
+				pcs.AddStringLiteral("\" \"");
 				var completionOptions = new List<string>();
 				completionOptions.Add("\" \"");
 				foreach (var col in masterTable.Columns)
 				{
-					sb.Append(", ");
-					sb.Append(col.Name);
+					pcs.AddDelimiter(",");
+					pcs.AddSpace();
+					pcs.AddConstant(col.Name);
 					completionOptions.Add(col.Name);
 				}
-				sb.Append(" }");
-				var fieldDataType = sb.ToString();
+				pcs.AddSpace();
+				pcs.AddOperator("}");
+
 				historyTable.AddColumn(new Column(historyTable.Name, "field",
-					new DataType(ValType.Enum, string.Format("like {0}.field", historyTable.Name), fieldDataType, completionOptions),
-					nameFilePos, true));
+					new DataType(ValType.Enum, string.Format("like {0}.field", historyTable.Name),
+					pcs.ToClassifiedString(), completionOptions), nameFilePos, true));
 
-				historyTable.AddColumn(new Column(historyTable.Name, "value", new DataType(ValType.String, "char(255)", "char(255)"), nameFilePos, true));
+				historyTable.AddColumn(new Column(historyTable.Name, "value", DataType.Char255, nameFilePos, true));
 
-				historyTable.AddColumn(new Column(historyTable.Name, string.Concat("rowno_", name, "_", masterTable.Name), DataType.Unsigned9, nameFilePos, true));
+				historyTable.AddColumn(new Column(historyTable.Name, string.Concat("rowno_", name, "_", masterTable.Name),
+					DataType.Unsigned9, nameFilePos, true));
 
-				historyTable.AddColumn(new Column(historyTable.Name, string.Concat("seqno_", name, "_", historyTable.Name), DataType.Unsigned9, nameFilePos, true));
+				historyTable.AddColumn(new Column(historyTable.Name, string.Concat("seqno_", name, "_", historyTable.Name),
+					DataType.Unsigned9, nameFilePos, true));
 
 				historyTable.AddColumn(new Column(historyTable.Name, "tdm_flags", DataType.Unsigned2, nameFilePos, true));
 

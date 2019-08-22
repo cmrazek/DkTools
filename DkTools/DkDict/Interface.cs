@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using DkTools.Classifier;
 using DkTools.CodeModel;
 using DkTools.CodeModel.Definitions;
 
@@ -34,7 +35,9 @@ namespace DkTools.DkDict
 			_name = name;
 			_filePos = filePos;
 			_def = new InterfaceTypeDefinition(this, filePos);
-			_dataType = new DataType(ValType.Interface, "", name, CodeModel.Definitions.Definition.EmptyArray, CodeModel.DataType.CompletionOptionsType.InterfaceMembers)
+			_dataType = new DataType(ValType.Interface, "",
+				new ProbeClassifiedString(ProbeClassifierType.Interface, _name),
+				CodeModel.Definitions.Definition.EmptyArray, CodeModel.DataType.CompletionOptionsType.InterfaceMembers)
 			{
 				Interface = this
 			};
@@ -109,8 +112,8 @@ namespace DkTools.DkDict
 				if (str != _name)
 				{
 					Dict.AddImpliedInterface(str, this);
-					_dataType.Name = _dataType.Source;
-					_dataType.Source = str;
+					_dataType.Name = _dataType.Source.ToString();
+					_dataType.Source = new Classifier.ProbeClassifiedString(Classifier.ProbeClassifierType.Interface, str);
 				}
 			}
 
@@ -155,7 +158,8 @@ namespace DkTools.DkDict
 				intf = Dict.GetImpliedInterface(str);
 				if (intf != null) return intf._dataType;
 
-				return new DataType(ValType.Interface, null, CleanInterfaceName(str));
+				return new DataType(ValType.Interface, null,
+					new Classifier.ProbeClassifiedString(Classifier.ProbeClassifierType.Interface, CleanInterfaceName(str)));
 			}
 
 			var code = new CodeParser(dataDef.TypeText[0]);
