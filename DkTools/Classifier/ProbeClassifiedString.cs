@@ -33,6 +33,8 @@ namespace DkTools.Classifier
 	{
 		private ProbeClassifiedRun[] _runs;
 
+		public static readonly ProbeClassifiedString Empty = new ProbeClassifiedString();
+
 		public ProbeClassifiedString()
 		{
 			_runs = new ProbeClassifiedRun[0];
@@ -176,6 +178,31 @@ namespace DkTools.Classifier
 		public void AddConstant(string text)
 		{
 			_runs.Add(new ProbeClassifiedRun(ProbeClassifierType.Constant, text));
+		}
+
+		public void AddTableName(string text)
+		{
+			_runs.Add(new ProbeClassifiedRun(ProbeClassifierType.TableName, text));
+		}
+
+		public void AddTableField(string text)
+		{
+			_runs.Add(new ProbeClassifiedRun(ProbeClassifierType.TableField, text));
+		}
+
+		public void AddComment(string text)
+		{
+			_runs.Add(new ProbeClassifiedRun(ProbeClassifierType.Comment, text));
+		}
+
+		public void AddClassifiedString(ProbeClassifiedString pcs)
+		{
+			_runs.AddRange(pcs.Runs);
+		}
+
+		public void AddClassifiedString(ProbeClassifiedStringBuilder pcs)
+		{
+			_runs.AddRange(pcs.Runs);
 		}
 	}
 }

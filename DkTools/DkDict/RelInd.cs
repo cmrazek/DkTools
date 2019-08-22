@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using DkTools.Classifier;
 using DkTools.CodeModel;
 using DkTools.CodeModel.Definitions;
 
@@ -12,7 +13,12 @@ namespace DkTools.DkDict
 	{
 		public bool Unique { get; set; }
 		public bool Primary { get; set; }
-		public string LinkDesc { get; set; }
+
+		/// <summary>
+		/// For relationships only, a description of the relationship between the tables.
+		/// For example: one cust to many dmd
+		/// </summary>
+		public ProbeClassifiedString LinkDesc { get; set; }
 
 		RelIndType _type;
 		private string _tableName;
@@ -72,43 +78,59 @@ namespace DkTools.DkDict
 			[order by effective ColumnName [...]] ( )
 			*/
 
-			var sb = new StringBuilder();
-			if (Unique) sb.Append("unique ");
-			if (Primary) sb.Append("primary ");
-			if (NoPick) sb.Append("nopick ");
+			var pcs = new ProbeClassifiedStringBuilder();
+			if (Unique)
+			{
+				pcs.AddKeyword("unique");
+				pcs.AddSpace();
+			}
+			if (Primary)
+			{
+				pcs.AddKeyword("primary");
+				pcs.AddSpace();
+			}
+			if (NoPick)
+			{
+				pcs.AddKeyword("nopick");
+				pcs.AddSpace();
+			}
 
 			switch (_type)
 			{
 				case RelIndType.Index:
-					sb.Append("index");
+					pcs.AddKeyword("index");
 					break;
 				case RelIndType.Relationship:
-					sb.Append("relationship");
+					pcs.AddKeyword("relationship");
 					break;
 				case RelIndType.TimeRelationship:
-					sb.Append("time relationship");
+					pcs.AddKeyword("time");
+					pcs.AddSpace();
+					pcs.AddKeyword("relationship");
 					break;
 			}
 
-			sb.Append(' ');
-			sb.Append(Name);
+			pcs.AddSpace();
+			pcs.AddTableName(Name);
 
 			if (_type == RelIndType.Index)
 			{
-				sb.Append(" on ");
-				sb.Append(TableName);
+				pcs.AddSpace();
+				pcs.AddKeyword("on");
+				pcs.AddSpace();
+				pcs.AddTableName(TableName);
 			}
 
 			if (Number != 0)
 			{
-				sb.Append(' ');
-				sb.Append(Number);
+				pcs.AddSpace();
+				pcs.AddNumber(Number.ToString());
 			}
 
-			if (!string.IsNullOrEmpty(LinkDesc))
+			if (LinkDesc != null && !LinkDesc.IsEmpty)
 			{
-				sb.Append(' ');
-				sb.Append(LinkDesc);
+				pcs.AddSpace();
+				pcs.AddClassifiedString(LinkDesc);
 			}
 
 			if (_sortCols != null)
@@ -117,34 +139,51 @@ namespace DkTools.DkDict
 				{
 					case RelIndType.Index:
 						{
-							sb.Append(" (");
+							pcs.AddSpace();
+							pcs.AddOperator("(");
 							var first = true;
 							foreach (var col in _sortCols)
 							{
 								if (first) first = false;
-								else sb.Append(", ");
-								sb.Append(col);
+								else
+								{
+									pcs.AddDelimiter(",");
+									pcs.AddSpace();
+								}
+								pcs.AddTableField(col);
 							}
-							sb.Append(')');
+							pcs.AddOperator(")");
 						}
 						break;
 					case RelIndType.Relationship:
 					case RelIndType.TimeRelationship:
-						sb.Append(" order by");
-						if (Unique) sb.Append(" unique");
+						pcs.AddSpace();
+						pcs.AddKeyword("order");
+						pcs.AddSpace();
+						pcs.AddKeyword("by");
+						if (Unique)
+						{
+							pcs.AddSpace();
+							pcs.AddKeyword("unique");
+						}
 						foreach (var col in _sortCols)
 						{
-							sb.Append(' ');
-							sb.Append(col);
+							pcs.AddSpace();
+							pcs.AddTableField(col);
 						}
-						sb.Append(" ( ");
-						if (Columns.Any()) sb.Append("... ");
-						sb.Append(')');
+						pcs.AddSpace();
+						pcs.AddOperator("(");
+						pcs.AddSpace();
+						if (Columns.Any())
+						{
+							pcs.AddComment("... ");
+						}
+						pcs.AddOperator(")");
 						break;
 				}
 			}
 
-			_def = new RelIndDefinition(this, TableName, sb.ToString(), Description, FilePosition);
+			_def = new RelIndDefinition(this, TableName, pcs.ToClassifiedString(), Description, FilePosition);
 		}
 
 		public override Definition Definition

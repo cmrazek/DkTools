@@ -1264,7 +1264,12 @@ namespace DkTools.DkDict
 								break;
 							}
 
-							relind.LinkDesc = string.Format("one {0} to one {1}", parentName, childName);
+							relind.LinkDesc = new ProbeClassifiedString(
+								new ProbeClassifiedRun(ProbeClassifierType.Keyword, "one "),
+								new ProbeClassifiedRun(ProbeClassifierType.TableName, parentName),
+								new ProbeClassifiedRun(ProbeClassifierType.Keyword, " to one "),
+								new ProbeClassifiedRun(ProbeClassifierType.TableName, childName)
+							);
 
 							// WBDK seems to tolerate ending the statement here
 							if (!_code.PeekExactWholeWordI("order") && !_code.PeekExact('(') && !_code.PeekExact('{')) break;
@@ -1286,7 +1291,12 @@ namespace DkTools.DkDict
 								break;
 							}
 
-							relind.LinkDesc = string.Format("one {0} to many {1}", parentName, childName);
+							relind.LinkDesc = new ProbeClassifiedString(
+								new ProbeClassifiedRun(ProbeClassifierType.Keyword, "one "),
+								new ProbeClassifiedRun(ProbeClassifierType.TableName, parentName),
+								new ProbeClassifiedRun(ProbeClassifierType.Keyword, " to many "),
+								new ProbeClassifiedRun(ProbeClassifierType.TableName, childName)
+							);
 
 							// WBDK seems to tolerate ending the statement here
 							if (!_code.PeekExactWholeWordI("order") && !_code.PeekExact('(') && !_code.PeekExact('{')) break;
@@ -1331,7 +1341,12 @@ namespace DkTools.DkDict
 								break;
 							}
 
-							relind.LinkDesc = string.Format("many {0} to many {1}", parentName, childName);
+							relind.LinkDesc = new ProbeClassifiedString(
+								new ProbeClassifiedRun(ProbeClassifierType.Keyword, "many "),
+								new ProbeClassifiedRun(ProbeClassifierType.TableName, parentName),
+								new ProbeClassifiedRun(ProbeClassifierType.Keyword, " to many "),
+								new ProbeClassifiedRun(ProbeClassifierType.TableName, childName)
+							);
 
 							// WBDK seems to tolerate ending the statement here
 							if (!_code.PeekExactWholeWordI("order") && !_code.PeekExact('(') && !_code.PeekExact('{')) break;
@@ -1516,17 +1531,17 @@ namespace DkTools.DkDict
 					}
 					else if (_tables.TryGetValue(word, out masterTable))
 					{
-						var sb = new StringBuilder();
-						sb.Append(word);
+						var pcs = new ProbeClassifiedStringBuilder();
+						pcs.AddTableName(word);
 
 						_code.ReadExactWholeWordI("to");
-						sb.Append(" to ");
+						pcs.AddKeyword(" to ");
 
 						var historyTableName = _code.ReadWordR();
 						if ((historyTable = GetTable(historyTableName)) != null)
 						{
-							sb.Append(historyTableName);
-							relind.LinkDesc = sb.ToString();
+							pcs.AddTableName(historyTableName);
+							relind.LinkDesc = pcs.ToClassifiedString();
 						}
 						else
 						{
