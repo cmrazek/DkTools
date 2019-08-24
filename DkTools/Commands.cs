@@ -184,8 +184,13 @@ namespace DkTools
 
 		private static void ShowProbeExplorer(object sender, EventArgs e)
 		{
-			var window = Shell.ShowProbeExplorerToolWindow();
-			window.FocusFileFilter();
+            ThreadHelper.JoinableTaskFactory.RunAsync(async () =>
+            {
+                await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
+
+                var window = Shell.ShowProbeExplorerToolWindow();
+                window.FocusFileFilter();
+            });
 		}
 
 		internal static void SaveProbeFiles()
@@ -1033,21 +1038,6 @@ namespace DkTools
 					var model = fileStore.CreatePreprocessedModel(fileName, view.TextSnapshot, false, "Debug:ShowPreprocessorFullModelDump");
 
 					Shell.OpenTempContent(model.DumpTree(), Path.GetFileName(model.FileName), ".prepmodel.xml");
-				});
-			}
-
-			public static void ShowStateAtCaret()
-			{
-				ThreadHelper.JoinableTaskFactory.RunAsync(async () =>
-				{
-					await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
-
-					var view = Shell.ActiveView;
-					if (view == null) return;
-
-					var tracker = Classifier.TextBufferStateTracker.GetTrackerForTextBuffer(view.TextBuffer);
-					var state = tracker.GetStateForPosition(view.Caret.Position.BufferPosition, view.TextSnapshot);
-					Log.Debug("State at caret: 0x{0:X8}", state);
 				});
 			}
 		}

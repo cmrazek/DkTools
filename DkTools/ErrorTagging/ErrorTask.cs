@@ -49,14 +49,19 @@ namespace DkTools.ErrorTagging
 
 		private void ErrorTask_Navigate(object sender, EventArgs e)
 		{
-			var task = sender as ErrorTask;
-			if (task != null)
+			ThreadHelper.JoinableTaskFactory.RunAsync(async () =>
 			{
-				if (!string.IsNullOrEmpty(task.Document))
+				await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
+
+				var task = sender as ErrorTask;
+				if (task != null)
 				{
-					Shell.OpenDocumentAndLine(task.Document, task.Line);
+					if (!string.IsNullOrEmpty(task.Document))
+					{
+						Shell.OpenDocumentAndLine(task.Document, task.Line);
+					}
 				}
-			}
+			});
 		}
 
 		public ErrorTaskSource Source

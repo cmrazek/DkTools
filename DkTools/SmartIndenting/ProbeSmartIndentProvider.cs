@@ -4,6 +4,7 @@ using System.ComponentModel.Composition;
 using System.Linq;
 using System.Text;
 using Microsoft.VisualStudio.Editor;
+using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Text.Editor;
 using Microsoft.VisualStudio.TextManager.Interop;
 using Microsoft.VisualStudio.Utilities;
@@ -24,6 +25,8 @@ namespace DkTools.SmartIndenting
 
 		public void VsTextViewCreated(IVsTextView textViewAdapter)
 		{
+			ThreadHelper.ThrowIfNotOnUIThread();
+
 			var textView = Shell.VsTextViewToWpfTextView(textViewAdapter);
 
 			// Create the smart indent now so that it's available before VS determines it's needed (e.g. when cleaning up snippets)

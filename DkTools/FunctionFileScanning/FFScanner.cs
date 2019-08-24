@@ -130,7 +130,7 @@ namespace DkTools.FunctionFileScanning
 					}
 					else
 					{
-						Shell.SetStatusText("DkTools background purging...");
+						ProbeToolsPackage.Instance.SetStatusText("DkTools background purging...");
 						using (var txn = db.BeginTransaction())
 						{
 							_currentApp.PurgeData(db);
@@ -139,7 +139,7 @@ namespace DkTools.FunctionFileScanning
 
 						var scanElapsed = DateTime.Now.Subtract(scanStartTime);
 
-						Shell.SetStatusText(string.Format("DkTools background scanning complete.  (elapsed: {0})", scanElapsed));
+						ProbeToolsPackage.Instance.SetStatusText(string.Format("DkTools background scanning complete.  (elapsed: {0})", scanElapsed));
 						lock (_scanLock)
 						{
 							_scanQueue = null;
@@ -245,8 +245,8 @@ namespace DkTools.FunctionFileScanning
 				var ffFile = app.GetFileForScan(db, scan.fileName);
 
 				Log.Debug("Processing file: {0} (modified={1}, last modified={2})", scan.fileName, fileModified, modified);
-				if (scan.mode == FFScanMode.Exports) Shell.SetStatusText(string.Format("DkTools background scanning file: {0} (exports only)", scan.fileName));
-				else Shell.SetStatusText(string.Format("DkTools background scanning file: {0}", scan.fileName));
+				if (scan.mode == FFScanMode.Exports) ProbeToolsPackage.Instance.SetStatusText(string.Format("DkTools background scanning file: {0} (exports only)", scan.fileName));
+				else ProbeToolsPackage.Instance.SetStatusText(string.Format("DkTools background scanning file: {0}", scan.fileName));
 
 				var fileTitle = Path.GetFileNameWithoutExtension(scan.fileName);
 

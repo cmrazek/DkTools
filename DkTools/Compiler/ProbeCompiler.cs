@@ -100,6 +100,8 @@ namespace DkTools.Compiler
 
 		public void StartCompile()
 		{
+			ThreadHelper.ThrowIfNotOnUIThread();
+
 			if (_compileThread != null) KillCompile(k_killCompileTimeout);
 
 			Commands.SaveProbeFiles();
@@ -159,7 +161,7 @@ namespace DkTools.Compiler
 
 					case CompileMethod.Dccmp:
 						WriteLine("Starting dccmp for application '{0}' at {1}.", ProbeEnvironment.CurrentApp, startTime.ToString(k_timeStampFormat));
-						Shell.SetStatusText("DK dccmp starting...");
+						ProbeToolsPackage.Instance.SetStatusText("DK dccmp starting...");
 
 						if (DoDccmp())
 						{
@@ -171,7 +173,7 @@ namespace DkTools.Compiler
 
 					case CompileMethod.Credelix:
 						WriteLine("Starting credelix for application '{0}' at {1}.", ProbeEnvironment.CurrentApp, startTime.ToString(k_timeStampFormat));
-						Shell.SetStatusText("DK credelix starting...");
+						ProbeToolsPackage.Instance.SetStatusText("DK credelix starting...");
 
 						if (DoCredelix())
 						{
@@ -199,7 +201,8 @@ namespace DkTools.Compiler
 		{
 			try
 			{
-				Shell.SetStatusText("DK compile starting...");
+				//Shell.SetStatusText("DK compile starting...");
+				ProbeToolsPackage.Instance.SetStatusText("DK compile starting...");
 
 				_numErrors = _numWarnings = 0;
 				_buildFailed = false;
@@ -208,7 +211,7 @@ namespace DkTools.Compiler
 				if (string.IsNullOrWhiteSpace(workingDir))
 				{
 					WriteLine("DK object directory not configured.");
-					Shell.SetStatusText("DK compile failed");
+					ProbeToolsPackage.Instance.SetStatusText("DK compile failed");
 					return false;
 				}
 				else if (!Directory.Exists(workingDir))
@@ -232,7 +235,7 @@ namespace DkTools.Compiler
 				if (!_proc.Start())
 				{
 					WriteLine("Unable to start DK compiler.");
-					Shell.SetStatusText("DK compile failed");
+					ProbeToolsPackage.Instance.SetStatusText("DK compile failed");
 					return false;
 				}
 
@@ -252,7 +255,7 @@ namespace DkTools.Compiler
 						stdOutThread.Join();
 						stdErrThread.Join();
 						WriteLine("Compile was stopped before completion.");
-						Shell.SetStatusText("DK compile stopped");
+						ProbeToolsPackage.Instance.SetStatusText("DK compile stopped");
 						return false;
 					}
 					Thread.Sleep(k_compileSleep);
@@ -275,7 +278,7 @@ namespace DkTools.Compiler
 
 					if (_numErrors > 0 || _buildFailed)
 					{
-						Shell.SetStatusText("DK compile failed");
+						ProbeToolsPackage.Instance.SetStatusText("DK compile failed");
 						if (ProbeToolsPackage.Instance.ProbeExplorerOptions.ShowErrorListAfterCompile) Shell.ShowErrorList();
 						return false;
 					}
@@ -284,12 +287,12 @@ namespace DkTools.Compiler
 				if (ProbeToolsPackage.Instance.ProbeExplorerOptions.RunDccmpAfterCompile)
 				{
 					WriteLine("Compile succeeded; running DCCMP...");
-					Shell.SetStatusText("DK compile succeeded; running DCCMP...");
+					ProbeToolsPackage.Instance.SetStatusText("DK compile succeeded; running DCCMP...");
 					if (!DoDccmp()) return false;
 				}
 
-				if (_numWarnings > 0) Shell.SetStatusText("DK compile succeeded with warnings");
-				else Shell.SetStatusText("DK compile succeeded");
+				if (_numWarnings > 0) ProbeToolsPackage.Instance.SetStatusText("DK compile succeeded with warnings");
+				else ProbeToolsPackage.Instance.SetStatusText("DK compile succeeded");
 				ShowErrorListIfRequired();
 				
 				return true;
@@ -297,7 +300,7 @@ namespace DkTools.Compiler
 			catch (Exception ex)
 			{
 				WriteLine(string.Concat("Fatal error in compile thread: ", ex.ToString()));
-				Shell.SetStatusText("DK compile failed");
+				ProbeToolsPackage.Instance.SetStatusText("DK compile failed");
 				return false;
 			}
 		}
@@ -317,7 +320,7 @@ namespace DkTools.Compiler
 		{
 			try 
 			{
-				Shell.SetStatusText("DCCMP starting...");
+				ProbeToolsPackage.Instance.SetStatusText("DCCMP starting...");
 
 				_proc = new Process();
 				var switches = GenerateDccmpSwitches();
@@ -334,7 +337,7 @@ namespace DkTools.Compiler
 				if (!_proc.Start())
 				{
 					WriteLine("Unable to start DCCMP.");
-					Shell.SetStatusText("DCCMP failed");
+					ProbeToolsPackage.Instance.SetStatusText("DCCMP failed");
 					return false;
 				}
 
@@ -354,7 +357,7 @@ namespace DkTools.Compiler
 						stdOutThread.Join();
 						stdErrThread.Join();
 						WriteLine("DCCMP was stopped before completion.");
-						Shell.SetStatusText("DCCMP dccmp stopped");
+						ProbeToolsPackage.Instance.SetStatusText("DCCMP dccmp stopped");
 						return false;
 					}
 					Thread.Sleep(k_compileSleep);
@@ -363,18 +366,18 @@ namespace DkTools.Compiler
 				if (_proc.ExitCode != 0)
 				{
 					WriteLine("DCCMP failed");
-					Shell.SetStatusText("DCCMP failed");
+					ProbeToolsPackage.Instance.SetStatusText("DCCMP failed");
 					return false;
 				}
 
 				WriteLine("DCCMP succeeded");
-				Shell.SetStatusText("DCCMP succeeded");
+				ProbeToolsPackage.Instance.SetStatusText("DCCMP succeeded");
 				return true;
 			}
 			catch (Exception ex)
 			{
 				WriteLine(string.Concat("Fatal error in dccmp thread: ", ex.ToString()));
-				Shell.SetStatusText("DCCMP failed");
+				ProbeToolsPackage.Instance.SetStatusText("DCCMP failed");
 				return false;
 			}
 		}
@@ -383,7 +386,7 @@ namespace DkTools.Compiler
 		{
 			try
 			{
-				Shell.SetStatusText("Probe credelix starting...");
+				ProbeToolsPackage.Instance.SetStatusText("Probe credelix starting...");
 
 				_proc = new Process();
 				var switches = GenerateCredelixSwitches();
@@ -400,7 +403,7 @@ namespace DkTools.Compiler
 				if (!_proc.Start())
 				{
 					WriteLine("Unable to start CREDELIX.");
-					Shell.SetStatusText("CREDELIX failed");
+					ProbeToolsPackage.Instance.SetStatusText("CREDELIX failed");
 					return false;
 				}
 
@@ -420,7 +423,7 @@ namespace DkTools.Compiler
 						stdOutThread.Join();
 						stdErrThread.Join();
 						WriteLine("CREDELIX was stopped before completion.");
-						Shell.SetStatusText("CREDELIX stopped");
+						ProbeToolsPackage.Instance.SetStatusText("CREDELIX stopped");
 						return false;
 					}
 					Thread.Sleep(k_compileSleep);
@@ -429,18 +432,18 @@ namespace DkTools.Compiler
 				if (_proc.ExitCode != 0)
 				{
 					WriteLine("CREDELIX failed");
-					Shell.SetStatusText("CREDELIX failed");
+					ProbeToolsPackage.Instance.SetStatusText("CREDELIX failed");
 					return false;
 				}
 
 				WriteLine("CREDELIX succeeded");
-				Shell.SetStatusText("CREDELIX succeeded");
+				ProbeToolsPackage.Instance.SetStatusText("CREDELIX succeeded");
 				return true;
 			}
 			catch (Exception ex)
 			{
 				WriteLine(string.Concat("Fatal error in CREDELIX thread: ", ex.ToString()));
-				Shell.SetStatusText("CREDELIX failed");
+				ProbeToolsPackage.Instance.SetStatusText("CREDELIX failed");
 				return false;
 			}
 		}

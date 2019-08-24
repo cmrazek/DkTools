@@ -58,13 +58,13 @@ namespace DkTools.Navigation
 					}
 					else
 					{
-						Shell.SetStatusText("Include file not found.");
+						ProbeToolsPackage.Instance.SetStatusText("Include file not found.");
 						return;
 					}
 				}
 
 				Log.Debug("Found no definitions.");
-				Shell.SetStatusText("Definition not found.");
+				ProbeToolsPackage.Instance.SetStatusText("Definition not found.");
 			}
 			catch (Exception ex)
 			{
@@ -74,6 +74,8 @@ namespace DkTools.Navigation
 
 		internal static bool BrowseToDefinition(CodeModel.Definitions.Definition def)
 		{
+			ThreadHelper.ThrowIfNotOnUIThread();
+
 			if (def is FunctionDefinition)
 			{
 				var funcDef = def as FunctionDefinition;
@@ -120,6 +122,8 @@ namespace DkTools.Navigation
 
 		private static bool PromptDefinitions(IEnumerable<Definition> defs)
 		{
+			ThreadHelper.ThrowIfNotOnUIThread();
+
 			var defList = defs.ToArray();
 			if (defList.Length == 0) return false;
 
@@ -168,7 +172,7 @@ namespace DkTools.Navigation
 					var token = model.File.FindDownward(modelPos, t => t.SourceDefinition != null).FirstOrDefault();
 					if (token == null)
 					{
-						Shell.SetStatusText("No reference found at cursor.");
+						ProbeToolsPackage.Instance.SetStatusText("No reference found at cursor.");
 						return;
 					}
 					else
@@ -205,6 +209,8 @@ namespace DkTools.Navigation
 
 		public static void TriggerFindReferences(string extRefId, string refName)
 		{
+			ThreadHelper.ThrowIfNotOnUIThread();
+
 			var pane = StartFindReferences(refName);
 			EndFindReferences(pane, FindGlobalReferences(extRefId));
 		}

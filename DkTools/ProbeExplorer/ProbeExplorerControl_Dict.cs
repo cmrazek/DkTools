@@ -176,37 +176,54 @@ namespace DkTools.ProbeExplorer
 
 		private void TableFindAllReferences_Click(object sender, RoutedEventArgs e)
 		{
-			var menuItem = (sender as MenuItem);
-			if (menuItem != null)
+			ThreadHelper.JoinableTaskFactory.RunAsync(async () =>
 			{
-				var table = menuItem.Tag as DkDict.Table;
-				if (table != null)
+				await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
+
+				try
 				{
-					Navigation.GoToDefinitionHelper.TriggerFindReferences(DkDict.Table.GetExternalRefId(table.Name), table.Name);
-					e.Handled = true;
+					var menuItem = (sender as MenuItem);
+					if (menuItem != null)
+					{
+						var table = menuItem.Tag as DkDict.Table;
+						if (table != null)
+						{
+							Navigation.GoToDefinitionHelper.TriggerFindReferences(DkDict.Table.GetExternalRefId(table.Name), table.Name);
+							e.Handled = true;
+						}
+					}
 				}
-			}
+				catch (Exception ex)
+				{
+					this.ShowError(ex);
+				}
+			});
 		}
 
 		void TableGoToDefinition_Click(object sender, RoutedEventArgs e)
 		{
-			try
+			ThreadHelper.JoinableTaskFactory.RunAsync(async () =>
 			{
-				var menuItem = (sender as MenuItem);
-				if (menuItem != null)
+				await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
+
+				try
 				{
-					var table = menuItem.Tag as DkDict.Table;
-					if (table != null)
+					var menuItem = (sender as MenuItem);
+					if (menuItem != null)
 					{
-						Navigation.GoToDefinitionHelper.BrowseToDefinition(table.Definition);
-						e.Handled = true;
+						var table = menuItem.Tag as DkDict.Table;
+						if (table != null)
+						{
+							Navigation.GoToDefinitionHelper.BrowseToDefinition(table.Definition);
+							e.Handled = true;
+						}
 					}
 				}
-			}
-			catch (Exception ex)
-			{
-				this.ShowError(ex);
-			}
+				catch (Exception ex)
+				{
+					this.ShowError(ex);
+				}
+			});
 		}
 		#endregion
 
@@ -286,44 +303,54 @@ namespace DkTools.ProbeExplorer
 
 		private void FieldFindAllReferences_Click(object sender, RoutedEventArgs e)
 		{
-			try
+			ThreadHelper.JoinableTaskFactory.RunAsync(async () =>
 			{
-				var menuItem = (sender as MenuItem);
-				if (menuItem != null)
+				await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
+
+				try
 				{
-					var field = menuItem.Tag as DkDict.Column;
-					if (field != null)
+					var menuItem = (sender as MenuItem);
+					if (menuItem != null)
 					{
-						Navigation.GoToDefinitionHelper.TriggerFindReferences(DkDict.Column.GetTableFieldExternalRefId(field.TableName, field.Name), field.Name);
-						e.Handled = true;
+						var field = menuItem.Tag as DkDict.Column;
+						if (field != null)
+						{
+							Navigation.GoToDefinitionHelper.TriggerFindReferences(DkDict.Column.GetTableFieldExternalRefId(field.TableName, field.Name), field.Name);
+							e.Handled = true;
+						}
 					}
 				}
-			}
-			catch (Exception ex)
-			{
-				this.ShowError(ex);
-			}
+				catch (Exception ex)
+				{
+					this.ShowError(ex);
+				}
+			});
 		}
 
 		private void FieldGoToDefinition_Click(object sender, RoutedEventArgs e)
 		{
-			try
+			ThreadHelper.JoinableTaskFactory.RunAsync(async () =>
 			{
-				var menuItem = (sender as MenuItem);
-				if (menuItem != null)
+				await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
+
+				try
 				{
-					var field = menuItem.Tag as DkDict.Column;
-					if (field != null)
+					var menuItem = (sender as MenuItem);
+					if (menuItem != null)
 					{
-						Navigation.GoToDefinitionHelper.BrowseToDefinition(field.Definition);
-						e.Handled = true;
+						var field = menuItem.Tag as DkDict.Column;
+						if (field != null)
+						{
+							Navigation.GoToDefinitionHelper.BrowseToDefinition(field.Definition);
+							e.Handled = true;
+						}
 					}
 				}
-			}
-			catch (Exception ex)
-			{
-				this.ShowError(ex);
-			}
+				catch (Exception ex)
+				{
+					this.ShowError(ex);
+				}
+			});
 		}
 		#endregion
 
@@ -388,23 +415,28 @@ namespace DkTools.ProbeExplorer
 
 		private void RelIndFindAllReferences_Click(object sender, RoutedEventArgs e)
 		{
-			try
+			ThreadHelper.JoinableTaskFactory.RunAsync(async () =>
 			{
-				var menuItem = (sender as MenuItem);
-				if (menuItem != null)
+				await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
+
+				try
 				{
-					var relInd = menuItem.Tag as DkDict.RelInd;
-					if (relInd != null)
+					var menuItem = (sender as MenuItem);
+					if (menuItem != null)
 					{
-						Navigation.GoToDefinitionHelper.TriggerFindReferences(CodeModel.Definitions.RelIndDefinition.GetExternalRefId(relInd.TableName, relInd.Name), relInd.Name);
-						e.Handled = true;
+						var relInd = menuItem.Tag as DkDict.RelInd;
+						if (relInd != null)
+						{
+							Navigation.GoToDefinitionHelper.TriggerFindReferences(CodeModel.Definitions.RelIndDefinition.GetExternalRefId(relInd.TableName, relInd.Name), relInd.Name);
+							e.Handled = true;
+						}
 					}
 				}
-			}
-			catch (Exception ex)
-			{
-				this.ShowError(ex);
-			}
+				catch (Exception ex)
+				{
+					this.ShowError(ex);
+				}
+			});
 		}
 
 		private void RelIndTvi_MouseRightButtonDown(object sender, MouseButtonEventArgs e)
@@ -426,23 +458,28 @@ namespace DkTools.ProbeExplorer
 
 		private void RelIndGoToDefinition_Click(object sender, RoutedEventArgs e)
 		{
-			try
+			ThreadHelper.JoinableTaskFactory.RunAsync(async () =>
 			{
-				var menuItem = (sender as MenuItem);
-				if (menuItem != null)
+				await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
+
+				try
 				{
-					var relInd = menuItem.Tag as DkDict.RelInd;
-					if (relInd != null)
+					var menuItem = (sender as MenuItem);
+					if (menuItem != null)
 					{
-						Navigation.GoToDefinitionHelper.BrowseToDefinition(relInd.Definition);
-						e.Handled = true;
+						var relInd = menuItem.Tag as DkDict.RelInd;
+						if (relInd != null)
+						{
+							Navigation.GoToDefinitionHelper.BrowseToDefinition(relInd.Definition);
+							e.Handled = true;
+						}
 					}
 				}
-			}
-			catch (Exception ex)
-			{
-				this.ShowError(ex);
-			}
+				catch (Exception ex)
+				{
+					this.ShowError(ex);
+				}
+			});
 		}
 		#endregion
 

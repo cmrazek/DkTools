@@ -25,6 +25,8 @@ namespace DkTools.Snippets
 
 		public SnippetCommandHandler(ITextView view, IVsTextView textViewAdapter)
 		{
+			ThreadHelper.ThrowIfNotOnUIThread();
+
 			_view = view;
 			_viewAdapter = textViewAdapter;
 
@@ -119,7 +121,9 @@ namespace DkTools.Snippets
 
 		public int FormatSpan(IVsTextLines pBuffer, TextSpan[] ts)
 		{
-			var buf = ProbeToolsPackage.Instance.EditorAdaptersService.GetDocumentBuffer(pBuffer);
+            ThreadHelper.ThrowIfNotOnUIThread();
+
+            var buf = ProbeToolsPackage.Instance.EditorAdaptersService.GetDocumentBuffer(pBuffer);
 			if (buf != null)
 			{
 				var tabSize = _view.GetTabSize();

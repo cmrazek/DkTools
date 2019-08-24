@@ -85,7 +85,7 @@ namespace DkTools.Navigation
 			var token = model.File.FindDownward(modelPos).LastOrDefault(x => x.SourceDefinition != null);
 			if (token == null)
 			{
-				Shell.SetStatusText("No reference found at this position.");
+				ProbeToolsPackage.Instance.SetStatusText("No reference found at this position.");
 				return;
 			}
 			var def = token.SourceDefinition;
@@ -132,7 +132,7 @@ namespace DkTools.Navigation
 			var snapSpan = new SnapshotSpan(caretPt.Snapshot, snapStart, snapEnd - snapStart);
 			MoveTo(snapSpan);
 
-			Shell.SetStatusText(string.Format("Reference {0} of {1}.", nextIndex + 1, refs.Length));
+			ProbeToolsPackage.Instance.SetStatusText(string.Format("Reference {0} of {1}.", nextIndex + 1, refs.Length));
 		}
 	}
 }

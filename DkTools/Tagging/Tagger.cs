@@ -235,6 +235,8 @@ namespace DkTools.Tagging
 
 		public static void CommentBlock()
 		{
+			ThreadHelper.ThrowIfNotOnUIThread();
+
 			var view = Shell.ActiveView;
 			var snapshot = view.TextSnapshot;
 			var buffer = view.TextBuffer;
@@ -329,6 +331,8 @@ namespace DkTools.Tagging
 
 		public static void UncommentBlock()
 		{
+			ThreadHelper.ThrowIfNotOnUIThread();
+
 			var view = Shell.ActiveView;
 			var snapshot = view.TextSnapshot;
 			var buffer = view.TextBuffer;

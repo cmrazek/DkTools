@@ -532,21 +532,24 @@ namespace DkTools
 				return _taskListService;
 			}
 		}
+		#endregion
 
+		#region Status Bar
 		private Microsoft.VisualStudio.Shell.Interop.IVsStatusbar _statusBarService;
-		internal Microsoft.VisualStudio.Shell.Interop.IVsStatusbar StatusBarService
+		internal void SetStatusText(string text)
 		{
-			get
+			ThreadHelper.JoinableTaskFactory.RunAsync(async () =>
 			{
-				ThreadHelper.ThrowIfNotOnUIThread();
+				await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
 
 				if (_statusBarService == null)
 				{
 					_statusBarService = this.GetService(typeof(SVsStatusbar)) as IVsStatusbar;
 					if (_statusBarService == null) throw new InvalidOperationException("Unable to get service 'Microsoft.VisualStudio.Shell.Interop.IVsStatusbar'.");
 				}
-				return _statusBarService;
-			}
+
+				_statusBarService.SetText(text);
+			});
 		}
 		#endregion
 	}

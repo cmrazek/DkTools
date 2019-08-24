@@ -143,7 +143,9 @@ namespace DkTools.Classifier
 		/// </summary>
 		public bool IsPositionInLiveCode(int pos, ITextSnapshot snapshot)
 		{
-			return State.IsInLiveCode(GetStateForPosition(pos, snapshot));
+            ThreadHelper.ThrowIfNotOnUIThread();
+
+            return State.IsInLiveCode(GetStateForPosition(pos, snapshot));
 		}
 	}
 }

@@ -72,16 +72,22 @@ namespace DkTools.ProbeExplorer
 
 		public void OnDocumentActivated(Microsoft.VisualStudio.Text.Editor.IWpfTextView view)
 		{
-			_exp.OnDocumentActivated(view);
+            ThreadHelper.ThrowIfNotOnUIThread();
+
+            _exp.OnDocumentActivated(view);
 		}
 
 		public void FocusFunctionFilter()
 		{
+			ThreadHelper.ThrowIfNotOnUIThread();
+
 			_exp.FocusFunctionFilter();
 		}
 
 		public void FocusDictFilter()
 		{
+			ThreadHelper.ThrowIfNotOnUIThread();
+
 			_exp.FocusDictFilter();
 		}
 	}

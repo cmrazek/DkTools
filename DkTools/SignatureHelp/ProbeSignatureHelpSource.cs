@@ -32,7 +32,9 @@ namespace DkTools.SignatureHelp
 
 		public void AugmentSignatureHelpSession(ISignatureHelpSession session, IList<ISignature> signatures)
 		{
-			var snapshot = _textBuffer.CurrentSnapshot;
+            ThreadHelper.ThrowIfNotOnUIThread();
+
+            var snapshot = _textBuffer.CurrentSnapshot;
 			var origPos = session.GetTriggerPoint(_textBuffer).GetPosition(snapshot);
 			var pos = origPos;
 

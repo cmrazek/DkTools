@@ -861,16 +861,6 @@ namespace DkTools.ProbeExplorer
 				menuItem.Click += ShowPreprocessorModel_Click;
 				menu.Items.Add(menuItem);
 
-				menuItem = new MenuItem();
-				menuItem.Header = "Sample Error";
-				menuItem.Click += SampleError_Click;
-				menu.Items.Add(menuItem);
-
-				menuItem = new MenuItem();
-				menuItem.Header = "Show State at Caret";
-				menuItem.Click += ShowStateAtCaret_Click;
-				menu.Items.Add(menuItem);
-
 				menu.PlacementTarget = c_appLabel;
 				menu.IsOpen = true;
 			}
@@ -882,102 +872,104 @@ namespace DkTools.ProbeExplorer
 
 		private void ShowCodeModelDump_Click(object sender, RoutedEventArgs e)
 		{
-			try
+			ThreadHelper.JoinableTaskFactory.RunAsync(async () =>
 			{
-				Commands.DebugCommands.ShowCodeModelDump();
-			}
-			catch (Exception ex)
-			{
-				this.ShowError(ex);
-			}
+				await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
+
+				try
+				{
+					Commands.DebugCommands.ShowCodeModelDump();
+				}
+				catch (Exception ex)
+				{
+					this.ShowError(ex);
+				}
+			});
 		}
 
 		private void ShowStdLibCodeModelDump_Click(object sender, RoutedEventArgs e)
 		{
-			try
+			ThreadHelper.JoinableTaskFactory.RunAsync(async () =>
 			{
-				Commands.DebugCommands.ShowStdLibCodeModelDump();
-			}
-			catch (Exception ex)
-			{
-				this.ShowError(ex);
-			}
+				await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
+
+				try
+				{
+					Commands.DebugCommands.ShowStdLibCodeModelDump();
+				}
+				catch (Exception ex)
+				{
+					this.ShowError(ex);
+				}
+			});
 		}
 
 		private void ShowDefinitions_Click(object sender, RoutedEventArgs e)
 		{
-			try
+			ThreadHelper.JoinableTaskFactory.RunAsync(async () =>
 			{
-				Commands.DebugCommands.ShowDefinitions();
-			}
-			catch (Exception ex)
-			{
-				this.ShowError(ex);
-			}
+				await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
+
+				try
+				{
+					Commands.DebugCommands.ShowDefinitions();
+				}
+				catch (Exception ex)
+				{
+					this.ShowError(ex);
+				}
+			});
 		}
 
 		private void ShowPreprocessor_Click(object sender, RoutedEventArgs e)
 		{
-			try
+			ThreadHelper.JoinableTaskFactory.RunAsync(async () =>
 			{
-				Commands.DebugCommands.ShowPreprocessor();
-			}
-			catch (Exception ex)
-			{
-				this.ShowError(ex);
-			}
+				await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
+
+				try
+				{
+					Commands.DebugCommands.ShowPreprocessor();
+				}
+				catch (Exception ex)
+				{
+					this.ShowError(ex);
+				}
+			});
 		}
 
 		private void ShowPreprocessorDump_Click(object sender, RoutedEventArgs e)
 		{
-			try
+			ThreadHelper.JoinableTaskFactory.RunAsync(async () =>
 			{
-				Commands.DebugCommands.ShowPreprocessorDump();
-			}
-			catch (Exception ex)
-			{
-				this.ShowError(ex);
-			}
+				await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
+
+				try
+				{
+					Commands.DebugCommands.ShowPreprocessorDump();
+				}
+				catch (Exception ex)
+				{
+					this.ShowError(ex);
+				}
+			});
 		}
 
 		private void ShowPreprocessorModel_Click(object sender, RoutedEventArgs e)
 		{
-			try
+			ThreadHelper.JoinableTaskFactory.RunAsync(async () =>
 			{
-				Commands.DebugCommands.ShowPreprocessorFullModelDump();
-			}
-			catch (Exception ex)
-			{
-				this.ShowError(ex);
-			}
-		}
+				await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
 
-		private void SampleError_Click(object sender, RoutedEventArgs e)
-		{
-			try
-			{
-				var dlg = new ErrorDialog("This is an error without details.");
-				dlg.Owner = System.Windows.Application.Current.MainWindow;
-				dlg.ShowDialog();
-
-				throw new InvalidOperationException("This is a sample exception.");
-			}
-			catch (Exception ex)
-			{
-				this.ShowError(ex);
-			}
-		}
-
-		private void ShowStateAtCaret_Click(object sender, RoutedEventArgs e)
-		{
-			try
-			{
-				Commands.DebugCommands.ShowStateAtCaret();
-			}
-			catch (Exception ex)
-			{
-				this.ShowError(ex);
-			}
+				try
+				{
+					Commands.DebugCommands.ShowPreprocessorFullModelDump();
+				}
+				catch (Exception ex)
+				{
+					this.ShowError(ex);
+				}
+			});
 		}
 #endif
 		#endregion
@@ -1041,17 +1033,22 @@ namespace DkTools.ProbeExplorer
 
 		private void TabControl_SelectionChanged(object sender, SelectionChangedEventArgs e)
 		{
-			try
+			ThreadHelper.JoinableTaskFactory.RunAsync(async () =>
 			{
-				if (e.AddedItems.Count == 1 && e.AddedItems[0] == c_functionTab)
+				await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
+
+				try
 				{
-					RefreshFunctionList(Shell.ActiveView);
+					if (e.AddedItems.Count == 1 && e.AddedItems[0] == c_functionTab)
+					{
+						RefreshFunctionList(Shell.ActiveView);
+					}
 				}
-			}
-			catch (Exception ex)
-			{
-				this.ShowError(ex);
-			}
+				catch (Exception ex)
+				{
+					this.ShowError(ex);
+				}
+			});
 		}
 
 		public class FunctionListItem : INotifyPropertyChanged

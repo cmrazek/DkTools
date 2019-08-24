@@ -31,7 +31,9 @@ namespace DkTools.SmartIndenting
 
 		public int? GetDesiredIndentation(ITextSnapshotLine line)
 		{
-			_tabSize = _view.GetTabSize();
+            ThreadHelper.ThrowIfNotOnUIThread();
+
+            _tabSize = _view.GetTabSize();
 			_keepTabs = _view.GetKeepTabs();
 
 			return GetDesiredIndentation(line.Snapshot.TextBuffer, line, _tabSize, _keepTabs);
@@ -171,7 +173,9 @@ namespace DkTools.SmartIndenting
 
 		public void FixIndentingBetweenLines(int startLineNumber, int endLineNumber)
 		{
-			using (var tran = _view.TextBuffer.CreateUndoTransaction("Indentation fix"))
+            ThreadHelper.ThrowIfNotOnUIThread();
+
+            using (var tran = _view.TextBuffer.CreateUndoTransaction("Indentation fix"))
 			{
 				for (int lineNumber = startLineNumber; lineNumber <= endLineNumber; lineNumber++)
 				{
@@ -196,7 +200,9 @@ namespace DkTools.SmartIndenting
 
 		public static void FixIndentingBetweenLines(ITextBuffer buffer, int startLineNumber, int endLineNumber, int tabSize, bool keepTabs)
 		{
-			for (int lineNumber = startLineNumber; lineNumber <= endLineNumber; lineNumber++)
+            ThreadHelper.ThrowIfNotOnUIThread();
+
+            for (int lineNumber = startLineNumber; lineNumber <= endLineNumber; lineNumber++)
 			{
 				var line = buffer.CurrentSnapshot.GetLineFromLineNumber(lineNumber);
 				var indent = GetDesiredIndentation(buffer, line, tabSize, keepTabs);

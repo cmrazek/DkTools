@@ -190,21 +190,12 @@ namespace DkTools
 			});
 		}
 
-		internal static void SetStatusText(string text)
-		{
-			ThreadHelper.JoinableTaskFactory.RunAsync(async () =>
-			{
-				await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
-
-				Log.Debug("Status: {0}", text);
-				ProbeToolsPackage.Instance.StatusBarService.SetText(text);
-			});
-		}
-
 		internal static ITextBuffer ActiveBuffer
 		{
 			get
 			{
+				ThreadHelper.ThrowIfNotOnUIThread();
+
 				var view = ActiveView;
 				if (view != null) return view.TextBuffer;
 				return null;
@@ -215,6 +206,8 @@ namespace DkTools
 		{
 			get
 			{
+				ThreadHelper.ThrowIfNotOnUIThread();
+
 				IVsTextView vsView;
 				if (ErrorHandler.Failed(ProbeToolsPackage.Instance.TextManagerService.GetActiveView(1, null, out vsView))) return null;
 				if (vsView == null) return null;
@@ -223,13 +216,10 @@ namespace DkTools
 			}
 		}
 
-		internal static ITextBuffer GetBufferForVsTextBuffer(IVsTextBuffer vsBuf)
-		{
-			return ProbeToolsPackage.Instance.EditorAdaptersService.GetDocumentBuffer(vsBuf);
-		}
-
 		internal static IWpfTextView VsTextViewToWpfTextView(IVsTextView vsView)
 		{
+			ThreadHelper.ThrowIfNotOnUIThread();
+
 			return ProbeToolsPackage.Instance.EditorAdaptersService.GetWpfTextView(vsView);
 		}
 
@@ -293,7 +283,9 @@ namespace DkTools
 
 		public static void OnTextViewActivated(IWpfTextView view)
 		{
-			var window = GetProbeExplorerToolWindow();
+            ThreadHelper.ThrowIfNotOnUIThread();
+
+            var window = GetProbeExplorerToolWindow();
 			window.OnDocumentActivated(view);
 		}
 

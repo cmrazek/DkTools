@@ -158,6 +158,8 @@ namespace DkTools
 		/// </summary>
 		public static bool IsInLiveCode(this SnapshotPoint pt)
 		{
+            ThreadHelper.ThrowIfNotOnUIThread();
+
 			var tracker = Classifier.TextBufferStateTracker.GetTrackerForTextBuffer(pt.Snapshot.TextBuffer);
 			return Classifier.State.IsInLiveCode(tracker.GetStateForPosition(pt.Position, pt.Snapshot));
 		}
@@ -175,6 +177,8 @@ namespace DkTools
 		/// </summary>
 		public static int GetState(this SnapshotPoint pt)
 		{
+            ThreadHelper.ThrowIfNotOnUIThread();
+
 			var tracker = Classifier.TextBufferStateTracker.GetTrackerForTextBuffer(pt.Snapshot.TextBuffer);
 			return tracker.GetStateForPosition(pt.Position, pt.Snapshot);
 		}

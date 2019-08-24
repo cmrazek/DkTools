@@ -137,6 +137,8 @@ namespace DkTools.StatementCompletion
 
 		void ICompletionSource.AugmentCompletionSession(ICompletionSession session, IList<CompletionSet> completionSets)
 		{
+            ThreadHelper.ThrowIfNotOnUIThread();
+
 			//var completionList = new Dictionary<string, Completion>();
 			var completionList = new SortedDictionary<string, Completion>();
 
@@ -401,7 +403,9 @@ namespace DkTools.StatementCompletion
 
 		private IEnumerable<Completion> HandleAfterMethodArgsStart(SnapshotSpan completionSpan, string word1, string word2)
 		{
-			// Starting a new function that belongs to a class or interface.
+            // Starting a new function that belongs to a class or interface.
+
+            ThreadHelper.ThrowIfNotOnUIThread();
 
 			foreach (var opt in GetOptionsForFunctionArg(word1, word2, 0, completionSpan.Start))
 			{
@@ -411,7 +415,9 @@ namespace DkTools.StatementCompletion
 
 		private IEnumerable<Completion> HandleAfterFunctionArgsStart(SnapshotSpan completionSpan, string funcName)
 		{
-			foreach (var opt in GetOptionsForFunctionArg(null, funcName, 0, completionSpan.Start))
+            ThreadHelper.ThrowIfNotOnUIThread();
+
+            foreach (var opt in GetOptionsForFunctionArg(null, funcName, 0, completionSpan.Start))
 			{
 				yield return opt;
 			}
@@ -419,7 +425,9 @@ namespace DkTools.StatementCompletion
 
 		private IEnumerable<Completion> HandleAfterComma(SnapshotSpan completionSpan)
 		{
-			var snapPt = completionSpan.Start;
+            ThreadHelper.ThrowIfNotOnUIThread();
+
+            var snapPt = completionSpan.Start;
 			string className;
 			string funcName;
 			int argIndex;
@@ -559,6 +567,8 @@ namespace DkTools.StatementCompletion
 
 		private IEnumerable<Completion> HandleAfterWord(string word, int curPos, ITextSnapshot snapshot)
 		{
+            ThreadHelper.ThrowIfNotOnUIThread();
+
 			var tracker = TextBufferStateTracker.GetTrackerForTextBuffer(_textBuffer);
 			var stmt = State.ToStatement(tracker.GetStateForPosition(curPos, snapshot));
 			return StatementLayout.GetCompletionsAfterToken(stmt);
@@ -566,21 +576,27 @@ namespace DkTools.StatementCompletion
 
 		private IEnumerable<Completion> HandleAfterSymbol(string word, int curPos, ITextSnapshot snapshot)
 		{
-			var tracker = TextBufferStateTracker.GetTrackerForTextBuffer(_textBuffer);
+            ThreadHelper.ThrowIfNotOnUIThread();
+
+            var tracker = TextBufferStateTracker.GetTrackerForTextBuffer(_textBuffer);
 			var stmt = State.ToStatement(tracker.GetStateForPosition(curPos, snapshot));
 			return StatementLayout.GetCompletionsAfterToken(stmt);
 		}
 
 		private IEnumerable<Completion> HandleAfterNumber(string word, int curPos, ITextSnapshot snapshot)
 		{
-			var tracker = TextBufferStateTracker.GetTrackerForTextBuffer(_textBuffer);
+            ThreadHelper.ThrowIfNotOnUIThread();
+
+            var tracker = TextBufferStateTracker.GetTrackerForTextBuffer(_textBuffer);
 			var stmt = State.ToStatement(tracker.GetStateForPosition(curPos, snapshot));
 			return StatementLayout.GetCompletionsAfterToken(stmt);
 		}
 
 		private IEnumerable<Completion> HandleAfterStringLiteral(int curPos, ITextSnapshot snapshot)
 		{
-			var tracker = TextBufferStateTracker.GetTrackerForTextBuffer(_textBuffer);
+            ThreadHelper.ThrowIfNotOnUIThread();
+
+            var tracker = TextBufferStateTracker.GetTrackerForTextBuffer(_textBuffer);
 			var stmt = State.ToStatement(tracker.GetStateForPosition(curPos, snapshot));
 			return StatementLayout.GetCompletionsAfterToken(stmt);
 		}
