@@ -279,7 +279,7 @@ namespace DkTools.Compiler
 					if (_numErrors > 0 || _buildFailed)
 					{
 						ProbeToolsPackage.Instance.SetStatusText("DK compile failed");
-						if (ProbeToolsPackage.Instance.ProbeExplorerOptions.ShowErrorListAfterCompile) Shell.ShowErrorList();
+						if (ProbeToolsPackage.Instance.ProbeExplorerOptions.ShowErrorListAfterCompile) ProbeToolsPackage.Instance.ShowErrorList();
 						return false;
 					}
 				}
@@ -311,7 +311,7 @@ namespace DkTools.Compiler
 			{
 				if (ProbeToolsPackage.Instance.ProbeExplorerOptions.ShowErrorListAfterCompile)
 				{
-					Shell.ShowErrorList();
+					ProbeToolsPackage.Instance.ShowErrorList();
 				}
 			}
 		}

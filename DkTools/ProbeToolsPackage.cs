@@ -501,22 +501,6 @@ namespace DkTools
 			}
 		}
 
-		private Microsoft.VisualStudio.Shell.Interop.IVsErrorList _errorListService;
-		internal Microsoft.VisualStudio.Shell.Interop.IVsErrorList ErrorListService
-		{
-			get
-			{
-				ThreadHelper.ThrowIfNotOnUIThread();
-
-				if (_errorListService == null)
-				{
-					_errorListService = this.GetService(typeof(SVsErrorList)) as IVsErrorList;
-					if (_errorListService == null) throw new InvalidOperationException("Unable to get service 'Microsoft.VisualStudio.Shell.Interop.IVsErrorList'.");
-				}
-				return _errorListService;
-			}
-		}
-
 		private Microsoft.VisualStudio.Shell.Interop.IVsTaskList _taskListService;
 		internal Microsoft.VisualStudio.Shell.Interop.IVsTaskList TaskListService
 		{
@@ -549,6 +533,25 @@ namespace DkTools
 				}
 
 				_statusBarService.SetText(text);
+			});
+		}
+		#endregion
+
+		#region Error List
+		private Microsoft.VisualStudio.Shell.Interop.IVsErrorList _errorListService;
+		internal void ShowErrorList()
+		{
+			ThreadHelper.JoinableTaskFactory.RunAsync(async () =>
+			{
+				await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
+
+				if (_errorListService == null)
+				{
+					_errorListService = this.GetService(typeof(SVsErrorList)) as IVsErrorList;
+					if (_statusBarService == null) throw new InvalidOperationException("Unable to get service 'Microsoft.VisualStudio.Shell.Interop.IVsErrorList'.");
+				}
+
+				_errorListService.BringToFront();
 			});
 		}
 		#endregion

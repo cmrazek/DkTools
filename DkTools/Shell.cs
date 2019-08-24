@@ -180,16 +180,6 @@ namespace DkTools
 			return outputPane;
 		}
 
-		internal static void ShowErrorList()
-		{
-			ThreadHelper.JoinableTaskFactory.RunAsync(async () =>
-			{
-				await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
-
-				ProbeToolsPackage.Instance.ErrorListService.BringToFront();
-			});
-		}
-
 		internal static ITextBuffer ActiveBuffer
 		{
 			get
