@@ -28,9 +28,9 @@ namespace DkTools.CodeModel.Definitions
 			_table = table;
 		}
 
-		public override StatementCompletion.CompletionType CompletionType
+		public override StatementCompletion.ProbeCompletionType CompletionType
 		{
-			get { return StatementCompletion.CompletionType.Table; }
+			get { return StatementCompletion.ProbeCompletionType.Table; }
 		}
 
 		public override bool CompletionVisible

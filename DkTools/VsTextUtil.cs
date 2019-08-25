@@ -182,5 +182,20 @@ namespace DkTools
 			var tracker = Classifier.TextBufferStateTracker.GetTrackerForTextBuffer(pt.Snapshot.TextBuffer);
 			return tracker.GetStateForPosition(pt.Position, pt.Snapshot);
 		}
+
+		public static SnapshotSpan ToSnapshotSpan(this SnapshotPoint pt)
+		{
+			return new SnapshotSpan(pt, 0);
+		}
+	}
+
+	internal static class ITextSnapshotLineEx
+	{
+		public static string GetTextUpToPosition(this ITextSnapshotLine line, SnapshotPoint position)
+		{
+			var matchPos = position.TranslateTo(line.Snapshot, PointTrackingMode.Positive);
+			if (matchPos.Position < line.Start.Position || matchPos.Position > line.End.Position) throw new ArgumentOutOfRangeException(nameof(position));
+			return line.Snapshot.GetText(line.Start.Position, matchPos.Position - line.Start.Position);
+		}
 	}
 }

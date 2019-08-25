@@ -8,6 +8,7 @@ using Microsoft.VisualStudio.Text.Adornments;
 using DkTools.Classifier;
 using DkTools.CodeModel.Definitions;
 using DkTools.CodeModel.Tokens;
+using DkTools.CodeModel.Tokens.Operators;
 
 namespace DkTools.CodeModel
 {

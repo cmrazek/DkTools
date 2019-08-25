@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using DkTools.CodeModel;
 using DkTools.CodeModel.Definitions;
+using DkTools.CodeModel.Tokens.Operators;
 
 namespace DkTools.CodeModel.Tokens
 {

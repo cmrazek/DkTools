@@ -20,7 +20,7 @@ namespace DkTools.CodeModel.Definitions
 		private string _externalRefId;
 
 		public abstract bool CompletionVisible { get; }
-		public abstract StatementCompletion.CompletionType CompletionType { get; }
+		public abstract StatementCompletion.ProbeCompletionType CompletionType { get; }
 		public abstract Classifier.ProbeClassifierType ClassifierType { get; }
 		public abstract string QuickInfoTextStr { get; }
 		public abstract object QuickInfoElements { get; }

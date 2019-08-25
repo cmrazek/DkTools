@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace DkTools.CodeModel.Tokens
+namespace DkTools.CodeModel.Tokens.Operators
 {
 	abstract class CompletionOperator : GroupToken
 	{

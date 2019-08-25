@@ -31,9 +31,9 @@ namespace DkTools.CodeModel.Definitions
 			get { return true; }
 		}
 
-		public override StatementCompletion.CompletionType CompletionType
+		public override StatementCompletion.ProbeCompletionType CompletionType
 		{
-			get { return StatementCompletion.CompletionType.Function; }
+			get { return StatementCompletion.ProbeCompletionType.Function; }
 		}
 
 		public override Classifier.ProbeClassifierType ClassifierType

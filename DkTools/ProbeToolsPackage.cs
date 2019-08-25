@@ -9,9 +9,10 @@ using System.Runtime.InteropServices;
 using System.Text;
 using Microsoft.Win32;
 using Microsoft.VisualStudio;
-using Microsoft.VisualStudio.Shell.Interop;
+using Microsoft.VisualStudio.Imaging.Interop;
 using Microsoft.VisualStudio.OLE.Interop;
 using Microsoft.VisualStudio.Shell;
+using Microsoft.VisualStudio.Shell.Interop;
 using DkTools.LanguageSvc;
 
 namespace DkTools
@@ -554,6 +555,30 @@ namespace DkTools
 				_errorListService.BringToFront();
 			});
 		}
+		#endregion
+
+		#region Image Catalogue
+		//IVsImageService2 _imageService;
+		//internal Microsoft.VisualStudio.Text.Adornments.ImageElement GetImage(ImageMoniker moniker)
+		//{
+		//	ThreadHelper.ThrowIfNotOnUIThread();
+
+		//	if (_imageService == null)
+		//	{
+		//		_imageService = this.GetService(typeof(SVsImageService)) as IVsImageService2;
+		//		if (_imageService == null) throw new InvalidOperationException("Unable to get service 'Microsoft.VisualStudio.Shell.Interop.IVsImageService2'.");
+		//	}
+
+		//	var attribs = new ImageAttributes
+		//	{
+		//		StructSize = Marshal.SizeOf(typeof(ImageAttributes)),
+		//		Flags = 0
+		//	};
+
+		//	var img = _imageService.GetImage(moniker, attribs);
+		//	return new Microsoft.VisualStudio.Text.Adornments.ImageElement(
+
+		//}
 		#endregion
 	}
 }
