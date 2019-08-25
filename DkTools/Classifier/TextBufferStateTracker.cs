@@ -61,20 +61,17 @@ namespace DkTools.Classifier
 			}
 		}
 
-		public int GetStateForPosition(int pos, ITextSnapshot snapshot)
+		public int GetStateForPosition(int pos, ITextSnapshot snapshot, string fileName)
 		{
-			ThreadHelper.ThrowIfNotOnUIThread();
-
 			_snapshot = snapshot;
 
 			var line = _snapshot.GetLineFromPosition(pos);
-			var state = GetStateForLineStart(line.LineNumber, snapshot);
+			var state = GetStateForLineStart(line.LineNumber, snapshot, fileName);
 			var lineStartPos = line.Start.Position;
 
 			var fileStore = CodeModel.FileStore.GetOrCreateForTextBuffer(snapshot.TextBuffer);
 			if (fileStore == null) return 0;
 
-			var fileName = VsTextUtil.TryGetDocumentFileName(snapshot.TextBuffer);
 			var model = fileStore.GetMostRecentModel(fileName, snapshot, "GetStateForPosition");
 
 			if (lineStartPos <= pos)
@@ -91,10 +88,8 @@ namespace DkTools.Classifier
 			return state;
 		}
 
-		public int GetStateForLineStart(int lineNum, ITextSnapshot snapshot)
+		public int GetStateForLineStart(int lineNum, ITextSnapshot snapshot, string fileName)
 		{
-			ThreadHelper.ThrowIfNotOnUIThread();
-
 			if (_states.Count <= lineNum)
 			{
 				if (_states.Count == 0)
@@ -109,7 +104,6 @@ namespace DkTools.Classifier
 				var fileStore = CodeModel.FileStore.GetOrCreateForTextBuffer(snapshot.TextBuffer);
 				if (fileStore == null) return 0;
 
-				var fileName = VsTextUtil.TryGetDocumentFileName(snapshot.TextBuffer);
 				var model = fileStore.GetMostRecentModel(fileName, snapshot, "GetStateForLine()");
 				_snapshot = snapshot;
 
@@ -141,11 +135,9 @@ namespace DkTools.Classifier
 		/// <summary>
 		/// Returns true if the position is not inside a comment, string literal or disabled code.
 		/// </summary>
-		public bool IsPositionInLiveCode(int pos, ITextSnapshot snapshot)
+		public bool IsPositionInLiveCode(int pos, ITextSnapshot snapshot, string fileName)
 		{
-            ThreadHelper.ThrowIfNotOnUIThread();
-
-            return State.IsInLiveCode(GetStateForPosition(pos, snapshot));
+            return State.IsInLiveCode(GetStateForPosition(pos, snapshot, fileName));
 		}
 	}
 }

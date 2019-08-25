@@ -566,79 +566,78 @@ namespace DkTools.StatementCompletion
 			}
 		}
 
-		// TODO: reinstate this
-		//public static IEnumerable<Completion> GetCompletionsAfterToken(StatementState state)
-		//{
-		//	foreach (var keyword in GetNextPossibleKeywords(state))
-		//	{
-		//		yield return ProbeCompletionSource.CreateCompletion(keyword, ProbeCompletionType.Keyword);
-		//	}
+		public static void GetCompletionsAfterToken(StatementState state, ProbeAsyncCompletionSource completionSource)
+		{
+			foreach (var keyword in GetNextPossibleKeywords(state))
+			{
+				completionSource.CreateCompletion(keyword, ProbeCompletionType.Keyword, null);
+			}
 
-		//	switch (state)
-		//	{
-		//		case StatementState.None:
-		//			break;
+			switch (state)
+			{
+				case StatementState.None:
+					break;
 
-		//		#region selects
-		//		case StatementState.Select:
-		//			yield return ProbeCompletionSource.CreateCompletion("*", ProbeCompletionType.Keyword);
-		//			break;
+				#region selects
+				case StatementState.Select:
+					completionSource.CreateCompletion("*", ProbeCompletionType.Keyword, null);
+					break;
 
-		//		case StatementState.SelectFrom:
-		//		case StatementState.SelectFromTableComma:
-		//		case StatementState.SelectFromTableOf:
-		//			foreach (var table in DkDict.Dict.Tables)
-		//			{
-		//				foreach (var def in table.Definitions)
-		//				{
-		//					yield return ProbeCompletionSource.CreateCompletion(def);
-		//				}
-		//			}
-		//			break;
-		//		#endregion
+				case StatementState.SelectFrom:
+				case StatementState.SelectFromTableComma:
+				case StatementState.SelectFromTableOf:
+					foreach (var table in DkDict.Dict.Tables)
+					{
+						foreach (var def in table.Definitions)
+						{
+							completionSource.CreateCompletion(def);
+						}
+					}
+					break;
+				#endregion
 
-		//		#region format
-		//		case StatementState.FormatRows:
-		//		case StatementState.FormatCols:
-		//		case StatementState.FormatGenpages:
-		//		case StatementState.FormatOutfile:
-		//			yield return ProbeCompletionSource.CreateCompletion("=", ProbeCompletionType.Keyword);
-		//			break;
-		//		#endregion
+				#region format
+				case StatementState.FormatRows:
+				case StatementState.FormatCols:
+				case StatementState.FormatGenpages:
+				case StatementState.FormatOutfile:
+					completionSource.CreateCompletion("=", ProbeCompletionType.Keyword, null);
+					break;
+				#endregion
 
-		//		#region interface
-		//		case StatementState.Interface:
-		//			foreach (var intf in DkDict.Dict.Interfaces)
-		//			{
-		//				yield return ProbeCompletionSource.CreateCompletion(intf.Definition);
-		//			}
-		//			break;
-		//		#endregion
+				#region interface
+				case StatementState.Interface:
+					foreach (var intf in DkDict.Dict.Interfaces)
+					{
+						completionSource.CreateCompletion(intf.Definition);
+					}
+					break;
+				#endregion
 
-		//		#region alter
-		//		case StatementState.AlterTable:
-		//			foreach (var table in DkDict.Dict.Tables)
-		//			{
-		//				yield return ProbeCompletionSource.CreateCompletion(table.Definition);
-		//			}
-		//			break;
+				#region alter
+				case StatementState.AlterTable:
+					foreach (var table in DkDict.Dict.Tables)
+					{
+						completionSource.CreateCompletion(table.Definition);
+					}
+					break;
 
-		//		case StatementState.AlterStringdef:
-		//			foreach (var sd in DkDict.Dict.Stringdefs)
-		//			{
-		//				yield return ProbeCompletionSource.CreateCompletion(sd.Definition);
-		//			}
-		//			break;
+				case StatementState.AlterStringdef:
+					foreach (var sd in DkDict.Dict.Stringdefs)
+					{
+						completionSource.CreateCompletion(sd.Definition);
+					}
+					break;
 
-		//		case StatementState.AlterTypedef:
-		//			foreach (var td in DkDict.Dict.Typedefs)
-		//			{
-		//				yield return ProbeCompletionSource.CreateCompletion(td.Definition);
-		//			}
-		//			break;
-		//		#endregion
-		//	}
-		//}
+				case StatementState.AlterTypedef:
+					foreach (var td in DkDict.Dict.Typedefs)
+					{
+						completionSource.CreateCompletion(td.Definition);
+					}
+					break;
+					#endregion
+			}
+		}
 
 
 	}

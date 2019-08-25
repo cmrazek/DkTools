@@ -14,6 +14,7 @@ using Microsoft.VisualStudio.Language.Intellisense.AsyncCompletion.Data;
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Adornments;
 using Microsoft.VisualStudio.Text.Editor;
+using DkTools.Classifier;
 using DkTools.CodeModel.Definitions;
 using DkTools.CodeModel.Tokens;
 using DkTools.CodeModel.Tokens.Operators;
@@ -23,6 +24,7 @@ namespace DkTools.StatementCompletion
 	internal struct ItemData
 	{
 		public Definition Definition { get; set; }
+		public string Description { get; set; }
 	}
 
 	public class ProbeAsyncCompletionSource : IAsyncCompletionSource
@@ -32,9 +34,10 @@ namespace DkTools.StatementCompletion
 
 		// Completion trigger parameters
 		private CompletionMode _mode = CompletionMode.None;
-		private string _op;
+		private string _str;
 		private SnapshotPoint _pt;
 		private string _fileName;
+		private ITextSnapshot _snapshot;
 
 		internal class ItemDataNode
 		{
@@ -52,12 +55,19 @@ namespace DkTools.StatementCompletion
 		{
 			None,
 			AfterAssignOrCompare,
-			AfterIfDef
+			AfterIfDef,
+			AfterComma,
+			AfterCase,
+			AfterExtract,
+			AfterReturn,
+			AfterTag,
+			AfterWord
 		}
 
 		private static readonly Regex _rxTypingTable = new Regex(@"(\w+)\.(\w*)$");
 		private static readonly Regex _rxTypingWord = new Regex(@"\w+$");
 		public static readonly Regex RxAfterAssignOrCompare = new Regex(@"(==|=|!=|<|<=|>|>=)\s$");
+		private static readonly Regex _rxAfterWord = new Regex(@"\b(\w+)\s$");
 		private static readonly Regex _rxClassFunctionStartBracket = new Regex(@"(\w+)\s*\.\s*(\w+)\s*\($");
 		private static readonly Regex _rxFunctionStartBracket = new Regex(@"(\w+)\s*\($");
 		private static readonly Regex _rxAfterIfDef = new Regex(@"\#ifn?def\s$");
@@ -81,7 +91,7 @@ namespace DkTools.StatementCompletion
 				{
 					_mode = CompletionMode.AfterAssignOrCompare;
 					applicableToSpan = triggerPt.ToSnapshotSpan();
-					_op = match.Groups[1].Value;
+					_str = match.Groups[1].Value;
 					_pt = new SnapshotPoint(line.Snapshot, match.Groups[1].Index + line.Start.Position);
 					_fileName = VsTextUtil.TryGetDocumentFileName(_textView.TextBuffer);
 					return true;
@@ -96,6 +106,50 @@ namespace DkTools.StatementCompletion
 					return true;
 				}
 				#endregion
+				#region Comma
+				else if (prefix.EndsWith(", "))
+				{
+					_mode = CompletionMode.AfterComma;
+					applicableToSpan = triggerPt.ToSnapshotSpan();
+					_fileName = VsTextUtil.TryGetDocumentFileName(_textView.TextBuffer);
+					return true;
+				}
+				#endregion
+				#region After Word
+				else if ((match = _rxAfterWord.Match(prefix)).Success)
+				{
+					switch (match.Groups[1].Value)
+					{
+						case "case":
+							_mode = CompletionMode.AfterCase;
+							applicableToSpan = triggerPt.ToSnapshotSpan();
+							_fileName = VsTextUtil.TryGetDocumentFileName(_textView.TextBuffer);
+							return true;
+						case "extract":
+							_mode = CompletionMode.AfterExtract;
+							applicableToSpan = triggerPt.ToSnapshotSpan();
+							_str = match.Groups[1].Value;
+							_fileName = VsTextUtil.TryGetDocumentFileName(_textView.TextBuffer);
+							return true;
+						case "return":
+							_mode = CompletionMode.AfterReturn;
+							applicableToSpan = triggerPt.ToSnapshotSpan();
+							_fileName = VsTextUtil.TryGetDocumentFileName(_textView.TextBuffer);
+							return true;
+						case "tag":
+							_mode = CompletionMode.AfterTag;
+							applicableToSpan = triggerPt.ToSnapshotSpan();
+							return true;
+						default:
+							_mode = CompletionMode.AfterWord;
+							applicableToSpan = triggerPt.ToSnapshotSpan();
+							_str = match.Groups[1].Value;
+							_snapshot = triggerPt.Snapshot;
+							_fileName = VsTextUtil.TryGetDocumentFileName(_textView.TextBuffer);
+							return true;
+					}
+				}
+				#endregion
 			}
 
 			applicableToSpan = new SnapshotSpan(triggerPt.Snapshot, new Span(0, 0));
@@ -105,41 +159,6 @@ namespace DkTools.StatementCompletion
 			/*
 			if (lastCh == ' ')
 			{
-				#region #ifdef
-				else if ((match = _rxAfterIfDef.Match(prefix)).Success)
-				{
-					AddCompletions(completionList, HandleAfterIfDef(completionSpan));
-				}
-				#endregion
-				#region Comma
-				else if (prefix.EndsWith(", "))
-				{
-					AddCompletions(completionList, HandleAfterComma(completionSpan));
-				}
-				#endregion
-				#region After Word
-				else if ((match = ProbeCompletionCommandHandler.RxAfterWord.Match(prefix)).Success)
-				{
-					switch (match.Groups[1].Value)
-					{
-						case "case":
-							AddCompletions(completionList, HandleAfterCase(completionSpan));
-							break;
-						case "extract":
-							AddCompletions(completionList, HandleAfterExtract(completionSpan, match.Groups[1].Value));
-							break;
-						case "return":
-							AddCompletions(completionList, HandleAfterReturn(completionSpan));
-							break;
-						case "tag":
-							AddCompletions(completionList, HandleAfterTag());
-							break;
-						default:
-							AddCompletions(completionList, HandleAfterWord(match.Groups[1].Value, curPos, snapshot));
-							break;
-					}
-				}
-				#endregion
 				#region After Symbol
 				else if ((match = ProbeCompletionCommandHandler.RxAfterSymbol.Match(prefix)).Success)
 				{
@@ -210,7 +229,7 @@ namespace DkTools.StatementCompletion
 			*/
 		}
 
-		public Task<CompletionContext> GetCompletionContextAsync(InitialTrigger trigger, SnapshotPoint triggerLocation,
+		public Task<CompletionContext> GetCompletionContextAsync(InitialTrigger trigger, SnapshotPoint triggerPt,
 			SnapshotSpan applicableToSpan, CancellationToken token)
 		{
 			_items.Clear();
@@ -218,10 +237,28 @@ namespace DkTools.StatementCompletion
 			switch (_mode)
 			{
 				case CompletionMode.AfterAssignOrCompare:
-					HandleAfterAssignOrCompare(applicableToSpan, _op, _pt);
+					HandleAfterAssignOrCompare(applicableToSpan, _str, _pt);
 					break;
 				case CompletionMode.AfterIfDef:
 					HandleAfterIfDef();
+					break;
+				case CompletionMode.AfterComma:
+					HandleAfterComma(applicableToSpan);
+					break;
+				case CompletionMode.AfterCase:
+					HandleAfterCase(applicableToSpan);
+					break;
+				case CompletionMode.AfterExtract:
+					HandleAfterExtract(applicableToSpan, _str);
+					break;
+				case CompletionMode.AfterReturn:
+					HandleAfterReturn(applicableToSpan);
+					break;
+				case CompletionMode.AfterTag:
+					HandleAfterTag();
+					break;
+				case CompletionMode.AfterWord:
+					HandleAfterWord(_str, triggerPt, _snapshot);
 					break;
 			}
 
@@ -238,6 +275,7 @@ namespace DkTools.StatementCompletion
 			return Task<object>.FromResult((object)null);
 		}
 
+		#region Completion Fulfillment Logic
 		private void HandleAfterAssignOrCompare(SnapshotSpan completionSpan, string operatorText, SnapshotPoint operatorPt)
 		{
 			var store = CodeModel.FileStore.GetOrCreateForTextBuffer(_textView.TextBuffer);
@@ -274,6 +312,178 @@ namespace DkTools.StatementCompletion
 			}
 		}
 
+		#region After Comma
+		private void HandleAfterComma(SnapshotSpan completionSpan)
+		{
+			var snapPt = completionSpan.Start;
+			string className;
+			string funcName;
+			int argIndex;
+			if (GetInsideFunction(completionSpan.Snapshot, completionSpan.Start.Position, out className, out funcName, out argIndex))
+			{
+				GetOptionsForFunctionArg(_fileName, className, funcName, argIndex, snapPt);
+			}
+		}
+
+		private bool GetInsideFunction(ITextSnapshot snapshot, int pos, out string className, out string funcName, out int argIndex)
+		{
+			var lineNum = snapshot.GetLineNumberFromPosition(pos);
+			var sb = new StringBuilder(snapshot.GetLineTextUpToPosition(pos));
+
+			var rxFuncCall = new Regex(@"(?:;|{|}|(?:(\w+)\s*\.\s*)?(\w+)\s*(\())");    // groups: 1 = class name, 2 = function name, 3 = start bracket
+
+			while (true)
+			{
+				var parser = new CodeParser(sb.ToString());
+
+				foreach (var match in rxFuncCall.Matches(parser.Source).Cast<Match>().Reverse())
+				{
+					if (match.Groups[0].Length == 1)
+					{
+						// Found a character that proves we're not inside a function.
+						className = null;
+						funcName = null;
+						argIndex = 0;
+						return false;
+					}
+					else
+					{
+						parser.Position = match.Groups[3].Index;    // position of start bracket
+						var startPos = parser.Position;
+						if (parser.ReadNestable() && parser.Type != CodeType.Nested)
+						{
+							className = match.Groups[1].Value;
+							funcName = match.Groups[2].Value;
+
+							// Count the number of commas between that position and the end.
+							parser.Position = startPos;
+							var commaCount = 0;
+							while (parser.Read())
+							{
+								if (parser.Text == ",") commaCount++;
+							}
+
+							argIndex = commaCount;
+							return true;
+						}
+					}
+				}
+
+				lineNum--;
+				if (lineNum < 0) break;
+				var line = snapshot.GetLineFromLineNumber(lineNum);
+				sb.Insert(0, line.GetText() + "\r\n");
+			}
+
+			className = null;
+			funcName = null;
+			argIndex = 0;
+			return false;
+		}
+		#endregion
+
+		private void HandleAfterCase(SnapshotSpan completionSpan)
+		{
+			var store = CodeModel.FileStore.GetOrCreateForTextBuffer(_textView.TextBuffer);
+			var model = store.GetMostRecentModel(_fileName, _textView.TextBuffer.CurrentSnapshot, "Auto-completion after case");
+			var modelPos = completionSpan.Start.TranslateTo(model.Snapshot, PointTrackingMode.Positive);
+
+			var switchToken = (from t in model.FindTokens(modelPos) where t is SwitchStatement select t as SwitchStatement).LastOrDefault();
+			if (switchToken != null)
+			{
+				var dt = switchToken.ExpressionDataType;
+				if (dt != null && dt.HasCompletionOptions)
+				{
+					foreach (var opt in dt.CompletionOptions)
+					{
+						CreateCompletion(opt);
+					}
+				}
+			}
+		}
+
+		private void HandleAfterExtract(SnapshotSpan completionSpan, string permWord)
+		{
+			if (string.IsNullOrEmpty(permWord))
+			{
+				CreateCompletion("permanent", ProbeCompletionType.Keyword, "permanent extract");
+			}
+
+			var store = CodeModel.FileStore.GetOrCreateForTextBuffer(_textView.TextBuffer);
+			if (store != null)
+			{
+				var model = store.GetMostRecentModel(_fileName, _textView.TextBuffer.CurrentSnapshot, "Auto-completion after 'extract'");
+
+				foreach (var exDef in model.DefinitionProvider.GetGlobalFromFile<ExtractTableDefinition>())
+				{
+					CreateCompletion(exDef);
+				}
+			}
+		}
+
+		private void HandleAfterReturn(SnapshotSpan completionSpan)
+		{
+			var fileStore = CodeModel.FileStore.GetOrCreateForTextBuffer(_textView.TextBuffer);
+			if (fileStore != null)
+			{
+				var model = fileStore.GetMostRecentModel(_fileName, _textView.TextBuffer.CurrentSnapshot, "Auto-completion after return");
+				var modelPos = completionSpan.Start.TranslateTo(model.Snapshot, PointTrackingMode.Positive);
+
+				var funcDef = model.PreprocessorModel.LocalFunctions.FirstOrDefault(f => f.Definition.EntireSpan.Contains(modelPos));
+				if (funcDef != null && funcDef.Definition != null)
+				{
+					var dataType = funcDef.Definition.DataType;
+					if (dataType != null && dataType.HasCompletionOptions)
+					{
+						foreach (var opt in dataType.CompletionOptions)
+						{
+							CreateCompletion(opt);
+						}
+					}
+				}
+			}
+		}
+
+		private void HandleAfterTag()
+		{
+			foreach (var name in Constants.TagNames)
+			{
+				CreateCompletion(name, ProbeCompletionType.Keyword, name);
+			}
+		}
+
+		private void HandleAfterWord(string word, int curPos, ITextSnapshot snapshot)
+		{
+			var tracker = TextBufferStateTracker.GetTrackerForTextBuffer(_textView.TextBuffer);
+			var stmt = State.ToStatement(tracker.GetStateForPosition(curPos, snapshot, _fileName));
+			StatementLayout.GetCompletionsAfterToken(stmt, this);
+		}
+
+		private void GetOptionsForFunctionArg(string fileName, string className, string funcName, int argIndex, SnapshotPoint snapPt)
+		{
+			var fileStore = CodeModel.FileStore.GetOrCreateForTextBuffer(_textView.TextBuffer);
+			if (fileStore == null) return;
+
+			var model = fileStore.GetMostRecentModel(fileName, _textView.TextBuffer.CurrentSnapshot, "Signature help get options for arg");
+			var modelPos = model.AdjustPosition(snapPt);
+
+			var sigInfos = SignatureHelp.ProbeSignatureHelpSource.GetAllSignaturesForFunction(model, modelPos, className, funcName).ToArray();
+			if (sigInfos.Length == 0) return;
+			var sig = sigInfos[0];
+
+			var arg = sig.TryGetArgument(argIndex);
+			if (arg == null) return;
+
+			var dataType = arg.DataType;
+			if (dataType == null) return;
+
+			foreach (var option in dataType.CompletionOptions)
+			{
+				CreateCompletion(option);
+			}
+		}
+		#endregion
+
 		#region Completion Creation
 		internal void CreateCompletion(string text, ProbeCompletionType type, ItemData itemData, Func<ItemData, object> descriptionCallback)
 		{
@@ -296,6 +506,12 @@ namespace DkTools.StatementCompletion
 			{
 				return data.Definition.QuickInfoElements;
 			});
+		}
+
+		internal void CreateCompletion(string text, ProbeCompletionType type, string description)
+		{
+			CreateCompletion(text, type, new ItemData { Description = description },
+				data => { return data.Description != null ? Definition.QuickInfoMainLine(data.Description) : null; });
 		}
 		#endregion
 
@@ -353,12 +569,6 @@ namespace DkTools.StatementCompletion
 
 
 /* TODO: remove
-
-namespace DkTools.StatementCompletion
-{
-	internal class ProbeCompletionSource : ICompletionSource
-	{
-
 		private IEnumerable<Completion> HandleDotSeparatedWords(SnapshotSpan completionSpan, string word1, string word2)
 		{
 			// Typing a table.field.
@@ -467,91 +677,6 @@ namespace DkTools.StatementCompletion
 			}
 		}
 
-		private IEnumerable<Completion> HandleAfterComma(SnapshotSpan completionSpan)
-		{
-            ThreadHelper.ThrowIfNotOnUIThread();
-
-            var snapPt = completionSpan.Start;
-			string className;
-			string funcName;
-			int argIndex;
-			if (GetInsideFunction(completionSpan.Snapshot, completionSpan.Start.Position, out className, out funcName, out argIndex))
-			{
-				foreach (var opt in GetOptionsForFunctionArg(className, funcName, argIndex, snapPt))
-				{
-					yield return opt;
-				}
-			}
-		}
-
-		private IEnumerable<Completion> HandleAfterReturn(SnapshotSpan completionSpan)
-		{
-			ThreadHelper.ThrowIfNotOnUIThread();
-
-			var fileStore = CodeModel.FileStore.GetOrCreateForTextBuffer(_textBuffer);
-			if (fileStore != null)
-			{
-				var fileName = VsTextUtil.TryGetDocumentFileName(_textBuffer);
-				var model = fileStore.GetMostRecentModel(fileName, _textBuffer.CurrentSnapshot, "Auto-completion after return");
-				var modelPos = completionSpan.Start.TranslateTo(model.Snapshot, PointTrackingMode.Positive);
-
-				var funcDef = model.PreprocessorModel.LocalFunctions.FirstOrDefault(f => f.Definition.EntireSpan.Contains(modelPos));
-				var dataType = funcDef.Definition.DataType;
-				if (dataType != null && dataType.HasCompletionOptions)
-				{
-					foreach (var opt in dataType.CompletionOptions)
-					{
-						yield return CreateCompletion(opt);
-					}
-				}
-			}
-		}
-
-		private IEnumerable<Completion> HandleAfterCase(SnapshotSpan completionSpan)
-		{
-			ThreadHelper.ThrowIfNotOnUIThread();
-
-			var fileName = VsTextUtil.TryGetDocumentFileName(_textBuffer);
-			var store = CodeModel.FileStore.GetOrCreateForTextBuffer(_textBuffer);
-			var model = store.GetMostRecentModel(fileName, _textBuffer.CurrentSnapshot, "Auto-completion after case");
-			var modelPos = completionSpan.Start.TranslateTo(model.Snapshot, PointTrackingMode.Positive);
-
-			var switchToken = (from t in model.FindTokens(modelPos) where t is SwitchStatement select t as SwitchStatement).LastOrDefault();
-			if (switchToken != null)
-			{
-				var dt = switchToken.ExpressionDataType;
-				if (dt != null && dt.HasCompletionOptions)
-				{
-					foreach (var opt in dt.CompletionOptions)
-					{
-						yield return CreateCompletion(opt);
-					}
-				}
-			}
-		}
-
-		private IEnumerable<Completion> HandleAfterExtract(SnapshotSpan completionSpan, string permWord)
-		{
-			ThreadHelper.ThrowIfNotOnUIThread();
-
-			if (string.IsNullOrEmpty(permWord))
-			{
-				yield return CreateCompletion("permanent", "permanent extract", ProbeCompletionType.Keyword);
-			}
-
-			var store = CodeModel.FileStore.GetOrCreateForTextBuffer(_textBuffer);
-			if (store != null)
-			{
-				var fileName = VsTextUtil.TryGetDocumentFileName(_textBuffer);
-				var model = store.GetMostRecentModel(fileName, _textBuffer.CurrentSnapshot, "Auto-completion after 'extract'");
-
-				foreach (var exDef in model.DefinitionProvider.GetGlobalFromFile<ExtractTableDefinition>())
-				{
-					yield return CreateCompletion(exDef);
-				}
-			}
-		}
-
 		private IEnumerable<Completion> HandleAfterInclude(SnapshotSpan completionSpan, string startCh)
 		{
 			ThreadHelper.ThrowIfNotOnUIThread();
@@ -601,23 +726,6 @@ namespace DkTools.StatementCompletion
 			}
 		}
 
-		private IEnumerable<Completion> HandleAfterTag()
-		{
-			foreach (var name in Constants.TagNames)
-			{
-				yield return CreateCompletion(name, name, ProbeCompletionType.Keyword);
-			}
-		}
-
-		private IEnumerable<Completion> HandleAfterWord(string word, int curPos, ITextSnapshot snapshot)
-		{
-            ThreadHelper.ThrowIfNotOnUIThread();
-
-			var tracker = TextBufferStateTracker.GetTrackerForTextBuffer(_textBuffer);
-			var stmt = State.ToStatement(tracker.GetStateForPosition(curPos, snapshot));
-			return StatementLayout.GetCompletionsAfterToken(stmt);
-		}
-
 		private IEnumerable<Completion> HandleAfterSymbol(string word, int curPos, ITextSnapshot snapshot)
 		{
             ThreadHelper.ThrowIfNotOnUIThread();
@@ -652,90 +760,6 @@ namespace DkTools.StatementCompletion
 				GC.SuppressFinalize(this);
 				_disposed = true;
 			}
-		}
-
-		private IEnumerable<Completion> GetOptionsForFunctionArg(string className, string funcName, int argIndex, SnapshotPoint snapPt)
-		{
-			ThreadHelper.ThrowIfNotOnUIThread();
-
-			var fileStore = CodeModel.FileStore.GetOrCreateForTextBuffer(_textBuffer);
-			if (fileStore == null) yield break;
-
-			var fileName = VsTextUtil.TryGetDocumentFileName(_textBuffer);
-			var model = fileStore.GetMostRecentModel(fileName, _textBuffer.CurrentSnapshot, "Signature help get options for arg");
-			var modelPos = model.AdjustPosition(snapPt);
-
-			var sigInfos = SignatureHelp.ProbeSignatureHelpSource.GetAllSignaturesForFunction(model, modelPos, className, funcName).ToArray();
-			if (sigInfos.Length == 0) yield break;
-			var sig = sigInfos[0];
-
-			var arg = sig.TryGetArgument(argIndex);
-			if (arg == null) yield break;
-
-			var dataType = arg.DataType;
-			if (dataType == null) yield break;
-
-			foreach (var option in dataType.CompletionOptions)
-			{
-				if (!option.CompletionVisible) continue;
-				yield return CreateCompletion(option);
-			}
-		}
-
-		private bool GetInsideFunction(ITextSnapshot snapshot, int pos, out string className, out string funcName, out int argIndex)
-		{
-			var lineNum = snapshot.GetLineNumberFromPosition(pos);
-			var sb = new StringBuilder(snapshot.GetLineTextUpToPosition(pos));
-
-			var rxFuncCall = new Regex(@"(?:;|{|}|(?:(\w+)\s*\.\s*)?(\w+)\s*(\())");	// groups: 1 = class name, 2 = function name, 3 = start bracket
-
-			while (true)
-			{
-				var parser = new CodeParser(sb.ToString());
-
-				foreach (var match in rxFuncCall.Matches(parser.Source).Cast<Match>().Reverse())
-				{
-					if (match.Groups[0].Length == 1)
-					{
-						// Found a character that proves we're not inside a function.
-						className = null;
-						funcName = null;
-						argIndex = 0;
-						return false;
-					}
-					else
-					{
-						parser.Position = match.Groups[3].Index;	// position of start bracket
-						var startPos = parser.Position;
-						if (parser.ReadNestable() && parser.Type != CodeType.Nested)
-						{
-							className = match.Groups[1].Value;
-							funcName = match.Groups[2].Value;
-
-							// Count the number of commas between that position and the end.
-							parser.Position = startPos;
-							var commaCount = 0;
-							while (parser.Read())
-							{
-								if (parser.Text == ",") commaCount++;
-							}
-
-							argIndex = commaCount;
-							return true;
-						}
-					}
-				}
-
-				lineNum--;
-				if (lineNum < 0) break;
-				var line = snapshot.GetLineFromLineNumber(lineNum);
-				sb.Insert(0, line.GetText() + "\r\n");
-			}
-
-			className = null;
-			funcName = null;
-			argIndex = 0;
-			return false;
 		}
 
 		private IEnumerable<Completion> GetWordCompletions(int curPos, int wordStartPos, ITextSnapshot snapshot)

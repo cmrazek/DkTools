@@ -156,12 +156,12 @@ namespace DkTools
 		/// <summary>
 		/// Returns true if the point is not inside a comment, string literal or disabled code.
 		/// </summary>
-		public static bool IsInLiveCode(this SnapshotPoint pt)
+		public static bool IsInLiveCode(this SnapshotPoint pt, string fileName)
 		{
             ThreadHelper.ThrowIfNotOnUIThread();
 
 			var tracker = Classifier.TextBufferStateTracker.GetTrackerForTextBuffer(pt.Snapshot.TextBuffer);
-			return Classifier.State.IsInLiveCode(tracker.GetStateForPosition(pt.Position, pt.Snapshot));
+			return Classifier.State.IsInLiveCode(tracker.GetStateForPosition(pt.Position, pt.Snapshot, fileName));
 		}
 
 		/// <summary>
@@ -175,12 +175,12 @@ namespace DkTools
 		/// <summary>
 		/// Gets the classifier state for this position.
 		/// </summary>
-		public static int GetState(this SnapshotPoint pt)
+		public static int GetState(this SnapshotPoint pt, string fileName)
 		{
             ThreadHelper.ThrowIfNotOnUIThread();
 
 			var tracker = Classifier.TextBufferStateTracker.GetTrackerForTextBuffer(pt.Snapshot.TextBuffer);
-			return tracker.GetStateForPosition(pt.Position, pt.Snapshot);
+			return tracker.GetStateForPosition(pt.Position, pt.Snapshot, fileName);
 		}
 
 		public static SnapshotSpan ToSnapshotSpan(this SnapshotPoint pt)
