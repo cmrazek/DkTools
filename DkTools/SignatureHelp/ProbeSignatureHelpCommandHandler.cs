@@ -37,6 +37,8 @@ namespace DkTools.SignatureHelp
 
 			//add this to the filter chain
 			textViewAdapter.AddCommandFilter(this, out _nextCommandHandler);
+
+			_textView.Caret.PositionChanged += Caret_PositionChanged;
 		}
 
 		public int Exec(ref Guid pguidCmdGroup, uint nCmdID, uint nCmdexecopt, IntPtr pvaIn, IntPtr pvaOut)
@@ -92,6 +94,7 @@ namespace DkTools.SignatureHelp
 						}
 					}
 				}
+
 				return _nextCommandHandler.Exec(ref pguidCmdGroup, nCmdID, nCmdexecopt, pvaIn, pvaOut);
 			}
 			catch (Exception ex)
@@ -106,6 +109,26 @@ namespace DkTools.SignatureHelp
 			ThreadHelper.ThrowIfNotOnUIThread();
 
 			return _nextCommandHandler.QueryStatus(ref pguidCmdGroup, cCmds, prgCmds, pCmdText);
+		}
+
+		private void Caret_PositionChanged(object sender, CaretPositionChangedEventArgs e)
+		{
+			if (_session != null && !_session.IsDismissed)
+			{
+				var caretPtTest = e.NewPosition.Point.GetPoint(_textView.TextSnapshot, PositionAffinity.Successor);
+				if (caretPtTest.HasValue)
+				{
+					var caretPt = caretPtTest.Value;
+					if (_session.SelectedSignature.ApplicableToSpan.GetSpan(caretPt.Snapshot).Contains(caretPt))
+					{
+						var sig = _session.SelectedSignature as ProbeSignature;
+						if (sig != null)
+						{
+							sig.ComputeCurrentParameter(caretPt);
+						}
+					}
+				}
+			}
 		}
 	}
 }

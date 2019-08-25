@@ -24,6 +24,7 @@ namespace DkTools.SignatureHelp
 	internal class ProbeSignatureHelpSource : ISignatureHelpSource
 	{
 		private VsText.ITextBuffer _textBuffer;
+		private int _triggerPos;
 
 		public ProbeSignatureHelpSource(VsText.ITextBuffer textBuffer)
 		{
@@ -35,19 +36,18 @@ namespace DkTools.SignatureHelp
             ThreadHelper.ThrowIfNotOnUIThread();
 
             var snapshot = _textBuffer.CurrentSnapshot;
-			var origPos = session.GetTriggerPoint(_textBuffer).GetPosition(snapshot);
-			var pos = origPos;
+			_triggerPos = session.GetTriggerPoint(_textBuffer).GetPosition(snapshot);
 
 			if (ProbeSignatureHelpCommandHandler.s_typedChar == '(')
 			{
-				foreach (var sig in HandleOpenBracket(snapshot, origPos))
+				foreach (var sig in HandleOpenBracket(snapshot))
 				{
 					signatures.Add(sig);
 				}
 			}
 			else if (ProbeSignatureHelpCommandHandler.s_typedChar == ',')
 			{
-				foreach (var sig in HandleComma(snapshot, origPos))
+				foreach (var sig in HandleComma(snapshot))
 				{
 					signatures.Add(sig);
 				}
@@ -56,16 +56,16 @@ namespace DkTools.SignatureHelp
 
 		private Regex _rxFuncBeforeBracket = new Regex(@"((\w+)\s*\.\s*)?(\w+)\s*$");
 
-		private IEnumerable<ISignature> HandleOpenBracket(VsText.ITextSnapshot snapshot, int triggerPos)
+		private IEnumerable<ISignature> HandleOpenBracket(VsText.ITextSnapshot snapshot)
 		{
 			ThreadHelper.ThrowIfNotOnUIThread();
 
-			var lineText = snapshot.GetLineTextUpToPosition(triggerPos);
+			var lineText = snapshot.GetLineTextUpToPosition(_triggerPos);
 
 			var match = _rxFuncBeforeBracket.Match(lineText);
 			if (match.Success)
 			{
-				var line = snapshot.GetLineFromPosition(triggerPos);
+				var line = snapshot.GetLineFromPosition(_triggerPos);
 				var word1 = match.Groups[2].Value;
 				var word1Start = line.Start.Position + match.Groups[2].Index;
 				var funcName = match.Groups[3].Value;
@@ -88,7 +88,7 @@ namespace DkTools.SignatureHelp
 							foreach (var word2Def in word1Def.GetChildDefinitions(funcName))
 							{
 								if (!word2Def.ArgumentsRequired) continue;
-								if (applicableToSpan == null) applicableToSpan = snapshot.CreateTrackingSpan(new VsText.Span(triggerPos, 0), VsText.SpanTrackingMode.EdgeInclusive);
+								if (applicableToSpan == null) applicableToSpan = snapshot.CreateTrackingSpan(new VsText.Span(_triggerPos, 0), VsText.SpanTrackingMode.EdgeInclusive);
 								yield return CreateSignature(_textBuffer, word2Def.ArgumentsSignature, applicableToSpan);
 							}
 						}
@@ -104,7 +104,7 @@ namespace DkTools.SignatureHelp
 						{
 							if (!def.ArgumentsRequired) continue;
 
-							if (applicableToSpan == null) applicableToSpan = snapshot.CreateTrackingSpan(new VsText.Span(triggerPos, 0), VsText.SpanTrackingMode.EdgeInclusive);
+							if (applicableToSpan == null) applicableToSpan = snapshot.CreateTrackingSpan(new VsText.Span(_triggerPos, 0), VsText.SpanTrackingMode.EdgeInclusive);
 							yield return CreateSignature(_textBuffer, def.ArgumentsSignature, applicableToSpan);
 						}
 					}
@@ -113,7 +113,7 @@ namespace DkTools.SignatureHelp
 			}
 		}
 
-		private IEnumerable<ISignature> HandleComma(VsText.ITextSnapshot snapshot, int triggerPos)
+		private IEnumerable<ISignature> HandleComma(VsText.ITextSnapshot snapshot)
 		{
 			ThreadHelper.ThrowIfNotOnUIThread();
 
@@ -122,7 +122,7 @@ namespace DkTools.SignatureHelp
 			{
 				var fileName = VsTextUtil.TryGetDocumentFileName(_textBuffer);
 				var model = fileStore.GetMostRecentModel(fileName, snapshot, "Signature help after ','");
-				var modelPos = (new VsText.SnapshotPoint(snapshot, triggerPos)).TranslateTo(model.Snapshot, VsText.PointTrackingMode.Negative).Position;
+				var modelPos = (new VsText.SnapshotPoint(snapshot, _triggerPos)).TranslateTo(model.Snapshot, VsText.PointTrackingMode.Negative).Position;
 
 				var argsToken = model.File.FindDownward<ArgsToken>().Where(t => t.Span.Start < modelPos && (t.Span.End > modelPos || !t.IsTerminated)).LastOrDefault();
 				if (argsToken != null && argsToken.Signature != null)
@@ -150,7 +150,7 @@ namespace DkTools.SignatureHelp
 																	 string.IsNullOrEmpty(a.Name) ? string.Empty : a.Name, sig)).Cast<IParameter>().ToArray());
 
 			sig.ApplicableToSpan = span;
-			sig.ComputeCurrentParameter();
+			sig.ComputeCurrentParameter(new VsText.SnapshotPoint(textBuffer.CurrentSnapshot, _triggerPos));
 			return sig;
 		}
 
