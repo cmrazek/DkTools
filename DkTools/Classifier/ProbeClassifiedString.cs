@@ -27,6 +27,11 @@ namespace DkTools.Classifier
 		{
 			return new ClassifiedTextRun(ProbeClassifier.GetClassificationTypeName(Type), Text);
 		}
+
+		public int Length
+		{
+			get { return Text.Length; }
+		}
 	}
 
 	internal class ProbeClassifiedString
@@ -84,6 +89,16 @@ namespace DkTools.Classifier
 		public ClassifiedTextElement ToClassifiedTextElement()
 		{
 			return new ClassifiedTextElement(_runs.Select(r => r.ToClassifiedTextRun()));
+		}
+
+		public int Length
+		{
+			get
+			{
+				int len = 0;
+				foreach (var run in _runs) len += run.Text.Length;
+				return len;
+			}
 		}
 	}
 
@@ -195,6 +210,16 @@ namespace DkTools.Classifier
 			_runs.Add(new ProbeClassifiedRun(ProbeClassifierType.Comment, text));
 		}
 
+		public void AddFunction(string text)
+		{
+			_runs.Add(new ProbeClassifiedRun(ProbeClassifierType.Function, text));
+		}
+
+		public void AddVariable(string text)
+		{
+			_runs.Add(new ProbeClassifiedRun(ProbeClassifierType.Variable, text));
+		}
+
 		public void AddClassifiedString(ProbeClassifiedString pcs)
 		{
 			_runs.AddRange(pcs.Runs);
@@ -203,6 +228,16 @@ namespace DkTools.Classifier
 		public void AddClassifiedString(ProbeClassifiedStringBuilder pcs)
 		{
 			_runs.AddRange(pcs.Runs);
+		}
+
+		public int Length
+		{
+			get
+			{
+				int len = 0;
+				foreach (var run in _runs) len += run.Text.Length;
+				return len;
+			}
 		}
 	}
 }

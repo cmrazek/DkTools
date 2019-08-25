@@ -527,6 +527,8 @@
     <Compile Include="Shell.cs" />
     <Compile Include="SignatureHelp\ProbeParameter.cs" />
     <Compile Include="SignatureHelp\ProbeSignature.cs" />
+    <Compile Include="SignatureHelp\ProbeSignatureHelpClassifier.cs" />
+    <Compile Include="SignatureHelp\ProbeSignatureHelpClassifierProvider.cs" />
     <Compile Include="SignatureHelp\ProbeSignatureHelpCommandHandler.cs" />
     <Compile Include="SignatureHelp\ProbeSignatureHelpCommandProvider.cs" />
     <Compile Include="SignatureHelp\ProbeSignatureHelpSource.cs" />

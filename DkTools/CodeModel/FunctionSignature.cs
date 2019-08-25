@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Adornments;
+using DkTools.Classifier;
 using DkTools.CodeModel.Definitions;
 
 namespace DkTools.CodeModel
@@ -17,7 +18,7 @@ namespace DkTools.CodeModel
 		private string _className;
 		private string _funcName;
 		private ArgumentDescriptor[] _args;
-		private string _prettySignature;
+		private ProbeClassifiedString _prettySignature;
 		private string _devDesc;
 
 		public static readonly FunctionSignature[] EmptyArray = new FunctionSignature[0];
@@ -97,51 +98,61 @@ namespace DkTools.CodeModel
 		{
 			if (_prettySignature == null)
 			{
-				var sb = new StringBuilder();
+				var pcs = new ProbeClassifiedStringBuilder();
 				var spaceRequired = false;
 
 				if (_privacy != FunctionPrivacy.Public)
 				{
-					sb.Append(_privacy.ToString().ToLower());
+					pcs.AddKeyword(_privacy.ToString().ToLower());
 					spaceRequired = true;
 				}
 
 				if (_extern)
 				{
-					if (spaceRequired) sb.Append(' ');
-					sb.Append("extern");
+					if (spaceRequired) pcs.AddSpace();
+					pcs.AddKeyword("extern");
 					spaceRequired = true;
 				}
 
 				if (_returnDataType != null)
 				{
-					if (spaceRequired) sb.Append(' ');
-					sb.Append(_returnDataType.ToSourceString());
+					if (spaceRequired) pcs.AddSpace();
+					pcs.AddClassifiedString(_returnDataType.Source);
 					spaceRequired = true;
 				}
 
-				if (spaceRequired) sb.Append(' ');
-				sb.Append(_funcName);
-				sb.Append('(');
+				if (spaceRequired) pcs.AddSpace();
+				pcs.AddFunction(_funcName);
+				pcs.AddOperator("(");
 				spaceRequired = false;
 
 				var firstArg = true;
 				foreach (var arg in _args)
 				{
 					if (firstArg) firstArg = false;
-					else sb.Append(", ");
+					else pcs.AddDelimiter(", ");
 
-					var argStartPos = sb.Length;
-					sb.Append(arg.SignatureText);
-					arg.SignatureSpan = new Span(argStartPos, sb.Length);
+					var argStartPos = pcs.Length;
+					var argSource = arg.ClassifiedString;
+					pcs.AddClassifiedString(argSource);
+					arg.SignatureSpan = new Span(argStartPos, argStartPos + argSource.Length);
 				}
 
-				sb.Append(')');
-				_prettySignature = sb.ToString();
+				pcs.AddOperator(")");
+				_prettySignature = pcs.ToClassifiedString();
 			}
 		}
 
 		public string PrettySignature
+		{
+			get
+			{
+				CheckPrettySignature();
+				return _prettySignature.ToString();
+			}
+		}
+
+		public ProbeClassifiedString ClassifiedString
 		{
 			get
 			{
@@ -154,58 +165,7 @@ namespace DkTools.CodeModel
 		{
 			get
 			{
-				var runs = new List<ClassifiedTextRun>();
-				var spaceRequired = false;
-
-				Action addSpace = () =>
-				{
-					if (spaceRequired)
-					{
-						runs.Add(Definition.QuickInfoRun(Classifier.ProbeClassifierType.Normal, " "));
-						spaceRequired = false;
-					}
-				};
-
-				if (_privacy != FunctionPrivacy.Public)
-				{
-					runs.Add(Definition.QuickInfoRun(Classifier.ProbeClassifierType.Keyword, _privacy.ToString().ToLower()));
-					spaceRequired = true;
-				}
-
-				if (_extern)
-				{
-					addSpace();
-					runs.Add(Definition.QuickInfoRun(Classifier.ProbeClassifierType.Keyword, "extern"));
-					spaceRequired = true;
-				}
-
-				if (_returnDataType != null)
-				{
-					addSpace();
-					runs.AddRange(_returnDataType.Source.Runs.Select(r => r.ToClassifiedTextRun()));
-					spaceRequired = true;
-				}
-
-				addSpace();
-				runs.Add(Definition.QuickInfoRun(Classifier.ProbeClassifierType.Function, _funcName));
-				runs.Add(Definition.QuickInfoRun(Classifier.ProbeClassifierType.Operator, "("));
-
-				var firstArg = true;
-				foreach (var arg in _args)
-				{
-					if (firstArg) firstArg = false;
-					else
-					{
-						runs.Add(Definition.QuickInfoRun(Classifier.ProbeClassifierType.Delimiter, ","));
-						runs.Add(Definition.QuickInfoRun(Classifier.ProbeClassifierType.Normal, " "));
-					}
-
-					runs.AddRange(arg.QuickInfoRuns);
-				}
-
-				runs.Add(Definition.QuickInfoRun(Classifier.ProbeClassifierType.Operator, ")"));
-
-				return new ClassifiedTextElement(runs.Where(r => r != null).ToArray());
+				return ClassifiedString.ToClassifiedTextElement();
 			}
 		}
 

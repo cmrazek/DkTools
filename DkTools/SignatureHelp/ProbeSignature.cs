@@ -13,9 +13,13 @@ using Microsoft.VisualStudio.Text.Operations;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.TextManager.Interop;
 using Microsoft.VisualStudio.OLE.Interop;
+using DkTools.Classifier;
 
 namespace DkTools.SignatureHelp
 {
+	/// <summary>
+	/// Signature object used for Intellisense Signature Help
+	/// </summary>
     internal class ProbeSignature : ISignature
     {
         private ITextBuffer _subjectBuffer;
@@ -23,7 +27,6 @@ namespace DkTools.SignatureHelp
 		private CodeModel.FunctionSignature _sig;
         private ITrackingSpan _applicableToSpan;
         private ReadOnlyCollection<IParameter> _params;
-        private string _printContent;
 
         public event EventHandler<CurrentParameterChangedEventArgs> CurrentParameterChanged;
 
@@ -100,8 +103,12 @@ namespace DkTools.SignatureHelp
 
         public string PrettyPrintedContent
         {
-            get { return _printContent; }
-            internal set { _printContent = value; }
+			get { return _sig.PrettySignature; }
         }
+
+		public ProbeClassifiedString ClassifiedContent
+		{
+			get { return _sig.ClassifiedString; }
+		}
     }
 }

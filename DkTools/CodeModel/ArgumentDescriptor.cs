@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Adornments;
+using DkTools.Classifier;
 using DkTools.CodeModel.Definitions;
 
 namespace DkTools.CodeModel
@@ -14,7 +15,7 @@ namespace DkTools.CodeModel
 		private string _name;
 		private DataType _dataType;
 		private PassByMethod _passByMethod;
-		private string _sigText;
+		private ProbeClassifiedString _source;
 		private Span _sigSpan;
 
 		public static readonly ArgumentDescriptor[] EmptyArray = new ArgumentDescriptor[0];
@@ -120,43 +121,48 @@ namespace DkTools.CodeModel
 
 		public string SignatureText
 		{
+			get { return ClassifiedString.ToString(); }
+		}
+
+		public ProbeClassifiedString ClassifiedString
+		{
 			get
 			{
-				if (_sigText == null)
+				if (_source == null)
 				{
-					var sb = new StringBuilder();
+					var pcs = new ProbeClassifiedStringBuilder();
 					var spaceRequired = false;
 
 					if (_dataType != null)
 					{
-						sb.Append(_dataType.ToSourceString());
+						pcs.AddClassifiedString(_dataType.Source);
 						spaceRequired = true;
 					}
 
 					switch (_passByMethod)
 					{
 						case PassByMethod.Reference:
-							if (spaceRequired) sb.Append(' ');
-							sb.Append('&');
+							if (spaceRequired) pcs.AddSpace();
+							pcs.AddOperator("&");
 							spaceRequired = false;
 							break;
 						case PassByMethod.ReferencePlus:
-							if (spaceRequired) sb.Append(' ');
-							sb.Append("&+");
+							if (spaceRequired) pcs.AddSpace();
+							pcs.AddOperator("&+");
 							spaceRequired = false;
 							break;
 					}
 
 					if (!string.IsNullOrEmpty(_name))
 					{
-						if (spaceRequired) sb.Append(' ');
-						sb.Append(_name);
+						if (spaceRequired) pcs.AddSpace();
+						pcs.AddVariable(_name);
 					}
 
-					_sigText = sb.ToString();
+					_source = pcs.ToClassifiedString();
 				}
 
-				return _sigText;
+				return _source;
 			}
 		}
 
