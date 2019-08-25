@@ -2,10 +2,11 @@ DkTools ChangeLog
 ____________________________________________________________________________________________________
 Version 1.5.2 - (WIP):
 
+- Quick Info (hover text) and Signature Help are now syntax highlighted.
+- QuickInfo uses the new asynchronous API.
 - Fixed issue with Visual Studio putting a lock on the dictionary.
   (caused compile to fail if there are dictionary changes)
 - Improved the colors of some text in dark mode.
-- QuickInfo (hover text) now uses the new asynchronous API.
 - Fixed many warnings which would potentially cause deadlocks.
 
 ____________________________________________________________________________________________________
