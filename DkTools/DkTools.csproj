@@ -563,12 +563,8 @@
     <Compile Include="Snippets\SnippetDeploy.cs" />
     <Compile Include="StatementCompletion\ProbeAsyncCompletionSource.cs" />
     <Compile Include="StatementCompletion\ProbeAsyncCompletionSourceProvider.cs" />
-    <Compile Include="StatementCompletion\ProbeCompletionCommandHandler.cs" />
-    <Compile Include="StatementCompletion\ProbeCompletionCommandHandlerProvider.cs" />
     <Compile Include="StatementCompletion\ProbeCompletionCommitManager.cs" />
     <Compile Include="StatementCompletion\ProbeCompletionCommitManagerProvider.cs" />
-    <Compile Include="StatementCompletion\ProbeCompletionSource.cs" />
-    <Compile Include="StatementCompletion\ProbeCompletionSourceProvider.cs" />
     <Compile Include="StatementCompletion\ProbeCompletionType.cs" />
     <Compile Include="StatementCompletion\StatementLayout.cs" />
     <Compile Include="Tagging\Tagger.cs" />

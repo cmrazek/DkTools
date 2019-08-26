@@ -5,6 +5,7 @@ using System.ComponentModel.Composition;
 using System.Linq;
 using System.Runtime.InteropServices;
 using Microsoft.VisualStudio.Language.Intellisense;
+using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Editor;
 using Microsoft.VisualStudio.Utilities;
@@ -30,7 +31,10 @@ namespace DkTools.SignatureHelp
         [Import]
         internal ISignatureHelpBroker SignatureHelpBroker { get; set; }
 
-        public void VsTextViewCreated(IVsTextView textViewAdapter)
+		[Import]
+		internal SVsServiceProvider ServiceProvider { get; set; }
+
+		public void VsTextViewCreated(IVsTextView textViewAdapter)
         {
             ITextView textView = AdapterService.GetWpfTextView(textViewAdapter);
             if (textView == null) return;
@@ -39,7 +43,8 @@ namespace DkTools.SignatureHelp
                  () => new ProbeSignatureHelpCommandHandler(textViewAdapter,
                     textView,
                     NavigatorService.GetTextStructureNavigator(textView.TextBuffer),
-                    SignatureHelpBroker));
+                    SignatureHelpBroker,
+					this));
         }
     }
 }

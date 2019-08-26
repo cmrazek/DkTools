@@ -26,14 +26,16 @@ namespace DkTools.SignatureHelp
 		private ISignatureHelpBroker _broker;
 		private ISignatureHelpSession _session;
 		private ITextStructureNavigator _navigator;
+		private ProbeSignatureHelpCommandProvider _provider;
 
 		public static char s_typedChar = char.MinValue;
 
-		internal ProbeSignatureHelpCommandHandler(IVsTextView textViewAdapter, ITextView textView, ITextStructureNavigator nav, ISignatureHelpBroker broker)
+		internal ProbeSignatureHelpCommandHandler(IVsTextView textViewAdapter, ITextView textView, ITextStructureNavigator nav, ISignatureHelpBroker broker, ProbeSignatureHelpCommandProvider provider)
 		{
 			_textView = textView;
 			_broker = broker;
 			_navigator = nav;
+			_provider = provider;
 
 			//add this to the filter chain
 			textViewAdapter.AddCommandFilter(this, out _nextCommandHandler);
@@ -47,52 +49,95 @@ namespace DkTools.SignatureHelp
 			{
 				ThreadHelper.ThrowIfNotOnUIThread();
 
-				char typedChar = char.MinValue;
-
-				if (pguidCmdGroup == VSConstants.VSStd2K && nCmdID == (uint)VSConstants.VSStd2KCmdID.TYPECHAR)
+				if (VsShellUtilities.IsInAutomationFunction(_provider.ServiceProvider))
 				{
-					typedChar = (char)(ushort)Marshal.GetObjectForNativeVariant(pvaIn);
-					if (typedChar == '(')
-					{
-						var fileName = VsTextUtil.TryGetDocumentFileName(_textView.TextBuffer);
-						if (_textView.Caret.Position.BufferPosition.IsInLiveCode(fileName))
-						{
-							SnapshotPoint point = _textView.Caret.Position.BufferPosition;
-							var pos = point.Position;
-							var lineText = point.Snapshot.GetLineTextUpToPosition(pos).TrimEnd();
+					return _nextCommandHandler.Exec(ref pguidCmdGroup, nCmdID, nCmdexecopt, pvaIn, pvaOut);
+				}
 
-							if (lineText.Length > 0 && lineText[lineText.Length - 1].IsWordChar(false))
-							{
-								if (_session != null && !_session.IsDismissed) _session.Dismiss();
-								s_typedChar = typedChar;
-								_session = _broker.TriggerSignatureHelp(_textView);
-							}
-						}
-					}
-					else if (typedChar == ')' && _session != null)
-					{
-						if (!_session.IsDismissed) _session.Dismiss();
-						_session = null;
-					}
-					else if (typedChar == ',' && (_session == null || _session.IsDismissed))
-					{
-						var fileName = VsTextUtil.TryGetDocumentFileName(_textView.TextBuffer);
-						if (_textView.Caret.Position.BufferPosition.IsInLiveCode(fileName))
-						{
-							var fileStore = CodeModel.FileStore.GetOrCreateForTextBuffer(_textView.TextBuffer);
-							if (fileStore != null)
-							{
-								var model = fileStore.GetMostRecentModel(fileName, _textView.TextSnapshot, "Signature help command handler - after ','");
-								var modelPos = _textView.Caret.Position.BufferPosition.TranslateTo(model.Snapshot, PointTrackingMode.Negative).Position;
+				var commandId = nCmdID;
+				var typedChar = char.MinValue;
 
-								var argsToken = model.File.FindDownward<CodeModel.Tokens.ArgsToken>(modelPos).Where(t => t.Span.Start < modelPos && (t.Span.End > modelPos || !t.IsTerminated)).LastOrDefault();
-								if (argsToken != null)
+				if (pguidCmdGroup == typeof(VSConstants.VSStd97CmdID).GUID)
+				{
+					if (nCmdID == (uint)VSConstants.VSStd97CmdID.GotoDefn)
+					{
+						Navigation.GoToDefinitionHelper.TriggerGoToDefinition(_textView);
+						return VSConstants.S_OK;
+					}
+					else if (nCmdID == (uint)VSConstants.VSStd97CmdID.FindReferences)
+					{
+						Navigation.GoToDefinitionHelper.TriggerFindReferences(_textView);
+						return VSConstants.S_OK;
+					}
+				}
+
+				if (pguidCmdGroup == VSConstants.VSStd2K)
+				{
+					if (nCmdID == (uint)VSConstants.VSStd2KCmdID.TYPECHAR)
+					{
+						typedChar = (char)(ushort)Marshal.GetObjectForNativeVariant(pvaIn);
+						if (typedChar == '(')
+						{
+							var fileName = VsTextUtil.TryGetDocumentFileName(_textView.TextBuffer);
+							if (_textView.Caret.Position.BufferPosition.IsInLiveCode(fileName))
+							{
+								SnapshotPoint point = _textView.Caret.Position.BufferPosition;
+								var pos = point.Position;
+								var lineText = point.Snapshot.GetLineTextUpToPosition(pos).TrimEnd();
+
+								if (lineText.Length > 0 && lineText[lineText.Length - 1].IsWordChar(false))
 								{
+									if (_session != null && !_session.IsDismissed) _session.Dismiss();
 									s_typedChar = typedChar;
 									_session = _broker.TriggerSignatureHelp(_textView);
 								}
 							}
 						}
+						else if (typedChar == ')' && _session != null)
+						{
+							if (!_session.IsDismissed) _session.Dismiss();
+							_session = null;
+						}
+						else if (typedChar == ',' && (_session == null || _session.IsDismissed))
+						{
+							var fileName = VsTextUtil.TryGetDocumentFileName(_textView.TextBuffer);
+							if (_textView.Caret.Position.BufferPosition.IsInLiveCode(fileName))
+							{
+								var fileStore = CodeModel.FileStore.GetOrCreateForTextBuffer(_textView.TextBuffer);
+								if (fileStore != null)
+								{
+									var model = fileStore.GetMostRecentModel(fileName, _textView.TextSnapshot, "Signature help command handler - after ','");
+									var modelPos = _textView.Caret.Position.BufferPosition.TranslateTo(model.Snapshot, PointTrackingMode.Negative).Position;
+
+									var argsToken = model.File.FindDownward<CodeModel.Tokens.ArgsToken>(modelPos).Where(t => t.Span.Start < modelPos && (t.Span.End > modelPos || !t.IsTerminated)).LastOrDefault();
+									if (argsToken != null)
+									{
+										s_typedChar = typedChar;
+										_session = _broker.TriggerSignatureHelp(_textView);
+									}
+								}
+							}
+						}
+					}
+					else if (nCmdID == (uint)VSConstants.VSStd2KCmdID.GOTOBRACE)
+					{
+						Navigation.GoToBraceHelper.Trigger(_textView, false);
+						return VSConstants.S_OK;
+					}
+					else if (nCmdID == (uint)VSConstants.VSStd2KCmdID.GOTOBRACE_EXT)
+					{
+						Navigation.GoToBraceHelper.Trigger(_textView, true);
+						return VSConstants.S_OK;
+					}
+					else if (nCmdID == (uint)VSConstants.VSStd2KCmdID.COMMENT_BLOCK)
+					{
+						Tagging.Tagger.CommentBlock();
+						return VSConstants.S_OK;
+					}
+					else if (nCmdID == (uint)VSConstants.VSStd2KCmdID.UNCOMMENT_BLOCK)
+					{
+						Tagging.Tagger.UncommentBlock();
+						return VSConstants.S_OK;
 					}
 				}
 
@@ -109,7 +154,25 @@ namespace DkTools.SignatureHelp
 		{
 			ThreadHelper.ThrowIfNotOnUIThread();
 
-			return _nextCommandHandler.QueryStatus(ref pguidCmdGroup, cCmds, prgCmds, pCmdText);
+			var status = _nextCommandHandler.QueryStatus(ref pguidCmdGroup, cCmds, prgCmds, pCmdText);
+
+			if (pguidCmdGroup == typeof(VSConstants.VSStd97CmdID).GUID)
+			{
+				for (int i = 0; i < cCmds; i++)
+				{
+					if (prgCmds[i].cmdID == (uint)VSConstants.VSStd97CmdID.FindReferences)
+					{
+						prgCmds[i].cmdf = (uint)(OLECMDF.OLECMDF_ENABLED | OLECMDF.OLECMDF_SUPPORTED);
+					}
+					else if (prgCmds[i].cmdID == (uint)VSConstants.VSStd97CmdID.GotoDecl ||
+						prgCmds[i].cmdID == (uint)VSConstants.VSStd97CmdID.GotoRef)
+					{
+						prgCmds[i].cmdf |= (uint)OLECMDF.OLECMDF_DEFHIDEONCTXTMENU;
+					}
+				}
+			}
+
+			return status;
 		}
 
 		private void Caret_PositionChanged(object sender, CaretPositionChangedEventArgs e)
