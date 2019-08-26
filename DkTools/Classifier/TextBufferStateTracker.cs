@@ -61,6 +61,11 @@ namespace DkTools.Classifier
 			}
 		}
 
+		public int GetStateForPosition(SnapshotPoint snapPt, string fileName)
+		{
+			return GetStateForPosition(snapPt.Position, snapPt.Snapshot, fileName);
+		}
+
 		public int GetStateForPosition(int pos, ITextSnapshot snapshot, string fileName)
 		{
 			_snapshot = snapshot;

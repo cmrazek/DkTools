@@ -15,7 +15,7 @@ namespace DkTools.StatementCompletion
 	class ProbeCompletionCommitManager : IAsyncCompletionCommitManager
 	{
 		private ITextView _textView;
-		private static readonly char[] _commitChars = new char[] { ' ', ';', '.', '(', ')', ',' };
+		private static readonly char[] _commitChars = new char[] { ' ', ';', '.', '(', ')', ',', '<', '>', '\"', '\'' };
 
 		public ProbeCompletionCommitManager(ITextView textView)
 		{
