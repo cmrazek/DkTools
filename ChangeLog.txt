@@ -1,5 +1,10 @@
 DkTools ChangeLog
 ____________________________________________________________________________________________________
+Version 1.5.3 - (WIP):
+
+- Fixed bug where auto-completion was triggering inside comments or strings.
+
+____________________________________________________________________________________________________
 Version 1.5.2 - Aug 26, 2019:
 
 - Quick Info (hover text), Auto-Completion, and Signature Help are now syntax highlighted.
