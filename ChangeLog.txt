@@ -1,6 +1,6 @@
 DkTools ChangeLog
 ____________________________________________________________________________________________________
-Version 1.5.3 - (WIP):
+Version 1.5.3 - Aug 28, 2019:
 
 - Fixed bug where auto-completion was triggering inside comments or strings.
 
