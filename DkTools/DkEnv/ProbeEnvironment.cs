@@ -3,8 +3,10 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Text.RegularExpressions;
+using System.Threading.Tasks;
 using Microsoft.Win32;
 
 namespace DkTools
@@ -18,7 +20,10 @@ namespace DkTools
 		#region Construction
 		public static void Initialize()
 		{
-			Reload(false);
+			System.Threading.ThreadPool.QueueUserWorkItem(state =>
+			{
+				Reload(null);
+			});
 		}
 
 		internal static void OnSettingsSaved()
@@ -28,292 +33,256 @@ namespace DkTools
 
 		public static bool Initialized
 		{
-			get { return _currentApp != null; }
+			get { return _appSettings.Initialized; }
 		}
 		#endregion
 
 		#region PSelect
-		private static PROBEENVSRVRLib.ProbeEnv _env;
-		private static PROBEENVSRVRLib.ProbeEnvApp _currentApp;
-		private static string[] _sourceDirs;
-		private static string[] _includeDirs;
-		private static string[] _libDirs;
-		private static string[] _exeDirs;
-		private static string _platformPath;
+		private static ProbeAppSettings _appSettings = new ProbeAppSettings();
 
-		public static void ReloadCurrentApp(string appName = "")
+		private static ProbeAppSettings ReloadCurrentApp(string appName = "")
 		{
 			Log.Write(LogLevel.Info, "Loading application settings...");
 			var startTime = DateTime.Now;
 
-			_sourceDirs = null;
-			_includeDirs = null;
-			_libDirs = null;
-			_exeDirs = null;
+			var appSettings = new ProbeAppSettings();
 
-			_env = new PROBEENVSRVRLib.ProbeEnv();
-
-			_currentApp = null;
-			if (!string.IsNullOrEmpty(appName)) _currentApp = _env.FindApp(appName);
-			if (_currentApp == null) _currentApp = _env.FindApp(_env.DefaultAppName);
-			if (_currentApp == null) Debug.WriteLine("No current app found.");
-			else Debug.WriteLine("Current App: " + _currentApp.Name);
-
-			var platform = _env as PROBEENVSRVRLib.IProbeEnvPlatform;
-			_platformPath = platform.Folder;
-			Debug.WriteLine("Platform Version: " + platform.Version);
-			Debug.WriteLine("Platform Folder: " + platform.Folder);
-
-			var customData = _currentApp as PROBEENVSRVRLib.IProbeEnvAppCustomDat;
-			for (int v = 1, vv = customData.Count; v <= vv; v++)
+			PROBEENVSRVRLib.ProbeEnv env = null;
+			PROBEENVSRVRLib.ProbeEnvApp currentApp = null;
+			try
 			{
-				var name = customData.GetVariableName(v);
-				var value = customData.GetValue(v);
-				Debug.WriteLine("  " + name + "=" + value);
-			}
+				env = new PROBEENVSRVRLib.ProbeEnv();
+				if (!string.IsNullOrEmpty(appName)) currentApp = env.FindApp(appName);
+				if (currentApp == null) currentApp = env.FindApp(env.DefaultAppName);
+				if (currentApp == null)
+				{
+					Debug.WriteLine("No current app found.");
+					appSettings.Initialized = true;
+				}
+				else
+				{
+					Debug.WriteLine("Current App: " + currentApp.Name);
+					appSettings.AppName = currentApp.Name;
+					appSettings.Initialized = true;
+					appSettings.PlatformPath = (env as PROBEENVSRVRLib.IProbeEnvPlatform).Folder;
+					appSettings.AppNames = LoadAppNames(env);
+					appSettings.SourceDirs = LoadSourceDirs(currentApp);
+					appSettings.IncludeDirs = LoadIncludeDirs(currentApp, appSettings);
+					appSettings.LibDirs = LoadLibDirs(currentApp, appSettings);
+					appSettings.ExeDirs = LoadExeDirs(currentApp);
+					appSettings.ObjectDir = currentApp.ObjectPath;
+					appSettings.TempDir = currentApp.TempPath;
+					appSettings.ReportDir = currentApp.ListingsPath;
+					appSettings.DataDir = currentApp.DataPath;
+					appSettings.LogDir = currentApp.LogPath;
+				}
 
-			var elapsed = DateTime.Now.Subtract(startTime);
-			Log.Write(LogLevel.Info, "Application settings reloaded (elapsed: {0})", elapsed);
+				var elapsed = DateTime.Now.Subtract(startTime);
+				Log.Write(LogLevel.Info, "Application settings reloaded (elapsed: {0})", elapsed);
+				return appSettings;
+			}
+			finally
+			{
+				if (currentApp != null)
+				{
+					Marshal.ReleaseComObject(currentApp);
+					currentApp = null;
+				}
+				if (env != null)
+				{
+					Marshal.ReleaseComObject(env);
+					env = null;
+				}
+			}
 		}
 
-		public static void Reload(bool keepCurrentApp)
+		public static void Reload(string appName)
 		{
-			var appName = "";
-			if (keepCurrentApp) appName = _currentApp != null ? _currentApp.Name : "";
-			ReloadCurrentApp(appName);
+			var appSettings = ReloadCurrentApp(appName);
 			ReloadTableList();
 			ClearFileLists();
+
+			_appSettings = appSettings;
+			// TODO: notify that refreshes are required
+		}
+
+		private static string[] LoadSourceDirs(PROBEENVSRVRLib.ProbeEnvApp currentApp)
+		{
+			if (currentApp == null) throw new ArgumentNullException(nameof(currentApp));
+
+			var sourceDirs = new List<string>();
+			for (int i = 1, ii = currentApp.NumSourcePath; i <= ii; i++)
+			{
+				try
+				{
+					var path = currentApp.SourcePath[i];
+					if (string.IsNullOrWhiteSpace(path))
+					{
+						Log.Warning("PROBE environment has returned a blank source path in slot {0}.", i);
+					}
+					else if (!Directory.Exists(path))
+					{
+						Log.Warning("Source directory [{0}] does not exist.", path);
+					}
+					else
+					{
+						sourceDirs.Add(path);
+					}
+				}
+				catch (Exception ex)
+				{
+					Log.Error(ex, "Exception when attempting to retrieve source dir in slot{0}", i);
+				}
+
+			}
+			return sourceDirs.ToArray();
 		}
 
 		public static IEnumerable<string> SourceDirs
 		{
-			get
-			{
-				if (_sourceDirs == null)
-				{
-					if (_currentApp != null)
-					{
-						var sourceDirs = new List<string>();
-						for (int i = 1, ii = _currentApp.NumSourcePath; i <= ii; i++)
-						{
-							try
-							{
-								var path = _currentApp.SourcePath[i];
-								if (string.IsNullOrWhiteSpace(path))
-								{
-									Log.Warning("PROBE environment has returned a blank source path in slot {0}.", i);
-								}
-								else if (!Directory.Exists(path))
-								{
-									Log.Warning("Source directory [{0}] does not exist.", path);
-								}
-								else
-								{
-									sourceDirs.Add(path);
-								}
-							}
-							catch (Exception ex)
-							{
-								Log.Error(ex, "Exception when attempting to retrieve source dir in slot{0}", i);
-							}
-							
-						}
-						_sourceDirs = sourceDirs.ToArray();
-					}
-					else
-					{
-						_sourceDirs = new string[0];
-					}
-				}
-				return _sourceDirs;
-			}
+			get { return _appSettings.SourceDirs; }
 		}
 
 		public static string ObjectDir
 		{
-			get
+			get { return _appSettings.ObjectDir; }
+		}
+
+		private static string[] LoadExeDirs(PROBEENVSRVRLib.ProbeEnvApp currentApp)
+		{
+			if (currentApp == null) throw new ArgumentNullException(nameof(currentApp));
+
+			var exeDirs = new List<string>();
+			for (int i = 1, ii = currentApp.NumExePath; i <= ii; i++)
 			{
-				if (_currentApp != null) return _currentApp.ObjectPath;
-				return string.Empty;
+				try
+				{
+					var path = currentApp.ExePath[i];
+					if (string.IsNullOrWhiteSpace(path))
+					{
+						Log.Warning("PROBE has returned a blank exe path in slot {0}", i);
+					}
+					else if (!Directory.Exists(path))
+					{
+						Log.Warning("Exe directory [{0}] does not exist.", path);
+					}
+					else
+					{
+						exeDirs.Add(path);
+					}
+				}
+				catch (Exception ex)
+				{
+					Log.Error(ex, "Exception when attempting to retrieve exe path in slot {0}", i);
+				}
 			}
+
+			return exeDirs.ToArray();
 		}
 
 		public static IEnumerable<string> ExeDirs
 		{
-			get
-			{
-				if (_exeDirs == null)
-				{
-					if (_currentApp != null)
-					{
-						var exeDirs = new List<string>();
-						for (int i = 1, ii = _currentApp.NumExePath; i <= ii; i++)
-						{
-							try
-							{
-								var path = _currentApp.ExePath[i];
-								if (string.IsNullOrWhiteSpace(path))
-								{
-									Log.Warning("PROBE has returned a blank exe path in slot {0}", i);
-								}
-								else if (!Directory.Exists(path))
-								{
-									Log.Warning("Exe directory [{0}] does not exist.", path);
-								}
-								else
-								{
-									exeDirs.Add(path);
-								}
-							}
-							catch (Exception ex)
-							{
-								Log.Error(ex, "Exception when attempting to retrieve exe path in slot {0}", i);
-							}
-						}
-
-						_exeDirs = exeDirs.ToArray();
-					}
-					else
-					{
-						_exeDirs = new string[0];
-					}
-				}
-				return _exeDirs;
-			}
+			get { return _appSettings.ExeDirs; }
 		}
 
 		public static string TempDir
 		{
-			get
-			{
-				if (_currentApp != null) return _currentApp.TempPath;
-				return string.Empty;
-			}
+			get { return _appSettings.TempDir; }
 		}
 
 		public static string ReportDir
 		{
-			get
-			{
-				if (_currentApp != null) return _currentApp.ListingsPath;
-				return string.Empty;
-			}
+			get { return _appSettings.ReportDir; }
 		}
 
 		public static string DataDir
 		{
-			get
-			{
-				if (_currentApp != null) return _currentApp.DataPath;
-				return string.Empty;
-			}
+			get { return _appSettings.DataDir; }
 		}
 
 		public static string LogDir
 		{
-			get
+			get { return _appSettings.LogDir; }
+		}
+
+		private static string[] LoadLibDirs(PROBEENVSRVRLib.ProbeEnvApp currentApp, ProbeAppSettings appSettings)
+		{
+			var list = new List<string>();
+
+			for (int i = 1, ii = currentApp.NumLibraryPath; i <= ii; i++)
 			{
-				if (_currentApp != null) return _currentApp.LogPath;
-				return string.Empty;
+				try
+				{
+					var path = currentApp.LibraryPath[i];
+					if (string.IsNullOrWhiteSpace(path))
+					{
+						Log.Warning("PROBE returned blank lib path in slot {0}", i);
+					}
+					else if (!Directory.Exists(path))
+					{
+						Log.Warning("Lib directory [{0}] does not exist.", path);
+					}
+					else
+					{
+						list.Add(path);
+					}
+				}
+				catch (Exception ex)
+				{
+					Log.Error(ex, "Exception when attempting to retrieve lib path in slot {0}", i);
+				}
+
 			}
+			if (!string.IsNullOrEmpty(appSettings.PlatformPath)) list.Add(appSettings.PlatformPath);
+
+			return list.ToArray();
 		}
 
 		public static IEnumerable<string> LibDirs
 		{
-			get
+			get { return _appSettings.LibDirs; }
+		}
+
+		private static string[] LoadIncludeDirs(PROBEENVSRVRLib.ProbeEnvApp currentApp, ProbeAppSettings appSettings)
+		{
+			var list = new List<string>();
+
+			for (int i = 1, ii = currentApp.NumIncludePath; i <= ii; i++)
 			{
-				if (_libDirs == null)
+				try
 				{
-					if (_currentApp != null)
+					var path = currentApp.IncludePath[i];
+					if (string.IsNullOrWhiteSpace(path))
 					{
-						var list = new List<string>();
-
-						for (int i = 1, ii = _currentApp.NumLibraryPath; i <= ii; i++)
-						{
-							try
-							{
-								var path = _currentApp.LibraryPath[i];
-								if (string.IsNullOrWhiteSpace(path))
-								{
-									Log.Warning("PROBE returned blank lib path in slot {0}", i);
-								}
-								else if (!Directory.Exists(path))
-								{
-									Log.Warning("Lib directory [{0}] does not exist.", path);
-								}
-								else
-								{
-									list.Add(path);
-								}
-							}
-							catch (Exception ex)
-							{
-								Log.Error(ex, "Exception when attempting to retrieve lib path in slot {0}", i);
-							}
-							
-						}
-						if (!string.IsNullOrEmpty(_platformPath)) list.Add(_platformPath);
-
-						_libDirs = list.ToArray();
+						Log.Warning("PROBE has returned blank include path in slot {0}", i);
+					}
+					else if (!Directory.Exists(path))
+					{
+						Log.Warning("Lib directory [{0}] does not exist.", path);
 					}
 					else
 					{
-						_libDirs = new string[0];
+						list.Add(path);
 					}
 				}
-				return _libDirs;
+				catch (Exception ex)
+				{
+					Log.Error(ex, "Exception when attempting to retrieve include path slot {0}", i);
+				}
 			}
+
+			if (!string.IsNullOrEmpty(appSettings.PlatformPath))
+			{
+				var includePath = Path.Combine(appSettings.PlatformPath, "include");
+				if (Directory.Exists(includePath)) list.Add(includePath);
+			}
+
+			return list.ToArray();
 		}
 
 		public static IEnumerable<string> IncludeDirs
 		{
-			get
-			{
-				if (_includeDirs == null)
-				{
-					if (_currentApp != null)
-					{
-						var list = new List<string>();
-
-						for (int i = 1, ii = _currentApp.NumIncludePath; i <= ii; i++)
-						{
-							try
-							{
-								var path = _currentApp.IncludePath[i];
-								if (string.IsNullOrWhiteSpace(path))
-								{
-									Log.Warning("PROBE has returned blank include path in slot {0}", i);
-								}
-								else if (!Directory.Exists(path))
-								{
-									Log.Warning("Lib directory [{0}] does not exist.", path);
-								}
-								else
-								{
-									list.Add(path);
-								}
-							}
-							catch (Exception ex)
-							{
-								Log.Error(ex, "Exception when attempting to retrieve include path slot {0}", i);
-							}
-						}
-
-						if (!string.IsNullOrEmpty(_platformPath))
-						{
-							var includePath = Path.Combine(_platformPath, "include");
-							if (Directory.Exists(includePath)) list.Add(includePath);
-						}
-
-						_includeDirs = list.ToArray();
-					}
-					else
-					{
-						_includeDirs = new string[0];
-					}
-				}
-				return _includeDirs;
-			}
+			get { return _appSettings.IncludeDirs; }
 		}
 
 		/// <summary>
@@ -329,17 +298,21 @@ namespace DkTools
 			}
 		}
 
+		private static string[] LoadAppNames(PROBEENVSRVRLib.ProbeEnv env)
+		{
+			var list = new List<string>();
+			var e = env.EnumApps();
+			// One-based array
+			for (int i = 1, ii = e.Count; i <= ii; i++)
+			{
+				list.Add(e.Element(i).Name);
+			}
+			return list.ToArray();
+		}
+
 		public static IEnumerable<string> AppNames
 		{
-			get
-			{
-				if (_env != null)
-				{
-					var e = _env.EnumApps();
-					// One-based array
-					for (int i = 1, ii = e.Count; i <= ii; i++) yield return e.Element(i).Name;
-				}
-			}
+			get { return _appSettings.AppNames; }
 		}
 
 		private const int k_defaultPort = 5001;
@@ -359,28 +332,20 @@ namespace DkTools
 
 		public static string CurrentApp
 		{
-			get
-			{
-				if (_currentApp != null) return _currentApp.Name;
-				return string.Empty;
-			}
+			get { return _appSettings.AppName; }
 			set
 			{
 				try
 				{
-					var oldCurrentApp = _currentApp;
-
-					if (_currentApp == null || _currentApp.Name != value)
+					if (_appSettings.AppName != value)
 					{
-						ReloadCurrentApp(value);
-
-						if (_currentApp != oldCurrentApp)
+						var appName = value;
+						System.Threading.ThreadPool.QueueUserWorkItem(state =>
 						{
-							EventHandler ev = AppChanged;
-							if (ev != null) ev(null, EventArgs.Empty);
-						}
-
-						TryUpdateDefaultCurrentApp();
+							Reload(appName);
+							AppChanged?.Invoke(null, EventArgs.Empty);
+							TryUpdateDefaultCurrentApp();
+						});
 					}
 				}
 				catch (Exception ex)
@@ -392,11 +357,13 @@ namespace DkTools
 
 		private static void TryUpdateDefaultCurrentApp()
 		{
+			if (string.IsNullOrEmpty(_appSettings.AppName)) return;
+
 			// Read the current value from the registry in read-only mode, to see if it needs updating.
 			using (var key = Registry.LocalMachine.OpenSubKey(Constants.WbdkRegKey, false))
 			{
 				var value = Convert.ToString(key.GetValue("CurrentConfig", string.Empty));
-				if (value == _currentApp.Name)
+				if (value == _appSettings.AppName)
 				{
 					// No update required.
 					return;
@@ -408,7 +375,7 @@ namespace DkTools
 			{
 				using (var key = Registry.LocalMachine.OpenSubKey(Constants.WbdkRegKey, true))
 				{
-					key.SetValue("CurrentConfig", _currentApp.Name);
+					key.SetValue("CurrentConfig", _appSettings.AppName);
 				}
 			}
 			catch (System.Security.SecurityException ex)
@@ -417,9 +384,11 @@ namespace DkTools
 				if (!options.DkAppChangeAdminFailure)
 				{
 					var msg = "The system-wide default DK application can't be changed because access was denied. To resolve this problem, run Visual Studio as an administrator.";
-					var dlg = new ErrorDialog(msg, ex.ToString());
-					dlg.ShowUserSuppress = true;
-					dlg.Owner = System.Windows.Application.Current.MainWindow;
+					var dlg = new ErrorDialog(msg, ex.ToString())
+					{
+						ShowUserSuppress = true,
+						Owner = System.Windows.Application.Current.MainWindow
+					};
 					dlg.ShowDialog();
 
 					if (options.DkAppChangeAdminFailure != dlg.UserSuppress)
@@ -433,7 +402,7 @@ namespace DkTools
 
 		public static string PlatformPath
 		{
-			get { return _platformPath; }
+			get { return _appSettings.PlatformPath; }
 		}
 		#endregion
 
@@ -781,10 +750,10 @@ namespace DkTools
 
 		public static void MergeEnvironmentVariables(System.Collections.Specialized.StringDictionary vars)
 		{
-			if (_env == null || _currentApp == null) return;
+			if (!_appSettings.Initialized) return;
 
 			var merger = new DkEnv.DkEnvVarMerger();
-			var mergedVars = merger.CreateMergedVarList(_currentApp);
+			var mergedVars = merger.CreateMergedVarList(_appSettings);
 
 			foreach (var v in mergedVars) vars[v.Name] = v.Value;
 		}
@@ -886,9 +855,9 @@ namespace DkTools
 
 		public static string GetRegString(string name, string defaultValue)
 		{
-			if (_currentApp == null) return defaultValue;
+			if (!_appSettings.Initialized) return defaultValue;
 
-			using (var key = Microsoft.Win32.Registry.LocalMachine.OpenSubKey(k_configPath + _currentApp.Name, false))
+			using (var key = Microsoft.Win32.Registry.LocalMachine.OpenSubKey(k_configPath + _appSettings.AppName, false))
 			{
 				if (key == null) return defaultValue;
 

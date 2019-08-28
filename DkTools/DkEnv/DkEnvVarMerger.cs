@@ -18,20 +18,17 @@ namespace DkTools.DkEnv
 		private const string k_windowsKits = "Software\\Microsoft\\Windows Kits\\Installed Roots";
 		private const string k_windowsDotNet = "Software\\Microsoft\\.NETFramework";
 
-		private PROBEENVSRVRLib.IProbeEnvApp _app;
 		private string _platformFolder;
 
-		public EnvVarList CreateMergedVarList(PROBEENVSRVRLib.IProbeEnvApp app)
+		public EnvVarList CreateMergedVarList(ProbeAppSettings app)
 		{
 			if (app == null) throw new ArgumentNullException("app");
-
-			_app = app;
 
 			// Create the base list of environment vars
 			var mergedVars = new EnvVarList();
 			mergedVars.LoadFromEnvironment();
 
-			mergedVars["pcurrentapp"] = app.Name;
+			mergedVars["pcurrentapp"] = app.AppName;
 
 			var appEnv = app as PROBEENVSRVRLib.IProbeEnvPlatform;
 			if (appEnv != null)

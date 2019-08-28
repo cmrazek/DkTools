@@ -365,6 +365,7 @@
     <Compile Include="DkDict\Table.cs" />
     <Compile Include="DkDict\Tag.cs" />
     <Compile Include="DkDict\Typedef.cs" />
+    <Compile Include="DkEnv\ProbeAppSettings.cs" />
     <Compile Include="ErrorDialog.xaml.cs">
       <DependentUpon>ErrorDialog.xaml</DependentUpon>
     </Compile>
