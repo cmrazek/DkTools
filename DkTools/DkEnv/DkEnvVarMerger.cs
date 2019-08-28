@@ -46,9 +46,8 @@ namespace DkTools.DkEnv
 			var path = new List<string>();
 			var excludeExeSubDirs = new string[] { "ccdll", "ctdef", "ctdll", "ncdll", "rtdll", "scdll", "st", "stdef", "stdll", "stn" };
 
-			for (int e = 1, ee = app.NumExePath; e <= ee; e++)
+			foreach (var exePath in app.ExeDirs)
 			{
-				var exePath = app.ExePath[e];
 				if (!Directory.Exists(exePath)) continue;
 
 				var helpPath = Path.Combine(exePath, "help");
@@ -71,9 +70,8 @@ namespace DkTools.DkEnv
 			// Include paths
 			var includes = new List<string>();
 
-			for (int i = 1, ii = app.NumIncludePath; i <= ii; i++)
+			foreach (var includePath in app.IncludeDirs)
 			{
-				var includePath = app.IncludePath[i];
 				if (!Directory.Exists(includePath)) continue;
 
 				includes.Add(includePath);
@@ -88,9 +86,8 @@ namespace DkTools.DkEnv
 			// Lib paths
 			var libs = new List<string>();
 
-			for (int l = 1, ll = app.NumLibraryPath; l <= ll; l++)
+			foreach (var libPath in app.LibDirs)
 			{
-				var libPath = app.LibraryPath[l];
 				if (!Directory.Exists(libPath)) continue;
 
 				libs.Add(libPath);

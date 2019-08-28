@@ -152,7 +152,13 @@ namespace DkTools.ProbeExplorer
 					var currentApp = ProbeEnvironment.CurrentApp;
 					c_appCombo.SelectedItem = (from a in c_appCombo.Items.Cast<string>() where a == currentApp select a).FirstOrDefault();
 
-					RefreshForEnvironment();
+					//RefreshForEnvironment();
+					RefreshAppCombo();
+					RefreshFileTree();
+					RefreshDictTree();
+					ProbeToolsPackage.Instance.FunctionFileScanner.RestartScanning();
+					CodeModel.FileStore.FireAllModelRebuildRequired();
+					ProbeToolsPackage.Instance.EditorOptions.FireEditorRefresh();
 				});
 			}
 			catch (Exception ex)
@@ -181,23 +187,12 @@ namespace DkTools.ProbeExplorer
 		{
 			try
 			{
-				RefreshForEnvironment();
+				ProbeEnvironment.ReloadAsync(null, false);
 			}
 			catch (Exception ex)
 			{
 				this.ShowError(ex);
 			}
-		}
-
-		private void RefreshForEnvironment()
-		{
-			ProbeEnvironment.Reload(true);
-			RefreshAppCombo();
-			RefreshFileTree();
-			RefreshDictTree();
-			ProbeToolsPackage.Instance.FunctionFileScanner.RestartScanning();
-			CodeModel.FileStore.FireAllModelRebuildRequired();
-			ProbeToolsPackage.Instance.EditorOptions.FireEditorRefresh();
 		}
 		#endregion
 
@@ -427,7 +422,7 @@ namespace DkTools.ProbeExplorer
 		{
 			try
 			{
-				RefreshForEnvironment();
+				ProbeEnvironment.ReloadAsync(null, false);
 			}
 			catch (Exception ex)
 			{

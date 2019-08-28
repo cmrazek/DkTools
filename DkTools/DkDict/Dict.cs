@@ -38,7 +38,7 @@ namespace DkTools.DkDict
 					dictPathName = string.Empty;
 				}
 
-				if (dictPathName == null)
+				if (string.IsNullOrEmpty(dictPathName))
 				{
 					Log.Write(LogLevel.Warning, "No DICT file could be found.");
 					return;

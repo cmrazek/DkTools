@@ -20,10 +20,7 @@ namespace DkTools
 		#region Construction
 		public static void Initialize()
 		{
-			System.Threading.ThreadPool.QueueUserWorkItem(state =>
-			{
-				Reload(null);
-			});
+			_ = Task.Run(() => { ReloadAsync(null, false); });
 		}
 
 		internal static void OnSettingsSaved()
@@ -96,14 +93,20 @@ namespace DkTools
 			}
 		}
 
-		public static void Reload(string appName)
+		public static void ReloadAsync(string appName, bool updateDefaultApp)
 		{
 			var appSettings = ReloadCurrentApp(appName);
 			ReloadTableList();
-			ClearFileLists();
 
 			_appSettings = appSettings;
 			// TODO: notify that refreshes are required
+
+			AppChanged?.Invoke(null, EventArgs.Empty);
+
+			if (updateDefaultApp)
+			{
+				TryUpdateDefaultCurrentApp();
+			}
 		}
 
 		private static string[] LoadSourceDirs(PROBEENVSRVRLib.ProbeEnvApp currentApp)
@@ -339,13 +342,7 @@ namespace DkTools
 				{
 					if (_appSettings.AppName != value)
 					{
-						var appName = value;
-						System.Threading.ThreadPool.QueueUserWorkItem(state =>
-						{
-							Reload(appName);
-							AppChanged?.Invoke(null, EventArgs.Empty);
-							TryUpdateDefaultCurrentApp();
-						});
+						_ = Task.Run(() => { ReloadAsync(value, true); });
 					}
 				}
 				catch (Exception ex)
@@ -431,13 +428,6 @@ namespace DkTools
 		private static List<string> _sourceFiles;
 		private static List<string> _includeFiles;
 		private static List<string> _sourceAndIncludeFiles;
-
-		private static void ClearFileLists()
-		{
-			_sourceFiles = null;
-			_includeFiles = null;
-			_sourceAndIncludeFiles = null;
-		}
 
 		public static string LocateFileInPath(string fileName)
 		{
