@@ -68,8 +68,9 @@ namespace DkTools.Navigation
 				return;
 			}
 
+			var appSettings = ProbeEnvironment.CurrentAppSettings;
 			var fileName = VsTextUtil.TryGetDocumentFileName(_view.TextBuffer);
-			var model = fileStore.GetMostRecentModel(fileName, _view.TextSnapshot, "ReferenceScroller.GoToNextReference()");
+			var model = fileStore.GetMostRecentModel(appSettings, fileName, _view.TextSnapshot, "ReferenceScroller.GoToNextReference()");
 
 			// Get the caret position
 			var caretPtTest = _view.Caret.Position.Point.GetPoint(buf => (!buf.ContentType.IsOfType("projection")), Microsoft.VisualStudio.Text.PositionAffinity.Predecessor);

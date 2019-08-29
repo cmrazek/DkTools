@@ -136,7 +136,9 @@ namespace DkTools
 					_sb.Append(DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.fff"));
 					_sb.Append("] (");
 					_sb.Append(level.ToString());
-					_sb.Append(") ");
+					_sb.Append(") {");
+					_sb.Append(System.Threading.Thread.CurrentThread.ManagedThreadId);
+					_sb.Append("} ");
 					_sb.Append(message);
 					var msg = _sb.ToString();
 #if DEBUG

@@ -45,8 +45,10 @@ namespace DkTools.ErrorTagging
 		{
 			ThreadHelper.ThrowIfNotOnUIThread();
 
+			var appSettings = ProbeEnvironment.CurrentAppSettings;
+
 			var fileName = VsTextUtil.TryGetDocumentFileName(_view.TextBuffer);
-			_model = _store.GetMostRecentModel(fileName, _view.TextSnapshot, "ErrorTagger.GetTags()");
+			_model = _store.GetMostRecentModel(appSettings, fileName, _view.TextSnapshot, "ErrorTagger.GetTags()");
 
 			return ErrorTaskProvider.Instance.GetErrorTagsForFile(_model.FileName, spans);
 		}
@@ -57,7 +59,7 @@ namespace DkTools.ErrorTagging
 			{
 				if (_model != null &&
 					_model.FileContext != FileContext.Include &&
-					ProbeEnvironment.FileExistsInApp(_model.FileName))
+					ProbeEnvironment.CurrentAppSettings.FileExistsInApp(_model.FileName))
 				{
 					_backgroundFecDeferrer.OnActivity();
 				}
@@ -80,7 +82,7 @@ namespace DkTools.ErrorTagging
 				if (string.Equals(e.FileName, _model.FileName, StringComparison.OrdinalIgnoreCase))
 				{
 					if (_model.FileContext != FileContext.Include &&
-						ProbeEnvironment.FileExistsInApp(_model.FileName))
+						ProbeEnvironment.CurrentAppSettings.FileExistsInApp(_model.FileName))
 					{
 						_backgroundFecDeferrer.OnActivity();
 					}
@@ -127,7 +129,7 @@ namespace DkTools.ErrorTagging
 				{
 					if (_model != null &&
 						_model.FileContext != FileContext.Include &&
-						ProbeEnvironment.FileExistsInApp(_model.FileName))
+						ProbeEnvironment.CurrentAppSettings.FileExistsInApp(_model.FileName))
 					{
 						if (ProbeToolsPackage.Instance.EditorOptions.RunBackgroundFecOnSave)
 						{
@@ -145,7 +147,7 @@ namespace DkTools.ErrorTagging
 							if (fileStore == null) return;
 
 							var fileName = VsTextUtil.TryGetDocumentFileName(textBuffer);
-							var preprocessedModel = fileStore.CreatePreprocessedModel(fileName, textBuffer.CurrentSnapshot, false, "Background Code Analysis");
+							var preprocessedModel = fileStore.CreatePreprocessedModel(_model.AppSettings, fileName, textBuffer.CurrentSnapshot, false, "Background Code Analysis");
 
 							var ca = new CodeAnalysis.CodeAnalyzer(null, preprocessedModel);
 							ca.Run();

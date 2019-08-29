@@ -22,10 +22,12 @@ namespace DkTools.Run
 
 		private Control _focusControl = null;
 		private RunOptions _options;
+		private ProbeAppSettings _appSettings;
 		
 		public RunForm()
 		{
 			_options = ProbeToolsPackage.Instance.RunOptions;
+			_appSettings = ProbeEnvironment.CurrentAppSettings;
 
 			InitializeComponent();
 		}
@@ -160,7 +162,7 @@ namespace DkTools.Run
 			{
 				using (var pr = new ProcessRunner())
 				{
-					int exitCode = pr.ExecuteProcess("setdbdat", "today force", ProbeEnvironment.TempDir, true);
+					int exitCode = pr.ExecuteProcess("setdbdat", "today force", _appSettings.TempDir, true);
 					if (exitCode != 0)
 					{
 						this.ShowError(string.Format("\"setdbdat today force\" returned exit code {0}.\n\n" +
@@ -173,7 +175,7 @@ namespace DkTools.Run
 
 			using (Process proc = new Process())
 			{
-				var platformPath = ProbeEnvironment.PlatformPath;
+				var platformPath = _appSettings.PlatformPath;
 				if (string.IsNullOrEmpty(platformPath))
 				{
 					this.ShowError(Res.Err_DkPlatformDirUnknown);
@@ -192,7 +194,7 @@ namespace DkTools.Run
 				info.RedirectStandardOutput = false;
 				info.RedirectStandardError = false;
 				info.CreateNoWindow = false;
-				info.WorkingDirectory = ProbeEnvironment.ExeDirs.FirstOrDefault();
+				info.WorkingDirectory = _appSettings.ExeDirs.FirstOrDefault();
 				proc.StartInfo = info;
 				if (!proc.Start())
 				{
@@ -212,7 +214,7 @@ namespace DkTools.Run
 
 			using (Process proc = new Process())
 			{
-				var platformPath = ProbeEnvironment.PlatformPath;
+				var platformPath = _appSettings.PlatformPath;
 				if (string.IsNullOrEmpty(platformPath))
 				{
 					this.ShowError(Res.Err_DkPlatformDirUnknown);
@@ -231,7 +233,7 @@ namespace DkTools.Run
 				info.RedirectStandardOutput = false;
 				info.RedirectStandardError = false;
 				info.CreateNoWindow = false;
-				info.WorkingDirectory = ProbeEnvironment.ExeDirs.FirstOrDefault();
+				info.WorkingDirectory = _appSettings.ExeDirs.FirstOrDefault();
 				proc.StartInfo = info;
 				if (!proc.Start())
 				{
@@ -245,7 +247,7 @@ namespace DkTools.Run
 
 		private bool RunLoadSam(Run.RunOptions options)
 		{
-			string exeFileName = Path.Combine(Path.Combine(ProbeEnvironment.ExeDirs.FirstOrDefault(), "uattools"), "loadsam.exe");
+			string exeFileName = Path.Combine(Path.Combine(_appSettings.ExeDirs.FirstOrDefault(), "uattools"), "loadsam.exe");
 			if (!File.Exists(exeFileName)) return false;
 
 			string args = string.Format("/Nloadsam {0}", options.LoadSamTime);

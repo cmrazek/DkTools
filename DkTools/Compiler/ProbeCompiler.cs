@@ -134,6 +134,12 @@ namespace DkTools.Compiler
 		private void CompileThread()
 		{
 			var startTime = DateTime.Now;
+			var appSettings = ProbeEnvironment.CurrentAppSettings;
+			if (!appSettings.Initialized)
+			{
+				WriteLine("Aborting compile because no current WBDK app is loaded.");
+				return;
+			}
 
 			while (!_mutex.WaitOne(1000))
 			{
@@ -149,9 +155,9 @@ namespace DkTools.Compiler
 				switch (_method)
 				{
 					case CompileMethod.Compile:
-						WriteLine("Starting compile for application '{0}' at {1}.", ProbeEnvironment.CurrentApp, startTime.ToString(k_timeStampFormat));
+						WriteLine("Starting compile for application '{0}' at {1}.", appSettings.AppName, startTime.ToString(k_timeStampFormat));
 
-						if (DoCompile())
+						if (DoCompile(appSettings))
 						{
 							var endTime = DateTime.Now;
 							var elapsed = endTime - startTime;
@@ -160,10 +166,10 @@ namespace DkTools.Compiler
 						break;
 
 					case CompileMethod.Dccmp:
-						WriteLine("Starting dccmp for application '{0}' at {1}.", ProbeEnvironment.CurrentApp, startTime.ToString(k_timeStampFormat));
+						WriteLine("Starting dccmp for application '{0}' at {1}.", appSettings.AppName, startTime.ToString(k_timeStampFormat));
 						ProbeToolsPackage.Instance.SetStatusText("DK dccmp starting...");
 
-						if (DoDccmp())
+						if (DoDccmp(appSettings))
 						{
 							var endTime = DateTime.Now;
 							var elapsed = endTime - startTime;
@@ -172,10 +178,10 @@ namespace DkTools.Compiler
 						break;
 
 					case CompileMethod.Credelix:
-						WriteLine("Starting credelix for application '{0}' at {1}.", ProbeEnvironment.CurrentApp, startTime.ToString(k_timeStampFormat));
+						WriteLine("Starting credelix for application '{0}' at {1}.", appSettings.AppName, startTime.ToString(k_timeStampFormat));
 						ProbeToolsPackage.Instance.SetStatusText("DK credelix starting...");
 
-						if (DoCredelix())
+						if (DoCredelix(appSettings))
 						{
 							var endTime = DateTime.Now;
 							var elapsed = endTime - startTime;
@@ -197,7 +203,7 @@ namespace DkTools.Compiler
 			}
 		}
 
-		private bool DoCompile()
+		private bool DoCompile(ProbeAppSettings appSettings)
 		{
 			try
 			{
@@ -207,7 +213,7 @@ namespace DkTools.Compiler
 				_numErrors = _numWarnings = 0;
 				_buildFailed = false;
 
-				var workingDir = ProbeEnvironment.ObjectDir;
+				var workingDir = appSettings.ObjectDir;
 				if (string.IsNullOrWhiteSpace(workingDir))
 				{
 					WriteLine("DK object directory not configured.");
@@ -226,8 +232,8 @@ namespace DkTools.Compiler
 				info.RedirectStandardOutput = true;
 				info.RedirectStandardError = true;
 				info.CreateNoWindow = true;
-				info.WorkingDirectory = ProbeEnvironment.ObjectDir;
-                ProbeEnvironment.MergeEnvironmentVariables(info.EnvironmentVariables);
+				info.WorkingDirectory = appSettings.ObjectDir;
+                appSettings.MergeEnvironmentVariables(info.EnvironmentVariables);
 
 				WriteLine(string.Concat("pc ", switches));
 
@@ -288,7 +294,7 @@ namespace DkTools.Compiler
 				{
 					WriteLine("Compile succeeded; running DCCMP...");
 					ProbeToolsPackage.Instance.SetStatusText("DK compile succeeded; running DCCMP...");
-					if (!DoDccmp()) return false;
+					if (!DoDccmp(appSettings)) return false;
 				}
 
 				if (_numWarnings > 0) ProbeToolsPackage.Instance.SetStatusText("DK compile succeeded with warnings");
@@ -316,20 +322,20 @@ namespace DkTools.Compiler
 			}
 		}
 
-		private bool DoDccmp()
+		private bool DoDccmp(ProbeAppSettings appSettings)
 		{
 			try 
 			{
 				ProbeToolsPackage.Instance.SetStatusText("DCCMP starting...");
 
 				_proc = new Process();
-				var switches = GenerateDccmpSwitches();
+				var switches = GenerateDccmpSwitches(appSettings);
 				var info = new ProcessStartInfo("dccmp.exe", switches);
 				info.UseShellExecute = false;
 				info.RedirectStandardOutput = true;
 				info.RedirectStandardError = true;
 				info.CreateNoWindow = true;
-				info.WorkingDirectory = ProbeEnvironment.ObjectDir;
+				info.WorkingDirectory = appSettings.ObjectDir;
 				_proc.StartInfo = info;
 
 				WriteLine("dccmp " + switches);
@@ -382,20 +388,20 @@ namespace DkTools.Compiler
 			}
 		}
 
-		private bool DoCredelix()
+		private bool DoCredelix(ProbeAppSettings appSettings)
 		{
 			try
 			{
 				ProbeToolsPackage.Instance.SetStatusText("Probe credelix starting...");
 
 				_proc = new Process();
-				var switches = GenerateCredelixSwitches();
+				var switches = GenerateCredelixSwitches(appSettings);
 				var info = new ProcessStartInfo("credelix.exe", switches);
 				info.UseShellExecute = false;
 				info.RedirectStandardOutput = true;
 				info.RedirectStandardError = true;
 				info.CreateNoWindow = true;
-				info.WorkingDirectory = ProbeEnvironment.ObjectDir;
+				info.WorkingDirectory = appSettings.ObjectDir;
 				_proc.StartInfo = info;
 
 				WriteLine("credelix " + switches);
@@ -632,11 +638,11 @@ namespace DkTools.Compiler
 			return ProbeToolsPackage.Instance.ProbeExplorerOptions.CompileArguments;
 		}
 
-		private string GenerateDccmpSwitches()
+		private string GenerateDccmpSwitches(ProbeAppSettings appSettings)
 		{
 			var sb = new StringBuilder();
 			sb.Append("/P \"");
-			sb.Append(ProbeEnvironment.CurrentApp);
+			sb.Append(appSettings.AppName);
 			sb.Append('\"');
 
 			var custom = ProbeToolsPackage.Instance.ProbeExplorerOptions.DccmpArguments;
@@ -649,11 +655,11 @@ namespace DkTools.Compiler
 			return sb.ToString();
 		}
 
-		private string GenerateCredelixSwitches()
+		private string GenerateCredelixSwitches(ProbeAppSettings appSettings)
 		{
 			var sb = new StringBuilder();
 			sb.Append("/P \"");
-			sb.Append(ProbeEnvironment.CurrentApp);
+			sb.Append(appSettings.AppName);
 			sb.Append('\"');
 
 			var custom = ProbeToolsPackage.Instance.ProbeExplorerOptions.CredelixArguments;

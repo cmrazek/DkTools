@@ -61,23 +61,23 @@ namespace DkTools.Classifier
 			}
 		}
 
-		public int GetStateForPosition(SnapshotPoint snapPt, string fileName)
+		public int GetStateForPosition(SnapshotPoint snapPt, string fileName, ProbeAppSettings appSettings)
 		{
-			return GetStateForPosition(snapPt.Position, snapPt.Snapshot, fileName);
+			return GetStateForPosition(snapPt.Position, snapPt.Snapshot, fileName, appSettings);
 		}
 
-		public int GetStateForPosition(int pos, ITextSnapshot snapshot, string fileName)
+		public int GetStateForPosition(int pos, ITextSnapshot snapshot, string fileName, ProbeAppSettings appSettings)
 		{
 			_snapshot = snapshot;
 
 			var line = _snapshot.GetLineFromPosition(pos);
-			var state = GetStateForLineStart(line.LineNumber, snapshot, fileName);
+			var state = GetStateForLineStart(line.LineNumber, snapshot, fileName, appSettings);
 			var lineStartPos = line.Start.Position;
 
 			var fileStore = CodeModel.FileStore.GetOrCreateForTextBuffer(snapshot.TextBuffer);
 			if (fileStore == null) return 0;
 
-			var model = fileStore.GetMostRecentModel(fileName, snapshot, "GetStateForPosition");
+			var model = fileStore.GetMostRecentModel(appSettings, fileName, snapshot, "GetStateForPosition");
 
 			if (lineStartPos <= pos)
 			{
@@ -93,7 +93,7 @@ namespace DkTools.Classifier
 			return state;
 		}
 
-		public int GetStateForLineStart(int lineNum, ITextSnapshot snapshot, string fileName)
+		public int GetStateForLineStart(int lineNum, ITextSnapshot snapshot, string fileName, ProbeAppSettings appSettings)
 		{
 			if (_states.Count <= lineNum)
 			{
@@ -109,7 +109,7 @@ namespace DkTools.Classifier
 				var fileStore = CodeModel.FileStore.GetOrCreateForTextBuffer(snapshot.TextBuffer);
 				if (fileStore == null) return 0;
 
-				var model = fileStore.GetMostRecentModel(fileName, snapshot, "GetStateForLine()");
+				var model = fileStore.GetMostRecentModel(appSettings, fileName, snapshot, "GetStateForLine()");
 				_snapshot = snapshot;
 
 				var tokenInfo = new ProbeClassifierScanner.TokenInfo();
@@ -140,9 +140,9 @@ namespace DkTools.Classifier
 		/// <summary>
 		/// Returns true if the position is not inside a comment, string literal or disabled code.
 		/// </summary>
-		public bool IsPositionInLiveCode(int pos, ITextSnapshot snapshot, string fileName)
+		public bool IsPositionInLiveCode(int pos, ITextSnapshot snapshot, string fileName, ProbeAppSettings appSettings)
 		{
-            return State.IsInLiveCode(GetStateForPosition(pos, snapshot, fileName));
+            return State.IsInLiveCode(GetStateForPosition(pos, snapshot, fileName, appSettings));
 		}
 	}
 }

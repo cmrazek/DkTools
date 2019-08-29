@@ -1,5 +1,10 @@
 DkTools ChangeLog
 ____________________________________________________________________________________________________
+Version 1.5.4 - (WIP):
+
+- Loading of DK settings and dictionary now done on background thread when VS starts.
+
+____________________________________________________________________________________________________
 Version 1.5.3 - Aug 28, 2019:
 
 - Fixed bug where auto-completion was triggering inside comments or strings.

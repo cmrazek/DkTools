@@ -26,6 +26,7 @@ namespace DkTools.CodeModel
 		private string _primaryFileName;
 		private string _origContent;
 		private Dictionary<string, string> _localFileContent = new Dictionary<string, string>();
+		private ProbeAppSettings _appSettings;
 
 		private enum MergeMode
 		{
@@ -52,8 +53,12 @@ namespace DkTools.CodeModel
 		public FileMerger()
 		{ }
 
-		public void MergeFile(string fileName, string content, bool showMergeComments, bool fileIsPrimary)
+		public void MergeFile(ProbeAppSettings appSettings, string fileName, string content, bool showMergeComments, bool fileIsPrimary)
 		{
+			if (appSettings == null) throw new ArgumentNullException(nameof(appSettings));
+
+			_appSettings = appSettings;
+
 			// Locate all needed copies of files
 			_primaryFileName = fileName;
 			_origFileName = "";
@@ -108,7 +113,7 @@ namespace DkTools.CodeModel
 		{
 			fileName = Path.GetFullPath(fileName);
 
-			foreach (var dir in ProbeEnvironment.SourceDirs)
+			foreach (var dir in _appSettings.SourceDirs)
 			{
 				if ((dir.EndsWith("\\") && fileName.StartsWith(dir, StringComparison.OrdinalIgnoreCase)) ||
 					(!dir.EndsWith("\\") && fileName.StartsWith(dir + "\\", StringComparison.OrdinalIgnoreCase)))
@@ -119,7 +124,7 @@ namespace DkTools.CodeModel
 				}
 			}
 
-			foreach (var dir in ProbeEnvironment.IncludeDirs)
+			foreach (var dir in _appSettings.IncludeDirs)
 			{
 				if ((dir.EndsWith("\\") && fileName.StartsWith(dir, StringComparison.OrdinalIgnoreCase)) ||
 					(!dir.EndsWith("\\") && fileName.StartsWith(dir + "\\", StringComparison.OrdinalIgnoreCase)))
@@ -143,7 +148,7 @@ namespace DkTools.CodeModel
 			if (fileName.EndsWith("&") || fileName.EndsWith("+")) fileName = fileName.Substring(0, fileName.Length - 1);
 			if (string.IsNullOrEmpty(fileName)) return;
 
-			foreach (string probeDir in ProbeEnvironment.SourceDirs)
+			foreach (string probeDir in _appSettings.SourceDirs)
 			{
 				try
 				{
@@ -159,7 +164,7 @@ namespace DkTools.CodeModel
 			if (string.IsNullOrEmpty(_origFileName))
 			{
 				_localFileNames.Clear();
-				foreach (string includeDir in ProbeEnvironment.IncludeDirs)
+				foreach (string includeDir in _appSettings.IncludeDirs)
 				{
 					try
 					{

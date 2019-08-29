@@ -28,8 +28,9 @@ namespace DkTools.Navigation
 			var store = FileStore.GetOrCreateForTextBuffer(view.TextBuffer);
 			if (store == null) return;
 
+			var appSettings = ProbeEnvironment.CurrentAppSettings;
 			var fileName = VsTextUtil.TryGetDocumentFileName(view.TextBuffer);
-			var model = store.GetMostRecentModel(fileName, view.TextSnapshot, "GoToBraceHelper.Trigger()");
+			var model = store.GetMostRecentModel(appSettings, fileName, view.TextSnapshot, "GoToBraceHelper.Trigger()");
 
 			var modelPos = model.AdjustPosition(caretPt.Position, caretPt.Snapshot);
 			var selTokens = model.File.FindDownwardTouching(modelPos).ToArray();

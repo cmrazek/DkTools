@@ -128,10 +128,11 @@ namespace DkTools.Snippets
 			{
 				var tabSize = _view.GetTabSize();
 				var keepTabs = _view.GetKeepTabs();
+				var appSettings = ProbeEnvironment.CurrentAppSettings;
 
 				foreach (var span in ts)
 				{
-					SmartIndenting.ProbeSmartIndent.FixIndentingBetweenLines(buf, span.iStartLine, span.iEndLine, tabSize, keepTabs);
+					SmartIndenting.ProbeSmartIndent.FixIndentingBetweenLines(buf, span.iStartLine, span.iEndLine, tabSize, keepTabs, appSettings);
 				}
 			}
 

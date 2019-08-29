@@ -16,6 +16,7 @@ namespace DkTools.CodeModel
 		private string _fileName;
 		private string _fileTitle;
 		private Microsoft.VisualStudio.Text.ITextSnapshot _snapshot;
+		private ProbeAppSettings _appSettings;
 		private FileStore _store;
 		private DefinitionProvider _defProvider;
 		private PreprocessorModel _prepModel;
@@ -28,24 +29,24 @@ namespace DkTools.CodeModel
 		private CodeModel()
 		{ }
 
-		private CodeModel(FileStore store)
+		private CodeModel(ProbeAppSettings appSettings, FileStore store)
 		{
-			if (store == null) throw new ArgumentNullException("store");
-			_store = store;
+			_appSettings = appSettings ?? throw new ArgumentNullException(nameof(appSettings));
+			_store = store ?? throw new ArgumentNullException(nameof(store));
 		}
 
-		public static CodeModel CreateVisibleModelForPreprocessed(CodeSource visibleSource, FileStore store, PreprocessorModel prepModel)
+		public static CodeModel CreateVisibleModelForPreprocessed(CodeSource visibleSource, ProbeAppSettings appSettings, FileStore store, PreprocessorModel prepModel)
 		{
-			var model = new CodeModel(store);
+			var model = new CodeModel(appSettings, store);
 			var codeFile = new CodeFile(model);
 
 			model.Init(visibleSource, codeFile, prepModel.FileName, true, prepModel.DefinitionProvider);
 			return model;
 		}
 
-		public static CodeModel CreateFullModelForPreprocessed(CodeSource source, FileStore store, PreprocessorModel prepModel)
+		public static CodeModel CreateFullModelForPreprocessed(CodeSource source, ProbeAppSettings appSettings, FileStore store, PreprocessorModel prepModel)
 		{
-			var model = new CodeModel(store);
+			var model = new CodeModel(appSettings, store);
 			var codeFile = new CodeFile(model);
 
 			model.Init(source, codeFile, prepModel.FileName, false, prepModel.DefinitionProvider);
@@ -173,6 +174,11 @@ namespace DkTools.CodeModel
 			get { return _file; }
 		}
 
+		public ProbeAppSettings AppSettings
+		{
+			get { return _appSettings; }
+		}
+
 		public FileStore FileStore
 		{
 			get { return _store; }
@@ -189,10 +195,10 @@ namespace DkTools.CodeModel
 
 		public CodeFile GetIncludeFile(string sourceFileName, string fileName, bool searchCurrentDir, IEnumerable<string> parentFiles)
 		{
-			var includeFile = _store.GetIncludeFile(sourceFileName, fileName, searchCurrentDir, parentFiles);
+			var includeFile = _store.GetIncludeFile(_appSettings, sourceFileName, fileName, searchCurrentDir, parentFiles);
 			if (includeFile == null) return null;
 
-			return includeFile.GetCodeFile(this, parentFiles);
+			return includeFile.GetCodeFile(_appSettings, this, parentFiles);
 		}
 
 		public IEnumerable<CodeFile> ImplicitIncludes

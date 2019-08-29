@@ -78,8 +78,9 @@ namespace DkTools.SignatureHelp
 						typedChar = (char)(ushort)Marshal.GetObjectForNativeVariant(pvaIn);
 						if (typedChar == '(')
 						{
+							var appSettings = ProbeEnvironment.CurrentAppSettings;
 							var fileName = VsTextUtil.TryGetDocumentFileName(_textView.TextBuffer);
-							if (_textView.Caret.Position.BufferPosition.IsInLiveCode(fileName))
+							if (_textView.Caret.Position.BufferPosition.IsInLiveCode(fileName, appSettings))
 							{
 								SnapshotPoint point = _textView.Caret.Position.BufferPosition;
 								var pos = point.Position;
@@ -100,13 +101,14 @@ namespace DkTools.SignatureHelp
 						}
 						else if (typedChar == ',' && (_session == null || _session.IsDismissed))
 						{
+							var appSettings = ProbeEnvironment.CurrentAppSettings;
 							var fileName = VsTextUtil.TryGetDocumentFileName(_textView.TextBuffer);
-							if (_textView.Caret.Position.BufferPosition.IsInLiveCode(fileName))
+							if (_textView.Caret.Position.BufferPosition.IsInLiveCode(fileName, appSettings))
 							{
 								var fileStore = CodeModel.FileStore.GetOrCreateForTextBuffer(_textView.TextBuffer);
 								if (fileStore != null)
 								{
-									var model = fileStore.GetMostRecentModel(fileName, _textView.TextSnapshot, "Signature help command handler - after ','");
+									var model = fileStore.GetMostRecentModel(appSettings, fileName, _textView.TextSnapshot, "Signature help command handler - after ','");
 									var modelPos = _textView.Caret.Position.BufferPosition.TranslateTo(model.Snapshot, PointTrackingMode.Negative).Position;
 
 									var argsToken = model.File.FindDownward<CodeModel.Tokens.ArgsToken>(modelPos).Where(t => t.Span.Start < modelPos && (t.Span.End > modelPos || !t.IsTerminated)).LastOrDefault();

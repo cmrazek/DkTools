@@ -25,7 +25,6 @@ namespace DkTools.ProbeExplorer
 	public partial class ProbeExplorerControl : UserControl, INotifyPropertyChanged
 	{
 		#region Variables
-		private List<string> _fileList;
 		private BackgroundDeferrer _dictTreeDeferrer = new BackgroundDeferrer();
 		private TextFilter _dictFilter = new TextFilter();
 
@@ -36,6 +35,8 @@ namespace DkTools.ProbeExplorer
 		private BitmapImage _relationshipImg;
 
 		private static BitmapImage _functionImg;
+
+		private bool _suppressAppChange = false;
 		#endregion
 
 		#region Constants
@@ -98,8 +99,9 @@ namespace DkTools.ProbeExplorer
 		{
 			try
 			{
-				RefreshAppCombo();
-				RefreshFileTree();
+				var appSettings = ProbeEnvironment.CurrentAppSettings;
+				RefreshAppCombo(appSettings);
+				RefreshFileTree(appSettings);
 				RefreshDictTree();
 
 				UpdateForFileFilter();
@@ -122,22 +124,30 @@ namespace DkTools.ProbeExplorer
 		#endregion
 
 		#region App Combo
-		private void RefreshAppCombo()
+		private void RefreshAppCombo(ProbeAppSettings appSettings)
 		{
-			c_appCombo.Items.Clear();
-
-			if (ProbeEnvironment.Initialized)
+			_suppressAppChange = true;
+			try
 			{
-				var currentApp = ProbeEnvironment.CurrentApp;
-				string selectApp = null;
+				c_appCombo.Items.Clear();
 
-				foreach (var appName in ProbeEnvironment.AppNames)
+				if (appSettings.Initialized)
 				{
-					c_appCombo.Items.Add(appName);
-					if (appName == currentApp) selectApp = appName;
-				}
+					var currentApp = appSettings.AppName;
+					string selectApp = null;
 
-				if (selectApp != null) c_appCombo.SelectedItem = selectApp;
+					foreach (var appName in appSettings.AllAppNames)
+					{
+						c_appCombo.Items.Add(appName);
+						if (appName == currentApp) selectApp = appName;
+					}
+
+					if (selectApp != null) c_appCombo.SelectedItem = selectApp;
+				}
+			}
+			finally
+			{
+				_suppressAppChange = false;
 			}
 		}
 
@@ -149,14 +159,12 @@ namespace DkTools.ProbeExplorer
 				{
 					await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
 
-					var currentApp = ProbeEnvironment.CurrentApp;
-					c_appCombo.SelectedItem = (from a in c_appCombo.Items.Cast<string>() where a == currentApp select a).FirstOrDefault();
+					var appSettings = ProbeEnvironment.CurrentAppSettings;
+					c_appCombo.SelectedItem = (from a in c_appCombo.Items.Cast<string>() where a == appSettings.AppName select a).FirstOrDefault();
 
-					//RefreshForEnvironment();
-					RefreshAppCombo();
-					RefreshFileTree();
+					RefreshAppCombo(appSettings);
+					RefreshFileTree(appSettings);
 					RefreshDictTree();
-					ProbeToolsPackage.Instance.FunctionFileScanner.RestartScanning();
 					CodeModel.FileStore.FireAllModelRebuildRequired();
 					ProbeToolsPackage.Instance.EditorOptions.FireEditorRefresh();
 				});
@@ -171,10 +179,12 @@ namespace DkTools.ProbeExplorer
 		{
 			try
 			{
+				if (_suppressAppChange) return;
+
 				var selectedApp = c_appCombo.SelectedItem as string;
-				if (!string.IsNullOrEmpty(selectedApp) && ProbeEnvironment.Initialized)
+				if (!string.IsNullOrEmpty(selectedApp) && ProbeEnvironment.CurrentAppSettings.Initialized)
 				{
-					ProbeEnvironment.CurrentApp = selectedApp;
+					ProbeEnvironment.ReloadAsync(selectedApp, true);
 				}
 			}
 			catch (Exception ex)
@@ -203,19 +213,22 @@ namespace DkTools.ProbeExplorer
 			public string path;
 		}
 
-		private void RefreshFileTree()
+		private void RefreshFileTree(ProbeAppSettings appSettings)
 		{
 			c_fileTree.Items.Clear();
 
-			if (ProbeEnvironment.Initialized)
+			if (appSettings.Initialized)
 			{
-				foreach (var dir in ProbeEnvironment.SourceDirs)
+				foreach (var dir in appSettings.SourceDirs)
 				{
 					c_fileTree.Items.Add(CreateDirTreeViewItem(dir, true));
 				}
 			}
 
-			RefreshFileList();
+			if (!string.IsNullOrEmpty(c_fileFilterTextBox.Text))
+			{
+				c_fileFilterTextBox.Text = string.Empty;
+			}
 		}
 
 		void CreateFileMenuItem_Click(object sender, RoutedEventArgs e)
@@ -518,34 +531,6 @@ namespace DkTools.ProbeExplorer
 		#endregion
 
 		#region File List
-		private void RefreshFileList()
-		{
-			if (ProbeEnvironment.Initialized)
-			{
-				Log.Write(LogLevel.Info, "Refreshing DK Explorer file list...");
-				var startTime = DateTime.Now;
-
-				var hiddenExt = ProbeToolsPackage.Instance.ProbeExplorerOptions.HiddenExtensions;
-				if (string.IsNullOrWhiteSpace(hiddenExt)) hiddenExt = Constants.DefaultHiddenExtensions;
-
-				var hiddenExtList = new HashSet<string>(from e in Util.ParseWordList(hiddenExt)
-														select e.StartsWith(".") ? e.ToLower() : string.Concat(".", e.ToLower()));
-
-				_fileList = new List<string>();
-				foreach (var fileName in ProbeEnvironment.GetAllSourceIncludeFiles())
-				{
-					var extLower = System.IO.Path.GetExtension(fileName).ToLower();
-					if (hiddenExtList.Contains(extLower)) continue;
-					_fileList.Add(fileName);
-				}
-
-				if (!string.IsNullOrEmpty(c_fileFilterTextBox.Text)) c_fileFilterTextBox.Text = string.Empty;
-
-				var elapsed = DateTime.Now.Subtract(startTime);
-				Log.Write(LogLevel.Info, "Finished refreshing DK Explorer file list. (elapsed: {0})", elapsed);
-			}
-		}
-
 		private void UpdateForFileFilter()
 		{
 			var filterText = c_fileFilterTextBox.Text;
@@ -562,28 +547,39 @@ namespace DkTools.ProbeExplorer
 
 				var numItems = 0;
 
-				if (_fileList != null)
-				{
-					var filter = new TextFilter(filterText);
-					foreach (var file in _fileList)
-					{
-						if (filter.Match(System.IO.Path.GetFileName(file)))
-						{
-							if (numItems >= Constants.FileListMaxItems)
-							{
-								c_fileList.Items.Add(CreateFileListOverflowItem());
-								break;
-							}
+				var hiddenExt = GetHiddenExtensions();
+				var appSettings = ProbeEnvironment.CurrentAppSettings;
 
-							c_fileList.Items.Add(CreateFileListItem(file));
-							numItems++;
+				var filter = new TextFilter(filterText);
+				foreach (var file in appSettings.SourceAndIncludeFiles)
+				{
+					if (hiddenExt.Contains(System.IO.Path.GetExtension(file).ToLower())) continue;
+
+					if (filter.Match(System.IO.Path.GetFileName(file)))
+					{
+						if (numItems >= Constants.FileListMaxItems)
+						{
+							c_fileList.Items.Add(CreateFileListOverflowItem());
+							break;
 						}
+
+						c_fileList.Items.Add(CreateFileListItem(file));
+						numItems++;
 					}
 				}
 
 				c_fileTree.Visibility = System.Windows.Visibility.Hidden;
 				c_fileList.Visibility = System.Windows.Visibility.Visible;
 			}
+		}
+
+		private HashSet<string> GetHiddenExtensions()
+		{
+			var hiddenExt = ProbeToolsPackage.Instance.ProbeExplorerOptions.HiddenExtensions;
+			if (string.IsNullOrWhiteSpace(hiddenExt)) hiddenExt = Constants.DefaultHiddenExtensions;
+			var hiddenExtList = new HashSet<string>(from e in Util.ParseWordList(hiddenExt)
+													select e.StartsWith(".") ? e.ToLower() : string.Concat(".", e.ToLower()));
+			return hiddenExtList;
 		}
 
 		private ListBoxItem CreateFileListItem(string fileName)
@@ -983,7 +979,7 @@ namespace DkTools.ProbeExplorer
 
 			Shell.OpenDocument(fileName);
 
-			RefreshFileTree();
+			RefreshFileTree(ProbeEnvironment.CurrentAppSettings);
 			SelectFileInTree(fileName);
 		}
 
@@ -1009,8 +1005,9 @@ namespace DkTools.ProbeExplorer
 						_activeView = view;
 						_activeSnapshot = snapshot;
 
+						var appSettings = ProbeEnvironment.CurrentAppSettings;
 						var fileName = VsTextUtil.TryGetDocumentFileName(view.TextBuffer);
-						_activeFunctions = (from f in fileStore.GetFunctionDropDownList(fileName, snapshot)
+						_activeFunctions = (from f in fileStore.GetFunctionDropDownList(appSettings, fileName, snapshot)
 											orderby f.Name.ToLower()
 											select new FunctionListItem(f)).ToArray();
 						ApplyFunctionFilter();

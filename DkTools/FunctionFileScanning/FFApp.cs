@@ -12,7 +12,7 @@ namespace DkTools.FunctionFileScanning
 	internal class FFApp
 	{
 		private FFScanner _scanner;
-		private string _name;
+		private ProbeAppSettings _appSettings;
 		private long _id;
 		private Dictionary<string, FFFile> _files = new Dictionary<string, FFFile>();
 		private Dictionary<string, DateTime> _invisibleFiles = new Dictionary<string, DateTime>();
@@ -21,12 +21,12 @@ namespace DkTools.FunctionFileScanning
 		private GroupedList<string, FFClass> _consolidatedClasses;
 		private GroupedList<string, FFPermEx> _consolidatedPermExs;
 
-		public FFApp(FFScanner scanner, FFDatabase db, string name)
+		public FFApp(FFScanner scanner, FFDatabase db, ProbeAppSettings appSettings)
 		{
-			if (scanner == null) throw new ArgumentNullException("scanner");
+			_scanner = scanner ?? throw new ArgumentNullException(nameof(scanner));
+			_appSettings = appSettings ?? throw new ArgumentNullException(nameof(appSettings));
 
-			_scanner = scanner;
-			_name = name;
+			if (!_appSettings.Initialized) return;
 
 			var conn = db.Connection;
 			if (conn == null) return;
@@ -34,7 +34,7 @@ namespace DkTools.FunctionFileScanning
 			// Load app info
 			using (var cmd = db.CreateCommand("select rowid from app where name = @name"))
 			{
-				cmd.Parameters.AddWithValue("@name", _name);
+				cmd.Parameters.AddWithValue("@name", _appSettings.AppName);
 				using (var rdr = cmd.ExecuteReader(CommandBehavior.SingleRow))
 				{
 					if (rdr.Read())
@@ -84,7 +84,7 @@ namespace DkTools.FunctionFileScanning
 			{
 				using (var cmd = db.CreateCommand("insert into app (name) values (@name); select last_insert_rowid();"))
 				{
-					cmd.Parameters.AddWithValue("@name", _name);
+					cmd.Parameters.AddWithValue("@name", _appSettings.AppName);
 					_id = Convert.ToInt64(cmd.ExecuteScalar());
 				}
 
@@ -102,7 +102,7 @@ namespace DkTools.FunctionFileScanning
 
 		public string Name
 		{
-			get { return _name; }
+			get { return _appSettings.AppName; }
 		}
 
 		public void OnVisibleFileChanged(FFFile file)
@@ -417,7 +417,7 @@ namespace DkTools.FunctionFileScanning
 		private void PurgeNonexistentApps(FFDatabase db)
 		{
 			var appsToRemove = new Dictionary<long, string>();
-			var appNames = ProbeEnvironment.AppNames.ToArray();
+			var appNames = _appSettings.AllAppNames.ToArray();
 
 			using (var cmd = db.CreateCommand("select rowid, name from app"))
 			{

@@ -20,22 +20,22 @@ namespace DkTools
 		#region Construction
 		public static void Initialize()
 		{
-			_ = Task.Run(() => { ReloadAsync(null, false); });
+			ReloadAsync(null, false);
 		}
 
 		internal static void OnSettingsSaved()
 		{
 			_probeExtensions = null;
 		}
-
-		public static bool Initialized
-		{
-			get { return _appSettings.Initialized; }
-		}
 		#endregion
 
 		#region PSelect
-		private static ProbeAppSettings _appSettings = new ProbeAppSettings();
+		private static ProbeAppSettings _currentApp = new ProbeAppSettings();
+
+		public static ProbeAppSettings CurrentAppSettings
+		{
+			get { return _currentApp; }
+		}
 
 		private static ProbeAppSettings ReloadCurrentApp(string appName = "")
 		{
@@ -62,7 +62,7 @@ namespace DkTools
 					appSettings.AppName = currentApp.Name;
 					appSettings.Initialized = true;
 					appSettings.PlatformPath = (env as PROBEENVSRVRLib.IProbeEnvPlatform).Folder;
-					appSettings.AppNames = LoadAppNames(env);
+					appSettings.AllAppNames = LoadAppNames(env);
 					appSettings.SourceDirs = LoadSourceDirs(currentApp);
 					appSettings.IncludeDirs = LoadIncludeDirs(currentApp, appSettings);
 					appSettings.LibDirs = LoadLibDirs(currentApp, appSettings);
@@ -72,6 +72,8 @@ namespace DkTools
 					appSettings.ReportDir = currentApp.ListingsPath;
 					appSettings.DataDir = currentApp.DataPath;
 					appSettings.LogDir = currentApp.LogPath;
+					appSettings.SourceFiles = LoadSourceFiles(appSettings);
+					appSettings.IncludeFiles = LoadIncludeFiles(appSettings);
 				}
 
 				var elapsed = DateTime.Now.Subtract(startTime);
@@ -95,18 +97,23 @@ namespace DkTools
 
 		public static void ReloadAsync(string appName, bool updateDefaultApp)
 		{
-			var appSettings = ReloadCurrentApp(appName);
-			ReloadTableList();
-
-			_appSettings = appSettings;
-			// TODO: notify that refreshes are required
-
-			AppChanged?.Invoke(null, EventArgs.Empty);
-
-			if (updateDefaultApp)
+			_ = Task.Run(() =>
 			{
-				TryUpdateDefaultCurrentApp();
-			}
+				var appSettings = ReloadCurrentApp(appName);
+				if (appSettings.Initialized)
+				{
+					ReloadTableList(appSettings);
+
+					_currentApp = appSettings;
+
+					AppChanged?.Invoke(null, EventArgs.Empty);
+
+					if (updateDefaultApp)
+					{
+						_currentApp.TryUpdateDefaultCurrentApp();
+					}
+				}
+			});
 		}
 
 		private static string[] LoadSourceDirs(PROBEENVSRVRLib.ProbeEnvApp currentApp)
@@ -141,16 +148,6 @@ namespace DkTools
 			return sourceDirs.ToArray();
 		}
 
-		public static IEnumerable<string> SourceDirs
-		{
-			get { return _appSettings.SourceDirs; }
-		}
-
-		public static string ObjectDir
-		{
-			get { return _appSettings.ObjectDir; }
-		}
-
 		private static string[] LoadExeDirs(PROBEENVSRVRLib.ProbeEnvApp currentApp)
 		{
 			if (currentApp == null) throw new ArgumentNullException(nameof(currentApp));
@@ -182,32 +179,7 @@ namespace DkTools
 
 			return exeDirs.ToArray();
 		}
-
-		public static IEnumerable<string> ExeDirs
-		{
-			get { return _appSettings.ExeDirs; }
-		}
-
-		public static string TempDir
-		{
-			get { return _appSettings.TempDir; }
-		}
-
-		public static string ReportDir
-		{
-			get { return _appSettings.ReportDir; }
-		}
-
-		public static string DataDir
-		{
-			get { return _appSettings.DataDir; }
-		}
-
-		public static string LogDir
-		{
-			get { return _appSettings.LogDir; }
-		}
-
+		
 		private static string[] LoadLibDirs(PROBEENVSRVRLib.ProbeEnvApp currentApp, ProbeAppSettings appSettings)
 		{
 			var list = new List<string>();
@@ -239,11 +211,6 @@ namespace DkTools
 			if (!string.IsNullOrEmpty(appSettings.PlatformPath)) list.Add(appSettings.PlatformPath);
 
 			return list.ToArray();
-		}
-
-		public static IEnumerable<string> LibDirs
-		{
-			get { return _appSettings.LibDirs; }
 		}
 
 		private static string[] LoadIncludeDirs(PROBEENVSRVRLib.ProbeEnvApp currentApp, ProbeAppSettings appSettings)
@@ -283,24 +250,6 @@ namespace DkTools
 			return list.ToArray();
 		}
 
-		public static IEnumerable<string> IncludeDirs
-		{
-			get { return _appSettings.IncludeDirs; }
-		}
-
-		/// <summary>
-		/// Gets a list of all source and include directories.
-		/// No effort is taken to remove duplicates.
-		/// </summary>
-		public static IEnumerable<string> SourceIncludeDirs
-		{
-			get
-			{
-				foreach (var dir in SourceDirs) yield return dir;
-				foreach (var dir in IncludeDirs) yield return dir;
-			}
-		}
-
 		private static string[] LoadAppNames(PROBEENVSRVRLib.ProbeEnv env)
 		{
 			var list = new List<string>();
@@ -312,106 +261,17 @@ namespace DkTools
 			}
 			return list.ToArray();
 		}
-
-		public static IEnumerable<string> AppNames
-		{
-			get { return _appSettings.AppNames; }
-		}
-
-		private const int k_defaultPort = 5001;
-
-		public static int SamPort
-		{
-			get
-			{
-				var portString = GetRegString("DB1SocketNumber", "");
-				if (string.IsNullOrEmpty(portString)) return k_defaultPort;
-
-				int port;
-				if (!int.TryParse(portString, out port)) return k_defaultPort;
-				return port;
-			}
-		}
-
-		public static string CurrentApp
-		{
-			get { return _appSettings.AppName; }
-			set
-			{
-				try
-				{
-					if (_appSettings.AppName != value)
-					{
-						_ = Task.Run(() => { ReloadAsync(value, true); });
-					}
-				}
-				catch (Exception ex)
-				{
-					Log.Error(ex, "Error when setting current Probe app.");
-				}
-			}
-		}
-
-		private static void TryUpdateDefaultCurrentApp()
-		{
-			if (string.IsNullOrEmpty(_appSettings.AppName)) return;
-
-			// Read the current value from the registry in read-only mode, to see if it needs updating.
-			using (var key = Registry.LocalMachine.OpenSubKey(Constants.WbdkRegKey, false))
-			{
-				var value = Convert.ToString(key.GetValue("CurrentConfig", string.Empty));
-				if (value == _appSettings.AppName)
-				{
-					// No update required.
-					return;
-				}
-			}
-
-			// Try to update the registry.
-			try
-			{
-				using (var key = Registry.LocalMachine.OpenSubKey(Constants.WbdkRegKey, true))
-				{
-					key.SetValue("CurrentConfig", _appSettings.AppName);
-				}
-			}
-			catch (System.Security.SecurityException ex)
-			{
-				var options = ProbeToolsPackage.Instance.ErrorSuppressionOptions;
-				if (!options.DkAppChangeAdminFailure)
-				{
-					var msg = "The system-wide default DK application can't be changed because access was denied. To resolve this problem, run Visual Studio as an administrator.";
-					var dlg = new ErrorDialog(msg, ex.ToString())
-					{
-						ShowUserSuppress = true,
-						Owner = System.Windows.Application.Current.MainWindow
-					};
-					dlg.ShowDialog();
-
-					if (options.DkAppChangeAdminFailure != dlg.UserSuppress)
-					{
-						options.DkAppChangeAdminFailure = dlg.UserSuppress;
-						options.SaveSettingsToStorage();
-					}
-				}
-			}
-		}
-
-		public static string PlatformPath
-		{
-			get { return _appSettings.PlatformPath; }
-		}
 		#endregion
 
 		#region Table List
-		private static void ReloadTableList()
+		private static void ReloadTableList(ProbeAppSettings appSettings)
 		{
 			try
 			{
 				Log.Write(LogLevel.Info, "Loading dictionary...");
 				var startTime = DateTime.Now;
 
-				DkDict.Dict.Load();
+				DkDict.Dict.Load(appSettings);
 
 				var elapsed = DateTime.Now.Subtract(startTime);
 				Log.Write(LogLevel.Info, "Successfully loaded dictionary (elapsed: {0})", elapsed);
@@ -425,9 +285,6 @@ namespace DkTools
 
 		#region File Paths
 		private static HashSet<string> _probeExtensions;
-		private static List<string> _sourceFiles;
-		private static List<string> _includeFiles;
-		private static List<string> _sourceAndIncludeFiles;
 
 		public static string LocateFileInPath(string fileName)
 		{
@@ -445,70 +302,6 @@ namespace DkTools
 				{ }
 			}
 			return "";
-		}
-
-		public static string GetRelativePathName(string pathName)
-		{
-			if (string.IsNullOrEmpty(pathName)) return "";
-
-			string fullFileName = Path.GetFullPath(pathName);
-
-			foreach (string sourceDir in SourceDirs)
-			{
-				if (fullFileName.Length > sourceDir.Length + 1 &&
-					fullFileName.StartsWith(sourceDir, StringComparison.OrdinalIgnoreCase))
-				{
-					string relPathName = fullFileName.Substring(sourceDir.Length);
-					if (relPathName.StartsWith("\\")) relPathName = relPathName.Substring(1);
-					return relPathName;
-				}
-			}
-
-			return "";
-		}
-
-		public static string FindBaseFile(string pathName)
-		{
-			if (string.IsNullOrEmpty(pathName)) return "";
-
-			string relPathName = GetRelativePathName(Path.GetFullPath(pathName));
-			if (string.IsNullOrEmpty(relPathName)) return "";
-			if (relPathName.EndsWith("&")) relPathName = relPathName.Substring(0, relPathName.Length - 1);
-
-			foreach (string dir in SourceDirs)
-			{
-				string testPathName = Path.Combine(dir, relPathName);
-				if (File.Exists(testPathName)) return testPathName;
-			}
-
-			return "";
-		}
-
-		public static IEnumerable<string> FindLocalFiles(string pathName, bool includeBaseFile)
-		{
-			List<string> files = new List<string>();
-
-			if (string.IsNullOrEmpty(pathName)) return files;
-
-			string relPathName = GetRelativePathName(Path.GetFullPath(pathName));
-			if (string.IsNullOrEmpty(relPathName)) return files;
-			if (relPathName.EndsWith("&")) relPathName = relPathName.Substring(0, relPathName.Length - 1);
-
-			foreach (string dir in SourceDirs)
-			{
-				string testPathName = Path.Combine(dir, relPathName);
-				if (includeBaseFile && File.Exists(testPathName)) files.Add(testPathName);
-
-				testPathName += "&";
-				if (File.Exists(testPathName)) files.Add(testPathName);
-			}
-
-			return files;
-		}
-
-		public static bool FileExistsInApp(string pathName)
-		{
-			return !string.IsNullOrEmpty(GetRelativePathName(Path.GetFullPath(pathName)));
 		}
 
 		/// <summary>
@@ -532,18 +325,16 @@ namespace DkTools
 			return _probeExtensions.Contains(fileExt.ToLower());
 		}
 
-		public static IEnumerable<string> GetAllSourceFiles()
+		private static string[] LoadSourceFiles(ProbeAppSettings appSettings)
 		{
-			if (_sourceFiles == null)
+			var sourceFiles = new List<string>();
+			foreach (var dir in appSettings.SourceDirs)
 			{
-				_sourceFiles = new List<string>();
-				foreach (var dir in SourceDirs)
-				{
-					if (string.IsNullOrWhiteSpace(dir)) continue;
-					_sourceFiles.AddRange(GetAllSourceFiles_ProcessDir(dir));
-				}
+				if (string.IsNullOrWhiteSpace(dir)) continue;
+				sourceFiles.AddRange(GetAllSourceFiles_ProcessDir(dir));
 			}
-			return _sourceFiles;
+
+			return sourceFiles.ToArray();
 		}
 
 		private static IEnumerable<string> GetAllSourceFiles_ProcessDir(string dir)
@@ -562,25 +353,24 @@ namespace DkTools
 			}
 		}
 
-		public static IEnumerable<string> GetAllIncludeFiles()
+		private static string[] LoadIncludeFiles(ProbeAppSettings appSettings)
 		{
-			if (_includeFiles == null)
+			var includeFiles = new List<string>();
+
+			foreach (var dir in appSettings.IncludeDirs)
 			{
-				_includeFiles = new List<string>();
-				foreach (var dir in IncludeDirs)
+				try
 				{
-					try
-					{
-						if (string.IsNullOrWhiteSpace(dir) || !Directory.Exists(dir)) continue;
-						_includeFiles.AddRange(GetAllIncludeFiles_ProcessDir(dir));
-					}
-					catch (Exception ex)
-					{
-						Log.Error(ex, "Exception when scanning for include files in directory [{0}]", dir);
-					}
+					if (string.IsNullOrWhiteSpace(dir) || !Directory.Exists(dir)) continue;
+					includeFiles.AddRange(GetAllIncludeFiles_ProcessDir(dir));
+				}
+				catch (Exception ex)
+				{
+					Log.Error(ex, "Exception when scanning for include files in directory [{0}]", dir);
 				}
 			}
-			return _includeFiles;
+
+			return includeFiles.ToArray();
 		}
 
 		private static IEnumerable<string> GetAllIncludeFiles_ProcessDir(string dir)
@@ -608,49 +398,6 @@ namespace DkTools
 			}
 
 			return files;
-		}
-
-		public static IEnumerable<string> GetAllSourceIncludeFiles()
-		{
-			if (_sourceAndIncludeFiles == null)
-			{
-				_sourceAndIncludeFiles = new List<string>();
-
-				foreach (var fileName in GetAllSourceFiles())
-				{
-					if (!_sourceAndIncludeFiles.Any(x => string.Equals(x, fileName, StringComparison.OrdinalIgnoreCase)))
-					{
-						_sourceAndIncludeFiles.Add(fileName);
-					}
-				}
-
-				foreach (var fileName in GetAllIncludeFiles())
-				{
-					if (!_sourceAndIncludeFiles.Any(x => string.Equals(x, fileName, StringComparison.OrdinalIgnoreCase)))
-					{
-						_sourceAndIncludeFiles.Add(fileName);
-					}
-				}
-			}
-
-			return _sourceAndIncludeFiles;
-		}
-
-		public static IEnumerable<string> GetAllIncludeFilesForDir(string path)
-		{
-			var list = new List<string>();
-
-			list.AddRange(GetAllIncludeFiles());
-
-			foreach (var fileName in (from f in GetAllSourceFiles() where f.StartsWith(path, StringComparison.OrdinalIgnoreCase) select f))
-			{
-				if (!list.Any(x => string.Equals(x, fileName, StringComparison.OrdinalIgnoreCase)))
-				{
-					list.Add(fileName);
-				}
-			}
-
-			return list;
 		}
 		#endregion
 
@@ -733,128 +480,6 @@ namespace DkTools
 		public static bool IsValidFieldName(string name)
 		{
 			return name.IsWord();
-		}
-		#endregion
-
-		#region Environment Variables
-
-		public static void MergeEnvironmentVariables(System.Collections.Specialized.StringDictionary vars)
-		{
-			if (!_appSettings.Initialized) return;
-
-			var merger = new DkEnv.DkEnvVarMerger();
-			var mergedVars = merger.CreateMergedVarList(_appSettings);
-
-			foreach (var v in mergedVars) vars[v.Name] = v.Value;
-		}
-
-        class EnvVars : PROBEENVSRVRLib.IPEnvironmentVars
-        {
-            private List<EnvVar> _vars = new List<EnvVar>();
-
-            private class EnvVar
-            {
-                public string name;
-                public string value;
-            }
-
-            public int Count
-            {
-                get { return _vars.Count; }
-            }
-
-            public string GetItemName(int index)
-            {
-                return _vars[index - 1].name;
-            }
-
-            public string GetVariable(string name)
-            {
-                foreach (var v in _vars)
-                {
-                    if (v.name.Equals(name, StringComparison.OrdinalIgnoreCase)) return v.value;
-                }
-
-                return null;
-            }
-
-            public bool IsExists(string name)
-            {
-                foreach (var v in _vars)
-                {
-                    if (v.name.Equals(name, StringComparison.OrdinalIgnoreCase)) return true;
-                }
-
-                return false;
-            }
-
-            public void SetVariable(string name, string varvalue)
-            {
-                foreach (var v in _vars)
-                {
-                    if (v.name.Equals(name, StringComparison.OrdinalIgnoreCase))
-                    {
-                        v.value = varvalue;
-                        return;
-                    }
-                }
-
-                _vars.Add(new EnvVar { name = name, value = varvalue });
-            }
-
-            public bool TryGetVariable(string name, out string varvalue)
-            {
-                foreach (var v in _vars)
-                {
-                    if (v.name.Equals(name, StringComparison.OrdinalIgnoreCase))
-                    {
-                        varvalue = v.value;
-                        return true;
-                    }
-                }
-
-                varvalue = null;
-                return false;
-            }
-
-            public void ResetToCurrent()
-            {
-                _vars.Clear();
-
-                var envVars = Environment.GetEnvironmentVariables();
-                foreach (var ev in envVars.Keys)
-                {
-                    var value = envVars[ev];
-                    _vars.Add(new EnvVar { name = ev.ToString(), value = value.ToString() });
-                }
-            }
-
-            public void DumpToConsole()
-            {
-                foreach (var v in _vars)
-                {
-                    Console.WriteLine(string.Concat(v.name, "=", v.value));
-                }
-            }
-        }
-		#endregion
-
-		#region DK Registry
-		private const string k_configPath = @"SOFTWARE\Fincentric\WBDK\Configurations\";
-		//private const string k_configPathWow64 = @"SOFTWARE\Wow6432Node\Fincentric\WBDK\Configurations";
-
-		public static string GetRegString(string name, string defaultValue)
-		{
-			if (!_appSettings.Initialized) return defaultValue;
-
-			using (var key = Microsoft.Win32.Registry.LocalMachine.OpenSubKey(k_configPath + _appSettings.AppName, false))
-			{
-				if (key == null) return defaultValue;
-
-				var obj = key.GetValue(name, defaultValue);
-				if (obj == null) return defaultValue;
-				return obj.ToString();
-			}
 		}
 		#endregion
 

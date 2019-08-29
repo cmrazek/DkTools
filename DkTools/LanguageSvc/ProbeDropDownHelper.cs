@@ -40,8 +40,9 @@ namespace DkTools.LanguageSvc
 
 			var index = 0;
 
+			var appSettings = ProbeEnvironment.CurrentAppSettings;
 			var fileName = VsTextUtil.TryGetDocumentFileName(buf);
-			foreach (var func in (from f in fileStore.GetFunctionDropDownList(fileName, buf.CurrentSnapshot)
+			foreach (var func in (from f in fileStore.GetFunctionDropDownList(appSettings, fileName, buf.CurrentSnapshot)
 								  orderby f.Name.ToLower()
 								  select f))
 			{

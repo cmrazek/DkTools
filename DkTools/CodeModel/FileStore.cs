@@ -47,7 +47,7 @@ namespace DkTools.CodeModel
 			return cache;
 		}
 
-		public IncludeFile GetIncludeFile(string sourceFileName, string fileName, bool searchSameDir, IEnumerable<string> parentFiles)
+		public IncludeFile GetIncludeFile(ProbeAppSettings appSettings, string sourceFileName, string fileName, bool searchSameDir, IEnumerable<string> parentFiles)
 		{
 #if DEBUG
 			if (parentFiles == null) throw new ArgumentNullException("parentFiles");
@@ -84,61 +84,28 @@ namespace DkTools.CodeModel
 					_sameDirIncludeFiles[fileNameLower] = file;
 					return file;
 				}
-
-				//var ampersandFileName = pathName + "&";
-				//if (File.Exists(ampersandFileName))
-				//{
-				//	if (CheckForCyclicalInclude(ampersandFileName, parentFiles)) return null;
-				//	file = new IncludeFile(this, ampersandFileName);
-				//	_sameDirIncludeFiles[fileNameLower] = file;
-				//	return file;
-				//}
-
-				//var plusFileName = pathName = "+";
-				//if (File.Exists(plusFileName))
-				//{
-				//	if (CheckForCyclicalInclude(plusFileName, parentFiles)) return null;
-				//	file = new IncludeFile(this, plusFileName);
-				//	_sameDirIncludeFiles[fileNameLower] = file;
-				//	return file;
-				//}
 			}
 
 			// Search the disk in global include directories.
-			foreach (var includeDir in ProbeEnvironment.IncludeDirs)
+			if (appSettings.Initialized)
 			{
-				var pathName = Path.Combine(includeDir, fileName);
-				if (File.Exists(pathName))
+				foreach (var includeDir in appSettings.IncludeDirs)
 				{
-					if (CheckForCyclicalInclude(pathName, parentFiles)) return null;
-					file = new IncludeFile(this, pathName);
-					_globalIncludeFiles[fileNameLower] = file;
-					return file;
+					var pathName = Path.Combine(includeDir, fileName);
+					if (File.Exists(pathName))
+					{
+						if (CheckForCyclicalInclude(pathName, parentFiles)) return null;
+						file = new IncludeFile(this, pathName);
+						_globalIncludeFiles[fileNameLower] = file;
+						return file;
+					}
 				}
-
-				//var ampersandFileName = pathName + "&";
-				//if (File.Exists(ampersandFileName))
-				//{
-				//	if (CheckForCyclicalInclude(ampersandFileName, parentFiles)) return null;
-				//	file = new IncludeFile(this, ampersandFileName);
-				//	_globalIncludeFiles[fileNameLower] = file;
-				//	return file;
-				//}
-
-				//var plusFileName = pathName = "+";
-				//if (File.Exists(plusFileName))
-				//{
-				//	if (CheckForCyclicalInclude(plusFileName, parentFiles)) return null;
-				//	file = new IncludeFile(this, plusFileName);
-				//	_globalIncludeFiles[fileNameLower] = file;
-				//	return file;
-				//}
 			}
 
 			return null;
 		}
 
-		public string LocateIncludeFile(string sourceFileName, string fileName, bool searchSameDir)
+		public string LocateIncludeFile(ProbeAppSettings appSettings, string sourceFileName, string fileName, bool searchSameDir)
 		{
 			if (string.IsNullOrEmpty(fileName)) return null;
 
@@ -161,40 +128,19 @@ namespace DkTools.CodeModel
 				{
 					return Path.GetFullPath(pathName);
 				}
-
-				//var ampersandFileName = pathName + "&";
-				//if (File.Exists(ampersandFileName))
-				//{
-				//	return Path.GetFullPath(ampersandFileName);
-				//}
-
-				//var plusFileName = pathName = "+";
-				//if (File.Exists(plusFileName))
-				//{
-				//	return Path.GetFullPath(plusFileName);
-				//}
 			}
 
 			// Search the disk in global include directories.
-			foreach (var includeDir in ProbeEnvironment.IncludeDirs)
+			if (appSettings.Initialized)
 			{
-				var pathName = Path.Combine(includeDir, fileName);
-				if (System.IO.File.Exists(pathName))
+				foreach (var includeDir in appSettings.IncludeDirs)
 				{
-					return Path.GetFullPath(pathName);
+					var pathName = Path.Combine(includeDir, fileName);
+					if (System.IO.File.Exists(pathName))
+					{
+						return Path.GetFullPath(pathName);
+					}
 				}
-
-				//var ampersandFileName = pathName + "&";
-				//if (System.IO.File.Exists(ampersandFileName))
-				//{
-				//	return Path.GetFullPath(ampersandFileName);
-				//}
-
-				//var plusFileName = pathName = "+";
-				//if (System.IO.File.Exists(plusFileName))
-				//{
-				//	return Path.GetFullPath(plusFileName);
-				//}
 			}
 
 			return null;
@@ -213,7 +159,7 @@ namespace DkTools.CodeModel
 			return false;
 		}
 
-		public CodeModel GetCurrentModel(string fileName, VsText.ITextSnapshot snapshot, string reason)
+		public CodeModel GetCurrentModel(ProbeAppSettings appSettings, string fileName, VsText.ITextSnapshot snapshot, string reason)
 		{
 #if DEBUG
 			if (snapshot == null) throw new ArgumentNullException("snapshot");
@@ -223,7 +169,7 @@ namespace DkTools.CodeModel
 			{
 				if (snapshot != null && _model.Snapshot.Version.VersionNumber < snapshot.Version.VersionNumber)
 				{
-					_model = CreatePreprocessedModel(fileName, snapshot, reason);
+					_model = CreatePreprocessedModel(appSettings, fileName, snapshot, reason);
 
 					var ev = ModelUpdated;
 					if (ev != null) ev(this, new ModelUpdatedEventArgs(_model));
@@ -231,7 +177,7 @@ namespace DkTools.CodeModel
 			}
 			else
 			{
-				_model = CreatePreprocessedModel(fileName, snapshot, reason);
+				_model = CreatePreprocessedModel(appSettings, fileName, snapshot, reason);
 
 				var ev = ModelUpdated;
 				if (ev != null) ev(this, new ModelUpdatedEventArgs(_model));
@@ -240,14 +186,14 @@ namespace DkTools.CodeModel
 			return _model;
 		}
 
-		public CodeModel GetMostRecentModel(string fileName, VsText.ITextSnapshot snapshot, string reason)
+		public CodeModel GetMostRecentModel(ProbeAppSettings appSettings, string fileName, VsText.ITextSnapshot snapshot, string reason)
 		{
 #if DEBUG
 			if (snapshot == null) throw new ArgumentNullException("snapshot");
 #endif
 			if (_model == null)
 			{
-				_model = CreatePreprocessedModel(fileName, snapshot, reason);
+				_model = CreatePreprocessedModel(appSettings, fileName, snapshot, reason);
 
 				var ev = ModelUpdated;
 				if (ev != null) ev(this, new ModelUpdatedEventArgs(_model));
@@ -256,13 +202,13 @@ namespace DkTools.CodeModel
 			return _model;
 		}
 
-		public CodeModel RegenerateModel(string fileName, VsText.ITextSnapshot snapshot, string reason)
+		public CodeModel RegenerateModel(ProbeAppSettings appSettings, string fileName, VsText.ITextSnapshot snapshot, string reason)
 		{
 #if DEBUG
 			if (snapshot == null) throw new ArgumentNullException("snapshot");
 #endif
 
-			_model = CreatePreprocessedModel(fileName, snapshot, reason);
+			_model = CreatePreprocessedModel(appSettings, fileName, snapshot, reason);
 
 			var ev = ModelUpdated;
 			if (ev != null) ev(this, new ModelUpdatedEventArgs(_model));
@@ -270,18 +216,18 @@ namespace DkTools.CodeModel
 			return _model;
 		}
 
-		public CodeModel CreatePreprocessedModel(string fileName, VsText.ITextSnapshot snapshot, string reason)
+		public CodeModel CreatePreprocessedModel(ProbeAppSettings appSettings, string fileName, VsText.ITextSnapshot snapshot, string reason)
 		{
 			var source = new CodeSource();
 			source.Append(snapshot.GetText(), fileName, 0, snapshot.Length, true, true, false);
 			source.Flush();
 
-			var model = CreatePreprocessedModel(source, fileName, true, reason, null);
+			var model = CreatePreprocessedModel(appSettings, source, fileName, true, reason, null);
 			model.Snapshot = snapshot;
 			return model;
 		}
 
-		public CodeModel CreatePreprocessedModel(string fileName, VsText.ITextSnapshot snapshot, bool visible, string reason)
+		public CodeModel CreatePreprocessedModel(ProbeAppSettings appSettings, string fileName, VsText.ITextSnapshot snapshot, bool visible, string reason)
 		{
 			CodeSource source;
 			IEnumerable<Preprocessor.IncludeDependency> includeDependencies = null;
@@ -294,19 +240,20 @@ namespace DkTools.CodeModel
 			else
 			{
 				var merger = new FileMerger();
-				merger.MergeFile(fileName, snapshot.GetText(), false, true);
+				merger.MergeFile(appSettings, fileName, snapshot.GetText(), false, true);
 				source = merger.MergedContent;
 
 				includeDependencies = (from f in merger.FileNames
 									   select new Preprocessor.IncludeDependency(f, false, true, merger.GetFileContent(f))).ToArray();
 			}
 
-			var model = CreatePreprocessedModel(source, fileName, visible, reason, includeDependencies);
+			var model = CreatePreprocessedModel(appSettings, source, fileName, visible, reason, includeDependencies);
 			model.Snapshot = snapshot;
 			return model;
 		}
 
-		public CodeModel CreatePreprocessedModel(CodeSource source, string fileName, bool visible, string reason, IEnumerable<Preprocessor.IncludeDependency> includeDependencies)
+		public CodeModel CreatePreprocessedModel(ProbeAppSettings appSettings, CodeSource source, string fileName,
+			bool visible, string reason, IEnumerable<Preprocessor.IncludeDependency> includeDependencies)
 		{
 #if DEBUG
 			Log.Debug("Creating preprocessed model. Reason: {0}", reason);
@@ -316,17 +263,17 @@ namespace DkTools.CodeModel
 			var reader = new CodeSource.CodeSourcePreprocessorReader(source);
 			var prepSource = new CodeSource();
 
-			var defProvider = new DefinitionProvider(fileName);
+			var defProvider = new DefinitionProvider(appSettings, fileName);
 
 			var fileContext = FileContextUtil.GetFileContextFromFileName(fileName);
-			var prep = new Preprocessor(this);
+			var prep = new Preprocessor(appSettings, this);
 			if (includeDependencies != null) prep.AddIncludeDependencies(includeDependencies);
 			prep.Preprocess(reader, prepSource, fileName, new string[0], fileContext, stdlibDefines: _stdLibDefines);
 			prep.AddDefinitionsToProvider(defProvider);
 
 			if (fileContext == FileContext.Include && !string.IsNullOrEmpty(fileName))
 			{
-				var includeParentDefs = GetIncludeParentDefinitions(fileName);
+				var includeParentDefs = GetIncludeParentDefinitions(appSettings, fileName);
 				defProvider.AddGlobalFromFile(includeParentDefs);
 			}
 
@@ -346,13 +293,13 @@ namespace DkTools.CodeModel
 			CodeModel modelToReturn;
 			if (visible)
 			{
-				modelToReturn = CodeModel.CreateVisibleModelForPreprocessed(source, this, prepModel);
+				modelToReturn = CodeModel.CreateVisibleModelForPreprocessed(source, appSettings, this, prepModel);
 				modelToReturn.PreprocessorModel = prepModel;
 				modelToReturn.DisabledSections = prepSource.GenerateDisabledSections().ToArray();
 			}
 			else
 			{
-				modelToReturn = CodeModel.CreateFullModelForPreprocessed(prepSource, this, prepModel);
+				modelToReturn = CodeModel.CreateFullModelForPreprocessed(prepSource, appSettings, this, prepModel);
 				modelToReturn.PreprocessorModel = prepModel;
 			}
 
@@ -375,9 +322,10 @@ namespace DkTools.CodeModel
 			get { return _model; }
 		}
 
-		public IEnumerable<FunctionDropDownItem> GetFunctionDropDownList(string fileName, VsText.ITextSnapshot snapshot)
+		public IEnumerable<FunctionDropDownItem> GetFunctionDropDownList(ProbeAppSettings appSettings,
+			string fileName, VsText.ITextSnapshot snapshot)
 		{
-			var model = GetMostRecentModel(fileName, snapshot, "Function drop-down list.");
+			var model = GetMostRecentModel(appSettings, fileName, snapshot, "Function drop-down list.");
 
 			var prepModel = model.PreprocessorModel;
 			if (prepModel == null) yield break;
@@ -402,32 +350,31 @@ namespace DkTools.CodeModel
 			get { return _guid; }
 		}
 
-		private static void CreateStdLibModel()
+		private static void CreateStdLibModel(ProbeAppSettings appSettings)
 		{
 			var tempStore = new FileStore();
-			var includeFile = tempStore.GetIncludeFile(null, "stdlib.i", false, new string[0]);
+			var includeFile = tempStore.GetIncludeFile(appSettings, null, "stdlib.i", false, new string[0]);
 			if (includeFile != null)
 			{
-				_stdLibModel = tempStore.CreatePreprocessedModel(includeFile.Source, includeFile.FullPathName, false, "stdlib.i model", null);
+				_stdLibModel = tempStore.CreatePreprocessedModel(appSettings, includeFile.GetSource(appSettings),
+					includeFile.FullPathName, false, "stdlib.i model", null);
 			}
 			else
 			{
 				var blankSource = new CodeSource();
 				blankSource.Flush();
 
-				_stdLibModel = tempStore.CreatePreprocessedModel(blankSource, "stdlib.i", false, "stdlib.i model (blank)", null);
+				_stdLibModel = tempStore.CreatePreprocessedModel(appSettings, blankSource, "stdlib.i", false,
+					"stdlib.i model (blank)", null);
 			}
 
 			_stdLibDefines = _stdLibModel.PreprocessorModel.Preprocessor.Defines.ToArray();
 		}
 
-		public static CodeModel StdLibModel
+		public static CodeModel GetStdLibModel(ProbeAppSettings appSettings)
 		{
-			get
-			{
-				if (_stdLibModel == null) CreateStdLibModel();
-				return _stdLibModel;
-			}
+			if (_stdLibModel == null) CreateStdLibModel(appSettings);
+			return _stdLibModel;
 		}
 
 		public static void FireAllModelRebuildRequired()
@@ -441,7 +388,7 @@ namespace DkTools.CodeModel
 			_model = null;
 		}
 
-		public Definition[] GetIncludeParentDefinitions(string includePathName)
+		public Definition[] GetIncludeParentDefinitions(ProbeAppSettings appSettings, string includePathName)
 		{
 			Definition[] cachedDefs;
 			if (_includeParentDefs.TryGetValue(includePathName.ToLower(), out cachedDefs)) return cachedDefs;
@@ -469,14 +416,14 @@ namespace DkTools.CodeModel
 				Log.Debug("Preprocessing include parent: {0}", parentPathName);
 
 				var merger = new FileMerger();
-				merger.MergeFile(parentPathName, null, false, true);
+				merger.MergeFile(appSettings, parentPathName, null, false, true);
 				var source = merger.MergedContent;
 
 				var reader = new CodeSource.CodeSourcePreprocessorReader(source);
 				var prepSource = new CodeSource();
 
 				var fileContext = FileContextUtil.GetFileContextFromFileName(parentPathName);
-				var prep = new Preprocessor(this);
+				var prep = new Preprocessor(appSettings, this);
 				var prepResult = prep.Preprocess(reader, prepSource, parentPathName, new string[0], fileContext, includePathName);
 				if (!prepResult.IncludeFileReached)
 				{
@@ -540,40 +487,37 @@ namespace DkTools.CodeModel
 				Shell.FileSaved -= Shell_FileSaving;
 			}
 
-			public CodeSource Source
+			public CodeSource GetSource(ProbeAppSettings appSettings)
 			{
-				get
+				if (_source == null)
 				{
-					if (_source == null)
+					try
 					{
-						try
-						{
-							var merger = new FileMerger();
-							merger.MergeFile(_fullPathName, null, false, false);
-							_source = merger.MergedContent;
+						var merger = new FileMerger();
+						merger.MergeFile(appSettings, _fullPathName, null, false, false);
+						_source = merger.MergedContent;
 
-							var fileInfo = new FileInfo(_fullPathName);
-							_lastModifiedDate = fileInfo.LastWriteTime;
-							_lastCheck = DateTime.Now;
+						var fileInfo = new FileInfo(_fullPathName);
+						_lastModifiedDate = fileInfo.LastWriteTime;
+						_lastCheck = DateTime.Now;
 
-							foreach (var mergeFileName in merger.FileNames)
-							{
-								var content = merger.GetFileContent(mergeFileName);
-								if (content == null) throw new InvalidOperationException("Merger content is null.");
-								_preMergeContent[mergeFileName.ToLower()] = content;
-							}
-						}
-						catch (Exception ex)
+						foreach (var mergeFileName in merger.FileNames)
 						{
-							Log.Error(ex, "Exception when attempting to read content of include file '{0}'.", _fullPathName);
-							_source = null;
+							var content = merger.GetFileContent(mergeFileName);
+							if (content == null) throw new InvalidOperationException("Merger content is null.");
+							_preMergeContent[mergeFileName.ToLower()] = content;
 						}
 					}
-					return _source;
+					catch (Exception ex)
+					{
+						Log.Error(ex, "Exception when attempting to read content of include file '{0}'.", _fullPathName);
+						_source = null;
+					}
 				}
+				return _source;
 			}
 
-			public CodeFile GetCodeFile(CodeModel model, IEnumerable<string> parentFiles)
+			public CodeFile GetCodeFile(ProbeAppSettings appSettings, CodeModel model, IEnumerable<string> parentFiles)
 			{
 				if (_codeFile == null)
 				{
@@ -581,7 +525,7 @@ namespace DkTools.CodeModel
 					{
 						Log.Debug("Processing include file: {0}", _fullPathName);
 
-						var content = Source;
+						var content = GetSource(appSettings);
 						if (content == null) return null;
 
 						var file = new CodeFile(model);

@@ -200,8 +200,9 @@ namespace DkTools.ErrorTagging
 				var fileStore = CodeModel.FileStore.GetOrCreateForTextBuffer(textView.TextBuffer);
 				if (fileStore != null)
 				{
+					var appSettings = ProbeEnvironment.CurrentAppSettings;
 					var fileName = VsTextUtil.TryGetDocumentFileName(textView.TextBuffer);
-					var model = fileStore.GetMostRecentModel(fileName, textView.TextSnapshot, "ErrorTaskProvider.OnDocumentClosed()");
+					var model = fileStore.GetMostRecentModel(appSettings, fileName, textView.TextSnapshot, "ErrorTaskProvider.OnDocumentClosed()");
 					RemoveAllForSource(ErrorTaskSource.BackgroundFec, model.FileName);
 				}
 			});

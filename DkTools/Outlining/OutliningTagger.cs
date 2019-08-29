@@ -84,8 +84,9 @@ namespace DkTools.Outlining
 			var fileStore = CodeModel.FileStore.GetOrCreateForTextBuffer(_buffer);
 			if (fileStore != null)
 			{
+				var appSettings = ProbeEnvironment.CurrentAppSettings;
 				var fileName = VsTextUtil.TryGetDocumentFileName(_buffer);
-				var model = fileStore.GetCurrentModel(fileName, _snapshot, "OutliningTagger.Reparse()");
+				var model = fileStore.GetCurrentModel(appSettings, fileName, _snapshot, "OutliningTagger.Reparse()");
 
 				foreach (var region in model.OutliningRegions.OrderBy(r => r.Span.Start))
 				{

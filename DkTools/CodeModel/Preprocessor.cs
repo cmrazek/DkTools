@@ -11,15 +11,16 @@ namespace DkTools.CodeModel
 {
 	internal class Preprocessor
 	{
+		private ProbeAppSettings _appSettings;
 		private FileStore _store;
 		private Dictionary<string, PreprocessorDefine> _defines;
 		private List<IncludeDependency> _includeDependencies = new List<IncludeDependency>();
 		private List<Reference> _refs = new List<Reference>();
 
-		public Preprocessor(FileStore store)
+		public Preprocessor(ProbeAppSettings appSettings, FileStore store)
 		{
-			if (store == null) throw new ArgumentNullException("store");
-			_store = store;
+			_appSettings = appSettings ?? throw new ArgumentNullException(nameof(appSettings));
+			_store = store ?? throw new ArgumentNullException(nameof(store));
 		}
 
 		/// <summary>
@@ -650,7 +651,7 @@ namespace DkTools.CodeModel
 				else parentFiles = new string[0];
 			}
 
-			var includeNode = _store.GetIncludeFile(p.fileName, fileName, searchSameDir, parentFiles);
+			var includeNode = _store.GetIncludeFile(_appSettings, p.fileName, fileName, searchSameDir, parentFiles);
 			if (includeNode == null) return;
 
 			if (p.stopAtIncludeFile != null && includeNode.FullPathName.Equals(p.stopAtIncludeFile, StringComparison.OrdinalIgnoreCase))
@@ -659,7 +660,7 @@ namespace DkTools.CodeModel
 				return;
 			}
 
-			var rawSource = includeNode.Source;
+			var rawSource = includeNode.GetSource(_appSettings);
 			if (rawSource == null) return;
 			var reader = new CodeSource.CodeSourcePreprocessorReader(rawSource);
 

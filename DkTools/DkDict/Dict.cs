@@ -22,7 +22,7 @@ namespace DkTools.DkDict
 		private static Dictionary<string, Interface> _interfaces = new Dictionary<string, Interface>();
 		private static Dictionary<string, Interface> _impliedInterfaces = new Dictionary<string, Interface>();
 
-		public static void Load()
+		public static void Load(ProbeAppSettings appSettings)
 		{
 			try
 			{
@@ -31,7 +31,7 @@ namespace DkTools.DkDict
 
 				// Find the dict file
 				var dictPathName = string.Empty;
-				foreach (var srcDir in ProbeEnvironment.SourceDirs)
+				foreach (var srcDir in appSettings.SourceDirs)
 				{
 					dictPathName = Path.Combine(srcDir, "DICT");
 					if (File.Exists(dictPathName)) break;
@@ -44,13 +44,13 @@ namespace DkTools.DkDict
 					return;
 				}
 				var merger = new FileMerger();
-				merger.MergeFile(dictPathName, null, false, true);
+				merger.MergeFile(appSettings, dictPathName, null, false, true);
 
 				var mergedSource = merger.MergedContent;
 				var mergedReader = new CodeSource.CodeSourcePreprocessorReader(mergedSource);
 
 				var fileStore = new FileStore();
-				var preprocessor = new Preprocessor(fileStore);
+				var preprocessor = new Preprocessor(appSettings, fileStore);
 				_source = new CodeSource();
 				preprocessor.Preprocess(mergedReader, _source, dictPathName, null, FileContext.Dictionary);
 
@@ -71,7 +71,7 @@ namespace DkTools.DkDict
 				elapsed = DateTime.Now.Subtract(curTime);
 				Log.Write(LogLevel.Info, "DICT parsing complete. (elapsed: {0})", elapsed);
 
-				LoadDkRepo();
+				LoadDkRepo(appSettings);
 			}
 			catch (Exception ex)
 			{
@@ -79,7 +79,7 @@ namespace DkTools.DkDict
 			}
 		}
 
-		private static void LoadDkRepo()
+		private static void LoadDkRepo(ProbeAppSettings appSettings)
 		{
 			Log.Info("Loading WBDK Repository.");
 			var startTime = DateTime.Now;
@@ -88,12 +88,11 @@ namespace DkTools.DkDict
 			DICTSRVRLib.PDictionary dict = null;
 			try
 			{
-				var appName = ProbeEnvironment.CurrentApp;
 				repo = new DICTSRVRLib.PRepository();
-				dict = repo.LoadDictionary(appName, string.Empty, DICTSRVRLib.PDS_Access.Access_READ);
+				dict = repo.LoadDictionary(appSettings.AppName, string.Empty, DICTSRVRLib.PDS_Access.Access_READ);
 				if (dict == null)
 				{
-					Log.Info("The WBDK repository for app '{0}' does not exist.", appName);
+					Log.Info("The WBDK repository for app '{0}' does not exist.", appSettings.AppName);
 					return;
 				}
 

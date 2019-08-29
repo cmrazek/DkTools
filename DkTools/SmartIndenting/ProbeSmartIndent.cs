@@ -29,17 +29,19 @@ namespace DkTools.SmartIndenting
 		{
 		}
 
-		public int? GetDesiredIndentation(ITextSnapshotLine line)
+		public int? GetDesiredIndentation(ITextSnapshotLine line)   // from ISmartIndent
 		{
             ThreadHelper.ThrowIfNotOnUIThread();
 
             _tabSize = _view.GetTabSize();
 			_keepTabs = _view.GetKeepTabs();
 
-			return GetDesiredIndentation(line.Snapshot.TextBuffer, line, _tabSize, _keepTabs);
+			var appSettings = ProbeEnvironment.CurrentAppSettings;
+
+			return GetDesiredIndentation(line.Snapshot.TextBuffer, line, _tabSize, _keepTabs, appSettings);
 		}
 
-		public static int? GetDesiredIndentation(ITextBuffer buffer, ITextSnapshotLine line, int tabSize, bool keepTabs)
+		public static int? GetDesiredIndentation(ITextBuffer buffer, ITextSnapshotLine line, int tabSize, bool keepTabs, ProbeAppSettings appSettings)
 		{
 			ThreadHelper.ThrowIfNotOnUIThread();
 
@@ -77,7 +79,7 @@ namespace DkTools.SmartIndenting
 				if (fileStore != null)
 				{
 					var fileName = VsTextUtil.TryGetDocumentFileName(buffer);
-					var model = fileStore.GetCurrentModel(fileName, buffer.CurrentSnapshot, "Smart indenting - case inside switch");
+					var model = fileStore.GetCurrentModel(appSettings, fileName, buffer.CurrentSnapshot, "Smart indenting - case inside switch");
 					var offset = line.Snapshot.TranslateOffsetToSnapshot(line.Start.Position, model.Snapshot);
 					var bracesToken = model.File.FindDownward(offset, t => t is CodeModel.Tokens.BracesToken).LastOrDefault() as CodeModel.Tokens.BracesToken;
 					if (bracesToken != null)
@@ -101,11 +103,11 @@ namespace DkTools.SmartIndenting
 					{
 						var lineNumber = prevLine.LineNumber;
 						var fileName = VsTextUtil.TryGetDocumentFileName(buffer);
-						var prevState = tracker.GetStateForLineStart(lineNumber, tracker.Snapshot, fileName);
+						var prevState = tracker.GetStateForLineStart(lineNumber, tracker.Snapshot, fileName, appSettings);
 						while (State.IsInsideMultiLineComment(prevState))
 						{
 							if (lineNumber == 0) break;	// At start of file. In theory, this should never happen as the state for the start of the file is always zero.
-							prevState = tracker.GetStateForLineStart(--lineNumber, tracker.Snapshot, fileName);
+							prevState = tracker.GetStateForLineStart(--lineNumber, tracker.Snapshot, fileName, appSettings);
 						}
 
 						if (prevLine.LineNumber != lineNumber) prevLine = prevLine.Snapshot.GetLineFromLineNumber(lineNumber);
@@ -199,14 +201,14 @@ namespace DkTools.SmartIndenting
 			}
 		}
 
-		public static void FixIndentingBetweenLines(ITextBuffer buffer, int startLineNumber, int endLineNumber, int tabSize, bool keepTabs)
+		public static void FixIndentingBetweenLines(ITextBuffer buffer, int startLineNumber, int endLineNumber, int tabSize, bool keepTabs, ProbeAppSettings appSettings)
 		{
             ThreadHelper.ThrowIfNotOnUIThread();
 
             for (int lineNumber = startLineNumber; lineNumber <= endLineNumber; lineNumber++)
 			{
 				var line = buffer.CurrentSnapshot.GetLineFromLineNumber(lineNumber);
-				var indent = GetDesiredIndentation(buffer, line, tabSize, keepTabs);
+				var indent = GetDesiredIndentation(buffer, line, tabSize, keepTabs, appSettings);
 				if (!indent.HasValue) continue;
 				var desiredIndent = indent.Value;
 

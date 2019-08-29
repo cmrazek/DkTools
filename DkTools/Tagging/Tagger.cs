@@ -127,9 +127,10 @@ namespace DkTools.Tagging
 						var fileStore = CodeModel.FileStore.GetOrCreateForTextBuffer(buf);
 						if (fileStore != null)
 						{
+							var appSettings = ProbeEnvironment.CurrentAppSettings;
 							var fileName = VsTextUtil.TryGetDocumentFileName(buf);
-							var funcs = fileStore.GetFunctionDropDownList(fileName, buf.CurrentSnapshot);
-							var model = fileStore.GetMostRecentModel(fileName, buf.CurrentSnapshot, "Insert diag");
+							var funcs = fileStore.GetFunctionDropDownList(appSettings, fileName, buf.CurrentSnapshot);
+							var model = fileStore.GetMostRecentModel(appSettings, fileName, buf.CurrentSnapshot, "Insert diag");
 							var modelPos = model.AdjustPosition(Shell.ActiveView.Caret.Position.BufferPosition.Position, model.Snapshot);
 							foreach (var func in funcs)
 							{

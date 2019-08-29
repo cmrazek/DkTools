@@ -14,6 +14,7 @@ namespace DkTools.FunctionFileScanning
 		private Thread _thread;
 		private EventWaitHandle _kill = new EventWaitHandle(false, EventResetMode.ManualReset);
 
+		private ProbeAppSettings _appSettings;
 		private FFApp _currentApp;
 		private object _currentAppLock = new object();
 		private Queue<ScanInfo> _scanQueue;
@@ -41,7 +42,8 @@ namespace DkTools.FunctionFileScanning
 
 		public FFScanner()
 		{
-			LoadCurrentApp(ProbeEnvironment.CurrentApp);
+			_appSettings = ProbeEnvironment.CurrentAppSettings;
+			LoadCurrentApp();
 
 			_thread = new Thread(new ThreadStart(ThreadProc));
 			_thread.Name = "Function File Scanner";
@@ -66,8 +68,9 @@ namespace DkTools.FunctionFileScanning
 
 		private void ProbeEnvironment_AppChanged(object sender, EventArgs e)
 		{
-			LoadCurrentApp(ProbeEnvironment.CurrentApp);
-			RestartScanning();
+			_appSettings = ProbeEnvironment.CurrentAppSettings;
+			LoadCurrentApp();
+			RestartScanning("Probe app changed");
 		}
 
 		private void Kill()
@@ -83,7 +86,7 @@ namespace DkTools.FunctionFileScanning
 		{
 			try
 			{
-				RestartScanning();
+				RestartScanning("Start of FFScanner thread");
 
 				while (!_kill.WaitOne(k_threadWaitIdle))
 				{
@@ -250,17 +253,17 @@ namespace DkTools.FunctionFileScanning
 
 				var fileTitle = Path.GetFileNameWithoutExtension(scan.fileName);
 
-				var defProvider = new CodeModel.DefinitionProvider(scan.fileName);
+				var defProvider = new CodeModel.DefinitionProvider(_appSettings, scan.fileName);
 
 				var fileContent = File.ReadAllText(scan.fileName);
 				var fileStore = new CodeModel.FileStore();
 
 				var merger = new FileMerger();
-				merger.MergeFile(scan.fileName, null, false, true);
+				merger.MergeFile(_appSettings, scan.fileName, null, false, true);
 				var includeDependencies = (from f in merger.FileNames
 										   select new Preprocessor.IncludeDependency(f, false, true, merger.GetFileContent(f))).ToArray();
 
-				var model = fileStore.CreatePreprocessedModel(merger.MergedContent, scan.fileName, false, string.Concat("Function file processing: ", scan.fileName), includeDependencies);
+				var model = fileStore.CreatePreprocessedModel(_appSettings, merger.MergedContent, scan.fileName, false, string.Concat("Function file processing: ", scan.fileName), includeDependencies);
 
 				var className = fileContext.IsClass() ? Path.GetFileNameWithoutExtension(scan.fileName) : null;
 				var classList = new List<FFClass>();
@@ -302,8 +305,12 @@ namespace DkTools.FunctionFileScanning
 			}
 		}
 
-		public void RestartScanning()
+		public void RestartScanning(string reason)
 		{
+			if (!_appSettings.Initialized) return;
+
+			Log.Debug("Starting FF scanning ({0})", reason);
+
 			lock (_scanLock)
 			{
 				_scanQueue = new Queue<ScanInfo>();
@@ -313,7 +320,7 @@ namespace DkTools.FunctionFileScanning
 			if (!options.DisableBackgroundScan)
 			{
 				var scanList = new List<ScanInfo>();
-				foreach (var dir in ProbeEnvironment.SourceDirs)
+				foreach (var dir in _appSettings.SourceDirs)
 				{
 					ProcessSourceDir(_currentApp, dir, scanList);
 				}
@@ -326,16 +333,18 @@ namespace DkTools.FunctionFileScanning
 			}
 		}
 
-		private void LoadCurrentApp(string appName)
+		private void LoadCurrentApp()
 		{
 			try
 			{
+				if (!_appSettings.Initialized) return;
+
 				Log.Write(LogLevel.Info, "Loading function file database...");
 				var startTime = DateTime.Now;
 
 				using (var db = new FFDatabase())
 				{
-					_currentApp = new FFApp(this, db, appName);
+					_currentApp = new FFApp(this, db, _appSettings);
 				}
 
 				var elapsed = DateTime.Now.Subtract(startTime);
@@ -356,7 +365,7 @@ namespace DkTools.FunctionFileScanning
 				if (!options.DisableBackgroundScan)
 				{
 					var fileContext = FileContextUtil.GetFileContextFromFileName(e.FileName);
-					if (ProbeEnvironment.FileExistsInApp(e.FileName))
+					if (ProbeEnvironment.CurrentAppSettings.FileExistsInApp(e.FileName))
 					{
 						if (fileContext != FileContext.Include && !FileContextUtil.IsLocalizedFile(e.FileName))
 						{
@@ -437,7 +446,7 @@ namespace DkTools.FunctionFileScanning
 				}
 			}
 
-			RestartScanning();
+			RestartScanning("Include file changed; scanning dependent files.");
 		}
 	}
 

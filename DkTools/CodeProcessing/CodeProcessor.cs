@@ -9,6 +9,7 @@ namespace DkTools.CodeProcessing
 {
 	internal class CodeProcessor
 	{
+		private ProbeAppSettings _appSettings;
 		private string _fileName = string.Empty;
 		private List<CodeFile> _files = new List<CodeFile>();
 		private List<CodeLine> _lines = new List<CodeLine>();
@@ -30,15 +31,18 @@ namespace DkTools.CodeProcessing
 		public CodeProcessor()
 		{ }
 
-		public void ProcessFile(string fileName)
+		public void ProcessFile(ProbeAppSettings appSettings, string fileName)
 		{
+			if (appSettings == null) throw new ArgumentNullException(nameof(appSettings));
+
+			_appSettings = appSettings;
 			_fileName = fileName;
 
 			_files.Clear();
 			_lines.Clear();
 			_replace.Clear();
 
-			var mergeFileNames = ProbeEnvironment.FindLocalFiles(fileName, true).ToArray();
+			var mergeFileNames = _appSettings.FindLocalFiles(fileName, true).ToArray();
 			if (mergeFileNames.Length == 0)
 			{
 				_errors.Add(new CodeError(null, "No files found."));

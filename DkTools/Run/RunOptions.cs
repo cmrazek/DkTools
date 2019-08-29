@@ -47,14 +47,16 @@ namespace DkTools.Run
 
 		internal string CreateSamArgsString()
 		{
+			var appSettings = ProbeEnvironment.CurrentAppSettings;
+
 			var sb = new StringBuilder();
-			sb.Append(string.Format("/N{0}", CleanSamName(string.Concat(ProbeEnvironment.CurrentApp, "_", System.Environment.UserName))));
-			sb.Append(string.Format(" /p{0}", ProbeEnvironment.SamPort));
+			sb.Append(string.Format("/N{0}", CleanSamName(string.Concat(appSettings.AppName, "_", System.Environment.UserName))));
+			sb.Append(string.Format(" /p{0}", appSettings.SamPort));
 			sb.Append(" /o0");
 			sb.Append(string.Format(" /y{0:00}{1:00}", TransReportTimeout, TransAbortTimeout));
 			sb.Append(string.Format(" /z{0}", MinChannels));
 			sb.Append(string.Format(" /Z{0}", MaxChannels));
-			sb.Append(string.Format(" /P{0}", ProbeEnvironment.CurrentApp));
+			sb.Append(string.Format(" /P{0}", appSettings.AppName));
 			if (Diags) sb.AppendFormat(" /d{0}", this.DiagLevel);
 
 			if (!string.IsNullOrWhiteSpace(SamArgs))
@@ -68,8 +70,10 @@ namespace DkTools.Run
 
 		internal string CreateCamArgsString()
 		{
+			var appSettings = ProbeEnvironment.CurrentAppSettings;
+
 			StringBuilder sb = new StringBuilder();
-			sb.Append("appname=" + ProbeEnvironment.CurrentApp);
+			sb.Append("appname=" + appSettings.AppName);
 			sb.Append(" networkname=" + CleanSamName(System.Environment.UserName + "_" + System.Environment.MachineName));
 
 			if (Diags) sb.AppendFormat(" devmode={0}", this.DiagLevel);

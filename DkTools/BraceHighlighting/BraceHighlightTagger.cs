@@ -151,8 +151,9 @@ namespace DkTools.BraceHighlighting
 				var fileStore = CodeModel.FileStore.GetOrCreateForTextBuffer(_sourceBuffer);
 				if (fileStore != null)
 				{
+					var appSettings = ProbeEnvironment.CurrentAppSettings;
 					var fileName = VsTextUtil.TryGetDocumentFileName(_sourceBuffer);
-					var model = fileStore.GetCurrentModel(fileName, _sourceBuffer.CurrentSnapshot, "Word select idle");
+					var model = fileStore.GetCurrentModel(appSettings, fileName, _sourceBuffer.CurrentSnapshot, "Word select idle");
 					var modelPos = model.AdjustPosition(snapPt);
 					var caretToken = model.File.FindDownwardTouching(modelPos).LastOrDefault(t => t.SourceDefinition != null);
 					if (caretToken == null)

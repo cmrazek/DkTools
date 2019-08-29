@@ -40,14 +40,14 @@ namespace DkTools.SignatureHelp
 
 			if (ProbeSignatureHelpCommandHandler.s_typedChar == '(')
 			{
-				foreach (var sig in HandleOpenBracket(snapshot))
+				foreach (var sig in HandleOpenBracket(snapshot, ProbeEnvironment.CurrentAppSettings))
 				{
 					signatures.Add(sig);
 				}
 			}
 			else if (ProbeSignatureHelpCommandHandler.s_typedChar == ',')
 			{
-				foreach (var sig in HandleComma(snapshot))
+				foreach (var sig in HandleComma(snapshot, ProbeEnvironment.CurrentAppSettings))
 				{
 					signatures.Add(sig);
 				}
@@ -56,7 +56,7 @@ namespace DkTools.SignatureHelp
 
 		private Regex _rxFuncBeforeBracket = new Regex(@"((\w+)\s*\.\s*)?(\w+)\s*$");
 
-		private IEnumerable<ISignature> HandleOpenBracket(VsText.ITextSnapshot snapshot)
+		private IEnumerable<ISignature> HandleOpenBracket(VsText.ITextSnapshot snapshot, ProbeAppSettings appSettings)
 		{
 			ThreadHelper.ThrowIfNotOnUIThread();
 
@@ -79,7 +79,7 @@ namespace DkTools.SignatureHelp
 						VsText.ITrackingSpan applicableToSpan = null;
 
 						var fileName = VsTextUtil.TryGetDocumentFileName(snapshot.TextBuffer);
-						var model = fileStore.GetMostRecentModel(fileName, snapshot, "Signature help after '(' - dot separated words");
+						var model = fileStore.GetMostRecentModel(appSettings, fileName, snapshot, "Signature help after '(' - dot separated words");
 						var modelPos = model.AdjustPosition(word1Start, snapshot);
 
 						foreach (var word1Def in model.DefinitionProvider.GetAny(modelPos, word1))
@@ -98,7 +98,7 @@ namespace DkTools.SignatureHelp
 						VsText.ITrackingSpan applicableToSpan = null;
 
 						var fileName = VsTextUtil.TryGetDocumentFileName(snapshot.TextBuffer);
-						var model = fileStore.GetMostRecentModel(fileName, snapshot, "Signature help after '('");
+						var model = fileStore.GetMostRecentModel(appSettings, fileName, snapshot, "Signature help after '('");
 						var modelPos = model.AdjustPosition(funcNameStart, snapshot);
 						foreach (var def in model.DefinitionProvider.GetAny(modelPos, funcName))
 						{
@@ -113,7 +113,7 @@ namespace DkTools.SignatureHelp
 			}
 		}
 
-		private IEnumerable<ISignature> HandleComma(VsText.ITextSnapshot snapshot)
+		private IEnumerable<ISignature> HandleComma(VsText.ITextSnapshot snapshot, ProbeAppSettings appSettings)
 		{
 			ThreadHelper.ThrowIfNotOnUIThread();
 
@@ -121,7 +121,7 @@ namespace DkTools.SignatureHelp
 			if (fileStore != null)
 			{
 				var fileName = VsTextUtil.TryGetDocumentFileName(_textBuffer);
-				var model = fileStore.GetMostRecentModel(fileName, snapshot, "Signature help after ','");
+				var model = fileStore.GetMostRecentModel(appSettings, fileName, snapshot, "Signature help after ','");
 				var modelPos = (new VsText.SnapshotPoint(snapshot, _triggerPos)).TranslateTo(model.Snapshot, VsText.PointTrackingMode.Negative).Position;
 
 				var argsToken = model.File.FindDownward<ArgsToken>().Where(t => t.Span.Start < modelPos && (t.Span.End > modelPos || !t.IsTerminated)).LastOrDefault();

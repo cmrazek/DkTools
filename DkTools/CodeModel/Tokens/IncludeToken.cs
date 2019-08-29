@@ -102,7 +102,7 @@ namespace DkTools.CodeModel.Tokens
 				if (_fullPathName == null)
 				{
 					var fileStore = Scope.FileStore;
-					if (fileStore != null) _fullPathName = fileStore.LocateIncludeFile(File.FileName, _fileName, _searchFileDir);
+					if (fileStore != null) _fullPathName = fileStore.LocateIncludeFile(Scope.Model.AppSettings, File.FileName, _fileName, _searchFileDir);
 					if (string.IsNullOrEmpty(_fullPathName)) _fullPathName = string.Empty;
 				}
 				return _fullPathName;

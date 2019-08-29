@@ -27,8 +27,9 @@ namespace DkTools.Navigation
 				var fileStore = CodeModel.FileStore.GetOrCreateForTextBuffer(textView.TextBuffer);
 				if (fileStore == null) return;
 
+				var appSettings = ProbeEnvironment.CurrentAppSettings;
 				var fileName = VsTextUtil.TryGetDocumentFileName(textView.TextBuffer);
-				var model = fileStore.GetCurrentModel(fileName, caretPt.Snapshot, "Go to definition");
+				var model = fileStore.GetCurrentModel(appSettings, fileName, caretPt.Snapshot, "Go to definition");
 				var modelPos = model.AdjustPosition(caretPt.Position, caretPt.Snapshot);
 				var selTokens = model.File.FindDownwardTouching(modelPos).ToArray();
 				if (selTokens.Length == 0)
@@ -160,14 +161,15 @@ namespace DkTools.Navigation
 				var fileStore = CodeModel.FileStore.GetOrCreateForTextBuffer(snapPt.Snapshot.TextBuffer);
 				if (fileStore == null) return;
 
+				var appSettings = ProbeEnvironment.CurrentAppSettings;
 				var fileName = VsTextUtil.TryGetDocumentFileName(textView.TextBuffer);
-				var fullModel = fileStore.CreatePreprocessedModel(fileName, snapPt.Snapshot, false, "Find Local References");
+				var fullModel = fileStore.CreatePreprocessedModel(appSettings, fileName, snapPt.Snapshot, false, "Find Local References");
 				var fullModelPos = fullModel.PreprocessorModel.Source.PrimaryFilePositionToSource(fullModel.AdjustPosition(snapPt));
 
 				var fullToken = fullModel.File.FindDownward(fullModelPos, t => t.SourceDefinition != null).FirstOrDefault();
 				if (fullToken == null)
 				{
-					var model = fileStore.GetMostRecentModel(fileName, snapPt.Snapshot, "Find Local References (fallback)");
+					var model = fileStore.GetMostRecentModel(appSettings, fileName, snapPt.Snapshot, "Find Local References (fallback)");
 					var modelPos = model.AdjustPosition(snapPt);
 					var token = model.File.FindDownward(modelPos, t => t.SourceDefinition != null).FirstOrDefault();
 					if (token == null)

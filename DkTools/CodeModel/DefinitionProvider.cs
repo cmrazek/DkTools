@@ -11,7 +11,7 @@ namespace DkTools.CodeModel
 	{
 		private static Definition[] _builtInDefs;
 
-		public DefinitionProvider(string fileName)
+		public DefinitionProvider(ProbeAppSettings appSettings, string fileName)
 		{
 			// Add definitions from external sources
 			if (_builtInDefs == null)
@@ -131,7 +131,7 @@ namespace DkTools.CodeModel
 			AddGlobalFromAnywhere(DkDict.Dict.AllDictDefinitions);
 			if (string.IsNullOrEmpty(fileName) || !System.IO.Path.GetFileName(fileName).Equals("stdlib.i", StringComparison.OrdinalIgnoreCase))
 			{
-				AddGlobalFromAnywhere(FileStore.StdLibModel.PreprocessorModel.DefinitionProvider.GlobalsFromFile);
+				AddGlobalFromAnywhere(FileStore.GetStdLibModel(appSettings).PreprocessorModel.DefinitionProvider.GlobalsFromFile);
 			}
 
 			var ffApp = ProbeToolsPackage.Instance.FunctionFileScanner.CurrentApp;

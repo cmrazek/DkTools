@@ -200,6 +200,7 @@ namespace DkTools
 				await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
 
 				List<string> srcDirs = null;
+				var appSettings = ProbeEnvironment.CurrentAppSettings;
 
 				foreach (EnvDTE.Document doc in Shell.DTE.Documents)
 				{
@@ -210,7 +211,7 @@ namespace DkTools
 						var docFileName = doc.FullName;
 						var saveFile = false;
 
-						if (srcDirs == null) srcDirs = ProbeEnvironment.SourceIncludeDirs.ToList();
+						if (srcDirs == null) srcDirs = appSettings.SourceDirs.Concat(appSettings.IncludeDirs).ToList();
 						foreach (var dir in srcDirs)
 						{
 							var srcDirPath = dir;
@@ -301,7 +302,7 @@ namespace DkTools
 						return;
 					}
 
-					string baseFileName = ProbeEnvironment.FindBaseFile(activeDoc.FullName);
+					string baseFileName = ProbeEnvironment.CurrentAppSettings.FindBaseFile(activeDoc.FullName);
 					if (string.IsNullOrEmpty(baseFileName))
 					{
 						Shell.ShowError("Base file could not be found.");
@@ -351,7 +352,7 @@ namespace DkTools
 						return;
 					}
 
-					string baseFileName = ProbeEnvironment.FindBaseFile(activeDoc.FullName);
+					string baseFileName = ProbeEnvironment.CurrentAppSettings.FindBaseFile(activeDoc.FullName);
 					if (string.IsNullOrEmpty(baseFileName))
 					{
 						Shell.ShowError("Base file could not be found.");
@@ -407,7 +408,7 @@ namespace DkTools
 
 					var cp = new CodeProcessing.CodeProcessor();
 					cp.ShowMergeComments = true;
-					cp.ProcessFile(fileName);
+					cp.ProcessFile(ProbeEnvironment.CurrentAppSettings, fileName);
 
 					string tempFileName = string.Empty;
 					using (var tempFileOutput = new TempFileOutput(string.Concat(Path.GetFileNameWithoutExtension(fileName), "_merge"),
@@ -454,7 +455,7 @@ namespace DkTools
 
 					using (var pr = new ProcessRunner())
 					{
-						exitCode = pr.CaptureProcess("ptd.exe", "", ProbeEnvironment.TempDir, output);
+						exitCode = pr.CaptureProcess("ptd.exe", "", ProbeEnvironment.CurrentAppSettings.TempDir, output);
 					}
 					if (exitCode != 0)
 					{
@@ -483,9 +484,10 @@ namespace DkTools
 				{
 					var dirs = new StringBuilder();
 					var dirList = new List<string>();
+					var appSettings = ProbeEnvironment.CurrentAppSettings;
 
-					foreach (var sourceDir in ProbeEnvironment.SourceDirs) dirList.Add(sourceDir);
-					foreach (var includeDir in ProbeEnvironment.IncludeDirs) dirList.Add(includeDir);
+					foreach (var sourceDir in appSettings.SourceDirs) dirList.Add(sourceDir);
+					foreach (var includeDir in appSettings.IncludeDirs) dirList.Add(includeDir);
 
 					Shell.ShowFindInFiles(dirList);
 				}
@@ -618,9 +620,11 @@ namespace DkTools
 				await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
 				try
 				{
-					if (!string.IsNullOrEmpty(ProbeEnvironment.PlatformPath))
+					var appSettings = ProbeEnvironment.CurrentAppSettings;
+
+					if (!string.IsNullOrEmpty(appSettings.PlatformPath))
 					{
-						var pathName = Path.Combine(ProbeEnvironment.PlatformPath, "ACM.msc");
+						var pathName = Path.Combine(appSettings.PlatformPath, "ACM.msc");
 						if (File.Exists(pathName))
 						{
 							Process.Start(pathName);
@@ -645,9 +649,11 @@ namespace DkTools
 				await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
 				try
 				{
-					if (!string.IsNullOrEmpty(ProbeEnvironment.PlatformPath))
+					var appSettings = ProbeEnvironment.CurrentAppSettings;
+
+					if (!string.IsNullOrEmpty(appSettings.PlatformPath))
 					{
-						var pathName = Path.Combine(ProbeEnvironment.PlatformPath, "..\\Documentation\\platform.chm");
+						var pathName = Path.Combine(appSettings.PlatformPath, "..\\Documentation\\platform.chm");
 						if (File.Exists(pathName))
 						{
 							Process.Start(pathName);
@@ -672,9 +678,11 @@ namespace DkTools
 				await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
 				try
 				{
-					if (!string.IsNullOrEmpty(ProbeEnvironment.PlatformPath))
+					var appSettings = ProbeEnvironment.CurrentAppSettings;
+
+					if (!string.IsNullOrEmpty(appSettings.PlatformPath))
 					{
-						var pathName = Path.Combine(ProbeEnvironment.PlatformPath, "DRV.msc");
+						var pathName = Path.Combine(appSettings.PlatformPath, "DRV.msc");
 						if (File.Exists(pathName))
 						{
 							Process.Start(pathName);
@@ -699,9 +707,11 @@ namespace DkTools
 				await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
 				try
 				{
-					if (!string.IsNullOrEmpty(ProbeEnvironment.PlatformPath))
+					var appSettings = ProbeEnvironment.CurrentAppSettings;
+
+					if (!string.IsNullOrEmpty(appSettings.PlatformPath))
 					{
-						var pathName = Path.Combine(ProbeEnvironment.PlatformPath, "probenv.exe");
+						var pathName = Path.Combine(appSettings.PlatformPath, "probenv.exe");
 						if (File.Exists(pathName))
 						{
 							Process.Start(pathName);
@@ -866,11 +876,13 @@ namespace DkTools
 					var view = Shell.ActiveView;
 					if (view == null) return;
 
+					var appSettings = ProbeEnvironment.CurrentAppSettings;
+
 					var fileName = VsTextUtil.TryGetDocumentFileName(view.TextBuffer);
 
 					var fileStore = CodeModel.FileStore.GetOrCreateForTextBuffer(view.TextBuffer);
 					if (fileStore == null) return;
-					var model = fileStore.CreatePreprocessedModel(fileName, view.TextSnapshot, false, "Code Analysis");
+					var model = fileStore.CreatePreprocessedModel(appSettings, fileName, view.TextSnapshot, false, "Code Analysis");
 
 					var pane = Shell.CreateOutputPane(GuidList.guidCodeAnalysisPane, "DK Code Analysis");
 					pane.Clear();
@@ -889,7 +901,7 @@ namespace DkTools
 #if DEBUG
 		internal static class DebugCommands
 		{
-			private static CodeModel.CodeModel GetModelForActiveDoc()
+			private static CodeModel.CodeModel GetModelForActiveDoc(ProbeAppSettings appSettings)
 			{
 				ThreadHelper.ThrowIfNotOnUIThread();
 
@@ -900,7 +912,7 @@ namespace DkTools
 				if (store == null) return null;
 
 				var fileName = VsTextUtil.TryGetDocumentFileName(view.TextBuffer);
-				return store.GetMostRecentModel(fileName, view.TextSnapshot, "Debug Commands");
+				return store.GetMostRecentModel(appSettings, fileName, view.TextSnapshot, "Debug Commands");
 			}
 
 			public static void ShowCodeModelDump()
@@ -909,6 +921,8 @@ namespace DkTools
 				{
 					await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
 
+					var appSettings = ProbeEnvironment.CurrentAppSettings;
+
 					var view = Shell.ActiveView;
 					if (view == null) return;
 
@@ -916,7 +930,7 @@ namespace DkTools
 					if (fileStore == null) return;
 
 					var fileName = VsTextUtil.TryGetDocumentFileName(view.TextBuffer);
-					var model = fileStore.GetCurrentModel(fileName, view.TextSnapshot, "Debug:ShowCodeModelDump");
+					var model = fileStore.GetCurrentModel(appSettings, fileName, view.TextSnapshot, "Debug:ShowCodeModelDump");
 
 					Shell.OpenTempContent(model.DumpTree(), Path.GetFileName(model.FileName), ".model.xml");
 				});
@@ -928,7 +942,9 @@ namespace DkTools
 				{
 					await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
 
-					var model = CodeModel.FileStore.StdLibModel;
+					var appSettings = ProbeEnvironment.CurrentAppSettings;
+
+					var model = CodeModel.FileStore.GetStdLibModel(appSettings);
 
 					Shell.OpenTempContent(model.DumpTree(), "stdlib", ".model.xml");
 				});
@@ -940,7 +956,9 @@ namespace DkTools
 				{
 					await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
 
-					var model = GetModelForActiveDoc();
+					var appSettings = ProbeEnvironment.CurrentAppSettings;
+
+					var model = GetModelForActiveDoc(appSettings);
 					if (model != null)
 					{
 						Shell.OpenTempContent(model.DefinitionProvider.DumpDefinitions(), Path.GetFileName(model.FileName), ".txt");
@@ -961,7 +979,7 @@ namespace DkTools
 					try
 					{
 						var merger = new CodeModel.FileMerger();
-						merger.MergeFile(fileName, content, true, true);
+						merger.MergeFile(ProbeEnvironment.CurrentAppSettings, fileName, content, true, true);
 						return merger.MergedContent;
 					}
 					catch (Exception ex)
@@ -986,12 +1004,15 @@ namespace DkTools
 				{
 					await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
 
+					var appSettings = ProbeEnvironment.CurrentAppSettings;
+
 					string fileName;
 					var codeSource = GetCodeSourceForActiveView(out fileName);
 					if (codeSource == null) return;
 
 					var store = new CodeModel.FileStore();
-					var model = store.CreatePreprocessedModel(codeSource, fileName, false, "Commands.Debug.ShowPreprocessor()", null);
+					var model = store.CreatePreprocessedModel(appSettings, codeSource, fileName, false,
+						"Commands.Debug.ShowPreprocessor()", null);
 
 					Shell.OpenTempContent(model.Source.Text, Path.GetFileName(fileName), ".preprocessor.txt");
 				});
@@ -1003,7 +1024,9 @@ namespace DkTools
 				{
 					await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
 
-					var model = GetModelForActiveDoc();
+					var appSettings = ProbeEnvironment.CurrentAppSettings;
+
+					var model = GetModelForActiveDoc(appSettings);
 					if (model == null)
 					{
 						Shell.ShowError("No model found.");
@@ -1028,6 +1051,8 @@ namespace DkTools
 				{
 					await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
 
+					var appSettings = ProbeEnvironment.CurrentAppSettings;
+
 					var view = Shell.ActiveView;
 					if (view == null) return;
 
@@ -1035,7 +1060,8 @@ namespace DkTools
 
 					var fileStore = CodeModel.FileStore.GetOrCreateForTextBuffer(view.TextBuffer);
 					if (fileStore == null) return;
-					var model = fileStore.CreatePreprocessedModel(fileName, view.TextSnapshot, false, "Debug:ShowPreprocessorFullModelDump");
+					var model = fileStore.CreatePreprocessedModel(appSettings, fileName, view.TextSnapshot, false,
+						"Debug:ShowPreprocessorFullModelDump");
 
 					Shell.OpenTempContent(model.DumpTree(), Path.GetFileName(model.FileName), ".prepmodel.xml");
 				});
