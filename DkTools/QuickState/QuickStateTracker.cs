@@ -161,6 +161,12 @@ namespace DkTools
 			return tracker.GetStateForPosition(snapPt);
 		}
 
+		public static bool IsInLiveCode(this SnapshotPoint snapPt)
+		{
+			var tracker = snapPt.Snapshot.TextBuffer.GetQuickStateTracker();
+			return IsInLiveCode(tracker.GetStateForPosition(snapPt));
+		}
+
 		public static bool IsInLiveCode(int state)
 		{
 			return (state & (StringLiteral | CharLiteral | SingleLineComment | MultiLineMask)) == 0;

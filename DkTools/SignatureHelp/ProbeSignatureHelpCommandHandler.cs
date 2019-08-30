@@ -75,12 +75,10 @@ namespace DkTools.SignatureHelp
 				{
 					if (nCmdID == (uint)VSConstants.VSStd2KCmdID.TYPECHAR)
 					{
-						typedChar = (char)(ushort)Marshal.GetObjectForNativeVariant(pvaIn);
-						if (typedChar == '(')
+						if (_textView.Caret.Position.BufferPosition.IsInLiveCode())
 						{
-							var appSettings = ProbeEnvironment.CurrentAppSettings;
-							var fileName = VsTextUtil.TryGetDocumentFileName(_textView.TextBuffer);
-							if (_textView.Caret.Position.BufferPosition.IsInLiveCode(fileName, appSettings))
+							typedChar = (char)(ushort)Marshal.GetObjectForNativeVariant(pvaIn);
+							if (typedChar == '(')
 							{
 								SnapshotPoint point = _textView.Caret.Position.BufferPosition;
 								var pos = point.Position;
@@ -93,21 +91,18 @@ namespace DkTools.SignatureHelp
 									_session = _broker.TriggerSignatureHelp(_textView);
 								}
 							}
-						}
-						else if (typedChar == ')' && _session != null)
-						{
-							if (!_session.IsDismissed) _session.Dismiss();
-							_session = null;
-						}
-						else if (typedChar == ',' && (_session == null || _session.IsDismissed))
-						{
-							var appSettings = ProbeEnvironment.CurrentAppSettings;
-							var fileName = VsTextUtil.TryGetDocumentFileName(_textView.TextBuffer);
-							if (_textView.Caret.Position.BufferPosition.IsInLiveCode(fileName, appSettings))
+							else if (typedChar == ')' && _session != null)
+							{
+								if (!_session.IsDismissed) _session.Dismiss();
+								_session = null;
+							}
+							else if (typedChar == ',' && (_session == null || _session.IsDismissed))
 							{
 								var fileStore = CodeModel.FileStore.GetOrCreateForTextBuffer(_textView.TextBuffer);
 								if (fileStore != null)
 								{
+									var appSettings = ProbeEnvironment.CurrentAppSettings;
+									var fileName = VsTextUtil.TryGetDocumentFileName(_textView.TextBuffer);
 									var model = fileStore.GetMostRecentModel(appSettings, fileName, _textView.TextSnapshot, "Signature help command handler - after ','");
 									var modelPos = _textView.Caret.Position.BufferPosition.TranslateTo(model.Snapshot, PointTrackingMode.Negative).Position;
 
