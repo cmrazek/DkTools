@@ -46,11 +46,7 @@ namespace DkTools.SmartIndenting
 
 				if (typedChar == '}' || typedChar == '#' || typedChar == ':')
 				{
-					var fileName = VsTextUtil.TryGetDocumentFileName(_textView.TextBuffer);
-					var appSettings = ProbeEnvironment.CurrentAppSettings;
-					var tracker = Classifier.TextBufferStateTracker.GetTrackerForTextBuffer(_textView.TextBuffer);
-					var state = tracker.GetStateForPosition(_textView.Caret.Position.BufferPosition, fileName, appSettings);
-					if (Classifier.State.IsInLiveCode(state))
+					if (QuickState.IsInLiveCode(_textView.Caret.Position.BufferPosition.GetQuickState()))
 					{
 						TriggerIndentReformat();
 						retVal = VSConstants.S_OK;
