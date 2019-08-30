@@ -97,12 +97,11 @@ namespace DkTools.StatementCompletion
 			ThreadHelper.ThrowIfNotOnUIThread();
 
 			_mode = CompletionMode.None;
-
 			_fileName = VsTextUtil.TryGetDocumentFileName(_textView.TextBuffer);
 			_appSettings = ProbeEnvironment.CurrentAppSettings;
-			var tracker = Classifier.TextBufferStateTracker.GetTrackerForTextBuffer(triggerPt.Snapshot.TextBuffer);
-			var state = tracker.GetStateForPosition(triggerPt, _fileName, _appSettings);
-			if (Classifier.State.IsInLiveCode(state))
+
+			var state = triggerPt.GetQuickState();
+			if (QuickState.IsInLiveCode(state))
 			{
 				Match match;
 				var line = triggerPt.Snapshot.GetLineFromPosition(triggerPt.Position);
@@ -251,7 +250,7 @@ namespace DkTools.StatementCompletion
 			}
 			else
 			{
-				if ((state & State.StringLiteral_Mask) != 0)
+				if ((state & QuickState.StringLiteral) != 0)
 				{
 					Match match;
 					var line = triggerPt.Snapshot.GetLineFromPosition(triggerPt.Position);

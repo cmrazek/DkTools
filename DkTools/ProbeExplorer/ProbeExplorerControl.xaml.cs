@@ -852,6 +852,11 @@ namespace DkTools.ProbeExplorer
 				menuItem.Click += ShowPreprocessorModel_Click;
 				menu.Items.Add(menuItem);
 
+				menuItem = new MenuItem();
+				menuItem.Header = "Show QuickState";
+				menuItem.Click += ShowQuickState_Click;
+				menu.Items.Add(menuItem);
+
 				menu.PlacementTarget = c_appLabel;
 				menu.IsOpen = true;
 			}
@@ -955,6 +960,23 @@ namespace DkTools.ProbeExplorer
 				try
 				{
 					Commands.DebugCommands.ShowPreprocessorFullModelDump();
+				}
+				catch (Exception ex)
+				{
+					this.ShowError(ex);
+				}
+			});
+		}
+
+		private void ShowQuickState_Click(object sender, RoutedEventArgs e)
+		{
+			ThreadHelper.JoinableTaskFactory.RunAsync(async () =>
+			{
+				await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
+
+				try
+				{
+					Commands.DebugCommands.ShowQuickState();
 				}
 				catch (Exception ex)
 				{

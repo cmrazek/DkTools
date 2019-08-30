@@ -1066,6 +1066,24 @@ namespace DkTools
 					Shell.OpenTempContent(model.DumpTree(), Path.GetFileName(model.FileName), ".prepmodel.xml");
 				});
 			}
+
+			public static void ShowQuickState()
+			{
+				ThreadHelper.ThrowIfNotOnUIThread();
+
+				var view = Shell.ActiveView;
+				var caretPtTest = view.Caret.Position.Point.GetPoint(buf => (!buf.ContentType.IsOfType("projection")),
+					Microsoft.VisualStudio.Text.PositionAffinity.Predecessor);
+				if (!caretPtTest.HasValue)
+				{
+					Log.Debug("Couldn't get caret point.");
+					return;
+				}
+				var caretPt = caretPtTest.Value;
+
+				var state = caretPt.GetQuickState();
+				Log.Info("State: 0x{0:X8}", state);
+			}
 		}
 #endif
 	}

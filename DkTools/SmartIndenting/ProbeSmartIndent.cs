@@ -98,27 +98,15 @@ namespace DkTools.SmartIndenting
 				var prevLine = GetPreviousCodeLine(line);
 				if (prevLine != null)
 				{
-					var tracker = Classifier.TextBufferStateTracker.GetTrackerForTextBuffer(buffer);
-					if (tracker != null)
+					var prevState = prevLine.Start.GetQuickState();
+					while (QuickState.IsInMultiLineComment(prevState))
 					{
-						var lineNumber = prevLine.LineNumber;
-						var fileName = VsTextUtil.TryGetDocumentFileName(buffer);
-						var prevState = tracker.GetStateForLineStart(lineNumber, tracker.Snapshot, fileName, appSettings);
-						while (State.IsInsideMultiLineComment(prevState))
-						{
-							if (lineNumber == 0) break;	// At start of file. In theory, this should never happen as the state for the start of the file is always zero.
-							prevState = tracker.GetStateForLineStart(--lineNumber, tracker.Snapshot, fileName, appSettings);
-						}
-
-						if (prevLine.LineNumber != lineNumber) prevLine = prevLine.Snapshot.GetLineFromLineNumber(lineNumber);
+						if (prevLine.LineNumber == 0) break; // At start of file. In theory, this should never happen as the state for the start of the file is always zero.
+						prevLine = prevLine.Snapshot.GetLineFromLineNumber(prevLine.LineNumber - 1);
+						prevState = prevLine.Start.GetQuickState();
 					}
 
 					var prevLineText = prevLine.Snapshot.GetText(prevLine.Start.Position, line.Start.Position - prevLine.Start.Position);
-
-					//var tracker = ;
-					//var state = tracker != null ? tracker.GetStateForLine(prevLine.LineNumber, _view.TextSnapshot) : 0;
-
-					//if (prevLineText.EndsWith("{") || _rxCaseLine.IsMatch(prevLineText))
 					if (PrevLineTextWarrantsIndent(prevLineText))
 					{
 						return prevLineText.GetIndentCount(tabSize).AddIndentTab(tabSize);
