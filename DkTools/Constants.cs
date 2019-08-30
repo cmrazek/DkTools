@@ -45,18 +45,13 @@ namespace DkTools
 			"nowarn numeric oleobject proto short shortform signed string time unsigned varchar variant void");
 
 		public static readonly HashSet<string> GlobalKeywords = Util.ParseWordList(
-			"after alter and BEGINHLP before break button comment col colff cols continue create display description each else endgroup ENDHLP extern extract",
+			"after all alter and BEGINHLP before break button case comment col colff cols continue create display default description each else endgroup ENDHLP extern extract",
 			"footer for form formonly format group header if index interface",
-			"many nomenu nopick nopersist on one onerror or order outfile permanent physical private prompt protected public relationship return row rows select snapshot static switch",
+			"many nomenu nopick nopersist of on one onerror or order outfile permanent physical private prompt protected public relationship return row rows select snapshot static switch",
 			"table tag to tool typedef unique updates where while widthof zoom");
 
 		// Keywords that are not supported by the code model, but should be highlighted anyway.
 		public static readonly HashSet<string> HighlightKeywords = Util.ParseWordList("where");
-
-		public static readonly HashSet<string> SwitchKeywords = Util.ParseWordList("case default");
-		public static readonly HashSet<string> FunctionKeywords = Util.ParseWordList("if return switch while");
-		public static readonly HashSet<string> SelectFromKeywords = Util.ParseWordList("of");
-		public static readonly HashSet<string> SelectBodyKeywords = Util.ParseWordList("after all before default each for group");
 
 		public static readonly HashSet<string> TagNames = Util.ParseWordList(
 			"accesstype checkbox cols controlstyle defaultenumcontrolstyle disabledborder easyview formatstring formposition hideModalMenus",
