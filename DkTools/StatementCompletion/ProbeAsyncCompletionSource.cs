@@ -92,172 +92,158 @@ namespace DkTools.StatementCompletion
 		private static readonly Regex _rxAfterNumber = new Regex(@"(\d+)\s$");
 		private static readonly Regex _rxAfterStringLiteral = new Regex(@"""\s$");
 
+		public static readonly char[] NoCompletionChars = new char[] { '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '-' };
+
 		public bool TryGetApplicableToSpan(char typedChar, SnapshotPoint triggerPt, out SnapshotSpan applicableToSpan, CancellationToken token)
 		{
 			ThreadHelper.ThrowIfNotOnUIThread();
 
-			_mode = CompletionMode.None;
-			_fileName = VsTextUtil.TryGetDocumentFileName(_textView.TextBuffer);
-			_appSettings = ProbeEnvironment.CurrentAppSettings;
-
-			var state = triggerPt.GetQuickState();
-			if (QuickState.IsInLiveCode(state))
+			if (!NoCompletionChars.Contains(typedChar))
 			{
-				Match match;
-				var line = triggerPt.Snapshot.GetLineFromPosition(triggerPt.Position);
-				var prefix = line.GetTextUpToPosition(triggerPt);
+				_mode = CompletionMode.None;
+				_fileName = VsTextUtil.TryGetDocumentFileName(_textView.TextBuffer);
+				_appSettings = ProbeEnvironment.CurrentAppSettings;
 
-				if (typedChar == ' ')
-				{
-					#region Assignment or Comparison
-					if ((match = _rxAfterAssignOrCompare.Match(prefix)).Success)
-					{
-						_mode = CompletionMode.AfterAssignOrCompare;
-						applicableToSpan = triggerPt.ToSnapshotSpan();
-						_params.str = match.Groups[1].Value;
-						_params.pt = new SnapshotPoint(line.Snapshot, match.Groups[1].Index + line.Start.Position);
-						return true;
-					}
-					#endregion
-					#region #ifdef
-					else if ((match = _rxAfterIfDef.Match(prefix)).Success)
-					{
-						_mode = CompletionMode.AfterIfDef;
-						applicableToSpan = triggerPt.ToSnapshotSpan();
-						return true;
-					}
-					#endregion
-					#region Comma
-					else if (prefix.EndsWith(", "))
-					{
-						_mode = CompletionMode.AfterComma;
-						applicableToSpan = triggerPt.ToSnapshotSpan();
-						return true;
-					}
-					#endregion
-					#region order by
-					else if ((match = _rxOrderBy.Match(prefix)).Success)
-					{
-						_mode = CompletionMode.AfterOrderBy;
-						applicableToSpan = triggerPt.ToSnapshotSpan();
-						return true;
-					}
-					#endregion
-					#region After Word
-					else if ((match = _rxAfterWord.Match(prefix)).Success)
-					{
-						switch (match.Groups[1].Value)
-						{
-							case "case":
-								_mode = CompletionMode.AfterCase;
-								applicableToSpan = triggerPt.ToSnapshotSpan();
-								return true;
-							case "extract":
-								_mode = CompletionMode.AfterExtract;
-								applicableToSpan = triggerPt.ToSnapshotSpan();
-								_params.str = match.Groups[1].Value;
-								return true;
-							case "return":
-								_mode = CompletionMode.AfterReturn;
-								applicableToSpan = triggerPt.ToSnapshotSpan();
-								return true;
-							case "tag":
-								_mode = CompletionMode.AfterTag;
-								applicableToSpan = triggerPt.ToSnapshotSpan();
-								return true;
-							default:
-								_mode = CompletionMode.AfterWord;
-								applicableToSpan = triggerPt.ToSnapshotSpan();
-								_params.str = match.Groups[1].Value;
-								_params.snapshot = triggerPt.Snapshot;
-								return true;
-						}
-					}
-					#endregion
-					#region After Symbol
-					else if ((match = _rxAfterSymbol.Match(prefix)).Success)
-					{
-						_mode = CompletionMode.AfterSymbol;
-						applicableToSpan = triggerPt.ToSnapshotSpan();
-						return true;
-					}
-					#endregion
-					#region After Number
-					else if ((match = _rxAfterNumber.Match(prefix)).Success)
-					{
-						_mode = CompletionMode.AfterNumber;
-						applicableToSpan = triggerPt.ToSnapshotSpan();
-						return true;
-					}
-					#endregion
-					#region After String Literal
-					else if ((match = _rxAfterStringLiteral.Match(prefix)).Success)
-					{
-						_mode = CompletionMode.AfterStringLiteral;
-						applicableToSpan = triggerPt.ToSnapshotSpan();
-						return true;
-					}
-					#endregion
-				}
-				#region Table.Field
-				else if ((match = _rxTypingTable.Match(prefix)).Success)
-				{
-					_mode = CompletionMode.DotSeparatedWords;
-					applicableToSpan = new SnapshotSpan(triggerPt.Snapshot, match.Groups[2].Index + line.Start.Position, match.Groups[2].Length);
-					_params.str = match.Groups[1].Value;
-					_params.str2 = match.Groups[2].Value;
-					return true;
-				}
-				#endregion
-				#region Word
-				else if ((match = _rxTypingWord.Match(prefix)).Success)
-				{
-					// Typing a regular word.
-					_mode = CompletionMode.Word;
-					_params.pt = new SnapshotPoint(triggerPt.Snapshot, line.Start.Position + match.Index);
-					applicableToSpan = new SnapshotSpan(_params.pt, match.Length);
-					return true;
-				}
-				#endregion
-				#region Class function bracket
-				else if ((match = _rxClassFunctionStartBracket.Match(prefix)).Success)
-				{
-					_mode = CompletionMode.ClassFunction;
-					applicableToSpan = triggerPt.ToSnapshotSpan();
-					_params.str = match.Groups[1].Value;
-					_params.str2 = match.Groups[2].Value;
-					return true;
-				}
-				#endregion
-				#region Function bracket
-				else if ((match = _rxFunctionStartBracket.Match(prefix)).Success)
-				{
-					_mode = CompletionMode.Function;
-					applicableToSpan = triggerPt.ToSnapshotSpan();
-					_params.str = match.Groups[1].Value;
-					return true;
-				}
-				#endregion
-				#region #include
-				else if ((match = _rxAfterInclude.Match(prefix)).Success)
-				{
-					_mode = CompletionMode.Include;
-					applicableToSpan = triggerPt.ToSnapshotSpan();
-					_params.str = match.Groups[1].Value;
-					return true;
-				}
-				#endregion
-			}
-			else
-			{
-				if ((state & QuickState.StringLiteral) != 0)
+				var state = triggerPt.GetQuickState();
+				if (QuickState.IsInLiveCode(state))
 				{
 					Match match;
 					var line = triggerPt.Snapshot.GetLineFromPosition(triggerPt.Position);
 					var prefix = line.GetTextUpToPosition(triggerPt);
 
-					#region #include (for string literal)
-					if ((match = _rxAfterInclude.Match(prefix)).Success)
+					if (typedChar == ' ')
+					{
+						#region Assignment or Comparison
+						if ((match = _rxAfterAssignOrCompare.Match(prefix)).Success)
+						{
+							_mode = CompletionMode.AfterAssignOrCompare;
+							applicableToSpan = triggerPt.ToSnapshotSpan();
+							_params.str = match.Groups[1].Value;
+							_params.pt = new SnapshotPoint(line.Snapshot, match.Groups[1].Index + line.Start.Position);
+							return true;
+						}
+						#endregion
+						#region #ifdef
+						else if ((match = _rxAfterIfDef.Match(prefix)).Success)
+						{
+							_mode = CompletionMode.AfterIfDef;
+							applicableToSpan = triggerPt.ToSnapshotSpan();
+							return true;
+						}
+						#endregion
+						#region Comma
+						else if (prefix.EndsWith(", "))
+						{
+							_mode = CompletionMode.AfterComma;
+							applicableToSpan = triggerPt.ToSnapshotSpan();
+							return true;
+						}
+						#endregion
+						#region order by
+						else if ((match = _rxOrderBy.Match(prefix)).Success)
+						{
+							_mode = CompletionMode.AfterOrderBy;
+							applicableToSpan = triggerPt.ToSnapshotSpan();
+							return true;
+						}
+						#endregion
+						#region After Word
+						else if ((match = _rxAfterWord.Match(prefix)).Success)
+						{
+							switch (match.Groups[1].Value)
+							{
+								case "case":
+									_mode = CompletionMode.AfterCase;
+									applicableToSpan = triggerPt.ToSnapshotSpan();
+									return true;
+								case "extract":
+									_mode = CompletionMode.AfterExtract;
+									applicableToSpan = triggerPt.ToSnapshotSpan();
+									_params.str = match.Groups[1].Value;
+									return true;
+								case "return":
+									_mode = CompletionMode.AfterReturn;
+									applicableToSpan = triggerPt.ToSnapshotSpan();
+									return true;
+								case "tag":
+									_mode = CompletionMode.AfterTag;
+									applicableToSpan = triggerPt.ToSnapshotSpan();
+									return true;
+								default:
+									_mode = CompletionMode.AfterWord;
+									applicableToSpan = triggerPt.ToSnapshotSpan();
+									_params.str = match.Groups[1].Value;
+									_params.snapshot = triggerPt.Snapshot;
+									return true;
+							}
+						}
+						#endregion
+						#region After Symbol
+						else if ((match = _rxAfterSymbol.Match(prefix)).Success)
+						{
+							_mode = CompletionMode.AfterSymbol;
+							applicableToSpan = triggerPt.ToSnapshotSpan();
+							return true;
+						}
+						#endregion
+						#region After Number
+						else if ((match = _rxAfterNumber.Match(prefix)).Success)
+						{
+							_mode = CompletionMode.AfterNumber;
+							applicableToSpan = triggerPt.ToSnapshotSpan();
+							return true;
+						}
+						#endregion
+						#region After String Literal
+						else if ((match = _rxAfterStringLiteral.Match(prefix)).Success)
+						{
+							_mode = CompletionMode.AfterStringLiteral;
+							applicableToSpan = triggerPt.ToSnapshotSpan();
+							return true;
+						}
+						#endregion
+					}
+					#region Table.Field
+					else if ((match = _rxTypingTable.Match(prefix)).Success)
+					{
+						_mode = CompletionMode.DotSeparatedWords;
+						applicableToSpan = new SnapshotSpan(triggerPt.Snapshot, match.Groups[2].Index + line.Start.Position, match.Groups[2].Length);
+						_params.str = match.Groups[1].Value;
+						_params.str2 = match.Groups[2].Value;
+						return true;
+					}
+					#endregion
+					#region Word
+					else if ((match = _rxTypingWord.Match(prefix)).Success)
+					{
+						// Typing a regular word.
+						_mode = CompletionMode.Word;
+						_params.pt = new SnapshotPoint(triggerPt.Snapshot, line.Start.Position + match.Index);
+						applicableToSpan = new SnapshotSpan(_params.pt, match.Length);
+						return true;
+					}
+					#endregion
+					#region Class function bracket
+					else if ((match = _rxClassFunctionStartBracket.Match(prefix)).Success)
+					{
+						_mode = CompletionMode.ClassFunction;
+						applicableToSpan = triggerPt.ToSnapshotSpan();
+						_params.str = match.Groups[1].Value;
+						_params.str2 = match.Groups[2].Value;
+						return true;
+					}
+					#endregion
+					#region Function bracket
+					else if ((match = _rxFunctionStartBracket.Match(prefix)).Success)
+					{
+						_mode = CompletionMode.Function;
+						applicableToSpan = triggerPt.ToSnapshotSpan();
+						_params.str = match.Groups[1].Value;
+						return true;
+					}
+					#endregion
+					#region #include
+					else if ((match = _rxAfterInclude.Match(prefix)).Success)
 					{
 						_mode = CompletionMode.Include;
 						applicableToSpan = triggerPt.ToSnapshotSpan();
@@ -266,7 +252,25 @@ namespace DkTools.StatementCompletion
 					}
 					#endregion
 				}
-				
+				else
+				{
+					if ((state & QuickState.StringLiteral) != 0)
+					{
+						Match match;
+						var line = triggerPt.Snapshot.GetLineFromPosition(triggerPt.Position);
+						var prefix = line.GetTextUpToPosition(triggerPt);
+
+						#region #include (for string literal)
+						if ((match = _rxAfterInclude.Match(prefix)).Success)
+						{
+							_mode = CompletionMode.Include;
+							applicableToSpan = triggerPt.ToSnapshotSpan();
+							_params.str = match.Groups[1].Value;
+							return true;
+						}
+						#endregion
+					}
+				}
 			}
 
 			applicableToSpan = new SnapshotSpan(triggerPt.Snapshot, new Span(0, 0));

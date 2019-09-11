@@ -15,7 +15,13 @@ namespace DkTools.StatementCompletion
 	class ProbeCompletionCommitManager : IAsyncCompletionCommitManager
 	{
 		private ITextView _textView;
-		private static readonly char[] _commitChars = new char[] { ' ', ';', '.', '(', ')', ',', '<', '>', '\"', '\'' };
+		private bool _startAbort;
+
+		private static readonly char[] _commitChars = new char[]
+		{
+			' ', ';', '.', '(', ')', ',', '<', '>', '\"', '\'', '-',
+			'0', '1', '2', '3', '4', '5', '6', '7', '8', '9'
+		};
 
 		public ProbeCompletionCommitManager(ITextView textView)
 		{
@@ -31,14 +37,41 @@ namespace DkTools.StatementCompletion
 		{
 			// Runs synchronously on main thread
 
-			return true;	// All commit chars should trigger a commit
+			_startAbort = false;
+
+			if (_textView.Properties.TryGetProperty(typeof(IAsyncCompletionSession), out IAsyncCompletionSession session))
+			{
+				if (ProbeAsyncCompletionSource.NoCompletionChars.Contains(typedChar))
+				{
+					if (session.ApplicableToSpan.GetSpan(location.Snapshot).Length == 1 &&
+						session.ApplicableToSpan.GetText(location.Snapshot) == typedChar.ToString())
+					{
+						_startAbort = true;
+						return true;
+					}
+				}
+			}
+
+			return true;
 		}
 
 		CommitResult IAsyncCompletionCommitManager.TryCommit(ITextView view, ITextBuffer buffer, CompletionItem item,
 			ITrackingSpan applicableToSpan, char typedChar, CancellationToken token)
 		{
+			if (_startAbort)
+			{
+				var span = applicableToSpan.GetSpan(buffer.CurrentSnapshot);
+				var text = applicableToSpan.GetText(buffer.CurrentSnapshot);
+
+				if (view.Properties.TryGetProperty(typeof(IAsyncCompletionSession), out IAsyncCompletionSession session))
+				{
+					session.Dismiss();
+				}
+
+				return CommitResult.Handled;
+			}
+
 			return CommitResult.Unhandled;	// Use default mechanism
 		}
-
 	}
 }
