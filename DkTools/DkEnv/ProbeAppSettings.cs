@@ -25,6 +25,7 @@ namespace DkTools
 		public string LogDir { get; set; }
 		public string[] SourceFiles { get; set; }
 		public string[] IncludeFiles { get; set; }
+		public string[] SourceAndIncludeFiles { get; set; }
 
 		public ProbeAppSettings()
 		{
@@ -43,15 +44,7 @@ namespace DkTools
 			LogDir = string.Empty;
 			SourceFiles = new string[0];
 			IncludeFiles = new string[0];
-		}
-
-		public IEnumerable<string> SourceAndIncludeFiles
-		{
-			get
-			{
-				foreach (var file in SourceFiles) yield return file;
-				foreach (var file in IncludeFiles) yield return file;
-			}
+			SourceAndIncludeFiles = new string[0];
 		}
 
 		public IEnumerable<string> GetAllIncludeFilesForDir(string path)

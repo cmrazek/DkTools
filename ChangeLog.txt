@@ -6,6 +6,7 @@ Version 1.5.4 - (WIP):
 - Typing ':' in a string no longer causes the line to be reindented.
 - Improved auto-completion when typing certain characters.
 - Fixed infinite loop in code model when select statement has words with capital letters.
+- Removed duplicate include files in DK Explorer.
 
 ____________________________________________________________________________________________________
 Version 1.5.3 - Aug 28, 2019:

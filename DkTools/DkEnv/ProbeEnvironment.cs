@@ -74,6 +74,7 @@ namespace DkTools
 					appSettings.LogDir = currentApp.LogPath;
 					appSettings.SourceFiles = LoadSourceFiles(appSettings);
 					appSettings.IncludeFiles = LoadIncludeFiles(appSettings);
+					appSettings.SourceAndIncludeFiles = appSettings.SourceFiles.Concat(appSettings.IncludeFiles.Where(i => !appSettings.SourceFiles.Contains(i))).ToArray();
 				}
 
 				var elapsed = DateTime.Now.Subtract(startTime);
