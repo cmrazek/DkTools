@@ -61,7 +61,7 @@ namespace DkTools.CodeAnalysis.Statements
 							{
 								if (!code.ReadWord())
 								{
-									ReportError(new Span(code.Position, code.Position + 1), CAError.CA0036);	// Expected table name after 'of'.
+									ReportError(new Span(code.Position, code.Position + 1), CAError.CA0036);    // Expected table name after 'of'.
 									return;
 								}
 							}
@@ -71,7 +71,7 @@ namespace DkTools.CodeAnalysis.Statements
 									   select d).FirstOrDefault();
 							if (def == null)
 							{
-								ReportError(code.Span, CAError.CA0035, code.Text);	// Table or relationship '{0}' does not exist.
+								ReportError(code.Span, CAError.CA0035, code.Text);  // Table or relationship '{0}' does not exist.
 								return;
 							}
 							else
@@ -82,7 +82,7 @@ namespace DkTools.CodeAnalysis.Statements
 						else if (code.ReadExact(',')) { }
 						else
 						{
-							ReportError(code.Span, CAError.CA0034, "{");	// Expected '{0}'.
+							ReportError(code.Span, CAError.CA0034, "{");    // Expected '{0}'.
 							return;
 						}
 					}
@@ -105,7 +105,7 @@ namespace DkTools.CodeAnalysis.Statements
 				{
 					if (!code.ReadExactWholeWord("by"))
 					{
-						ReportError(new Span(code.Position, code.Position + 1), CAError.CA0034, "by");	// Expected '{0}'.
+						ReportError(new Span(code.Position, code.Position + 1), CAError.CA0034, "by");  // Expected '{0}'.
 						return;
 					}
 
@@ -130,56 +130,60 @@ namespace DkTools.CodeAnalysis.Statements
 					}
 				}
 				#endregion
+				else break;
 			}
 
-			while (!code.EndOfFile && !code.ReadExact('}'))
+			if (bodyStarted)
 			{
-				if (code.ReadExactWholeWord("before") || code.ReadExactWholeWord("after"))
+				while (!code.EndOfFile && !code.ReadExact('}'))
 				{
-					if (!code.ReadExactWholeWord("group"))
+					if (code.ReadExactWholeWord("before") || code.ReadExactWholeWord("after"))
 					{
-						ReportError(new Span(code.Position, code.Position + 1), CAError.CA0034, "group");	// Expected '{0}'.
-						return;
+						if (!code.ReadExactWholeWord("group"))
+						{
+							ReportError(new Span(code.Position, code.Position + 1), CAError.CA0034, "group");   // Expected '{0}'.
+							return;
+						}
+
+						if (code.ReadExactWholeWord("all")) { }
+						else if (!ReadTableColOrRelInd(p, false)) return;
+
+						if (!code.ReadExact(':'))
+						{
+							ReportError(new Span(code.Position, code.Position + 1), CAError.CA0034, ":");   // Expected '{0}'.
+							return;
+						}
+
+						if (!ReadGroupStatements(p, false)) return;
 					}
-
-					if (code.ReadExactWholeWord("all")) { }
-					else if (!ReadTableColOrRelInd(p, false)) return;
-
-					if (!code.ReadExact(':'))
+					else if (code.ReadExactWholeWord("for"))
 					{
-						ReportError(new Span(code.Position, code.Position + 1), CAError.CA0034, ":");	// Expected '{0}'.
-						return;
-					}
+						if (!code.ReadExactWholeWord("each"))
+						{
+							ReportError(new Span(code.Position, code.Position + 1), CAError.CA0034, "each");    // Expected '{0}'.
+							return;
+						}
 
-					if (!ReadGroupStatements(p, false)) return;
+						if (!code.ReadExact(':'))
+						{
+							ReportError(new Span(code.Position, code.Position + 1), CAError.CA0034, ":");   // Expected '{0}'.
+							return;
+						}
+
+						ReadGroupStatements(p, false);
+					}
+					else if (code.ReadExactWholeWord("default"))
+					{
+						if (!code.ReadExact(':'))
+						{
+							ReportError(new Span(code.Position, code.Position + 1), CAError.CA0034, ":");   // Expected '{0}'.
+							return;
+						}
+
+						ReadGroupStatements(p, true);
+					}
+					else break;
 				}
-				else if (code.ReadExactWholeWord("for"))
-				{
-					if (!code.ReadExactWholeWord("each"))
-					{
-						ReportError(new Span(code.Position, code.Position + 1), CAError.CA0034, "each");	// Expected '{0}'.
-						return;
-					}
-
-					if (!code.ReadExact(':'))
-					{
-						ReportError(new Span(code.Position, code.Position + 1), CAError.CA0034, ":");	// Expected '{0}'.
-						return;
-					}
-
-					ReadGroupStatements(p, false);
-				}
-				else if (code.ReadExactWholeWord("default"))
-				{
-					if (!code.ReadExact(':'))
-					{
-						ReportError(new Span(code.Position, code.Position + 1), CAError.CA0034, ":");	// Expected '{0}'.
-						return;
-					}
-
-					ReadGroupStatements(p, true);
-				}
-				else break;
 			}
 		}
 

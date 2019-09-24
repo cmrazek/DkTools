@@ -22,6 +22,10 @@ namespace DkTools.StatementCompletion
 			' ', ';', '.', '(', ')', ',', '<', '>', '\"', '\'', '-',
 			'0', '1', '2', '3', '4', '5', '6', '7', '8', '9'
 		};
+		private static readonly char[] _acceptSelectionCompletionChars = new char[]
+		{
+			'\n', '\t', ' '
+		};
 
 		public ProbeCompletionCommitManager(ITextView textView)
 		{
@@ -63,15 +67,30 @@ namespace DkTools.StatementCompletion
 				var span = applicableToSpan.GetSpan(buffer.CurrentSnapshot);
 				var text = applicableToSpan.GetText(buffer.CurrentSnapshot);
 
-				if (view.Properties.TryGetProperty(typeof(IAsyncCompletionSession), out IAsyncCompletionSession session))
+				if (view.Properties.TryGetProperty(typeof(IAsyncCompletionSession), out IAsyncCompletionSession session) &&
+					session != null && !session.IsDismissed)
 				{
 					session.Dismiss();
 				}
 
 				return CommitResult.Handled;
 			}
+			else if (!_acceptSelectionCompletionChars.Contains(typedChar))
+			{
+				// Stick with what the user has typed so far, rather than the selection.
+				if (view.Properties.TryGetProperty(typeof(IAsyncCompletionSession), out IAsyncCompletionSession session) &&
+					session != null && !session.IsDismissed)
+				{
+					session.Dismiss();
+				}
 
-			return CommitResult.Unhandled;	// Use default mechanism
+				return CommitResult.Handled;
+			}
+			else
+			{
+				// The selection should override what the user has typed.
+				return CommitResult.Unhandled;  // Use default mechanism
+			}
 		}
 	}
 }
