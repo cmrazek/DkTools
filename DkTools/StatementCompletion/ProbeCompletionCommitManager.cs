@@ -56,6 +56,8 @@ namespace DkTools.StatementCompletion
 				}
 			}
 
+			if (char.IsDigit(typedChar)) return false;
+
 			return true;
 		}
 
