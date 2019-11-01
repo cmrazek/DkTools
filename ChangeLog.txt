@@ -1,6 +1,6 @@
 DkTools ChangeLog
 ____________________________________________________________________________________________________
-Version 1.5.4 - (WIP):
+Version 1.5.4 - Nov 1, 2019:
 
 - Loading of DK settings and dictionary now done on background thread when VS starts.
 - Typing ':' in a string no longer causes the line to be reindented.
