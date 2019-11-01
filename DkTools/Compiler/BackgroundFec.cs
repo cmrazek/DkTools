@@ -10,7 +10,7 @@ namespace DkTools.Compiler
 {
 	class BackgroundFec
 	{
-		public static void Run(string sourceFileName, VsText.ITextSnapshot snapshot)
+		public static void RunSync(string sourceFileName, VsText.ITextSnapshot snapshot)
 		{
 			if (string.IsNullOrWhiteSpace(sourceFileName)) return;
 
@@ -36,50 +36,50 @@ namespace DkTools.Compiler
 			{
 				var first = true;
 				var reportError = new Action<ErrorTask>(task =>
+				{
+					if (first)
 					{
-						if (first)
-						{
-							first = false;
-							//ErrorTaskProvider.Instance.RemoveAllForFile(sourceFileName);
-							ErrorTaskProvider.Instance.RemoveAllForSource(ErrorTaskSource.BackgroundFec, sourceFileName);
-						}
-						if (task != null) ErrorTaskProvider.Instance.Add(task);
-					});
+						first = false;
+						//ErrorTaskProvider.Instance.RemoveAllForFile(sourceFileName);
+						ErrorTaskProvider.Instance.RemoveAllForSource(ErrorTaskSource.BackgroundFec, sourceFileName);
+					}
+					if (task != null) ErrorTaskProvider.Instance.Add(task);
+				});
 
 				var output = new CallbackOutput(line =>
+				{
+					var index = line.IndexOf(": error :");
+					if (index >= 0)
 					{
-						var index = line.IndexOf(": error :");
-						if (index >= 0)
+						Log.Debug("Background FEC error: {0}", line);
+
+						string fileName;
+						int lineNum;
+						if (ProbeCompiler.ParseFileNameAndLine(line.Substring(0, index), out fileName, out lineNum))
 						{
-							Log.Debug("Background FEC error: {0}", line);
-
-							string fileName;
-							int lineNum;
-							if (ProbeCompiler.ParseFileNameAndLine(line.Substring(0, index), out fileName, out lineNum))
-							{
-								var message = line.Substring(index + ": error :".Length).Trim();
-								var task = new ErrorTask(fileName, lineNum - 1, -1, message, ErrorType.Error, ErrorTaskSource.BackgroundFec, sourceFileName, snapshot);
-								reportError(task);
-							}
-							return;
+							var message = line.Substring(index + ": error :".Length).Trim();
+							var task = new ErrorTask(fileName, lineNum - 1, -1, message, ErrorType.Error, ErrorTaskSource.BackgroundFec, sourceFileName, snapshot);
+							reportError(task);
 						}
+						return;
+					}
 
-						index = line.IndexOf(": warning :");
-						if (index >= 0)
+					index = line.IndexOf(": warning :");
+					if (index >= 0)
+					{
+						Log.Debug("Background FEC warning: {0}", line);
+
+						string fileName;
+						int lineNum;
+						if (ProbeCompiler.ParseFileNameAndLine(line.Substring(0, index), out fileName, out lineNum))
 						{
-							Log.Debug("Background FEC warning: {0}", line);
-
-							string fileName;
-							int lineNum;
-							if (ProbeCompiler.ParseFileNameAndLine(line.Substring(0, index), out fileName, out lineNum))
-							{
-								var message = line.Substring(index + ": warning :".Length).Trim();
-								var task = new ErrorTask(fileName, lineNum - 1, -1, message, ErrorType.Warning, ErrorTaskSource.BackgroundFec, sourceFileName, snapshot);
-								reportError(task);
-							}
-							return;
+							var message = line.Substring(index + ": warning :".Length).Trim();
+							var task = new ErrorTask(fileName, lineNum - 1, -1, message, ErrorType.Warning, ErrorTaskSource.BackgroundFec, sourceFileName, snapshot);
+							reportError(task);
 						}
-					});
+						return;
+					}
+				});
 
 				var workingDir = ProbeToolsPackage.TempDir;
 

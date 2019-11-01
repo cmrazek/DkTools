@@ -7,6 +7,8 @@ Version 1.5.4 - (WIP):
 - Improved auto-completion when typing certain characters.
 - Fixed infinite loop in code model when select statement has words with capital letters.
 - Removed duplicate include files in DK Explorer.
+- Fixed background FEC/code analysis which was running on the main thread, causing periods of
+  unresponsiveness after opening or saving a file.
 
 ____________________________________________________________________________________________________
 Version 1.5.3 - Aug 28, 2019:

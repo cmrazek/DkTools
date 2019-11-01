@@ -127,34 +127,43 @@ namespace DkTools.ErrorTagging
 
 				try
 				{
+					var fileName = VsTextUtil.TryGetDocumentFileName(_view.TextBuffer);
+
 					if (_model != null &&
 						_model.FileContext != FileContext.Include &&
 						ProbeEnvironment.CurrentAppSettings.FileExistsInApp(_model.FileName))
 					{
-						if (ProbeToolsPackage.Instance.EditorOptions.RunBackgroundFecOnSave)
-						{
-							Compiler.BackgroundFec.Run(_model.FileName, _model.Snapshot.TextBuffer.CurrentSnapshot);
-						}
-						else
+						if (!ProbeToolsPackage.Instance.EditorOptions.RunBackgroundFecOnSave)
 						{
 							ErrorTaskProvider.Instance.RemoveAllForSource(ErrorTaskSource.BackgroundFec, _model.FileName);
 						}
-
-						if (ProbeToolsPackage.Instance.EditorOptions.RunCodeAnalysisOnSave)
-						{
-							var textBuffer = _model.Snapshot.TextBuffer;
-							var fileStore = CodeModel.FileStore.GetOrCreateForTextBuffer(textBuffer);
-							if (fileStore == null) return;
-
-							var fileName = VsTextUtil.TryGetDocumentFileName(textBuffer);
-							var preprocessedModel = fileStore.CreatePreprocessedModel(_model.AppSettings, fileName, textBuffer.CurrentSnapshot, false, "Background Code Analysis");
-
-							var ca = new CodeAnalysis.CodeAnalyzer(null, preprocessedModel);
-							ca.Run();
-						}
-						else
+						if (!ProbeToolsPackage.Instance.EditorOptions.RunCodeAnalysisOnSave)
 						{
 							ErrorTaskProvider.Instance.RemoveAllForSource(ErrorTaskSource.CodeAnalysis, _model.FileName);
+						}
+
+						if (ProbeToolsPackage.Instance.EditorOptions.RunBackgroundFecOnSave ||
+							ProbeToolsPackage.Instance.EditorOptions.RunCodeAnalysisOnSave)
+						{
+							System.Threading.ThreadPool.QueueUserWorkItem(state =>
+							{
+								if (ProbeToolsPackage.Instance.EditorOptions.RunBackgroundFecOnSave)
+								{
+									Compiler.BackgroundFec.RunSync(_model.FileName, _model.Snapshot.TextBuffer.CurrentSnapshot);
+								}
+
+								if (ProbeToolsPackage.Instance.EditorOptions.RunCodeAnalysisOnSave)
+								{
+									var textBuffer = _model.Snapshot.TextBuffer;
+									var fileStore = CodeModel.FileStore.GetOrCreateForTextBuffer(textBuffer);
+									if (fileStore == null) return;
+
+									var preprocessedModel = fileStore.CreatePreprocessedModel(_model.AppSettings, fileName, textBuffer.CurrentSnapshot, false, "Background Code Analysis");
+
+									var ca = new CodeAnalysis.CodeAnalyzer(null, preprocessedModel);
+									ca.Run();
+								}
+							});
 						}
 					}
 				}
