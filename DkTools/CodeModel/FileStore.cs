@@ -231,7 +231,7 @@ namespace DkTools.CodeModel
 		{
 			CodeSource source;
 			IEnumerable<Preprocessor.IncludeDependency> includeDependencies = null;
-			if (visible)
+			if (visible || string.IsNullOrEmpty(fileName))
 			{
 				source = new CodeSource();
 				source.Append(snapshot.GetText(), fileName, 0, snapshot.Length, true, true, false);

@@ -14,8 +14,6 @@ namespace DkTools.ErrorTagging
 	{
 		public static ErrorTaskProvider Instance;
 
-		private object _tasksLock = new object();
-
 		public event EventHandler<ErrorTaskEventArgs> ErrorTagsChangedForFile;
 		public class ErrorTaskEventArgs : EventArgs
 		{
@@ -48,10 +46,7 @@ namespace DkTools.ErrorTagging
 					return;
 				}
 
-				lock (_tasksLock)
-				{
-					Tasks.Add(task);
-				}
+				Tasks.Add(task);
 
 				if (!dontSignalTagsChanged)
 				{
@@ -69,10 +64,7 @@ namespace DkTools.ErrorTagging
 
 				var tasks = Tasks.Cast<ErrorTask>().ToArray();
 
-				lock (_tasksLock)
-				{
-					Tasks.Clear();
-				}
+				Tasks.Clear();
 
 				foreach (ErrorTask task in tasks)
 				{
@@ -86,17 +78,14 @@ namespace DkTools.ErrorTagging
 		{
 			var fileNames = new List<string>();
 
-			lock (_tasksLock)
+			foreach (var task in Tasks)
 			{
-				foreach (var task in Tasks)
-				{
-					if (!(task is ErrorTask)) continue;
-					var errorTask = task as ErrorTask;
+				if (!(task is ErrorTask)) continue;
+				var errorTask = task as ErrorTask;
 
-					if (!fileNames.Contains(errorTask.Document))
-					{
-						fileNames.Add(errorTask.Document);
-					}
+				if (!fileNames.Contains(errorTask.Document))
+				{
+					fileNames.Add(errorTask.Document);
 				}
 			}
 
@@ -112,10 +101,7 @@ namespace DkTools.ErrorTagging
 
 		public void RemoveTask(ErrorTask task)
 		{
-			lock (_tasksLock)
-			{
-				Tasks.Remove(task);
-			}
+			Tasks.Remove(task);
 
 			var ev = ErrorTagsChangedForFile;
 			if (ev != null) ev(this, new ErrorTaskEventArgs { FileName = task.Document });
@@ -125,16 +111,13 @@ namespace DkTools.ErrorTagging
 		{
 			var filesToNotify = new List<string>();
 
-			lock (_tasksLock)
+			var tasksToRemove = (from t in Tasks.Cast<ErrorTask>()
+									where t.Source == source && string.Equals(t.SourceArg, sourceFileName, StringComparison.OrdinalIgnoreCase)
+									select t).ToArray();
+			foreach (var task in tasksToRemove)
 			{
-				var tasksToRemove = (from t in Tasks.Cast<ErrorTask>()
-									 where t.Source == source && string.Equals(t.SourceArg, sourceFileName, StringComparison.OrdinalIgnoreCase)
-									 select t).ToArray();
-				foreach (var task in tasksToRemove)
-				{
-					Tasks.Remove(task);
-					if (!filesToNotify.Contains(task.Document)) filesToNotify.Add(task.Document);
-				}
+				Tasks.Remove(task);
+				if (!filesToNotify.Contains(task.Document)) filesToNotify.Add(task.Document);
 			}
 
 			foreach (var file in filesToNotify)
@@ -148,16 +131,13 @@ namespace DkTools.ErrorTagging
 		{
 			var filesToNotify = new List<string>();
 
-			lock (_tasksLock)
+			var tasksToRemove = (from t in Tasks.Cast<ErrorTask>()
+									where string.Equals(t.Document, fileName, StringComparison.OrdinalIgnoreCase)
+									select t).ToArray();
+			foreach (var task in tasksToRemove)
 			{
-				var tasksToRemove = (from t in Tasks.Cast<ErrorTask>()
-									 where string.Equals(t.Document, fileName, StringComparison.OrdinalIgnoreCase)
-									 select t).ToArray();
-				foreach (var task in tasksToRemove)
-				{
-					Tasks.Remove(task);
-					if (!filesToNotify.Contains(task.Document)) filesToNotify.Add(task.Document);
-				}
+				Tasks.Remove(task);
+				if (!filesToNotify.Contains(task.Document)) filesToNotify.Add(task.Document);
 			}
 
 			foreach (var file in filesToNotify)
@@ -171,17 +151,14 @@ namespace DkTools.ErrorTagging
 		{
 			var filesToNotify = new List<string>();
 
-			lock (_tasksLock)
+			var tasksToRemove = (from t in Tasks.Cast<ErrorTask>()
+									where t.Source == source && string.Equals(t.SourceArg, sourceFileName, StringComparison.OrdinalIgnoreCase) &&
+										string.Equals(t.Document, fileName, StringComparison.OrdinalIgnoreCase)
+									select t).ToArray();
+			foreach (var task in tasksToRemove)
 			{
-				var tasksToRemove = (from t in Tasks.Cast<ErrorTask>()
-									 where t.Source == source && string.Equals(t.SourceArg, sourceFileName, StringComparison.OrdinalIgnoreCase) &&
-										 string.Equals(t.Document, fileName, StringComparison.OrdinalIgnoreCase)
-									 select t).ToArray();
-				foreach (var task in tasksToRemove)
-				{
-					Tasks.Remove(task);
-					if (!filesToNotify.Contains(task.Document)) filesToNotify.Add(task.Document);
-				}
+				Tasks.Remove(task);
+				if (!filesToNotify.Contains(task.Document)) filesToNotify.Add(task.Document);
 			}
 
 			foreach (var file in filesToNotify)
@@ -216,11 +193,7 @@ namespace DkTools.ErrorTagging
 			if (firstSpan == null) return tags;
 			var snapshot = firstSpan.Snapshot;
 
-			ErrorTask[] tasks;
-			lock (_tasksLock)
-			{
-				tasks = Tasks.Cast<ErrorTask>().ToArray();
-			}
+			ErrorTask[] tasks = Tasks.Cast<ErrorTask>().ToArray();
 
 			foreach (var task in (from t in tasks where string.Equals(t.Document, fileName, StringComparison.OrdinalIgnoreCase) select t))
 			{

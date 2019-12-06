@@ -94,6 +94,21 @@ namespace DkTools.StatementCompletion
 
 		public static readonly char[] NoCompletionChars = new char[] { '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '-' };
 
+		public CompletionStartData InitializeCompletion(CompletionTrigger trigger, SnapshotPoint triggerLocation, CancellationToken token)
+		{
+			ThreadHelper.ThrowIfNotOnUIThread();
+
+			if (trigger.Reason == CompletionTriggerReason.Insertion)
+			{
+				if (TryGetApplicableToSpan(trigger.Character, triggerLocation, out SnapshotSpan applicableToSpan, token))
+				{
+					return new CompletionStartData(CompletionParticipation.ProvidesItems, applicableToSpan);
+				}
+			}
+
+			return new CompletionStartData();
+		}
+
 		public bool TryGetApplicableToSpan(char typedChar, SnapshotPoint triggerPt, out SnapshotSpan applicableToSpan, CancellationToken token)
 		{
 			ThreadHelper.ThrowIfNotOnUIThread();
@@ -277,7 +292,7 @@ namespace DkTools.StatementCompletion
 			return false;
 		}
 
-		public Task<CompletionContext> GetCompletionContextAsync(InitialTrigger trigger, SnapshotPoint triggerPt,
+		public Task<CompletionContext> GetCompletionContextAsync(IAsyncCompletionSession session, CompletionTrigger trigger, SnapshotPoint triggerPt,
 			SnapshotSpan applicableToSpan, CancellationToken token)
 		{
 			_items.Clear();
@@ -340,7 +355,7 @@ namespace DkTools.StatementCompletion
 			return Task<CompletionContext>.FromResult(new CompletionContext(_items.Keys.OrderBy(i => i.SortText.ToLower()).ToImmutableArray()));
 		}
 
-		public Task<object> GetDescriptionAsync(CompletionItem item, CancellationToken token)
+		public Task<object> GetDescriptionAsync(IAsyncCompletionSession session, CompletionItem item, CancellationToken token)
 		{
 			if (_items.TryGetValue(item, out ItemDataNode itemData))
 			{
