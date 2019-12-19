@@ -77,11 +77,18 @@ namespace DkTools.QuickInfo
 
 						if (applicableToSpan == null)
 						{
-							applicableToSpan = model.Snapshot.CreateTrackingSpan(task.GetSnapshotSpan(snapshotPoint.Snapshot), SpanTrackingMode.EdgeInclusive);
+							var snapshotSpan = task.TryGetSnapshotSpan(snapshotPoint.Snapshot);
+							if (snapshotSpan.HasValue)
+							{
+								applicableToSpan = model.Snapshot.CreateTrackingSpan(snapshotSpan.Value, SpanTrackingMode.EdgeInclusive);
+							}
 						}
 					}
 
-					if (elements != null) return Task.FromResult<QuickInfoItem>(new QuickInfoItem(applicableToSpan, elements));
+					if (elements != null && applicableToSpan != null)
+					{
+						return Task.FromResult<QuickInfoItem>(new QuickInfoItem(applicableToSpan, elements));
+					}
 				}
 			}
 

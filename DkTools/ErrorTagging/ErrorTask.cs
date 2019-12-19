@@ -85,26 +85,34 @@ namespace DkTools.ErrorTagging
 			return _snapshot;
 		}
 
-		public SnapshotSpan GetSnapshotSpan(ITextSnapshot currentSnapshot)
+		public SnapshotSpan? TryGetSnapshotSpan(ITextSnapshot currentSnapshot)
 		{
-			if (_span.HasValue)
+			try
 			{
+				if (_span.HasValue)
+				{
+					if (_snapshot == null) _snapshot = currentSnapshot;
+					return new SnapshotSpan(_snapshot, _span.Value.Start, _span.Value.Length).TranslateTo(currentSnapshot, SpanTrackingMode.EdgePositive);
+				}
+
+				if (Line < 0 || Line >= _snapshot.LineCount) return null;
+				var line = _snapshot.GetLineFromLineNumber(Line);
+				var startPos = line.Start.Position;
+				var endPos = line.End.Position;
+				if (startPos < endPos)
+				{
+					var newStartPos = line.Start.Position + line.GetText().GetIndentOffset();
+					if (newStartPos < endPos) startPos = newStartPos;
+				}
+
 				if (_snapshot == null) _snapshot = currentSnapshot;
-				return new SnapshotSpan(_snapshot, _span.Value.Start, _span.Value.Length);
+				_span = new CodeModel.Span(startPos, endPos);
+				return new SnapshotSpan(_snapshot, _span.Value.Start, _span.Value.Length).TranslateTo(currentSnapshot, SpanTrackingMode.EdgePositive);
 			}
-
-			var line = _snapshot.GetLineFromLineNumber(Line);
-			var startPos = line.Start.Position;
-			var endPos = line.End.Position;
-			if (startPos < endPos)
+			catch (ArgumentOutOfRangeException)
 			{
-				var newStartPos = line.Start.Position + line.GetText().GetIndentOffset();
-				if (newStartPos < endPos) startPos = newStartPos;
+				return null;
 			}
-
-			if (_snapshot == null) _snapshot = currentSnapshot;
-			_span = new CodeModel.Span(startPos, endPos);
-			return new SnapshotSpan(_snapshot, _span.Value.Start, _span.Value.Length);
 		}
 
 		public CodeModel.Span? Span

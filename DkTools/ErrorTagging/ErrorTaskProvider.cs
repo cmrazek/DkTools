@@ -197,12 +197,12 @@ namespace DkTools.ErrorTagging
 
 			foreach (var task in (from t in tasks where string.Equals(t.Document, fileName, StringComparison.OrdinalIgnoreCase) select t))
 			{
-				var span = task.Span;
+				var span = task.TryGetSnapshotSpan(snapshot);
 				if (span.HasValue)
 				{
 					foreach (var docSpan in docSpans)
 					{
-						if (docSpan.Contains(span.Value.ToVsTextSpan()))
+						if (docSpan.Contains(span.Value))
 						{
 							string tagType;
 							switch (task.Type)
@@ -217,7 +217,7 @@ namespace DkTools.ErrorTagging
 									tagType = VSTheme.CurrentTheme == VSThemeMode.Light ? ErrorTagger.CodeErrorLight : ErrorTagger.CodeErrorDark;
 									break;
 							}
-							tags.Add(new TagSpan<ErrorTag>(task.GetSnapshotSpan(snapshot), new ErrorTag(tagType, task.Text)));
+							tags.Add(new TagSpan<ErrorTag>(span.Value, new ErrorTag(tagType, task.Text)));
 							break;
 						}
 					}
