@@ -665,7 +665,7 @@ namespace DkTools.CodeModel
 				else return new DataType(ValType.Numeric, a.TypeName, pcs.ToClassifiedString());
 			}
 
-			if (code.ReadExact("int"))
+			if (code.ReadExact("int"))	// TODO: All these should be ReadExactWholeWord; to avoid picking up a partial identifier like "integral" (moneylib.f)
 			{
 				pcs.AddSpace();
 				pcs.AddDataType("int");

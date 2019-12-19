@@ -1,5 +1,10 @@
 DkTools ChangeLog
 ____________________________________________________________________________________________________
+Version 1.5.6 - WIP
+
+- Fixed bug in error tagging causing ArgumentOutOfRangeException's.
+
+____________________________________________________________________________________________________
 Version 1.5.4 - Nov 1, 2019:
 
 - Loading of DK settings and dictionary now done on background thread when VS starts.

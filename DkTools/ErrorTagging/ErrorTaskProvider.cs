@@ -202,8 +202,7 @@ namespace DkTools.ErrorTagging
 				{
 					foreach (var docSpan in docSpans)
 					{
-						var spanT = new SnapshotSpan(task.GetSnapshot(snapshot), span.Value.Start, span.Value.Length).TranslateTo(docSpan.Snapshot, SpanTrackingMode.EdgeExclusive);
-						if (docSpan.Contains(spanT.Start))
+						if (docSpan.Contains(span.Value.ToVsTextSpan()))
 						{
 							string tagType;
 							switch (task.Type)
