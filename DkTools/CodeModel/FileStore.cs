@@ -26,6 +26,8 @@ namespace DkTools.CodeModel
 		public event EventHandler<ModelUpdatedEventArgs> ModelUpdated;
 		public static event EventHandler AllModelRebuildRequired;
 
+		private const int NumberOfIncludeParentFiles = 3;
+
 		public FileStore()
 		{
 			_guid = Guid.NewGuid();
@@ -396,9 +398,14 @@ namespace DkTools.CodeModel
 			Log.Debug("Getting include file parent definitions: {0}", includePathName);
 
 			IEnumerable<string> parentFileNames;
-			using (var searcher = ProbeToolsPackage.Instance.FunctionFileScanner.CurrentApp.CreateSearcher())
+			var ds = DefinitionStore.Current;
+			if (ds != null)
 			{
-				parentFileNames = searcher.GetIncludeParentFiles(includePathName, 3);	// TODO: make limit configurable
+				parentFileNames = ds.GetIncludeParentFiles(includePathName, NumberOfIncludeParentFiles);
+			}
+			else
+			{
+				parentFileNames = new string[0];
 			}
 
 			Definition[] commonDefines = null;

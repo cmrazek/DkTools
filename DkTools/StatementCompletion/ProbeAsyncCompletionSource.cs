@@ -642,20 +642,23 @@ namespace DkTools.StatementCompletion
 			}
 
 			// Class and method
-			var ffScanner = ProbeToolsPackage.Instance.FunctionFileScanner;
-			foreach (var cls in ffScanner.CurrentApp.GetClasses(word1))
+			var ds = DefinitionStore.Current;
+			if (ds != null)
 			{
-				foreach (var def in cls.FunctionDefinitions)
+				foreach (var cls in ds.GetClasses(word1))
 				{
-					CreateCompletion(def);
+					foreach (var def in cls.Functions)
+					{
+						CreateCompletion(def);
+					}
 				}
-			}
 
-			foreach (var permex in ffScanner.CurrentApp.GetPermExs(word1))
-			{
-				foreach (var field in permex.Fields)
+				foreach (var permex in ds.GetPermanentExtracts(word1))
 				{
-					CreateCompletion(field);
+					foreach (var field in permex.Fields)
+					{
+						CreateCompletion(field);
+					}
 				}
 			}
 
@@ -713,10 +716,13 @@ namespace DkTools.StatementCompletion
 			// Don't show functions when on the root.
 			if (tokens.Any(t => !t.IsOnRoot))
 			{
-				var ffApp = ProbeToolsPackage.Instance.FunctionFileScanner.CurrentApp;
-				foreach (var f in ffApp.GlobalDefinitions)
+				var ds = DefinitionStore.Current;
+				if (ds != null)
 				{
-					CreateCompletion(f);
+					foreach (var f in ds.GlobalDefinitions)
+					{
+						CreateCompletion(f);
+					}
 				}
 			}
 

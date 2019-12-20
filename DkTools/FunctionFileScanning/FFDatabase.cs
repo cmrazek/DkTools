@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Data.SQLite;
 using System.IO;
 using System.Linq;
@@ -208,6 +209,7 @@ namespace DkTools.FunctionFileScanning
 
 			using (var cmd = _conn.CreateCommand())
 			{
+				cmd.CommandType = CommandType.Text;
 				cmd.CommandText = sql;
 				return cmd.ExecuteNonQuery();
 			}
@@ -219,8 +221,28 @@ namespace DkTools.FunctionFileScanning
 
 			using (var cmd = _conn.CreateCommand())
 			{
+				cmd.CommandType = CommandType.Text;
 				cmd.CommandText = sql;
 				return Convert.ToInt32(cmd.ExecuteScalar());
+			}
+		}
+
+		public T ExecuteScalar<T>(string sql, params object[] args)
+		{
+			if (_conn == null) throw new InvalidOperationException("Database connection is not established.");
+			if (args.Length % 2 != 0) throw new ArgumentException("There must be an even number of arguments for key/value pairs.");
+
+			using (var cmd = _conn.CreateCommand())
+			{
+				cmd.CommandType = CommandType.Text;
+				cmd.CommandText = sql;
+				for (int i = 0; i < args.Length; i += 2)
+				{
+					cmd.Parameters.AddWithValue(args[i].ToString(), args[i + 1]);
+				}
+				var obj = cmd.ExecuteScalar();
+				if (obj == null || Convert.IsDBNull(obj)) return default(T);
+				return (T)obj;
 			}
 		}
 
@@ -229,13 +251,18 @@ namespace DkTools.FunctionFileScanning
 			get { return _conn; }
 		}
 
-		public SQLiteCommand CreateCommand(string sql)
+		public SQLiteCommand CreateCommand(string sql, params object[] args)
 		{
 			if (_conn == null) throw new InvalidOperationException("Database connection is not established.");
+			if (args.Length % 2 != 0) throw new ArgumentException("There must be an even number of arguments for key/value pairs.");
 
 			var cmd = _conn.CreateCommand();
-			cmd.CommandType = System.Data.CommandType.Text;
+			cmd.CommandType = CommandType.Text;
 			cmd.CommandText = sql;
+			for (int i = 0; i < args.Length; i += 2)
+			{
+				cmd.Parameters.AddWithValue(args[i].ToString(), args[i + 1]);
+			}
 			return cmd;
 		}
 

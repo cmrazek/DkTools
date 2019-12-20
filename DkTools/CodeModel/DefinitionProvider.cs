@@ -134,8 +134,11 @@ namespace DkTools.CodeModel
 				AddGlobalFromAnywhere(FileStore.GetStdLibModel(appSettings).PreprocessorModel.DefinitionProvider.GlobalsFromFile);
 			}
 
-			var ffApp = ProbeToolsPackage.Instance.FunctionFileScanner.CurrentApp;
-			AddGlobalFromAnywhere(ffApp.GlobalDefinitions);
+			var ds = DefinitionStore.Current;
+			if (ds != null)
+			{
+				AddGlobalFromAnywhere(ds.GlobalDefinitions);
+			}
 		}
 
 		#region Global Definitions

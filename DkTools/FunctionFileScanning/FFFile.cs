@@ -578,6 +578,9 @@ namespace DkTools.FunctionFileScanning
 			}
 		}
 
+		/// <summary>
+		/// Indicates whether this file's export functions are visible to other files.
+		/// </summary>
 		public bool Visible
 		{
 			get { return _visible; }

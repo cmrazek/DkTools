@@ -133,6 +133,8 @@ namespace DkTools.FunctionFileScanning
 					}
 					else
 					{
+						_currentApp.PublishDefinitions();
+
 						ProbeToolsPackage.Instance.SetStatusText("DkTools background purging...");
 						using (var txn = db.BeginTransaction())
 						{
@@ -264,10 +266,7 @@ namespace DkTools.FunctionFileScanning
 										   select new Preprocessor.IncludeDependency(f, false, true, merger.GetFileContent(f))).ToArray();
 
 				var model = fileStore.CreatePreprocessedModel(_appSettings, merger.MergedContent, scan.fileName, false, string.Concat("Function file processing: ", scan.fileName), includeDependencies);
-
 				var className = fileContext.IsClass() ? Path.GetFileNameWithoutExtension(scan.fileName) : null;
-				var classList = new List<FFClass>();
-				var funcList = new List<FFFunction>();
 
 				using (var txn = db.BeginTransaction())
 				{
@@ -294,7 +293,7 @@ namespace DkTools.FunctionFileScanning
 			}
 		}
 
-		public FFApp CurrentApp
+		private FFApp CurrentApp
 		{
 			get
 			{
@@ -346,6 +345,8 @@ namespace DkTools.FunctionFileScanning
 				{
 					_currentApp = new FFApp(this, db, _appSettings);
 				}
+
+				_currentApp.PublishDefinitions();
 
 				var elapsed = DateTime.Now.Subtract(startTime);
 				Log.Write(LogLevel.Info, "Function file database loaded. (elapsed: {0})", elapsed);

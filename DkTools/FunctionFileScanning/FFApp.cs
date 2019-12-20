@@ -17,10 +17,6 @@ namespace DkTools.FunctionFileScanning
 		private Dictionary<string, FFFile> _files = new Dictionary<string, FFFile>();
 		private Dictionary<string, DateTime> _invisibleFiles = new Dictionary<string, DateTime>();
 
-		private GroupedList<string, FFFunction> _consolidatedFunctions;
-		private GroupedList<string, FFClass> _consolidatedClasses;
-		private GroupedList<string, FFPermEx> _consolidatedPermExs;
-
 		public FFApp(FFScanner scanner, FFDatabase db, ProbeAppSettings appSettings)
 		{
 			_scanner = scanner ?? throw new ArgumentNullException(nameof(scanner));
@@ -107,10 +103,6 @@ namespace DkTools.FunctionFileScanning
 
 		public void OnVisibleFileChanged(FFFile file)
 		{
-			_consolidatedFunctions = null;
-			_consolidatedClasses = null;
-			_consolidatedPermExs = null;
-
 			var fileNameLower = file.FileName.ToLower();
 			if (!_files.ContainsKey(fileNameLower))
 			{
@@ -124,90 +116,119 @@ namespace DkTools.FunctionFileScanning
 			_invisibleFiles[fileNameLower] = file.Modified;
 		}
 
-		private void CheckConsolidatedLists()
+		public void PublishDefinitions()
 		{
-			if (_consolidatedFunctions == null)
+			var ds = new DefinitionStore(_appSettings.AppName);
+
+			foreach (var file in _files.Values)
 			{
-				_consolidatedFunctions = new GroupedList<string, FFFunction>();
-				_consolidatedClasses = new GroupedList<string, FFClass>();
-				_consolidatedPermExs = new GroupedList<string, FFPermEx>();
+				var cls = file.Class?.ClassDefinition;
 
-				foreach (var file in _files.Values)
+				foreach (var func in file.Functions)
 				{
-					foreach (var func in file.Functions)
+					if (func.Visible)
 					{
-						if (!func.Visible) continue;
-						_consolidatedFunctions.Add(func.Name, func);
-					}
-
-					var cls = file.Class;
-					if (cls != null) _consolidatedClasses.Add(cls.Name, cls);
-
-					foreach (var permex in file.PermExs)
-					{
-						_consolidatedPermExs.Add(permex.Name, permex);
+						if (cls != null) cls.AddFunction(func.Definition);
+						else ds.AddFunction(func.Definition);
 					}
 				}
+
+				if (cls != null) ds.AddClass(cls);
+
+				foreach (var permex in file.PermExs)
+				{
+					ds.AddPermanentExtract(permex.Definition);
+				}
 			}
+
+			DefinitionStore.Publish(ds);
 		}
 
-		public GroupedList<string, FFFunction> Functions
-		{
-			get
-			{
-				CheckConsolidatedLists();
-				return _consolidatedFunctions;
-			}
-		}
+		// TODO: remove
+		//private void CheckConsolidatedLists()
+		//{
+		//	if (_consolidatedFunctions == null)
+		//	{
+		//		_consolidatedFunctions = new GroupedList<string, FFFunction>();
+		//		_consolidatedClasses = new GroupedList<string, FFClass>();
+		//		_consolidatedPermExs = new GroupedList<string, FFPermEx>();
 
-		public GroupedList<string, FFClass> Classes
-		{
-			get
-			{
-				CheckConsolidatedLists();
-				return _consolidatedClasses;
-			}
-		}
+		//		foreach (var file in _files.Values)
+		//		{
+		//			foreach (var func in file.Functions)
+		//			{
+		//				if (!func.Visible) continue;
+		//				_consolidatedFunctions.Add(func.Name, func);
+		//			}
 
-		public IEnumerable<FFClass> GetClasses(string name)
-		{
-			CheckConsolidatedLists();
+		//			var cls = file.Class;
+		//			if (cls != null) _consolidatedClasses.Add(cls.Name, cls);
 
-			return _consolidatedClasses[name.ToLower()];
-		}
+		//			foreach (var permex in file.PermExs)
+		//			{
+		//				_consolidatedPermExs.Add(permex.Name, permex);
+		//			}
+		//		}
+		//	}
+		//}
 
-		public IEnumerable<FFPermEx> GetPermExs(string name)
-		{
-			CheckConsolidatedLists();
+		//public GroupedList<string, FFFunction> Functions
+		//{
+		//	get
+		//	{
+		//		CheckConsolidatedLists();
+		//		return _consolidatedFunctions;
+		//	}
+		//}
 
-			return _consolidatedPermExs[name];
-		}
+		//public GroupedList<string, FFClass> Classes
+		//{
+		//	get
+		//	{
+		//		CheckConsolidatedLists();
+		//		return _consolidatedClasses;
+		//	}
+		//}
+
+		//public IEnumerable<FFClass> GetClasses(string name)
+		//{
+		//	CheckConsolidatedLists();
+
+		//	return _consolidatedClasses[name.ToLower()];
+		//}
+
+		//public IEnumerable<FFPermEx> GetPermExs(string name)
+		//{
+		//	CheckConsolidatedLists();
+
+		//	return _consolidatedPermExs[name];
+		//}
 
 		/// <summary>
 		/// Gets a list of definitions that are available at the global scope.
 		/// Only public definitions are returned.
 		/// </summary>
-		public IEnumerable<CodeModel.Definitions.Definition> GlobalDefinitions
-		{
-			get
-			{
-				CheckConsolidatedLists();
-				foreach (var func in _consolidatedFunctions.Values)
-				{
-					yield return func.Definition;
-				}
+		//public IEnumerable<CodeModel.Definitions.Definition> GlobalDefinitions
+		//{
+		//	get
+		//	{
+		//		CheckConsolidatedLists();
+		//		foreach (var func in _consolidatedFunctions.Values)
+		//		{
+		//			yield return func.Definition;
+		//		}
 
-				foreach (var cls in _consolidatedClasses.Values)
-				{
-					yield return cls.ClassDefinition;
-				}
+		//		foreach (var cls in _consolidatedClasses.Values)
+		//		{
+		//			yield return cls.ClassDefinition;
+		//		}
 
-				foreach (var permex in _consolidatedPermExs.Values)
-				{
-					yield return permex.Definition;
-				}
-			}
-		}
+		//		foreach (var permex in _consolidatedPermExs.Values)
+		//		{
+		//			yield return permex.Definition;
+		//		}
+		//	}
+		//}
 
 		public bool TryGetFileDate(string fileName, out DateTime modified)
 		{
@@ -467,19 +488,6 @@ namespace DkTools.FunctionFileScanning
 					cmd.Parameters.AddWithValue("@app_id", appId);
 					cmd.ExecuteNonQuery();
 				}
-			}
-		}
-
-		public FFSearcher CreateSearcher()
-		{
-			try
-			{
-				return new FFSearcher(this);
-			}
-			catch (Exception ex)
-			{
-				Log.WriteEx(ex);
-				return null;
 			}
 		}
 

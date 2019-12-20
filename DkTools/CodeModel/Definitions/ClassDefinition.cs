@@ -10,10 +10,14 @@ namespace DkTools.CodeModel.Definitions
 {
 	internal class ClassDefinition : Definition
 	{
+		private List<FunctionDefinition> _funcs = new List<FunctionDefinition>();
+
 		public ClassDefinition(string name, string fileName)
 			: base(name, new FilePosition(fileName, 0, true), FunctionFileScanning.FFClass.GetExternalRefId(name))
 		{
 		}
+
+		public IEnumerable<FunctionDefinition> Functions => _funcs;
 
 		public override bool CompletionVisible
 		{
@@ -57,12 +61,9 @@ namespace DkTools.CodeModel.Definitions
 
 		public override IEnumerable<Definition> GetChildDefinitions(string name)
 		{
-			foreach (var cls in ProbeToolsPackage.Instance.FunctionFileScanner.CurrentApp.GetClasses(Name))
+			foreach (var func in _funcs)
 			{
-				foreach (var func in cls.GetFunctionDefinitions(name))
-				{
-					yield return func;
-				}
+				if (func.Name == name) yield return func;
 			}
 		}
 
@@ -70,13 +71,7 @@ namespace DkTools.CodeModel.Definitions
 		{
 			get
 			{
-				foreach (var cls in ProbeToolsPackage.Instance.FunctionFileScanner.CurrentApp.GetClasses(Name))
-				{
-					foreach (var func in cls.FunctionDefinitions)
-					{
-						yield return func;
-					}
-				}
+				return _funcs.Cast<Definition>();
 			}
 		}
 
@@ -88,6 +83,13 @@ namespace DkTools.CodeModel.Definitions
 		public override bool CaseSensitive
 		{
 			get { return false; }
+		}
+
+		public void AddFunction(FunctionDefinition func)
+		{
+			if (func == null) throw new ArgumentNullException(nameof(func));
+
+			if (!_funcs.Contains(func)) _funcs.Add(func);
 		}
 	}
 }

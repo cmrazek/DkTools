@@ -86,18 +86,16 @@ namespace DkTools.Navigation
 
 				if (funcDef.Extern)
 				{
-					using (var searcher = ProbeToolsPackage.Instance.FunctionFileScanner.CurrentApp.CreateSearcher())
+					var ds = DefinitionStore.Current;
+					if (ds != null)
 					{
-						if (searcher != null)
+						foreach (var def2 in ds.SearchForFunctionDefinitions(funcDef.Name))
 						{
-							foreach (var def2 in searcher.SearchForFunctionDefinitions(funcDef.Name))
+							if (def2 == def || (def2.SourceFileName == def.SourceFileName && def2.SourceStartPos == def.SourceStartPos))
 							{
-								if (def2 == def || (def2.SourceFileName == def.SourceFileName && def2.SourceStartPos == def.SourceStartPos))
-								{
-									continue;
-								}
-								funcList.Add(def2);
+								continue;
 							}
+							funcList.Add(def2);
 						}
 					}
 
@@ -261,32 +259,38 @@ namespace DkTools.Navigation
 		{
 			if (string.IsNullOrEmpty(extRefId)) throw new ArgumentException("Definition has no external ref ID.");
 
-			var db = new FunctionFileScanning.FFDatabase();
-			using (var cmd = db.CreateCommand(
-				"select file_.file_name, ref.pos, alt_file.file_name as true_file_name from ref"
-				+ " inner join file_ on file_.rowid = ref.file_id"
-				+ " left outer join alt_file on alt_file.rowid = ref.alt_file_id"
-				+ " where ref.ext_ref_id = @ext_ref_id"
-				+ " and ref.app_id = @app_id"
-			)) {
-				cmd.Parameters.AddWithValue("@ext_ref_id", extRefId);
-				cmd.Parameters.AddWithValue("@app_id", ProbeToolsPackage.Instance.FunctionFileScanner.CurrentApp.Id);
+			var ds = DefinitionStore.Current;
+			if (ds == null) yield break;
 
-				using (var rdr = cmd.ExecuteReader())
+			using (var db = new FunctionFileScanning.FFDatabase())
+			{
+				var appId = db.ExecuteScalar<long>("select rowid from app where name = @app_name collate nocase",
+					"@app_name", ds.AppName);
+
+				using (var cmd = db.CreateCommand(@"
+select file_.file_name, ref.pos, alt_file.file_name as true_file_name from ref
+inner join file_ on file_.rowid = ref.file_id
+left outer join alt_file on alt_file.rowid = ref.alt_file_id
+where ref.ext_ref_id = @ext_ref_id
+and ref.app_id = @app_id",
+					"@ext_ref_id", extRefId, "@app_id", appId))
 				{
-					var ordFileName = rdr.GetOrdinal("file_name");
-					var ordPos = rdr.GetOrdinal("pos");
-					var ordTrueFileName = rdr.GetOrdinal("true_file_name");
-
-					while (rdr.Read())
+					using (var rdr = cmd.ExecuteReader())
 					{
-						var fileName = rdr.GetString(ordFileName);
-						var pos = rdr.GetInt32(ordPos);
-						var trueFileName = FunctionFileScanning.FFUtil.GetStringOrNull(rdr, ordTrueFileName);
+						var ordFileName = rdr.GetOrdinal("file_name");
+						var ordPos = rdr.GetOrdinal("pos");
+						var ordTrueFileName = rdr.GetOrdinal("true_file_name");
 
-						if (!string.IsNullOrEmpty(trueFileName)) fileName = trueFileName;
+						while (rdr.Read())
+						{
+							var fileName = rdr.GetString(ordFileName);
+							var pos = rdr.GetInt32(ordPos);
+							var trueFileName = FunctionFileScanning.FFUtil.GetStringOrNull(rdr, ordTrueFileName);
 
-						yield return new Reference(fileName, pos, true);
+							if (!string.IsNullOrEmpty(trueFileName)) fileName = trueFileName;
+
+							yield return new Reference(fileName, pos, true);
+						}
 					}
 				}
 			}

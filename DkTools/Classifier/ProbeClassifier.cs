@@ -65,6 +65,7 @@ namespace DkTools.Classifier
 			_scanner = new ProbeClassifierScanner();
 
 			ProbeEnvironment.AppChanged += new EventHandler(ProbeEnvironment_AppChanged);
+			CodeModel.Definitions.DefinitionStore.DefinitionStoreChanged += DefinitionStore_DefinitionStoreChanged;
 			ProbeToolsPackage.Instance.EditorOptions.EditorRefreshRequired += EditorOptions_ClassifierRefreshRequired;
 
 			VSTheme.ThemeChanged += VSTheme_ThemeChanged;
@@ -136,6 +137,11 @@ namespace DkTools.Classifier
 		}
 
 		private void ProbeEnvironment_AppChanged(object sender, EventArgs e)
+		{
+			UpdateClassification();
+		}
+
+		private void DefinitionStore_DefinitionStoreChanged(object sender, EventArgs e)
 		{
 			UpdateClassification();
 		}

@@ -3,6 +3,7 @@ ________________________________________________________________________________
 Version 1.5.6 - WIP
 
 - Fixed bug in error tagging causing ArgumentOutOfRangeException's.
+- Isolated function file scanning from live-intellisense processing to avoid sync errors.
 
 ____________________________________________________________________________________________________
 Version 1.5.4 - Nov 1, 2019:

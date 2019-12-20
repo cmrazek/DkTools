@@ -27,8 +27,10 @@ namespace DkTools.CodeModel.Definitions
 
 		public void Add(Definition item)
 		{
-			LinkedList<Definition> list;
-			if (!_defs.TryGetValue(item.Name, out list))
+			if (item == null) throw new ArgumentNullException(nameof(item));
+			if (string.IsNullOrEmpty(item.Name)) throw new InvalidOperationException("A definition must have a name");
+
+			if (!_defs.TryGetValue(item.Name, out var list))
 			{
 				list = new LinkedList<Definition>();
 				_defs[item.Name] = list;
@@ -54,7 +56,10 @@ namespace DkTools.CodeModel.Definitions
 
 		public void Add(IEnumerable<Definition> defs)
 		{
-			foreach (var def in defs) Add(def);
+			foreach (var def in defs)
+			{
+				if (def != null) Add(def);
+			}
 		}
 
 		public void Clear()
