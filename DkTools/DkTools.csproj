@@ -584,6 +584,7 @@
     <Compile Include="StatementCompletion\ProbeCompletionCommitManagerProvider.cs" />
     <Compile Include="StatementCompletion\ProbeCompletionType.cs" />
     <Compile Include="StatementCompletion\StatementLayout.cs" />
+    <Compile Include="StatementCompletion\StatementState.cs" />
     <Compile Include="Tagging\Tagger.cs" />
     <Compile Include="Tagging\TaggingOptions.cs">
       <SubType>Component</SubType>

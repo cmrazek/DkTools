@@ -88,7 +88,7 @@ namespace DkTools.StatementCompletion
 		private static readonly Regex _rxAfterIfDef = new Regex(@"\#ifn?def\s$");
 		private static readonly Regex _rxAfterInclude = new Regex(@"\#include\s+(\<|\"")$");
 		private static readonly Regex _rxOrderBy = new Regex(@"\border\s+by\s$");
-		private static readonly Regex _rxAfterSymbol = new Regex(@"(\*|,|\()\s$");
+		private static readonly Regex _rxAfterSymbol = new Regex(@"(\*|,|\(|\))\s$");
 		private static readonly Regex _rxAfterNumber = new Regex(@"(\d+)\s$");
 		private static readonly Regex _rxAfterStringLiteral = new Regex(@"""\s$");
 

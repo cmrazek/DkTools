@@ -61,7 +61,7 @@ namespace DkTools.Classifier
 
 		private static readonly char[] k_commentEndKickOffChars = new char[] { '*', '/' };
 
-		public bool ScanTokenAndProvideInfoAboutIt(TokenInfo tokenInfo, ref int state)
+		public bool ScanTokenAndProvideInfoAboutIt(TokenInfo tokenInfo, ref long state)
 		{
 			if (_pos >= _length) return false;
 
@@ -152,7 +152,7 @@ namespace DkTools.Classifier
 				}
 				else
 				{
-					StatementCompletion.StatementState stmt = (StatementCompletion.StatementState)(state >> 16);
+					var stmt = new StatementCompletion.StatementState((int)(state >> State.StatementShift));
 
 					var gotKeyword = false;
 					foreach (var keyword in StatementCompletion.StatementLayout.GetNextPossibleKeywords(stmt))
@@ -204,7 +204,7 @@ namespace DkTools.Classifier
 					}
 
 					stmt = StatementCompletion.StatementLayout.ProcessWord(word, stmt);
-					state = (((int)stmt) << 16) | (state & ~State.StatementMask);
+					state = (((long)(stmt.IValue)) << State.StatementShift) | (state & ~State.StatementMask);
 				}
 			}
 			else if ((match = _rxNumber.Match(_source, _pos)).Success)
@@ -213,9 +213,9 @@ namespace DkTools.Classifier
 				else tokenInfo.Type = ProbeClassifierType.Number;
 				_pos = match.Index + match.Length;
 
-				StatementCompletion.StatementState stmt = (StatementCompletion.StatementState)(state >> 16);
+				var stmt = new StatementCompletion.StatementState((int)(state >> State.StatementShift));
 				stmt = StatementCompletion.StatementLayout.ProcessNumber(stmt);
-				state = (((int)stmt) << 16) | (state & ~State.StatementMask);
+				state = (((long)stmt.IValue) << State.StatementShift) | (state & ~State.StatementMask);
 			}
 			else if ((ch == '\"' || ch == '\'') && MatchStringLiteral(true, ch, ref state))
 			{
@@ -223,9 +223,9 @@ namespace DkTools.Classifier
 				else tokenInfo.Type = ProbeClassifierType.StringLiteral;
 				//_pos = match.Index + match.Length;
 
-				StatementCompletion.StatementState stmt = (StatementCompletion.StatementState)(state >> 16);
+				var stmt = new StatementCompletion.StatementState((int)(state >> State.StatementShift));
 				stmt = StatementCompletion.StatementLayout.ProcessStringLiteral(stmt);
-				state = (((int)stmt) << 16) | (state & ~State.StatementMask);
+				state = (((long)stmt.IValue) << State.StatementShift) | (state & ~State.StatementMask);
 			}
 			else if ((match = _rxPreprocessor.Match(_source, _pos)).Success)
 			{
@@ -245,18 +245,18 @@ namespace DkTools.Classifier
 				tokenInfo.Type = ProbeClassifierType.Delimiter;
 				_pos++;
 
-				StatementCompletion.StatementState stmt = (StatementCompletion.StatementState)(state >> 16);
+				var stmt = new StatementCompletion.StatementState((int)(state >> State.StatementShift));
 				stmt = StatementCompletion.StatementLayout.ProcessSymbol(ch, stmt);
-				state = (((int)stmt) << 16) | (state & ~State.StatementMask);
+				state = (((long)stmt.IValue) << State.StatementShift) | (state & ~State.StatementMask);
 			}
 			else if (ch == '(' || ch == ')' || ch == '{' || ch == '}' || ch == '[' || ch == ']')
 			{
 				tokenInfo.Type = ProbeClassifierType.Operator;
 				_pos++;
 
-				StatementCompletion.StatementState stmt = (StatementCompletion.StatementState)(state >> 16);
+				var stmt = new StatementCompletion.StatementState((int)(state >> State.StatementShift));
 				stmt = StatementCompletion.StatementLayout.ProcessSymbol(ch, stmt);
-				state = (((int)stmt) << 16) | (state & ~State.StatementMask);
+				state = (((long)stmt.IValue) << State.StatementShift) | (state & ~State.StatementMask);
 			}
 			else
 			{
@@ -272,16 +272,16 @@ namespace DkTools.Classifier
 
 				_pos++;
 
-				StatementCompletion.StatementState stmt = (StatementCompletion.StatementState)(state >> 16);
+				var stmt = new StatementCompletion.StatementState((int)(state >> State.StatementShift));
 				stmt = StatementCompletion.StatementLayout.ProcessSymbol(ch, stmt);
-				state = (((int)stmt) << 16) | (state & ~State.StatementMask);
+				state = (((long)stmt.IValue) << State.StatementShift) | (state & ~State.StatementMask);
 			}
 
 			tokenInfo.Length = _pos - tokenInfo.StartIndex;
 			return true;
 		}
 
-		private bool MatchStringLiteral(bool starting, char startCh, ref int state)
+		private bool MatchStringLiteral(bool starting, char startCh, ref long state)
 		{
 			char ch;
 
@@ -391,7 +391,7 @@ namespace DkTools.Classifier
 			get { return _model; }
 		}
 
-		private void SkipComments(ref int state)
+		private void SkipComments(ref long state)
 		{
 			char ch;
 

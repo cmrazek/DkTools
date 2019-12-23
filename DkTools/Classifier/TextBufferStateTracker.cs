@@ -13,7 +13,7 @@ namespace DkTools.Classifier
 		private ITextBuffer _buffer;
 		private ProbeClassifierScanner _scanner;
 		private ITextSnapshot _snapshot;
-		private List<int> _states = new List<int>();
+		private List<long> _states = new List<long>();
 
 		public TextBufferStateTracker(ITextBuffer buffer)
 		{
@@ -61,12 +61,12 @@ namespace DkTools.Classifier
 			}
 		}
 
-		public int GetStateForPosition(SnapshotPoint snapPt, string fileName, ProbeAppSettings appSettings)
+		public long GetStateForPosition(SnapshotPoint snapPt, string fileName, ProbeAppSettings appSettings)
 		{
 			return GetStateForPosition(snapPt.Position, snapPt.Snapshot, fileName, appSettings);
 		}
 
-		public int GetStateForPosition(int pos, ITextSnapshot snapshot, string fileName, ProbeAppSettings appSettings)
+		public long GetStateForPosition(int pos, ITextSnapshot snapshot, string fileName, ProbeAppSettings appSettings)
 		{
 			_snapshot = snapshot;
 
@@ -93,7 +93,7 @@ namespace DkTools.Classifier
 			return state;
 		}
 
-		public int GetStateForLineStart(int lineNum, ITextSnapshot snapshot, string fileName, ProbeAppSettings appSettings)
+		public long GetStateForLineStart(int lineNum, ITextSnapshot snapshot, string fileName, ProbeAppSettings appSettings)
 		{
 			if (_states.Count <= lineNum)
 			{

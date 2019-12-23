@@ -7,122 +7,44 @@ using Microsoft.VisualStudio.Language.Intellisense;
 
 namespace DkTools.StatementCompletion
 {
-	internal enum StatementState
-	{
-		None = 0x0000,
-
-		#region create
-		Create = 0x0100,
-		CreateInterfacetype,
-		CreateTime,
-		CreateInterfacetypeName,
-		CreateInterfacetypeTypeliblocator,
-		CreateInterfacetypeTypeliblocatorName,
-		CreateInterfacetypeFramework,
-		#endregion
-
-		#region select
-		Select = 0x0200,
-		SelectStar,
-		SelectFrom,
-		SelectFromTable,
-		SelectFromTableComma,
-		SelectFromTableOf,
-		SelectFromTableOfTable,
-		SelectFromTableList,
-		Order,
-		OrderBy,
-		OrderByTable,
-		OrderByTableDot,
-		OrderByTableField,
-		OrderByTableFieldAscDesc,
-		OrderByTableFieldComma,
-		Before,
-		After,
-		BeforeAfterGroup,
-		#endregion
-
-		#region format
-		Format = 0x0300,
-		FormatRows = 0x0301,
-		FormatCols = 0x0302,
-		FormatGenpages = 0x0303,
-		FormatOutfile = 0x0304,
-		FormatRowsEquals = 0x0305,
-		FormatColsEquals = 0x0306,
-		FormatGenpagesEquals = 0x0307,
-		FormatRowsNumber = 0x0308,
-		FormatColsNumber = 0x0309,
-		FormatGenpagesNumber = 0x0310,
-		#endregion
-
-		#region interface
-		Interface,
-		#endregion
-
-		#region onerror
-		Onerror,
-		#endregion
-
-		#region alter
-		Alter,
-		AlterColumn,
-		AlterColumnName,
-		AlterTable,
-		AlterApplication,
-		AlterApplicationAppIID,
-		AlterApplicationAppIIDName,
-		AlterApplicationPrompt,
-		AlterApplicationPromptString,
-		AlterApplicationComment,
-		AlterApplicationCommentString,
-		AlterApplicationLangId,
-		AlterApplicationLangIdNumber,
-		AlterApplicationDescription,
-		AlterApplicationDescriptionString,
-		AlterApplicationBrackets,
-		AlterApplicationExtends,
-		AlterApplicationExtendsAppIID,
-		AlterApplicationExtendsAppIIDString,
-		AlterStringdef,
-		AlterTypedef,
-		#endregion
-	}
-
 	internal class StatementLayout
 	{
 		public static StatementState ProcessWord(string word, StatementState state)
 		{
-			switch (state)
+			switch (state.Section)
 			{
-				case StatementState.None:
+				case StatementSection.None:
 					switch (word)
 					{
-						case "after": return StatementState.After;
-						case "alter": return StatementState.Alter;
-						case "before": return StatementState.Before;
-						case "create": return StatementState.Create;
-						case "format": return StatementState.Format;
-						case "interface": return StatementState.Interface;
-						case "onerror": return StatementState.Onerror;
-						case "order": return StatementState.Order;
-						case "select": return StatementState.Select;
+						case "after": return new StatementState(StatementSection.After);
+						case "alter": return new StatementState(StatementSection.Alter);
+						case "before": return new StatementState(StatementSection.Before);
+						case "create": return new StatementState(StatementSection.Create);
+						case "format": return new StatementState(StatementSection.Format);
+						case "int": return new StatementState(StatementSection.Int);
+						case "interface": return new StatementState(StatementSection.Interface);
+						case "numeric": return new StatementState(StatementSection.Numeric);
+						case "onerror": return new StatementState(StatementSection.Onerror);
+						case "order": return new StatementState(StatementSection.Order);
+						case "select": return new StatementState(StatementSection.Select);
+						case "signed": return new StatementState(StatementSection.Signed, StatementFlag.HasSign);
+						case "unsigned": return new StatementState(StatementSection.Unsigned, StatementFlag.HasSign);
 					}
 					break;
 
 				#region create
-				case StatementState.Create:
+				case StatementSection.Create:
 					switch (word)
 					{
-						case "interfacetype": return StatementState.CreateInterfacetype;
-						case "time": return StatementState.CreateTime;
+						case "interfacetype": return new StatementState(StatementSection.CreateInterfacetype);
+						case "time": return new StatementState(StatementSection.CreateTime);
 					}
 					break;
 
-				case StatementState.CreateInterfacetype:
-					return StatementState.CreateInterfacetypeName;
+				case StatementSection.CreateInterfacetype:
+					return new StatementState(StatementSection.CreateInterfacetypeName);
 
-				case StatementState.CreateInterfacetypeName:
+				case StatementSection.CreateInterfacetypeName:
 					switch (word)
 					{
 						case "path":
@@ -130,157 +52,189 @@ namespace DkTools.StatementCompletion
 						case "clsid":
 						case "tlibid":
 						case "iid":
-							return StatementState.CreateInterfacetypeTypeliblocator;
+							return new StatementState(StatementSection.CreateInterfacetypeTypeliblocator);
 
 						case "framework":
-							return StatementState.CreateInterfacetypeFramework;
+							return new StatementState(StatementSection.CreateInterfacetypeFramework);
 					}
 					break;
 
-				case StatementState.CreateInterfacetypeTypeliblocator:
-					return StatementState.CreateInterfacetypeTypeliblocatorName;
+				case StatementSection.CreateInterfacetypeTypeliblocator:
+					return new StatementState(StatementSection.CreateInterfacetypeTypeliblocatorName);
 				#endregion
 
 				#region selects
-				case StatementState.SelectStar:
-					if (word == "from") return StatementState.SelectFrom;
+				case StatementSection.SelectStar:
+					if (word == "from") return new StatementState(StatementSection.SelectFrom);
 					break;
 
-				case StatementState.SelectFrom:
-					if (DkDict.Dict.IsTable(word)) return StatementState.SelectFromTable;
+				case StatementSection.SelectFrom:
+					if (DkDict.Dict.IsTable(word)) return new StatementState(StatementSection.SelectFromTable);
 					break;
 
-				case StatementState.SelectFromTable:
-					if (word == "of") return StatementState.SelectFromTableOf;
-					if (word == "order") return StatementState.Order;
+				case StatementSection.SelectFromTable:
+					if (word == "of") return new StatementState(StatementSection.SelectFromTableOf);
+					if (word == "order") return new StatementState(StatementSection.Order);
 					break;
 
-				case StatementState.SelectFromTableComma:
-					if (DkDict.Dict.IsTable(word)) return StatementState.SelectFromTableList;
+				case StatementSection.SelectFromTableComma:
+					if (DkDict.Dict.IsTable(word)) return new StatementState(StatementSection.SelectFromTableList);
 					break;
 
-				case StatementState.SelectFromTableOf:
-					if (DkDict.Dict.IsTable(word)) return StatementState.SelectFromTableOfTable;
+				case StatementSection.SelectFromTableOf:
+					if (DkDict.Dict.IsTable(word)) return new StatementState(StatementSection.SelectFromTableOfTable);
 					break;
 
-				case StatementState.Order:
-					if (word == "by") return StatementState.OrderBy;
+				case StatementSection.Order:
+					if (word == "by") return new StatementState(StatementSection.OrderBy);
 					break;
 
-				case StatementState.OrderBy:
-				case StatementState.OrderByTableFieldComma:
-					if (ProbeEnvironment.IsValidTableName(word)) return StatementState.OrderByTable;
+				case StatementSection.OrderBy:
+				case StatementSection.OrderByTableFieldComma:
+					if (ProbeEnvironment.IsValidTableName(word)) return new StatementState(StatementSection.OrderByTable);
 					break;
 
-				case StatementState.OrderByTableDot:
-					if (ProbeEnvironment.IsValidFieldName(word)) return StatementState.OrderByTableField;
+				case StatementSection.OrderByTableDot:
+					if (ProbeEnvironment.IsValidFieldName(word)) return new StatementState(StatementSection.OrderByTableField);
 					break;
 
-				case StatementState.OrderByTable:
-				case StatementState.OrderByTableField:
-					if (word == "asc" || word == "desc") return StatementState.OrderByTableFieldAscDesc;
+				case StatementSection.OrderByTable:
+				case StatementSection.OrderByTableField:
+					if (word == "asc" || word == "desc") return new StatementState(StatementSection.OrderByTableFieldAscDesc);
 					break;
 
-				case StatementState.Before:
-				case StatementState.After:
-					if (word == "group") return StatementState.BeforeAfterGroup;
+				case StatementSection.Before:
+				case StatementSection.After:
+					if (word == "group") return new StatementState(StatementSection.BeforeAfterGroup);
 					break;
 				#endregion
 
 				#region format
-				case StatementState.Format:
-					if (word == "rows") return StatementState.FormatRows;
-					if (word == "cols") return StatementState.FormatCols;
-					if (word == "genpages") return StatementState.FormatGenpages;
-					if (word == "outfile") return StatementState.FormatOutfile;
+				case StatementSection.Format:
+					if (word == "rows") return new StatementState(StatementSection.FormatRows);
+					if (word == "cols") return new StatementState(StatementSection.FormatCols);
+					if (word == "genpages") return new StatementState(StatementSection.FormatGenpages);
+					if (word == "outfile") return new StatementState(StatementSection.FormatOutfile);
 					break;
 
-				case StatementState.FormatRowsEquals:
-					return StatementState.FormatRowsNumber;
+				case StatementSection.FormatRowsEquals:
+					return new StatementState(StatementSection.FormatRowsNumber);
 
-				case StatementState.FormatRowsNumber:
-					if (word == "cols") return StatementState.FormatCols;
-					if (word == "genpages") return StatementState.FormatGenpages;
-					if (word == "outfile") return StatementState.FormatOutfile;
+				case StatementSection.FormatRowsNumber:
+					if (word == "cols") return new StatementState(StatementSection.FormatCols);
+					if (word == "genpages") return new StatementState(StatementSection.FormatGenpages);
+					if (word == "outfile") return new StatementState(StatementSection.FormatOutfile);
 					break;
 
-				case StatementState.FormatColsEquals:
-					return StatementState.FormatColsNumber;
+				case StatementSection.FormatColsEquals:
+					return new StatementState(StatementSection.FormatColsNumber);
 
-				case StatementState.FormatColsNumber:
-					if (word == "genpages") return StatementState.FormatGenpages;
-					if (word == "outfile") return StatementState.FormatOutfile;
+				case StatementSection.FormatColsNumber:
+					if (word == "genpages") return new StatementState(StatementSection.FormatGenpages);
+					if (word == "outfile") return new StatementState(StatementSection.FormatOutfile);
 					break;
 
-				case StatementState.FormatGenpagesEquals:
-					return StatementState.FormatGenpagesNumber;
+				case StatementSection.FormatGenpagesEquals:
+					return new StatementState(StatementSection.FormatGenpagesNumber);
 
-				case StatementState.FormatGenpagesNumber:
-					if (word == "outfile") return StatementState.FormatOutfile;
+				case StatementSection.FormatGenpagesNumber:
+					if (word == "outfile") return new StatementState(StatementSection.FormatOutfile);
 					break;
 				#endregion
 
 				#region alter
-				case StatementState.Alter:
+				case StatementSection.Alter:
 					switch (word)
 					{
-						case "application": return StatementState.AlterApplication;
-						case "column": return StatementState.AlterColumn;
-						case "table": return StatementState.AlterTable;
-						case "stringdef": return StatementState.AlterStringdef;
-						case "typedef": return StatementState.AlterTypedef;
+						case "application": return new StatementState(StatementSection.AlterApplication);
+						case "column": return new StatementState(StatementSection.AlterColumn);
+						case "table": return new StatementState(StatementSection.AlterTable);
+						case "stringdef": return new StatementState(StatementSection.AlterStringdef);
+						case "typedef": return new StatementState(StatementSection.AlterTypedef);
 					}
 					break;
 
-				case StatementState.AlterColumn:
-					if (ProbeEnvironment.IsValidFieldName(word)) return StatementState.AlterColumnName;
+				case StatementSection.AlterColumn:
+					if (ProbeEnvironment.IsValidFieldName(word)) return new StatementState(StatementSection.AlterColumnName);
 					break;
 
-				case StatementState.AlterApplication:
-					if (word == "AppIID") return StatementState.AlterApplicationAppIID;
+				case StatementSection.AlterApplication:
+					if (word == "AppIID") return new StatementState(StatementSection.AlterApplicationAppIID);
 					break;
 
-				case StatementState.AlterApplicationAppIID:
-					if (word != "prompt") return StatementState.AlterApplicationAppIIDName;
+				case StatementSection.AlterApplicationAppIID:
+					if (word != "prompt") return new StatementState(StatementSection.AlterApplicationAppIIDName);
 					break;
 
-				case StatementState.AlterApplicationAppIIDName:
-					if (word == "prompt") return StatementState.AlterApplicationPrompt;
+				case StatementSection.AlterApplicationAppIIDName:
+					if (word == "prompt") return new StatementState(StatementSection.AlterApplicationPrompt);
 					break;
 
-				case StatementState.AlterApplicationPrompt:
-					return StatementState.AlterApplicationPromptString;
+				case StatementSection.AlterApplicationPrompt:
+					return new StatementState(StatementSection.AlterApplicationPromptString);
 
-				case StatementState.AlterApplicationPromptString:
-					if (word == "comment") return StatementState.AlterApplicationComment;
-					if (word == "langid") return StatementState.AlterApplicationLangId;
-					if (word == "description") return StatementState.AlterApplicationDescription;
+				case StatementSection.AlterApplicationPromptString:
+					if (word == "comment") return new StatementState(StatementSection.AlterApplicationComment);
+					if (word == "langid") return new StatementState(StatementSection.AlterApplicationLangId);
+					if (word == "description") return new StatementState(StatementSection.AlterApplicationDescription);
 					break;
 
-				case StatementState.AlterApplicationComment:
-					return StatementState.AlterApplicationCommentString;
+				case StatementSection.AlterApplicationComment:
+					return new StatementState(StatementSection.AlterApplicationCommentString);
 
-				case StatementState.AlterApplicationCommentString:
-					if (word == "langid") return StatementState.AlterApplicationLangId;
-					if (word == "description") return StatementState.AlterApplicationDescription;
+				case StatementSection.AlterApplicationCommentString:
+					if (word == "langid") return new StatementState(StatementSection.AlterApplicationLangId);
+					if (word == "description") return new StatementState(StatementSection.AlterApplicationDescription);
 					break;
 
-				case StatementState.AlterApplicationLangId:
-					return StatementState.AlterApplicationLangIdNumber;
+				case StatementSection.AlterApplicationLangId:
+					return new StatementState(StatementSection.AlterApplicationLangIdNumber);
 
-				case StatementState.AlterApplicationDescription:
-					return StatementState.AlterApplicationDescriptionString;
+				case StatementSection.AlterApplicationDescription:
+					return new StatementState(StatementSection.AlterApplicationDescriptionString);
 
-				case StatementState.AlterApplicationBrackets:
-					if (word == "extends") return StatementState.AlterApplicationExtends;
+				case StatementSection.AlterApplicationBrackets:
+					if (word == "extends") return new StatementState(StatementSection.AlterApplicationExtends);
 					break;
 
-				case StatementState.AlterApplicationExtends:
-					if (word == "AppIID") return StatementState.AlterApplicationExtendsAppIID;
+				case StatementSection.AlterApplicationExtends:
+					if (word == "AppIID") return new StatementState(StatementSection.AlterApplicationExtendsAppIID);
 					break;
 
-				case StatementState.AlterApplicationExtendsAppIID:
-					return StatementState.AlterApplicationExtendsAppIIDString;
+				case StatementSection.AlterApplicationExtendsAppIID:
+					return new StatementState(StatementSection.AlterApplicationExtendsAppIIDString);
+				#endregion
+
+				#region Data Types
+				case StatementSection.Numeric:
+					switch (word)
+					{
+						case "unsigned": return state.SetFlag(StatementFlag.HasSign);
+						case "signed": return state.SetFlag(StatementFlag.HasSign);
+						case "currency": return state.SetFlag(StatementFlag.HasCurrency);
+						case "local_currency": return state.SetFlag(StatementFlag.HasCurrency);
+						case "LEADINGZEROS": return state.SetFlag(StatementFlag.HasLeadingZeros);
+						case "PROBE": return state;
+					}
+					break;
+
+				case StatementSection.Int:
+					switch (word)
+					{
+						case "signed":
+						case "unsigned":
+							return state.SetFlag(StatementFlag.HasSign);
+					}
+					break;
+
+				case StatementSection.Signed:
+				case StatementSection.Unsigned:
+					switch (word)
+					{
+						case "int":
+							return state.SetSection(StatementSection.Int);
+					}
+					break;
 				#endregion
 			}
 
@@ -289,25 +243,36 @@ namespace DkTools.StatementCompletion
 
 		public static StatementState ProcessNumber(StatementState state)
 		{
-			switch (state)
+			switch (state.Section)
 			{
-				case StatementState.None:
+				case StatementSection.None:
 					return StatementState.None;
 
 				#region format
-				case StatementState.FormatRowsEquals:
-					return StatementState.FormatRowsNumber;
+				case StatementSection.FormatRowsEquals:
+					return new StatementState(StatementSection.FormatRowsNumber);
 
-				case StatementState.FormatColsEquals:
-					return StatementState.FormatColsNumber;
+				case StatementSection.FormatColsEquals:
+					return new StatementState(StatementSection.FormatColsNumber);
 
-				case StatementState.FormatGenpagesEquals:
-					return StatementState.FormatGenpagesNumber;
+				case StatementSection.FormatGenpagesEquals:
+					return new StatementState(StatementSection.FormatGenpagesNumber);
 				#endregion
 
 				#region alter
-				case StatementState.AlterApplicationLangId:
-					return StatementState.AlterApplicationLangIdNumber;
+				case StatementSection.AlterApplicationLangId:
+					return new StatementState(StatementSection.AlterApplicationLangIdNumber);
+				#endregion
+
+				#region Data Types
+				case StatementSection.Numeric:
+					return state.SetFlag(StatementFlag.HasWidth);
+				case StatementSection.NumericBracket:
+					return state.SetSection(StatementSection.NumericWithinWidth);
+				case StatementSection.Int:
+				case StatementSection.Signed:
+				case StatementSection.Unsigned:
+					return new StatementState(StatementSection.Int, state.Flags | StatementFlag.HasWidth);
 				#endregion
 			}
 			return StatementState.None;
@@ -315,37 +280,46 @@ namespace DkTools.StatementCompletion
 
 		public static StatementState ProcessStringLiteral(StatementState state)
 		{
-			switch (state)
+			switch (state.Section)
 			{
-				case StatementState.None:
+				case StatementSection.None:
 					return StatementState.None;
 
 				#region create
-				case StatementState.CreateInterfacetypeTypeliblocator:
-					return StatementState.CreateInterfacetypeTypeliblocatorName;
+				case StatementSection.CreateInterfacetypeTypeliblocator:
+					return new StatementState(StatementSection.CreateInterfacetypeTypeliblocatorName);
 				#endregion
 
 				#region selects
-				case StatementState.Select:	// Optional name for select
-					return StatementState.Select;
+				case StatementSection.Select:	// Optional name for select
+					return new StatementState(StatementSection.Select);
 				#endregion
 
 				#region alter
-				case StatementState.AlterApplicationAppIID:
-					return StatementState.AlterApplicationAppIIDName;
+				case StatementSection.AlterApplicationAppIID:
+					return new StatementState(StatementSection.AlterApplicationAppIIDName);
 
-				case StatementState.AlterApplicationPrompt:
-					return StatementState.AlterApplicationPromptString;
+				case StatementSection.AlterApplicationPrompt:
+					return new StatementState(StatementSection.AlterApplicationPromptString);
 
-				case StatementState.AlterApplicationComment:
-					return StatementState.AlterApplicationCommentString;
+				case StatementSection.AlterApplicationComment:
+					return new StatementState(StatementSection.AlterApplicationCommentString);
 
-				case StatementState.AlterApplicationDescription:
-				case StatementState.AlterApplicationDescriptionString:
-					return StatementState.AlterApplicationDescriptionString;
+				case StatementSection.AlterApplicationDescription:
+				case StatementSection.AlterApplicationDescriptionString:
+					return new StatementState(StatementSection.AlterApplicationDescriptionString);
 
-				case StatementState.AlterApplicationExtendsAppIID:
-					return StatementState.AlterApplicationExtendsAppIIDString;
+				case StatementSection.AlterApplicationExtendsAppIID:
+					return new StatementState(StatementSection.AlterApplicationExtendsAppIIDString);
+				#endregion
+
+				#region Date Types
+				case StatementSection.Numeric:
+				case StatementSection.Int:
+					return state.SetFlag(StatementFlag.HasMask);
+				case StatementSection.Signed:
+				case StatementSection.Unsigned:
+					return state.SetSection(StatementSection.Int).SetFlag(StatementFlag.HasMask);
 				#endregion
 			}
 
@@ -357,38 +331,50 @@ namespace DkTools.StatementCompletion
 			switch (ch)
 			{
 				case '*':
-					if (state == StatementState.Select) return StatementState.SelectStar;
+					if (state.Section == StatementSection.Select) return new StatementState(StatementSection.SelectStar);
 					break;
 
 				case ',':
-					switch (state)
+					switch (state.Section)
 					{
-						case StatementState.SelectFromTable:
-							return StatementState.SelectFromTableComma;
-						case StatementState.OrderByTableField:
-						case StatementState.OrderByTableFieldAscDesc:
-							return StatementState.OrderByTableFieldComma;
+						case StatementSection.SelectFromTable:
+							return new StatementState(StatementSection.SelectFromTableComma);
+						case StatementSection.OrderByTableField:
+						case StatementSection.OrderByTableFieldAscDesc:
+							return new StatementState(StatementSection.OrderByTableFieldComma);
+						case StatementSection.NumericWithinWidth:
+							return state.SetSection(StatementSection.NumericBracket);
 					}
 					break;
 
 				case '.':
-					if (state == StatementState.OrderByTable) return StatementState.OrderByTableDot;
+					if (state.Section == StatementSection.OrderByTable) return new StatementState(StatementSection.OrderByTableDot);
 					break;
 
 				case '=':
-					if (state == StatementState.FormatRows) return StatementState.FormatRowsEquals;
-					if (state == StatementState.FormatCols) return StatementState.FormatColsEquals;
-					if (state == StatementState.FormatGenpages) return StatementState.FormatGenpagesEquals;
+					if (state.Section == StatementSection.FormatRows) return new StatementState(StatementSection.FormatRowsEquals);
+					if (state.Section == StatementSection.FormatCols) return new StatementState(StatementSection.FormatColsEquals);
+					if (state.Section == StatementSection.FormatGenpages) return new StatementState(StatementSection.FormatGenpagesEquals);
 					break;
 
 				case '(':
-					switch (state)
+					switch (state.Section)
 					{
-						case StatementState.AlterApplicationPromptString:
-						case StatementState.AlterApplicationCommentString:
-						case StatementState.AlterApplicationLangIdNumber:
-						case StatementState.AlterApplicationDescriptionString:
-							return StatementState.AlterApplicationBrackets;
+						case StatementSection.AlterApplicationPromptString:
+						case StatementSection.AlterApplicationCommentString:
+						case StatementSection.AlterApplicationLangIdNumber:
+						case StatementSection.AlterApplicationDescriptionString:
+							return new StatementState(StatementSection.AlterApplicationBrackets);
+						case StatementSection.Numeric:
+							return state.SetSection(StatementSection.NumericBracket);
+					}
+					break;
+
+				case ')':
+					switch (state.Section)
+					{
+						case StatementSection.NumericWithinWidth:
+							return state.SetSection(StatementSection.Numeric).SetFlag(StatementFlag.HasWidth);
 					}
 					break;
 			}
@@ -398,13 +384,13 @@ namespace DkTools.StatementCompletion
 
 		public static IEnumerable<string> GetNextPossibleKeywords(StatementState state)
 		{
-			switch (state)
+			switch (state.Section)
 			{
-				case StatementState.None:
+				case StatementSection.None:
 					break;
 
 				#region create
-				case StatementState.Create:
+				case StatementSection.Create:
 					yield return "index";
 					yield return "interfacetype";
 					yield return "relationship";
@@ -415,11 +401,11 @@ namespace DkTools.StatementCompletion
 					yield return "workspace";
 					break;
 
-				case StatementState.CreateTime:
+				case StatementSection.CreateTime:
 					yield return "relationship";
 					break;
 
-				case StatementState.CreateInterfacetypeName:
+				case StatementSection.CreateInterfacetypeName:
 					yield return "path";
 					yield return "framework";
 					yield return "progid";
@@ -428,86 +414,86 @@ namespace DkTools.StatementCompletion
 					yield return "iid";
 					break;
 
-				case StatementState.CreateInterfacetypeTypeliblocatorName:
+				case StatementSection.CreateInterfacetypeTypeliblocatorName:
 					yield return "default";
 					yield return "defaultevent";
 					yield return "interface";
 					break;
 
-				case StatementState.CreateInterfacetypeFramework:
+				case StatementSection.CreateInterfacetypeFramework:
 					yield return "interface";
 					break;
 				#endregion
 
 				#region selects
-				case StatementState.SelectStar:
+				case StatementSection.SelectStar:
 					yield return "from";
 					break;
 
-				case StatementState.SelectFromTable:
+				case StatementSection.SelectFromTable:
 					yield return "of";
 					yield return "where";
 					break;
 
-				case StatementState.SelectFromTableOf:
-				case StatementState.SelectFromTableList:
-				case StatementState.SelectFromTableOfTable:
+				case StatementSection.SelectFromTableOf:
+				case StatementSection.SelectFromTableList:
+				case StatementSection.SelectFromTableOfTable:
 					yield return "where";
 					break;
 
-				case StatementState.Order:
+				case StatementSection.Order:
 					yield return "by";
 					break;
 
-				case StatementState.OrderByTable:
-				case StatementState.OrderByTableField:
+				case StatementSection.OrderByTable:
+				case StatementSection.OrderByTableField:
 					yield return "asc";
 					yield return "desc";
 					break;
 
-				case StatementState.Before:
-				case StatementState.After:
+				case StatementSection.Before:
+				case StatementSection.After:
 					yield return "group";
 					break;
 
-				case StatementState.BeforeAfterGroup:
+				case StatementSection.BeforeAfterGroup:
 					yield return "all";
 					break;
 				#endregion
 
 				#region format
-				case StatementState.Format:
+				case StatementSection.Format:
 					yield return "rows";
 					yield return "cols";
 					yield return "genpages";
 					yield return "outfile";
 					break;
 
-				case StatementState.FormatRowsNumber:
+				case StatementSection.FormatRowsNumber:
 					yield return "cols";
 					yield return "genpages";
 					yield return "outfile";
 					break;
 
-				case StatementState.FormatColsNumber:
+				case StatementSection.FormatColsNumber:
 					yield return "genpages";
 					yield return "outfile";
 					break;
 
-				case StatementState.FormatGenpagesNumber:
+				case StatementSection.FormatGenpagesNumber:
 					yield return "outfile";
 					break;
 				#endregion
 
 				#region onerror
-				case StatementState.Onerror:
+				case StatementSection.Onerror:
 					yield return "goto";
 					yield return "resume";
 					break;
 				#endregion
 
 				#region alter
-				case StatementState.Alter:
+				case StatementSection.Alter:
 					yield return "application";
 					yield return "column";
 					yield return "stringdef";
@@ -516,51 +502,65 @@ namespace DkTools.StatementCompletion
 					yield return "workspace";
 					break;
 
-				case StatementState.AlterColumnName:
+				case StatementSection.AlterColumnName:
 					yield return "sametype";
 					break;
 
-				case StatementState.AlterApplication:
+				case StatementSection.AlterApplication:
 					yield return "AppIID";
 					break;
 
-				case StatementState.AlterApplicationAppIIDName:
+				case StatementSection.AlterApplicationAppIIDName:
 					yield return "prompt";
 					break;
 
-				case StatementState.AlterApplicationPromptString:
+				case StatementSection.AlterApplicationPromptString:
 					yield return "comment";
 					yield return "langid";
 					yield return "description";
 					yield return "(";
 					break;
 
-				case StatementState.AlterApplicationCommentString:
+				case StatementSection.AlterApplicationCommentString:
 					yield return "langid";
 					yield return "description";
 					yield return "(";
 					break;
 
-				case StatementState.AlterApplicationLangIdNumber:
+				case StatementSection.AlterApplicationLangIdNumber:
 					yield return "langid";
 					yield return "description";
 					yield return "(";
 					break;
 
-				case StatementState.AlterApplicationDescriptionString:
+				case StatementSection.AlterApplicationDescriptionString:
 					yield return "(";
 					break;
 
-				case StatementState.AlterApplicationBrackets:
+				case StatementSection.AlterApplicationBrackets:
 					yield return "extends";
 					break;
 
-				case StatementState.AlterApplicationExtends:
+				case StatementSection.AlterApplicationExtends:
 					yield return "AppIID";
 					break;
 
-				case StatementState.AlterApplicationExtendsAppIIDString:
+				case StatementSection.AlterApplicationExtendsAppIIDString:
 					yield return ")";
+					break;
+				#endregion
+
+				#region Data Types
+				case StatementSection.Numeric:
+					if (!state.HasFlag(StatementFlag.HasSign)) yield return "unsigned";
+					if (!state.HasFlag(StatementFlag.HasCurrency)) yield return "currency";
+					if (!state.HasFlag(StatementFlag.HasCurrency)) yield return "local_currency";
+					if (!state.HasFlag(StatementFlag.HasLeadingZeros)) yield return "LEADINGZEROS";
+					break;
+
+				case StatementSection.Signed:
+				case StatementSection.Unsigned:
+					yield return "int";
 					break;
 				#endregion
 			}
@@ -573,19 +573,19 @@ namespace DkTools.StatementCompletion
 				completionSource.CreateCompletion(keyword, ProbeCompletionType.Keyword, null);
 			}
 
-			switch (state)
+			switch (state.Section)
 			{
-				case StatementState.None:
+				case StatementSection.None:
 					break;
 
 				#region selects
-				case StatementState.Select:
+				case StatementSection.Select:
 					completionSource.CreateCompletion("*", ProbeCompletionType.Keyword, null);
 					break;
 
-				case StatementState.SelectFrom:
-				case StatementState.SelectFromTableComma:
-				case StatementState.SelectFromTableOf:
+				case StatementSection.SelectFrom:
+				case StatementSection.SelectFromTableComma:
+				case StatementSection.SelectFromTableOf:
 					foreach (var table in DkDict.Dict.Tables)
 					{
 						foreach (var def in table.Definitions)
@@ -597,16 +597,16 @@ namespace DkTools.StatementCompletion
 				#endregion
 
 				#region format
-				case StatementState.FormatRows:
-				case StatementState.FormatCols:
-				case StatementState.FormatGenpages:
-				case StatementState.FormatOutfile:
+				case StatementSection.FormatRows:
+				case StatementSection.FormatCols:
+				case StatementSection.FormatGenpages:
+				case StatementSection.FormatOutfile:
 					completionSource.CreateCompletion("=", ProbeCompletionType.Keyword, null);
 					break;
 				#endregion
 
 				#region interface
-				case StatementState.Interface:
+				case StatementSection.Interface:
 					foreach (var intf in DkDict.Dict.Interfaces)
 					{
 						completionSource.CreateCompletion(intf.Definition);
@@ -615,30 +615,28 @@ namespace DkTools.StatementCompletion
 				#endregion
 
 				#region alter
-				case StatementState.AlterTable:
+				case StatementSection.AlterTable:
 					foreach (var table in DkDict.Dict.Tables)
 					{
 						completionSource.CreateCompletion(table.Definition);
 					}
 					break;
 
-				case StatementState.AlterStringdef:
+				case StatementSection.AlterStringdef:
 					foreach (var sd in DkDict.Dict.Stringdefs)
 					{
 						completionSource.CreateCompletion(sd.Definition);
 					}
 					break;
 
-				case StatementState.AlterTypedef:
+				case StatementSection.AlterTypedef:
 					foreach (var td in DkDict.Dict.Typedefs)
 					{
 						completionSource.CreateCompletion(td.Definition);
 					}
 					break;
-					#endregion
+				#endregion
 			}
 		}
-
-
 	}
 }
