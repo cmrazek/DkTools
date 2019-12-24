@@ -456,6 +456,9 @@ namespace DkTools.CodeModel
 				}
 			}
 
+			// Remove trailing whitespace
+			while (sb.Length > 0 && char.IsWhiteSpace(sb[sb.Length - 1])) sb.Length--;
+
 			return sb.ToString();
 		}
 

@@ -81,12 +81,14 @@ namespace DkTools.ErrorTagging
 
 		public ITextSnapshot GetSnapshot(ITextSnapshot currentSnapshot)
 		{
-			if (_snapshot == null || _snapshot.TextBuffer != currentSnapshot.TextBuffer) _snapshot = currentSnapshot;
+			if (_snapshot == null || _snapshot != currentSnapshot) _snapshot = currentSnapshot;
 			return _snapshot;
 		}
 
 		public SnapshotSpan? TryGetSnapshotSpan(ITextSnapshot currentSnapshot)
 		{
+			if (currentSnapshot == null) throw new ArgumentNullException(nameof(currentSnapshot));
+
 			try
 			{
 				if (_span.HasValue)
@@ -95,8 +97,9 @@ namespace DkTools.ErrorTagging
 					return new SnapshotSpan(_snapshot, _span.Value.Start, _span.Value.Length).TranslateTo(currentSnapshot, SpanTrackingMode.EdgePositive);
 				}
 
-				if (Line < 0 || Line >= _snapshot.LineCount) return null;
-				var line = _snapshot.GetLineFromLineNumber(Line);
+				var snapshot = _snapshot ?? currentSnapshot;
+				if (Line < 0 || Line >= snapshot.LineCount) return null;
+				var line = snapshot.GetLineFromLineNumber(Line);
 				var startPos = line.Start.Position;
 				var endPos = line.End.Position;
 				if (startPos < endPos)
@@ -107,7 +110,9 @@ namespace DkTools.ErrorTagging
 
 				if (_snapshot == null) _snapshot = currentSnapshot;
 				_span = new CodeModel.Span(startPos, endPos);
-				return new SnapshotSpan(_snapshot, _span.Value.Start, _span.Value.Length).TranslateTo(currentSnapshot, SpanTrackingMode.EdgePositive);
+				var snapshotSpan = new SnapshotSpan(_snapshot, _span.Value.Start, _span.Value.Length);
+				if (_snapshot != currentSnapshot) snapshotSpan = snapshotSpan.TranslateTo(currentSnapshot, SpanTrackingMode.EdgePositive);
+				return snapshotSpan;
 			}
 			catch (ArgumentOutOfRangeException)
 			{
