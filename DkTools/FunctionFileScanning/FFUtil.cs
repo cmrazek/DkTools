@@ -19,6 +19,12 @@ namespace DkTools.FunctionFileScanning
 
 		public static bool FileNameIsClass(string fileName, out string className)
 		{
+			if (string.IsNullOrEmpty(fileName))
+			{
+				className = null;
+				return false;
+			}
+
 			var ext = System.IO.Path.GetExtension(fileName).ToLower();
 			switch (ext)
 			{
@@ -41,6 +47,8 @@ namespace DkTools.FunctionFileScanning
 
 		public static bool FileNameIsFunction(string fileName)
 		{
+			if (string.IsNullOrEmpty(fileName)) return false;
+
 			var ext = System.IO.Path.GetExtension(fileName).ToLower();
 			switch (ext)
 			{

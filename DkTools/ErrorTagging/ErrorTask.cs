@@ -89,6 +89,8 @@ namespace DkTools.ErrorTagging
 		{
 			if (currentSnapshot == null) throw new ArgumentNullException(nameof(currentSnapshot));
 
+			if (_snapshot != null && _snapshot.TextBuffer != currentSnapshot.TextBuffer) return null;
+
 			try
 			{
 				if (_span.HasValue)
