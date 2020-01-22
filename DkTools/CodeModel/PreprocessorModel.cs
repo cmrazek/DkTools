@@ -25,16 +25,12 @@ namespace DkTools.CodeModel
 		private Preprocessor _prep;
 		private List<Definition> _globalDefs = new List<Definition>();
 
-		public PreprocessorModel(CodeSource source, DefinitionProvider defProv, string fileName, bool visible, IEnumerable<Preprocessor.IncludeDependency> includeDependencies)
+		public PreprocessorModel(CodeSource source, DefinitionProvider definitionProvider, string fileName, bool visible, IEnumerable<Preprocessor.IncludeDependency> includeDependencies)
 		{
-#if DEBUG
-			if (source == null) throw new ArgumentNullException("source");
-			if (defProv == null) throw new ArgumentNullException("defProv");
-#endif
-			_source = source;
+			_source = source ?? throw new ArgumentNullException(nameof(source));
 			_code = new CodeParser(source.Text);
-			_defProv = defProv;
-			_fileName = fileName;
+			_defProv = definitionProvider ?? throw new ArgumentNullException(nameof(definitionProvider));
+			_fileName = fileName ?? throw new ArgumentNullException(nameof(fileName));
 			FunctionFileScanning.FFUtil.FileNameIsClass(_fileName, out _className);
 			_fileContext = FileContextUtil.GetFileContextFromFileName(fileName);
 			_visible = visible;

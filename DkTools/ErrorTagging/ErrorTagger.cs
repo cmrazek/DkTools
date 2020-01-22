@@ -128,6 +128,7 @@ namespace DkTools.ErrorTagging
 				try
 				{
 					var fileName = VsTextUtil.TryGetDocumentFileName(_view.TextBuffer);
+					if (string.IsNullOrEmpty(fileName)) return;
 
 					if (_model != null &&
 						_model.FileContext != FileContext.Include &&

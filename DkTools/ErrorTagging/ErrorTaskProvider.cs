@@ -76,26 +76,31 @@ namespace DkTools.ErrorTagging
 
 		public void FireTagsChangedEvent()
 		{
-			var fileNames = new List<string>();
-
-			foreach (var task in Tasks)
+			try
 			{
-				if (!(task is ErrorTask)) continue;
-				var errorTask = task as ErrorTask;
+				var fileNames = new List<string>();
 
-				if (!fileNames.Contains(errorTask.Document))
+				foreach (var task in Tasks.Cast<Microsoft.VisualStudio.Shell.Task>()
+					.Where(t => t is ErrorTask).Cast<ErrorTask>().ToArray())
 				{
-					fileNames.Add(errorTask.Document);
+					if (!fileNames.Contains(task.Document))
+					{
+						fileNames.Add(task.Document);
+					}
+				}
+
+				if (fileNames.Any())
+				{
+					foreach (var fileName in fileNames)
+					{
+						var ev = ErrorTagsChangedForFile;
+						if (ev != null) ev(this, new ErrorTaskEventArgs { FileName = fileName });
+					}
 				}
 			}
-
-			if (fileNames.Any())
+			catch (Exception ex)
 			{
-				foreach (var fileName in fileNames)
-				{
-					var ev = ErrorTagsChangedForFile;
-					if (ev != null) ev(this, new ErrorTaskEventArgs { FileName = fileName });
-				}
+				Log.Error(ex);
 			}
 		}
 

@@ -220,6 +220,8 @@ namespace DkTools.CodeModel
 
 		public CodeModel CreatePreprocessedModel(ProbeAppSettings appSettings, string fileName, VsText.ITextSnapshot snapshot, string reason)
 		{
+			if (string.IsNullOrEmpty(fileName)) throw new ArgumentNullException(nameof(fileName));
+
 			var source = new CodeSource();
 			source.Append(snapshot.GetText(), fileName, 0, snapshot.Length, true, true, false);
 			source.Flush();
@@ -231,6 +233,8 @@ namespace DkTools.CodeModel
 
 		public CodeModel CreatePreprocessedModel(ProbeAppSettings appSettings, string fileName, VsText.ITextSnapshot snapshot, bool visible, string reason)
 		{
+			if (string.IsNullOrEmpty(fileName)) throw new ArgumentNullException(nameof(fileName));
+
 			CodeSource source;
 			IEnumerable<Preprocessor.IncludeDependency> includeDependencies = null;
 			if (visible || string.IsNullOrEmpty(fileName))
@@ -257,6 +261,7 @@ namespace DkTools.CodeModel
 		public CodeModel CreatePreprocessedModel(ProbeAppSettings appSettings, CodeSource source, string fileName,
 			bool visible, string reason, IEnumerable<Preprocessor.IncludeDependency> includeDependencies)
 		{
+			if (string.IsNullOrEmpty(fileName)) throw new ArgumentNullException(nameof(fileName));
 #if DEBUG
 			Log.Debug("Creating preprocessed model. Reason: {0}", reason);
 			var startTime = DateTime.Now;
