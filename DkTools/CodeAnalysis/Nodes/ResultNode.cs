@@ -50,11 +50,13 @@ namespace DkTools.CodeAnalysis.Nodes
 				var rightNode = Parent.GetRightSibling(scope, this) as ResultNode;
 				if (rightNode == null || rightNode.Source != ResultSource.Conditional2)
 				{
-					ReportError(Span, CAError.CA0021);	// Operator '?' expects ':' on right.
+					ReportError(Span, CAError.CA0021);  // Operator '?' expects ':' on right.
 					Parent.ReplaceWithResult(Value.Void, this);
 				}
-
-				Parent.ReplaceWithResult(rightNode.ReadValue(scope), this, rightNode);
+				else
+				{
+					Parent.ReplaceWithResult(rightNode.ReadValue(scope), this, rightNode);
+				}
 			}
 			else
 			{
