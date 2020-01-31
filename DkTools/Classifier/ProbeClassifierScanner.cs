@@ -28,12 +28,12 @@ namespace DkTools.Classifier
 
 		public void SetSource(string source, int offset, VsText.ITextSnapshot snapshot, CodeModel.CodeModel model)
 		{
-			_source = source;
+			_source = source ?? throw new ArgumentNullException(nameof(source));
+			_snapshot = snapshot ?? throw new ArgumentNullException(nameof(snapshot));
+			_model = model ?? throw new ArgumentNullException(nameof(model));
 			_pos = 0;
 			_posOffset = offset;
 			_length = _source.Length;
-			_snapshot = snapshot;
-			_model = model;
 
 			var transStart = snapshot.TranslateOffsetToSnapshot(offset, _model.Snapshot);
 			var transEnd = snapshot.TranslateOffsetToSnapshot(offset + source.Length, _model.Snapshot);
