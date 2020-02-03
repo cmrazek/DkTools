@@ -35,13 +35,22 @@ namespace DkTools.Classifier
 			_posOffset = offset;
 			_length = _source.Length;
 
-			var transStart = snapshot.TranslateOffsetToSnapshot(offset, _model.Snapshot);
-			var transEnd = snapshot.TranslateOffsetToSnapshot(offset + source.Length, _model.Snapshot);
+			int transStart, transEnd;
+			if (_model.Snapshot != null)
+			{
+				transStart = snapshot.TranslateOffsetToSnapshot(offset, _model.Snapshot);
+				transEnd = snapshot.TranslateOffsetToSnapshot(offset + source.Length, _model.Snapshot);
+			}
+			else
+			{
+				transStart = offset;
+				transEnd = offset + source.Length;
+			}
 
 			_tokenMap = new Dictionary<int, Token>();
 			foreach (var token in _model.File.FindDownward(transStart, transEnd - transStart))
 			{
-				var snapStart = _model.Snapshot.TranslateOffsetToSnapshot(token.Span.Start, snapshot);
+				var snapStart = _model.Snapshot != null ? _model.Snapshot.TranslateOffsetToSnapshot(token.Span.Start, snapshot) : token.Span.Start;
 				_tokenMap[snapStart] = token;
 			}
 		}

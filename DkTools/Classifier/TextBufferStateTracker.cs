@@ -55,9 +55,12 @@ namespace DkTools.Classifier
 
 		private void PurgeStatesOnOrAfterLine(int purgeLineNum)
 		{
-			if (purgeLineNum < _states.Count)
+			lock (this)
 			{
-				_states.RemoveRange(purgeLineNum, _states.Count - purgeLineNum);
+				if (purgeLineNum < _states.Count)
+				{
+					_states.RemoveRange(purgeLineNum, _states.Count - purgeLineNum);
+				}
 			}
 		}
 
@@ -68,73 +71,85 @@ namespace DkTools.Classifier
 
 		public long GetStateForPosition(int pos, ITextSnapshot snapshot, string fileName, ProbeAppSettings appSettings)
 		{
-			_snapshot = snapshot;
-
-			var line = _snapshot.GetLineFromPosition(pos);
-			var state = GetStateForLineStart(line.LineNumber, snapshot, fileName, appSettings);
-			var lineStartPos = line.Start.Position;
-
-			var fileStore = CodeModel.FileStore.GetOrCreateForTextBuffer(snapshot.TextBuffer);
-			if (fileStore == null) return 0;
-
-			var model = fileStore.GetMostRecentModel(appSettings, fileName, snapshot, "GetStateForPosition");
-
-			if (lineStartPos <= pos)
+			lock (this)
 			{
-				var lineText = line.GetTextIncludingLineBreak();
-				if (pos - lineStartPos < lineText.Length) lineText = lineText.Substring(0, pos - lineStartPos);
+				_snapshot = snapshot;
 
-				_scanner.SetSource(lineText, line.Start.Position, line.Snapshot, model);
-
-				var tokenInfo = new ProbeClassifierScanner.TokenInfo();
-				while (_scanner.ScanTokenAndProvideInfoAboutIt(tokenInfo, ref state)) ;
-			}
-
-			return state;
-		}
-
-		public long GetStateForLineStart(int lineNum, ITextSnapshot snapshot, string fileName, ProbeAppSettings appSettings)
-		{
-			if (_states.Count <= lineNum)
-			{
-				if (_states.Count == 0)
-				{
-					_states.Add(0);
-					if (lineNum == 0) return 0;
-				}
-
-				var stateLineNum = _states.Count - 1;
-				var state = _states[stateLineNum];
+				var line = _snapshot.GetLineFromPosition(pos);
+				var state = GetStateForLineStart(line.LineNumber, snapshot, fileName, appSettings);
+				var lineStartPos = line.Start.Position;
 
 				var fileStore = CodeModel.FileStore.GetOrCreateForTextBuffer(snapshot.TextBuffer);
 				if (fileStore == null) return 0;
 
-				var model = fileStore.GetMostRecentModel(appSettings, fileName, snapshot, "GetStateForLine()");
-				_snapshot = snapshot;
+				var model = fileStore.GetMostRecentModel(appSettings, fileName, snapshot, "GetStateForPosition");
 
-				var tokenInfo = new ProbeClassifierScanner.TokenInfo();
-
-				while (stateLineNum < lineNum)
+				if (lineStartPos <= pos)
 				{
-					var line = _snapshot.GetLineFromLineNumber(stateLineNum);
-					if (line == null) break;
+					var lineText = line.GetTextIncludingLineBreak();
+					if (pos - lineStartPos < lineText.Length) lineText = lineText.Substring(0, pos - lineStartPos);
 
-					_scanner.SetSource(line.GetTextIncludingLineBreak(), line.Start.Position, _snapshot, model);
+					_scanner.SetSource(lineText, line.Start.Position, line.Snapshot, model);
+
+					var tokenInfo = new ProbeClassifierScanner.TokenInfo();
 					while (_scanner.ScanTokenAndProvideInfoAboutIt(tokenInfo, ref state)) ;
-
-					_states.Add(state);
-					stateLineNum++;
 				}
 
-				if (_states.Count <= lineNum) return 0;
+				return state;
 			}
+		}
 
-			return _states[lineNum];
+		public long GetStateForLineStart(int lineNum, ITextSnapshot snapshot, string fileName, ProbeAppSettings appSettings)
+		{
+			lock (this)
+			{
+				if (_states.Count <= lineNum)
+				{
+					if (_states.Count == 0)
+					{
+						_states.Add(0);
+						if (lineNum == 0) return 0;
+					}
+
+					var stateLineNum = _states.Count - 1;
+					var state = _states[stateLineNum];
+
+					var fileStore = CodeModel.FileStore.GetOrCreateForTextBuffer(snapshot.TextBuffer);
+					if (fileStore == null) return 0;
+
+					var model = fileStore.GetMostRecentModel(appSettings, fileName, snapshot, "GetStateForLine()");
+					_snapshot = snapshot;
+
+					var tokenInfo = new ProbeClassifierScanner.TokenInfo();
+
+					while (stateLineNum < lineNum)
+					{
+						var line = _snapshot.GetLineFromLineNumber(stateLineNum);
+						if (line == null) break;
+
+						_scanner.SetSource(line.GetTextIncludingLineBreak(), line.Start.Position, _snapshot, model);
+						while (_scanner.ScanTokenAndProvideInfoAboutIt(tokenInfo, ref state)) ;
+
+						_states.Add(state);
+						stateLineNum++;
+					}
+
+					if (_states.Count <= lineNum) return 0;
+				}
+
+				return _states[lineNum];
+			}
 		}
 
 		public ITextSnapshot Snapshot
 		{
-			get { return _snapshot; }
+			get
+			{
+				lock (this)
+				{
+					return _snapshot;
+				}
+			}
 		}
 
 		/// <summary>
