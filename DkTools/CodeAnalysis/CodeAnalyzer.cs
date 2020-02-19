@@ -51,7 +51,7 @@ namespace DkTools.CodeAnalysis
 				AnalyzeFunction(func);
 			}
 
-			ErrorTaskProvider.Instance.FireTagsChangedEvent();
+			//ErrorTaskProvider.Instance.FireTagsChangedEvent();
 
 			if (_pane != null)
 			{

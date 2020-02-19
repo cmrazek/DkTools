@@ -33,12 +33,12 @@ namespace DkTools.QuickInfo
 			_subjectBuffer = subjectBuffer;
 		}
 
-		Task<QuickInfoItem> IAsyncQuickInfoSource.GetQuickInfoItemAsync(IAsyncQuickInfoSession session, CancellationToken cancellationToken)
+		async Task<QuickInfoItem> IAsyncQuickInfoSource.GetQuickInfoItemAsync(IAsyncQuickInfoSession session, CancellationToken cancellationToken)
 		{
 			// https://github.com/microsoft/VSSDK-Extensibility-Samples/blob/master/AsyncQuickInfo/src/LineAsyncQuickInfoSource.cs
 
 			var subjectTriggerPoint = session.GetTriggerPoint(_subjectBuffer.CurrentSnapshot);
-			if (!subjectTriggerPoint.HasValue) return Task.FromResult<QuickInfoItem>(null);
+			if (!subjectTriggerPoint.HasValue) return null;
 			var snapshotPoint = subjectTriggerPoint.Value;
 			var currentSnapshot = snapshotPoint.Snapshot;
 
@@ -64,7 +64,8 @@ namespace DkTools.QuickInfo
 						applicableToSpan = model.Snapshot.CreateTrackingSpan(info.Value.token.Span.ToVsTextSpan(), SpanTrackingMode.EdgeInclusive);
 					}
 
-					foreach (var task in ErrorTagging.ErrorTaskProvider.Instance.GetErrorMessagesAtPoint(model.FileName, snapshotPoint))
+					var tasks = await ErrorTagging.ErrorTaskProvider.Instance.GetErrorMessagesAtPointAsync(model.FileName, snapshotPoint);
+					foreach (var task in tasks)
 					{
 						if (elements != null)
 						{
@@ -87,12 +88,12 @@ namespace DkTools.QuickInfo
 
 					if (elements != null && applicableToSpan != null)
 					{
-						return Task.FromResult<QuickInfoItem>(new QuickInfoItem(applicableToSpan, elements));
+						return new QuickInfoItem(applicableToSpan, elements);
 					}
 				}
 			}
 
-			return Task.FromResult<QuickInfoItem>(null);
+			return null;
 		}
 
 		private bool _disposed;

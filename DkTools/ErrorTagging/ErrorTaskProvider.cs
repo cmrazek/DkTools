@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -14,6 +15,9 @@ namespace DkTools.ErrorTagging
 	{
 		public static ErrorTaskProvider Instance;
 
+		private ConcurrentQueue<ErrorTask> _newTasks = new ConcurrentQueue<ErrorTask>();
+		private ConcurrentQueue<ErrorTask> _delTasks = new ConcurrentQueue<ErrorTask>();
+
 		public event EventHandler<ErrorTaskEventArgs> ErrorTagsChangedForFile;
 		public class ErrorTaskEventArgs : EventArgs
 		{
@@ -26,151 +30,97 @@ namespace DkTools.ErrorTagging
 			Instance = this;
 		}
 
+		private async System.Threading.Tasks.Task OnTasksChangedAsync()
+		{
+			await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
+
+			var fileNames = new List<string>();
+
+			ErrorTask task;
+			while (_newTasks.TryDequeue(out task))
+			{
+				Tasks.Add(task);
+				if (!fileNames.Contains(task.Document)) fileNames.Add(task.Document);
+			}
+			while (_delTasks.TryDequeue(out task))
+			{
+				Tasks.Remove(task);
+				if (!fileNames.Contains(task.Document)) fileNames.Add(task.Document);
+			}
+
+			foreach (var fileName in fileNames)
+			{
+				ErrorTagsChangedForFile?.Invoke(this, new ErrorTaskEventArgs { FileName = fileName });
+			}
+		}
+
 		public void Add(ErrorTask task, bool dontSignalTagsChanged = false)
 		{
-#if DEBUG
 			if (task == null) throw new ArgumentNullException("task");
-#endif
-			ThreadHelper.JoinableTaskFactory.RunAsync(async () =>
+
+			_newTasks.Enqueue(task);
+
+			if (!dontSignalTagsChanged)
 			{
-				await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
+				ThreadHelper.JoinableTaskFactory.RunAsync(OnTasksChangedAsync);
+			}
+		}
 
-				var taskLine = task.Line;
-				var taskColumn = task.Column;
-				var taskDocument = task.Document;
-				var taskText = task.Text;
-				if (Tasks.Cast<ErrorTask>().Any(t => t.Line == taskLine && t.Column == taskColumn &&
-					string.Equals(t.Document, taskDocument, StringComparison.OrdinalIgnoreCase) &&
-					t.Text == taskText))
-				{
-					return;
-				}
+		private async System.Threading.Tasks.Task OnClearTasksAsync()
+		{
+			await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
 
-				Tasks.Add(task);
+			var fileNames = new List<string>();
 
-				if (!dontSignalTagsChanged)
-				{
-					var ev = ErrorTagsChangedForFile;
-					if (ev != null) ev(this, new ErrorTaskEventArgs { FileName = task.Document });
-				}
-			});
+			foreach (var task in Tasks.Cast<ErrorTask>())
+			{
+				if (!fileNames.Contains(task.Document)) fileNames.Add(task.Document);
+			}
+			Tasks.Clear();
+
+			while (_newTasks.TryDequeue(out var task))
+			{
+				if (!fileNames.Contains(task.Document)) fileNames.Add(task.Document);
+			}
+
+			while (_delTasks.TryDequeue(out var task))
+			{
+				if (!fileNames.Contains(task.Document)) fileNames.Add(task.Document);
+			}
+
+			foreach (var fileName in fileNames)
+			{
+				ErrorTagsChangedForFile?.Invoke(this, new ErrorTaskEventArgs { FileName = fileName });
+			}
 		}
 
 		public void Clear()
 		{
-			ThreadHelper.JoinableTaskFactory.RunAsync(async () =>
-			{
-				await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
-
-				var tasks = Tasks.Cast<ErrorTask>().ToArray();
-
-				Tasks.Clear();
-
-				foreach (ErrorTask task in tasks)
-				{
-					var ev = ErrorTagsChangedForFile;
-					if (ev != null) ev(this, new ErrorTaskEventArgs { FileName = task.Document });
-				}
-			});
-		}
-
-		public void FireTagsChangedEvent()
-		{
-			try
-			{
-				var fileNames = new List<string>();
-
-				foreach (var task in Tasks.Cast<Microsoft.VisualStudio.Shell.Task>()
-					.Where(t => t is ErrorTask).Cast<ErrorTask>().ToArray())
-				{
-					if (!fileNames.Contains(task.Document))
-					{
-						fileNames.Add(task.Document);
-					}
-				}
-
-				if (fileNames.Any())
-				{
-					foreach (var fileName in fileNames)
-					{
-						var ev = ErrorTagsChangedForFile;
-						if (ev != null) ev(this, new ErrorTaskEventArgs { FileName = fileName });
-					}
-				}
-			}
-			catch (Exception ex)
-			{
-				Log.Error(ex);
-			}
-		}
-
-		public void RemoveTask(ErrorTask task)
-		{
-			Tasks.Remove(task);
-
-			var ev = ErrorTagsChangedForFile;
-			if (ev != null) ev(this, new ErrorTaskEventArgs { FileName = task.Document });
+			ThreadHelper.JoinableTaskFactory.RunAsync(OnClearTasksAsync);
 		}
 
 		public void RemoveAllForSource(ErrorTaskSource source, string sourceFileName)
 		{
-			var filesToNotify = new List<string>();
-
-			var tasksToRemove = (from t in Tasks.Cast<ErrorTask>()
-									where t.Source == source && string.Equals(t.SourceArg, sourceFileName, StringComparison.OrdinalIgnoreCase)
-									select t).ToArray();
-			foreach (var task in tasksToRemove)
+			ThreadHelper.JoinableTaskFactory.RunAsync(async () =>
 			{
-				Tasks.Remove(task);
-				if (!filesToNotify.Contains(task.Document)) filesToNotify.Add(task.Document);
-			}
+				await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
 
-			foreach (var file in filesToNotify)
-			{
-				var ev = ErrorTagsChangedForFile;
-				if (ev != null) ev(this, new ErrorTaskEventArgs { FileName = file });
-			}
-		}
+				var filesToNotify = new List<string>();
 
-		public void RemoveAllForFile(string fileName)
-		{
-			var filesToNotify = new List<string>();
+				var tasksToRemove = (from t in Tasks.Cast<ErrorTask>()
+									 where t.Source == source && string.Equals(t.SourceArg, sourceFileName, StringComparison.OrdinalIgnoreCase)
+									 select t).ToArray();
+				foreach (var task in tasksToRemove)
+				{
+					Tasks.Remove(task);
+					if (!filesToNotify.Contains(task.Document)) filesToNotify.Add(task.Document);
+				}
 
-			var tasksToRemove = (from t in Tasks.Cast<ErrorTask>()
-									where string.Equals(t.Document, fileName, StringComparison.OrdinalIgnoreCase)
-									select t).ToArray();
-			foreach (var task in tasksToRemove)
-			{
-				Tasks.Remove(task);
-				if (!filesToNotify.Contains(task.Document)) filesToNotify.Add(task.Document);
-			}
-
-			foreach (var file in filesToNotify)
-			{
-				var ev = ErrorTagsChangedForFile;
-				if (ev != null) ev(this, new ErrorTaskEventArgs { FileName = file });
-			}
-		}
-
-		public void RemoveAllForSourceAndFile(ErrorTaskSource source, string sourceFileName, string fileName)
-		{
-			var filesToNotify = new List<string>();
-
-			var tasksToRemove = (from t in Tasks.Cast<ErrorTask>()
-									where t.Source == source && string.Equals(t.SourceArg, sourceFileName, StringComparison.OrdinalIgnoreCase) &&
-										string.Equals(t.Document, fileName, StringComparison.OrdinalIgnoreCase)
-									select t).ToArray();
-			foreach (var task in tasksToRemove)
-			{
-				Tasks.Remove(task);
-				if (!filesToNotify.Contains(task.Document)) filesToNotify.Add(task.Document);
-			}
-
-			foreach (var file in filesToNotify)
-			{
-				var ev = ErrorTagsChangedForFile;
-				if (ev != null) ev(this, new ErrorTaskEventArgs { FileName = file });
-			}
+				foreach (var file in filesToNotify)
+				{
+					ErrorTagsChangedForFile?.Invoke(this, new ErrorTaskEventArgs { FileName = file });
+				}
+			});
 		}
 
 		public void OnDocumentClosed(ITextView textView)
@@ -192,6 +142,8 @@ namespace DkTools.ErrorTagging
 
 		public IEnumerable<ITagSpan<ErrorTag>> GetErrorTagsForFile(string fileName, NormalizedSnapshotSpanCollection docSpans)
 		{
+			ThreadHelper.ThrowIfNotOnUIThread();
+
 			var tags = new List<TagSpan<ErrorTag>>();
 
 			var firstSpan = docSpans.FirstOrDefault();
@@ -271,32 +223,42 @@ namespace DkTools.ErrorTagging
 			return tags;
 		}
 
-		public IEnumerable<ErrorTask> GetErrorMessagesAtPoint(string fileName, SnapshotPoint pt)
+		public async Task<IEnumerable<ErrorTask>> GetErrorMessagesAtPointAsync(string fileName, SnapshotPoint pt)
 		{
-			foreach (var task in (from t in Tasks.Cast<ErrorTask>() where string.Equals(t.Document, fileName, StringComparison.OrdinalIgnoreCase) select t))
+			var tasks = new List<ErrorTask>();
+			await ThreadHelper.JoinableTaskFactory.RunAsync(async () =>
 			{
-				var span = task.Span;
-				if (span.HasValue)
+				await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
+
+				foreach (var task in (from t in Tasks.Cast<ErrorTask>() where string.Equals(t.Document, fileName, StringComparison.OrdinalIgnoreCase) select t))
 				{
-					if (span.Value.Contains(pt.TranslateTo(task.GetSnapshot(pt.Snapshot), PointTrackingMode.Positive)))
+					var span = task.Span;
+					if (span.HasValue)
 					{
-						yield return task;
+						if (span.Value.Contains(pt.TranslateTo(task.GetSnapshot(pt.Snapshot), PointTrackingMode.Positive)))
+						{
+							tasks.Add(task);
+						}
+					}
+					else
+					{
+						var taskLine = task.GetSnapshot(pt.Snapshot).GetLineFromLineNumber(task.Line);
+						var taskSpan = new SnapshotSpan(taskLine.Start, taskLine.End);
+						if (taskSpan.Contains(pt.TranslateTo(taskSpan.Snapshot, PointTrackingMode.Positive)))
+						{
+							tasks.Add(task);
+						}
 					}
 				}
-				else
-				{
-					var taskLine = task.GetSnapshot(pt.Snapshot).GetLineFromLineNumber(task.Line);
-					var taskSpan = new SnapshotSpan(taskLine.Start, taskLine.End);
-					if (taskSpan.Contains(pt.TranslateTo(taskSpan.Snapshot, PointTrackingMode.Positive)))
-					{
-						yield return task;
-					}
-				}
-			}
+			});
+
+			return tasks;
 		}
 
 		public IEnumerable<string> GetFilesForInclude(string fileName)
 		{
+			ThreadHelper.ThrowIfNotOnUIThread();
+
 			var ret = new List<string>();
 
 			foreach (ErrorTask task in Tasks)

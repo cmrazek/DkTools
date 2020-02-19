@@ -163,7 +163,8 @@ namespace DkTools.CodeAnalysis.Nodes
 								{
 									var rDataType = exp.NumChildren > 0 ? exp.LastChild.DataType : null;
 									exp.AddChild(new OperatorNode(p.Statement, code.Span, code.Text, null));
-									exp.AddChild(ExpressionNode.Read(p, rDataType, stopStrings));
+									var rExp = ExpressionNode.Read(p, rDataType, stopStrings);
+									if (rExp != null) exp.AddChild(rExp);
 								}
 								break;
 							case "==":

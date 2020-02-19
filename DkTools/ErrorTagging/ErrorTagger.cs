@@ -148,21 +148,28 @@ namespace DkTools.ErrorTagging
 						{
 							System.Threading.ThreadPool.QueueUserWorkItem(state =>
 							{
-								if (ProbeToolsPackage.Instance.EditorOptions.RunBackgroundFecOnSave)
+								try
 								{
-									Compiler.BackgroundFec.RunSync(_model.FileName, _model.Snapshot.TextBuffer.CurrentSnapshot);
+									if (ProbeToolsPackage.Instance.EditorOptions.RunBackgroundFecOnSave)
+									{
+										Compiler.BackgroundFec.RunSync(_model.FileName, _model.Snapshot.TextBuffer.CurrentSnapshot);
+									}
+
+									if (ProbeToolsPackage.Instance.EditorOptions.RunCodeAnalysisOnSave)
+									{
+										var textBuffer = _model.Snapshot.TextBuffer;
+										var fileStore = CodeModel.FileStore.GetOrCreateForTextBuffer(textBuffer);
+										if (fileStore == null) return;
+
+										var preprocessedModel = fileStore.CreatePreprocessedModel(_model.AppSettings, fileName, textBuffer.CurrentSnapshot, false, "Background Code Analysis");
+
+										var ca = new CodeAnalysis.CodeAnalyzer(null, preprocessedModel);
+										ca.Run();
+									}
 								}
-
-								if (ProbeToolsPackage.Instance.EditorOptions.RunCodeAnalysisOnSave)
+								catch (Exception ex)
 								{
-									var textBuffer = _model.Snapshot.TextBuffer;
-									var fileStore = CodeModel.FileStore.GetOrCreateForTextBuffer(textBuffer);
-									if (fileStore == null) return;
-
-									var preprocessedModel = fileStore.CreatePreprocessedModel(_model.AppSettings, fileName, textBuffer.CurrentSnapshot, false, "Background Code Analysis");
-
-									var ca = new CodeAnalysis.CodeAnalyzer(null, preprocessedModel);
-									ca.Run();
+									Log.WriteEx(ex);
 								}
 							});
 						}
