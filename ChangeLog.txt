@@ -7,6 +7,8 @@ Version 1.5.6 - WIP
 - Fixed crash in code analysis extract contains a conditional statement spanning multiple lines.
 - Added exception catch in code analysis thread.
 - Fixed problem with changing class functions causing repeating entries in statement completion lists.
+- Changed file header to use '//' style comments because VS2019 will interpret the leading spaces in
+  the old style header to use spaces instead of tabs.
 
 ____________________________________________________________________________________________________
 Version 1.5.4 - Nov 1, 2019:

@@ -43,15 +43,15 @@ namespace DkTools.Tagging
 			if (string.IsNullOrWhiteSpace(dateFormat)) dateFormat = Constants.DefaultDateFormat;
 
 			var sb = new StringBuilder();
-			sb.AppendLine("/***************************************************************************************************");
-			sb.Append(" * File Name: ");
+			sb.AppendLine("//**************************************************************************************************");
+			sb.Append("// File Name: ");
 			sb.AppendLine(Path.GetFileName(fileName));
-			sb.AppendLine(" *  ");
-			sb.AppendLine(" *");
-			sb.AppendLine(" * Modification History:");
-			sb.AppendLine(" *  Date        Who #       Description of Changes");
-			sb.AppendLine(" *  ----------- --- ------- ------------------------------------------------------------------------");
-			sb.Append(" *  ");
+			sb.AppendLine("//  ");
+			sb.AppendLine("//");
+			sb.AppendLine("// Modification History:");
+			sb.AppendLine("//  Date        Who #       Description of Changes");
+			sb.AppendLine("//  ----------- --- ------- ------------------------------------------------------------------------");
+			sb.Append("//  ");
 			sb.Append(DateTime.Now.ToString(dateFormat));
 			sb.Append("   ");
 			sb.Append(initials.PadRight(4));
@@ -68,7 +68,7 @@ namespace DkTools.Tagging
 				sb.Append("Created");
 			}
 			sb.AppendLine();
-			sb.AppendLine(" **************************************************************************************************/");
+			sb.AppendLine("//**************************************************************************************************");
 			sb.AppendLine();
 
 			return sb.ToString();
