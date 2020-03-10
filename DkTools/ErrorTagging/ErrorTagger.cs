@@ -75,6 +75,7 @@ namespace DkTools.ErrorTagging
 
 		void Shell_FileSaved(object sender, Shell.FileSavedEventArgs e)
 		{
+			ThreadHelper.ThrowIfNotOnUIThread();
 			try
 			{
 				if (_model == null) return;

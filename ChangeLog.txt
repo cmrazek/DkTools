@@ -6,6 +6,7 @@ Version 1.5.6 - WIP
 - Isolated function file scanning from live-intellisense processing to avoid sync errors.
 - Fixed crash in code analysis extract contains a conditional statement spanning multiple lines.
 - Added exception catch in code analysis thread.
+- Fixed problem with changing class functions causing repeating entries in statement completion lists.
 
 ____________________________________________________________________________________________________
 Version 1.5.4 - Nov 1, 2019:

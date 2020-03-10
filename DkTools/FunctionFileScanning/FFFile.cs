@@ -428,6 +428,13 @@ namespace DkTools.FunctionFileScanning
 						_functions.Remove(removeFunc);
 					}
 
+					// Update the class
+					if (_class != null)
+					{
+						_class.ClearFunctions();
+						foreach (var func in _functions) _class.AddFunction(func);
+					}
+
 					break;
 			}
 

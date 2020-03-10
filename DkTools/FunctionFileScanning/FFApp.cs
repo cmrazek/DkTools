@@ -122,18 +122,18 @@ namespace DkTools.FunctionFileScanning
 
 			foreach (var file in _files.Values)
 			{
-				var cls = file.Class?.ClassDefinition;
+				if (file.Class != null)
+				{
+					ds.AddClass(file.Class.ClassDefinition);
+				}
 
 				foreach (var func in file.Functions)
 				{
 					if (func.Visible)
 					{
-						if (cls != null) cls.AddFunction(func.Definition);
-						else ds.AddFunction(func.Definition);
+						ds.AddFunction(func.Definition);
 					}
 				}
-
-				if (cls != null) ds.AddClass(cls);
 
 				foreach (var permex in file.PermExs)
 				{

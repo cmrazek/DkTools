@@ -41,17 +41,6 @@ namespace DkTools.FunctionFileScanning
 			get { return _def; }
 		}
 
-		public IEnumerable<CodeModel.Definitions.FunctionDefinition> FunctionDefinitions
-		{
-			get
-			{
-				foreach (var func in _file.Functions)
-				{
-					yield return func.Definition;
-				}
-			}
-		}
-
 		public IEnumerable<CodeModel.Definitions.FunctionDefinition> GetFunctionDefinitions(string name)
 		{
 			foreach (var func in _file.GetFunctions(name)) yield return func.Definition;
@@ -65,6 +54,16 @@ namespace DkTools.FunctionFileScanning
 		public static string GetExternalRefId(string className)
 		{
 			return string.Concat("class:", className);
+		}
+
+		public void ClearFunctions()
+		{
+			_def.ClearFunctions();
+		}
+
+		public void AddFunction(FFFunction func)
+		{
+			_def.AddFunction(func.Definition);
 		}
 	}
 }

@@ -89,7 +89,15 @@ namespace DkTools.CodeModel.Definitions
 		{
 			if (func == null) throw new ArgumentNullException(nameof(func));
 
-			if (!_funcs.Contains(func)) _funcs.Add(func);
+			var ix = _funcs.FindIndex(x => x.Name == func.Name);
+			if (ix >= 0) _funcs.RemoveAt(ix);
+
+			_funcs.Add(func);
+		}
+
+		public void ClearFunctions()
+		{
+			_funcs.Clear();
 		}
 	}
 }
