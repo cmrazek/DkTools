@@ -99,6 +99,12 @@ namespace DkTools.FunctionFileScanning
 				}
 			}
 
+			if (_class != null)
+			{
+				_class.ClearFunctions();
+				foreach (var func in _functions) _class.AddFunction(func);
+			}
+
 			foreach (var permex in _permExs) permex.Load(db);
 		}
 
