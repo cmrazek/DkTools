@@ -2,13 +2,14 @@ DkTools ChangeLog
 ____________________________________________________________________________________________________
 Version 1.5.6 - WIP
 
-- Fixed bug in error tagging causing ArgumentOutOfRangeException's.
-- Isolated function file scanning from live-intellisense processing to avoid sync errors.
-- Fixed crash in code analysis extract contains a conditional statement spanning multiple lines.
-- Added exception catch in code analysis thread.
+- Signature help now shows the short name for a data type, if available, rather than the entire
+  definition. This gets rid of the super-long enum lists for arguments.
 - Fixed problem with changing class functions causing repeating entries in statement completion lists.
 - Changed file header to use '//' style comments because VS2019 will interpret the leading spaces in
   the old style header to use spaces instead of tabs.
+- Isolated function file scanning from live-intellisense processing to avoid sync errors.
+- Improved error catching in error tagging/code analysis threads.
+- Fixed crash in code analysis extract contains a conditional statement spanning multiple lines.
 
 ____________________________________________________________________________________________________
 Version 1.5.4 - Nov 1, 2019:
