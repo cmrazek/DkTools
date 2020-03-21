@@ -37,20 +37,22 @@ namespace DkTools.StatementCompletion
 			get { return _commitChars; }
 		}
 
-		bool IAsyncCompletionCommitManager.ShouldCommitCompletion(IAsyncCompletionSession session, SnapshotPoint location,
-			char typedChar, CancellationToken token)
+		bool IAsyncCompletionCommitManager.ShouldCommitCompletion(char typedChar, SnapshotPoint location, CancellationToken token)
 		{
 			// Runs synchronously on main thread
 
 			_startAbort = false;
 
-			if (ProbeAsyncCompletionSource.NoCompletionChars.Contains(typedChar))
+			if (_textView.Properties.TryGetProperty(typeof(IAsyncCompletionSession), out IAsyncCompletionSession session))
 			{
-				if (session.ApplicableToSpan.GetSpan(location.Snapshot).Length == 1 &&
-					session.ApplicableToSpan.GetText(location.Snapshot) == typedChar.ToString())
+				if (ProbeAsyncCompletionSource.NoCompletionChars.Contains(typedChar))
 				{
-					_startAbort = true;
-					return true;
+					if (session.ApplicableToSpan.GetSpan(location.Snapshot).Length == 1 &&
+						session.ApplicableToSpan.GetText(location.Snapshot) == typedChar.ToString())
+					{
+						_startAbort = true;
+						return true;
+					}
 				}
 			}
 
@@ -59,12 +61,16 @@ namespace DkTools.StatementCompletion
 			return true;
 		}
 
-		CommitResult IAsyncCompletionCommitManager.TryCommit(IAsyncCompletionSession session,
-			ITextBuffer buffer, CompletionItem item, char typedChar, CancellationToken token)
+		CommitResult IAsyncCompletionCommitManager.TryCommit(ITextView view, ITextBuffer buffer, CompletionItem item,
+			ITrackingSpan applicableToSpan, char typedChar, CancellationToken token)
 		{
 			if (_startAbort)
 			{
-				if (session != null && !session.IsDismissed)
+				var span = applicableToSpan.GetSpan(buffer.CurrentSnapshot);
+				var text = applicableToSpan.GetText(buffer.CurrentSnapshot);
+
+				if (view.Properties.TryGetProperty(typeof(IAsyncCompletionSession), out IAsyncCompletionSession session) &&
+					session != null && !session.IsDismissed)
 				{
 					session.Dismiss();
 				}
@@ -74,7 +80,8 @@ namespace DkTools.StatementCompletion
 			else if (!_acceptSelectionCompletionChars.Contains(typedChar))
 			{
 				// Stick with what the user has typed so far, rather than the selection.
-				if (session != null && !session.IsDismissed)
+				if (view.Properties.TryGetProperty(typeof(IAsyncCompletionSession), out IAsyncCompletionSession session) &&
+					session != null && !session.IsDismissed)
 				{
 					session.Dismiss();
 				}
