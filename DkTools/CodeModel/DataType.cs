@@ -160,6 +160,15 @@ namespace DkTools.CodeModel
 			set { _source = value; }
 		}
 
+		public ProbeClassifiedString ShortSource
+		{
+			get
+			{
+				if (!string.IsNullOrEmpty(_name)) return new ProbeClassifiedString(ProbeClassifierType.DataType, _name);
+				return _source;
+			}
+		}
+
 		public override string ToString()
 		{
 			if (!string.IsNullOrEmpty(_name)) return string.Concat(_name, " (", _source, ")");

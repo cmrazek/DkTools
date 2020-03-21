@@ -135,7 +135,7 @@ namespace DkTools.CodeModel
 
 					if (_dataType != null)
 					{
-						pcs.AddClassifiedString(_dataType.Source);
+						pcs.AddClassifiedString(_dataType.ShortSource);
 						spaceRequired = true;
 					}
 
