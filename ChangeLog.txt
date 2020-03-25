@@ -1,6 +1,6 @@
 DkTools ChangeLog
 ____________________________________________________________________________________________________
-Version 1.5.6 - WIP
+Version 1.5.6 - Mar 25, 2020:
 
 - Signature help now shows the short name for a data type, if available, rather than the entire
   definition. This gets rid of the super-long enum lists for arguments.
