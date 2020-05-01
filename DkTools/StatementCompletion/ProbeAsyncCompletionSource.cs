@@ -76,7 +76,8 @@ namespace DkTools.StatementCompletion
 			Word,
 			ClassFunction,
 			Function,
-			Include
+			Include,
+			Preprocessor
 		}
 
 		private static readonly Regex _rxTypingTable = new Regex(@"(\w+)\.(\w*)$");
@@ -218,6 +219,14 @@ namespace DkTools.StatementCompletion
 						}
 						#endregion
 					}
+					#region Preprocessor
+					else if (typedChar == '#')
+					{
+						_mode = CompletionMode.Preprocessor;
+						applicableToSpan = new SnapshotSpan(triggerPt.Snapshot, triggerPt.Position - 1, 1);
+						return true;
+					}
+					#endregion
 					#region Table.Field
 					else if ((match = _rxTypingTable.Match(prefix)).Success)
 					{
@@ -349,6 +358,9 @@ namespace DkTools.StatementCompletion
 					break;
 				case CompletionMode.Include:
 					HandleAfterInclude(_params.str, _fileName);
+					break;
+				case CompletionMode.Preprocessor:
+					HandlePreprocessor();
 					break;
 			}
 
@@ -796,6 +808,14 @@ namespace DkTools.StatementCompletion
 			foreach (var fileName in retDict.Values)
 			{
 				CreateCompletion(System.IO.Path.GetFileName(fileName), ProbeCompletionType.Constant, fileName);
+			}
+		}
+
+		private void HandlePreprocessor()
+		{
+			foreach (var directive in Constants.PreprocessorDirectives)
+			{
+				CreateCompletion(directive, ProbeCompletionType.Keyword, null);
 			}
 		}
 		#endregion

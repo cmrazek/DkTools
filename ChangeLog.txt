@@ -1,5 +1,10 @@
 DkTools ChangeLog
 ____________________________________________________________________________________________________
+Version 1.5.7 - May 1, 2020:
+
+- Auto-completion now supports preprocessor directives (e.g. #include)
+
+____________________________________________________________________________________________________
 Version 1.5.6 - Mar 25, 2020:
 
 - Signature help now shows the short name for a data type, if available, rather than the entire
