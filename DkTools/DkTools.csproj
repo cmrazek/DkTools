@@ -567,6 +567,7 @@
     <Compile Include="SignatureHelp\ProbeSignatureHelpCommandProvider.cs" />
     <Compile Include="SignatureHelp\ProbeSignatureHelpSource.cs" />
     <Compile Include="SignatureHelp\ProbeSignatureHelpSourceProvider.cs" />
+    <Compile Include="SignatureHelp\FunctionCallFinder.cs" />
     <Compile Include="SmartIndenting\ProbeSmartIndent.cs" />
     <Compile Include="SmartIndenting\ProbeSmartIndentCommandHandler.cs" />
     <Compile Include="SmartIndenting\ProbeSmartIndentProvider.cs" />

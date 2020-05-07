@@ -124,15 +124,12 @@ namespace DkTools.SignatureHelp
 				var model = fileStore.GetMostRecentModel(appSettings, fileName, snapshot, "Signature help after ','");
 				var modelPos = (new VsText.SnapshotPoint(snapshot, _triggerPos)).TranslateTo(model.Snapshot, VsText.PointTrackingMode.Negative).Position;
 
-				var argsToken = model.File.FindDownward<ArgsToken>().Where(t => t.Span.Start < modelPos && (t.Span.End > modelPos || !t.IsTerminated)).LastOrDefault();
-				if (argsToken != null && argsToken.Signature != null)
+				var finder = new FunctionCallFinder();
+				var findResult = finder.FindContainingFunctionCall(_textBuffer.CurrentSnapshot.GetText(), _triggerPos);
+				if (findResult != null)
 				{
-					var modelSpan = new VsText.SnapshotSpan(model.Snapshot, argsToken.Span.ToVsTextSpan());
-					var snapshotSpan = modelSpan.TranslateTo(snapshot, VsText.SpanTrackingMode.EdgeInclusive);
-					var applicableToSpan = snapshot.CreateTrackingSpan(snapshotSpan.Span, VsText.SpanTrackingMode.EdgeInclusive, 0);
-					yield return CreateSignature(_textBuffer, argsToken.Signature, applicableToSpan);
-
-					foreach (var sig in argsToken.SignatureAlternatives)
+					var applicableToSpan = snapshot.CreateTrackingSpan(findResult.ArgumentsSpan.ToVsTextSpan(), VsText.SpanTrackingMode.EdgeInclusive);
+					foreach (var sig in GetAllSignaturesForFunction(model, modelPos, findResult.ClassName, findResult.FunctionName))
 					{
 						yield return CreateSignature(_textBuffer, sig, applicableToSpan);
 					}

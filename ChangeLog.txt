@@ -1,5 +1,10 @@
 DkTools ChangeLog
 ____________________________________________________________________________________________________
+Version 1.5.8 - (not yet released):
+
+- Signature help can now do a better job of detecting which function its in when comma is pressed.
+
+____________________________________________________________________________________________________
 Version 1.5.7 - May 1, 2020:
 
 - Auto-completion now supports preprocessor directives (e.g. #include)
