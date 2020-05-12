@@ -31,6 +31,7 @@ namespace DkTools.StatementCompletion
 	{
 		private ITextView _textView;
 		private Dictionary<CompletionItem, ItemDataNode> _items = new Dictionary<CompletionItem, ItemDataNode>();
+		private HashSet<string> _itemNames = new HashSet<string>();
 		private string _fileName;
 		private ProbeAppSettings _appSettings;
 
@@ -305,6 +306,7 @@ namespace DkTools.StatementCompletion
 			SnapshotSpan applicableToSpan, CancellationToken token)
 		{
 			_items.Clear();
+			_itemNames.Clear();
 
 			switch (_mode)
 			{
@@ -823,12 +825,15 @@ namespace DkTools.StatementCompletion
 		#region Completion Creation
 		internal void CreateCompletion(string text, ProbeCompletionType type, ItemData itemData, Func<ItemData, object> descriptionCallback)
 		{
+			if (_itemNames.Contains(text)) return;
+
 			var ci = new CompletionItem(text, this, GetImageForCompletionType(type));
 			_items.Add(ci, new ItemDataNode
 			{
 				DescriptionCallback = descriptionCallback,
 				ItemData = itemData
 			});
+			_itemNames.Add(text);
 		}
 
 		internal void CreateCompletion(Definition def)
