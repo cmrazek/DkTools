@@ -70,8 +70,7 @@ namespace DkTools.SignatureHelp
 						return VSConstants.S_OK;
 					}
 				}
-
-				if (pguidCmdGroup == VSConstants.VSStd2K)
+				else if (pguidCmdGroup == VSConstants.VSStd2K)
 				{
 					if (nCmdID == (uint)VSConstants.VSStd2KCmdID.TYPECHAR)
 					{
@@ -137,6 +136,14 @@ namespace DkTools.SignatureHelp
 						return VSConstants.S_OK;
 					}
 				}
+				else if (pguidCmdGroup == typeof(VSConstants.VSStd12CmdID).GUID)
+				{
+					if (nCmdID == (uint)VSConstants.VSStd12CmdID.PeekDefinition)
+					{
+						Log.Debug("PEEK DEFINITION!");
+						return VSConstants.S_OK;
+					}
+				}
 
 				return _nextCommandHandler.Exec(ref pguidCmdGroup, nCmdID, nCmdexecopt, pvaIn, pvaOut);
 			}
@@ -165,6 +172,16 @@ namespace DkTools.SignatureHelp
 						prgCmds[i].cmdID == (uint)VSConstants.VSStd97CmdID.GotoRef)
 					{
 						prgCmds[i].cmdf |= (uint)OLECMDF.OLECMDF_DEFHIDEONCTXTMENU;
+					}
+				}
+			}
+			else if (pguidCmdGroup == typeof(VSConstants.VSStd12CmdID).GUID)
+			{
+				for (int i = 0; i < cCmds; i++)
+				{
+					if (prgCmds[i].cmdID == (uint)VSConstants.VSStd12CmdID.PeekDefinition)
+					{
+						prgCmds[i].cmdf = (uint)(OLECMDF.OLECMDF_ENABLED | OLECMDF.OLECMDF_SUPPORTED);
 					}
 				}
 			}
