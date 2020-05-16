@@ -73,6 +73,22 @@ namespace DkTools.Navigation
 			}
 		}
 
+		internal static Definition GetDefinitionAtPoint(SnapshotPoint point)
+		{
+			ThreadHelper.ThrowIfNotOnUIThread();
+
+			var textBuffer = point.Snapshot.TextBuffer;
+
+			var fileStore = CodeModel.FileStore.GetOrCreateForTextBuffer(textBuffer);
+			if (fileStore == null) return null;
+
+			var appSettings = ProbeEnvironment.CurrentAppSettings;
+			var fileName = VsTextUtil.TryGetDocumentFileName(textBuffer);
+			var model = fileStore.GetCurrentModel(appSettings, fileName, point.Snapshot, "Go to definition");
+			var modelPos = model.AdjustPosition(point.Position, point.Snapshot);
+			return model.File.FindDownwardTouching(modelPos).Select(x => x.SourceDefinition).LastOrDefault();
+		}
+
 		internal static bool BrowseToDefinition(CodeModel.Definitions.Definition def)
 		{
 			ThreadHelper.ThrowIfNotOnUIThread();
