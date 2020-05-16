@@ -19,7 +19,10 @@ namespace DkTools.SignatureHelp
     [Export(typeof(IVsTextViewCreationListener))]
     [Name("Probe Signature Help Controller")]
     [TextViewRole(PredefinedTextViewRoles.Editable)]
-	[ContentType("DK")]
+    [TextViewRole(PredefinedTextViewRoles.EmbeddedPeekTextView)]
+	[ContentType(Constants.DkContentType)]
+    [ContentType(Constants.TextContentType)]
+    [Order(After = nameof(DkGenericTextViewListener))]
     internal sealed class ProbeSignatureHelpCommandProvider : IVsTextViewCreationListener
     {
         [Import]
@@ -34,10 +37,14 @@ namespace DkTools.SignatureHelp
 		[Import]
 		internal SVsServiceProvider ServiceProvider { get; set; }
 
-		public void VsTextViewCreated(IVsTextView textViewAdapter)
+        [Import]
+        internal IPeekBroker PeekBroker = null;
+
+        public void VsTextViewCreated(IVsTextView textViewAdapter)
         {
             ITextView textView = AdapterService.GetWpfTextView(textViewAdapter);
             if (textView == null) return;
+            if (textView.TextBuffer.ContentType.TypeName != Constants.DkContentType) return;
 
             textView.Properties.GetOrCreateSingletonProperty(
                  () => new ProbeSignatureHelpCommandHandler(textViewAdapter,
@@ -45,6 +52,8 @@ namespace DkTools.SignatureHelp
                     NavigatorService.GetTextStructureNavigator(textView.TextBuffer),
                     SignatureHelpBroker,
 					this));
+
+            textView.Properties.GetOrCreateSingletonProperty(typeof(IPeekBroker), () => PeekBroker);
         }
     }
 }

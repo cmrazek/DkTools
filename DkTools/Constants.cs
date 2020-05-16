@@ -16,6 +16,7 @@ namespace DkTools
 		public const string FindReferencesOutputPaneTitle = "DK References";
 		public const string ErrorCaption = "Error";
 		public const string DkContentType = "DK";
+		public const string TextContentType = "text";
         public const string ThemeRegKey = @"Software\Microsoft\VisualStudio\15.0";
 
         /// <summary>

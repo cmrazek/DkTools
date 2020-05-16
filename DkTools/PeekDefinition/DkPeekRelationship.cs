@@ -5,7 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace DkTools.Navigation
+namespace DkTools.PeekDefinition
 {
 	public class DkPeekRelationship : IPeekRelationship
 	{

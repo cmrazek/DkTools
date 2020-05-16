@@ -8,15 +8,17 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
-namespace DkTools.Navigation
+namespace DkTools.PeekDefinition
 {
 	public class DkPeekableItem : IPeekableItem
 	{
 		private Definition _def;
 		private DkPeekResultSource _resultSource;
+		private IPeekResultFactory _peekResultFactory;
 
-		internal DkPeekableItem(Definition definition)
+		internal DkPeekableItem(IPeekResultFactory peekResultFactory, Definition definition)
 		{
+			_peekResultFactory = peekResultFactory ?? throw new ArgumentNullException(nameof(peekResultFactory));
 			_def = definition ?? throw new ArgumentNullException(nameof(definition));
 		}
 
@@ -33,7 +35,7 @@ namespace DkTools.Navigation
 
 		public IPeekResultSource GetOrCreateResultSource(string relationshipName)
 		{
-			if (_resultSource == null) _resultSource = new DkPeekResultSource(this);
+			if (_resultSource == null) _resultSource = new DkPeekResultSource(_peekResultFactory, this);
 			return _resultSource;
 		}
 	}

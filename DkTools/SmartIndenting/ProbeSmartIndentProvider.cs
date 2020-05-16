@@ -14,7 +14,9 @@ namespace DkTools.SmartIndenting
 	[Export(typeof(ISmartIndentProvider))]
 	[Export(typeof(IVsTextViewCreationListener))]
 	[ContentType(Constants.DkContentType)]
+	[ContentType("text")]
 	[TextViewRole(PredefinedTextViewRoles.Editable)]
+	[Order(After = nameof(DkGenericTextViewListener))]
 	public sealed class ProbeSmartIndentProvider : ISmartIndentProvider, IVsTextViewCreationListener
 	{
 		public ISmartIndent CreateSmartIndent(ITextView textView)
@@ -28,6 +30,8 @@ namespace DkTools.SmartIndenting
 			ThreadHelper.ThrowIfNotOnUIThread();
 
 			var textView = Shell.VsTextViewToWpfTextView(textViewAdapter);
+			if (textView == null) return;
+			if (textView.TextBuffer.ContentType.TypeName != Constants.DkContentType) return;
 
 			// Create the smart indent now so that it's available before VS determines it's needed (e.g. when cleaning up snippets)
 			CreateSmartIndent(textView);

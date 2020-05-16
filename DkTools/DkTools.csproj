@@ -481,6 +481,7 @@
     <Compile Include="ErrorTagging\ErrorTaskProvider.cs" />
     <Compile Include="ErrorTagging\ErrorType.cs" />
     <Compile Include="ErrorTagging\ErrorTypeAttribute.cs" />
+    <Compile Include="DkGenericTextViewListener.cs" />
     <Compile Include="FileMergeException.cs" />
     <Compile Include="CodeModel\FileMerger.cs" />
     <Compile Include="FileUtil.cs" />
@@ -500,13 +501,11 @@
     <Compile Include="IniFile.cs" />
     <Compile Include="LockedValue.cs" />
     <Compile Include="Log.cs" />
-    <Compile Include="Navigation\DkPeekableItem.cs" />
-    <Compile Include="Navigation\DkPeekableItemSource.cs" />
-    <Compile Include="Navigation\DkPeekableItemSourceProvider.cs" />
-    <Compile Include="Navigation\DkPeekRelationship.cs" />
-    <Compile Include="Navigation\DkPeekResult.cs" />
-    <Compile Include="Navigation\DkPeekResultDisplayInfo.cs" />
-    <Compile Include="Navigation\DkPeekResultSource.cs" />
+    <Compile Include="PeekDefinition\DkPeekableItem.cs" />
+    <Compile Include="PeekDefinition\DkPeekableItemSource.cs" />
+    <Compile Include="PeekDefinition\DkPeekableItemSourceProvider.cs" />
+    <Compile Include="PeekDefinition\DkPeekRelationship.cs" />
+    <Compile Include="PeekDefinition\DkPeekResultSource.cs" />
     <Compile Include="Navigation\Navigator.cs" />
     <Compile Include="Outlining\OutliningTagger.cs" />
     <Compile Include="Outlining\OutliningTaggerProvider.cs" />
