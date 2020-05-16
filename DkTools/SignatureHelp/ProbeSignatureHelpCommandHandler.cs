@@ -170,11 +170,8 @@ namespace DkTools.SignatureHelp
 			{
 				for (int i = 0; i < cCmds; i++)
 				{
-					if (prgCmds[i].cmdID == (uint)VSConstants.VSStd97CmdID.FindReferences)
-					{
-						prgCmds[i].cmdf = (uint)(OLECMDF.OLECMDF_ENABLED | OLECMDF.OLECMDF_SUPPORTED);
-					}
-					else if (prgCmds[i].cmdID == (uint)VSConstants.VSStd97CmdID.GotoDefn)
+					if (prgCmds[i].cmdID == (uint)VSConstants.VSStd97CmdID.FindReferences ||
+						prgCmds[i].cmdID == (uint)VSConstants.VSStd97CmdID.GotoDefn)
 					{
 						prgCmds[i].cmdf = (uint)(OLECMDF.OLECMDF_ENABLED | OLECMDF.OLECMDF_SUPPORTED);
 					}

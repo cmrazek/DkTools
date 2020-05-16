@@ -19,7 +19,7 @@ namespace DkTools.SignatureHelp
     [Export(typeof(IVsTextViewCreationListener))]
     [Name("Probe Signature Help Controller")]
     [TextViewRole(PredefinedTextViewRoles.Editable)]
-    [TextViewRole(PredefinedTextViewRoles.EmbeddedPeekTextView)]
+    //[TextViewRole(PredefinedTextViewRoles.EmbeddedPeekTextView)]
 	[ContentType(Constants.DkContentType)]
     [ContentType(Constants.TextContentType)]
     [Order(After = nameof(DkGenericTextViewListener))]
