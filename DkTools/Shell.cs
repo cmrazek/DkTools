@@ -1,15 +1,13 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Linq;
-using System.Text;
+﻿using DkTools.CodeModel;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Editor;
-using Microsoft.VisualStudio.Text.Outlining;
 using Microsoft.VisualStudio.TextManager.Interop;
+using System;
+using System.Collections.Generic;
+using System.Text;
 
 namespace DkTools
 {
@@ -52,23 +50,26 @@ namespace DkTools
 					OpenDocument(fileName, out view, out windowFrame);
 					ErrorHandler.ThrowOnFailure(windowFrame.Show());
 
-					if (selectSpan.End > selectSpan.Start)
+					if (selectSpan.Start > 0 || selectSpan.End > 0)
 					{
-						int startLine, startCol;
-						view.GetLineAndColumn(selectSpan.Start, out startLine, out startCol);
+						if (selectSpan.End > selectSpan.Start)
+						{
+							int startLine, startCol;
+							view.GetLineAndColumn(selectSpan.Start, out startLine, out startCol);
 
-						int endLine, endCol;
-						view.GetLineAndColumn(selectSpan.End, out endLine, out endCol);
+							int endLine, endCol;
+							view.GetLineAndColumn(selectSpan.End, out endLine, out endCol);
 
-						view.SetSelection(startLine, startCol, endLine, endCol);
-						view.CenterLines(startLine, 1);
-					}
-					else
-					{
-						int startLine, startCol;
-						view.GetLineAndColumn(selectSpan.Start, out startLine, out startCol);
-						view.SetSelection(startLine, startCol, startLine, startCol);
-						view.CenterLines(startLine, 1);
+							view.SetSelection(startLine, startCol, endLine, endCol);
+							view.CenterLines(startLine, 1);
+						}
+						else
+						{
+							int startLine, startCol;
+							view.GetLineAndColumn(selectSpan.Start, out startLine, out startCol);
+							view.SetSelection(startLine, startCol, startLine, startCol);
+							view.CenterLines(startLine, 1);
+						}
 					}
 				}
 				catch (Exception ex)
@@ -109,6 +110,18 @@ namespace DkTools
 
 				if (pos < 0) pos = 0;
 				OpenDocument(fileName, new CodeModel.Span(pos, pos));
+			});
+		}
+
+		internal static void OpenDocument(FilePosition filePos)
+		{
+			if (filePos.IsEmpty) throw new ArgumentException("File position is empty.");
+
+			ThreadHelper.JoinableTaskFactory.RunAsync(async () =>
+			{
+				await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
+
+				OpenDocument(filePos.FileName, new CodeModel.Span(filePos.Position, filePos.Position));
 			});
 		}
 

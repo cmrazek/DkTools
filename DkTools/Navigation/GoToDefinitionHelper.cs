@@ -1,11 +1,12 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+﻿using DkTools.CodeModel;
+using DkTools.CodeModel.Definitions;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Editor;
-using DkTools.CodeModel.Definitions;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
 
 namespace DkTools.Navigation
 {
@@ -19,53 +20,15 @@ namespace DkTools.Navigation
 			{
 				ThreadHelper.ThrowIfNotOnUIThread();
 
-				// Get caret point
 				var caretPtTest = textView.Caret.Position.Point.GetPoint(textBuffer => (!textBuffer.ContentType.IsOfType("projection")), PositionAffinity.Predecessor);
 				if (!caretPtTest.HasValue) return;
 				var caretPt = caretPtTest.Value;
 
-				var fileStore = CodeModel.FileStore.GetOrCreateForTextBuffer(textView.TextBuffer);
-				if (fileStore == null) return;
-
-				var appSettings = ProbeEnvironment.CurrentAppSettings;
-				var fileName = VsTextUtil.TryGetDocumentFileName(textView.TextBuffer);
-				var model = fileStore.GetCurrentModel(appSettings, fileName, caretPt.Snapshot, "Go to definition");
-				var modelPos = model.AdjustPosition(caretPt.Position, caretPt.Snapshot);
-				var selTokens = model.File.FindDownwardTouching(modelPos).ToArray();
-				if (selTokens.Length == 0)
+				var def = GetDefinitionAtPoint(caretPt);
+				if (!def.FilePosition.IsEmpty)
 				{
-					Log.Debug("Nothing selected.");
-					return;
+					Shell.OpenDocument(def.FilePosition);
 				}
-
-				var defToken = selTokens.LastOrDefault(t => t.SourceDefinition != null);
-				if (defToken != null && defToken.SourceDefinition != null)
-				{
-					Log.Debug("Got token with SourceDefinition.");
-					BrowseToDefinition(defToken.SourceDefinition);
-					return;
-				}
-
-				var includeToken = selTokens.LastOrDefault(t => t is CodeModel.Tokens.IncludeToken) as CodeModel.Tokens.IncludeToken;
-				if (includeToken != null)
-				{
-					Log.Debug("Found include token.");
-
-					var pathName = includeToken.FullPathName;
-					if (!string.IsNullOrEmpty(pathName))
-					{
-						Shell.OpenDocument(pathName);
-						return;
-					}
-					else
-					{
-						ProbeToolsPackage.Instance.SetStatusText("Include file not found.");
-						return;
-					}
-				}
-
-				Log.Debug("Found no definitions.");
-				ProbeToolsPackage.Instance.SetStatusText("Definition not found.");
 			}
 			catch (Exception ex)
 			{
@@ -77,76 +40,90 @@ namespace DkTools.Navigation
 		{
 			ThreadHelper.ThrowIfNotOnUIThread();
 
-			var textBuffer = point.Snapshot.TextBuffer;
-
-			var fileStore = CodeModel.FileStore.GetOrCreateForTextBuffer(textBuffer);
+			var fileStore = CodeModel.FileStore.GetOrCreateForTextBuffer(point.Snapshot.TextBuffer);
 			if (fileStore == null) return null;
 
 			var appSettings = ProbeEnvironment.CurrentAppSettings;
-			var fileName = VsTextUtil.TryGetDocumentFileName(textBuffer);
+			var fileName = VsTextUtil.TryGetDocumentFileName(point.Snapshot.TextBuffer);
 			var model = fileStore.GetCurrentModel(appSettings, fileName, point.Snapshot, "Go to definition");
 			var modelPos = model.AdjustPosition(point.Position, point.Snapshot);
-			return model.File.FindDownwardTouching(modelPos).Select(x => x.SourceDefinition).LastOrDefault();
+			var selTokens = model.File.FindDownwardTouching(modelPos).ToArray();
+			if (selTokens.Length == 0) return null;
+
+			var defToken = selTokens.LastOrDefault(t => t.SourceDefinition != null);
+			if (defToken != null && defToken.SourceDefinition != null)
+			{
+				var def = defToken.SourceDefinition;
+
+				if (def is FunctionDefinition)
+				{
+					var funcDef = def as FunctionDefinition;
+
+					var funcList = new List<FunctionDefinition>();
+					funcList.Add(funcDef);
+
+					if (funcDef.Extern)
+					{
+						var ds = DefinitionStore.Current;
+						if (ds != null)
+						{
+							foreach (var def2 in ds.SearchForFunctionDefinitions(funcDef.Name))
+							{
+								if (def2 == def || (def2.SourceFileName == def.SourceFileName && def2.SourceStartPos == def.SourceStartPos))
+								{
+									continue;
+								}
+								funcList.Add(def2);
+							}
+						}
+
+						// If there is one true function definition and the list, and the others are externs, then just go straight to the true definition.
+						if (funcList.Count > 1 &&
+							funcList.Count(x => !x.Extern) == 1 &&
+							funcList.Count(x => x.Extern) == funcList.Count - 1)
+						{
+							funcList = funcList.Where(x => !x.Extern).ToList();
+						}
+					}
+
+					return PromptDefinitions(funcList);
+				}
+
+				return def;
+			}
+
+			var includeToken = selTokens.LastOrDefault(t => t is CodeModel.Tokens.IncludeToken) as CodeModel.Tokens.IncludeToken;
+			if (includeToken != null)
+			{
+				var pathName = includeToken.FullPathName;
+				if (!string.IsNullOrEmpty(pathName))
+				{
+					return new FilePositionDefinition(new FilePosition(pathName, 0));
+				}
+			}
+
+			return null;
 		}
 
 		internal static bool BrowseToDefinition(CodeModel.Definitions.Definition def)
 		{
 			ThreadHelper.ThrowIfNotOnUIThread();
 
-			if (def is FunctionDefinition)
+			if (!def.FilePosition.IsEmpty)
 			{
-				var funcDef = def as FunctionDefinition;
-
-				var funcList = new List<FunctionDefinition>();
-				funcList.Add(funcDef);
-
-				if (funcDef.Extern)
-				{
-					var ds = DefinitionStore.Current;
-					if (ds != null)
-					{
-						foreach (var def2 in ds.SearchForFunctionDefinitions(funcDef.Name))
-						{
-							if (def2 == def || (def2.SourceFileName == def.SourceFileName && def2.SourceStartPos == def.SourceStartPos))
-							{
-								continue;
-							}
-							funcList.Add(def2);
-						}
-					}
-
-					// If there is one true function definition and the list, and the others are externs, then just go straight to the true definition.
-					if (funcList.Count > 1 &&
-						funcList.Count(x => !x.Extern) == 1 &&
-						funcList.Count(x => x.Extern) == funcList.Count - 1)
-					{
-						funcList = funcList.Where(x => !x.Extern).ToList();
-					}
-				}
-
-				return PromptDefinitions(funcList);
-			}
-			else if (!string.IsNullOrWhiteSpace(def.SourceFileName))
-			{
-				Shell.OpenDocument(def.SourceFileName, def.SourceStartPos);
-				return true;
+				Shell.OpenDocument(def.FilePosition);
 			}
 
 			return false;
 		}
 
-		private static bool PromptDefinitions(IEnumerable<Definition> defs)
+		private static Definition PromptDefinitions(IEnumerable<Definition> defs)
 		{
 			ThreadHelper.ThrowIfNotOnUIThread();
 
 			var defList = defs.ToArray();
-			if (defList.Length == 0) return false;
-
-			if (defList.Length == 1)
-			{
-				Shell.OpenDocument(defList[0].SourceFileName, defList[0].SourceStartPos);
-				return true;
-			}
+			if (defList.Length == 0) return null;
+			if (defList.Length == 1) return defList[0];
 
 			var dlg = new DefinitionPickerWindow();
 			dlg.Owner = System.Windows.Application.Current.MainWindow;
@@ -154,14 +131,10 @@ namespace DkTools.Navigation
 			if (dlg.ShowDialog() == true)
 			{
 				var selDef = dlg.SelectedItem;
-				if (selDef != null)
-				{
-					Shell.OpenDocument(selDef.SourceFileName, selDef.SourceStartPos);
-					return true;
-				}
+				if (selDef != null) return selDef;
 			}
 
-			return false;
+			return null;
 		}
 
 		public static void TriggerFindReferences(ITextView textView)
