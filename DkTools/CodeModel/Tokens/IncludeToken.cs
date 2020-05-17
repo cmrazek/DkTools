@@ -74,7 +74,7 @@ namespace DkTools.CodeModel.Tokens
 		public override void DumpTreeInner(System.Xml.XmlWriter xml)
 		{
 			xml.WriteAttributeString("fileName", _fileName);
-			xml.WriteAttributeString("span", Span.ToString());
+			//xml.WriteAttributeString("span", Span.ToString());
 			base.DumpTreeInner(xml);
 		}
 

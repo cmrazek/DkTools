@@ -36,7 +36,7 @@ namespace DkTools.Navigation
 			}
 		}
 
-		internal static Definition GetDefinitionAtPoint(SnapshotPoint point)
+		internal static Definition GetDefinitionAtPoint(SnapshotPoint point, bool realCodeOnly = false)
 		{
 			ThreadHelper.ThrowIfNotOnUIThread();
 
@@ -92,13 +92,16 @@ namespace DkTools.Navigation
 				return def;
 			}
 
-			var includeToken = selTokens.LastOrDefault(t => t is CodeModel.Tokens.IncludeToken) as CodeModel.Tokens.IncludeToken;
-			if (includeToken != null)
+			if (!realCodeOnly)
 			{
-				var pathName = includeToken.FullPathName;
-				if (!string.IsNullOrEmpty(pathName))
+				var includeToken = selTokens.LastOrDefault(t => t is CodeModel.Tokens.IncludeToken) as CodeModel.Tokens.IncludeToken;
+				if (includeToken != null)
 				{
-					return new FilePositionDefinition(new FilePosition(pathName, 0));
+					var pathName = includeToken.FullPathName;
+					if (!string.IsNullOrEmpty(pathName))
+					{
+						return new FilePositionDefinition(new FilePosition(pathName, 0));
+					}
 				}
 			}
 

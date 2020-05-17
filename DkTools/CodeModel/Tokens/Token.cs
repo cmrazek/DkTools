@@ -97,6 +97,9 @@ namespace DkTools.CodeModel.Tokens
 			get { return _scope.Code; }
 		}
 
+		/// <summary>
+		/// Span of this token, in raw/preprocessor coordinates.
+		/// </summary>
 		public Span Span
 		{
 			get { return _span; }

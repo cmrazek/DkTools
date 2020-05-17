@@ -202,6 +202,7 @@ namespace DkTools.CodeModel
 			// Get the define name
 			rdr.IgnoreWhiteSpaceAndComments(true);
 			var linkFilePos = rdr.FilePosition;
+			var linkRawPos = rdr.Position;
 			var name = rdr.PeekIdentifier();
 			if (string.IsNullOrEmpty(name)) return;
 			var nameFilePos = rdr.FilePosition;
@@ -329,7 +330,7 @@ namespace DkTools.CodeModel
 			{
 				var define = new PreprocessorDefine(name, sb.ToString().Trim(), paramNames, linkFilePos);
 				_defines[name] = define;
-				if (nameFilePos.IsInFile) _refs.Add(new Reference(define.Definition, nameFilePos));
+				if (nameFilePos.IsInFile) _refs.Add(new Reference(define.Definition, nameFilePos, rawPosition: linkRawPos));
 			}
 		}
 
@@ -339,6 +340,7 @@ namespace DkTools.CodeModel
 			var name = p.reader.PeekIdentifier();
 			if (string.IsNullOrEmpty(name)) return;
 			var nameFilePos = p.reader.FilePosition;
+			var nameRawPos = p.reader.Position;
 			p.reader.Ignore(name.Length);
 
 			if (!p.suppress)
@@ -347,7 +349,7 @@ namespace DkTools.CodeModel
 				if (_defines.TryGetValue(name, out define))
 				{
 					define.Disabled = true;
-					if (nameFilePos.IsInFile) _refs.Add(new Reference(define.Definition, nameFilePos));
+					if (nameFilePos.IsInFile) _refs.Add(new Reference(define.Definition, nameFilePos, rawPosition: nameRawPos));
 				}
 			}
 		}
@@ -387,7 +389,7 @@ namespace DkTools.CodeModel
 			}
 
 			var nameFilePos = rdr.FilePosition;
-			if (nameFilePos.IsInFile) _refs.Add(new Reference(define.Definition, nameFilePos));
+			if (nameFilePos.IsInFile) _refs.Add(new Reference(define.Definition, nameFilePos, rawPosition: rdr.Position));
 
 			if (define.DataType != null && name == define.DataType.Name)
 			{
@@ -706,7 +708,7 @@ namespace DkTools.CodeModel
 				PreprocessorDefine define;
 				if (_defines.TryGetValue(name, out define))
 				{
-					_refs.Add(new Reference(define.Definition, nameFilePos));
+					_refs.Add(new Reference(define.Definition, nameFilePos, rawPosition: rdr.Position));
 				}
 			}
 
@@ -1147,22 +1149,18 @@ namespace DkTools.CodeModel
 		{
 			private Definition _def;
 			private FilePosition _filePos;
+			private int _rawPos;
 
-			public Reference(Definition def, FilePosition filePos)
+			public Reference(Definition def, FilePosition filePos, int rawPosition)
 			{
 				_def = def;
 				_filePos = filePos;
+				_rawPos = rawPosition;
 			}
 
-			public Definition Definition
-			{
-				get { return _def; }
-			}
-
-			public FilePosition FilePosition
-			{
-				get { return _filePos; }
-			}
+			public Definition Definition => _def;
+			public FilePosition FilePosition => _filePos;
+			public int RawPosition => _rawPos;
 		}
 	}
 }

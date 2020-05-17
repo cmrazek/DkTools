@@ -301,5 +301,10 @@ namespace DkTools
 				System.Windows.MessageBox.Show(message, caption, System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Information);
 			});
 		}
+
+		public static void Status(string text)
+		{
+			ProbeToolsPackage.Instance.SetStatusText(text);
+		}
 	}
 }
