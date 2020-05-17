@@ -2,6 +2,8 @@ DkTools ChangeLog
 ____________________________________________________________________________________________________
 Version 1.5.8 - (not yet released):
 
+- Added 'Peek Definition' support (Alt+F12)
+- DICT is now treated like a DK code file.
 - Signature help can now do a better job of detecting which function its in when comma is pressed.
 - Remove duplicates in auto-completion list.
 

@@ -16,6 +16,7 @@ using Microsoft.VisualStudio.TextManager.Interop;
 using Microsoft.VisualStudio.Utilities;
 using DkTools.CodeModel;
 using DkTools.CodeModel.Tokens;
+using DkTools.PeekDefinition;
 
 namespace DkTools.SignatureHelp
 {
@@ -70,8 +71,7 @@ namespace DkTools.SignatureHelp
 						return VSConstants.S_OK;
 					}
 				}
-
-				if (pguidCmdGroup == VSConstants.VSStd2K)
+				else if (pguidCmdGroup == VSConstants.VSStd2K)
 				{
 					if (nCmdID == (uint)VSConstants.VSStd2KCmdID.TYPECHAR)
 					{
@@ -137,6 +137,19 @@ namespace DkTools.SignatureHelp
 						return VSConstants.S_OK;
 					}
 				}
+				else if (pguidCmdGroup == typeof(VSConstants.VSStd12CmdID).GUID)
+				{
+					if (nCmdID == (uint)VSConstants.VSStd12CmdID.PeekDefinition)
+					{
+						var caretPt = _textView.TextSnapshot.CreateTrackingPoint(_textView.Caret.Position.BufferPosition.Position, PointTrackingMode.Negative);
+						var peekBroker = _textView.Properties.GetProperty<IPeekBroker>(typeof(IPeekBroker));
+						peekBroker.TriggerPeekSession(new PeekSessionCreationOptions(
+							textView: _textView,
+							relationshipName: DkPeekRelationship.RelationshipName,
+							triggerPoint: caretPt));
+						return VSConstants.S_OK;
+					}
+				}
 
 				return _nextCommandHandler.Exec(ref pguidCmdGroup, nCmdID, nCmdexecopt, pvaIn, pvaOut);
 			}
@@ -157,7 +170,8 @@ namespace DkTools.SignatureHelp
 			{
 				for (int i = 0; i < cCmds; i++)
 				{
-					if (prgCmds[i].cmdID == (uint)VSConstants.VSStd97CmdID.FindReferences)
+					if (prgCmds[i].cmdID == (uint)VSConstants.VSStd97CmdID.FindReferences ||
+						prgCmds[i].cmdID == (uint)VSConstants.VSStd97CmdID.GotoDefn)
 					{
 						prgCmds[i].cmdf = (uint)(OLECMDF.OLECMDF_ENABLED | OLECMDF.OLECMDF_SUPPORTED);
 					}
@@ -165,6 +179,16 @@ namespace DkTools.SignatureHelp
 						prgCmds[i].cmdID == (uint)VSConstants.VSStd97CmdID.GotoRef)
 					{
 						prgCmds[i].cmdf |= (uint)OLECMDF.OLECMDF_DEFHIDEONCTXTMENU;
+					}
+				}
+			}
+			else if (pguidCmdGroup == typeof(VSConstants.VSStd12CmdID).GUID)
+			{
+				for (int i = 0; i < cCmds; i++)
+				{
+					if (prgCmds[i].cmdID == (uint)VSConstants.VSStd12CmdID.PeekDefinition)
+					{
+						prgCmds[i].cmdf = (uint)(OLECMDF.OLECMDF_ENABLED | OLECMDF.OLECMDF_SUPPORTED);
 					}
 				}
 			}

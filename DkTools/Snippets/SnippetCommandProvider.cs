@@ -14,6 +14,8 @@ namespace DkTools.Snippets
 	[Export(typeof(IVsTextViewCreationListener))]
 	[TextViewRole(PredefinedTextViewRoles.Editable)]
 	[ContentType(Constants.DkContentType)]
+	[ContentType("text")]
+	[Order(After = nameof(DkGenericTextViewListener))]
 	internal sealed class SnippetCommandProvider : IVsTextViewCreationListener
 	{
 		[Import]
@@ -21,10 +23,11 @@ namespace DkTools.Snippets
 
 		public void VsTextViewCreated(IVsTextView textViewAdapter)
 		{
-			ITextView view = AdapterService.GetWpfTextView(textViewAdapter);
-			if (view == null) return;
+			ITextView textView = AdapterService.GetWpfTextView(textViewAdapter);
+			if (textView == null) return;
+			if (textView.TextBuffer.ContentType.TypeName != Constants.DkContentType) return;
 
-			view.Properties.GetOrCreateSingletonProperty(() => new SnippetCommandHandler(view, textViewAdapter));
+			textView.Properties.GetOrCreateSingletonProperty(() => new SnippetCommandHandler(textView, textViewAdapter));
 		}
 	}
 }
