@@ -18,8 +18,9 @@ namespace DkTools.CodeAnalysis
 		private bool _isArg;
 		private TriState _isInitialized;
 		private bool _isUsed;
+		private Span _rawSpan;
 
-		public Variable(Definition def, string name, DataType dataType, Value value, bool isArg, TriState isInitialized, bool isUsed)
+		public Variable(Definition def, string name, DataType dataType, Value value, bool isArg, TriState isInitialized, bool isUsed, Span rawSpan)
 		{
 			_def = def;
 			_name = name;
@@ -28,11 +29,12 @@ namespace DkTools.CodeAnalysis
 			_isArg = isArg;
 			_isInitialized = isInitialized;
 			_isUsed = isUsed;
+			_rawSpan = rawSpan;
 		}
 
 		public Variable Clone()
 		{
-			return new Variable(_def, _name, _dataType, _value, _isArg, _isInitialized, _isUsed);
+			return new Variable(_def, _name, _dataType, _value, _isArg, _isInitialized, _isUsed, _rawSpan);
 		}
 
 		public DataType DataType => _dataType;
@@ -41,6 +43,7 @@ namespace DkTools.CodeAnalysis
 		public TriState IsInitialized { get => _isInitialized; set => _isInitialized = value; }
 		public bool IsUsed { get => _isUsed; set => _isUsed = value; }
 		public string Name => _name;
+		public Span RawSpan => _rawSpan;
 		public override string ToString() => _name;
 		public Value Value => _value;
 

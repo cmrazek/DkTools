@@ -1,9 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Data.Entity.Infrastructure;
 using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows.Forms;
 using DkTools.CodeModel.Definitions;
 using DkTools.CodeModel.Tokens;
 
@@ -16,12 +18,16 @@ namespace DkTools.CodeModel
 		private Dictionary<string, PreprocessorDefine> _defines;
 		private List<IncludeDependency> _includeDependencies = new List<IncludeDependency>();
 		private List<Reference> _refs = new List<Reference>();
+		private WarningSuppressionTracker _warningSuppressions = new WarningSuppressionTracker();
 
 		public Preprocessor(ProbeAppSettings appSettings, FileStore store)
 		{
 			_appSettings = appSettings ?? throw new ArgumentNullException(nameof(appSettings));
 			_store = store ?? throw new ArgumentNullException(nameof(store));
 		}
+
+		public IEnumerable<Reference> References => _refs;
+		public WarningSuppressionTracker WarningSuppressions => _warningSuppressions;
 
 		/// <summary>
 		/// Preprocesses a document.
@@ -171,9 +177,12 @@ namespace DkTools.CodeModel
 					ProcessEndIf(p, directiveName);
 					break;
 				case "#warndel":
+					p.reader.Ignore(directiveName.Length);
+					ProcessWarnAddDel(p, false);
+					break;
 				case "#warnadd":
 					p.reader.Ignore(directiveName.Length);
-					ProcessWarnAddDel(p);
+					ProcessWarnAddDel(p, true);
 					break;
 				case "#replace":
 					ProcessReplace(p, directiveName);
@@ -922,13 +931,19 @@ namespace DkTools.CodeModel
 			return sb.ToString();
 		}
 
-		private void ProcessWarnAddDel(PreprocessorParams p)
+		private void ProcessWarnAddDel(PreprocessorParams p, bool add)
 		{
 			var rdr = p.reader;
 			rdr.IgnoreWhiteSpaceAndComments(true);
 
-			var number = rdr.PeekToken(true);
-			if (!string.IsNullOrEmpty(number) && char.IsNumber(number[0])) rdr.Ignore(number.Length);
+			var numberString = rdr.PeekToken(true);
+			if (!string.IsNullOrEmpty(numberString) && char.IsNumber(numberString[0])) rdr.Ignore(numberString.Length);
+
+			if (int.TryParse(numberString, out int number))
+			{
+				if (add) _warningSuppressions.OnWarnAdd(number, rdr.Position);
+				else _warningSuppressions.OnWarnDel(number, rdr.Position);
+			}
 		}
 
 		private bool IsDefined(PreprocessorParams p, string name)
@@ -992,11 +1007,6 @@ namespace DkTools.CodeModel
 			p.reader.IgnoreWhiteSpaceAndComments(true);
 			var name = p.reader.PeekToken(true);
 			if (name.IsWord()) p.reader.Ignore(name.Length);
-		}
-
-		public IEnumerable<Reference> References
-		{
-			get { return _refs; }
 		}
 
 		public enum ConditionResult

@@ -18,6 +18,7 @@ namespace DkTools.CodeAnalysis
 		private DkTools.CodeModel.CodeModel _codeModel;
 		private PreprocessorModel _prepModel;
 		private string _fullSource;
+		private WarningSuppressionTracker _warningSuppressions;
 
 		private List<Statement> _stmts;
 		private RunScope _scope;
@@ -39,6 +40,7 @@ namespace DkTools.CodeAnalysis
 
 			_prepModel = _codeModel.PreprocessorModel;
 			_fullSource = _codeModel.Source.Text;
+			_warningSuppressions = _codeModel.PreprocessorModel.Preprocessor.WarningSuppressions;
 
 			ErrorTaskProvider.Instance.RemoveAllForSource(ErrorTaskSource.CodeAnalysis, _codeModel.FileName);
 
@@ -81,20 +83,23 @@ namespace DkTools.CodeAnalysis
 
 			foreach (var arg in func.Arguments)
 			{
-				if (!string.IsNullOrEmpty(arg.Name))
+				if (!string.IsNullOrEmpty(arg.Definition.Name))
 				{
-					_scope.AddVariable(new Variable(arg, arg.Name, arg.DataType, Value.CreateUnknownFromDataType(arg.DataType), true, TriState.True, true));
+					_scope.AddVariable(new Variable(arg.Definition, arg.Definition.Name, arg.Definition.DataType,
+						Value.CreateUnknownFromDataType(arg.Definition.DataType), true, TriState.True, true, arg.RawSpan));
 				}
 			}
 
 			foreach (var v in func.Variables)
 			{
-				_scope.AddVariable(new Variable(v, v.Name, v.DataType, Value.CreateUnknownFromDataType(v.DataType), false, TriState.False, false));
+				_scope.AddVariable(new Variable(v.Definition, v.Definition.Name, v.Definition.DataType,
+					Value.CreateUnknownFromDataType(v.Definition.DataType), false, TriState.False, false, v.RawSpan));
 			}
 
-			foreach (var v in _prepModel.DefinitionProvider.GetGlobalFromFile<VariableDefinition>())
+			foreach (var v in _prepModel.GlobalVariables)
 			{
-				_scope.AddVariable(new Variable(v, v.Name, v.DataType, Value.CreateUnknownFromDataType(v.DataType), false, TriState.True, true));
+				_scope.AddVariable(new Variable(v.Definition, v.Definition.Name, v.Definition.DataType,
+					Value.CreateUnknownFromDataType(v.Definition.DataType), false, TriState.True, true, v.RawSpan));
 			}
 
 			foreach (var stmt in _stmts)
@@ -115,14 +120,12 @@ namespace DkTools.CodeAnalysis
 					if (v.IsInitialized != TriState.False)
 					{
 						var def = v.Definition;
-						ReportErrorLocal(def.SourceFileName, new Span(def.SourceStartPos, def.SourceStartPos + def.Name.Length),
-							false, null, CAError.CA0111, v.Name);	// Variable '{0}' is assigned a value, but is never used.
+						ReportErrorAbsolute(v.RawSpan + func.StartPos, CAError.CA0111, v.Name); // Variable '{0}' is assigned a value, but is never used.
 					}
 					else
 					{
 						var def = v.Definition;
-						ReportErrorLocal(def.SourceFileName, new Span(def.SourceStartPos, def.SourceStartPos + def.Name.Length),
-							false, null, CAError.CA0112, v.Name);	// Variable '{0}' is not used.
+						ReportErrorAbsolute(v.RawSpan + func.StartPos, CAError.CA0112, v.Name); // Variable '{0}' is not used.
 					}
 				}
 			}
@@ -143,6 +146,14 @@ namespace DkTools.CodeAnalysis
 			//	return;
 			//}
 
+			if (int.TryParse(errorCode.ToString().Substring(2), out int code))
+			{
+				if (_warningSuppressions.IsWarningSuppressed(code, span.Start))
+				{
+					return;
+				}
+			}
+
 			string fileName;
 			bool isPrimary;
 			var fileSpan = _prepModel.Source.GetFileSpan(span, out fileName, out isPrimary);
@@ -157,10 +168,10 @@ namespace DkTools.CodeAnalysis
 				}
 			}
 
-			ReportErrorLocal(fileName, fileSpan, isPrimary, fileContent, errorCode, args);
+			ReportErrorLocal_Internal(fileName, fileSpan, isPrimary, fileContent, errorCode, args);
 		}
 
-		public void ReportErrorLocal(string fileName, Span fileSpan, bool isPrimary, string fileContent, CAError errorCode, params object[] args)
+		private void ReportErrorLocal_Internal(string fileName, Span fileSpan, bool isPrimary, string fileContent, CAError errorCode, params object[] args)
 		{
 			int lineNum = 0, linePos = 0;
 

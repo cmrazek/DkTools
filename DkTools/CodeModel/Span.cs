@@ -47,6 +47,8 @@ namespace DkTools.CodeModel
 			return string.Format("[{0}..{1}]", _start, _end);
 		}
 
+		public static Span operator +(Span span, int offset) => new Span(span.Start + offset, span.End + offset);
+
 		public bool Contains(int pos)
 		{
 			return _start <= pos && _end > pos;

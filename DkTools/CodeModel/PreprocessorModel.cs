@@ -16,7 +16,7 @@ namespace DkTools.CodeModel
 		private DefinitionProvider _defProv;
 		private string _fileName;
 		private string _className;
-		private Dictionary<string, VariableDefinition> _globalVars = new Dictionary<string, VariableDefinition>();
+		private Dictionary<string, PrepVariable> _globalVars = new Dictionary<string, PrepVariable>();
 		private Dictionary<string, FunctionDefinition> _externFuncs = new Dictionary<string, FunctionDefinition>();
 		private List<LocalFunction> _localFuncs = new List<LocalFunction>();
 		private FileContext _fileContext;
@@ -40,6 +40,8 @@ namespace DkTools.CodeModel
 
 			Parse();
 		}
+
+		public IEnumerable<PrepVariable> GlobalVariables => _globalVars.Values;
 
 		public CodeSource Source
 		{
@@ -99,8 +101,7 @@ namespace DkTools.CodeModel
 
 		private VariableDefinition GlobalVariableCallback(string name)
 		{
-			VariableDefinition def;
-			if (_globalVars.TryGetValue(name, out def)) return def;
+			if (_globalVars.TryGetValue(name, out var def)) return def.Definition;
 			return null;
 		}
 
@@ -124,14 +125,14 @@ namespace DkTools.CodeModel
 				{
 					var localPos = _source.GetFilePosition(nameSpan.Start);
 					var def = new VariableDefinition(name, localPos, dataType, false, arrayLength, VariableType.Global);
-					_globalVars[name] = def;
+					_globalVars[name] = new PrepVariable(def, nameSpan);
 					AddGlobalDefinition(def);
 				}
 				else if (_code.ReadExact(','))
 				{
 					var localPos = _source.GetFilePosition(nameSpan.Start);
 					var def = new VariableDefinition(name, localPos, dataType, false, arrayLength, VariableType.Global);
-					_globalVars[name] = def;
+					_globalVars[name] = new PrepVariable(def, nameSpan);
 					AddGlobalDefinition(def);
 					AfterRootDataType(dataType, dataTypeStartPos, privacy, isExtern);
 				}
@@ -234,7 +235,7 @@ namespace DkTools.CodeModel
 			var argScope = new CodeScope(localArgStartPos.Position);
 			int argEndPos = 0;
 			var args = new List<ArgumentDescriptor>();
-			var argDefList = new List<Definition>();
+			var argDefList = new List<PrepVariable>();
 
 			// Read the arguments
 			while (true)
@@ -278,8 +279,8 @@ namespace DkTools.CodeModel
 			// Read the variables at the start of the function.
 			var localBodyStartPos = _source.GetFilePosition(bodyStartPos);
 			CodeScope funcScope = null;
-			var varList = new List<Definition>();
-			if (!_visible || localBodyStartPos.PrimaryFile)	// Don't worry about saving variables if this function isn't in this file anyway.
+			var varList = new List<PrepVariable>();
+			if (!_visible || localBodyStartPos.PrimaryFile) // Don't worry about saving variables if this function isn't in this file anyway.
 			{
 				funcScope = new CodeScope(argScope, bodyStartPos);
 				while (!_code.EndOfFile)
@@ -316,7 +317,7 @@ namespace DkTools.CodeModel
 			if (_visible) argEffect = new Span(localArgStartPos.Position, _source.GetPrimaryFilePosition(bodyEndPos));
 			else argEffect = new Span(argStartPos, bodyEndPos);
 
-			_defProv.AddLocal(argEffect, argDefList);
+			_defProv.AddLocal(argEffect, argDefList.Select(x => x.Definition));
 
 			// Add the definitions for the declared variables
 			if (varList != null)
@@ -325,7 +326,7 @@ namespace DkTools.CodeModel
 				if (_visible) varEffect = new Span(bodyStartLocalPos, _source.GetPrimaryFilePosition(bodyEndPos));
 				else varEffect = new Span(bodyStartPos, bodyEndPos);
 
-				_defProv.AddLocal(varEffect, varList);
+				_defProv.AddLocal(varEffect, varList.Select(x => x.Definition));
 			}
 		}
 
@@ -481,7 +482,7 @@ namespace DkTools.CodeModel
 			}
 		}
 
-		private bool TryReadFunctionArgument(CodeScope scope, bool createDefinitions, List<ArgumentDescriptor> args, List<Definition> newDefList)
+		private bool TryReadFunctionArgument(CodeScope scope, bool createDefinitions, List<ArgumentDescriptor> args, List<PrepVariable> newDefList)
 		{
 			var dataType = DataType.TryParse(new DataType.ParseArgs
 			{
@@ -492,9 +493,9 @@ namespace DkTools.CodeModel
 			if (dataType == null) return false;
 
 			PassByMethod passByMethod = PassByMethod.Value;
-			if (_code.ReadExact("&"))	// Optional reference
+			if (_code.ReadExact("&"))   // Optional reference
 			{
-				if (_code.ReadExact("+"))	// Optional &+
+				if (_code.ReadExact("+"))   // Optional &+
 				{
 					passByMethod = PassByMethod.ReferencePlus;
 				}
@@ -512,7 +513,7 @@ namespace DkTools.CodeModel
 
 			args.Add(new ArgumentDescriptor(name, dataType, passByMethod));
 
-			if (name != null && createDefinitions)	// Optional var name
+			if (name != null && createDefinitions)  // Optional var name
 			{
 				var arrayLength = TryReadArrayDecl();
 
@@ -521,14 +522,14 @@ namespace DkTools.CodeModel
 				scope.AddDefinition(def);
 				if (!_visible || localPos.PrimaryFile)
 				{
-					newDefList.Add(def);
+					newDefList.Add(new PrepVariable(def, _code.Span));
 				}
 			}
 
 			return true;
 		}
 
-		private bool TryReadVariableDeclaration(CodeScope scope, List<Definition> newDefList)
+		private bool TryReadVariableDeclaration(CodeScope scope, List<PrepVariable> newDefList)
 		{
 			var dataType = DataType.TryParse(new DataType.ParseArgs
 			{
@@ -545,6 +546,7 @@ namespace DkTools.CodeModel
 				if (!_code.ReadWord()) break;
 
 				var varName = _code.Text;
+				var varNameSpan = _code.Span;
 				var localPos = _source.GetFilePosition(_code.TokenStartPostion);
 
 				var arrayLength = TryReadArrayDecl();
@@ -553,7 +555,7 @@ namespace DkTools.CodeModel
 				scope.AddDefinition(def);
 				if (!_visible || localPos.PrimaryFile)
 				{
-					newDefList.Add(def);
+					newDefList.Add(new PrepVariable(def, varNameSpan));
 				}
 				gotVars = true;
 
@@ -637,7 +639,7 @@ namespace DkTools.CodeModel
 			if (!_code.ReadWord()) return;
 			var name = _code.Text;
 			ExtractTableDefinition exDef = null;
-			if (!_defProv.GetGlobalFromFile<ExtractTableDefinition>(name).Any())	// Don't add a definition if it's already there (extracts can be called multiple times)
+			if (!_defProv.GetGlobalFromFile<ExtractTableDefinition>(name).Any())    // Don't add a definition if it's already there (extracts can be called multiple times)
 			{
 				var localPos = _source.GetFilePosition(_code.TokenStartPostion);
 				exDef = new ExtractTableDefinition(name, localPos, permanent);
@@ -847,11 +849,11 @@ namespace DkTools.CodeModel
 			private FunctionDefinition _def;
 			private int _startPos;
 			private int _endPos;
-			private Definition[] _args;
-			private Definition[] _vars;
+			private PrepVariable[] _args;
+			private PrepVariable[] _vars;
 			private Span _nameSpan;
 
-			public LocalFunction(FunctionDefinition def, Span nameSpan, int startPos, int endPos, IEnumerable<Definition> args, IEnumerable<Definition> vars)
+			public LocalFunction(FunctionDefinition def, Span nameSpan, int startPos, int endPos, IEnumerable<PrepVariable> args, IEnumerable<PrepVariable> vars)
 			{
 				_def = def;
 				_startPos = startPos;
@@ -860,6 +862,9 @@ namespace DkTools.CodeModel
 				_vars = vars.ToArray();
 				_nameSpan = nameSpan;
 			}
+
+			public PrepVariable[] Arguments => _args;
+			public PrepVariable[] Variables => _vars;
 
 			public FunctionDefinition Definition
 			{
@@ -882,16 +887,6 @@ namespace DkTools.CodeModel
 				get { return _endPos; }
 			}
 
-			public Definition[] Arguments
-			{
-				get { return _args; }
-			}
-
-			public Definition[] Variables
-			{
-				get { return _vars; }
-			}
-
 			/// <summary>
 			/// Span of the function name, in preprocessor coordinates.
 			/// </summary>
@@ -899,6 +894,19 @@ namespace DkTools.CodeModel
 			{
 				get { return _nameSpan; }
 			}
+		}
+
+		public class PrepVariable
+		{
+			public PrepVariable(VariableDefinition definition, Span rawSpan)
+			{
+				Definition = definition ?? throw new ArgumentNullException(nameof(definition));
+				RawSpan = rawSpan;
+			}
+
+			public VariableDefinition Definition { get; private set; }
+			public string Dump() => Definition.Dump();
+			public Span RawSpan { get; private set; }
 		}
 	}
 }
