@@ -159,68 +159,29 @@ namespace DkTools.ErrorTagging
 
 			foreach (var task in (from t in tasks where string.Equals(t.Document, fileName, StringComparison.OrdinalIgnoreCase) select t))
 			{
-				var span = task.TryGetSnapshotSpan(snapshot);
-				if (span.HasValue)
+				var taskSpan = task.TryGetSnapshotSpan(snapshot);
+				if (!taskSpan.HasValue) continue;
+
+				foreach (var docSpan in docSpans)
 				{
-					foreach (var docSpan in docSpans)
+					var mappedTaskSpan = taskSpan.Value.TranslateTo(docSpan.Snapshot, SpanTrackingMode.EdgeExclusive);
+					if (docSpan.Contains(mappedTaskSpan))
 					{
-						if (docSpan.Contains(span.Value))
+						string tagType;
+						switch (task.Type)
 						{
-							string tagType;
-							switch (task.Type)
-							{
-								case ErrorType.Warning:
-									tagType = VSTheme.CurrentTheme == VSThemeMode.Light ? ErrorTagger.CodeWarningLight : ErrorTagger.CodeWarningDark;
-									break;
-								case ErrorType.CodeAnalysisError:
-									tagType = VSTheme.CurrentTheme == VSThemeMode.Light ? ErrorTagger.CodeAnalysisErrorLight : ErrorTagger.CodeAnalysisErrorDark;
-									break;
-								default:
-									tagType = VSTheme.CurrentTheme == VSThemeMode.Light ? ErrorTagger.CodeErrorLight : ErrorTagger.CodeErrorDark;
-									break;
-							}
-							tags.Add(new TagSpan<ErrorTag>(span.Value, new ErrorTag(tagType, task.Text)));
-							break;
+							case ErrorType.Warning:
+								tagType = VSTheme.CurrentTheme == VSThemeMode.Light ? ErrorTagger.CodeWarningLight : ErrorTagger.CodeWarningDark;
+								break;
+							case ErrorType.CodeAnalysisError:
+								tagType = VSTheme.CurrentTheme == VSThemeMode.Light ? ErrorTagger.CodeAnalysisErrorLight : ErrorTagger.CodeAnalysisErrorDark;
+								break;
+							default:
+								tagType = VSTheme.CurrentTheme == VSThemeMode.Light ? ErrorTagger.CodeErrorLight : ErrorTagger.CodeErrorDark;
+								break;
 						}
-					}
-				}
-				else
-				{
-					var line = task.GetSnapshot(snapshot).GetLineFromLineNumber(task.Line);
-					foreach (var docSpan in docSpans)
-					{
-						var spanLineStart = line.Start.TranslateTo(docSpan.Snapshot, PointTrackingMode.Negative);
-						if (docSpan.Contains(spanLineStart.Position))
-						{
-							var errorCode = task.Type == ErrorType.Warning ? ErrorCode.Fec_Warning : ErrorCode.Fec_Error;
-
-							var spanLine = docSpan.Snapshot.GetLineFromPosition(spanLineStart);
-							var startPos = spanLine.Start.Position;
-							var endPos = spanLine.End.Position;
-							if (startPos < endPos)
-							{
-								var newStartPos = spanLine.Start.Position + spanLine.GetText().GetIndentOffset();
-								if (newStartPos < endPos) startPos = newStartPos;
-							}
-
-							string tagType;
-							switch (task.Type)
-							{
-								case ErrorType.Warning:
-									tagType = VSTheme.CurrentTheme == VSThemeMode.Light ? ErrorTagger.CodeWarningLight : ErrorTagger.CodeWarningDark;
-									break;
-								case ErrorType.CodeAnalysisError:
-									tagType = VSTheme.CurrentTheme == VSThemeMode.Light ? ErrorTagger.CodeAnalysisErrorLight : ErrorTagger.CodeAnalysisErrorDark;
-									break;
-								default:
-									tagType = VSTheme.CurrentTheme == VSThemeMode.Light ? ErrorTagger.CodeErrorLight : ErrorTagger.CodeErrorDark;
-									break;
-							}
-
-							tags.Add(new TagSpan<ErrorTag>(new SnapshotSpan(docSpan.Snapshot, startPos, endPos - startPos),
-								new ErrorTag(tagType, task.Text)));
-							break;
-						}
+						tags.Add(new TagSpan<ErrorTag>(taskSpan.Value, new ErrorTag(tagType, task.Text)));
+						break;
 					}
 				}
 			}
@@ -237,19 +198,11 @@ namespace DkTools.ErrorTagging
 
 				foreach (var task in (from t in Tasks.Cast<ErrorTask>() where string.Equals(t.Document, fileName, StringComparison.OrdinalIgnoreCase) select t))
 				{
-					var span = task.Span;
-					if (span.HasValue)
+					var taskSpan = task.TryGetSnapshotSpan(pt.Snapshot);
+					if (taskSpan.HasValue)
 					{
-						if (span.Value.Contains(pt.TranslateTo(task.GetSnapshot(pt.Snapshot), PointTrackingMode.Positive)))
-						{
-							tasks.Add(task);
-						}
-					}
-					else
-					{
-						var taskLine = task.GetSnapshot(pt.Snapshot).GetLineFromLineNumber(task.Line);
-						var taskSpan = new SnapshotSpan(taskLine.Start, taskLine.End);
-						if (taskSpan.Contains(pt.TranslateTo(taskSpan.Snapshot, PointTrackingMode.Positive)))
+						var mappedPt = pt.TranslateTo(taskSpan.Value.Snapshot, PointTrackingMode.Positive);
+						if (taskSpan.Value.Contains(mappedPt))
 						{
 							tasks.Add(task);
 						}

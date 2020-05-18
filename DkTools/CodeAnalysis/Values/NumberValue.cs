@@ -253,5 +253,13 @@ namespace DkTools.CodeAnalysis.Values
 		{
 			return new NumberValue(DataType, value.ToNumber(scope, span));
 		}
+
+		public override bool IsEqualTo(Value other)
+		{
+			if (!_num.HasValue) return false;
+			var o = other as NumberValue;
+			if (o == null || !o._num.HasValue) return false;
+			return _num.Value == o._num.Value;
+		}
 	}
 }

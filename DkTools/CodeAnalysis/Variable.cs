@@ -35,50 +35,31 @@ namespace DkTools.CodeAnalysis
 			return new Variable(_def, _name, _dataType, _value, _isArg, _isInitialized, _isUsed);
 		}
 
-		public Definition Definition
-		{
-			get { return _def; }
-		}
-
-		public string Name
-		{
-			get { return _name; }
-		}
-
-		public DataType DataType
-		{
-			get { return _dataType; }
-		}
-
-		public Value Value
-		{
-			get
-			{
-				return _value;
-			}
-			set
-			{
-				_value = value;
-			}
-		}
-
-		public bool IsArgument
-		{
-			get { return _isArg; }
-		}
-
-		public TriState IsInitialized
-		{
-			get { return _isInitialized; }
-			set { _isInitialized = value; }
-		}
-
-		public bool IsUsed
-		{
-			get { return _isUsed; }
-			set { _isUsed = value; }
-		}
-
+		public DataType DataType => _dataType;
+		public Definition Definition => _def;
+		public bool IsArgument => _isArg;
+		public TriState IsInitialized { get => _isInitialized; set => _isInitialized = value; }
+		public bool IsUsed { get => _isUsed; set => _isUsed = value; }
+		public string Name => _name;
 		public override string ToString() => _name;
+		public Value Value => _value;
+
+		public void AssignValue(Value value)
+		{
+			_value = value;
+		}
+
+		public void Merge(Variable other)
+		{
+			_value = other._value;
+		}
+
+		public void Merge(IEnumerable<Variable> otherVars)
+		{
+			var others = otherVars.Where(x => x != null).ToArray();
+			if (others.Length == 0) return;
+
+			_value = Value.Combine(_value.DataType, others.Select(x => x._value));
+		}
 	}
 }

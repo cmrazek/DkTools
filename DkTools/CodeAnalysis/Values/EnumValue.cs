@@ -302,5 +302,13 @@ namespace DkTools.CodeAnalysis.Values
 			if (str != null && DataType.IsValidEnumOption(str)) return new EnumValue(DataType, str);
 			return new EnumValue(DataType, null, null);
 		}
+
+		public override bool IsEqualTo(Value other)
+		{
+			if (!_ordinal.HasValue) return false;
+			var o = other as EnumValue;
+			if (o == null || !o._ordinal.HasValue) return false;
+			return _ordinal.Value == o._ordinal.Value;
+		}
 	}
 }

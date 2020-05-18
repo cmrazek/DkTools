@@ -60,8 +60,7 @@ namespace DkTools.CodeAnalysis
 			
 			foreach (var myVar in _vars.Values)
 			{
-				Variable otherVar;
-				if (scope._vars.TryGetValue(myVar.Name, out otherVar))
+				if (scope._vars.TryGetValue(myVar.Name, out var otherVar))
 				{
 					if (scope.Returned != TriState.True)	// Don't initialize variables if the branch returned before this point
 					{
@@ -69,6 +68,8 @@ namespace DkTools.CodeAnalysis
 					}
 
 					if (otherVar.IsUsed) myVar.IsUsed = true;
+
+					myVar.Merge(otherVar);
 				}
 			}
 		}
@@ -97,7 +98,8 @@ namespace DkTools.CodeAnalysis
 
 			foreach (var v in _vars)
 			{
-				if (v.Value.IsInitialized != TriState.True)
+				var myVar = v.Value;
+				if (myVar.IsInitialized != TriState.True)
 				{
 					var numScopes = 0;
 					var numInitScopes = 0;
@@ -119,19 +121,21 @@ namespace DkTools.CodeAnalysis
 
 					if (numScopes > 0)
 					{
-						if (numInitScopes == numScopes) v.Value.IsInitialized = TriState.True;
-						else if (numInitScopes > 0 || numMaybeInitScopes > 0) v.Value.IsInitialized = TriState.Indeterminate;
+						if (numInitScopes == numScopes) myVar.IsInitialized = TriState.True;
+						else if (numInitScopes > 0 || numMaybeInitScopes > 0) myVar.IsInitialized = TriState.Indeterminate;
 					}
 				}
 
-				if (!v.Value.IsUsed)
+				if (!myVar.IsUsed)
 				{
 					foreach (var scope in scopes)
 					{
 						if (scope == null) continue;
-						if (scope.GetVariable(v.Key).IsUsed) v.Value.IsUsed = true;
+						if (scope.GetVariable(v.Key).IsUsed) myVar.IsUsed = true;
 					}
 				}
+
+				myVar.Merge(scopes.Where(x => x != null).Select(x => x.GetVariable(v.Key)));
 			}
 		}
 

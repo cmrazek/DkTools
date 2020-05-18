@@ -107,7 +107,7 @@ namespace DkTools.CodeAnalysis.Nodes
 			ReplaceNodes(new ResultNode(Statement, span, value, source, errRep, resultIsReportable), nodes);
 		}
 
-		private void Execute(RunScope scope)
+		private void SimplifyGroup(RunScope scope)
 		{
 			var reduceRetries = 3;
 
@@ -192,13 +192,13 @@ namespace DkTools.CodeAnalysis.Nodes
 			return null;
 		}
 
-		public override void Run(RunScope scope)
+		public override void Execute(RunScope scope)
 		{
-			Execute(scope);
+			SimplifyGroup(scope);
 
 			if (_nodes.Count == 1)
 			{
-				_nodes[0].Run(scope);
+				_nodes[0].Execute(scope);
 				return;
 			}
 
@@ -207,7 +207,7 @@ namespace DkTools.CodeAnalysis.Nodes
 
 		public override Value ReadValue(RunScope scope)
 		{
-			Execute(scope);
+			SimplifyGroup(scope);
 
 			if (_nodes.Count == 2 && scope.RemoveHeaderString)
 			{
@@ -230,7 +230,7 @@ namespace DkTools.CodeAnalysis.Nodes
 
 		public override void WriteValue(RunScope scope, Value value)
 		{
-			Execute(scope);
+			SimplifyGroup(scope);
 			if (_nodes.Count == 1)
 			{
 				_nodes[0].WriteValue(scope, value);

@@ -97,10 +97,11 @@ namespace DkTools.CodeAnalysis.Statements
 				}
 
 				var condIsConfirmedTrue = condValue != null && condValue.IsTrue;
+				var condIsConfirmedFalse = condValue != null && condValue.IsFalse;
 
 				if (i < _trueBodies.Count)
 				{
-					if (!gotConfirmedTrueCondition)
+					if (!gotConfirmedTrueCondition && !condIsConfirmedFalse)
 					{
 						var trueScope = scope.Clone();
 						foreach (var stmt in _trueBodies[i]) stmt.Execute(trueScope);

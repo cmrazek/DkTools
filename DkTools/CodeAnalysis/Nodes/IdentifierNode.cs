@@ -47,7 +47,7 @@ namespace DkTools.CodeAnalysis.Nodes
 			return _def.CanWrite;
 		}
 
-		public override void Run(RunScope scope)
+		public override void Execute(RunScope scope)
 		{
 			// Don't read from the identifier.
 		}
@@ -133,7 +133,7 @@ namespace DkTools.CodeAnalysis.Nodes
 				var v = scope.GetVariable(Text);
 				if (v != null)
 				{
-					v.Value = v.Value.Convert(scope, Span, value);
+					v.AssignValue(v.Value.Convert(scope, Span, value));
 					v.IsInitialized = TriState.True;
 					return;
 				}

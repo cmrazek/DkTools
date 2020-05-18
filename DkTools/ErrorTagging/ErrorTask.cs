@@ -15,11 +15,11 @@ namespace DkTools.ErrorTagging
 		private ErrorTaskSource _source;
 		private string _sourceArg;
 		private ErrorType _type;
-		private ITextSnapshot _snapshot;
-		private CodeModel.Span? _span;
+		private CodeModel.Span? _reportedSpan;
+		private SnapshotSpan? _snapshotSpan;
 
 		public ErrorTask(string fileName, int lineNum, int lineCol, string message, ErrorType type, ErrorTaskSource source,
-			string sourceFileName, ITextSnapshot snapshot, CodeModel.Span? span = null)
+			string sourceFileName, CodeModel.Span? reportedSpan, SnapshotSpan? snapshotSpan)
 		{
 			this.Document = fileName;
 			this.Line = lineNum;
@@ -41,11 +41,15 @@ namespace DkTools.ErrorTagging
 			_source = source;
 			_sourceArg = sourceFileName;
 			_type = type;
-			_snapshot = snapshot;
-			_span = span;
+			_reportedSpan = reportedSpan;
+			_snapshotSpan = snapshotSpan;
 
 			this.Navigate += ErrorTask_Navigate;
 		}
+
+		public ErrorTaskSource Source => _source;
+		public string SourceArg => _sourceArg;
+		public ErrorType Type => _type;
 
 		private void ErrorTask_Navigate(object sender, EventArgs e)
 		{
@@ -64,67 +68,26 @@ namespace DkTools.ErrorTagging
 			});
 		}
 
-		public ErrorTaskSource Source
-		{
-			get { return _source; }
-		}
-
-		public string SourceArg
-		{
-			get { return _sourceArg; }
-		}
-
-		public ErrorType Type
-		{
-			get { return _type; }
-		}
-
-		public ITextSnapshot GetSnapshot(ITextSnapshot currentSnapshot)
-		{
-			if (_snapshot == null || _snapshot != currentSnapshot) _snapshot = currentSnapshot;
-			return _snapshot;
-		}
-
 		public SnapshotSpan? TryGetSnapshotSpan(ITextSnapshot currentSnapshot)
 		{
 			if (currentSnapshot == null) throw new ArgumentNullException(nameof(currentSnapshot));
 
-			if (_snapshot != null && _snapshot.TextBuffer != currentSnapshot.TextBuffer) return null;
+			if (_snapshotSpan.HasValue) return _snapshotSpan.Value;
 
-			try
+			if (_reportedSpan.HasValue)
 			{
-				if (_span.HasValue)
-				{
-					if (_snapshot == null) _snapshot = currentSnapshot;
-					return new SnapshotSpan(_snapshot, _span.Value.Start, _span.Value.Length).TranslateTo(currentSnapshot, SpanTrackingMode.EdgePositive);
-				}
-
-				var snapshot = _snapshot ?? currentSnapshot;
-				if (Line < 0 || Line >= snapshot.LineCount) return null;
-				var line = snapshot.GetLineFromLineNumber(Line);
-				var startPos = line.Start.Position;
-				var endPos = line.End.Position;
-				if (startPos < endPos)
-				{
-					var newStartPos = line.Start.Position + line.GetText().GetIndentOffset();
-					if (newStartPos < endPos) startPos = newStartPos;
-				}
-
-				if (_snapshot == null) _snapshot = currentSnapshot;
-				_span = new CodeModel.Span(startPos, endPos);
-				var snapshotSpan = new SnapshotSpan(_snapshot, _span.Value.Start, _span.Value.Length);
-				if (_snapshot != currentSnapshot) snapshotSpan = snapshotSpan.TranslateTo(currentSnapshot, SpanTrackingMode.EdgePositive);
-				return snapshotSpan;
+				var clampedSpan = _reportedSpan.Value.Intersection(new CodeModel.Span(0, currentSnapshot.Length));
+				if (clampedSpan.IsEmpty) return null;
+				_snapshotSpan = clampedSpan.ToVsTextSnapshotSpan(currentSnapshot);
 			}
-			catch (ArgumentOutOfRangeException)
+			else
 			{
-				return null;
+				if (Line < 0 || Line >= currentSnapshot.LineCount) return null;
+				var line = currentSnapshot.GetLineFromLineNumber(Line);
+				_snapshotSpan = line.GetSnapshotSpan();
 			}
-		}
 
-		public CodeModel.Span? Span
-		{
-			get { return _span; }
+			return _snapshotSpan;
 		}
 
 		public object QuickInfoContent

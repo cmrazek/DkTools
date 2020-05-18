@@ -48,5 +48,13 @@ namespace DkTools.CodeAnalysis.Values
 		{
 			return new VoidValue();
 		}
+
+		public override bool IsEqualTo(Value other)
+		{
+			if (_indRelName == null) return false;
+			var o = other as IndRelValue;
+			if (o == null || o._indRelName == null) return false;
+			return _indRelName == o._indRelName;
+		}
 	}
 }

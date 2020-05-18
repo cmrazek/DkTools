@@ -27,12 +27,9 @@ namespace DkTools.CodeAnalysis.Nodes
 			if (_source == ResultSource.Conditional1) _prec = 10;
 		}
 
+		public override void Execute(RunScope scope) { }
 		public override bool IsReportable => _reportable;
 		public override string ToString() => _value.ToString();
-
-		public override void Run(RunScope scope)
-		{
-		}
 
 		public override Value ReadValue(RunScope scope)
 		{

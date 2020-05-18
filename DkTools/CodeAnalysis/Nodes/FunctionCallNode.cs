@@ -150,7 +150,7 @@ namespace DkTools.CodeAnalysis.Nodes
 			}
 		}
 
-		public override void Run(RunScope scope)
+		public override void Execute(RunScope scope)
 		{
 			// Running has the same effect as reading, since DK function cannot return references
 			ReadValue(scope);

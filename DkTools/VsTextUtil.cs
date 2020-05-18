@@ -149,6 +149,11 @@ namespace DkTools
 		{
 			return new Span(line.Start.Position, line.End.Position - line.Start.Position);
 		}
+
+		public static SnapshotSpan GetSnapshotSpan(this ITextSnapshotLine line)
+		{
+			return new SnapshotSpan(line.Start, line.End);
+		}
 	}
 
 	internal static class SnapshotPointEx

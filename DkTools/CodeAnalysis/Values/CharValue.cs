@@ -283,5 +283,13 @@ namespace DkTools.CodeAnalysis.Values
 			if (str != null && str.Length == 1) return new CharValue(DataType, str[0]);
 			return new CharValue(DataType, null);
 		}
+
+		public override bool IsEqualTo(Value other)
+		{
+			if (!_char.HasValue) return false;
+			var o = other as CharValue;
+			if (o == null || !o._char.HasValue) return false;
+			return _char.Value == o._char.Value;
+		}
 	}
 }

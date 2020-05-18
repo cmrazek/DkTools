@@ -119,11 +119,11 @@ namespace DkTools.CodeAnalysis.Nodes
 			return ret;
 		}
 
-		public override void Run(RunScope scope)
+		public override void Execute(RunScope scope)
 		{
 			if (_whereExp != null)
 			{
-				_whereExp.Run(scope);
+				_whereExp.Execute(scope);
 			}
 
 			if (_aggExp != null)

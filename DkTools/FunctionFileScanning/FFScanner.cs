@@ -284,7 +284,7 @@ namespace DkTools.FunctionFileScanning
 				}
 
 #if DEBUG
-				FFDatabase.DumpMemoryStats();
+				//FFDatabase.DumpMemoryStats();
 #endif
 			}
 			catch (Exception ex)

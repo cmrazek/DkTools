@@ -48,5 +48,13 @@ namespace DkTools.CodeAnalysis.Values
 		{
 			return new VoidValue();
 		}
+
+		public override bool IsEqualTo(Value other)
+		{
+			if (_tableName == null) return false;
+			var o = other as TableValue;
+			if (o == null || o._tableName == null) return false;
+			return _tableName == o._tableName;
+		}
 	}
 }

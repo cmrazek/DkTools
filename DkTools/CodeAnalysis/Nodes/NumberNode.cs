@@ -24,6 +24,7 @@ namespace DkTools.CodeAnalysis.Nodes
 			}
 		}
 
+		public override void Execute(RunScope scope) { }
 		public override bool IsReportable => true;
 		public override Value ReadValue(RunScope scope) => new NumberValue(DataType.Numeric, _value);
 		public override string ToString() => _value.ToString();

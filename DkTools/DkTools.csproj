@@ -318,7 +318,6 @@
     <Compile Include="CodeAnalysis\Values\CharValue.cs" />
     <Compile Include="CodeAnalysis\Values\DateValue.cs" />
     <Compile Include="CodeAnalysis\Values\EnumValue.cs" />
-    <Compile Include="CodeAnalysis\Values\VariableValue.cs" />
     <Compile Include="CodeAnalysis\Values\IndRelValue.cs" />
     <Compile Include="CodeAnalysis\Values\NumberValue.cs" />
     <Compile Include="CodeAnalysis\Values\StringValue.cs" />

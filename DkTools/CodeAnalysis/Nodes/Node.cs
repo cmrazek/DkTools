@@ -40,7 +40,7 @@ namespace DkTools.CodeAnalysis.Nodes
 			throw new NotImplementedException();
 		}
 
-		public virtual void Run(RunScope scope)
+		public virtual void Execute(RunScope scope)
 		{
 			ReportError(Span, CAError.CA0101);  // Syntax error.
 		}

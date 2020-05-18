@@ -172,5 +172,13 @@ namespace DkTools.CodeModel
 				_start < span._start ? _start : span._start,
 				_end > span._end ? _end : span._end);
 		}
+
+		public Span Intersection(Span span)
+		{
+			var start = _start > span._start ? _start : span._start;
+			var end = _end < span._end ? _end : span._end;
+			if (start > end) return Span.Empty;
+			return new Span(start, end);
+		}
 	}
 }

@@ -16,6 +16,7 @@ namespace DkTools.CodeAnalysis.Nodes
 		{
 		}
 
+		public override void Execute(RunScope scope) { }
 		public override bool IsReportable => true;
 		public override Value ReadValue(RunScope scope) => new StringValue(DataType.String, CodeParser.StringLiteralToString(Text));
 		public override string ToString() => $"\"{Text}\"";

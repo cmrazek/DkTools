@@ -45,5 +45,10 @@ namespace DkTools.CodeAnalysis.Values
 		{
 			return new VoidValue();
 		}
+
+		public override bool IsEqualTo(Value other)
+		{
+			return false;
+		}
 	}
 }

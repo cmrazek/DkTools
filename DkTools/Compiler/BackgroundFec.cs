@@ -10,7 +10,7 @@ namespace DkTools.Compiler
 {
 	class BackgroundFec
 	{
-		public static void RunSync(string sourceFileName, VsText.ITextSnapshot snapshot)
+		public static void RunSync(string sourceFileName)
 		{
 			if (string.IsNullOrWhiteSpace(sourceFileName)) return;
 
@@ -40,7 +40,6 @@ namespace DkTools.Compiler
 					if (first)
 					{
 						first = false;
-						//ErrorTaskProvider.Instance.RemoveAllForFile(sourceFileName);
 						ErrorTaskProvider.Instance.RemoveAllForSource(ErrorTaskSource.BackgroundFec, sourceFileName);
 					}
 					if (task != null) ErrorTaskProvider.Instance.Add(task);
@@ -58,7 +57,16 @@ namespace DkTools.Compiler
 						if (ProbeCompiler.ParseFileNameAndLine(line.Substring(0, index), out fileName, out lineNum))
 						{
 							var message = line.Substring(index + ": error :".Length).Trim();
-							var task = new ErrorTask(fileName, lineNum - 1, -1, message, ErrorType.Error, ErrorTaskSource.BackgroundFec, sourceFileName, snapshot);
+							var task = new ErrorTask(
+								fileName: fileName, 
+								lineNum: lineNum - 1,
+								lineCol: -1,
+								message: message,
+								type: ErrorType.Error,
+								source: ErrorTaskSource.BackgroundFec,
+								sourceFileName: sourceFileName,
+								reportedSpan: null,
+								snapshotSpan: null);
 							reportError(task);
 						}
 						return;
@@ -74,7 +82,16 @@ namespace DkTools.Compiler
 						if (ProbeCompiler.ParseFileNameAndLine(line.Substring(0, index), out fileName, out lineNum))
 						{
 							var message = line.Substring(index + ": warning :".Length).Trim();
-							var task = new ErrorTask(fileName, lineNum - 1, -1, message, ErrorType.Warning, ErrorTaskSource.BackgroundFec, sourceFileName, snapshot);
+							var task = new ErrorTask(
+								fileName: fileName,
+								lineNum: lineNum - 1,
+								lineCol: -1,
+								message: message,
+								type: ErrorType.Warning,
+								source: ErrorTaskSource.BackgroundFec,
+								sourceFileName: sourceFileName,
+								reportedSpan: null,
+								snapshotSpan: null);
 							reportError(task);
 						}
 						return;

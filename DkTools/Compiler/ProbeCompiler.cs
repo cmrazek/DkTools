@@ -544,7 +544,16 @@ namespace DkTools.Compiler
 				if (ParseFileNameAndLine(line.Substring(0, index), out fileName, out lineNum))
 				{
 					var message = line.Substring(index + ": error :".Length).Trim();
-					var task = new DkTools.ErrorTagging.ErrorTask(fileName, lineNum - 1, -1, message, ErrorType.Error, ErrorTaskSource.Compile, null, null);
+					var task = new DkTools.ErrorTagging.ErrorTask(
+						fileName: fileName,
+						lineNum: lineNum - 1,
+						lineCol: -1,
+						message: message,
+						type: ErrorType.Error,
+						source: ErrorTaskSource.Compile,
+						sourceFileName: null,
+						reportedSpan: null,
+						snapshotSpan: null);
 					ErrorTaskProvider.Instance.Add(task);
 				}
 				_pane.WriteLine(line);
@@ -560,7 +569,16 @@ namespace DkTools.Compiler
 				if (ParseFileNameAndLine(line.Substring(0, index), out fileName, out lineNum))
 				{
 					var message = line.Substring(index + ": warning :".Length).Trim();
-					var task = new DkTools.ErrorTagging.ErrorTask(fileName, lineNum - 1, -1, message, ErrorType.Warning, ErrorTaskSource.Compile, null, null);
+					var task = new DkTools.ErrorTagging.ErrorTask(
+						fileName: fileName,
+						lineNum: lineNum - 1,
+						lineCol: -1,
+						message: message,
+						type: ErrorType.Warning,
+						source: ErrorTaskSource.Compile,
+						sourceFileName: null,
+						reportedSpan: null,
+						snapshotSpan: null);
 					ErrorTaskProvider.Instance.Add(task);
 				}
 				_pane.WriteLine(line);
@@ -571,7 +589,16 @@ namespace DkTools.Compiler
 			if (line.StartsWith("LINK : fatal error"))
 			{
 				var message = line.Substring("LINK : fatal error".Length).Trim();
-				var task = new DkTools.ErrorTagging.ErrorTask(string.Empty, 0, -1, message, ErrorType.Error, ErrorTaskSource.Compile, null, null);
+				var task = new DkTools.ErrorTagging.ErrorTask(
+					fileName: string.Empty,
+					lineNum: 0,
+					lineCol: -1,
+					message: message,
+					type: ErrorType.Error,
+					source: ErrorTaskSource.Compile,
+					sourceFileName: null,
+					reportedSpan: null,
+					snapshotSpan: null);
 				_pane.WriteLine(line);
 				_numErrors++;
 				return;
@@ -579,7 +606,16 @@ namespace DkTools.Compiler
 
 			if (line.Equals("Build failed."))
 			{
-				var task = new DkTools.ErrorTagging.ErrorTask(string.Empty, 0, -1, "Build failed.", ErrorType.Error, ErrorTaskSource.Compile, null, null);
+				var task = new DkTools.ErrorTagging.ErrorTask(
+					fileName: string.Empty,
+					lineNum: 0,
+					lineCol: -1,
+					message: "Build failed.",
+					type: ErrorType.Error,
+					source: ErrorTaskSource.Compile,
+					sourceFileName: null,
+					reportedSpan: null,
+					snapshotSpan: null);
 				ErrorTaskProvider.Instance.Add(task);
 				_buildFailed = true;
 				_pane.WriteLine(line);
@@ -588,7 +624,16 @@ namespace DkTools.Compiler
 
 			if (line.IndexOf("Compile failed", StringComparison.OrdinalIgnoreCase) >= 0)
 			{
-				var task = new DkTools.ErrorTagging.ErrorTask(string.Empty, 0, -1, line, ErrorType.Error, ErrorTaskSource.Compile, null, null);
+				var task = new DkTools.ErrorTagging.ErrorTask(
+					fileName: string.Empty,
+					lineNum: 0,
+					lineCol: -1,
+					message: line,
+					type: ErrorType.Error,
+					source: ErrorTaskSource.Compile,
+					sourceFileName: null,
+					reportedSpan: null,
+					snapshotSpan: null);
 				ErrorTaskProvider.Instance.Add(task);
 				_buildFailed = true;
 				_pane.WriteLine(line);

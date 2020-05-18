@@ -19,6 +19,7 @@ namespace DkTools.CodeAnalysis.Nodes
 			if (text != null && text.Length >= 1) _char = text[0];
 		}
 
+		public override void Execute(RunScope scope) { }
 		public override bool IsReportable => true;
 		public override Value ReadValue(RunScope scope) => new CharValue(DataType.Char, _char);
 		public override string ToString() => string.Concat("'", _char.ToString(), "'");

@@ -20,9 +20,9 @@ namespace DkTools.CodeAnalysis.Nodes
 
 		public override string ToString() => $"({DataType.ToCodeString()})";
 
-		public override void Run(RunScope scope)
+		public override void Execute(RunScope scope)
 		{
-			base.Run(scope);
+			base.Execute(scope);
 		}
 
 		public override Value ReadValue(RunScope scope)

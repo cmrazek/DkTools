@@ -35,7 +35,7 @@ namespace DkTools.CodeAnalysis.Statements
 
 			if (_root.NumChildren > 0)
 			{
-				_root.Run(scope);
+				_root.Execute(scope);
 
 				if (_root.IsReportable)
 				{

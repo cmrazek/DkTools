@@ -167,5 +167,13 @@ namespace DkTools.CodeAnalysis.Values
 		{
 			return new StringValue(DataType, value.ToStringValue(scope, span));
 		}
+
+		public override bool IsEqualTo(Value other)
+		{
+			if (_value == null) return false;
+			var o = other as StringValue;
+			if (o == null || o._value == null) return false;
+			return _value == o._value;
+		}
 	}
 }

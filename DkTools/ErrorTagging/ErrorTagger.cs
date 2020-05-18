@@ -153,7 +153,7 @@ namespace DkTools.ErrorTagging
 								{
 									if (ProbeToolsPackage.Instance.EditorOptions.RunBackgroundFecOnSave)
 									{
-										Compiler.BackgroundFec.RunSync(_model.FileName, _model.Snapshot.TextBuffer.CurrentSnapshot);
+										Compiler.BackgroundFec.RunSync(_model.FileName);
 									}
 
 									if (ProbeToolsPackage.Instance.EditorOptions.RunCodeAnalysisOnSave)

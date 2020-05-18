@@ -15,7 +15,6 @@ namespace DkTools.CodeAnalysis
 {
 	class CodeAnalyzer
 	{
-		private OutputPane _pane;
 		private DkTools.CodeModel.CodeModel _codeModel;
 		private PreprocessorModel _prepModel;
 		private string _fullSource;
@@ -30,16 +29,13 @@ namespace DkTools.CodeAnalysis
 		{
 			if (model == null) throw new ArgumentNullException("model");
 
-			_pane = pane;
 			_codeModel = model;
 		}
 
 		public void Run()
 		{
-			if (_pane != null)
-			{
-				_pane.WriteLine(string.Format("Starting code analysis on file: {0}", _codeModel.FileName));
-			}
+			Log.Debug("Starting code analysis on file: {0}", _codeModel.FileName);
+			var startTime = DateTime.Now;
 
 			_prepModel = _codeModel.PreprocessorModel;
 			_fullSource = _codeModel.Source.Text;
@@ -56,10 +52,7 @@ namespace DkTools.CodeAnalysis
 				ErrorTaskProvider.Instance.FireTagsChanged();
 			}
 
-			if (_pane != null)
-			{
-				_pane.WriteLine(string.Format("Code analysis complete: {0} error(s), {1} warning(s)", _numErrors, _numWarnings));
-			}
+			Log.Debug("Completed code analysis (elapsed: {0} msec)", DateTime.Now.Subtract(startTime).TotalMilliseconds);
 		}
 
 		private void AnalyzeFunction(CodeModel.PreprocessorModel.LocalFunction func)
@@ -212,14 +205,19 @@ namespace DkTools.CodeAnalysis
 			if (type == ErrorType.Warning) _numWarnings++;
 			else _numErrors++;
 
-			if (_pane != null)
-			{
-				_pane.WriteLine(string.Format("{0}({1},{2}) : {3} : {4}", fileName, lineNum + 1, linePos + 1, type, message));
-			}
+			Log.Debug("{0}({1},{2}) : {3} : {4}", fileName, lineNum + 1, linePos + 1, type, message);
 
-			var task = new ErrorTagging.ErrorTask(fileName, lineNum, linePos, message, ErrorType.CodeAnalysisError,
-				ErrorTaskSource.CodeAnalysis, _codeModel.FileName,
-				isPrimary ? _codeModel.Snapshot : null, fileSpan);
+			var task = new ErrorTagging.ErrorTask(
+				fileName: fileName,
+				lineNum: lineNum,
+				lineCol: linePos,
+				message: message,
+				type: ErrorType.CodeAnalysisError,
+				source: ErrorTaskSource.CodeAnalysis,
+				sourceFileName: _codeModel.FileName,
+				reportedSpan: fileSpan,
+				snapshotSpan: null);
+
 			ErrorTaskProvider.Instance.Add(task, true);
 		}
 
