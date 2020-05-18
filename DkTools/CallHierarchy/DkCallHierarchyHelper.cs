@@ -1,4 +1,5 @@
-﻿using DkTools.CodeModel.Definitions;
+﻿using DkTools.CodeModel;
+using DkTools.CodeModel.Definitions;
 using EnvDTE;
 using Microsoft.VisualStudio.CallHierarchy.Package.Definitions;
 using Microsoft.VisualStudio.Language.CallHierarchy;
@@ -20,13 +21,6 @@ namespace DkTools.CallHierarchy
 
 			try
 			{
-				var chWindow = ProbeToolsPackage.GetGlobalService(typeof(SCallHierarchy)) as ICallHierarchy;
-				if (chWindow == null)
-				{
-					Shell.Status("Unable to access Call Hierarchy tool window.");
-					return;
-				}
-
 				var def = Navigation.GoToDefinitionHelper.GetDefinitionAtPoint(triggerPt, realCodeOnly: true);
 				if (!(def is FunctionDefinition))
 				{
@@ -34,11 +28,29 @@ namespace DkTools.CallHierarchy
 					return;
 				}
 
+				ViewCallHierarchy(def as FunctionDefinition);
+			}
+			catch (Exception ex)
+			{
+				Shell.ShowError(ex);
+			}
+		}
+
+		public static void ViewCallHierarchy(FunctionDefinition funcDef)
+		{
+			try
+			{
+				var chWindow = ProbeToolsPackage.GetGlobalService(typeof(SCallHierarchy)) as ICallHierarchy;
+				if (chWindow == null)
+				{
+					Shell.Status("Unable to access Call Hierarchy tool window.");
+					return;
+				}
+
 				chWindow.ShowToolWindow();
 
-				var funcDef = def as FunctionDefinition;
 				chWindow.AddRootItem(new DkCallHierarchyMemberItem(
-					textBuffer: triggerPt.Snapshot.TextBuffer,
+					funcDef.FilePosition.FileName,
 					functionFullName: funcDef.FullName,
 					className: funcDef.ClassName,
 					functionName: funcDef.Name,
@@ -47,7 +59,7 @@ namespace DkTools.CallHierarchy
 			}
 			catch (Exception ex)
 			{
-				Log.Error(ex);
+				Shell.ShowError(ex);
 			}
 		}
 	}

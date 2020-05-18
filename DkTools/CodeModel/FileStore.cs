@@ -343,12 +343,7 @@ namespace DkTools.CodeModel
 				if (def.EntireSpan.Length == 0) continue;
 				if (!def.SourceFileName.Equals(model.FileName, StringComparison.OrdinalIgnoreCase)) continue;
 
-				yield return new FunctionDropDownItem
-				{
-					Name = def.Name,
-					Span = new Span(def.SourceStartPos, def.SourceStartPos),
-					EntireFunctionSpan = def.EntireSpan
-				};
+				yield return new FunctionDropDownItem(def, def.Name, new Span(def.SourceStartPos, def.SourceStartPos), def.EntireSpan);
 			}
 		}
 
@@ -609,9 +604,18 @@ namespace DkTools.CodeModel
 
 		public class FunctionDropDownItem
 		{
-			public string Name { get; set; }
-			public Span Span { get; set; }
-			public Span EntireFunctionSpan { get; set; }
+			public FunctionDropDownItem(FunctionDefinition definition, string name, Span span, Span entireFunctionSpan)
+			{
+				Definition = definition ?? throw new ArgumentNullException(nameof(definition));
+				Name = name;
+				Span = span;
+				EntireFunctionSpan = entireFunctionSpan;
+			}
+
+			public FunctionDefinition Definition { get; private set; }
+			public string Name { get; private set; }
+			public Span Span { get; private set; }
+			public Span EntireFunctionSpan { get; private set; }
 		}
 
 		public class ModelUpdatedEventArgs : EventArgs

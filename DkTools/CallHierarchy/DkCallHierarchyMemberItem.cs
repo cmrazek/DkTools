@@ -20,7 +20,7 @@ namespace DkTools.CallHierarchy
 {
 	class DkCallHierarchyMemberItem : ICallHierarchyMemberItem
 	{
-		private ITextBuffer _textBuffer;
+		private string _filePath;
 		private string _functionFullName;
 		private string _className;
 		private string _functionName;
@@ -30,9 +30,19 @@ namespace DkTools.CallHierarchy
 
 		private const string CallsSearchCategory = "Calls";
 
-		public DkCallHierarchyMemberItem(ITextBuffer textBuffer, string functionFullName, string className, string functionName, FilePosition filePos, string extRefId)
+		/// <summary>
+		/// A function node in the View Call Hierarchy tool window.
+		/// </summary>
+		/// <param name="filePath">The pathname of the file that was active when the search was started.
+		/// This could be null if the search was started from the DK Explorer window.</param>
+		/// <param name="functionFullName">Full name of the function, including class name.</param>
+		/// <param name="className">Class name. Will be null for functions not in a class.</param>
+		/// <param name="functionName">Name of the function.</param>
+		/// <param name="filePos">File and position to the function declaration.</param>
+		/// <param name="extRefId">Reference ID for the function.</param>
+		public DkCallHierarchyMemberItem(string filePath, string functionFullName, string className, string functionName, FilePosition filePos, string extRefId)
 		{
-			_textBuffer = textBuffer ?? throw new ArgumentNullException(nameof(textBuffer));
+			_filePath = filePath;
 			_functionFullName = functionFullName;
 			_className = className;
 			_functionName = functionName;
@@ -98,13 +108,8 @@ namespace DkTools.CallHierarchy
 						var appId = db.ExecuteScalar<long>("select rowid from app where name = @app_name collate nocase",
 							"@app_name", ds.AppName);
 
-						string limitFilePath = null;
-						if (searchScope == CallHierarchySearchScope.CurrentDocument)
-						{
-							limitFilePath = VsTextUtil.TryGetDocumentFileName(_textBuffer);
-						}
-
-						foreach (var result in GetCallingFunctionsInSolution(db, appId, _extRefId, limitFilePath))
+						foreach (var result in GetCallingFunctionsInSolution(db, appId, _extRefId,
+							searchScope == CallHierarchySearchScope.CurrentDocument ? _filePath : null))
 						{
 							callback.AddResult(result);
 						}
@@ -162,7 +167,7 @@ and ref.func_ref_id != ref.ext_ref_id
 						if (limitFilePath != null && string.Compare(funcFileName, limitFilePath, StringComparison.OrdinalIgnoreCase) != 0) continue;
 
 						var detailFilePath = string.IsNullOrEmpty(altFileName) ? fileName : altFileName;
-						if (limitFilePath != null && string.Compare(detailFilePath, limitFilePath, StringComparison.OrdinalIgnoreCase) != 0) continue;
+						if (!string.IsNullOrEmpty(limitFilePath) && string.Compare(detailFilePath, limitFilePath, StringComparison.OrdinalIgnoreCase) != 0) continue;
 
 						var parentFuncFullName = FunctionDefinition.ParseFullNameFromExtRefId(parentFuncRefId);
 						var parentFuncClassName = FunctionDefinition.ParseClassNameFromExtRefId(parentFuncRefId);
@@ -189,7 +194,7 @@ and ref.func_ref_id != ref.ext_ref_id
 						}
 						else
 						{
-							item = new DkCallHierarchyMemberItem(_textBuffer, parentFuncFullName, parentFuncClassName, parentFuncName,
+							item = new DkCallHierarchyMemberItem(_filePath, parentFuncFullName, parentFuncClassName, parentFuncName,
 								new FilePosition(funcFileName, funcPos), parentFuncRefId);
 							item.AddDetail(detail);
 							items[funcKey] = item;

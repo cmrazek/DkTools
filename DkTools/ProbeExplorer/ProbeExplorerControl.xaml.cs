@@ -12,10 +12,12 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
+using DkTools.CallHierarchy;
 using DkTools.CodeModel;
 using DkTools.CodeModel.Definitions;
 using DkTools.Navigation;
 using Microsoft.VisualStudio.Shell;
+using Microsoft.VisualStudio.Shell.Interop;
 using IO = System.IO;
 using VsText=Microsoft.VisualStudio.Text;
 using VsTextEditor=Microsoft.VisualStudio.Text.Editor;
@@ -1037,7 +1039,7 @@ namespace DkTools.ProbeExplorer
 						var appSettings = ProbeEnvironment.CurrentAppSettings;
 						_activeFunctions = (from f in fileStore.GetFunctionDropDownList(appSettings, fileName, snapshot)
 											orderby f.Name.ToLower()
-											select new FunctionListItem(f, className)).ToArray();
+											select new FunctionListItem(f)).ToArray();
 						ApplyFunctionFilter();
 						c_functionList.ItemsSource = _activeFunctions;
 					}
@@ -1071,21 +1073,23 @@ namespace DkTools.ProbeExplorer
 			});
 		}
 
-		public class FunctionListItem : INotifyPropertyChanged
+		internal class FunctionListItem : INotifyPropertyChanged
 		{
-			public string ClassName { get; private set; }
-			public string Name { get; private set; }
-			public CodeModel.Span Span { get; private set; }
+			private FunctionDefinition _def;
+			private CodeModel.Span _span;
 			private bool _visible = true;
 
 			public event PropertyChangedEventHandler PropertyChanged;
 
-			internal FunctionListItem(CodeModel.FileStore.FunctionDropDownItem func, string className)
+			internal FunctionListItem(CodeModel.FileStore.FunctionDropDownItem func)
 			{
-				ClassName = className;
-				Name = func.Name;
-				Span = func.Span;
+				_span = func.Span;
+				_def = func.Definition;
 			}
+
+			public FunctionDefinition Definition => _def;
+			public string Name => _def.Name;
+			public CodeModel.Span Span => _span;
 
 			public bool Visible
 			{
@@ -1305,9 +1309,25 @@ namespace DkTools.ProbeExplorer
 				var funcItem = menuItem.DataContext as FunctionListItem;
 				if (funcItem == null) return;
 
-				GoToDefinitionHelper.TriggerFindReferences(
-					FunctionDefinition.MakeExtRefId(funcItem.ClassName, funcItem.Name),
-					FunctionDefinition.MakeFullName(funcItem.ClassName, funcItem.Name));
+				GoToDefinitionHelper.TriggerFindReferences(funcItem.Definition.ExternalRefId, funcItem.Definition.FullName);
+			}
+			catch (Exception ex)
+			{
+				this.ShowError(ex);
+			}
+		}
+
+		private void FunctionViewCallHierarchy_Click(object sender, RoutedEventArgs e)
+		{
+			try
+			{
+				var menuItem = e.OriginalSource as MenuItem;
+				if (menuItem == null) return;
+
+				var funcItem = menuItem.DataContext as FunctionListItem;
+				if (funcItem == null) return;
+
+				DkCallHierarchyHelper.ViewCallHierarchy(funcItem.Definition);
 			}
 			catch (Exception ex)
 			{

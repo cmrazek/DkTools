@@ -30,7 +30,6 @@ namespace DkTools.SignatureHelp
 		private ISignatureHelpSession _session;
 		private ITextStructureNavigator _navigator;
 		private ProbeSignatureHelpCommandProvider _provider;
-		//private ICallHierarchyUIFactory _callHierarchyUIFactory;	TODO
 
 		public static char s_typedChar = char.MinValue;
 
@@ -40,13 +39,11 @@ namespace DkTools.SignatureHelp
 			ITextStructureNavigator textStructureNavigator,
 			ISignatureHelpBroker signatureHelpBroker,
 			ProbeSignatureHelpCommandProvider signatureHelpCommandProvider)
-			//ICallHierarchyUIFactory callHierarchyUIFactory)	TODO
 		{
 			_textView = textView ?? throw new ArgumentNullException(nameof(textView));
 			_broker = signatureHelpBroker ?? throw new ArgumentNullException(nameof(signatureHelpBroker));
 			_navigator = textStructureNavigator ?? throw new ArgumentNullException(nameof(textStructureNavigator));
 			_provider = signatureHelpCommandProvider ?? throw new ArgumentNullException(nameof(signatureHelpCommandProvider));
-			//_callHierarchyUIFactory = callHierarchyUIFactory ?? throw new ArgumentNullException(nameof(callHierarchyUIFactory));		TODO
 
 			//add this to the filter chain
 			textViewAdapter.AddCommandFilter(this, out _nextCommandHandler);

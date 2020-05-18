@@ -150,6 +150,9 @@
                                             <MenuItem Header="_Find All References"
                                                       Click="FunctionFindAllReferences_Click"
                                                       CommandParameter="{Binding RelativeSource={RelativeSource Self}}"/>
+                                            <MenuItem Header="View Call Hierarchy"
+                                                      Click="FunctionViewCallHierarchy_Click"
+                                                      CommandParameter="{Binding RelativeSource={RelativeSource Self}}"/>
                                         </ContextMenu>
                                     </StackPanel.ContextMenu>
                                 </StackPanel>

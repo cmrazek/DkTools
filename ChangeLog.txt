@@ -4,6 +4,8 @@ Version 1.5.8 - (not yet released):
 
 - Added 'Peek Definition' support (Alt+F12)
 - Added 'View Call Hierarchy' support.
+- 'Find All References' and 'View Call Hierarchy' can now be triggered from the Functions tab in
+  DK Explorer.
 - DICT is now treated like a DK code file.
 - Signature help can now do a better job of detecting which function its in when comma is pressed.
 - Remove duplicates in auto-completion list.
