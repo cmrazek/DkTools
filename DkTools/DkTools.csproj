@@ -318,6 +318,7 @@
     <Compile Include="CodeAnalysis\Values\CharValue.cs" />
     <Compile Include="CodeAnalysis\Values\DateValue.cs" />
     <Compile Include="CodeAnalysis\Values\EnumValue.cs" />
+    <Compile Include="CodeAnalysis\Values\VariableValue.cs" />
     <Compile Include="CodeAnalysis\Values\IndRelValue.cs" />
     <Compile Include="CodeAnalysis\Values\NumberValue.cs" />
     <Compile Include="CodeAnalysis\Values\StringValue.cs" />
@@ -604,6 +605,7 @@
     <Compile Include="StatementCompletion\ProbeCompletionType.cs" />
     <Compile Include="StatementCompletion\StatementLayout.cs" />
     <Compile Include="StatementCompletion\StatementState.cs" />
+    <Compile Include="StringUtil.cs" />
     <Compile Include="Tagging\Tagger.cs" />
     <Compile Include="Tagging\TaggingOptions.cs">
       <SubType>Component</SubType>

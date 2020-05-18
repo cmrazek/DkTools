@@ -14,6 +14,8 @@ namespace DkTools.CodeAnalysis.Values
 		{
 		}
 
+		public override string ToString() => "void";
+
 		public override string ToStringValue(RunScope scope, Span span)
 		{
 			return null;

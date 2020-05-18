@@ -148,6 +148,8 @@ namespace DkTools.CodeModel
 			_completionOptionsType = CompletionOptionsType.EnumOptionsList;
 		}
 
+		public bool IsReportable => _valueType != ValType.Void && _valueType != ValType.Unknown;
+
 		public string Name
 		{
 			get { return _name; }

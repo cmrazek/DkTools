@@ -17,6 +17,8 @@ namespace DkTools.CodeAnalysis.Values
 			_time = time;
 		}
 
+		public override string ToString() => _time.HasValue ? _time.Value.ToString() : "(null-time)";
+
 		public override Value Multiply(RunScope scope, Span span, Value rightValue)
 		{
 			if (_time.HasValue)

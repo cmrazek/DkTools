@@ -62,8 +62,13 @@ namespace DkTools.ErrorTagging
 
 			if (!dontSignalTagsChanged)
 			{
-				ThreadHelper.JoinableTaskFactory.RunAsync(OnTasksChangedAsync);
+				FireTagsChanged();
 			}
+		}
+
+		public void FireTagsChanged()
+		{
+			ThreadHelper.JoinableTaskFactory.RunAsync(OnTasksChangedAsync);
 		}
 
 		private async System.Threading.Tasks.Task OnClearTasksAsync()

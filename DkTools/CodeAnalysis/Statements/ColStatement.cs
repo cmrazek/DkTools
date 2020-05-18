@@ -21,5 +21,7 @@ namespace DkTools.CodeAnalysis.Statements
 
 			code.ReadExact(';');	// Optional
 		}
+
+		public override string ToString() => "col...";
 	}
 }

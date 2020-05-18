@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using DkTools.CodeAnalysis.Nodes;
+using DkTools.CodeAnalysis.Values;
 using DkTools.CodeModel;
 
 namespace DkTools.CodeAnalysis.Statements
@@ -13,6 +14,8 @@ namespace DkTools.CodeAnalysis.Statements
 		private List<ExpressionNode> _conditions = new List<ExpressionNode>();
 		private List<List<Statement>> _trueBodies = new List<List<Statement>>();
 		private List<Statement> _falseBody;
+
+		public override string ToString() => new string[] { "if ", _conditions.FirstOrDefault()?.ToString(), " {...}" }.Combine();
 
 		public IfStatement(ReadParams p, Span keywordSpan)
 			: base(p.CodeAnalyzer, keywordSpan)
@@ -81,36 +84,56 @@ namespace DkTools.CodeAnalysis.Statements
 			base.Execute(scope);
 
 			var scopes = new List<RunScope>();
+			var gotConfirmedTrueCondition = false;
 
 			for (int i = 0, ii = _conditions.Count > _trueBodies.Count ? _conditions.Count : _trueBodies.Count; i < ii; i++)
 			{
-				if (i < _conditions.Count)
+				Value condValue = null;
+				if (i < _conditions.Count && !gotConfirmedTrueCondition)
 				{
 					var condScope = scope.Clone();
-					_conditions[i].ReadValue(condScope);
+					condValue = _conditions[i].ReadValue(condScope);
 					scope.Merge(condScope, true, true);
 				}
 
+				var condIsConfirmedTrue = condValue != null && condValue.IsTrue;
+
 				if (i < _trueBodies.Count)
 				{
-					var trueScope = scope.Clone();
-					foreach (var stmt in _trueBodies[i])
+					if (!gotConfirmedTrueCondition)
 					{
-						stmt.Execute(trueScope);
+						var trueScope = scope.Clone();
+						foreach (var stmt in _trueBodies[i]) stmt.Execute(trueScope);
+						scopes.Add(trueScope);
 					}
-					scopes.Add(trueScope);
+					else
+					{
+						foreach (var stmt in _trueBodies[i]) scope.CodeAnalyzer.ReportError(stmt.Span, CAError.CA0016);  // Unreachable code
+					}
+				}
+
+				if (condIsConfirmedTrue)
+				{
+					gotConfirmedTrueCondition = true;
 				}
 			}
 
-			var falseScope = scope.Clone();
-			if (_falseBody != null)
+			if (!gotConfirmedTrueCondition)
 			{
-				foreach (var stmt in _falseBody)
+				var falseScope = scope.Clone();
+				if (_falseBody != null)
 				{
-					stmt.Execute(falseScope);
+					foreach (var stmt in _falseBody) stmt.Execute(falseScope);
+				}
+				scopes.Add(falseScope);
+			}
+			else
+			{
+				if (_falseBody != null)
+				{
+					foreach (var stmt in _falseBody) scope.CodeAnalyzer.ReportError(stmt.Span, CAError.CA0016);  // Unreachable code
 				}
 			}
-			scopes.Add(falseScope);
 
 			scope.Merge(scopes, true, true);
 		}

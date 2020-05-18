@@ -14,15 +14,24 @@ namespace DkTools.CodeAnalysis.Nodes
 		private Value _value;
 		private ResultSource _source;
 		private int _prec;
+		private bool _reportable;
 
-		public ResultNode(Statement stmt, Span span, Value value, ResultSource source, ErrorTagging.ErrorType? errorReported)
+		public ResultNode(Statement stmt, Span span, Value value, ResultSource source, ErrorTagging.ErrorType? errorReported, bool reportable)
 			: base(stmt, value.DataType, span)
 		{
 			_value = value;
 			_source = source;
 			ErrorReported = errorReported;
+			_reportable = reportable;
 
 			if (_source == ResultSource.Conditional1) _prec = 10;
+		}
+
+		public override bool IsReportable => _reportable;
+		public override string ToString() => _value.ToString();
+
+		public override void Run(RunScope scope)
+		{
 		}
 
 		public override Value ReadValue(RunScope scope)
@@ -51,11 +60,12 @@ namespace DkTools.CodeAnalysis.Nodes
 				if (rightNode == null || rightNode.Source != ResultSource.Conditional2)
 				{
 					ReportError(Span, CAError.CA0021);  // Operator '?' expects ':' on right.
-					Parent.ReplaceWithResult(Value.Void, this);
+					Parent.ReplaceWithResult(Value.Void, false, this);
 				}
 				else
 				{
-					Parent.ReplaceWithResult(rightNode.ReadValue(scope), this, rightNode);
+					var rightValue = rightNode.ReadValue(scope);
+					Parent.ReplaceWithResult(rightValue, !rightValue.IsVoid, this, rightNode);
 				}
 			}
 			else

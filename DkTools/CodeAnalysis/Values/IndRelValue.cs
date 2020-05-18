@@ -17,6 +17,8 @@ namespace DkTools.CodeAnalysis.Values
 			_indRelName = indRelName;
 		}
 
+		public override string ToString() => _indRelName;
+
 		public override string ToStringValue(RunScope scope, Span span)
 		{
 			return null;

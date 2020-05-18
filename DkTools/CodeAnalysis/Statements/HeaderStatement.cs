@@ -32,6 +32,8 @@ namespace DkTools.CodeAnalysis.Statements
 			}
 		}
 
+		public override string ToString() => "header...";
+
 		public override void Execute(RunScope scope)
 		{
 			var headerScope = scope.Clone();

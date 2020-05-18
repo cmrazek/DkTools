@@ -17,6 +17,8 @@ namespace DkTools.CodeAnalysis.Values
 			_date = date;
 		}
 
+		public override string ToString() => _date.HasValue ? _date.Value.ToString() : "(null-date)";
+
 		public DateValue(DataType dataType, decimal num)
 			: base(dataType)
 		{

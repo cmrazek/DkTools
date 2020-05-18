@@ -24,6 +24,8 @@ namespace DkTools.CodeAnalysis.Nodes
 
 		private static string[] s_stopStrings = new string[] { "?", ":" };
 
+		public override string ToString() => new string[] { _trueExp.ToString(), ":", _falseExp?.ToString() }.Combine(" ");
+
 		public static ConditionalNode Read(ReadParams p, DataType refDataType, Span opSpan, string[] stopStrings)
 		{
 			var code = p.Code;
@@ -85,7 +87,7 @@ namespace DkTools.CodeAnalysis.Nodes
 			if (leftNode == null)
 			{
 				ReportError(_opSpan, CAError.CA0007, "?");	// Operator '{0}' expects value on left.
-				Parent.ReplaceWithResult(Value.Void, ResultSource.Conditional1, this);
+				Parent.ReplaceWithResult(Value.Void, false, ResultSource.Conditional1, this);
 			}
 			else
 			{
@@ -117,7 +119,7 @@ namespace DkTools.CodeAnalysis.Nodes
 					if (result == null) result = Value.Void;
 				}
 
-				Parent.ReplaceWithResult(result, leftNode, this);
+				Parent.ReplaceWithResult(result, !result.IsVoid, leftNode, this);
 			}
 		}
 	}

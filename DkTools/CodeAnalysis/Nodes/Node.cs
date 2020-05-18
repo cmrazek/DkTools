@@ -24,31 +24,25 @@ namespace DkTools.CodeAnalysis.Nodes
 			_span = span;
 		}
 
-		public Statement Statement
-		{
-			get { return _stmt; }
-		}
+		public GroupNode Parent { get => _parent; set => _parent = value; }
+		public Span Span { get => _span; set => _span = value; }
+		public Statement Statement => _stmt;
 
-		public GroupNode Parent
-		{
-			get { return _parent; }
-			set { _parent = value; }
-		}
-
-		public Span Span
-		{
-			get { return _span; }
-			set { _span = value; }
-		}
-
-		public virtual int Precedence
-		{
-			get { return 0; }
-		}
+		/// <summary>
+		/// If true, this node should be written out to the report if it's the last node in a statement.
+		/// </summary>
+		public virtual bool IsReportable { get => false; set { } }
+		public virtual int Precedence => 0;
+		public virtual DataType DataType => _dataType;
 
 		public virtual void Simplify(RunScope scope)
 		{
 			throw new NotImplementedException();
+		}
+
+		public virtual void Run(RunScope scope)
+		{
+			ReportError(Span, CAError.CA0101);  // Syntax error.
 		}
 
 		public virtual Value ReadValue(RunScope scope)
@@ -65,11 +59,6 @@ namespace DkTools.CodeAnalysis.Nodes
 		public virtual bool CanAssignValue(RunScope scope)
 		{
 			return false;
-		}
-
-		public virtual DataType DataType
-		{
-			get { return _dataType; }
 		}
 
 		public void ReportError(CAError errorCode, params object[] args)

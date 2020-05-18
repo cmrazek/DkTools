@@ -42,6 +42,8 @@ namespace DkTools.CodeAnalysis.Values
 			}
 		}
 
+		public override string ToString() => !string.IsNullOrEmpty(_value) ? _value : _ordinal.ToString();
+
 		public override decimal? ToNumber(RunScope scope, Span span)
 		{
 			if (_ordinal.HasValue) return (decimal)_ordinal.Value;

@@ -18,6 +18,8 @@ namespace DkTools.CodeAnalysis.Values
 			_value = value;
 		}
 
+		public override string ToString() => $"\"{_value}\"";
+
 		public override Value CompareEqual(RunScope scope, Span span, Value rightValue)
 		{
 			if (_value != null)

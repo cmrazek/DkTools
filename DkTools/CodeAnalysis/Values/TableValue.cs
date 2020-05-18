@@ -17,6 +17,8 @@ namespace DkTools.CodeAnalysis.Values
 			_tableName = tableName;
 		}
 
+		public override string ToString() => _tableName;
+
 		public override string ToStringValue(RunScope scope, Span span)
 		{
 			return null;

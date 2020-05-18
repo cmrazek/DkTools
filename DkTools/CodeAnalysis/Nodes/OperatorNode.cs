@@ -88,6 +88,9 @@ namespace DkTools.CodeAnalysis.Nodes
 			}
 		}
 
+		public override bool IsReportable => false;
+		public override string ToString() => Text;
+
 		public override int Precedence
 		{
 			get
@@ -175,14 +178,14 @@ namespace DkTools.CodeAnalysis.Nodes
 						throw new InvalidOperationException();
 				}
 
-				Parent.ReplaceWithResult(result, leftNode, this, rightNode);
+				Parent.ReplaceWithResult(result, !result.IsVoid, leftNode, this, rightNode);
 			}
 			else
 			{
 				Value resultValue = Value.Void;
 				if (leftNode != null && rightNode == null) resultValue = leftNode.ReadValue(scope);
 				else if (leftNode == null && rightNode != null) resultValue = rightNode.ReadValue(scope);
-				Parent.ReplaceWithResult(resultValue, leftNode, this, rightNode);
+				Parent.ReplaceWithResult(resultValue, false, leftNode, this, rightNode);
 			}
 		}
 
@@ -195,7 +198,7 @@ namespace DkTools.CodeAnalysis.Nodes
 				var rightValue = rightNode.ReadValue(scope).Invert(scope, Span);
 				if (rightValue.IsVoid) rightNode.ReportError(rightNode.Span, CAError.CA0008, Text);	// Operator '{0}' expects value on right.
 
-				Parent.ReplaceWithResult(rightValue, this, rightNode);
+				Parent.ReplaceWithResult(rightValue, !rightValue.IsVoid, this, rightNode);
 			}
 		}
 
@@ -221,19 +224,19 @@ namespace DkTools.CodeAnalysis.Nodes
 						result = leftValue.CompareEqual(scope, Span, rightValue);
 						break;
 					case "!=":
-						result = leftValue.CompareEqual(scope, Span, rightValue);
+						result = leftValue.CompareNotEqual(scope, Span, rightValue);
 						break;
 					case "<":
-						result = leftValue.CompareEqual(scope, Span, rightValue);
+						result = leftValue.CompareLessThan(scope, Span, rightValue);
 						break;
 					case ">":
-						result = leftValue.CompareEqual(scope, Span, rightValue);
+						result = leftValue.CompareGreaterThan(scope, Span, rightValue);
 						break;
 					case "<=":
-						result = leftValue.CompareEqual(scope, Span, rightValue);
+						result = leftValue.CompareLessEqual(scope, Span, rightValue);
 						break;
 					case ">=":
-						result = leftValue.CompareEqual(scope, Span, rightValue);
+						result = leftValue.CompareGreaterEqual(scope, Span, rightValue);
 						break;
 					case "and":
 					case "&&":
@@ -257,14 +260,14 @@ namespace DkTools.CodeAnalysis.Nodes
 						throw new InvalidOperationException();
 				}
 
-				Parent.ReplaceWithResult(result, leftNode, this, rightNode);
+				Parent.ReplaceWithResult(result, !result.IsVoid, leftNode, this, rightNode);
 			}
 			else
 			{
 				Value resultValue = Value.Void;
 				if (leftNode != null && rightNode == null) resultValue = leftNode.ReadValue(scope);
 				else if (leftNode == null && rightNode != null) resultValue = rightNode.ReadValue(scope);
-				Parent.ReplaceWithResult(resultValue, leftNode, this, rightNode);
+				Parent.ReplaceWithResult(resultValue, false, leftNode, this, rightNode);
 			}
 		}
 
@@ -317,15 +320,16 @@ namespace DkTools.CodeAnalysis.Nodes
 				}
 
 				leftNode.WriteValue(scope, rightValue);
+				leftNode.IsReportable = false;
 				Parent.ReplaceNodes(null, this, rightNode);
-				//Parent.ReplaceWithResult(rightValue, leftNode, this, rightNode);
+				//Parent.ReplaceWithResult(rightValue, false, leftNode, this, rightNode);
 			}
 			else
 			{
 				Value resultValue = Value.Void;
 				if (leftNode != null && rightNode == null) resultValue = leftNode.ReadValue(scope);
 				else if (leftNode == null && rightNode != null) resultValue = rightNode.ReadValue(scope);
-				Parent.ReplaceWithResult(resultValue, leftNode, this, rightNode);
+				Parent.ReplaceWithResult(resultValue, false, leftNode, this, rightNode);
 			}
 		}
 	}

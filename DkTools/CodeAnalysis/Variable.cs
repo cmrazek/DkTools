@@ -78,5 +78,7 @@ namespace DkTools.CodeAnalysis
 			get { return _isUsed; }
 			set { _isUsed = value; }
 		}
+
+		public override string ToString() => _name;
 	}
 }

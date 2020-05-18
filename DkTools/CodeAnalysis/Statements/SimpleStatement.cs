@@ -17,15 +17,9 @@ namespace DkTools.CodeAnalysis.Statements
 			_root = new GroupNode(this, null);
 		}
 
-		public int NumChildren
-		{
-			get { return _root.NumChildren; }
-		}
-
-		public bool IsEmpty
-		{
-			get { return _root.NumChildren == 0; }
-		}
+		public bool IsEmpty => _root.NumChildren == 0;
+		public int NumChildren => _root.NumChildren;
+		public override string ToString() => _root.ToString();
 
 		public void AddNode(Node node)
 		{
@@ -41,10 +35,15 @@ namespace DkTools.CodeAnalysis.Statements
 
 			if (_root.NumChildren > 0)
 			{
-				var readScope = scope.Clone();
-				readScope.RemoveHeaderString = true;
-				_root.ReadValue(readScope);
-				scope.Merge(readScope);
+				_root.Run(scope);
+
+				if (_root.IsReportable)
+				{
+					var readScope = scope.Clone();
+					readScope.RemoveHeaderString = true;
+					_root.ReadValue(readScope);
+					scope.Merge(readScope);
+				}
 			}
 		}
 	}

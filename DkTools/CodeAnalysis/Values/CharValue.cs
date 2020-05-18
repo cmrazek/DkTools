@@ -17,6 +17,8 @@ namespace DkTools.CodeAnalysis.Values
 			_char = value;
 		}
 
+		public override string ToString() => $"'{_char}'";
+
 		public override string ToStringValue(RunScope scope, Span span)
 		{
 			if (_char != null) return _char.Value.ToString();

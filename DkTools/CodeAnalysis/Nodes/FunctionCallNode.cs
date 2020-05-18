@@ -25,6 +25,8 @@ namespace DkTools.CodeAnalysis.Nodes
 			_def = funcDef;
 		}
 
+		public override string ToString() => new string[] { _name, "(", _args.Select(a => a.ToString()).Combine(", "), ")" }.Combine();
+
 		private static FunctionCallNode ParseArguments(ReadParams p, Span funcNameSpan, string funcName, Definition funcDef)
 		{
 			var funcCallNode = new FunctionCallNode(p.Statement, funcNameSpan, funcName, funcDef);
@@ -110,6 +112,8 @@ namespace DkTools.CodeAnalysis.Nodes
 			return funcCallNode;
 		}
 
+		public override bool IsReportable => _def.DataType != null && _def.DataType.IsReportable;
+
 		public void AddArgument(GroupNode node)
 		{
 			_args.Add(node);
@@ -144,6 +148,12 @@ namespace DkTools.CodeAnalysis.Nodes
 						return base.DataType;
 				}
 			}
+		}
+
+		public override void Run(RunScope scope)
+		{
+			// Running has the same effect as reading, since DK function cannot return references
+			ReadValue(scope);
 		}
 
 		public override Value ReadValue(RunScope scope)

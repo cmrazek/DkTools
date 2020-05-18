@@ -19,6 +19,8 @@ namespace DkTools.CodeAnalysis.Nodes
 		{
 		}
 
+		public override string ToString() => string.Concat("(", _nodes.Select(n => n.ToString()).Combine(" "), ")");
+
 		public void AddChild(Node node)
 		{
 			_nodes.Add(node);
@@ -79,12 +81,12 @@ namespace DkTools.CodeAnalysis.Nodes
 			}
 		}
 
-		public void ReplaceWithResult(Value value, params Node[] nodes)
+		public void ReplaceWithResult(Value value, bool resultIsReportable, params Node[] nodes)
 		{
-			ReplaceWithResult(value, ResultSource.Normal, nodes);
+			ReplaceWithResult(value, resultIsReportable, ResultSource.Normal, nodes);
 		}
 
-		public void ReplaceWithResult(Value value, ResultSource source, params Node[] nodes)
+		public void ReplaceWithResult(Value value, bool resultIsReportable, ResultSource source, params Node[] nodes)
 		{
 			ErrorType? errRep = null;
 			Span span = Span.Empty;
@@ -102,10 +104,10 @@ namespace DkTools.CodeAnalysis.Nodes
 				}
 			}
 
-			ReplaceNodes(new ResultNode(Statement, span, value, source, errRep), nodes);
+			ReplaceNodes(new ResultNode(Statement, span, value, source, errRep, resultIsReportable), nodes);
 		}
 
-		protected virtual void Execute(RunScope scope)
+		private void Execute(RunScope scope)
 		{
 			var reduceRetries = 3;
 
@@ -190,6 +192,19 @@ namespace DkTools.CodeAnalysis.Nodes
 			return null;
 		}
 
+		public override void Run(RunScope scope)
+		{
+			Execute(scope);
+
+			if (_nodes.Count == 1)
+			{
+				_nodes[0].Run(scope);
+				return;
+			}
+
+			ReportError(Span, CAError.CA0101);  // Syntax error.
+		}
+
 		public override Value ReadValue(RunScope scope)
 		{
 			Execute(scope);
@@ -204,9 +219,12 @@ namespace DkTools.CodeAnalysis.Nodes
 				}
 			}
 
-			if (_nodes.Count == 1) return _nodes[0].ReadValue(scope);
+			if (_nodes.Count == 1)
+			{
+				return _nodes[0].ReadValue(scope);
+			}
 
-			ReportError(Span, CAError.CA0101);	// Syntax error.
+			ReportError(Span, CAError.CA0101);  // Syntax error.
 			return Value.Void;
 		}
 
@@ -237,9 +255,19 @@ namespace DkTools.CodeAnalysis.Nodes
 		{
 			get
 			{
-				if (_nodes.Count == 1) return _nodes[0].DataType;
+				foreach (var node in _nodes)
+				{
+					var dt = node.DataType;
+					if (dt != null) return dt;
+				}
 				return null;
 			}
+		}
+
+		public override bool IsReportable
+		{
+			get => _nodes.Count == 1 && _nodes[0].IsReportable;
+			set { if (_nodes.Count == 1) _nodes[0].IsReportable = value; }
 		}
 	}
 }

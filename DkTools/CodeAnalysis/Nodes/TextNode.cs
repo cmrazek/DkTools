@@ -18,9 +18,7 @@ namespace DkTools.CodeAnalysis.Nodes
 			_text = text;
 		}
 
-		public string Text
-		{
-			get { return _text; }
-		}
+		public string Text => _text;
+		public override string ToString() => _text;
 	}
 }

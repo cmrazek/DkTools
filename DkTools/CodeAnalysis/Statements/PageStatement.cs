@@ -15,5 +15,7 @@ namespace DkTools.CodeAnalysis.Statements
 		{
 			p.Code.ReadExact(';');
 		}
+
+		public override string ToString() => "page";
 	}
 }

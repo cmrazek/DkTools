@@ -15,6 +15,8 @@ namespace DkTools.CodeAnalysis.Statements
 		private ExpressionNode _whereExp;
 		private List<GroupBody> _groups = new List<GroupBody>();
 
+		public override string ToString() => new string[] { "select * from ", _tables.Select(t => t.Name).Combine(", "), "..." }.Combine();
+
 		public SelectStatement(ReadParams p, Span keywordSpan)
 			: base(p.CodeAnalyzer, keywordSpan)
 		{

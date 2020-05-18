@@ -17,6 +17,8 @@ namespace DkTools.CodeAnalysis.Values
 			_num = number;
 		}
 
+		public override string ToString() => _num.HasValue ? _num.Value.ToString() : "(null)";
+
 		public override Value Multiply(RunScope scope, Span span, Value rightValue)
 		{
 			if (_num.HasValue)

@@ -14,14 +14,5 @@ namespace DkTools.CodeAnalysis.Nodes
 			: base(stmt, null, openBracketSpan)
 		{
 		}
-
-		public override DataType DataType
-		{
-			get
-			{
-				if (NumChildren == 1) return FirstChild.DataType;
-				return base.DataType;
-			}
-		}
 	}
 }

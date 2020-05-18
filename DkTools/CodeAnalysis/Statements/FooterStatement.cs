@@ -32,6 +32,8 @@ namespace DkTools.CodeAnalysis.Statements
 			}
 		}
 
+		public override string ToString() => "footer...";
+
 		public override void Execute(RunScope scope)
 		{
 			var footerScope = scope.Clone();
