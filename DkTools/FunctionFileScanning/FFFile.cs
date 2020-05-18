@@ -5,6 +5,7 @@ using System.Data.SQLite;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows.Forms;
 using DkTools.CodeModel;
 using DkTools.CodeModel.Definitions;
 using DkTools.CodeModel.Tokens;
@@ -265,6 +266,9 @@ namespace DkTools.FunctionFileScanning
 					var ordExtRefId = rdr.GetOrdinal("ext_ref_id");
 					var ordTrueFileName = rdr.GetOrdinal("true_file_name");
 					var ordPos = rdr.GetOrdinal("pos");
+					var ordFuncRefId = rdr.GetOrdinal("func_ref_id");
+					var ordFuncFileName = rdr.GetOrdinal("func_file_name");
+					var ordFuncPos = rdr.GetOrdinal("func_pos");
 
 					while (rdr.Read())
 					{
@@ -272,11 +276,17 @@ namespace DkTools.FunctionFileScanning
 						var extRefId = rdr.GetString(ordExtRefId);
 						var trueFileName = rdr.GetStringOrNull(ordTrueFileName);
 						var pos = rdr.GetInt32(ordPos);
+						var funcRefId = rdr.GetStringOrNull(ordFuncRefId);
+						var funcFileName = rdr.GetStringOrNull(ordFuncFileName);
+						var funcPos = rdr.GetInt32OrNull(ordFuncPos);
 
 						var memRef = memRefs.FirstOrDefault(r => r.ExternalRefId == extRefId &&
 							(r.TrueFileName == null) == (trueFileName == null) &&
 							(r.TrueFileName == null || string.Equals(r.TrueFileName, trueFileName, StringComparison.OrdinalIgnoreCase)) &&
-							r.Position == pos);
+							r.Position == pos &&
+							r.ParentFunctionRefId == funcRefId &&
+							string.Equals(r.ParentFunctionFileName, funcFileName, StringComparison.OrdinalIgnoreCase) &&
+							r.ParentFunctionPosition == funcPos);
 						if (memRef != null)
 						{
 							memRef.Exists = true;
@@ -347,8 +357,8 @@ namespace DkTools.FunctionFileScanning
 				}
 
 				// Inserts the ref records
-				using (var cmd = db.CreateCommand("insert into ref (app_id, file_id, ext_ref_id, alt_file_id, pos)" +
-					" values (@app_id, @file_id, @ext_ref_id, @alt_file_id, @pos)"))
+				using (var cmd = db.CreateCommand("insert into ref (app_id, file_id, ext_ref_id, alt_file_id, pos, func_ref_id, func_file_name, func_pos)" +
+					" values (@app_id, @file_id, @ext_ref_id, @alt_file_id, @pos, @func_ref_id, @func_file_name, @func_pos)"))
 				{
 					foreach (var newRef in memRefs.Where(r => !r.Exists))
 					{
@@ -365,6 +375,9 @@ namespace DkTools.FunctionFileScanning
 						cmd.Parameters.AddWithValue("@ext_ref_id", newRef.ExternalRefId);
 						cmd.Parameters.AddWithValue("@alt_file_id", trueFileId);
 						cmd.Parameters.AddWithValue("@pos", newRef.Position);
+						cmd.Parameters.AddWithValue("@func_ref_id", newRef.ParentFunctionRefId);
+						cmd.Parameters.AddWithValue("@func_file_name", newRef.ParentFunctionFileName);
+						cmd.Parameters.AddWithValue("@func_pos", newRef.ParentFunctionPosition);
 						cmd.ExecuteNonQuery();
 					}
 				}
@@ -449,6 +462,8 @@ namespace DkTools.FunctionFileScanning
 
 			if (scanMode == FFScanMode.Deep)
 			{
+				var funcDefs = model.PreprocessorModel.LocalFunctions.Where(x => !x.Definition.EntireSpan.IsEmpty).Select(x => x.Definition).ToArray();
+
 				// Get all references in the file.
 				var refList = new List<Reference>();
 				foreach (var token in model.File.FindDownward(t => t.SourceDefinition != null &&
@@ -457,21 +472,27 @@ namespace DkTools.FunctionFileScanning
 				{
 					var localPos = token.File.CodeSource.GetFilePosition(token.Span.Start);
 
+					var parentFuncDef = funcDefs.Where(x => x.RawBodySpan.Contains(token.Span.Start)).FirstOrDefault();
+
 					var def = token.SourceDefinition;
 					var refId = def.ExternalRefId;
 					if (!string.IsNullOrEmpty(refId))
 					{
-						refList.Add(new Reference
-						{
-							ExternalRefId = refId,
-							TrueFileName = string.Equals(localPos.FileName, model.FileName, StringComparison.OrdinalIgnoreCase) ? null : localPos.FileName,
-							Position = localPos.Position
-						});
+						refList.Add(new Reference(
+							rawPosition: token.Span.Start,
+							externalRefId: refId,
+							trueFileName: string.Equals(localPos.FileName, model.FileName, StringComparison.OrdinalIgnoreCase) ? null : localPos.FileName,
+							position: localPos.Position,
+							parentFunctionRefId: parentFuncDef?.ExternalRefId,
+							parentFunctionFileName: parentFuncDef?.FilePosition.FileName,
+							parentFunctionPosition: parentFuncDef?.FilePosition.Position ?? 0));
 					}
 				}
 
 				foreach (var rf in model.PreprocessorReferences)
 				{
+					var parentFuncDef = funcDefs.Where(x => x.RawBodySpan.Contains(rf.RawPosition)).FirstOrDefault();
+
 					var def = rf.Definition;
 					var refId = def.ExternalRefId;
 					if (!string.IsNullOrEmpty(refId))
@@ -479,12 +500,14 @@ namespace DkTools.FunctionFileScanning
 						var filePos = rf.FilePosition;
 						if (filePos.PrimaryFile)
 						{
-							refList.Add(new Reference
-							{
-								ExternalRefId = refId,
-								TrueFileName = filePos.FileName,
-								Position = filePos.Position
-							});
+							refList.Add(new Reference(
+								rawPosition: rf.RawPosition,
+								externalRefId: refId,
+								trueFileName: filePos.FileName,
+								position: filePos.Position,
+								parentFunctionRefId: parentFuncDef?.ExternalRefId,
+								parentFunctionFileName: parentFuncDef?.FilePosition.FileName,
+								parentFunctionPosition: parentFuncDef?.FilePosition.Position ?? 0));
 						}
 					}
 				}
@@ -548,9 +571,25 @@ namespace DkTools.FunctionFileScanning
 
 		private class Reference
 		{
-			public string ExternalRefId { get; set; }
-			public string TrueFileName { get; set; }
-			public int Position { get; set; }
+			public Reference(int rawPosition, string externalRefId, string trueFileName, int position,
+				string parentFunctionRefId, string parentFunctionFileName, int parentFunctionPosition)
+			{
+				RawPosition = rawPosition;
+				ExternalRefId = externalRefId;
+				TrueFileName = trueFileName;
+				Position = position;
+				ParentFunctionRefId = parentFunctionRefId;
+				ParentFunctionFileName = parentFunctionFileName;
+				ParentFunctionPosition = parentFunctionPosition;
+			}
+
+			public int RawPosition { get; private set; }
+			public string ExternalRefId { get; private set; }
+			public string TrueFileName { get; private set; }
+			public int Position { get; private set; }
+			public string ParentFunctionRefId { get; private set; }
+			public string ParentFunctionFileName { get; private set; }
+			public int ParentFunctionPosition { get; private set; }
 
 			// Flags used for database management
 			public bool Exists { get; set; }

@@ -52,15 +52,9 @@ namespace DkTools.CodeModel
 			};
 		}
 
-		public string ClassName
-		{
-			get { return _className; }
-		}
-
-		public string FunctionName
-		{
-			get { return _funcName; }
-		}
+		public string ClassName => _className;
+		public string FunctionName => _funcName;
+		public string FullName => !string.IsNullOrEmpty(_className) ? string.Concat(_className, ".", _funcName) : _funcName;
 
 		public string Description
 		{

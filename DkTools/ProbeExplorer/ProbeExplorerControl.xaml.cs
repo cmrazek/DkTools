@@ -12,7 +12,12 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
+using DkTools.CallHierarchy;
+using DkTools.CodeModel;
+using DkTools.CodeModel.Definitions;
+using DkTools.Navigation;
 using Microsoft.VisualStudio.Shell;
+using Microsoft.VisualStudio.Shell.Interop;
 using IO = System.IO;
 using VsText=Microsoft.VisualStudio.Text;
 using VsTextEditor=Microsoft.VisualStudio.Text.Editor;
@@ -1016,6 +1021,10 @@ namespace DkTools.ProbeExplorer
 
 			if (!c_functionTab.IsSelected) return;
 
+			string className = null;
+			var fileName = VsTextUtil.TryGetDocumentFileName(view.TextBuffer);
+			if (!string.IsNullOrEmpty(fileName)) className = FileContextUtil.GetClassNameFromFileName(fileName);
+
 			if (view != null)
 			{
 				var fileStore = CodeModel.FileStore.GetOrCreateForTextBuffer(view.TextBuffer);
@@ -1028,7 +1037,6 @@ namespace DkTools.ProbeExplorer
 						_activeSnapshot = snapshot;
 
 						var appSettings = ProbeEnvironment.CurrentAppSettings;
-						var fileName = VsTextUtil.TryGetDocumentFileName(view.TextBuffer);
 						_activeFunctions = (from f in fileStore.GetFunctionDropDownList(appSettings, fileName, snapshot)
 											orderby f.Name.ToLower()
 											select new FunctionListItem(f)).ToArray();
@@ -1065,19 +1073,23 @@ namespace DkTools.ProbeExplorer
 			});
 		}
 
-		public class FunctionListItem : INotifyPropertyChanged
+		internal class FunctionListItem : INotifyPropertyChanged
 		{
-			public string Name { get; private set; }
-			public CodeModel.Span Span { get; private set; }
+			private FunctionDefinition _def;
+			private CodeModel.Span _span;
 			private bool _visible = true;
 
 			public event PropertyChangedEventHandler PropertyChanged;
 
 			internal FunctionListItem(CodeModel.FileStore.FunctionDropDownItem func)
 			{
-				this.Name = func.Name;
-				this.Span = func.Span;
+				_span = func.Span;
+				_def = func.Definition;
 			}
+
+			public FunctionDefinition Definition => _def;
+			public string Name => _def.Name;
+			public CodeModel.Span Span => _span;
 
 			public bool Visible
 			{
@@ -1087,9 +1099,7 @@ namespace DkTools.ProbeExplorer
 					if (_visible != value)
 					{
 						_visible = value;
-
-						var ev = PropertyChanged;
-						if (ev != null) ev(this, new PropertyChangedEventArgs("Visible"));
+						PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(Visible)));
 					}
 				}
 			}
@@ -1285,6 +1295,44 @@ namespace DkTools.ProbeExplorer
 		{
 			c_functionFilter.Text = string.Empty;
 			c_functionFilter.Focus();
+		}
+
+		private void FunctionFindAllReferences_Click(object sender, RoutedEventArgs e)
+		{
+			ThreadHelper.ThrowIfNotOnUIThread();
+
+			try
+			{
+				var menuItem = e.OriginalSource as MenuItem;
+				if (menuItem == null) return;
+
+				var funcItem = menuItem.DataContext as FunctionListItem;
+				if (funcItem == null) return;
+
+				GoToDefinitionHelper.TriggerFindReferences(funcItem.Definition.ExternalRefId, funcItem.Definition.FullName);
+			}
+			catch (Exception ex)
+			{
+				this.ShowError(ex);
+			}
+		}
+
+		private void FunctionViewCallHierarchy_Click(object sender, RoutedEventArgs e)
+		{
+			try
+			{
+				var menuItem = e.OriginalSource as MenuItem;
+				if (menuItem == null) return;
+
+				var funcItem = menuItem.DataContext as FunctionListItem;
+				if (funcItem == null) return;
+
+				DkCallHierarchyHelper.ViewCallHierarchy(funcItem.Definition);
+			}
+			catch (Exception ex)
+			{
+				this.ShowError(ex);
+			}
 		}
 		#endregion
 

@@ -17,6 +17,8 @@ using Microsoft.VisualStudio.Utilities;
 using DkTools.CodeModel;
 using DkTools.CodeModel.Tokens;
 using DkTools.PeekDefinition;
+using Microsoft.VisualStudio.Language.CallHierarchy;
+using DkTools.CallHierarchy;
 
 namespace DkTools.SignatureHelp
 {
@@ -31,12 +33,17 @@ namespace DkTools.SignatureHelp
 
 		public static char s_typedChar = char.MinValue;
 
-		internal ProbeSignatureHelpCommandHandler(IVsTextView textViewAdapter, ITextView textView, ITextStructureNavigator nav, ISignatureHelpBroker broker, ProbeSignatureHelpCommandProvider provider)
+		internal ProbeSignatureHelpCommandHandler(
+			IVsTextView textViewAdapter,
+			ITextView textView,
+			ITextStructureNavigator textStructureNavigator,
+			ISignatureHelpBroker signatureHelpBroker,
+			ProbeSignatureHelpCommandProvider signatureHelpCommandProvider)
 		{
-			_textView = textView;
-			_broker = broker;
-			_navigator = nav;
-			_provider = provider;
+			_textView = textView ?? throw new ArgumentNullException(nameof(textView));
+			_broker = signatureHelpBroker ?? throw new ArgumentNullException(nameof(signatureHelpBroker));
+			_navigator = textStructureNavigator ?? throw new ArgumentNullException(nameof(textStructureNavigator));
+			_provider = signatureHelpCommandProvider ?? throw new ArgumentNullException(nameof(signatureHelpCommandProvider));
 
 			//add this to the filter chain
 			textViewAdapter.AddCommandFilter(this, out _nextCommandHandler);
@@ -136,6 +143,12 @@ namespace DkTools.SignatureHelp
 						Tagging.Tagger.UncommentBlock();
 						return VSConstants.S_OK;
 					}
+					else if (nCmdID == (uint)VSConstants.VSStd2KCmdID.ViewCallHierarchy)
+					{
+						var caretPt = _textView.TextSnapshot.CreateTrackingPoint(_textView.Caret.Position.BufferPosition.Position, PointTrackingMode.Negative);
+						DkCallHierarchyHelper.ViewCallHierarchy(caretPt.GetPoint(_textView.TextSnapshot));
+						return VSConstants.S_OK;
+					}
 				}
 				else if (pguidCmdGroup == typeof(VSConstants.VSStd12CmdID).GUID)
 				{
@@ -166,7 +179,17 @@ namespace DkTools.SignatureHelp
 
 			var status = _nextCommandHandler.QueryStatus(ref pguidCmdGroup, cCmds, prgCmds, pCmdText);
 
-			if (pguidCmdGroup == typeof(VSConstants.VSStd97CmdID).GUID)
+			if (pguidCmdGroup == typeof(VSConstants.VSStd2KCmdID).GUID)
+			{
+				for (int i = 0; i < cCmds; i++)
+				{
+					if (prgCmds[i].cmdID == (uint)VSConstants.VSStd2KCmdID.ViewCallHierarchy)
+					{
+						prgCmds[i].cmdf = (uint)(OLECMDF.OLECMDF_ENABLED | OLECMDF.OLECMDF_SUPPORTED);
+					}
+				}
+			}
+			else if (pguidCmdGroup == typeof(VSConstants.VSStd97CmdID).GUID)
 			{
 				for (int i = 0; i < cCmds; i++)
 				{

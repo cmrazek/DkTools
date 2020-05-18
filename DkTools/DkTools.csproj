@@ -88,6 +88,9 @@
     <Reference Include="microsoft.msxml, Version=8.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
       <EmbedInteropTypes>False</EmbedInteropTypes>
     </Reference>
+    <Reference Include="Microsoft.VisualStudio.CallHierarchy.Package.Definitions">
+      <HintPath>..\..\..\Program Files (x86)\Microsoft Visual Studio\2019\Professional\Common7\IDE\Microsoft.VisualStudio.CallHierarchy.Package.Definitions.dll</HintPath>
+    </Reference>
     <Reference Include="Microsoft.VisualStudio.ComponentModelHost, Version=16.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\Common7\IDE\PublicAssemblies\Microsoft.VisualStudio.ComponentModelHost.dll</HintPath>
@@ -112,6 +115,10 @@
     <Reference Include="Microsoft.VisualStudio.Language, Version=16.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\VSSDK\VisualStudioIntegration\Common\Assemblies\v4.0\Microsoft.VisualStudio.Language.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.VisualStudio.Language.CallHierarchy, Version=11.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\..\Program Files (x86)\Microsoft Visual Studio\2019\Professional\Common7\IDE\CommonExtensions\Microsoft\CallHierarchy\Microsoft.VisualStudio.Language.CallHierarchy.dll</HintPath>
     </Reference>
     <Reference Include="Microsoft.VisualStudio.Language.Intellisense, Version=15.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
@@ -258,6 +265,9 @@
     <Compile Include="BraceHighlighting\BraceHighlightTag.cs" />
     <Compile Include="BraceHighlighting\BraceHighlightTagger.cs" />
     <Compile Include="BraceHighlighting\BraceHighlightTaggerProvider.cs" />
+    <Compile Include="CallHierarchy\DkCallHierarchyItemDetails.cs" />
+    <Compile Include="CallHierarchy\DkCallHierarchyHelper.cs" />
+    <Compile Include="CallHierarchy\DkCallHierarchyMemberItem.cs" />
     <Compile Include="Classifier\DisabledSectionTracker.cs" />
     <Compile Include="Classifier\ProbeClassifierScanner.cs" />
     <Compile Include="Classifier\ProbeClassifier.cs" />
@@ -316,6 +326,7 @@
     <Compile Include="CodeAnalysis\Values\Value.cs" />
     <Compile Include="CodeAnalysis\Values\VoidValue.cs" />
     <Compile Include="CodeAnalysis\Variable.cs" />
+    <Compile Include="CodeInfoStore.cs" />
     <Compile Include="CodeModel\ArgumentDescriptor.cs" />
     <Compile Include="CodeModel\Definitions\DefinitionStore.cs" />
     <Compile Include="CodeModel\Definitions\FilePositionDefinition.cs" />

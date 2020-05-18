@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using DkTools.CodeModel.Tokens;
 
@@ -14,36 +15,43 @@ namespace DkTools.CodeModel.Definitions
 		private int _argsStartPos;
 		private int _argsEndPos;
 		private Span _entireSpan;
+		private Span _rawBodySpan;
 
-		public FunctionDefinition(FunctionSignature sig, FilePosition filePos,
-			int argsStartPos, int argsEndPos, int bodyStartPos, Span entireSpan)
-			: base(sig.FunctionName, filePos, !string.IsNullOrEmpty(sig.ClassName) ? string.Concat("class:", sig.ClassName, ".func:", sig.FunctionName) : string.Concat("func:", sig.FunctionName))
+		public FunctionDefinition(
+			FunctionSignature signature,
+			FilePosition filePos,
+			int argsStartPos,
+			int argsEndPos,
+			int bodyStartPos,
+			Span entireSpan,
+			Span rawBodySpan)
+			: base(signature.FunctionName, filePos, MakeExtRefId(signature.ClassName, signature.FunctionName))
 		{
-#if DEBUG
-			if (sig == null) throw new ArgumentNullException("sig");
-#endif
-			_sig = sig;
+			_sig = signature ?? throw new ArgumentNullException(nameof(signature));
 			_argsStartPos = argsStartPos;
 			_argsEndPos = argsEndPos;
 			_bodyStartPos = bodyStartPos;
 			_entireSpan = entireSpan;
+			_rawBodySpan = rawBodySpan;
 		}
 
-		public FunctionDefinition(FunctionSignature sig)
-			: base(sig.FunctionName, FilePosition.Empty, string.Concat("func:", sig.FunctionName))
+		public FunctionDefinition(FunctionSignature signature)
+			: base(signature.FunctionName, FilePosition.Empty, string.Concat("func:", signature.FunctionName))
 		{
-#if DEBUG
-			if (sig == null) throw new ArgumentNullException("sig");
-#endif
-			_sig = sig;
+			_sig = signature ?? throw new ArgumentNullException(nameof(signature));
 			_argsStartPos = _argsEndPos = _bodyStartPos = 0;
 			_entireSpan = Span.Empty;
 		}
 
 		public FunctionDefinition CloneAsExtern()
 		{
-			return new FunctionDefinition(_sig.Clone(), FilePosition, _argsStartPos, _argsEndPos, _bodyStartPos, _entireSpan);
+			return new FunctionDefinition(_sig.Clone(), FilePosition, _argsStartPos, _argsEndPos, _bodyStartPos, _entireSpan, _rawBodySpan);
 		}
+
+		/// <summary>
+		/// Gets the full name "className.funcName" or "funcName" of this function.
+		/// </summary>
+		public string FullName => _sig.FullName;
 
 		public override DataType DataType
 		{
@@ -127,10 +135,20 @@ namespace DkTools.CodeModel.Definitions
 			get { return _sig.ClassName; }
 		}
 
+		/// <summary>
+		/// Span of the function, from start of the return data type to the end of the closing brace, in primary file coordinates.
+		/// </summary>
 		public Span EntireSpan
 		{
 			get { return _entireSpan; }
 		}
+
+		/// <summary>
+		/// Span of the function body, in raw/preprocessor coordinates.
+		/// This is only guaranteed to be present if this definition was created by the preprocessor.
+		/// Function definitions read from the database will have an empty span.
+		/// </summary>
+		public Span RawBodySpan => _rawBodySpan;
 
 		public override string PickText
 		{
@@ -181,5 +199,48 @@ namespace DkTools.CodeModel.Definitions
 				return true;
 			}
 		}
+
+		#region External Reference ID
+		private static readonly Regex _rxExtRefId = new Regex(@"^(?:class\:(\w+)\.)?func\:(\w+)$");
+
+		public static string MakeExtRefId(string className, string funcName)
+		{
+			return !string.IsNullOrEmpty(className)
+				? string.Concat("class:", className, ".func:", funcName)
+				: string.Concat("func:", funcName);
+		}
+
+		public static string MakeFullName(string className, string funcName)
+		{
+			return !string.IsNullOrEmpty(className)
+				? string.Concat(className, ".", funcName)
+				: funcName;
+		}
+
+		public static string ParseFullNameFromExtRefId(string extRefId)
+		{
+			var match = _rxExtRefId.Match(extRefId);
+			if (!match.Success) return null;
+
+			var className = match.Groups[1].Value;
+			var funcName = match.Groups[2].Value;
+			if (string.IsNullOrEmpty(className)) return funcName;
+			return string.Concat(className, funcName);
+		}
+
+		public static string ParseClassNameFromExtRefId(string extRefId)
+		{
+			var match = _rxExtRefId.Match(extRefId);
+			if (!match.Success) return null;
+			return match.Groups[1].Value;
+		}
+
+		public static string ParseFunctionNameFromExtRefId(string extRefId)
+		{
+			var match = _rxExtRefId.Match(extRefId);
+			if (!match.Success) return null;
+			return match.Groups[2].Value;
+		}
+		#endregion
 	}
 }

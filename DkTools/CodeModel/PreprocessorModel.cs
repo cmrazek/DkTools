@@ -262,7 +262,14 @@ namespace DkTools.CodeModel
 
 				var sig = new FunctionSignature(true, privacy, returnDataType, _className, funcName, description, args);
 				sig.ApplyDocumentation(localPos.FileName);
-				var def = new FunctionDefinition(sig, localPos, 0, 0, 0, Span.Empty);
+				var def = new FunctionDefinition(
+					signature: sig,
+					filePos: localPos,
+					argsStartPos: 0,
+					argsEndPos: 0,
+					bodyStartPos: 0,
+					entireSpan: Span.Empty,
+					rawBodySpan: Span.Empty);
 				_externFuncs[funcName] = def;
 				AddGlobalDefinition(def);
 				return;
@@ -279,12 +286,6 @@ namespace DkTools.CodeModel
 				{
 					if (!TryReadVariableDeclaration(funcScope, varList)) break;
 				}
-
-				//// Add the arguments to the body as well, so they are accessible inside the function.
-				//foreach (var def in argDefList)
-				//{
-				//	_defProv.AddLocalDefinition(localBodyStartPos.Position, def);
-				//}
 			}
 
 			var statementsStartPos = _code.Position;
@@ -298,8 +299,15 @@ namespace DkTools.CodeModel
 			var argEndPrimaryPos = _source.GetPrimaryFilePosition(argEndPos);
 			var entireSpan = _source.GetPrimaryFileSpan(new Span(allStartPos, bodyEndPos));
 
-			var funcDef = new FunctionDefinition(new FunctionSignature(false, privacy, returnDataType, _className, funcName, description, args),
-				nameActualPos, argStartPrimaryPos, argEndPrimaryPos, bodyStartLocalPos, entireSpan);
+			var funcDef = new FunctionDefinition(
+				signature: new FunctionSignature(false, privacy, returnDataType, _className, funcName, description, args),
+				filePos: nameActualPos,
+				argsStartPos: argStartPrimaryPos,
+				argsEndPos: argEndPrimaryPos,
+				bodyStartPos: bodyStartLocalPos,
+				entireSpan: entireSpan,
+				rawBodySpan: new Span(bodyStartPos + 1, bodyEndPos - 1));
+
 			_localFuncs.Add(new LocalFunction(funcDef, nameSpan, statementsStartPos, bodyEndPos, argDefList, varList));
 			AddGlobalDefinition(funcDef);
 
