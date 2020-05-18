@@ -2,12 +2,14 @@
 using DkTools.CodeModel.Definitions;
 using DkTools.CodeModel.Tokens;
 using DkTools.FunctionFileScanning;
+using DkTools.Navigation;
 using EnvDTE;
 using Microsoft.VisualStudio.Language.CallHierarchy;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Text;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -43,9 +45,9 @@ namespace DkTools.CallHierarchy
 		public IEnumerable<ICallHierarchyItemDetails> Details => _details;
 		public string SortText => _functionFullName;
 		public ImageSource DisplayGlyph => null;
-		public string MemberName => _functionName;
-		public string ContainingTypeName => _className ?? string.Empty;
-		public string ContainingNamespaceName => string.Empty;
+		public string MemberName => _functionFullName;
+		public string ContainingTypeName => Path.GetFileName(_filePos.FileName);
+		public string ContainingNamespaceName => null;
 		public bool Valid => true;
 		public IEnumerable<CallHierarchySearchCategory> SupportedSearchCategories
 		{
@@ -62,6 +64,8 @@ namespace DkTools.CallHierarchy
 
 		public void FindReferences()
 		{
+			ThreadHelper.ThrowIfNotOnUIThread();
+			GoToDefinitionHelper.TriggerFindReferences(_extRefId, _functionFullName);
 		}
 
 		public void ItemSelected()
