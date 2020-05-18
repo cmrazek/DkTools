@@ -12,6 +12,9 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
+using DkTools.CodeModel;
+using DkTools.CodeModel.Definitions;
+using DkTools.Navigation;
 using Microsoft.VisualStudio.Shell;
 using IO = System.IO;
 using VsText=Microsoft.VisualStudio.Text;
@@ -1016,6 +1019,10 @@ namespace DkTools.ProbeExplorer
 
 			if (!c_functionTab.IsSelected) return;
 
+			string className = null;
+			var fileName = VsTextUtil.TryGetDocumentFileName(view.TextBuffer);
+			if (!string.IsNullOrEmpty(fileName)) className = FileContextUtil.GetClassNameFromFileName(fileName);
+
 			if (view != null)
 			{
 				var fileStore = CodeModel.FileStore.GetOrCreateForTextBuffer(view.TextBuffer);
@@ -1028,10 +1035,9 @@ namespace DkTools.ProbeExplorer
 						_activeSnapshot = snapshot;
 
 						var appSettings = ProbeEnvironment.CurrentAppSettings;
-						var fileName = VsTextUtil.TryGetDocumentFileName(view.TextBuffer);
 						_activeFunctions = (from f in fileStore.GetFunctionDropDownList(appSettings, fileName, snapshot)
 											orderby f.Name.ToLower()
-											select new FunctionListItem(f)).ToArray();
+											select new FunctionListItem(f, className)).ToArray();
 						ApplyFunctionFilter();
 						c_functionList.ItemsSource = _activeFunctions;
 					}
@@ -1067,16 +1073,18 @@ namespace DkTools.ProbeExplorer
 
 		public class FunctionListItem : INotifyPropertyChanged
 		{
+			public string ClassName { get; private set; }
 			public string Name { get; private set; }
 			public CodeModel.Span Span { get; private set; }
 			private bool _visible = true;
 
 			public event PropertyChangedEventHandler PropertyChanged;
 
-			internal FunctionListItem(CodeModel.FileStore.FunctionDropDownItem func)
+			internal FunctionListItem(CodeModel.FileStore.FunctionDropDownItem func, string className)
 			{
-				this.Name = func.Name;
-				this.Span = func.Span;
+				ClassName = className;
+				Name = func.Name;
+				Span = func.Span;
 			}
 
 			public bool Visible
@@ -1087,9 +1095,7 @@ namespace DkTools.ProbeExplorer
 					if (_visible != value)
 					{
 						_visible = value;
-
-						var ev = PropertyChanged;
-						if (ev != null) ev(this, new PropertyChangedEventArgs("Visible"));
+						PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(Visible)));
 					}
 				}
 			}
@@ -1285,6 +1291,28 @@ namespace DkTools.ProbeExplorer
 		{
 			c_functionFilter.Text = string.Empty;
 			c_functionFilter.Focus();
+		}
+
+		private void FunctionFindAllReferences_Click(object sender, RoutedEventArgs e)
+		{
+			ThreadHelper.ThrowIfNotOnUIThread();
+
+			try
+			{
+				var menuItem = e.OriginalSource as MenuItem;
+				if (menuItem == null) return;
+
+				var funcItem = menuItem.DataContext as FunctionListItem;
+				if (funcItem == null) return;
+
+				GoToDefinitionHelper.TriggerFindReferences(
+					FunctionDefinition.MakeExtRefId(funcItem.ClassName, funcItem.Name),
+					FunctionDefinition.MakeFullName(funcItem.ClassName, funcItem.Name));
+			}
+			catch (Exception ex)
+			{
+				this.ShowError(ex);
+			}
 		}
 		#endregion
 

@@ -141,29 +141,36 @@
 							 KeyDown="FunctionList_KeyDown"
 							 >
 						<ListBox.ItemTemplate>
-							<DataTemplate>
-								<StackPanel Orientation="Horizontal">
-									<Image Source="{Binding Source={x:Static local:ProbeExplorerControl.FunctionImage}}" Width="16" Height="16" Margin="0,0,2,0"/>
-									<TextBlock Name="c_functionName" Text="{Binding Path=Name}" />
-								</StackPanel>
-							</DataTemplate>
-						</ListBox.ItemTemplate>
-						<ListBox.ItemContainerStyle>
-							<Style TargetType="ListBoxItem" BasedOn="{StaticResource {x:Type ListBoxItem}}">
-								<EventSetter Event="Selected" Handler="FunctionListBoxItem_Selected"/>
-								<EventSetter Event="KeyDown" Handler="FunctionListBoxItem_KeyDown"/>
-								<EventSetter Event="MouseDoubleClick" Handler="FunctionListBoxItem_MouseDoubleClick"/>
-								<Style.Triggers>
-									<DataTrigger Binding="{Binding Path=Visible}" Value="True">
-										<Setter Property="Visibility" Value="Visible"/>
-									</DataTrigger>
-									<DataTrigger Binding="{Binding Path=Visible}" Value="False">
-										<Setter Property="Visibility" Value="Collapsed"/>
-									</DataTrigger>
-								</Style.Triggers>
-							</Style>
-						</ListBox.ItemContainerStyle>
-					</ListBox>
+                            <DataTemplate>
+                                <StackPanel Orientation="Horizontal">
+                                    <Image Source="{Binding Source={x:Static local:ProbeExplorerControl.FunctionImage}}" Width="16" Height="16" Margin="0,0,2,0"/>
+                                    <TextBlock Name="c_functionName" Text="{Binding Path=Name}" />
+                                    <StackPanel.ContextMenu>
+                                        <ContextMenu>
+                                            <MenuItem Header="_Find All References"
+                                                      Click="FunctionFindAllReferences_Click"
+                                                      CommandParameter="{Binding RelativeSource={RelativeSource Self}}"/>
+                                        </ContextMenu>
+                                    </StackPanel.ContextMenu>
+                                </StackPanel>
+                            </DataTemplate>
+                        </ListBox.ItemTemplate>
+                        <ListBox.ItemContainerStyle>
+                            <Style TargetType="ListBoxItem" BasedOn="{StaticResource {x:Type ListBoxItem}}">
+                                <EventSetter Event="Selected" Handler="FunctionListBoxItem_Selected"/>
+                                <EventSetter Event="KeyDown" Handler="FunctionListBoxItem_KeyDown"/>
+                                <EventSetter Event="MouseDoubleClick" Handler="FunctionListBoxItem_MouseDoubleClick"/>
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding Path=Visible}" Value="True">
+                                        <Setter Property="Visibility" Value="Visible"/>
+                                    </DataTrigger>
+                                    <DataTrigger Binding="{Binding Path=Visible}" Value="False">
+                                        <Setter Property="Visibility" Value="Collapsed"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </ListBox.ItemContainerStyle>
+                    </ListBox>
 				</Grid>
 			</TabItem>
 			<!-- Endregion -->

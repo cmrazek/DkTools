@@ -25,7 +25,7 @@ namespace DkTools.CodeModel.Definitions
 			int bodyStartPos,
 			Span entireSpan,
 			Span rawBodySpan)
-			: base(signature.FunctionName, filePos, !string.IsNullOrEmpty(signature.ClassName) ? string.Concat("class:", signature.ClassName, ".func:", signature.FunctionName) : string.Concat("func:", signature.FunctionName))
+			: base(signature.FunctionName, filePos, MakeExtRefId(signature.ClassName, signature.FunctionName))
 		{
 			_sig = signature ?? throw new ArgumentNullException(nameof(signature));
 			_argsStartPos = argsStartPos;
@@ -200,7 +200,22 @@ namespace DkTools.CodeModel.Definitions
 			}
 		}
 
+		#region External Reference ID
 		private static readonly Regex _rxExtRefId = new Regex(@"^(?:class\:(\w+)\.)?func\:(\w+)$");
+
+		public static string MakeExtRefId(string className, string funcName)
+		{
+			return !string.IsNullOrEmpty(className)
+				? string.Concat("class:", className, ".func:", funcName)
+				: string.Concat("func:", funcName);
+		}
+
+		public static string MakeFullName(string className, string funcName)
+		{
+			return !string.IsNullOrEmpty(className)
+				? string.Concat(className, ".", funcName)
+				: funcName;
+		}
 
 		public static string ParseFullNameFromExtRefId(string extRefId)
 		{
@@ -226,5 +241,6 @@ namespace DkTools.CodeModel.Definitions
 			if (!match.Success) return null;
 			return match.Groups[2].Value;
 		}
+		#endregion
 	}
 }
