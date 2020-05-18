@@ -84,57 +84,31 @@ namespace DkTools.CodeAnalysis.Statements
 			base.Execute(scope);
 
 			var scopes = new List<RunScope>();
-			var gotConfirmedTrueCondition = false;
 
 			for (int i = 0, ii = _conditions.Count > _trueBodies.Count ? _conditions.Count : _trueBodies.Count; i < ii; i++)
 			{
 				Value condValue = null;
-				if (i < _conditions.Count && !gotConfirmedTrueCondition)
+				if (i < _conditions.Count)
 				{
 					var condScope = scope.Clone();
 					condValue = _conditions[i].ReadValue(condScope);
 					scope.Merge(condScope, true, true);
 				}
 
-				var condIsConfirmedTrue = condValue != null && condValue.IsTrue;
-				var condIsConfirmedFalse = condValue != null && condValue.IsFalse;
-
 				if (i < _trueBodies.Count)
 				{
-					if (!gotConfirmedTrueCondition && !condIsConfirmedFalse)
-					{
-						var trueScope = scope.Clone();
-						foreach (var stmt in _trueBodies[i]) stmt.Execute(trueScope);
-						scopes.Add(trueScope);
-					}
-					else
-					{
-						foreach (var stmt in _trueBodies[i]) scope.CodeAnalyzer.ReportError(stmt.Span, CAError.CA0016);  // Unreachable code
-					}
-				}
-
-				if (condIsConfirmedTrue)
-				{
-					gotConfirmedTrueCondition = true;
+					var trueScope = scope.Clone();
+					foreach (var stmt in _trueBodies[i]) stmt.Execute(trueScope);
+					scopes.Add(trueScope);
 				}
 			}
 
-			if (!gotConfirmedTrueCondition)
+			var falseScope = scope.Clone();
+			if (_falseBody != null)
 			{
-				var falseScope = scope.Clone();
-				if (_falseBody != null)
-				{
-					foreach (var stmt in _falseBody) stmt.Execute(falseScope);
-				}
-				scopes.Add(falseScope);
+				foreach (var stmt in _falseBody) stmt.Execute(falseScope);
 			}
-			else
-			{
-				if (_falseBody != null)
-				{
-					foreach (var stmt in _falseBody) scope.CodeAnalyzer.ReportError(stmt.Span, CAError.CA0016);  // Unreachable code
-				}
-			}
+			scopes.Add(falseScope);
 
 			scope.Merge(scopes, true, true);
 		}

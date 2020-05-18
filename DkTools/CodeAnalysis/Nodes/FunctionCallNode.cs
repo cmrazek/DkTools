@@ -194,9 +194,7 @@ namespace DkTools.CodeAnalysis.Nodes
 					}
 					else
 					{
-						var readScope = scope.Clone();
-						arg.ReadValue(readScope);
-						scope.Merge(readScope);
+						arg.ReadValue(scope);
 					}
 				}
 				else
