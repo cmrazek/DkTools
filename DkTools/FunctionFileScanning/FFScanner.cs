@@ -133,7 +133,7 @@ namespace DkTools.FunctionFileScanning
 					}
 					else
 					{
-						_currentApp.PublishDefinitions();
+						//_currentApp.PublishDefinitions();
 
 						ProbeToolsPackage.Instance.SetStatusText("DkTools background purging...");
 						using (var txn = db.BeginTransaction())
@@ -283,9 +283,7 @@ namespace DkTools.FunctionFileScanning
 					app.OnInvisibleFileChanged(ffFile);
 				}
 
-#if DEBUG
-				FFDatabase.DumpMemoryStats();
-#endif
+				app.PublishDefinitions();
 			}
 			catch (Exception ex)
 			{
