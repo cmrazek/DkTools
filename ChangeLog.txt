@@ -7,6 +7,8 @@ Version 1.5.8 - May 19, 2020:
 - DICT is now treated like a DK code file.
 - Signature help can now do a better job of detecting which function its in when comma is pressed.
 - Remove duplicates in auto-completion list.
+- Fix bug in background scanning where external references not always picked up.
+- Fix ongoing text buffer sync issues with error tags.
 
 ____________________________________________________________________________________________________
 Version 1.5.7 - May 1, 2020:
