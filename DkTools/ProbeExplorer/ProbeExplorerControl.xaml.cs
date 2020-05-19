@@ -12,7 +12,6 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
-using DkTools.CallHierarchy;
 using DkTools.CodeModel;
 using DkTools.CodeModel.Definitions;
 using DkTools.Navigation;
@@ -1310,24 +1309,6 @@ namespace DkTools.ProbeExplorer
 				if (funcItem == null) return;
 
 				GoToDefinitionHelper.TriggerFindReferences(funcItem.Definition.ExternalRefId, funcItem.Definition.FullName);
-			}
-			catch (Exception ex)
-			{
-				this.ShowError(ex);
-			}
-		}
-
-		private void FunctionViewCallHierarchy_Click(object sender, RoutedEventArgs e)
-		{
-			try
-			{
-				var menuItem = e.OriginalSource as MenuItem;
-				if (menuItem == null) return;
-
-				var funcItem = menuItem.DataContext as FunctionListItem;
-				if (funcItem == null) return;
-
-				DkCallHierarchyHelper.ViewCallHierarchy(funcItem.Definition);
 			}
 			catch (Exception ex)
 			{

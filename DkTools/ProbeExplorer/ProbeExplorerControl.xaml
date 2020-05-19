@@ -147,13 +147,10 @@
                                     <TextBlock Name="c_functionName" Text="{Binding Path=Name}" />
                                     <StackPanel.ContextMenu>
                                         <ContextMenu>
-                                            <MenuItem Header="_Find All References"
+											<MenuItem Header="_Find All References"
                                                       Click="FunctionFindAllReferences_Click"
                                                       CommandParameter="{Binding RelativeSource={RelativeSource Self}}"/>
-                                            <MenuItem Header="View Call Hierarchy"
-                                                      Click="FunctionViewCallHierarchy_Click"
-                                                      CommandParameter="{Binding RelativeSource={RelativeSource Self}}"/>
-                                        </ContextMenu>
+										</ContextMenu>
                                     </StackPanel.ContextMenu>
                                 </StackPanel>
                             </DataTemplate>

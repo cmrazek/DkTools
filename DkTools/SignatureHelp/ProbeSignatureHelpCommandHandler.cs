@@ -17,8 +17,6 @@ using Microsoft.VisualStudio.Utilities;
 using DkTools.CodeModel;
 using DkTools.CodeModel.Tokens;
 using DkTools.PeekDefinition;
-using Microsoft.VisualStudio.Language.CallHierarchy;
-using DkTools.CallHierarchy;
 
 namespace DkTools.SignatureHelp
 {
@@ -143,12 +141,6 @@ namespace DkTools.SignatureHelp
 						Tagging.Tagger.UncommentBlock();
 						return VSConstants.S_OK;
 					}
-					else if (nCmdID == (uint)VSConstants.VSStd2KCmdID.ViewCallHierarchy)
-					{
-						var caretPt = _textView.TextSnapshot.CreateTrackingPoint(_textView.Caret.Position.BufferPosition.Position, PointTrackingMode.Negative);
-						DkCallHierarchyHelper.ViewCallHierarchy(caretPt.GetPoint(_textView.TextSnapshot));
-						return VSConstants.S_OK;
-					}
 				}
 				else if (pguidCmdGroup == typeof(VSConstants.VSStd12CmdID).GUID)
 				{
@@ -179,17 +171,7 @@ namespace DkTools.SignatureHelp
 
 			var status = _nextCommandHandler.QueryStatus(ref pguidCmdGroup, cCmds, prgCmds, pCmdText);
 
-			if (pguidCmdGroup == typeof(VSConstants.VSStd2KCmdID).GUID)
-			{
-				for (int i = 0; i < cCmds; i++)
-				{
-					if (prgCmds[i].cmdID == (uint)VSConstants.VSStd2KCmdID.ViewCallHierarchy)
-					{
-						prgCmds[i].cmdf = (uint)(OLECMDF.OLECMDF_ENABLED | OLECMDF.OLECMDF_SUPPORTED);
-					}
-				}
-			}
-			else if (pguidCmdGroup == typeof(VSConstants.VSStd97CmdID).GUID)
+			if (pguidCmdGroup == typeof(VSConstants.VSStd97CmdID).GUID)
 			{
 				for (int i = 0; i < cCmds; i++)
 				{

@@ -45,13 +45,25 @@ namespace DkTools.FunctionFileScanning
 
 		public FFFunction(FFApp app, FFFile file, FFClass cls, SQLiteDataReader rdr)
 		{
-			_app = app ?? throw new ArgumentNullException(nameof(app));
-			_file = file ?? throw new ArgumentNullException(nameof(file));
+#if DEBUG
+			if (app == null) throw new ArgumentNullException("app");
+			if (file == null) throw new ArgumentNullException("file");
+#endif
+
+			_app = app;
+			_file = file;
 			_class = cls;
 
 			_id = rdr.GetInt64(rdr.GetOrdinal("rowid"));
 			_name = rdr.GetString(rdr.GetOrdinal("name"));
 			_sig = FunctionSignature.ParseFromDb(rdr.GetString(rdr.GetOrdinal("sig")));
+
+			var devDescValue = rdr.GetStringOrNull(rdr.GetOrdinal("description"));
+			if (devDescValue != null)
+			{
+				// TODO: Transitionary until the next database version
+				if (_sig.Description == null) _sig.Description = devDescValue;
+			}
 
 			var fileName = _file.FileName;
 			var altFileName = rdr.GetStringOrNull(rdr.GetOrdinal("alt_file_name"));
@@ -59,14 +71,7 @@ namespace DkTools.FunctionFileScanning
 			var pos = rdr.GetInt32(rdr.GetOrdinal("pos"));
 			var filePos = new FilePosition(fileName, pos);
 
-			_def = new CodeModel.Definitions.FunctionDefinition(
-				signature: _sig,
-				filePos: filePos,
-				argsStartPos: 0,
-				argsEndPos: 0,
-				bodyStartPos: 0,
-				entireSpan: _span,
-				rawBodySpan: Span.Empty);
+			_def = new CodeModel.Definitions.FunctionDefinition(_sig, filePos, 0, 0, 0, _span);
 
 			UpdateVisibility();
 		}
@@ -78,20 +83,20 @@ namespace DkTools.FunctionFileScanning
 			var funcName = rdr.GetString(rdr.GetOrdinal("name"));
 			var sig = FunctionSignature.ParseFromDb(rdr.GetString(rdr.GetOrdinal("sig")));
 
+			var devDescValue = rdr.GetStringOrNull(rdr.GetOrdinal("description"));
+			if (devDescValue != null)
+			{
+				// TODO: Transitionary until the next database version
+				if (sig.Description == null) sig.Description = devDescValue;
+			}
+
 			var trueFileName = fileName;
 			var altFileName = rdr.GetStringOrNull(rdr.GetOrdinal("alt_file_name"));
 			if (!string.IsNullOrEmpty(altFileName)) trueFileName = altFileName;
 			var pos = rdr.GetInt32(rdr.GetOrdinal("pos"));
 			var filePos = new FilePosition(trueFileName, pos);
 
-			return new CodeModel.Definitions.FunctionDefinition(
-				signature: sig,
-				filePos: filePos,
-				argsStartPos: 0,
-				argsEndPos: 0,
-				bodyStartPos: 0,
-				entireSpan: Span.Empty,
-				rawBodySpan: Span.Empty);
+			return new CodeModel.Definitions.FunctionDefinition(sig, filePos, 0, 0, 0, Span.Empty);
 		}
 
 		public void UpdateFromDefinition(CodeModel.Definitions.FunctionDefinition def)
@@ -161,9 +166,10 @@ namespace DkTools.FunctionFileScanning
 
 			if (_id != 0)
 			{
+				// TODO: next database version, remove description field
 				using (var cmd = db.CreateCommand(@"
 					update func set file_id = @file_id, name = @name, sig = @sig, alt_file_id = @alt_file_id, pos = @pos,
-					visible = @visible, ext_ref_id = @ext_ref_id where rowid = @id
+					description = null, visible = @visible where rowid = @id
 					"))
 				{
 					cmd.Parameters.AddWithValue("@id", _id);
@@ -173,16 +179,15 @@ namespace DkTools.FunctionFileScanning
 					cmd.Parameters.AddWithValue("@alt_file_id", altFileId);
 					cmd.Parameters.AddWithValue("@pos", filePos.Position);
 					cmd.Parameters.AddWithValue("@visible", _visible ? 1 : 0);
-					cmd.Parameters.AddWithValue("@ext_ref_id", _def.ExternalRefId);
-					
+
 					cmd.ExecuteNonQuery();
 				}
 			}
 			else
 			{
 				using (var cmd = db.CreateCommand(@"
-					insert into func (name, app_id, file_id, alt_file_id, pos, sig, visible, ext_ref_id)
-					values (@name, @app_id, @file_id, @alt_file_id, @pos, @sig, @visible, @ext_ref_id);
+					insert into func (name, app_id, file_id, alt_file_id, pos, sig, visible)
+					values (@name, @app_id, @file_id, @alt_file_id, @pos, @sig, @visible);
 					select last_insert_rowid();
 					"))
 				{
@@ -193,8 +198,6 @@ namespace DkTools.FunctionFileScanning
 					cmd.Parameters.AddWithValue("@pos", filePos.Position);
 					cmd.Parameters.AddWithValue("@sig", _sig.ToDbString());
 					cmd.Parameters.AddWithValue("@visible", _visible ? 1 : 0);
-					cmd.Parameters.AddWithValue("@ext_ref_id", _def.ExternalRefId);
-
 					_id = Convert.ToInt64(cmd.ExecuteScalar());
 				}
 			}

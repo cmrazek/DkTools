@@ -37,13 +37,12 @@ namespace DkTools.FunctionFileScanning
 	alt_file_id			integer			not null,
 	pos					int				not null,
 	sig					text			not null,
-	visible				tinyint			not null,
-	ext_ref_id			varchar(100)	not null
+	description			text,
+	visible				tinyint			not null
 );",
 "create index func_ix_appid on func (app_id, name)",
 "create index func_ix_fileid on func (file_id)",
 "create index func_ix_altfileid on func (alt_file_id)",
-"create index func_ix_extrefid on func (ext_ref_id)",
 
 @"create table include_depends
 (
@@ -62,10 +61,7 @@ namespace DkTools.FunctionFileScanning
 	file_id				integer			not null,
 	ext_ref_id			varchar(100)	not null,
 	alt_file_id			integer			not null,
-	pos					int				not null,
-	func_ref_id			varchar(100),
-	func_file_name		varchar(260),
-	func_pos			int
+	pos					int				not null
 )",
 @"create index ref_ix_extrefid on ref (ext_ref_id, app_id)",
 @"create index ref_ix_fileid on ref (file_id)",
@@ -103,7 +99,7 @@ namespace DkTools.FunctionFileScanning
 };
 		#endregion
 
-		public const string DatabaseFileName = "DkScan_v9.sqlite";	// New for 1.5.8
+		public const string DatabaseFileName = "DkScan_v8.sqlite";  // New for 1.4
 		public static readonly string[] OldDatabaseFileNames = new string[]
 		{
 			"DkScan.sdf",
@@ -113,7 +109,6 @@ namespace DkTools.FunctionFileScanning
 			"DkScan_v5.sdf",		// last used 1.2.23
 			"DkScan_v6.sdf",		// last used 1.3
 			"DkScan_v7.sdf",		// last used 1.3.5
-			"DkScan_v8.sqlite",		// last used 1.5.7
 		};
 
 		private SQLiteConnection _conn;

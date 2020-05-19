@@ -1,5 +1,4 @@
 ﻿using Microsoft.VisualStudio.Editor;
-using Microsoft.VisualStudio.Language.CallHierarchy;
 using Microsoft.VisualStudio.Language.Intellisense;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Text;
@@ -38,10 +37,6 @@ namespace DkTools.SignatureHelp
 		[Import]
 		internal IPeekBroker PeekBroker = null;
 
-		// TODO
-		//[Import]
-		//internal ICallHierarchyUIFactory CallHierarchyUIFactory { get; set; }
-
 		public void VsTextViewCreated(IVsTextView textViewAdapter)
 		{
 			ITextView textView = AdapterService.GetWpfTextView(textViewAdapter);
@@ -55,7 +50,6 @@ namespace DkTools.SignatureHelp
 					textStructureNavigator: NavigatorService.GetTextStructureNavigator(textView.TextBuffer),
 					signatureHelpBroker: SignatureHelpBroker,
 					signatureHelpCommandProvider: this));
-					//callHierarchyUIFactory: CallHierarchyUIFactory));		TODO
 
 			textView.Properties.GetOrCreateSingletonProperty(typeof(IPeekBroker), () => PeekBroker);
 		}
