@@ -269,8 +269,7 @@ namespace DkTools.CodeModel
 					argsStartPos: 0,
 					argsEndPos: 0,
 					bodyStartPos: 0,
-					entireSpan: Span.Empty,
-					rawBodySpan: Span.Empty);
+					entireSpan: Span.Empty);
 				_externFuncs[funcName] = def;
 				AddGlobalDefinition(def);
 				return;
@@ -306,8 +305,7 @@ namespace DkTools.CodeModel
 				argsStartPos: argStartPrimaryPos,
 				argsEndPos: argEndPrimaryPos,
 				bodyStartPos: bodyStartLocalPos,
-				entireSpan: entireSpan,
-				rawBodySpan: new Span(bodyStartPos + 1, bodyEndPos - 1));
+				entireSpan: entireSpan);
 
 			_localFuncs.Add(new LocalFunction(funcDef, nameSpan, statementsStartPos, bodyEndPos, argDefList, varList));
 			AddGlobalDefinition(funcDef);

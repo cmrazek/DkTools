@@ -15,7 +15,6 @@ namespace DkTools.CodeModel.Definitions
 		private int _argsStartPos;
 		private int _argsEndPos;
 		private Span _entireSpan;
-		private Span _rawBodySpan;
 
 		public FunctionDefinition(
 			FunctionSignature signature,
@@ -23,8 +22,7 @@ namespace DkTools.CodeModel.Definitions
 			int argsStartPos,
 			int argsEndPos,
 			int bodyStartPos,
-			Span entireSpan,
-			Span rawBodySpan)
+			Span entireSpan)
 			: base(signature.FunctionName, filePos, MakeExtRefId(signature.ClassName, signature.FunctionName))
 		{
 			_sig = signature ?? throw new ArgumentNullException(nameof(signature));
@@ -32,7 +30,6 @@ namespace DkTools.CodeModel.Definitions
 			_argsEndPos = argsEndPos;
 			_bodyStartPos = bodyStartPos;
 			_entireSpan = entireSpan;
-			_rawBodySpan = rawBodySpan;
 		}
 
 		public FunctionDefinition(FunctionSignature signature)
@@ -45,7 +42,7 @@ namespace DkTools.CodeModel.Definitions
 
 		public FunctionDefinition CloneAsExtern()
 		{
-			return new FunctionDefinition(_sig.Clone(), FilePosition, _argsStartPos, _argsEndPos, _bodyStartPos, _entireSpan, _rawBodySpan);
+			return new FunctionDefinition(_sig.Clone(), FilePosition, _argsStartPos, _argsEndPos, _bodyStartPos, _entireSpan);
 		}
 
 		/// <summary>
@@ -142,13 +139,6 @@ namespace DkTools.CodeModel.Definitions
 		{
 			get { return _entireSpan; }
 		}
-
-		/// <summary>
-		/// Span of the function body, in raw/preprocessor coordinates.
-		/// This is only guaranteed to be present if this definition was created by the preprocessor.
-		/// Function definitions read from the database will have an empty span.
-		/// </summary>
-		public Span RawBodySpan => _rawBodySpan;
 
 		public override string PickText
 		{
