@@ -3,6 +3,7 @@ ________________________________________________________________________________
 Version 1.5.9 - (not yet released):
 
 - Fixed some Code Analysis errors/warnings not showing up because of thread sync issues.
+- Code Analysis warnings can now be suppressed with #warndel and #warnadd (prefix code with 99).
 
 ____________________________________________________________________________________________________
 Version 1.5.8 - May 19, 2020:

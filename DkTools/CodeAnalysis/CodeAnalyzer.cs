@@ -145,11 +145,6 @@ namespace DkTools.CodeAnalysis
 				return;
 			}
 
-			if (errorCode == CAError.CA0110)
-			{
-				var TODO = 0;
-			}
-
 			if (int.TryParse(errorCode.ToString().Substring(2), out int code))
 			{
 				if (_warningSuppressions.IsWarningSuppressed(code, span.Start))

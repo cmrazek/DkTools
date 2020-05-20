@@ -39,13 +39,11 @@ namespace DkTools.ErrorTagging
 			ErrorTask task;
 			while (_newTasks.TryDequeue(out task))
 			{
-				Log.Debug("Add Task: {0}", task);	// TODO
 				Tasks.Add(task);
 				if (!fileNames.Contains(task.Document)) fileNames.Add(task.Document);
 			}
 			while (_delTasks.TryDequeue(out task))
 			{
-				Log.Debug("Remove Task: {0}", task);	// TODO
 				Tasks.Remove(task);
 				if (!fileNames.Contains(task.Document)) fileNames.Add(task.Document);
 			}
@@ -122,7 +120,6 @@ namespace DkTools.ErrorTagging
 									 select t).ToArray();
 				foreach (var task in tasksToRemove)
 				{
-					Log.Debug("Remove Task (SourceAndFile): {0} Source[{1}] File [{2}]", task, source, invokingFilePath);	// TODO
 					Tasks.Remove(task);
 					if (!filesToNotify.Contains(task.Document)) filesToNotify.Add(task.Document);
 				}
@@ -151,14 +148,12 @@ namespace DkTools.ErrorTagging
 									 select t).ToArray();
 				foreach (var task in tasksToRemove)
 				{
-					Log.Debug("Remove Task (Replace): {0} Source[{1}] File [{2}]", task, source, invokingFilePath);   // TODO
 					Tasks.Remove(task);
 					if (!filesToNotify.Contains(task.Document)) filesToNotify.Add(task.Document);
 				}
 
 				foreach (var task in tasks)
 				{
-					Log.Debug("Add Task (Replace): {0} Source[{1}] File [{2}]", task, source, invokingFilePath);    // TODO
 					Tasks.Add(task);
 					if (!filesToNotify.Contains(task.Document)) filesToNotify.Add(task.Document);
 				}
@@ -191,9 +186,6 @@ namespace DkTools.ErrorTagging
 		{
 			ThreadHelper.ThrowIfNotOnUIThread();
 
-			var sb = new StringBuilder();   // TODO: remove
-			sb.AppendLine("GetErrorTagsForFile:");
-
 			var tags = new List<TagSpan<ErrorTag>>();
 
 			var firstSpan = docSpans.FirstOrDefault();
@@ -205,25 +197,16 @@ namespace DkTools.ErrorTagging
 			foreach (var task in (from t in tasks where string.Equals(t.Document, fileName, StringComparison.OrdinalIgnoreCase) select t))
 			{
 				var taskSpan = task.TryGetSnapshotSpan(snapshot);
-				sb.Append($"  Task: {task.Text}");	// TODO
 				if (!taskSpan.HasValue)
 				{
-					sb.AppendLine(" (no snapshot span - filtered out)");	// TODO
 					continue;
 				}
 
 				foreach (var docSpan in docSpans)
 				{
-					sb.Append($"   DocSpan: [{docSpan.Span.Start}-{docSpan.Span.End}] Version [{docSpan.Snapshot.Version}]");	// TODO
-
 					var mappedTaskSpan = taskSpan.Value.TranslateTo(docSpan.Snapshot, SpanTrackingMode.EdgeExclusive);
-
-					sb.Append($" MappedSpan [{mappedTaskSpan.Span.Start}-{mappedTaskSpan.Span.End}]");	// TODO
-
 					if (docSpan.Contains(mappedTaskSpan))
 					{
-						sb.Append(" INCLUDED");	// TODO
-
 						string tagType;
 						switch (task.Type)
 						{
@@ -240,16 +223,8 @@ namespace DkTools.ErrorTagging
 						tags.Add(new TagSpan<ErrorTag>(taskSpan.Value, new ErrorTag(tagType, task.Text)));
 						break;
 					}
-					else
-					{
-						sb.Append(" Not Included");	// TODO
-					}
-
-					sb.AppendLine();	// TODO
 				}
 			}
-
-			Log.Debug(sb.ToString());	// TODO
 
 			return tags;
 		}
