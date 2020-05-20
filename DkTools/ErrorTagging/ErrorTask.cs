@@ -13,42 +13,70 @@ namespace DkTools.ErrorTagging
 	class ErrorTask : VsShell.Task
 	{
 		private ErrorTaskSource _source;
-		private string _sourceArg;
+		private string _invokingFilePath;
 		private ErrorType _type;
 		private CodeModel.Span? _reportedSpan;
 		private SnapshotSpan? _snapshotSpan;
 
-		public ErrorTask(string fileName, int lineNum, int lineCol, string message, ErrorType type, ErrorTaskSource source,
-			string sourceFileName, CodeModel.Span? reportedSpan, SnapshotSpan? snapshotSpan)
+		/// <summary>
+		/// Creates a new error/warning task.
+		/// </summary>
+		/// <param name="invokingFilePath">The file which caused this error to be found.
+		/// For example, if doing code analysis on a .nc file but the error was found in an include file,
+		/// this parameter would be the .nc file.</param>
+		/// <param name="filePath">The file in which the error actually shows up.</param>
+		/// <param name="lineNum">Line number in filePath where the error exists.</param>
+		/// <param name="lineCol">Line column in filePath where the error exists.</param>
+		/// <param name="message">Error message.</param>
+		/// <param name="type">Type of task (error or warning)</param>
+		/// <param name="source">Source of the task (compiler, background fec, or code analysis)</param>
+		/// <param name="reportedSpan">Optional span in filePath where the error exists.</param>
+		/// <param name="snapshotSpan">Optional snapshot span for the error. Will be generated later if not specified.</param>
+		public ErrorTask(
+			string invokingFilePath,
+			string filePath,
+			int lineNum,
+			int lineCol,
+			string message,
+			ErrorType type,
+			ErrorTaskSource source,
+			CodeModel.Span? reportedSpan,
+			SnapshotSpan? snapshotSpan)
 		{
-			this.Document = fileName;
-			this.Line = lineNum;
-			this.Column = lineCol;
+			_invokingFilePath = invokingFilePath;
+			Document = filePath;
+			Line = lineNum;
+			Column = lineCol;
 
-			if (string.IsNullOrEmpty(sourceFileName) || string.Equals(sourceFileName, fileName, StringComparison.OrdinalIgnoreCase))
+			if (string.IsNullOrEmpty(invokingFilePath) ||
+				string.Equals(invokingFilePath, filePath, StringComparison.OrdinalIgnoreCase))
 			{
-				this.Text = message;
+				Text = message;
 			}
 			else
 			{
-				var ix = sourceFileName.LastIndexOf('\\');
-				var sourceFileTitle = ix >= 0 ? sourceFileName.Substring(ix + 1) : sourceFileName;
-				this.Text = string.Format("{0}: {1}", sourceFileTitle, message);
+				var ix = invokingFilePath.LastIndexOf('\\');
+				var invokingFileName = ix >= 0 ? invokingFilePath.Substring(ix + 1) : invokingFilePath;
+				Text = string.Format("{0}: {1}", invokingFileName, message);
 			}
 			
-			this.Priority = type == ErrorType.Warning || type == ErrorType.CodeAnalysisError ? TaskPriority.Normal : TaskPriority.High;
-			this.Category = TaskCategory.BuildCompile;
+			Priority = type == ErrorType.Warning || type == ErrorType.CodeAnalysisError ? TaskPriority.Normal : TaskPriority.High;
+			Category = TaskCategory.BuildCompile;
 			_source = source;
-			_sourceArg = sourceFileName;
 			_type = type;
 			_reportedSpan = reportedSpan;
 			_snapshotSpan = snapshotSpan;
 
-			this.Navigate += ErrorTask_Navigate;
+			Navigate += ErrorTask_Navigate;
 		}
 
+		/// <summary>
+		/// The file that was being analyzed when this error was found.
+		/// For include files, this will be the base file which included that file.
+		/// </summary>
+		public string InvokingFilePath => _invokingFilePath;
 		public ErrorTaskSource Source => _source;
-		public string SourceArg => _sourceArg;
+		public override string ToString() => string.Concat(Document, "(", Line, ", ", Column, ") ", Type, ": ", Text);
 		public ErrorType Type => _type;
 
 		private void ErrorTask_Navigate(object sender, EventArgs e)
@@ -72,7 +100,22 @@ namespace DkTools.ErrorTagging
 		{
 			if (currentSnapshot == null) throw new ArgumentNullException(nameof(currentSnapshot));
 
-			if (_snapshotSpan.HasValue) return _snapshotSpan.Value;
+			if (_snapshotSpan.HasValue)
+			{
+				if (_snapshotSpan.Value.Snapshot == currentSnapshot)
+				{
+					if (_snapshotSpan.Value.Snapshot.Version != currentSnapshot.Version)
+					{
+						var updatedSpan = _snapshotSpan.Value.TranslateTo(currentSnapshot, SpanTrackingMode.EdgeExclusive);
+						_snapshotSpan = updatedSpan;
+						return updatedSpan;
+					}
+
+					return _snapshotSpan.Value;
+				}
+
+				_snapshotSpan = null;
+			}
 
 			if (_reportedSpan.HasValue)
 			{

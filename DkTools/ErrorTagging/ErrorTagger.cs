@@ -135,15 +135,6 @@ namespace DkTools.ErrorTagging
 						_model.FileContext != FileContext.Include &&
 						ProbeEnvironment.CurrentAppSettings.FileExistsInApp(_model.FileName))
 					{
-						if (!ProbeToolsPackage.Instance.EditorOptions.RunBackgroundFecOnSave)
-						{
-							ErrorTaskProvider.Instance.RemoveAllForSource(ErrorTaskSource.BackgroundFec, _model.FileName);
-						}
-						if (!ProbeToolsPackage.Instance.EditorOptions.RunCodeAnalysisOnSave)
-						{
-							ErrorTaskProvider.Instance.RemoveAllForSource(ErrorTaskSource.CodeAnalysis, _model.FileName);
-						}
-
 						if (ProbeToolsPackage.Instance.EditorOptions.RunBackgroundFecOnSave ||
 							ProbeToolsPackage.Instance.EditorOptions.RunCodeAnalysisOnSave)
 						{

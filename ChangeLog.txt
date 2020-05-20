@@ -1,5 +1,10 @@
 DkTools ChangeLog
 ____________________________________________________________________________________________________
+Version 1.5.9 - (not yet released):
+
+- Fixed some Code Analysis errors/warnings not showing up because of thread sync issues.
+
+____________________________________________________________________________________________________
 Version 1.5.8 - May 19, 2020:
 
 - Added 'Peek Definition' support (Alt+F12)

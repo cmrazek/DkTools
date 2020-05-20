@@ -39,11 +39,13 @@ namespace DkTools.ErrorTagging
 			ErrorTask task;
 			while (_newTasks.TryDequeue(out task))
 			{
+				Log.Debug("Add Task: {0}", task);	// TODO
 				Tasks.Add(task);
 				if (!fileNames.Contains(task.Document)) fileNames.Add(task.Document);
 			}
 			while (_delTasks.TryDequeue(out task))
 			{
+				Log.Debug("Remove Task: {0}", task);	// TODO
 				Tasks.Remove(task);
 				if (!fileNames.Contains(task.Document)) fileNames.Add(task.Document);
 			}
@@ -75,6 +77,8 @@ namespace DkTools.ErrorTagging
 		{
 			await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
 
+			Log.Debug("Clearing error tags");
+
 			var fileNames = new List<string>();
 
 			foreach (var task in Tasks.Cast<ErrorTask>())
@@ -104,7 +108,7 @@ namespace DkTools.ErrorTagging
 			ThreadHelper.JoinableTaskFactory.RunAsync(OnClearTasksAsync);
 		}
 
-		public void RemoveAllForSource(ErrorTaskSource source, string sourceFileName)
+		public void RemoveAllForSourceAndInvokingFile(ErrorTaskSource source, string invokingFilePath)
 		{
 			ThreadHelper.JoinableTaskFactory.RunAsync(async () =>
 			{
@@ -113,11 +117,49 @@ namespace DkTools.ErrorTagging
 				var filesToNotify = new List<string>();
 
 				var tasksToRemove = (from t in Tasks.Cast<ErrorTask>()
-									 where t.Source == source && string.Equals(t.SourceArg, sourceFileName, StringComparison.OrdinalIgnoreCase)
+									 where t.Source == source &&
+										string.Equals(t.InvokingFilePath, invokingFilePath, StringComparison.OrdinalIgnoreCase)
 									 select t).ToArray();
 				foreach (var task in tasksToRemove)
 				{
+					Log.Debug("Remove Task (SourceAndFile): {0} Source[{1}] File [{2}]", task, source, invokingFilePath);	// TODO
 					Tasks.Remove(task);
+					if (!filesToNotify.Contains(task.Document)) filesToNotify.Add(task.Document);
+				}
+
+				foreach (var file in filesToNotify)
+				{
+					ErrorTagsChangedForFile?.Invoke(this, new ErrorTaskEventArgs { FileName = file });
+				}
+			});
+		}
+
+		public void ReplaceForSourceAndInvokingFile(
+			ErrorTaskSource source,
+			string invokingFilePath,
+			IEnumerable<ErrorTask> tasks)
+		{
+			ThreadHelper.JoinableTaskFactory.RunAsync(async () =>
+			{
+				await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
+
+				var filesToNotify = new List<string>();
+
+				var tasksToRemove = (from t in Tasks.Cast<ErrorTask>()
+									 where t.Source == source &&
+										string.Equals(t.InvokingFilePath, invokingFilePath, StringComparison.OrdinalIgnoreCase)
+									 select t).ToArray();
+				foreach (var task in tasksToRemove)
+				{
+					Log.Debug("Remove Task (Replace): {0} Source[{1}] File [{2}]", task, source, invokingFilePath);   // TODO
+					Tasks.Remove(task);
+					if (!filesToNotify.Contains(task.Document)) filesToNotify.Add(task.Document);
+				}
+
+				foreach (var task in tasks)
+				{
+					Log.Debug("Add Task (Replace): {0} Source[{1}] File [{2}]", task, source, invokingFilePath);    // TODO
+					Tasks.Add(task);
 					if (!filesToNotify.Contains(task.Document)) filesToNotify.Add(task.Document);
 				}
 
@@ -140,7 +182,7 @@ namespace DkTools.ErrorTagging
 					var appSettings = ProbeEnvironment.CurrentAppSettings;
 					var fileName = VsTextUtil.TryGetDocumentFileName(textView.TextBuffer);
 					var model = fileStore.GetMostRecentModel(appSettings, fileName, textView.TextSnapshot, "ErrorTaskProvider.OnDocumentClosed()");
-					RemoveAllForSource(ErrorTaskSource.BackgroundFec, model.FileName);
+					RemoveAllForSourceAndInvokingFile(ErrorTaskSource.BackgroundFec, model.FileName);
 				}
 			});
 		}
@@ -148,6 +190,9 @@ namespace DkTools.ErrorTagging
 		public IEnumerable<ITagSpan<ErrorTag>> GetErrorTagsForFile(string fileName, NormalizedSnapshotSpanCollection docSpans)
 		{
 			ThreadHelper.ThrowIfNotOnUIThread();
+
+			var sb = new StringBuilder();   // TODO: remove
+			sb.AppendLine("GetErrorTagsForFile:");
 
 			var tags = new List<TagSpan<ErrorTag>>();
 
@@ -160,13 +205,25 @@ namespace DkTools.ErrorTagging
 			foreach (var task in (from t in tasks where string.Equals(t.Document, fileName, StringComparison.OrdinalIgnoreCase) select t))
 			{
 				var taskSpan = task.TryGetSnapshotSpan(snapshot);
-				if (!taskSpan.HasValue) continue;
+				sb.Append($"  Task: {task.Text}");	// TODO
+				if (!taskSpan.HasValue)
+				{
+					sb.AppendLine(" (no snapshot span - filtered out)");	// TODO
+					continue;
+				}
 
 				foreach (var docSpan in docSpans)
 				{
+					sb.Append($"   DocSpan: [{docSpan.Span.Start}-{docSpan.Span.End}] Version [{docSpan.Snapshot.Version}]");	// TODO
+
 					var mappedTaskSpan = taskSpan.Value.TranslateTo(docSpan.Snapshot, SpanTrackingMode.EdgeExclusive);
+
+					sb.Append($" MappedSpan [{mappedTaskSpan.Span.Start}-{mappedTaskSpan.Span.End}]");	// TODO
+
 					if (docSpan.Contains(mappedTaskSpan))
 					{
+						sb.Append(" INCLUDED");	// TODO
+
 						string tagType;
 						switch (task.Type)
 						{
@@ -183,8 +240,16 @@ namespace DkTools.ErrorTagging
 						tags.Add(new TagSpan<ErrorTag>(taskSpan.Value, new ErrorTag(tagType, task.Text)));
 						break;
 					}
+					else
+					{
+						sb.Append(" Not Included");	// TODO
+					}
+
+					sb.AppendLine();	// TODO
 				}
 			}
+
+			Log.Debug(sb.ToString());	// TODO
 
 			return tags;
 		}
@@ -225,10 +290,10 @@ namespace DkTools.ErrorTagging
 				{
 					if (task.Source == ErrorTaskSource.BackgroundFec)
 					{
-						var sourceFileName = task.SourceArg;
-						if (!string.IsNullOrEmpty(sourceFileName))
+						var invokingFilePath = task.InvokingFilePath;
+						if (!string.IsNullOrEmpty(invokingFilePath))
 						{
-							if (!ret.Any(x => string.Equals(x, sourceFileName))) ret.Add(sourceFileName);
+							if (!ret.Any(x => string.Equals(x, invokingFilePath))) ret.Add(invokingFilePath);
 						}
 					}
 				}

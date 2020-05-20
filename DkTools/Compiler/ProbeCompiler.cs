@@ -539,19 +539,17 @@ namespace DkTools.Compiler
 			var index = line.IndexOf(": error :");
 			if (index >= 0)
 			{
-				string fileName;
-				int lineNum;
-				if (ParseFileNameAndLine(line.Substring(0, index), out fileName, out lineNum))
+				if (ParseFilePathAndLine(line.Substring(0, index), out var filePath, out var lineNum))
 				{
 					var message = line.Substring(index + ": error :".Length).Trim();
 					var task = new DkTools.ErrorTagging.ErrorTask(
-						fileName: fileName,
+						invokingFilePath: filePath,
+						filePath: filePath,
 						lineNum: lineNum - 1,
 						lineCol: -1,
 						message: message,
 						type: ErrorType.Error,
 						source: ErrorTaskSource.Compile,
-						sourceFileName: null,
 						reportedSpan: null,
 						snapshotSpan: null);
 					ErrorTaskProvider.Instance.Add(task);
@@ -564,19 +562,17 @@ namespace DkTools.Compiler
 			index = line.IndexOf(": warning :");
 			if (index >= 0)
 			{
-				string fileName;
-				int lineNum;
-				if (ParseFileNameAndLine(line.Substring(0, index), out fileName, out lineNum))
+				if (ParseFilePathAndLine(line.Substring(0, index), out var filePath, out var lineNum))
 				{
 					var message = line.Substring(index + ": warning :".Length).Trim();
 					var task = new DkTools.ErrorTagging.ErrorTask(
-						fileName: fileName,
+						invokingFilePath: filePath,
+						filePath: filePath,
 						lineNum: lineNum - 1,
 						lineCol: -1,
 						message: message,
 						type: ErrorType.Warning,
 						source: ErrorTaskSource.Compile,
-						sourceFileName: null,
 						reportedSpan: null,
 						snapshotSpan: null);
 					ErrorTaskProvider.Instance.Add(task);
@@ -590,13 +586,13 @@ namespace DkTools.Compiler
 			{
 				var message = line.Substring("LINK : fatal error".Length).Trim();
 				var task = new DkTools.ErrorTagging.ErrorTask(
-					fileName: string.Empty,
+					invokingFilePath: null,
+					filePath: string.Empty,
 					lineNum: 0,
 					lineCol: -1,
 					message: message,
 					type: ErrorType.Error,
 					source: ErrorTaskSource.Compile,
-					sourceFileName: null,
 					reportedSpan: null,
 					snapshotSpan: null);
 				_pane.WriteLine(line);
@@ -607,13 +603,13 @@ namespace DkTools.Compiler
 			if (line.Equals("Build failed."))
 			{
 				var task = new DkTools.ErrorTagging.ErrorTask(
-					fileName: string.Empty,
+					invokingFilePath: null,
+					filePath: string.Empty,
 					lineNum: 0,
 					lineCol: -1,
 					message: "Build failed.",
 					type: ErrorType.Error,
 					source: ErrorTaskSource.Compile,
-					sourceFileName: null,
 					reportedSpan: null,
 					snapshotSpan: null);
 				ErrorTaskProvider.Instance.Add(task);
@@ -625,13 +621,13 @@ namespace DkTools.Compiler
 			if (line.IndexOf("Compile failed", StringComparison.OrdinalIgnoreCase) >= 0)
 			{
 				var task = new DkTools.ErrorTagging.ErrorTask(
-					fileName: string.Empty,
+					invokingFilePath: null,
+					filePath: string.Empty,
 					lineNum: 0,
 					lineCol: -1,
 					message: line,
 					type: ErrorType.Error,
 					source: ErrorTaskSource.Compile,
-					sourceFileName: null,
 					reportedSpan: null,
 					snapshotSpan: null);
 				ErrorTaskProvider.Instance.Add(task);
@@ -663,7 +659,7 @@ namespace DkTools.Compiler
 
 		private static Regex _rxFileNameAndLine = new Regex(@"(.+)\s*\((\d{1,9})\)\s*$");
 
-		public static bool ParseFileNameAndLine(string str, out string fileName, out int lineNum)
+		public static bool ParseFilePathAndLine(string str, out string fileName, out int lineNum)
 		{
 			var match = _rxFileNameAndLine.Match(str);
 			if (match.Success)

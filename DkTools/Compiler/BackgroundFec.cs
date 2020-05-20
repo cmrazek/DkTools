@@ -10,11 +10,11 @@ namespace DkTools.Compiler
 {
 	class BackgroundFec
 	{
-		public static void RunSync(string sourceFileName)
+		public static void RunSync(string sourceFilePath)
 		{
-			if (string.IsNullOrWhiteSpace(sourceFileName)) return;
+			if (string.IsNullOrWhiteSpace(sourceFilePath)) return;
 
-			Log.Debug("Running background FEC for file '{0}'.", sourceFileName);
+			Log.Debug("Running background FEC for file '{0}'.", sourceFilePath);
 
 			var counter = 10;
 			while (counter > 0)
@@ -34,16 +34,7 @@ namespace DkTools.Compiler
 
 			try
 			{
-				var first = true;
-				var reportError = new Action<ErrorTask>(task =>
-				{
-					if (first)
-					{
-						first = false;
-						ErrorTaskProvider.Instance.RemoveAllForSource(ErrorTaskSource.BackgroundFec, sourceFileName);
-					}
-					if (task != null) ErrorTaskProvider.Instance.Add(task);
-				});
+				var tasks = new List<ErrorTask>();
 
 				var output = new CallbackOutput(line =>
 				{
@@ -54,20 +45,19 @@ namespace DkTools.Compiler
 
 						string fileName;
 						int lineNum;
-						if (ProbeCompiler.ParseFileNameAndLine(line.Substring(0, index), out fileName, out lineNum))
+						if (ProbeCompiler.ParseFilePathAndLine(line.Substring(0, index), out fileName, out lineNum))
 						{
 							var message = line.Substring(index + ": error :".Length).Trim();
-							var task = new ErrorTask(
-								fileName: fileName, 
+							tasks.Add(new ErrorTask(
+								invokingFilePath: sourceFilePath,
+								filePath: fileName,
 								lineNum: lineNum - 1,
 								lineCol: -1,
 								message: message,
 								type: ErrorType.Error,
 								source: ErrorTaskSource.BackgroundFec,
-								sourceFileName: sourceFileName,
 								reportedSpan: null,
-								snapshotSpan: null);
-							reportError(task);
+								snapshotSpan: null));
 						}
 						return;
 					}
@@ -79,20 +69,19 @@ namespace DkTools.Compiler
 
 						string fileName;
 						int lineNum;
-						if (ProbeCompiler.ParseFileNameAndLine(line.Substring(0, index), out fileName, out lineNum))
+						if (ProbeCompiler.ParseFilePathAndLine(line.Substring(0, index), out fileName, out lineNum))
 						{
 							var message = line.Substring(index + ": warning :".Length).Trim();
-							var task = new ErrorTask(
-								fileName: fileName,
+							tasks.Add(new ErrorTask(
+								invokingFilePath: sourceFilePath,
+								filePath: fileName,
 								lineNum: lineNum - 1,
 								lineCol: -1,
 								message: message,
 								type: ErrorType.Warning,
 								source: ErrorTaskSource.BackgroundFec,
-								sourceFileName: sourceFileName,
 								reportedSpan: null,
-								snapshotSpan: null);
-							reportError(task);
+								snapshotSpan: null));
 						}
 						return;
 					}
@@ -104,15 +93,15 @@ namespace DkTools.Compiler
 				runner.CaptureOutput = true;
 				runner.CaptureError = true;
 
-				var exitCode = runner.CaptureProcess("fec.exe", string.Concat("\"", sourceFileName, "\""), workingDir, output);
+				var exitCode = runner.CaptureProcess("fec.exe", string.Concat("\"", sourceFilePath, "\""), workingDir, output);
 				if (exitCode == 0)
 				{
-					if (first) reportError(null);
+					ErrorTaskProvider.Instance.ReplaceForSourceAndInvokingFile(ErrorTaskSource.BackgroundFec, sourceFilePath, tasks);
 					Log.Debug("Background FEC completed successfully.");
 				}
 				else
 				{
-					Log.Write(LogLevel.Warning, "FEC.exe returned exit code {0} when running background FEC for file '{1}'.", exitCode, sourceFileName);
+					Log.Write(LogLevel.Warning, "FEC.exe returned exit code {0} when running background FEC for file '{1}'.", exitCode, sourceFilePath);
 				}
 			}
 			catch (Exception ex)
