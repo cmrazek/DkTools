@@ -903,8 +903,11 @@ namespace DkTools.CodeModel
 			}
 
 			public VariableDefinition Definition { get; private set; }
-			public string Dump() => Definition.Dump();
 			public Span RawSpan { get; private set; }
+
+#if DEBUG
+			public string Dump() => Definition.Dump();
+#endif
 		}
 	}
 }
