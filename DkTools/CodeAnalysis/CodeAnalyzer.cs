@@ -43,8 +43,6 @@ namespace DkTools.CodeAnalysis
 			_fullSource = _codeModel.Source.Text;
 			_warningSuppressions = _codeModel.PreprocessorModel.Preprocessor.WarningSuppressions;
 
-			//ErrorTaskProvider.Instance.RemoveAllForSourceAndInvokingFile(ErrorTaskSource.CodeAnalysis, _codeModel.FileName);		TODO: remove
-
 			foreach (var func in _prepModel.LocalFunctions)
 			{
 				AnalyzeFunction(func);
@@ -52,9 +50,6 @@ namespace DkTools.CodeAnalysis
 
 			if (_numErrors > 0 || _numWarnings > 0)
 			{
-				Log.Debug("CodeAnalyzer is firing tags changed event"); // TODO
-
-				//ErrorTaskProvider.Instance.FireTagsChanged();	// TODO
 				ErrorTaskProvider.Instance.ReplaceForSourceAndInvokingFile(
 					ErrorTaskSource.CodeAnalysis, _codeModel.FileName, _tasks);
 			}
@@ -147,15 +142,18 @@ namespace DkTools.CodeAnalysis
 		{
 			if (span.IsEmpty)
 			{
-				Log.Debug("{0} not reported because the span is empty.", errorCode);	// TODO
 				return;
+			}
+
+			if (errorCode == CAError.CA0110)
+			{
+				var TODO = 0;
 			}
 
 			if (int.TryParse(errorCode.ToString().Substring(2), out int code))
 			{
 				if (_warningSuppressions.IsWarningSuppressed(code, span.Start))
 				{
-					Log.Debug("{0} not reported because it is suppressed.", errorCode);	// TODO
 					return;
 				}
 			}
@@ -232,7 +230,6 @@ namespace DkTools.CodeAnalysis
 				reportedSpan: fileSpan,
 				snapshotSpan: null);
 
-			//ErrorTaskProvider.Instance.Add(task, true);		TODO
 			_tasks.Add(task);
 		}
 

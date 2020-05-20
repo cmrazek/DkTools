@@ -941,8 +941,8 @@ namespace DkTools.CodeModel
 
 			if (int.TryParse(numberString, out int number))
 			{
-				if (add) _warningSuppressions.OnWarnAdd(number, rdr.Position);
-				else _warningSuppressions.OnWarnDel(number, rdr.Position);
+				if (add) _warningSuppressions.OnWarnAdd(number, p.writer.Position);
+				else _warningSuppressions.OnWarnDel(number, p.writer.Position);
 			}
 		}
 
