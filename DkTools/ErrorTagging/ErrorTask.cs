@@ -127,7 +127,7 @@ namespace DkTools.ErrorTagging
 			{
 				if (Line < 0 || Line >= currentSnapshot.LineCount) return null;
 				var line = currentSnapshot.GetLineFromLineNumber(Line);
-				_snapshotSpan = line.GetSnapshotSpan();
+				_snapshotSpan = line.GetTrimmedSnapshotSpan();
 			}
 
 			return _snapshotSpan;

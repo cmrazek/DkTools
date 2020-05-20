@@ -154,6 +154,20 @@ namespace DkTools
 		{
 			return new SnapshotSpan(line.Start, line.End);
 		}
+
+		public static SnapshotSpan GetTrimmedSnapshotSpan(this ITextSnapshotLine line)
+		{
+			var lineText = line.GetText();
+
+			var start = 0;
+			while (start <= lineText.Length && char.IsWhiteSpace(lineText[start])) start++;
+
+			var end = lineText.Length;
+			while (end > 0 && char.IsWhiteSpace(lineText[end - 1])) end--;
+
+			if (start >= end) return new SnapshotSpan(line.End, 0);
+			return new SnapshotSpan(line.Snapshot, line.Start.Position + start, end - start);
+		}
 	}
 
 	internal static class SnapshotPointEx
