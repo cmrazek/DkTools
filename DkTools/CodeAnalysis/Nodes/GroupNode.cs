@@ -196,6 +196,16 @@ namespace DkTools.CodeAnalysis.Nodes
 		{
 			SimplifyGroup(scope);
 
+			if (_nodes.Count == 2 && scope.RemoveHeaderString)
+			{
+				var lastNode = _nodes.Last() as StringLiteralNode;
+				if (lastNode != null)
+				{
+					RemoveChild(lastNode);
+					scope.RemoveHeaderString = false;
+				}
+			}
+
 			if (_nodes.Count == 1)
 			{
 				_nodes[0].Execute(scope);
@@ -208,16 +218,6 @@ namespace DkTools.CodeAnalysis.Nodes
 		public override Value ReadValue(RunScope scope)
 		{
 			SimplifyGroup(scope);
-
-			if (_nodes.Count == 2 && scope.RemoveHeaderString)
-			{
-				var lastNode = _nodes.Last() as StringLiteralNode;
-				if (lastNode != null)
-				{
-					RemoveChild(lastNode);
-					scope.RemoveHeaderString = false;
-				}
-			}
 
 			if (_nodes.Count == 1)
 			{
@@ -266,8 +266,8 @@ namespace DkTools.CodeAnalysis.Nodes
 
 		public override bool IsReportable
 		{
-			get => _nodes.Count == 1 && _nodes[0].IsReportable;
-			set { if (_nodes.Count == 1) _nodes[0].IsReportable = value; }
+			get => _nodes.Count > 0 ? _nodes[0].IsReportable : false;
+			set { if (_nodes.Count > 0) _nodes[0].IsReportable = value; }
 		}
 	}
 }
