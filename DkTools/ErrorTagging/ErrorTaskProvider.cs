@@ -106,6 +106,30 @@ namespace DkTools.ErrorTagging
 			ThreadHelper.JoinableTaskFactory.RunAsync(OnClearTasksAsync);
 		}
 
+		public void RemoveAllForSource(ErrorTaskSource source)
+		{
+			ThreadHelper.JoinableTaskFactory.RunAsync(async () =>
+			{
+				await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
+
+				var filesToNotify = new List<string>();
+
+				var tasksToRemove = (from t in Tasks.Cast<ErrorTask>()
+									 where t.Source == source
+									 select t).ToArray();
+				foreach (var task in tasksToRemove)
+				{
+					Tasks.Remove(task);
+					if (!filesToNotify.Contains(task.Document)) filesToNotify.Add(task.Document);
+				}
+
+				foreach (var file in filesToNotify)
+				{
+					ErrorTagsChangedForFile?.Invoke(this, new ErrorTaskEventArgs { FileName = file });
+				}
+			});
+		}
+
 		public void RemoveAllForSourceAndInvokingFile(ErrorTaskSource source, string invokingFilePath)
 		{
 			ThreadHelper.JoinableTaskFactory.RunAsync(async () =>

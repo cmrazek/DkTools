@@ -153,6 +153,15 @@ namespace DkTools.ErrorTagging
 								}
 							});
 						}
+
+						if (!ProbeToolsPackage.Instance.EditorOptions.RunBackgroundFecOnSave)
+						{
+							ErrorTaskProvider.Instance.RemoveAllForSource(ErrorTaskSource.BackgroundFec);
+						}
+						if (!ProbeToolsPackage.Instance.EditorOptions.RunCodeAnalysisOnSave)
+						{
+							ErrorTaskProvider.Instance.RemoveAllForSource(ErrorTaskSource.CodeAnalysis);
+						}
 					}
 				}
 				catch (Exception ex)
