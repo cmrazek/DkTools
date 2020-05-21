@@ -8,6 +8,8 @@ Version 1.5.9 - (not yet released):
 - Add an Option to run Code Analysis after user input. (in Tools -> Options)
 - Disabled the annoying 'Full Background Scan Required' message box.
 - Changed files now detected using a file system watcher and references should update more frequently.
+- Typing a colon ':' now closes auto-completion. This was interfering with 'case' and 'default' on
+  switch statements.
 
 ____________________________________________________________________________________________________
 Version 1.5.8 - May 19, 2020:
