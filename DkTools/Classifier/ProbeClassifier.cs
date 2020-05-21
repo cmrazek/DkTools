@@ -64,11 +64,16 @@ namespace DkTools.Classifier
 
 			_scanner = new ProbeClassifierScanner();
 
-			ProbeEnvironment.AppChanged += new EventHandler(ProbeEnvironment_AppChanged);
-			CodeModel.Definitions.DefinitionStore.DefinitionStoreChanged += DefinitionStore_DefinitionStoreChanged;
-			ProbeToolsPackage.Instance.EditorOptions.EditorRefreshRequired += EditorOptions_ClassifierRefreshRequired;
+			ProbeToolsPackage.Instance.RefreshAllDocumentsRequired += OnRefreshAllDocumentsRequired;
+			ProbeToolsPackage.Instance.RefreshDocumentRequired += OnRefreshDocumentRequired;
 
 			VSTheme.ThemeChanged += VSTheme_ThemeChanged;
+		}
+
+		~ProbeClassifier()
+		{
+			ProbeToolsPackage.Instance.RefreshAllDocumentsRequired -= OnRefreshAllDocumentsRequired;
+			ProbeToolsPackage.Instance.RefreshDocumentRequired -= OnRefreshDocumentRequired;
 		}
 
 		public IList<ClassificationSpan> GetClassificationSpans(SnapshotSpan span)  // from IClassifier
@@ -136,19 +141,34 @@ namespace DkTools.Classifier
 			}
 		}
 
-		private void ProbeEnvironment_AppChanged(object sender, EventArgs e)
+		private void OnRefreshAllDocumentsRequired(object sender, EventArgs e)
 		{
-			UpdateClassification();
+			try
+			{
+				UpdateClassification();
+			}
+			catch (Exception ex)
+			{
+				Log.Error(ex);
+			}
 		}
 
-		private void DefinitionStore_DefinitionStoreChanged(object sender, EventArgs e)
+		private void OnRefreshDocumentRequired(object sender, ProbeToolsPackage.RefreshDocumentEventArgs e)
 		{
-			UpdateClassification();
-		}
+			ThreadHelper.ThrowIfNotOnUIThread();
 
-		void EditorOptions_ClassifierRefreshRequired(object sender, EventArgs e)
-		{
-			UpdateClassification();
+			try
+			{
+				var filePath = VsTextUtil.TryGetDocumentFileName(_snapshot.TextBuffer);
+				if (string.Equals(filePath, e.FilePath, StringComparison.OrdinalIgnoreCase))
+				{
+					UpdateClassification();
+				}
+			}
+			catch (Exception ex)
+			{
+				Log.Error(ex);
+			}
 		}
 
 		void VSTheme_ThemeChanged(object sender, EventArgs e)

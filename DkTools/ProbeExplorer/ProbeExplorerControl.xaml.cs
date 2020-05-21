@@ -169,8 +169,7 @@ namespace DkTools.ProbeExplorer
 					RefreshAppCombo(appSettings);
 					RefreshFileTree(appSettings);
 					RefreshDictTree();
-					CodeModel.FileStore.FireAllModelRebuildRequired();
-					ProbeToolsPackage.Instance.EditorOptions.FireEditorRefresh();
+					ProbeToolsPackage.Instance.FireRefreshAllDocuments();
 				});
 			}
 			catch (Exception ex)

@@ -24,14 +24,24 @@ namespace DkTools.CodeModel
 		private static PreprocessorDefine[] _stdLibDefines;
 
 		public event EventHandler<ModelUpdatedEventArgs> ModelUpdated;
-		public static event EventHandler AllModelRebuildRequired;
 
 		private const int NumberOfIncludeParentFiles = 3;
 
 		public FileStore()
 		{
 			_guid = Guid.NewGuid();
-			AllModelRebuildRequired += FileStore_AllModelRebuildRequired;
+			ProbeToolsPackage.Instance.RefreshAllDocumentsRequired += OnRefreshAllDocumentsRequired;
+			ProbeToolsPackage.Instance.RefreshDocumentRequired += OnRefreshDocumentRequired;
+			ProbeAppSettings.FileChanged += ProbeAppSettings_FileChanged;
+			ProbeAppSettings.FileDeleted += ProbeAppSettings_FileDeleted;
+		}
+
+		~FileStore()
+		{
+			ProbeToolsPackage.Instance.RefreshAllDocumentsRequired -= OnRefreshAllDocumentsRequired;
+			ProbeToolsPackage.Instance.RefreshDocumentRequired -= OnRefreshDocumentRequired;
+			ProbeAppSettings.FileChanged -= ProbeAppSettings_FileChanged;
+			ProbeAppSettings.FileDeleted -= ProbeAppSettings_FileDeleted;
 		}
 
 		public static FileStore GetOrCreateForTextBuffer(VsText.ITextBuffer buf)
@@ -64,14 +74,12 @@ namespace DkTools.CodeModel
 			{
 				if (_sameDirIncludeFiles.TryGetValue(fileNameLower, out file))
 				{
-					file.CheckForRefreshRequired();
 					return file;
 				}
 			}
 
 			if (_globalIncludeFiles.TryGetValue(fileNameLower, out file))
 			{
-				file.CheckForRefreshRequired();
 				return file;
 			}
 
@@ -379,15 +387,106 @@ namespace DkTools.CodeModel
 			return _stdLibModel;
 		}
 
-		public static void FireAllModelRebuildRequired()
-		{
-			var ev = AllModelRebuildRequired;
-			if (ev != null) ev(null, EventArgs.Empty);
-		}
-
-		private void FileStore_AllModelRebuildRequired(object sender, EventArgs e)
+		private void OnRefreshAllDocumentsRequired(object sender, EventArgs e)
 		{
 			_model = null;
+		}
+
+		private void OnRefreshDocumentRequired(object sender, ProbeToolsPackage.RefreshDocumentEventArgs e)
+		{
+			if (_model != null && e.FilePath.EqualsI(_model.FileName))
+			{
+				_model = null;
+			}
+		}
+
+		private void ProbeAppSettings_FileChanged(object sender, ProbeAppSettings.FileEventArgs e)
+		{
+			try
+			{
+				InvalidateFile(e.FilePath);
+			}
+			catch (Exception ex)
+			{
+				Log.Error(ex);
+			}
+		}
+
+		private void ProbeAppSettings_FileDeleted(object sender, ProbeAppSettings.FileEventArgs e)
+		{
+			try
+			{
+				InvalidateFile(e.FilePath);
+			}
+			catch (Exception ex)
+			{
+				Log.Error(ex);
+			}
+		}
+
+		private void InvalidateFile(string filePath)
+		{
+			// If the file is an include file this model depends on, then clear those from the cache as well.
+			var includeFilesAffected = false;
+			var filesToRemove = new List<string>();
+			foreach (var kv in _sameDirIncludeFiles)
+			{
+				if (string.Equals(kv.Value.FullPathName, filePath, StringComparison.OrdinalIgnoreCase))
+				{
+					filesToRemove.Add(kv.Key);
+					includeFilesAffected = true;
+				}
+			}
+			foreach (var key in filesToRemove)
+			{
+				_sameDirIncludeFiles.Remove(key);
+			}
+
+			filesToRemove.Clear();
+			foreach (var kv in _globalIncludeFiles)
+			{
+				if (string.Equals(kv.Value.FullPathName, filePath, StringComparison.OrdinalIgnoreCase))
+				{
+					filesToRemove.Add(kv.Key);
+					includeFilesAffected = true;
+				}
+			}
+			foreach (var key in filesToRemove)
+			{
+				_globalIncludeFiles.Remove(key);
+			}
+
+			filesToRemove.Clear();
+			foreach (var includeFilePath in _includeParentDefs.Keys)
+			{
+				if (string.Equals(includeFilePath, filePath, StringComparison.OrdinalIgnoreCase))
+				{
+					filesToRemove.Add(includeFilePath);
+					includeFilesAffected = true;
+				}
+			}
+			foreach (var key in filesToRemove)
+			{
+				_includeParentDefs.Remove(key);
+			}
+
+			// If an include file was touched by this change, then rebuild the entire model.
+			if (includeFilesAffected)
+			{
+				// The main model needs to be refreshed as well, since it depends on that include file.
+				if (_model != null && !string.IsNullOrEmpty(_model.FileName))
+				{
+					Log.Debug("FileStore is triggering a refresh for document '{0}' because a refresh was detected for an include file.", _model.FileName);
+					ProbeToolsPackage.Instance.FireRefreshDocument(_model.FileName);
+				}
+
+				_model = null;
+			}
+			// If the file touched is the main model, then require it to be completely rebuilt.
+			else if (string.Equals(_model?.FileName, filePath, StringComparison.OrdinalIgnoreCase))
+			{
+				_model = null;
+			}
 		}
 
 		public Definition[] GetIncludeParentDefinitions(ProbeAppSettings appSettings, string includePathName)
@@ -466,140 +565,6 @@ namespace DkTools.CodeModel
 			Log.Debug("Using {0} definition(s) from include parent files.", commonDefines.Length);
 			_includeParentDefs[includePathName.ToLower()] = commonDefines;
 			return commonDefines;
-		}
-
-		public sealed class IncludeFile
-		{
-			private FileStore _store;
-			private string _fullPathName;
-			private CodeSource _source;
-			private CodeFile _codeFile;
-			private DateTime _lastCheck;
-			private DateTime _lastModifiedDate;
-			private Dictionary<string, string> _preMergeContent = new Dictionary<string, string>();
-
-			public IncludeFile(FileStore store, string fileName)
-			{
-				if (store == null) throw new ArgumentNullException("store");
-				if (string.IsNullOrEmpty(fileName)) throw new ArgumentNullException("fileName");
-
-				_store = store;
-				_fullPathName = fileName;
-
-				Shell.FileSaved += Shell_FileSaving;
-			}
-
-			~IncludeFile()
-			{
-				Shell.FileSaved -= Shell_FileSaving;
-			}
-
-			public CodeSource GetSource(ProbeAppSettings appSettings)
-			{
-				if (_source == null)
-				{
-					try
-					{
-						var merger = new FileMerger();
-						merger.MergeFile(appSettings, _fullPathName, null, false, false);
-						_source = merger.MergedContent;
-
-						var fileInfo = new FileInfo(_fullPathName);
-						_lastModifiedDate = fileInfo.LastWriteTime;
-						_lastCheck = DateTime.Now;
-
-						foreach (var mergeFileName in merger.FileNames)
-						{
-							var content = merger.GetFileContent(mergeFileName);
-							if (content == null) throw new InvalidOperationException("Merger content is null.");
-							_preMergeContent[mergeFileName.ToLower()] = content;
-						}
-					}
-					catch (Exception ex)
-					{
-						Log.Error(ex, "Exception when attempting to read content of include file '{0}'.", _fullPathName);
-						_source = null;
-					}
-				}
-				return _source;
-			}
-
-			public CodeFile GetCodeFile(ProbeAppSettings appSettings, CodeModel model, IEnumerable<string> parentFiles)
-			{
-				if (_codeFile == null)
-				{
-					try
-					{
-						Log.Debug("Processing include file: {0}", _fullPathName);
-
-						var content = GetSource(appSettings);
-						if (content == null) return null;
-
-						var file = new CodeFile(model);
-						file.Parse(content, _fullPathName, parentFiles, false);
-						_codeFile = file;
-					}
-					catch (Exception ex)
-					{
-						Log.Error(ex, "Exception when processing include file '{0}'.", _fullPathName);
-						_codeFile = null;
-					}
-
-					_lastCheck = DateTime.Now;
-				}
-				return _codeFile;
-			}
-
-			public string FullPathName
-			{
-				get { return _fullPathName; }
-			}
-
-			public void CheckForRefreshRequired()
-			{
-				if (_lastCheck.AddSeconds(Constants.IncludeFileCheckFrequency) <= DateTime.Now)
-				{
-					var fileInfo = new FileInfo(_fullPathName);
-					var modDate = fileInfo.LastWriteTime;
-					if (Math.Abs(modDate.Subtract(_lastModifiedDate).TotalSeconds) > 1.0)
-					{
-						Log.Debug("Detected change in include file: {0}", _fullPathName);
-						OnFileChangeSuspected();
-						_lastModifiedDate = modDate;
-					}
-					_lastCheck = DateTime.Now;
-				}
-			}
-
-			private void Shell_FileSaving(object sender, Shell.FileSavedEventArgs e)
-			{
-				if (e.FileName.Equals(_fullPathName, StringComparison.OrdinalIgnoreCase))
-				{
-					Log.Debug("Detected change in include file (saving): {0}", _fullPathName);
-					OnFileChangeSuspected();
-				}
-			}
-
-			private void OnFileChangeSuspected()
-			{
-				_source = null;
-				_codeFile = null;
-			}
-
-			public IEnumerable<string> PreMergeFileNames
-			{
-				get
-				{
-					return _preMergeContent.Keys;
-				}
-			}
-
-			public string GetPreMergeContent(string fileName)
-			{
-				string content;
-				if (_preMergeContent.TryGetValue(fileName.ToLower(), out content)) return content;
-				return null;
-			}
 		}
 
 		public class FunctionDropDownItem

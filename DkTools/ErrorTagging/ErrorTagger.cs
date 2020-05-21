@@ -30,13 +30,19 @@ namespace DkTools.ErrorTagging
 			_view = view;
 			_store = FileStore.GetOrCreateForTextBuffer(_view.TextBuffer);
 
-			ProbeToolsPackage.Instance.EditorOptions.EditorRefreshRequired += EditorOptions_EditorRefreshRequired;
-			Shell.FileSaved += Shell_FileSaved;
+			ProbeToolsPackage.Instance.RefreshAllDocumentsRequired += OnRefreshAllDocumentsRequired;
+			ProbeToolsPackage.Instance.RefreshDocumentRequired += OnRefreshDocumentRequired;
 			ErrorTaskProvider.Instance.ErrorTagsChangedForFile += Instance_ErrorTagsChangedForFile;
 
 			_backgroundFecDeferrer = new BackgroundDeferrer(Constants.BackgroundFecDelay);
 			_backgroundFecDeferrer.Idle += _backgroundFecDeferrer_Idle;
 			_backgroundFecDeferrer.OnActivity();
+		}
+
+		~ErrorTagger()
+		{
+			ProbeToolsPackage.Instance.RefreshAllDocumentsRequired -= OnRefreshAllDocumentsRequired;
+			ProbeToolsPackage.Instance.RefreshDocumentRequired -= OnRefreshDocumentRequired;
 		}
 
 		public event EventHandler<SnapshotSpanEventArgs> TagsChanged;
@@ -53,52 +59,34 @@ namespace DkTools.ErrorTagging
 			return ErrorTaskProvider.Instance.GetErrorTagsForFile(_model.FileName, spans);
 		}
 
-		private void EditorOptions_EditorRefreshRequired(object sender, EventArgs e)
+		private void OnRefreshAllDocumentsRequired(object sender, EventArgs e)
 		{
 			try
 			{
-				if (_model != null &&
-					_model.FileContext != FileContext.Include &&
-					ProbeEnvironment.CurrentAppSettings.FileExistsInApp(_model.FileName))
+				if (_model != null && _model.FileContext != FileContext.Include)
 				{
 					_backgroundFecDeferrer.OnActivity();
 				}
-
-				var ev = TagsChanged;
-				if (ev != null) ev(this, new SnapshotSpanEventArgs(new SnapshotSpan(_view.TextSnapshot, 0, _view.TextSnapshot.Length)));
 			}
 			catch (Exception ex)
 			{
-				Log.WriteEx(ex);
+				Log.Error(ex);
 			}
 		}
 
-		void Shell_FileSaved(object sender, Shell.FileSavedEventArgs e)
+		private void OnRefreshDocumentRequired(object sender, ProbeToolsPackage.RefreshDocumentEventArgs e)
 		{
-			ThreadHelper.ThrowIfNotOnUIThread();
 			try
 			{
-				if (_model == null) return;
-
-				if (string.Equals(e.FileName, _model.FileName, StringComparison.OrdinalIgnoreCase))
+				if (_model != null && _model.FileContext != FileContext.Include &&
+					e.FilePath.EqualsI(_model.FileName))
 				{
-					if (_model.FileContext != FileContext.Include &&
-						ProbeEnvironment.CurrentAppSettings.FileExistsInApp(_model.FileName))
-					{
-						_backgroundFecDeferrer.OnActivity();
-					}
-					else
-					{
-						foreach (var sourceFileName in ErrorTaskProvider.Instance.GetFilesForInclude(_model.FileName))
-						{
-							Shell.OnFileSaved(sourceFileName);
-						}
-					}
+					_backgroundFecDeferrer.OnActivity();
 				}
 			}
 			catch (Exception ex)
 			{
-				Log.WriteEx(ex);
+				Log.Error(ex);
 			}
 		}
 

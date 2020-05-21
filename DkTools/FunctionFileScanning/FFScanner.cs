@@ -5,6 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
+using System.Windows.Forms;
 using DkTools.CodeModel;
 
 namespace DkTools.FunctionFileScanning
@@ -51,7 +52,7 @@ namespace DkTools.FunctionFileScanning
 			_thread.Start();
 
 			ProbeEnvironment.AppChanged += new EventHandler(ProbeEnvironment_AppChanged);
-			Shell.FileSaved += Shell_FileSaved;
+			ProbeAppSettings.FileChanged += ProbeAppSettings_FileChanged;
 		}
 
 		public void OnShutdown()
@@ -356,27 +357,27 @@ namespace DkTools.FunctionFileScanning
 			}
 		}
 
-		private void Shell_FileSaved(object sender, Shell.FileSavedEventArgs e)
+		private void ProbeAppSettings_FileChanged(object sender, ProbeAppSettings.FileEventArgs e)
 		{
 			try
 			{
 				var options = ProbeToolsPackage.Instance.EditorOptions;
 				if (!options.DisableBackgroundScan)
 				{
-					var fileContext = FileContextUtil.GetFileContextFromFileName(e.FileName);
-					if (ProbeEnvironment.CurrentAppSettings.FileExistsInApp(e.FileName))
+					var fileContext = FileContextUtil.GetFileContextFromFileName(e.FilePath);
+					if (ProbeEnvironment.CurrentAppSettings.FileExistsInApp(e.FilePath))
 					{
-						if (fileContext != FileContext.Include && !FileContextUtil.IsLocalizedFile(e.FileName))
+						if (fileContext != FileContext.Include && !FileContextUtil.IsLocalizedFile(e.FilePath))
 						{
-							Log.Debug("Scanner detected a saved file: {0}", e.FileName);
+							Log.Debug("Scanner detected a saved file: {0}", e.FilePath);
 
-							EnqueueChangedFile(e.FileName);
+							EnqueueChangedFile(e.FilePath);
 						}
 						else
 						{
-							Log.Debug("Scanner detected an include file was saved: {0}", e.FileName);
+							Log.Debug("Scanner detected an include file was saved: {0}", e.FilePath);
 
-							EnqueueFilesDependentOnInclude(e.FileName);
+							EnqueueFilesDependentOnInclude(e.FilePath);
 						}
 					}
 				}

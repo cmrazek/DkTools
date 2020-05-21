@@ -32,8 +32,6 @@ namespace DkTools
 		[Description("Stop scanning files in the background (will cause classes, functions to not be detected properly).")]
 		public bool DisableBackgroundScan { get; set; }
 
-		public event EventHandler EditorRefreshRequired;
-
 		public EditorOptions()
 		{
 			DisableDeadCode = true;
@@ -45,13 +43,7 @@ namespace DkTools
 		{
 			base.SaveSettingsToStorage();
 
-			FireEditorRefresh();
-		}
-
-		public void FireEditorRefresh()
-		{
-			var ev = EditorRefreshRequired;
-			if (ev != null) ev(this, EventArgs.Empty);
+			ProbeToolsPackage.Instance.FireRefreshAllDocuments();
 		}
 	}
 }

@@ -15,8 +15,6 @@ namespace DkTools.CodeModel.Definitions
 		private GroupedList<string, ClassDefinition> _classes = new GroupedList<string, ClassDefinition>();
 		private GroupedList<string, ExtractTableDefinition> _permExtracts = new GroupedList<string, ExtractTableDefinition>();
 
-		public static event EventHandler DefinitionStoreChanged;
-
 		public DefinitionStore(string appName)
 		{
 			if (string.IsNullOrEmpty(appName)) throw new ArgumentNullException(nameof(appName));
@@ -29,7 +27,7 @@ namespace DkTools.CodeModel.Definitions
 		{
 			if (ds == null) throw new ArgumentNullException(nameof(ds));
 			Current = ds;
-			DefinitionStoreChanged?.Invoke(null, EventArgs.Empty);
+			ProbeToolsPackage.Instance.FireRefreshAllDocuments();
 		}
 
 		public IEnumerable<Definition> GlobalDefinitions

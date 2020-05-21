@@ -321,6 +321,7 @@
     <Compile Include="CodeModel\Definitions\DefinitionStore.cs" />
     <Compile Include="CodeModel\Definitions\FilePositionDefinition.cs" />
     <Compile Include="CodeModel\FunctionSignature.cs" />
+    <Compile Include="CodeModel\IncludeFile.cs" />
     <Compile Include="CodeModel\PassByMethod.cs" />
     <Compile Include="CodeModel\PreprocessorDefine.cs" />
     <Compile Include="CodeModel\SignatureDocumentor.cs" />

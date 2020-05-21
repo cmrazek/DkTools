@@ -35,6 +35,14 @@ namespace DkTools
 		public static ProbeAppSettings CurrentAppSettings
 		{
 			get { return _currentApp; }
+			set
+			{
+				if (_currentApp != value)
+				{
+					if (_currentApp != null) _currentApp.Deactivate();
+					_currentApp = value;
+				}
+			}
 		}
 
 		private static ProbeAppSettings ReloadCurrentApp(string appName = "")
@@ -75,6 +83,7 @@ namespace DkTools
 					appSettings.SourceFiles = LoadSourceFiles(appSettings);
 					appSettings.IncludeFiles = LoadIncludeFiles(appSettings);
 					appSettings.SourceAndIncludeFiles = appSettings.SourceFiles.Concat(appSettings.IncludeFiles.Where(i => !appSettings.SourceFiles.Contains(i))).ToArray();
+					appSettings.CreateFileSystemWatcher();
 				}
 
 				var elapsed = DateTime.Now.Subtract(startTime);
@@ -105,13 +114,14 @@ namespace DkTools
 				{
 					ReloadTableList(appSettings);
 
-					_currentApp = appSettings;
+					CurrentAppSettings = appSettings;
 
 					AppChanged?.Invoke(null, EventArgs.Empty);
+					ProbeToolsPackage.Instance.FireRefreshAllDocuments();
 
 					if (updateDefaultApp)
 					{
-						_currentApp.TryUpdateDefaultCurrentApp();
+						CurrentAppSettings.TryUpdateDefaultCurrentApp();
 					}
 				}
 			});

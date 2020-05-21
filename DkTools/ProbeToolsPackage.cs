@@ -155,6 +155,9 @@ namespace DkTools
 			_dteDocumentEvents = _dteEvents.DocumentEvents;
 			_dteDocumentEvents.DocumentSaved += DocumentEvents_DocumentSaved;
 
+			ProbeAppSettings.FileChanged += ProbeAppSettings_FileChanged;
+			ProbeAppSettings.FileDeleted += ProbeAppSettings_FileDeleted;
+
 			Microsoft.VisualStudio.PlatformUI.VSColorTheme.ThemeChanged += VSColorTheme_ThemeChanged;
 		}
 
@@ -302,20 +305,53 @@ namespace DkTools
 			{
 				await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
 
-				try
-				{
-					Shell.OnFileSaved(Document.FullName);
-				}
-				catch (Exception ex)
-				{
-					Shell.ShowError(ex);
-				}
+				FireRefreshDocument(Document.FullName);
 			});
+		}
+
+		private void ProbeAppSettings_FileChanged(object sender, ProbeAppSettings.FileEventArgs e)
+		{
+			ThreadHelper.ThrowIfNotOnUIThread();
+
+			FireRefreshDocument(e.FilePath);
+		}
+
+		private void ProbeAppSettings_FileDeleted(object sender, ProbeAppSettings.FileEventArgs e)
+		{
+			ThreadHelper.ThrowIfNotOnUIThread();
+
+			FireRefreshDocument(e.FilePath);
 		}
 
 		private void VSColorTheme_ThemeChanged(Microsoft.VisualStudio.PlatformUI.ThemeChangedEventArgs e)
 		{
 			VSTheme.OnThemeChanged();
+		}
+
+		public event EventHandler RefreshAllDocumentsRequired;
+
+		public void FireRefreshAllDocuments()
+		{
+			Log.Debug("Event: RefreshAllDocumentsRequired");
+			RefreshAllDocumentsRequired?.Invoke(this, EventArgs.Empty);
+		}
+
+		public event EventHandler<RefreshDocumentEventArgs> RefreshDocumentRequired;
+
+		public class RefreshDocumentEventArgs : EventArgs
+		{
+			public string FilePath { get; private set; }
+
+			public RefreshDocumentEventArgs(string filePath)
+			{
+				FilePath = filePath;
+			}
+		}
+
+		public void FireRefreshDocument(string filePath)
+		{
+			Log.Debug("Event: RefreshDocumentRequired: {0}", filePath);
+			RefreshDocumentRequired?.Invoke(this, new RefreshDocumentEventArgs(filePath));
 		}
 
 		#region Settings

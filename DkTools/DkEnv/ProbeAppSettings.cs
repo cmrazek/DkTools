@@ -1,9 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Microsoft.VisualStudio.Shell;
 using Microsoft.Win32;
 
 namespace DkTools
@@ -45,6 +47,11 @@ namespace DkTools
 			SourceFiles = new string[0];
 			IncludeFiles = new string[0];
 			SourceAndIncludeFiles = new string[0];
+		}
+
+		public void Deactivate()
+		{
+			StopFileSystemWatcher();
 		}
 
 		public IEnumerable<string> GetAllIncludeFilesForDir(string path)
@@ -216,5 +223,139 @@ namespace DkTools
 				}
 			}
 		}
+
+		#region File System Watcher
+		public static event EventHandler<FileEventArgs> FileChanged;
+		public static event EventHandler<FileEventArgs> FileDeleted;
+
+		private List<FileSystemWatcher> _watchers = new List<FileSystemWatcher>();
+
+		public void CreateFileSystemWatcher()
+		{
+			// Create a master list of parent directories only so there are no redundant file system watchers created.
+			var masterDirs = new List<string>();
+			foreach (var dir in SourceDirs.Concat(IncludeDirs))
+			{
+				var placedDir = false;
+
+				for (int i = 0; i < masterDirs.Count; i++)
+				{
+					if (FileUtil.PathIsSameOrChildDir(masterDirs[i], dir))
+					{
+						// What we have saved is a child, so swap it with it's parent
+						masterDirs[i] = dir;
+						placedDir = true;
+						break;
+					}
+					else if (FileUtil.PathIsSameOrChildDir(dir, masterDirs[i]))
+					{
+						// This directory is already covered by one in the master list.
+						placedDir = true;
+						break;
+					}
+				}
+
+				if (!placedDir)
+				{
+					masterDirs.Add(dir);
+				}
+			}
+
+			// Create a watcher for each master dir.
+			foreach (var dir in masterDirs)
+			{
+				try
+				{
+					if (!Directory.Exists(dir)) continue;
+
+					Log.Info("Creating file system watcher for directory: {0}", dir);
+
+					var watcher = new FileSystemWatcher();
+					_watchers.Add(watcher);
+
+					watcher.Path = dir;
+					watcher.Filter = "*";
+					watcher.NotifyFilter = NotifyFilters.LastWrite | NotifyFilters.DirectoryName | NotifyFilters.FileName;
+					watcher.IncludeSubdirectories = true;
+
+					watcher.Changed += OnFileChanged;
+					watcher.Deleted += OnFileDeleted;
+					watcher.Renamed += OnFileRenamed;
+
+					watcher.EnableRaisingEvents = true;
+				}
+				catch (Exception ex)
+				{
+					Log.Error(ex, "Exception when trying to create FileSystemWatcher for '{0}'.", dir);
+				}
+			}
+		}
+
+		private void StopFileSystemWatcher()
+		{
+			while (_watchers.Count > 0)
+			{
+				try
+				{
+					var watcher = _watchers.First();
+
+					Log.Info("Stopping file system watcher for directory: {0}", watcher.Path);
+
+					watcher.Dispose();
+					_watchers.RemoveAt(0);
+				}
+				catch (Exception ex)
+				{
+					Log.Error(ex, "Exception when trying to stop FileSystemWatcher.");
+				}
+			}
+		}
+
+		private void OnFileChanged(object sender, FileSystemEventArgs e)
+		{
+			ThreadHelper.JoinableTaskFactory.RunAsync(async () =>
+			{
+				await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
+
+				Log.Debug("File change detected: {0}", e.FullPath);
+
+				FileChanged?.Invoke(this, new FileEventArgs(e.FullPath));
+			});
+		}
+
+		private void OnFileDeleted(object sender, FileSystemEventArgs e)
+		{
+			ThreadHelper.JoinableTaskFactory.RunAsync(async () =>
+			{
+				await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
+
+				Log.Debug("File deletion detected: {0}", e.FullPath);
+
+				FileDeleted?.Invoke(this, new FileEventArgs(e.FullPath));
+			});
+		}
+
+		private void OnFileRenamed(object sender, RenamedEventArgs e)
+		{
+			ThreadHelper.JoinableTaskFactory.RunAsync(async () =>
+			{
+				await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
+
+				Log.Debug("File rename detected: {0} -> {1}", e.OldFullPath, e.FullPath);
+
+				FileDeleted?.Invoke(this, new FileEventArgs(e.OldFullPath));
+			});
+		}
+
+		public class FileEventArgs : EventArgs
+		{
+			public FileEventArgs(string filePath)
+			{
+				FilePath = filePath ?? throw new ArgumentNullException(nameof(filePath));
+			}
+
+			public string FilePath { get; private set; }
+		}
+#endregion
 	}
 }
