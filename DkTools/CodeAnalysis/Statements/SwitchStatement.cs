@@ -142,8 +142,10 @@ namespace DkTools.CodeAnalysis.Statements
 			var bodyScopes = new List<RunScope>();
 			var currentBodyScope = (RunScope)null;
 
-			foreach (var cas in _cases)
+			for (int c = 0; c < _cases.Count; c++)
 			{
+				var cas = _cases[c];
+
 				if (cas.exp != null)
 				{
 					var valueScope = scope.Clone();
@@ -185,7 +187,14 @@ namespace DkTools.CodeAnalysis.Statements
 					}
 					else if (currentBodyScope.Breaked == TriState.False && currentBodyScope.Returned == TriState.False && cas.body.Count > 0)
 					{
-						ReportError(cas.caseSpan, CAError.CA0031);	// Switch fall-throughs are inadvisable.
+						if (c == _cases.Count - 1 && _default == null)
+						{
+							// Fall-throughs are allowed on the last 'case', as long as there is no 'default'.
+						}
+						else
+						{
+							ReportError(cas.caseSpan, CAError.CA0031);  // Switch fall-throughs are inadvisable.
+						}
 					}
 				}
 			}
