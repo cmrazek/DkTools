@@ -21,6 +21,9 @@ namespace DkTools.FunctionFileScanning
 		private Queue<ScanInfo> _scanQueue;
 		private object _scanLock = new object();
 
+		private DateTime _lastDefinitionPublish = DateTime.MinValue;
+		private bool _definitionPublishRequired = false;
+
 		private const int k_threadWaitIdle = 1000;
 		private const int k_threadWaitActive = 0;
 
@@ -134,7 +137,7 @@ namespace DkTools.FunctionFileScanning
 					}
 					else
 					{
-						//_currentApp.PublishDefinitions();
+						_currentApp.PublishDefinitions();
 
 						ProbeToolsPackage.Instance.SetStatusText("DkTools background purging...");
 						using (var txn = db.BeginTransaction())
@@ -254,6 +257,12 @@ namespace DkTools.FunctionFileScanning
 				if (scan.mode == FFScanMode.Exports) ProbeToolsPackage.Instance.SetStatusText(string.Format("DkTools background scanning file: {0} (exports only)", scan.fileName));
 				else ProbeToolsPackage.Instance.SetStatusText(string.Format("DkTools background scanning file: {0}", scan.fileName));
 
+				// Make sure all definitions are available when starting deep scanning.
+				if (scan.mode != FFScanMode.Exports && _definitionPublishRequired)
+				{
+					app.PublishDefinitions();
+				}
+
 				var fileTitle = Path.GetFileNameWithoutExtension(scan.fileName);
 
 				var defProvider = new CodeModel.DefinitionProvider(_appSettings, scan.fileName);
@@ -284,7 +293,17 @@ namespace DkTools.FunctionFileScanning
 					app.OnInvisibleFileChanged(ffFile);
 				}
 
-				app.PublishDefinitions();
+				if (scan.mode == FFScanMode.Exports)
+				{
+					_definitionPublishRequired = true;
+
+					if (DateTime.Now.Subtract(_lastDefinitionPublish).TotalSeconds > 5.0)
+					{
+						app.PublishDefinitions();
+						_definitionPublishRequired = false;
+						_lastDefinitionPublish = DateTime.Now;
+					}
+				}
 			}
 			catch (Exception ex)
 			{
