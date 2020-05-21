@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Text;
 using System.Threading.Tasks;
 using DkTools.CodeAnalysis.Statements;
@@ -17,11 +18,11 @@ namespace DkTools.CodeAnalysis.Nodes
 			if (exp != null) AddChild(exp);
 		}
 
-		protected override void Execute(RunScope scope)
+		public override string ToString() => $"({DataType.ToCodeString()})";
+
+		public override void Execute(RunScope scope)
 		{
-			var castScope = scope.Clone();
-			base.Execute(castScope);
-			scope.Merge(castScope);
+			base.Execute(scope);
 		}
 
 		public override Value ReadValue(RunScope scope)

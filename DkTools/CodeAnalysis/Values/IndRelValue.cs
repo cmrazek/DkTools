@@ -17,6 +17,8 @@ namespace DkTools.CodeAnalysis.Values
 			_indRelName = indRelName;
 		}
 
+		public override string ToString() => _indRelName;
+
 		public override string ToStringValue(RunScope scope, Span span)
 		{
 			return null;
@@ -45,6 +47,14 @@ namespace DkTools.CodeAnalysis.Values
 		public override Value Convert(RunScope scope, Span span, Value value)
 		{
 			return new VoidValue();
+		}
+
+		public override bool IsEqualTo(Value other)
+		{
+			if (_indRelName == null) return false;
+			var o = other as IndRelValue;
+			if (o == null || o._indRelName == null) return false;
+			return _indRelName == o._indRelName;
 		}
 	}
 }

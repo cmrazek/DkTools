@@ -17,6 +17,8 @@ namespace DkTools.CodeAnalysis.Values
 			_tableName = tableName;
 		}
 
+		public override string ToString() => _tableName;
+
 		public override string ToStringValue(RunScope scope, Span span)
 		{
 			return null;
@@ -45,6 +47,14 @@ namespace DkTools.CodeAnalysis.Values
 		public override Value Convert(RunScope scope, Span span, Value value)
 		{
 			return new VoidValue();
+		}
+
+		public override bool IsEqualTo(Value other)
+		{
+			if (_tableName == null) return false;
+			var o = other as TableValue;
+			if (o == null || o._tableName == null) return false;
+			return _tableName == o._tableName;
 		}
 	}
 }

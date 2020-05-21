@@ -55,6 +55,8 @@ namespace DkTools.CodeModel
 			}
 		}
 
+		public int Position => _length;
+
 		public void Flush()
 		{
 			if (_segments.Count == 0) return;

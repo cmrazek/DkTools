@@ -28,5 +28,7 @@ namespace DkTools.CodeModel
 		public void Flush()
 		{
 		}
+
+		public int Position => _sb.Length;
 	}
 }

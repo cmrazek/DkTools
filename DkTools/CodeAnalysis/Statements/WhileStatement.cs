@@ -39,6 +39,8 @@ namespace DkTools.CodeAnalysis.Statements
 			}
 		}
 
+		public override string ToString() => new string[] { "while (", _cond?.ToString(), ")..." }.Combine();
+
 		public override void Execute(RunScope scope)
 		{
 			base.Execute(scope);

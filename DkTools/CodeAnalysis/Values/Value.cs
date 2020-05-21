@@ -19,6 +19,7 @@ namespace DkTools.CodeAnalysis.Values
 		public abstract DkTime? ToTime(RunScope scope, Span span);
 		public abstract char? ToChar(RunScope scope, Span span);
 		public abstract Value Convert(RunScope scope, Span span, Value value);
+		public abstract bool IsEqualTo(Value other);
 
 		protected Value(DataType dataType)
 		{
@@ -147,6 +148,16 @@ namespace DkTools.CodeAnalysis.Values
 		public virtual bool IsFalse
 		{
 			get { return false; }
+		}
+
+		public Value Combine(DataType dataType, IEnumerable<Value> values)
+		{
+			var first = values.Where(x => x != null).FirstOrDefault();
+			if (first == null) return null;
+
+			if (values.Where(x => x != null).Skip(1).All(x => x.IsEqualTo(first))) return first;
+
+			return CreateUnknownFromDataType(dataType);
 		}
 	}
 }

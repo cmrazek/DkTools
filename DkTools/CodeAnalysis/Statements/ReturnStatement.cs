@@ -30,6 +30,8 @@ namespace DkTools.CodeAnalysis.Statements
 			if (!p.Code.ReadExact(';')) ReportError(p.Code.Span, CAError.CA0015);	// Expected ';'.
 		}
 
+		public override string ToString() => new string[] { "return", _exp.ToString() }.Combine(" ");
+
 		public override void Execute(RunScope scope)
 		{
 			base.Execute(scope);

@@ -1,6 +1,8 @@
 ﻿using System;
+using System.CodeDom;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
 using DkTools.CodeAnalysis.Statements;
@@ -16,13 +18,17 @@ namespace DkTools.CodeAnalysis.Nodes
 		private ExpressionNode[] _arrayAccessExps;
 		private ExpressionNode[] _subscriptAccessExps;
 		private DataType _dataType;
+		private bool _reportable;
 
-		public IdentifierNode(Statement stmt, Span span, string name, Definition def, IEnumerable<ExpressionNode> arrayAccessExps = null,
-			IEnumerable<ExpressionNode> subscriptAccessExps = null)
+		public IdentifierNode(Statement stmt, Span span, string name, Definition def,
+			IEnumerable<ExpressionNode> arrayAccessExps = null,
+			IEnumerable<ExpressionNode> subscriptAccessExps = null,
+			bool reportable = true)
 			: base(stmt, def.DataType, span, name)
 		{
 			_def = def;
 			_dataType = def.DataType;
+			_reportable = reportable;
 
 			if (arrayAccessExps != null && arrayAccessExps.Any()) _arrayAccessExps = arrayAccessExps.ToArray();
 			if (subscriptAccessExps != null && subscriptAccessExps.Any())
@@ -33,9 +39,17 @@ namespace DkTools.CodeAnalysis.Nodes
 			}
 		}
 
+		public override bool IsReportable { get => _reportable && _dataType != null && _dataType.IsReportable; set => _reportable = false; }
+		public override string ToString() => _def.Name;
+
 		public override bool CanAssignValue(RunScope scope)
 		{
 			return _def.CanWrite;
+		}
+
+		public override void Execute(RunScope scope)
+		{
+			// Don't read from the identifier.
 		}
 
 		public override Value ReadValue(RunScope scope)
@@ -119,7 +133,7 @@ namespace DkTools.CodeAnalysis.Nodes
 				var v = scope.GetVariable(Text);
 				if (v != null)
 				{
-					v.Value = v.Value.Convert(scope, Span, value);
+					v.AssignValue(v.Value.Convert(scope, Span, value));
 					v.IsInitialized = TriState.True;
 					return;
 				}

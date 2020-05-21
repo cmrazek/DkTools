@@ -17,6 +17,8 @@ namespace DkTools.CodeAnalysis.Values
 			_char = value;
 		}
 
+		public override string ToString() => $"'{_char}'";
+
 		public override string ToStringValue(RunScope scope, Span span)
 		{
 			if (_char != null) return _char.Value.ToString();
@@ -280,6 +282,14 @@ namespace DkTools.CodeAnalysis.Values
 			var str = value.ToStringValue(scope, span);
 			if (str != null && str.Length == 1) return new CharValue(DataType, str[0]);
 			return new CharValue(DataType, null);
+		}
+
+		public override bool IsEqualTo(Value other)
+		{
+			if (!_char.HasValue) return false;
+			var o = other as CharValue;
+			if (o == null || !o._char.HasValue) return false;
+			return _char.Value == o._char.Value;
 		}
 	}
 }

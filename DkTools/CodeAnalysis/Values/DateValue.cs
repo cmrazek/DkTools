@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using DkTools.CodeModel;
+using Microsoft.VisualStudio.OLE.Interop;
 
 namespace DkTools.CodeAnalysis.Values
 {
@@ -16,6 +17,8 @@ namespace DkTools.CodeAnalysis.Values
 		{
 			_date = date;
 		}
+
+		public override string ToString() => _date.HasValue ? _date.Value.ToString() : "(null-date)";
 
 		public DateValue(DataType dataType, decimal num)
 			: base(dataType)
@@ -313,6 +316,14 @@ namespace DkTools.CodeAnalysis.Values
 		{
 			return new DateValue(DataType, value.ToDate(scope, span));
 		}
+
+		public override bool IsEqualTo(Value other)
+		{
+			if (!_date.HasValue) return false;
+			var o = other as DateValue;
+			if (o == null || !o._date.HasValue) return false;
+			return _date.Value == o._date.Value;
+		}
 	}
 
 	struct DkDate
@@ -346,5 +357,19 @@ namespace DkTools.CodeAnalysis.Values
 			var dt = Constants.ZeroDate.AddDays(_val);
 			return dt.ToString("ddMMMyyyy");
 		}
+
+		public override bool Equals(object obj)
+		{
+			if (obj == null || obj.GetType() != typeof(DkDate)) return false;
+			return _val == ((DkDate)obj)._val;
+		}
+
+		public override int GetHashCode()
+		{
+			return _val.GetHashCode();
+		}
+
+		public static bool operator ==(DkDate a, DkDate b) => a._val == b._val;
+		public static bool operator !=(DkDate a, DkDate b) => a._val != b._val;
 	}
 }

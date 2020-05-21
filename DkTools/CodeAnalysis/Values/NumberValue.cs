@@ -17,6 +17,8 @@ namespace DkTools.CodeAnalysis.Values
 			_num = number;
 		}
 
+		public override string ToString() => _num.HasValue ? _num.Value.ToString() : "(null)";
+
 		public override Value Multiply(RunScope scope, Span span, Value rightValue)
 		{
 			if (_num.HasValue)
@@ -250,6 +252,14 @@ namespace DkTools.CodeAnalysis.Values
 		public override Value Convert(RunScope scope, Span span, Value value)
 		{
 			return new NumberValue(DataType, value.ToNumber(scope, span));
+		}
+
+		public override bool IsEqualTo(Value other)
+		{
+			if (!_num.HasValue) return false;
+			var o = other as NumberValue;
+			if (o == null || !o._num.HasValue) return false;
+			return _num.Value == o._num.Value;
 		}
 	}
 }

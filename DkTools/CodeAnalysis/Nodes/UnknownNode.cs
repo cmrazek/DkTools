@@ -14,5 +14,8 @@ namespace DkTools.CodeAnalysis.Nodes
 			: base(stmt, null, span, text)
 		{
 		}
+
+		public override bool IsReportable => false;
+		public override string ToString() => "(unknown)";
 	}
 }

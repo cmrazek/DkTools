@@ -370,6 +370,7 @@
     <Compile Include="CodeModel\Tokens\InterfacePropertyToken.cs" />
     <Compile Include="CodeModel\Tokens\InterfaceTypeToken.cs" />
     <Compile Include="CodeModel\Tokens\TagToken.cs" />
+    <Compile Include="CodeModel\WarningSuppressionTracker.cs" />
     <Compile Include="Compiler\BackgroundFec.cs" />
     <Compile Include="CsvWriter.cs" />
     <Compile Include="DictTextViewListener.cs" />
@@ -594,6 +595,7 @@
     <Compile Include="StatementCompletion\ProbeCompletionType.cs" />
     <Compile Include="StatementCompletion\StatementLayout.cs" />
     <Compile Include="StatementCompletion\StatementState.cs" />
+    <Compile Include="StringUtil.cs" />
     <Compile Include="Tagging\Tagger.cs" />
     <Compile Include="Tagging\TaggingOptions.cs">
       <SubType>Component</SubType>

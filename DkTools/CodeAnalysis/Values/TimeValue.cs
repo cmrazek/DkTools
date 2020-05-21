@@ -17,6 +17,8 @@ namespace DkTools.CodeAnalysis.Values
 			_time = time;
 		}
 
+		public override string ToString() => _time.HasValue ? _time.Value.ToString() : "(null-time)";
+
 		public override Value Multiply(RunScope scope, Span span, Value rightValue)
 		{
 			if (_time.HasValue)
@@ -279,6 +281,14 @@ namespace DkTools.CodeAnalysis.Values
 		{
 			return new TimeValue(DataType, value.ToTime(scope, span));
 		}
+
+		public override bool IsEqualTo(Value other)
+		{
+			if (!_time.HasValue) return false;
+			var o = other as TimeValue;
+			if (o == null || !o._time.HasValue) return false;
+			return _time.Value == o._time.Value;
+		}
 	}
 
 	struct DkTime
@@ -320,5 +330,20 @@ namespace DkTools.CodeAnalysis.Values
 		{
 			return string.Format("{0:00}:{1:00}:{2:00}", _hour, _minute, _second);
 		}
+
+		public override bool Equals(object obj)
+		{
+			if (obj == null || obj.GetType() != typeof(DkTime)) return false;
+			var o = (DkTime)obj;
+			return _hour == o._hour && _minute == o._minute && _second == o._second;
+		}
+
+		public override int GetHashCode()
+		{
+			return _hour.GetHashCode() * 59 + _minute.GetHashCode() * 13 + _second.GetHashCode();
+		}
+
+		public static bool operator ==(DkTime a, DkTime b) => a._hour == b._hour && a._minute == b._minute && a._second == b._second;
+		public static bool operator !=(DkTime a, DkTime b) => a._hour != b._hour || a._minute != b._minute || a._second != b._second;
 	}
 }

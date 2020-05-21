@@ -16,13 +16,7 @@ namespace DkTools.CodeAnalysis.Nodes
 		{
 		}
 
-		public override int Precedence
-		{
-			get
-			{
-				return 0;
-			}
-		}
+		public override int Precedence => 0;
 
 		public static ExpressionNode Read(ReadParams p, DataType refDataType, params string[] stopStrings)
 		{

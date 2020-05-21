@@ -24,6 +24,8 @@ namespace DkTools.CodeAnalysis.Statements
 			public bool safeFallThrough;
 		}
 
+		public override string ToString() => new string[] { "switch (", _condExp?.ToString(), _compareOp?.ToString(), ")..." }.Combine();
+
 		public SwitchStatement(ReadParams p, Span keywordSpan)
 			: base(p.CodeAnalyzer, keywordSpan)
 		{

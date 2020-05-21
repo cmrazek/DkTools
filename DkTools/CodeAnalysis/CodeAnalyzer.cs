@@ -15,14 +15,15 @@ namespace DkTools.CodeAnalysis
 {
 	class CodeAnalyzer
 	{
-		private OutputPane _pane;
 		private DkTools.CodeModel.CodeModel _codeModel;
 		private PreprocessorModel _prepModel;
 		private string _fullSource;
+		private WarningSuppressionTracker _warningSuppressions;
 
 		private List<Statement> _stmts;
 		private RunScope _scope;
 		private ReadParams _read;
+		private List<ErrorTask> _tasks = new List<ErrorTask>();
 		private int _numErrors;
 		private int _numWarnings;
 
@@ -30,33 +31,30 @@ namespace DkTools.CodeAnalysis
 		{
 			if (model == null) throw new ArgumentNullException("model");
 
-			_pane = pane;
 			_codeModel = model;
 		}
 
 		public void Run()
 		{
-			if (_pane != null)
-			{
-				_pane.WriteLine(string.Format("Starting code analysis on file: {0}", _codeModel.FileName));
-			}
+			Log.Debug("Starting code analysis on file: {0}", _codeModel.FileName);
+			var startTime = DateTime.Now;
 
 			_prepModel = _codeModel.PreprocessorModel;
 			_fullSource = _codeModel.Source.Text;
-
-			ErrorTaskProvider.Instance.RemoveAllForSource(ErrorTaskSource.CodeAnalysis, _codeModel.FileName);
+			_warningSuppressions = _codeModel.PreprocessorModel.Preprocessor.WarningSuppressions;
 
 			foreach (var func in _prepModel.LocalFunctions)
 			{
 				AnalyzeFunction(func);
 			}
 
-			//ErrorTaskProvider.Instance.FireTagsChangedEvent();
-
-			if (_pane != null)
+			if (_numErrors > 0 || _numWarnings > 0)
 			{
-				_pane.WriteLine(string.Format("Code analysis complete: {0} error(s), {1} warning(s)", _numErrors, _numWarnings));
+				ErrorTaskProvider.Instance.ReplaceForSourceAndInvokingFile(
+					ErrorTaskSource.CodeAnalysis, _codeModel.FileName, _tasks);
 			}
+
+			Log.Debug("Completed code analysis (elapsed: {0} msec)", DateTime.Now.Subtract(startTime).TotalMilliseconds);
 		}
 
 		private void AnalyzeFunction(CodeModel.PreprocessorModel.LocalFunction func)
@@ -85,20 +83,23 @@ namespace DkTools.CodeAnalysis
 
 			foreach (var arg in func.Arguments)
 			{
-				if (!string.IsNullOrEmpty(arg.Name))
+				if (!string.IsNullOrEmpty(arg.Definition.Name))
 				{
-					_scope.AddVariable(new Variable(arg, arg.Name, arg.DataType, Value.CreateUnknownFromDataType(arg.DataType), true, TriState.True, true));
+					_scope.AddVariable(new Variable(arg.Definition, arg.Definition.Name, arg.Definition.DataType,
+						Value.CreateUnknownFromDataType(arg.Definition.DataType), true, TriState.True, true, arg.RawSpan));
 				}
 			}
 
 			foreach (var v in func.Variables)
 			{
-				_scope.AddVariable(new Variable(v, v.Name, v.DataType, Value.CreateUnknownFromDataType(v.DataType), false, TriState.False, false));
+				_scope.AddVariable(new Variable(v.Definition, v.Definition.Name, v.Definition.DataType,
+					Value.CreateUnknownFromDataType(v.Definition.DataType), false, TriState.False, false, v.RawSpan));
 			}
 
-			foreach (var v in _prepModel.DefinitionProvider.GetGlobalFromFile<VariableDefinition>())
+			foreach (var v in _prepModel.GlobalVariables)
 			{
-				_scope.AddVariable(new Variable(v, v.Name, v.DataType, Value.CreateUnknownFromDataType(v.DataType), false, TriState.True, true));
+				_scope.AddVariable(new Variable(v.Definition, v.Definition.Name, v.Definition.DataType,
+					Value.CreateUnknownFromDataType(v.Definition.DataType), false, TriState.True, true, v.RawSpan));
 			}
 
 			foreach (var stmt in _stmts)
@@ -119,14 +120,12 @@ namespace DkTools.CodeAnalysis
 					if (v.IsInitialized != TriState.False)
 					{
 						var def = v.Definition;
-						ReportErrorLocal(def.SourceFileName, new Span(def.SourceStartPos, def.SourceStartPos + def.Name.Length),
-							false, null, CAError.CA0111, v.Name);	// Variable '{0}' is assigned a value, but is never used.
+						ReportErrorAbsolute(v.RawSpan, CAError.CA0111, v.Name); // Variable '{0}' is assigned a value, but is never used.
 					}
 					else
 					{
 						var def = v.Definition;
-						ReportErrorLocal(def.SourceFileName, new Span(def.SourceStartPos, def.SourceStartPos + def.Name.Length),
-							false, null, CAError.CA0112, v.Name);	// Variable '{0}' is not used.
+						ReportErrorAbsolute(v.RawSpan, CAError.CA0112, v.Name); // Variable '{0}' is not used.
 					}
 				}
 			}
@@ -141,15 +140,20 @@ namespace DkTools.CodeAnalysis
 
 		public void ReportErrorAbsolute(Span span, CAError errorCode, params object[] args)
 		{
-			//if (span.IsEmpty)
-			//{
-			//	Log.Debug("Error {0} not reported because the span is empty.", errorCode);
-			//	return;
-			//}
+			if (span.IsEmpty)
+			{
+				return;
+			}
 
-			string fileName;
-			bool isPrimary;
-			var fileSpan = _prepModel.Source.GetFileSpan(span, out fileName, out isPrimary);
+			if (int.TryParse(errorCode.ToString().Substring(2), out int code))
+			{
+				if (_warningSuppressions.IsWarningSuppressed(code, span.Start))
+				{
+					return;
+				}
+			}
+
+			var fileSpan = _prepModel.Source.GetFileSpan(span, out var fileName, out var _);
 			
 			string fileContent = null;
 			foreach (var incl in _prepModel.IncludeDependencies)
@@ -161,10 +165,10 @@ namespace DkTools.CodeAnalysis
 				}
 			}
 
-			ReportErrorLocal(fileName, fileSpan, isPrimary, fileContent, errorCode, args);
+			ReportErrorLocal_Internal(fileName, fileSpan, fileContent, errorCode, args);
 		}
 
-		public void ReportErrorLocal(string fileName, Span fileSpan, bool isPrimary, string fileContent, CAError errorCode, params object[] args)
+		private void ReportErrorLocal_Internal(string filePath, Span fileSpan, string fileContent, CAError errorCode, params object[] args)
 		{
 			int lineNum = 0, linePos = 0;
 
@@ -172,10 +176,9 @@ namespace DkTools.CodeAnalysis
 			{
 				foreach (var incl in _prepModel.IncludeDependencies)
 				{
-					if (string.Equals(incl.FileName, fileName, StringComparison.OrdinalIgnoreCase))
+					if (string.Equals(incl.FileName, filePath, StringComparison.OrdinalIgnoreCase))
 					{
 						fileContent = incl.Content;
-						isPrimary = string.Equals(fileName, _codeModel.FileName, StringComparison.OrdinalIgnoreCase);
 						break;
 					}
 				}
@@ -209,15 +212,20 @@ namespace DkTools.CodeAnalysis
 			if (type == ErrorType.Warning) _numWarnings++;
 			else _numErrors++;
 
-			if (_pane != null)
-			{
-				_pane.WriteLine(string.Format("{0}({1},{2}) : {3} : {4}", fileName, lineNum + 1, linePos + 1, type, message));
-			}
+			Log.Debug("{0}({1},{2}) : {3} : {4} Span [{5}]", filePath, lineNum + 1, linePos + 1, type, message, fileSpan);
 
-			var task = new ErrorTagging.ErrorTask(fileName, lineNum, linePos, message, ErrorType.CodeAnalysisError,
-				ErrorTaskSource.CodeAnalysis, _codeModel.FileName,
-				isPrimary ? _codeModel.Snapshot : null, fileSpan);
-			ErrorTaskProvider.Instance.Add(task, true);
+			var task = new ErrorTask(
+				invokingFilePath: _codeModel.FileName,
+				filePath: filePath,
+				lineNum: lineNum,
+				lineCol: linePos,
+				message: message,
+				type: ErrorType.CodeAnalysisError,
+				source: ErrorTaskSource.CodeAnalysis,
+				reportedSpan: fileSpan,
+				snapshotSpan: null);
+
+			_tasks.Add(task);
 		}
 
 		public PreprocessorModel PreprocessorModel

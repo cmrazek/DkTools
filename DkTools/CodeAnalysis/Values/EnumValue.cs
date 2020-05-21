@@ -42,6 +42,8 @@ namespace DkTools.CodeAnalysis.Values
 			}
 		}
 
+		public override string ToString() => !string.IsNullOrEmpty(_value) ? _value : _ordinal.ToString();
+
 		public override decimal? ToNumber(RunScope scope, Span span)
 		{
 			if (_ordinal.HasValue) return (decimal)_ordinal.Value;
@@ -299,6 +301,14 @@ namespace DkTools.CodeAnalysis.Values
 			var str = value.ToStringValue(scope, span);
 			if (str != null && DataType.IsValidEnumOption(str)) return new EnumValue(DataType, str);
 			return new EnumValue(DataType, null, null);
+		}
+
+		public override bool IsEqualTo(Value other)
+		{
+			if (!_ordinal.HasValue) return false;
+			var o = other as EnumValue;
+			if (o == null || !o._ordinal.HasValue) return false;
+			return _ordinal.Value == o._ordinal.Value;
 		}
 	}
 }

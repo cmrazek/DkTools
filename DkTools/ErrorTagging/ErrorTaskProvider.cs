@@ -62,13 +62,20 @@ namespace DkTools.ErrorTagging
 
 			if (!dontSignalTagsChanged)
 			{
-				ThreadHelper.JoinableTaskFactory.RunAsync(OnTasksChangedAsync);
+				FireTagsChanged();
 			}
+		}
+
+		public void FireTagsChanged()
+		{
+			ThreadHelper.JoinableTaskFactory.RunAsync(OnTasksChangedAsync);
 		}
 
 		private async System.Threading.Tasks.Task OnClearTasksAsync()
 		{
 			await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
+
+			Log.Debug("Clearing error tags");
 
 			var fileNames = new List<string>();
 
@@ -99,7 +106,7 @@ namespace DkTools.ErrorTagging
 			ThreadHelper.JoinableTaskFactory.RunAsync(OnClearTasksAsync);
 		}
 
-		public void RemoveAllForSource(ErrorTaskSource source, string sourceFileName)
+		public void RemoveAllForSourceAndInvokingFile(ErrorTaskSource source, string invokingFilePath)
 		{
 			ThreadHelper.JoinableTaskFactory.RunAsync(async () =>
 			{
@@ -108,11 +115,46 @@ namespace DkTools.ErrorTagging
 				var filesToNotify = new List<string>();
 
 				var tasksToRemove = (from t in Tasks.Cast<ErrorTask>()
-									 where t.Source == source && string.Equals(t.SourceArg, sourceFileName, StringComparison.OrdinalIgnoreCase)
+									 where t.Source == source &&
+										string.Equals(t.InvokingFilePath, invokingFilePath, StringComparison.OrdinalIgnoreCase)
 									 select t).ToArray();
 				foreach (var task in tasksToRemove)
 				{
 					Tasks.Remove(task);
+					if (!filesToNotify.Contains(task.Document)) filesToNotify.Add(task.Document);
+				}
+
+				foreach (var file in filesToNotify)
+				{
+					ErrorTagsChangedForFile?.Invoke(this, new ErrorTaskEventArgs { FileName = file });
+				}
+			});
+		}
+
+		public void ReplaceForSourceAndInvokingFile(
+			ErrorTaskSource source,
+			string invokingFilePath,
+			IEnumerable<ErrorTask> tasks)
+		{
+			ThreadHelper.JoinableTaskFactory.RunAsync(async () =>
+			{
+				await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
+
+				var filesToNotify = new List<string>();
+
+				var tasksToRemove = (from t in Tasks.Cast<ErrorTask>()
+									 where t.Source == source &&
+										string.Equals(t.InvokingFilePath, invokingFilePath, StringComparison.OrdinalIgnoreCase)
+									 select t).ToArray();
+				foreach (var task in tasksToRemove)
+				{
+					Tasks.Remove(task);
+					if (!filesToNotify.Contains(task.Document)) filesToNotify.Add(task.Document);
+				}
+
+				foreach (var task in tasks)
+				{
+					Tasks.Add(task);
 					if (!filesToNotify.Contains(task.Document)) filesToNotify.Add(task.Document);
 				}
 
@@ -135,7 +177,7 @@ namespace DkTools.ErrorTagging
 					var appSettings = ProbeEnvironment.CurrentAppSettings;
 					var fileName = VsTextUtil.TryGetDocumentFileName(textView.TextBuffer);
 					var model = fileStore.GetMostRecentModel(appSettings, fileName, textView.TextSnapshot, "ErrorTaskProvider.OnDocumentClosed()");
-					RemoveAllForSource(ErrorTaskSource.BackgroundFec, model.FileName);
+					RemoveAllForSourceAndInvokingFile(ErrorTaskSource.BackgroundFec, model.FileName);
 				}
 			});
 		}
@@ -154,68 +196,32 @@ namespace DkTools.ErrorTagging
 
 			foreach (var task in (from t in tasks where string.Equals(t.Document, fileName, StringComparison.OrdinalIgnoreCase) select t))
 			{
-				var span = task.TryGetSnapshotSpan(snapshot);
-				if (span.HasValue)
+				var taskSpan = task.TryGetSnapshotSpan(snapshot);
+				if (!taskSpan.HasValue)
 				{
-					foreach (var docSpan in docSpans)
-					{
-						if (docSpan.Contains(span.Value))
-						{
-							string tagType;
-							switch (task.Type)
-							{
-								case ErrorType.Warning:
-									tagType = VSTheme.CurrentTheme == VSThemeMode.Light ? ErrorTagger.CodeWarningLight : ErrorTagger.CodeWarningDark;
-									break;
-								case ErrorType.CodeAnalysisError:
-									tagType = VSTheme.CurrentTheme == VSThemeMode.Light ? ErrorTagger.CodeAnalysisErrorLight : ErrorTagger.CodeAnalysisErrorDark;
-									break;
-								default:
-									tagType = VSTheme.CurrentTheme == VSThemeMode.Light ? ErrorTagger.CodeErrorLight : ErrorTagger.CodeErrorDark;
-									break;
-							}
-							tags.Add(new TagSpan<ErrorTag>(span.Value, new ErrorTag(tagType, task.Text)));
-							break;
-						}
-					}
+					continue;
 				}
-				else
+
+				foreach (var docSpan in docSpans)
 				{
-					var line = task.GetSnapshot(snapshot).GetLineFromLineNumber(task.Line);
-					foreach (var docSpan in docSpans)
+					var mappedTaskSpan = taskSpan.Value.TranslateTo(docSpan.Snapshot, SpanTrackingMode.EdgeExclusive);
+					if (docSpan.Contains(mappedTaskSpan))
 					{
-						var spanLineStart = line.Start.TranslateTo(docSpan.Snapshot, PointTrackingMode.Negative);
-						if (docSpan.Contains(spanLineStart.Position))
+						string tagType;
+						switch (task.Type)
 						{
-							var errorCode = task.Type == ErrorType.Warning ? ErrorCode.Fec_Warning : ErrorCode.Fec_Error;
-
-							var spanLine = docSpan.Snapshot.GetLineFromPosition(spanLineStart);
-							var startPos = spanLine.Start.Position;
-							var endPos = spanLine.End.Position;
-							if (startPos < endPos)
-							{
-								var newStartPos = spanLine.Start.Position + spanLine.GetText().GetIndentOffset();
-								if (newStartPos < endPos) startPos = newStartPos;
-							}
-
-							string tagType;
-							switch (task.Type)
-							{
-								case ErrorType.Warning:
-									tagType = VSTheme.CurrentTheme == VSThemeMode.Light ? ErrorTagger.CodeWarningLight : ErrorTagger.CodeWarningDark;
-									break;
-								case ErrorType.CodeAnalysisError:
-									tagType = VSTheme.CurrentTheme == VSThemeMode.Light ? ErrorTagger.CodeAnalysisErrorLight : ErrorTagger.CodeAnalysisErrorDark;
-									break;
-								default:
-									tagType = VSTheme.CurrentTheme == VSThemeMode.Light ? ErrorTagger.CodeErrorLight : ErrorTagger.CodeErrorDark;
-									break;
-							}
-
-							tags.Add(new TagSpan<ErrorTag>(new SnapshotSpan(docSpan.Snapshot, startPos, endPos - startPos),
-								new ErrorTag(tagType, task.Text)));
-							break;
+							case ErrorType.Warning:
+								tagType = VSTheme.CurrentTheme == VSThemeMode.Light ? ErrorTagger.CodeWarningLight : ErrorTagger.CodeWarningDark;
+								break;
+							case ErrorType.CodeAnalysisError:
+								tagType = VSTheme.CurrentTheme == VSThemeMode.Light ? ErrorTagger.CodeAnalysisErrorLight : ErrorTagger.CodeAnalysisErrorDark;
+								break;
+							default:
+								tagType = VSTheme.CurrentTheme == VSThemeMode.Light ? ErrorTagger.CodeErrorLight : ErrorTagger.CodeErrorDark;
+								break;
 						}
+						tags.Add(new TagSpan<ErrorTag>(taskSpan.Value, new ErrorTag(tagType, task.Text)));
+						break;
 					}
 				}
 			}
@@ -232,19 +238,11 @@ namespace DkTools.ErrorTagging
 
 				foreach (var task in (from t in Tasks.Cast<ErrorTask>() where string.Equals(t.Document, fileName, StringComparison.OrdinalIgnoreCase) select t))
 				{
-					var span = task.Span;
-					if (span.HasValue)
+					var taskSpan = task.TryGetSnapshotSpan(pt.Snapshot);
+					if (taskSpan.HasValue)
 					{
-						if (span.Value.Contains(pt.TranslateTo(task.GetSnapshot(pt.Snapshot), PointTrackingMode.Positive)))
-						{
-							tasks.Add(task);
-						}
-					}
-					else
-					{
-						var taskLine = task.GetSnapshot(pt.Snapshot).GetLineFromLineNumber(task.Line);
-						var taskSpan = new SnapshotSpan(taskLine.Start, taskLine.End);
-						if (taskSpan.Contains(pt.TranslateTo(taskSpan.Snapshot, PointTrackingMode.Positive)))
+						var mappedPt = pt.TranslateTo(taskSpan.Value.Snapshot, PointTrackingMode.Positive);
+						if (taskSpan.Value.Contains(mappedPt))
 						{
 							tasks.Add(task);
 						}
@@ -267,10 +265,10 @@ namespace DkTools.ErrorTagging
 				{
 					if (task.Source == ErrorTaskSource.BackgroundFec)
 					{
-						var sourceFileName = task.SourceArg;
-						if (!string.IsNullOrEmpty(sourceFileName))
+						var invokingFilePath = task.InvokingFilePath;
+						if (!string.IsNullOrEmpty(invokingFilePath))
 						{
-							if (!ret.Any(x => string.Equals(x, sourceFileName))) ret.Add(sourceFileName);
+							if (!ret.Any(x => string.Equals(x, invokingFilePath))) ret.Add(invokingFilePath);
 						}
 					}
 				}

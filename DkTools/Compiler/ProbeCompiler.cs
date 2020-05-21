@@ -539,12 +539,19 @@ namespace DkTools.Compiler
 			var index = line.IndexOf(": error :");
 			if (index >= 0)
 			{
-				string fileName;
-				int lineNum;
-				if (ParseFileNameAndLine(line.Substring(0, index), out fileName, out lineNum))
+				if (ParseFilePathAndLine(line.Substring(0, index), out var filePath, out var lineNum))
 				{
 					var message = line.Substring(index + ": error :".Length).Trim();
-					var task = new DkTools.ErrorTagging.ErrorTask(fileName, lineNum - 1, -1, message, ErrorType.Error, ErrorTaskSource.Compile, null, null);
+					var task = new DkTools.ErrorTagging.ErrorTask(
+						invokingFilePath: filePath,
+						filePath: filePath,
+						lineNum: lineNum - 1,
+						lineCol: -1,
+						message: message,
+						type: ErrorType.Error,
+						source: ErrorTaskSource.Compile,
+						reportedSpan: null,
+						snapshotSpan: null);
 					ErrorTaskProvider.Instance.Add(task);
 				}
 				_pane.WriteLine(line);
@@ -555,12 +562,19 @@ namespace DkTools.Compiler
 			index = line.IndexOf(": warning :");
 			if (index >= 0)
 			{
-				string fileName;
-				int lineNum;
-				if (ParseFileNameAndLine(line.Substring(0, index), out fileName, out lineNum))
+				if (ParseFilePathAndLine(line.Substring(0, index), out var filePath, out var lineNum))
 				{
 					var message = line.Substring(index + ": warning :".Length).Trim();
-					var task = new DkTools.ErrorTagging.ErrorTask(fileName, lineNum - 1, -1, message, ErrorType.Warning, ErrorTaskSource.Compile, null, null);
+					var task = new DkTools.ErrorTagging.ErrorTask(
+						invokingFilePath: filePath,
+						filePath: filePath,
+						lineNum: lineNum - 1,
+						lineCol: -1,
+						message: message,
+						type: ErrorType.Warning,
+						source: ErrorTaskSource.Compile,
+						reportedSpan: null,
+						snapshotSpan: null);
 					ErrorTaskProvider.Instance.Add(task);
 				}
 				_pane.WriteLine(line);
@@ -571,7 +585,16 @@ namespace DkTools.Compiler
 			if (line.StartsWith("LINK : fatal error"))
 			{
 				var message = line.Substring("LINK : fatal error".Length).Trim();
-				var task = new DkTools.ErrorTagging.ErrorTask(string.Empty, 0, -1, message, ErrorType.Error, ErrorTaskSource.Compile, null, null);
+				var task = new DkTools.ErrorTagging.ErrorTask(
+					invokingFilePath: null,
+					filePath: string.Empty,
+					lineNum: 0,
+					lineCol: -1,
+					message: message,
+					type: ErrorType.Error,
+					source: ErrorTaskSource.Compile,
+					reportedSpan: null,
+					snapshotSpan: null);
 				_pane.WriteLine(line);
 				_numErrors++;
 				return;
@@ -579,7 +602,16 @@ namespace DkTools.Compiler
 
 			if (line.Equals("Build failed."))
 			{
-				var task = new DkTools.ErrorTagging.ErrorTask(string.Empty, 0, -1, "Build failed.", ErrorType.Error, ErrorTaskSource.Compile, null, null);
+				var task = new DkTools.ErrorTagging.ErrorTask(
+					invokingFilePath: null,
+					filePath: string.Empty,
+					lineNum: 0,
+					lineCol: -1,
+					message: "Build failed.",
+					type: ErrorType.Error,
+					source: ErrorTaskSource.Compile,
+					reportedSpan: null,
+					snapshotSpan: null);
 				ErrorTaskProvider.Instance.Add(task);
 				_buildFailed = true;
 				_pane.WriteLine(line);
@@ -588,7 +620,16 @@ namespace DkTools.Compiler
 
 			if (line.IndexOf("Compile failed", StringComparison.OrdinalIgnoreCase) >= 0)
 			{
-				var task = new DkTools.ErrorTagging.ErrorTask(string.Empty, 0, -1, line, ErrorType.Error, ErrorTaskSource.Compile, null, null);
+				var task = new DkTools.ErrorTagging.ErrorTask(
+					invokingFilePath: null,
+					filePath: string.Empty,
+					lineNum: 0,
+					lineCol: -1,
+					message: line,
+					type: ErrorType.Error,
+					source: ErrorTaskSource.Compile,
+					reportedSpan: null,
+					snapshotSpan: null);
 				ErrorTaskProvider.Instance.Add(task);
 				_buildFailed = true;
 				_pane.WriteLine(line);
@@ -618,7 +659,7 @@ namespace DkTools.Compiler
 
 		private static Regex _rxFileNameAndLine = new Regex(@"(.+)\s*\((\d{1,9})\)\s*$");
 
-		public static bool ParseFileNameAndLine(string str, out string fileName, out int lineNum)
+		public static bool ParseFilePathAndLine(string str, out string fileName, out int lineNum)
 		{
 			var match = _rxFileNameAndLine.Match(str);
 			if (match.Success)

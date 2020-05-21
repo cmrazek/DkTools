@@ -18,8 +18,9 @@ namespace DkTools.CodeAnalysis
 		private bool _isArg;
 		private TriState _isInitialized;
 		private bool _isUsed;
+		private Span _rawSpan;
 
-		public Variable(Definition def, string name, DataType dataType, Value value, bool isArg, TriState isInitialized, bool isUsed)
+		public Variable(Definition def, string name, DataType dataType, Value value, bool isArg, TriState isInitialized, bool isUsed, Span rawSpan)
 		{
 			_def = def;
 			_name = name;
@@ -28,55 +29,40 @@ namespace DkTools.CodeAnalysis
 			_isArg = isArg;
 			_isInitialized = isInitialized;
 			_isUsed = isUsed;
+			_rawSpan = rawSpan;
 		}
 
 		public Variable Clone()
 		{
-			return new Variable(_def, _name, _dataType, _value, _isArg, _isInitialized, _isUsed);
+			return new Variable(_def, _name, _dataType, _value, _isArg, _isInitialized, _isUsed, _rawSpan);
 		}
 
-		public Definition Definition
+		public DataType DataType => _dataType;
+		public Definition Definition => _def;
+		public bool IsArgument => _isArg;
+		public TriState IsInitialized { get => _isInitialized; set => _isInitialized = value; }
+		public bool IsUsed { get => _isUsed; set => _isUsed = value; }
+		public string Name => _name;
+		public Span RawSpan => _rawSpan;
+		public override string ToString() => _name;
+		public Value Value => _value;
+
+		public void AssignValue(Value value)
 		{
-			get { return _def; }
+			_value = value;
 		}
 
-		public string Name
+		public void Merge(Variable other)
 		{
-			get { return _name; }
+			_value = other._value;
 		}
 
-		public DataType DataType
+		public void Merge(IEnumerable<Variable> otherVars)
 		{
-			get { return _dataType; }
-		}
+			var others = otherVars.Where(x => x != null).ToArray();
+			if (others.Length == 0) return;
 
-		public Value Value
-		{
-			get
-			{
-				return _value;
-			}
-			set
-			{
-				_value = value;
-			}
-		}
-
-		public bool IsArgument
-		{
-			get { return _isArg; }
-		}
-
-		public TriState IsInitialized
-		{
-			get { return _isInitialized; }
-			set { _isInitialized = value; }
-		}
-
-		public bool IsUsed
-		{
-			get { return _isUsed; }
-			set { _isUsed = value; }
+			_value = Value.Combine(_value.DataType, others.Select(x => x._value));
 		}
 	}
 }

@@ -68,6 +68,8 @@ namespace DkTools.CodeAnalysis.Statements
 			}
 		}
 
+		public override string ToString() => new string[] { "extract... " }.Concat(_colExps.Select(x => x.ToString()).Delim(" ")).Combine();
+
 		public override void Execute(RunScope scope)
 		{
 			base.Execute(scope);

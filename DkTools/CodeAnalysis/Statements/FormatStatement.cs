@@ -15,6 +15,8 @@ namespace DkTools.CodeAnalysis.Statements
 		private ExpressionNode _genpagesExp;
 		private ExpressionNode _outfileExp;
 
+		public override string ToString() => "format...";
+
 		public FormatStatement(ReadParams p, Span keywordSpan)
 			: base(p.CodeAnalyzer, keywordSpan)
 		{

@@ -22,6 +22,8 @@ namespace DkTools.CodeAnalysis.Nodes
 			_name = funcName;
 		}
 
+		public override string ToString() => new string[] { _name, "(", _aggExp?.ToString(), _whereExp != null ? ", " : "", _whereExp?.ToString(), ")" }.Combine();
+
 		public static AggregateFunctionCallNode Read(ReadParams p, Span funcNameSpan, string funcName)
 		{
 			var ret = new AggregateFunctionCallNode(p.Statement, funcNameSpan, funcName);
@@ -117,6 +119,19 @@ namespace DkTools.CodeAnalysis.Nodes
 			return ret;
 		}
 
+		public override void Execute(RunScope scope)
+		{
+			if (_whereExp != null)
+			{
+				_whereExp.Execute(scope);
+			}
+
+			if (_aggExp != null)
+			{
+				_aggExp.ReadValue(scope);
+			}
+		}
+
 		public override Values.Value ReadValue(RunScope scope)
 		{
 			if (_whereExp != null)
@@ -135,6 +150,16 @@ namespace DkTools.CodeAnalysis.Nodes
 			else
 			{
 				return base.ReadValue(scope);
+			}
+		}
+
+		public override bool IsReportable
+		{
+			get
+			{
+				if (_name == "count") return true;
+				if (_aggExp != null) return _aggExp.IsReportable;
+				return false;
 			}
 		}
 	}

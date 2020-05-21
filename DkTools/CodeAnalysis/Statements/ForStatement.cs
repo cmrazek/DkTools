@@ -15,6 +15,8 @@ namespace DkTools.CodeAnalysis.Statements
 		private ExpressionNode _incExp;
 		private List<Statement> _body = new List<Statement>();
 
+		public override string ToString() => new string[] { "for (", _condExp?.ToString(), ")..." }.Combine();
+
 		public ForStatement(ReadParams p, Span keywordSpan)
 			: base(p.CodeAnalyzer, keywordSpan)
 		{

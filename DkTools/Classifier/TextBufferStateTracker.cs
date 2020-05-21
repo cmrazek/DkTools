@@ -75,6 +75,9 @@ namespace DkTools.Classifier
 			{
 				_snapshot = snapshot;
 
+				if (pos < 0) pos = 0;
+				if (pos > snapshot.Length) pos = snapshot.Length;
+
 				var line = _snapshot.GetLineFromPosition(pos);
 				var state = GetStateForLineStart(line.LineNumber, snapshot, fileName, appSettings);
 				var lineStartPos = line.Start.Position;

@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using DkTools.CodeAnalysis.Nodes;
+using DkTools.CodeAnalysis.Values;
 using DkTools.CodeModel;
 
 namespace DkTools.CodeAnalysis.Statements
@@ -13,6 +14,8 @@ namespace DkTools.CodeAnalysis.Statements
 		private List<ExpressionNode> _conditions = new List<ExpressionNode>();
 		private List<List<Statement>> _trueBodies = new List<List<Statement>>();
 		private List<Statement> _falseBody;
+
+		public override string ToString() => new string[] { "if ", _conditions.FirstOrDefault()?.ToString(), " {...}" }.Combine();
 
 		public IfStatement(ReadParams p, Span keywordSpan)
 			: base(p.CodeAnalyzer, keywordSpan)
@@ -84,20 +87,18 @@ namespace DkTools.CodeAnalysis.Statements
 
 			for (int i = 0, ii = _conditions.Count > _trueBodies.Count ? _conditions.Count : _trueBodies.Count; i < ii; i++)
 			{
+				Value condValue = null;
 				if (i < _conditions.Count)
 				{
 					var condScope = scope.Clone();
-					_conditions[i].ReadValue(condScope);
+					condValue = _conditions[i].ReadValue(condScope);
 					scope.Merge(condScope, true, true);
 				}
 
 				if (i < _trueBodies.Count)
 				{
 					var trueScope = scope.Clone();
-					foreach (var stmt in _trueBodies[i])
-					{
-						stmt.Execute(trueScope);
-					}
+					foreach (var stmt in _trueBodies[i]) stmt.Execute(trueScope);
 					scopes.Add(trueScope);
 				}
 			}
@@ -105,10 +106,7 @@ namespace DkTools.CodeAnalysis.Statements
 			var falseScope = scope.Clone();
 			if (_falseBody != null)
 			{
-				foreach (var stmt in _falseBody)
-				{
-					stmt.Execute(falseScope);
-				}
+				foreach (var stmt in _falseBody) stmt.Execute(falseScope);
 			}
 			scopes.Add(falseScope);
 

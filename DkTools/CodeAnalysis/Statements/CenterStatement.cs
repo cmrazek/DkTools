@@ -15,5 +15,7 @@ namespace DkTools.CodeAnalysis.Statements
 		{
 			p.Code.ReadExact(';');	// Optional
 		}
+
+		public override string ToString() => "center";
 	}
 }
