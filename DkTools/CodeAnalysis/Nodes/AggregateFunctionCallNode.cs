@@ -103,7 +103,7 @@ namespace DkTools.CodeAnalysis.Nodes
 					}
 					else if (code.ReadExactWholeWord("in"))
 					{
-						if (!code.ReadStringLiteral())
+						if (!code.ReadStringLiteral() && !code.ReadWord())
 						{
 							ret.ReportError(code.Span, CAError.CA0068);	// Expected select name to follow 'in'.
 							return ret;
