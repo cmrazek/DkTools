@@ -8,6 +8,7 @@ using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Editor;
 using Microsoft.VisualStudio.Text.Tagging;
 using DkTools.CodeModel;
+using System.CodeDom;
 
 namespace DkTools.ErrorTagging
 {
@@ -25,6 +26,9 @@ namespace DkTools.ErrorTagging
 		public const string CodeAnalysisErrorLight = "DkCodeAnalysisError.Light";
 		public const string CodeAnalysisErrorDark = "DkCodeAnalysisError.Dark";
 
+		private const int DeferPriority_UserInput = 1;
+		private const int DeferPriority_DocumentRefresh = 2;
+
 		public ErrorTagger(ITextView view)
 		{
 			_view = view;
@@ -36,7 +40,12 @@ namespace DkTools.ErrorTagging
 
 			_backgroundFecDeferrer = new BackgroundDeferrer(Constants.BackgroundFecDelay);
 			_backgroundFecDeferrer.Idle += _backgroundFecDeferrer_Idle;
-			_backgroundFecDeferrer.OnActivity();
+			_backgroundFecDeferrer.OnActivity(priority: DeferPriority_DocumentRefresh);
+
+			_view.TextBuffer.Changed += (sender, e) =>
+			{
+				_backgroundFecDeferrer.OnActivity(priority: DeferPriority_UserInput);
+			};
 		}
 
 		~ErrorTagger()
@@ -65,7 +74,7 @@ namespace DkTools.ErrorTagging
 			{
 				if (_model != null && _model.FileContext != FileContext.Include)
 				{
-					_backgroundFecDeferrer.OnActivity();
+					_backgroundFecDeferrer.OnActivity(priority: DeferPriority_DocumentRefresh);
 				}
 			}
 			catch (Exception ex)
@@ -81,7 +90,7 @@ namespace DkTools.ErrorTagging
 				if (_model != null && _model.FileContext != FileContext.Include &&
 					e.FilePath.EqualsI(_model.FileName))
 				{
-					_backgroundFecDeferrer.OnActivity();
+					_backgroundFecDeferrer.OnActivity(priority: DeferPriority_DocumentRefresh);
 				}
 			}
 			catch (Exception ex)
@@ -116,35 +125,39 @@ namespace DkTools.ErrorTagging
 
 				try
 				{
-					var fileName = VsTextUtil.TryGetDocumentFileName(_view.TextBuffer);
-					if (string.IsNullOrEmpty(fileName)) return;
-
-					if (_model != null &&
-						_model.FileContext != FileContext.Include &&
-						ProbeEnvironment.CurrentAppSettings.FileExistsInApp(_model.FileName))
+					if ((e.Priority == DeferPriority_DocumentRefresh && ProbeToolsPackage.Instance.EditorOptions.RunBackgroundFecOnSave) ||
+						(e.Priority == DeferPriority_DocumentRefresh && ProbeToolsPackage.Instance.EditorOptions.RunCodeAnalysisOnSave) ||
+						(e.Priority == DeferPriority_UserInput && ProbeToolsPackage.Instance.EditorOptions.RunCodeAnalysisOnUserInput))
 					{
-						if (ProbeToolsPackage.Instance.EditorOptions.RunBackgroundFecOnSave ||
-							ProbeToolsPackage.Instance.EditorOptions.RunCodeAnalysisOnSave)
+						var fileName = VsTextUtil.TryGetDocumentFileName(_view.TextBuffer);
+						if (string.IsNullOrEmpty(fileName)) return;
+
+						if (_model != null &&
+							_model.FileContext != FileContext.Include &&
+							ProbeEnvironment.CurrentAppSettings.FileExistsInApp(_model.FileName))
 						{
 							System.Threading.ThreadPool.QueueUserWorkItem(state =>
 							{
 								try
 								{
-									if (ProbeToolsPackage.Instance.EditorOptions.RunBackgroundFecOnSave)
+									if ((e.Priority == DeferPriority_DocumentRefresh && ProbeToolsPackage.Instance.EditorOptions.RunBackgroundFecOnSave))
 									{
 										Compiler.BackgroundFec.RunSync(_model.FileName);
 									}
 
-									if (ProbeToolsPackage.Instance.EditorOptions.RunCodeAnalysisOnSave)
+									if ((e.Priority == DeferPriority_DocumentRefresh && ProbeToolsPackage.Instance.EditorOptions.RunCodeAnalysisOnSave) ||
+										(e.Priority == DeferPriority_UserInput && ProbeToolsPackage.Instance.EditorOptions.RunCodeAnalysisOnUserInput))
 									{
 										var textBuffer = _model.Snapshot.TextBuffer;
-										var fileStore = CodeModel.FileStore.GetOrCreateForTextBuffer(textBuffer);
-										if (fileStore == null) return;
+										var fileStore = FileStore.GetOrCreateForTextBuffer(textBuffer);
+										if (fileStore != null)
+										{
+											var preprocessedModel = fileStore.CreatePreprocessedModel(_model.AppSettings, fileName,
+												textBuffer.CurrentSnapshot, false, "Background Code Analysis");
 
-										var preprocessedModel = fileStore.CreatePreprocessedModel(_model.AppSettings, fileName, textBuffer.CurrentSnapshot, false, "Background Code Analysis");
-
-										var ca = new CodeAnalysis.CodeAnalyzer(null, preprocessedModel);
-										ca.Run();
+											var ca = new CodeAnalysis.CodeAnalyzer(null, preprocessedModel);
+											ca.Run();
+										}
 									}
 								}
 								catch (Exception ex)
@@ -158,7 +171,8 @@ namespace DkTools.ErrorTagging
 						{
 							ErrorTaskProvider.Instance.RemoveAllForSource(ErrorTaskSource.BackgroundFec);
 						}
-						if (!ProbeToolsPackage.Instance.EditorOptions.RunCodeAnalysisOnSave)
+						if (!ProbeToolsPackage.Instance.EditorOptions.RunCodeAnalysisOnSave &&
+							!ProbeToolsPackage.Instance.EditorOptions.RunCodeAnalysisOnUserInput)
 						{
 							ErrorTaskProvider.Instance.RemoveAllForSource(ErrorTaskSource.CodeAnalysis);
 						}

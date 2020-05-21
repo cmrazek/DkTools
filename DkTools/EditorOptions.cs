@@ -23,9 +23,14 @@ namespace DkTools
 		public bool RunBackgroundFecOnSave { get; set; }
 
 		[Category("Editor Options")]
-		[DisplayName("Show Code Analysis Automatically")]
+		[DisplayName("Show Code Analysis on Save")]
 		[Description("When a file is saved, run code analysis and show detected errors and warnings.")]
 		public bool RunCodeAnalysisOnSave { get; set; }
+
+		[Category("Editor Options")]
+		[DisplayName("Show Code Analysis on User Input")]
+		[Description("Run code analysis as code is being modified.")]
+		public bool RunCodeAnalysisOnUserInput { get; set; }
 
 		[Category("Editor Options")]
 		[DisplayName("Disable Background Scanning")]
@@ -37,6 +42,7 @@ namespace DkTools
 			DisableDeadCode = true;
 			RunBackgroundFecOnSave = true;
 			RunCodeAnalysisOnSave = true;
+			RunCodeAnalysisOnUserInput = true;
 		}
 
 		public override void SaveSettingsToStorage()

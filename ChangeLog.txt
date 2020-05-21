@@ -5,6 +5,7 @@ Version 1.5.9 - (not yet released):
 - Fixed CA error often not showing: CA0111: Variable 'x' is assigned a value, but is never used.
 - Fixed some Code Analysis errors/warnings not showing up because of thread sync issues.
 - Code Analysis warnings can now be suppressed with #warndel and #warnadd (prefix code with 99).
+- Add an Option to run Code Analysis after user input. (in Tools -> Options)
 - Disabled the annoying 'Full Background Scan Required' message box.
 - Changed files now detected using a file system watcher and references should update more frequently.
 
