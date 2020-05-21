@@ -18,6 +18,7 @@ namespace DkTools.CodeAnalysis
 		private TriState _returned;
 		private TriState _breaked;
 		private TriState _continued;
+		private TriState _terminated;
 		private bool _canBreak;
 		private bool _canContinue;
 		private bool _suppressInitializedCheck;
@@ -57,6 +58,11 @@ namespace DkTools.CodeAnalysis
 			if (promoteBreak && scope.Breaked > _breaked) _breaked = scope.Breaked;
 			if (promoteContinue && scope.Continued > _continued) _continued = scope.Continued;
 
+			if (_terminated != TriState.True)
+			{
+				if (scope.Terminated == TriState.True) _terminated = TriState.True;
+				else if (scope.Terminated == TriState.Indeterminate) _terminated = TriState.Indeterminate;
+			}
 			
 			foreach (var myVar in _vars.Values)
 			{
@@ -94,6 +100,13 @@ namespace DkTools.CodeAnalysis
 			{
 				var continued = TriStateUtil.Combine(from s in scopes select s.Continued);
 				if (continued > _continued) _continued = continued;
+			}
+
+			if (_terminated != TriState.True)
+			{
+				var count = scopes.Count();
+				if (scopes.All(x => x.Terminated == TriState.True)) _terminated = TriState.True;
+				else if (scopes.Any(x => x.Terminated != TriState.False)) _terminated = TriState.Indeterminate;
 			}
 
 			foreach (var v in _vars)
@@ -159,19 +172,52 @@ namespace DkTools.CodeAnalysis
 		public TriState Returned
 		{
 			get { return _returned; }
-			set { _returned = value; }
+			set
+			{
+				_returned = value;
+				if (value == TriState.True) _terminated = TriState.True;
+				else if (value == TriState.Indeterminate && _terminated == TriState.False) _terminated = TriState.Indeterminate;
+			}
 		}
 
 		public TriState Breaked
 		{
 			get { return _breaked; }
-			set { _breaked = value; }
+			set
+			{
+				_breaked = value;
+				if (value == TriState.True) _terminated = TriState.True;
+				else if (value == TriState.Indeterminate && _terminated == TriState.False) _terminated = TriState.Indeterminate;
+			}
 		}
 
 		public TriState Continued
 		{
 			get { return _continued; }
-			set { _continued = value; }
+			set
+			{
+				_continued = value;
+				if (value == TriState.True) _terminated = TriState.True;
+				else if (value == TriState.Indeterminate && _terminated == TriState.False) _terminated = TriState.Indeterminate;
+			}
+		}
+
+		public TriState Terminated => _terminated;
+
+		private TriState CalcTerminated()
+		{
+			if (_returned == TriState.True || _breaked == TriState.True || _continued == TriState.True)
+			{
+				return TriState.True;
+			}
+			else if (_returned == TriState.Indeterminate || _breaked == TriState.Indeterminate || _continued == TriState.Indeterminate)
+			{
+				return TriState.Indeterminate;
+			}
+			else
+			{
+				return TriState.False;
+			}
 		}
 
 		public bool CanBreak
