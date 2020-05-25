@@ -93,6 +93,15 @@ namespace DkTools.CodeAnalysis.Statements
 						ReportError(code.Span, CAError.CA0032);	// Duplicate default case.
 					}
 
+					if (_cases.Count > 0)
+					{
+						var lastCase = _cases[_cases.Count - 1];
+						if (lastCase != null && lastCase.body.Count == 0)
+						{
+							lastCase.safeFallThrough = true;
+						}
+					}
+
 					insideDefault = true;
 					_default = new List<Statement>();
 
@@ -131,9 +140,12 @@ namespace DkTools.CodeAnalysis.Statements
 			}
 
 			var bodyScopes = new List<RunScope>();
+			var currentBodyScope = (RunScope)null;
 
-			foreach (var cas in _cases)
+			for (int c = 0; c < _cases.Count; c++)
 			{
+				var cas = _cases[c];
+
 				if (cas.exp != null)
 				{
 					var valueScope = scope.Clone();
@@ -162,35 +174,48 @@ namespace DkTools.CodeAnalysis.Statements
 
 				if (!cas.safeFallThrough)
 				{
-					var bodyScope = scope.Clone(canBreak: true);
+					if (currentBodyScope == null) currentBodyScope = scope.Clone(canBreak: true);
 					foreach (var stmt in cas.body)
 					{
-						stmt.Execute(bodyScope);
+						stmt.Execute(currentBodyScope);
 					}
-					bodyScopes.Add(bodyScope);
 
-					if (bodyScope.Breaked == TriState.False && bodyScope.Returned == TriState.False && cas.body.Any())
+					if (currentBodyScope.Terminated == TriState.True)
 					{
-						ReportError(cas.caseSpan, CAError.CA0031);	// Switch fall-throughs are inadvisable.
+						bodyScopes.Add(currentBodyScope);
+						currentBodyScope = null;
+					}
+					else if (currentBodyScope.Breaked == TriState.False && currentBodyScope.Returned == TriState.False && cas.body.Count > 0)
+					{
+						if (c == _cases.Count - 1 && _default == null)
+						{
+							// Fall-throughs are allowed on the last 'case', as long as there is no 'default'.
+						}
+						else
+						{
+							ReportError(cas.caseSpan, CAError.CA0031);  // Switch fall-throughs are inadvisable.
+						}
 					}
 				}
 			}
 
 			if (_default != null)
 			{
-				var bodyScope = scope.Clone(canBreak: true);
-				foreach (var stmt in _default) stmt.Execute(bodyScope);
-				bodyScopes.Add(bodyScope);
+				if (currentBodyScope == null) currentBodyScope = scope.Clone(canBreak: true);
+				foreach (var stmt in _default) stmt.Execute(currentBodyScope);
+				bodyScopes.Add(currentBodyScope);
 			}
 			else if (enumOptions != null && enumOptions.Count == 0)
 			{
 				// There is no default, but all the enum options have been covered off.
 				// This is ok.
+				if (currentBodyScope != null) bodyScopes.Add(currentBodyScope);
 			}
 			else
 			{
 				// Because there's no default, this switch doesn't cover all code branches.
 				// Add a dummy scope to indicate that.
+				if (currentBodyScope != null) bodyScopes.Add(currentBodyScope);
 				bodyScopes.Add(scope.Clone());
 			}
 

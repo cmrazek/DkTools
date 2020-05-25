@@ -44,5 +44,10 @@ namespace DkTools
 				yield return item;
 			}
 		}
+
+		public static bool EqualsI(this string pathA, string pathB)
+		{
+			return string.Equals(pathA, pathB, StringComparison.OrdinalIgnoreCase);
+		}
 	}
 }

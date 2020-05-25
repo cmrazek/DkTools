@@ -5,6 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
+using System.Windows.Forms;
 using DkTools.CodeModel;
 
 namespace DkTools.FunctionFileScanning
@@ -19,6 +20,9 @@ namespace DkTools.FunctionFileScanning
 		private object _currentAppLock = new object();
 		private Queue<ScanInfo> _scanQueue;
 		private object _scanLock = new object();
+
+		private DateTime _lastDefinitionPublish = DateTime.MinValue;
+		private bool _definitionPublishRequired = false;
 
 		private const int k_threadWaitIdle = 1000;
 		private const int k_threadWaitActive = 0;
@@ -51,7 +55,7 @@ namespace DkTools.FunctionFileScanning
 			_thread.Start();
 
 			ProbeEnvironment.AppChanged += new EventHandler(ProbeEnvironment_AppChanged);
-			Shell.FileSaved += Shell_FileSaved;
+			ProbeAppSettings.FileChanged += ProbeAppSettings_FileChanged;
 		}
 
 		public void OnShutdown()
@@ -133,7 +137,7 @@ namespace DkTools.FunctionFileScanning
 					}
 					else
 					{
-						//_currentApp.PublishDefinitions();
+						_currentApp.PublishDefinitions();
 
 						ProbeToolsPackage.Instance.SetStatusText("DkTools background purging...");
 						using (var txn = db.BeginTransaction())
@@ -253,6 +257,12 @@ namespace DkTools.FunctionFileScanning
 				if (scan.mode == FFScanMode.Exports) ProbeToolsPackage.Instance.SetStatusText(string.Format("DkTools background scanning file: {0} (exports only)", scan.fileName));
 				else ProbeToolsPackage.Instance.SetStatusText(string.Format("DkTools background scanning file: {0}", scan.fileName));
 
+				// Make sure all definitions are available when starting deep scanning.
+				if (scan.mode != FFScanMode.Exports && _definitionPublishRequired)
+				{
+					app.PublishDefinitions();
+				}
+
 				var fileTitle = Path.GetFileNameWithoutExtension(scan.fileName);
 
 				var defProvider = new CodeModel.DefinitionProvider(_appSettings, scan.fileName);
@@ -283,7 +293,17 @@ namespace DkTools.FunctionFileScanning
 					app.OnInvisibleFileChanged(ffFile);
 				}
 
-				app.PublishDefinitions();
+				if (scan.mode == FFScanMode.Exports)
+				{
+					_definitionPublishRequired = true;
+
+					if (DateTime.Now.Subtract(_lastDefinitionPublish).TotalSeconds > 5.0)
+					{
+						app.PublishDefinitions();
+						_definitionPublishRequired = false;
+						_lastDefinitionPublish = DateTime.Now;
+					}
+				}
 			}
 			catch (Exception ex)
 			{
@@ -356,27 +376,27 @@ namespace DkTools.FunctionFileScanning
 			}
 		}
 
-		private void Shell_FileSaved(object sender, Shell.FileSavedEventArgs e)
+		private void ProbeAppSettings_FileChanged(object sender, ProbeAppSettings.FileEventArgs e)
 		{
 			try
 			{
 				var options = ProbeToolsPackage.Instance.EditorOptions;
 				if (!options.DisableBackgroundScan)
 				{
-					var fileContext = FileContextUtil.GetFileContextFromFileName(e.FileName);
-					if (ProbeEnvironment.CurrentAppSettings.FileExistsInApp(e.FileName))
+					var fileContext = FileContextUtil.GetFileContextFromFileName(e.FilePath);
+					if (ProbeEnvironment.CurrentAppSettings.FileExistsInApp(e.FilePath))
 					{
-						if (fileContext != FileContext.Include && !FileContextUtil.IsLocalizedFile(e.FileName))
+						if (fileContext != FileContext.Include && !FileContextUtil.IsLocalizedFile(e.FilePath))
 						{
-							Log.Debug("Scanner detected a saved file: {0}", e.FileName);
+							Log.Debug("Scanner detected a saved file: {0}", e.FilePath);
 
-							EnqueueChangedFile(e.FileName);
+							EnqueueChangedFile(e.FilePath);
 						}
 						else
 						{
-							Log.Debug("Scanner detected an include file was saved: {0}", e.FileName);
+							Log.Debug("Scanner detected an include file was saved: {0}", e.FilePath);
 
-							EnqueueFilesDependentOnInclude(e.FileName);
+							EnqueueFilesDependentOnInclude(e.FilePath);
 						}
 					}
 				}

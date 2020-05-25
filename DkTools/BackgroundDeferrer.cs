@@ -1,4 +1,5 @@
-﻿using System;
+﻿using EnvDTE;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -11,12 +12,20 @@ namespace DkTools
 		private int _idleTime;
 		private Timer _timer;
 		private object _value;
+		private int _priority;
 
 		public event EventHandler<IdleEventArgs> Idle;
 
 		public class IdleEventArgs : EventArgs
 		{
-			public object Value { get; set; }
+			public object Value { get; private set; }
+			public int Priority { get; private set; }
+
+			public IdleEventArgs(object value, int priority)
+			{
+				Value = value;
+				Priority = priority;
+			}
 		}
 
 		public BackgroundDeferrer(int idleTime = 1000)
@@ -39,9 +48,10 @@ namespace DkTools
 			}
 		}
 
-		public void OnActivity(object value = null)
+		public void OnActivity(object value = null, int priority = 0)
 		{
 			_value = value;
+			if (priority > _priority) _priority = priority;
 			_timer.Stop();
 			_timer.Start();
 		}
@@ -66,8 +76,16 @@ namespace DkTools
 
 		private void Execute()
 		{
-			var ev = Idle;
-			if (ev != null) ev(this, new IdleEventArgs { Value = _value });
+			try
+			{
+				var priority = _priority;
+				_priority = 0;
+				Idle?.Invoke(this, new IdleEventArgs(_value, priority));
+			}
+			catch (Exception ex)
+			{
+				Log.Error(ex);
+			}
 		}
 	}
 }

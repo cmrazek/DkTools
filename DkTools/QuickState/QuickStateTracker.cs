@@ -30,8 +30,11 @@ namespace DkTools
 				}
 			}
 
-			var snapLine = e.After.GetLineFromPosition(startPos);
-			Invalidate(snapLine.LineNumber);
+			if (startPos >= 0 && startPos <= e.After.Length)
+			{
+				var snapLine = e.After.GetLineFromPosition(startPos);
+				Invalidate(snapLine.LineNumber);
+			}
 		}
 
 		private int GetStateForLine(int lineNumber)

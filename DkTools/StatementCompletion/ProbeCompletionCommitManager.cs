@@ -19,7 +19,7 @@ namespace DkTools.StatementCompletion
 
 		private static readonly char[] _commitChars = new char[]
 		{
-			' ', ';', '.', '(', ')', ',', '<', '>', '\"', '\'', '-',
+			' ', ';', '.', '(', ')', ',', '<', '>', '\"', '\'', '-', ':',
 			'0', '1', '2', '3', '4', '5', '6', '7', '8', '9'
 		};
 		private static readonly char[] _acceptSelectionCompletionChars = new char[]

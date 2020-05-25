@@ -35,7 +35,10 @@ namespace DkTools.CodeAnalysis.Statements
 
 			if (_root.NumChildren > 0)
 			{
-				_root.Execute(scope);
+				var exeScope = scope.Clone();
+				exeScope.RemoveHeaderString = true;
+				_root.Execute(exeScope);
+				scope.Merge(exeScope);
 
 				if (_root.IsReportable)
 				{

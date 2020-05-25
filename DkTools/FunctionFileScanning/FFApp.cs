@@ -84,11 +84,11 @@ namespace DkTools.FunctionFileScanning
 					_id = Convert.ToInt64(cmd.ExecuteScalar());
 				}
 
-				var options = ProbeToolsPackage.Instance.EditorOptions;
-				if (!options.DisableBackgroundScan)
-				{
-					Shell.ShowNotificationAsync(Res.FFDatabaseCreationNotification, Res.FFDatabaseCreationCaption);
-				}
+				//var options = ProbeToolsPackage.Instance.EditorOptions;
+				//if (!options.DisableBackgroundScan)
+				//{
+				//	Shell.ShowNotificationAsync(Res.FFDatabaseCreationNotification, Res.FFDatabaseCreationCaption);
+				//}
 			}
 		}
 

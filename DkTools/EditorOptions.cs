@@ -23,35 +23,33 @@ namespace DkTools
 		public bool RunBackgroundFecOnSave { get; set; }
 
 		[Category("Editor Options")]
-		[DisplayName("Show Code Analysis Automatically")]
+		[DisplayName("Show Code Analysis on Save")]
 		[Description("When a file is saved, run code analysis and show detected errors and warnings.")]
 		public bool RunCodeAnalysisOnSave { get; set; }
+
+		[Category("Editor Options")]
+		[DisplayName("Show Code Analysis on User Input")]
+		[Description("Run code analysis as code is being modified.")]
+		public bool RunCodeAnalysisOnUserInput { get; set; }
 
 		[Category("Editor Options")]
 		[DisplayName("Disable Background Scanning")]
 		[Description("Stop scanning files in the background (will cause classes, functions to not be detected properly).")]
 		public bool DisableBackgroundScan { get; set; }
 
-		public event EventHandler EditorRefreshRequired;
-
 		public EditorOptions()
 		{
 			DisableDeadCode = true;
 			RunBackgroundFecOnSave = true;
 			RunCodeAnalysisOnSave = true;
+			RunCodeAnalysisOnUserInput = true;
 		}
 
 		public override void SaveSettingsToStorage()
 		{
 			base.SaveSettingsToStorage();
 
-			FireEditorRefresh();
-		}
-
-		public void FireEditorRefresh()
-		{
-			var ev = EditorRefreshRequired;
-			if (ev != null) ev(this, EventArgs.Empty);
+			ProbeToolsPackage.Instance.FireRefreshAllDocuments();
 		}
 	}
 }

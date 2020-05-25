@@ -48,11 +48,7 @@ namespace DkTools.CodeAnalysis
 				AnalyzeFunction(func);
 			}
 
-			if (_numErrors > 0 || _numWarnings > 0)
-			{
-				ErrorTaskProvider.Instance.ReplaceForSourceAndInvokingFile(
-					ErrorTaskSource.CodeAnalysis, _codeModel.FileName, _tasks);
-			}
+			ErrorTaskProvider.Instance.ReplaceForSourceAndInvokingFile(ErrorTaskSource.CodeAnalysis, _codeModel.FileName, _tasks);
 
 			Log.Debug("Completed code analysis (elapsed: {0} msec)", DateTime.Now.Subtract(startTime).TotalMilliseconds);
 		}
