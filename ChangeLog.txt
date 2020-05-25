@@ -1,6 +1,6 @@
 DkTools ChangeLog
 ____________________________________________________________________________________________________
-Version 1.5.9 - (not yet released):
+Version 1.5.9 - May 25, 2020:
 
 - Fixed CA error often not showing: CA0111: Variable 'x' is assigned a value, but is never used.
 - Fixed some Code Analysis errors/warnings not showing up because of thread sync issues.
