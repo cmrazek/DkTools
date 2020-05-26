@@ -160,7 +160,7 @@ namespace DkTools
 			var lineText = line.GetText();
 
 			var start = 0;
-			while (start <= lineText.Length && char.IsWhiteSpace(lineText[start])) start++;
+			while (start < lineText.Length && char.IsWhiteSpace(lineText[start])) start++;
 
 			var end = lineText.Length;
 			while (end > 0 && char.IsWhiteSpace(lineText[end - 1])) end--;

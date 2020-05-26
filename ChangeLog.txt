@@ -1,5 +1,10 @@
 DkTools ChangeLog
 ____________________________________________________________________________________________________
+Version 1.5.10 - (not yet released):
+
+- Fixed IndexOutOfRangeException occurring on errors/warnings reported by fec.
+
+____________________________________________________________________________________________________
 Version 1.5.9 - May 25, 2020:
 
 - Fixed CA error often not showing: CA0111: Variable 'x' is assigned a value, but is never used.
