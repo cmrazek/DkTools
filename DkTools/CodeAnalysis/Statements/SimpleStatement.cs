@@ -45,7 +45,13 @@ namespace DkTools.CodeAnalysis.Statements
 					var readScope = scope.Clone();
 					readScope.RemoveHeaderString = true;
 					var rootValue = _root.ReadValue(readScope);
-					if (!rootValue.IsVoid) ReportError(_root.Span, CAError.CA0070);    // This expression writes to the report stream.
+					if (!rootValue.IsVoid)
+					{
+						if (ProbeToolsPackage.Instance.EditorOptions.HighlightReportOutput)
+						{
+							ReportError(_root.Span, CAError.CA0070);    // This expression writes to the report stream.
+						}
+					}
 					scope.Merge(readScope);
 				}
 			}

@@ -18,6 +18,11 @@ namespace DkTools
 		public bool DisableDeadCode { get; set; }
 
 		[Category("Editor Options")]
+		[DisplayName("Highlight Report Output")]
+		[Description("Expressions that write to the report output stream will be highlighted. (Requires Code Analysis)")]
+		public bool HighlightReportOutput { get; set; }
+
+		[Category("Editor Options")]
 		[DisplayName("Show FEC Errors")]
 		[Description("When a file is saved, run FEC in the background and show detected errors and warnings.")]
 		public bool RunBackgroundFecOnSave { get; set; }
@@ -40,6 +45,7 @@ namespace DkTools
 		public EditorOptions()
 		{
 			DisableDeadCode = true;
+			HighlightReportOutput = true;
 			RunBackgroundFecOnSave = true;
 			RunCodeAnalysisOnSave = true;
 			RunCodeAnalysisOnUserInput = true;
