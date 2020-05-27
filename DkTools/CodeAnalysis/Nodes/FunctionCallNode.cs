@@ -37,10 +37,12 @@ namespace DkTools.CodeAnalysis.Nodes
 			var argIndex = 0;
 			var args = new List<GroupNode>();
 			var argDefs = funcDef.Arguments.ToArray();
+			var closePos = -1;
 
 			if (code.ReadExact(')'))
 			{
 				closed = true;
+				closePos = code.Span.End;
 			}
 			else
 			{
@@ -51,6 +53,7 @@ namespace DkTools.CodeAnalysis.Nodes
 						if (code.ReadExact(')'))
 						{
 							closed = true;
+							closePos = code.Span.End;
 							break;
 						}
 						if (!code.ReadExact(','))
@@ -83,7 +86,8 @@ namespace DkTools.CodeAnalysis.Nodes
 			//	code.Position = resetPos;
 			//	return null;
 			//}
-			
+
+			funcCallNode.Span = new Span(funcNameSpan.Start, closePos);
 			return funcCallNode;
 		}
 
@@ -112,7 +116,7 @@ namespace DkTools.CodeAnalysis.Nodes
 			return funcCallNode;
 		}
 
-		public override bool IsReportable => _def.DataType != null && _def.DataType.IsReportable;
+		public override bool IsReportable => _def != null && _def.DataType != null && _def.DataType.IsReportable;
 
 		public void AddArgument(GroupNode node)
 		{

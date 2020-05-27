@@ -550,8 +550,7 @@ namespace DkTools.Compiler
 						message: message,
 						type: ErrorType.Error,
 						source: ErrorTaskSource.Compile,
-						reportedSpan: null,
-						snapshotSpan: null);
+						reportedSpan: null);
 					ErrorTaskProvider.Instance.Add(task);
 				}
 				_pane.WriteLine(line);
@@ -573,8 +572,7 @@ namespace DkTools.Compiler
 						message: message,
 						type: ErrorType.Warning,
 						source: ErrorTaskSource.Compile,
-						reportedSpan: null,
-						snapshotSpan: null);
+						reportedSpan: null);
 					ErrorTaskProvider.Instance.Add(task);
 				}
 				_pane.WriteLine(line);
@@ -593,8 +591,7 @@ namespace DkTools.Compiler
 					message: message,
 					type: ErrorType.Error,
 					source: ErrorTaskSource.Compile,
-					reportedSpan: null,
-					snapshotSpan: null);
+					reportedSpan: null);
 				_pane.WriteLine(line);
 				_numErrors++;
 				return;
@@ -610,8 +607,7 @@ namespace DkTools.Compiler
 					message: "Build failed.",
 					type: ErrorType.Error,
 					source: ErrorTaskSource.Compile,
-					reportedSpan: null,
-					snapshotSpan: null);
+					reportedSpan: null);
 				ErrorTaskProvider.Instance.Add(task);
 				_buildFailed = true;
 				_pane.WriteLine(line);
@@ -628,8 +624,7 @@ namespace DkTools.Compiler
 					message: line,
 					type: ErrorType.Error,
 					source: ErrorTaskSource.Compile,
-					reportedSpan: null,
-					snapshotSpan: null);
+					reportedSpan: null);
 				ErrorTaskProvider.Instance.Add(task);
 				_buildFailed = true;
 				_pane.WriteLine(line);

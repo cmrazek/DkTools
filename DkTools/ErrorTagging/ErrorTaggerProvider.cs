@@ -14,7 +14,7 @@ namespace DkTools.ErrorTagging
 {
 	[Export(typeof(IViewTaggerProvider))]
 	[TagType(typeof(ErrorTag))]
-	[ContentType("DK")]
+	[ContentType(Constants.DkContentType)]
 	internal class ErrorTaggerProvider : IViewTaggerProvider
 	{
 		public ITagger<T> CreateTagger<T>(ITextView textView, ITextBuffer buffer) where T : ITag

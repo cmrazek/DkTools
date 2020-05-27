@@ -932,7 +932,7 @@ namespace DkTools
 					var fileName = VsTextUtil.TryGetDocumentFileName(view.TextBuffer);
 					var model = fileStore.GetCurrentModel(appSettings, fileName, view.TextSnapshot, "Debug:ShowCodeModelDump");
 
-					Shell.OpenTempContent(model.DumpTree(), Path.GetFileName(model.FileName), ".model.xml");
+					Shell.OpenTempContent(model.DumpTree(), Path.GetFileName(model.FilePath), ".model.xml");
 				});
 			}
 
@@ -961,7 +961,7 @@ namespace DkTools
 					var model = GetModelForActiveDoc(appSettings);
 					if (model != null)
 					{
-						Shell.OpenTempContent(model.DefinitionProvider.DumpDefinitions(), Path.GetFileName(model.FileName), ".txt");
+						Shell.OpenTempContent(model.DefinitionProvider.DumpDefinitions(), Path.GetFileName(model.FilePath), ".txt");
 					}
 				});
 			}
@@ -1041,7 +1041,7 @@ namespace DkTools
 					}
 
 					//Shell.OpenTempContent(prepModel.File.CodeSource.Dump(), Path.GetFileName(model.FileName), ".ppsegs.txt");
-					Shell.OpenTempContent(prepModel.Dump(), Path.GetFileName(model.FileName), ".prep.txt");
+					Shell.OpenTempContent(prepModel.Dump(), Path.GetFileName(model.FilePath), ".prep.txt");
 				});
 			}
 
@@ -1063,7 +1063,7 @@ namespace DkTools
 					var model = fileStore.CreatePreprocessedModel(appSettings, fileName, view.TextSnapshot, false,
 						"Debug:ShowPreprocessorFullModelDump");
 
-					Shell.OpenTempContent(model.DumpTree(), Path.GetFileName(model.FileName), ".prepmodel.xml");
+					Shell.OpenTempContent(model.DumpTree(), Path.GetFileName(model.FilePath), ".prepmodel.xml");
 				});
 			}
 

@@ -44,7 +44,8 @@ namespace DkTools.CodeAnalysis.Statements
 				{
 					var readScope = scope.Clone();
 					readScope.RemoveHeaderString = true;
-					_root.ReadValue(readScope);
+					var rootValue = _root.ReadValue(readScope);
+					if (!rootValue.IsVoid) ReportError(_root.Span, CAError.CA0070);    // This expression writes to the report stream.
 					scope.Merge(readScope);
 				}
 			}

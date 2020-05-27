@@ -392,7 +392,6 @@
     <Compile Include="ErrorSuppressionOptions.cs">
       <SubType>Component</SubType>
     </Compile>
-    <Compile Include="ErrorTagging\ErrorCode.cs" />
     <Compile Include="CodeModel\FunctionPrivacy.cs" />
     <Compile Include="CodeModel\FilePosition.cs" />
     <Compile Include="CodeModel\Preprocessor.cs" />
@@ -477,14 +476,15 @@
       <SubType>Component</SubType>
     </Compile>
     <Compile Include="ErrorTagging\ErrorClassificationFormatDefinition.cs" />
-    <Compile Include="ErrorTagging\ErrorInfo.cs" />
+    <Compile Include="ErrorTagging\ErrorMarkerTaggerProvider.cs" />
+    <Compile Include="ErrorTagging\ErrorMarkerTag.cs" />
+    <Compile Include="ErrorTagging\ErrorMarkerTagger.cs" />
     <Compile Include="ErrorTagging\ErrorTag.cs" />
     <Compile Include="ErrorTagging\ErrorTagger.cs" />
     <Compile Include="ErrorTagging\ErrorTaggerProvider.cs" />
     <Compile Include="ErrorTagging\ErrorTask.cs" />
     <Compile Include="ErrorTagging\ErrorTaskProvider.cs" />
     <Compile Include="ErrorTagging\ErrorType.cs" />
-    <Compile Include="ErrorTagging\ErrorTypeAttribute.cs" />
     <Compile Include="DkGenericTextViewListener.cs" />
     <Compile Include="FileMergeException.cs" />
     <Compile Include="CodeModel\FileMerger.cs" />

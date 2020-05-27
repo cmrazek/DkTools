@@ -16,7 +16,7 @@ namespace DkTools.ErrorTagging
 		private string _invokingFilePath;
 		private ErrorType _type;
 		private CodeModel.Span? _reportedSpan;
-		private SnapshotSpan? _snapshotSpan;
+		private Dictionary<ITextBuffer, SnapshotSpan> _snapshotSpans;
 
 		/// <summary>
 		/// Creates a new error/warning task.
@@ -40,8 +40,7 @@ namespace DkTools.ErrorTagging
 			string message,
 			ErrorType type,
 			ErrorTaskSource source,
-			CodeModel.Span? reportedSpan,
-			SnapshotSpan? snapshotSpan)
+			CodeModel.Span? reportedSpan)
 		{
 			_invokingFilePath = invokingFilePath;
 			Document = filePath;
@@ -65,7 +64,6 @@ namespace DkTools.ErrorTagging
 			_source = source;
 			_type = type;
 			_reportedSpan = reportedSpan;
-			_snapshotSpan = snapshotSpan;
 
 			Navigate += ErrorTask_Navigate;
 		}
@@ -100,37 +98,34 @@ namespace DkTools.ErrorTagging
 		{
 			if (currentSnapshot == null) throw new ArgumentNullException(nameof(currentSnapshot));
 
-			if (_snapshotSpan.HasValue)
-			{
-				if (_snapshotSpan.Value.Snapshot == currentSnapshot)
-				{
-					if (_snapshotSpan.Value.Snapshot.Version != currentSnapshot.Version)
-					{
-						var updatedSpan = _snapshotSpan.Value.TranslateTo(currentSnapshot, SpanTrackingMode.EdgeExclusive);
-						_snapshotSpan = updatedSpan;
-						return updatedSpan;
-					}
+			if (_snapshotSpans == null) _snapshotSpans = new Dictionary<ITextBuffer, SnapshotSpan>();
 
-					return _snapshotSpan.Value;
+			if (_snapshotSpans.TryGetValue(currentSnapshot.TextBuffer, out var taskSnapshotSpan))
+			{
+				if (taskSnapshotSpan.Snapshot.Version != currentSnapshot.Version)
+				{
+					taskSnapshotSpan = taskSnapshotSpan.TranslateTo(currentSnapshot, SpanTrackingMode.EdgeExclusive);
+					_snapshotSpans[currentSnapshot.TextBuffer] = taskSnapshotSpan;
 				}
 
-				_snapshotSpan = null;
+				return taskSnapshotSpan;
 			}
 
 			if (_reportedSpan.HasValue)
 			{
 				var clampedSpan = _reportedSpan.Value.Intersection(new CodeModel.Span(0, currentSnapshot.Length));
 				if (clampedSpan.IsEmpty) return null;
-				_snapshotSpan = clampedSpan.ToVsTextSnapshotSpan(currentSnapshot);
+				taskSnapshotSpan = clampedSpan.ToVsTextSnapshotSpan(currentSnapshot);
 			}
 			else
 			{
 				if (Line < 0 || Line >= currentSnapshot.LineCount) return null;
 				var line = currentSnapshot.GetLineFromLineNumber(Line);
-				_snapshotSpan = line.GetTrimmedSnapshotSpan();
+				taskSnapshotSpan = line.GetTrimmedSnapshotSpan();
 			}
 
-			return _snapshotSpan;
+			_snapshotSpans[currentSnapshot.TextBuffer] = taskSnapshotSpan;
+			return taskSnapshotSpan;
 		}
 
 		public object QuickInfoContent

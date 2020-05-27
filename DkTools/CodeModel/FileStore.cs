@@ -349,7 +349,7 @@ namespace DkTools.CodeModel
 			{
 				var def = func.Definition;
 				if (def.EntireSpan.Length == 0) continue;
-				if (!def.SourceFileName.Equals(model.FileName, StringComparison.OrdinalIgnoreCase)) continue;
+				if (!def.SourceFileName.Equals(model.FilePath, StringComparison.OrdinalIgnoreCase)) continue;
 
 				yield return new FunctionDropDownItem(def, def.Name, new Span(def.SourceStartPos, def.SourceStartPos), def.EntireSpan);
 			}
@@ -394,7 +394,7 @@ namespace DkTools.CodeModel
 
 		private void OnRefreshDocumentRequired(object sender, ProbeToolsPackage.RefreshDocumentEventArgs e)
 		{
-			if (_model != null && e.FilePath.EqualsI(_model.FileName))
+			if (_model != null && e.FilePath.EqualsI(_model.FilePath))
 			{
 				_model = null;
 			}
@@ -474,16 +474,16 @@ namespace DkTools.CodeModel
 			if (includeFilesAffected)
 			{
 				// The main model needs to be refreshed as well, since it depends on that include file.
-				if (_model != null && !string.IsNullOrEmpty(_model.FileName))
+				if (_model != null && !string.IsNullOrEmpty(_model.FilePath))
 				{
-					Log.Debug("FileStore is triggering a refresh for document '{0}' because a refresh was detected for an include file.", _model.FileName);
-					ProbeToolsPackage.Instance.FireRefreshDocument(_model.FileName);
+					Log.Debug("FileStore is triggering a refresh for document '{0}' because a refresh was detected for an include file.", _model.FilePath);
+					ProbeToolsPackage.Instance.FireRefreshDocument(_model.FilePath);
 				}
 
 				_model = null;
 			}
 			// If the file touched is the main model, then require it to be completely rebuilt.
-			else if (string.Equals(_model?.FileName, filePath, StringComparison.OrdinalIgnoreCase))
+			else if (string.Equals(_model?.FilePath, filePath, StringComparison.OrdinalIgnoreCase))
 			{
 				_model = null;
 			}

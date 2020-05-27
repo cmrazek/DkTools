@@ -464,7 +464,7 @@ namespace DkTools.FunctionFileScanning
 						refList.Add(new Reference
 						{
 							ExternalRefId = refId,
-							TrueFileName = string.Equals(localPos.FileName, model.FileName, StringComparison.OrdinalIgnoreCase) ? null : localPos.FileName,
+							TrueFileName = string.Equals(localPos.FileName, model.FilePath, StringComparison.OrdinalIgnoreCase) ? null : localPos.FileName,
 							Position = localPos.Position
 						});
 					}

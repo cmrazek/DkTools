@@ -159,7 +159,7 @@ namespace DkTools.CodeModel
 			return _file.FindDownward(pos, pred);
 		}
 
-		public string FileName
+		public string FilePath
 		{
 			get { return _file.FileName; }
 		}

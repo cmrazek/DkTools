@@ -159,6 +159,8 @@ namespace DkTools.Classifier
 
 			try
 			{
+				if (_snapshot == null) return;
+
 				var filePath = VsTextUtil.TryGetDocumentFileName(_snapshot.TextBuffer);
 				if (string.Equals(filePath, e.FilePath, StringComparison.OrdinalIgnoreCase))
 				{

@@ -64,7 +64,7 @@ namespace DkTools.QuickInfo
 						applicableToSpan = model.Snapshot.CreateTrackingSpan(info.Value.token.Span.ToVsTextSpan(), SpanTrackingMode.EdgeInclusive);
 					}
 
-					var tasks = await ErrorTagging.ErrorTaskProvider.Instance.GetErrorMessagesAtPointAsync(model.FileName, snapshotPoint);
+					var tasks = await ErrorTagging.ErrorTaskProvider.Instance.GetErrorMessagesAtPointAsync(model.FilePath, snapshotPoint);
 					foreach (var task in tasks)
 					{
 						if (elements != null)

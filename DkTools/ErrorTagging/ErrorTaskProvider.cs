@@ -201,7 +201,7 @@ namespace DkTools.ErrorTagging
 					var appSettings = ProbeEnvironment.CurrentAppSettings;
 					var fileName = VsTextUtil.TryGetDocumentFileName(textView.TextBuffer);
 					var model = fileStore.GetMostRecentModel(appSettings, fileName, textView.TextSnapshot, "ErrorTaskProvider.OnDocumentClosed()");
-					RemoveAllForSourceAndInvokingFile(ErrorTaskSource.BackgroundFec, model.FileName);
+					RemoveAllForSourceAndInvokingFile(ErrorTaskSource.BackgroundFec, model.FilePath);
 				}
 			});
 		}
@@ -231,20 +231,7 @@ namespace DkTools.ErrorTagging
 					var mappedTaskSpan = taskSpan.Value.TranslateTo(docSpan.Snapshot, SpanTrackingMode.EdgeExclusive);
 					if (docSpan.Contains(mappedTaskSpan))
 					{
-						string tagType;
-						switch (task.Type)
-						{
-							case ErrorType.Warning:
-								tagType = VSTheme.CurrentTheme == VSThemeMode.Light ? ErrorTagger.CodeWarningLight : ErrorTagger.CodeWarningDark;
-								break;
-							case ErrorType.CodeAnalysisError:
-								tagType = VSTheme.CurrentTheme == VSThemeMode.Light ? ErrorTagger.CodeAnalysisErrorLight : ErrorTagger.CodeAnalysisErrorDark;
-								break;
-							default:
-								tagType = VSTheme.CurrentTheme == VSThemeMode.Light ? ErrorTagger.CodeErrorLight : ErrorTagger.CodeErrorDark;
-								break;
-						}
-						tags.Add(new TagSpan<ErrorTag>(taskSpan.Value, new ErrorTag(tagType, task.Text)));
+						tags.Add(new TagSpan<ErrorTag>(taskSpan.Value, new ErrorTag(task.Type.GetErrorTypeString(), task.Text)));
 						break;
 					}
 				}

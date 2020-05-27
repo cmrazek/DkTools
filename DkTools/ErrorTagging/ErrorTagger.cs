@@ -25,6 +25,8 @@ namespace DkTools.ErrorTagging
 		public const string CodeWarningDark = "DkCodeWarning.Dark";
 		public const string CodeAnalysisErrorLight = "DkCodeAnalysisError.Light";
 		public const string CodeAnalysisErrorDark = "DkCodeAnalysisError.Dark";
+		public const string ReportOutputTagLight = "DkReportOutputTag.Light";
+		public const string ReportOutputTagDark = "DkReportOutputTag.Dark";
 
 		private const int DeferPriority_UserInput = 1;
 		private const int DeferPriority_DocumentRefresh = 2;
@@ -65,7 +67,12 @@ namespace DkTools.ErrorTagging
 			var fileName = VsTextUtil.TryGetDocumentFileName(_view.TextBuffer);
 			_model = _store.GetMostRecentModel(appSettings, fileName, _view.TextSnapshot, "ErrorTagger.GetTags()");
 
+#if DEBUG
+			var tags = ErrorTaskProvider.Instance.GetErrorTagsForFile(_model.FilePath, spans);
+			return tags;
+#else
 			return ErrorTaskProvider.Instance.GetErrorTagsForFile(_model.FileName, spans);
+#endif
 		}
 
 		private void OnRefreshAllDocumentsRequired(object sender, EventArgs e)
@@ -88,7 +95,7 @@ namespace DkTools.ErrorTagging
 			try
 			{
 				if (_model != null && _model.FileContext != FileContext.Include &&
-					e.FilePath.EqualsI(_model.FileName))
+					e.FilePath.EqualsI(_model.FilePath))
 				{
 					_backgroundFecDeferrer.OnActivity(priority: DeferPriority_DocumentRefresh);
 				}
@@ -105,7 +112,7 @@ namespace DkTools.ErrorTagging
 			{
 				if (_model == null) return;
 
-				if (string.Equals(e.FileName, _model.FileName, StringComparison.OrdinalIgnoreCase))
+				if (string.Equals(e.FileName, _model.FilePath, StringComparison.OrdinalIgnoreCase))
 				{
 					var ev = TagsChanged;
 					if (ev != null) ev(this, new SnapshotSpanEventArgs(new SnapshotSpan(_view.TextSnapshot, 0, _view.TextSnapshot.Length)));
@@ -134,7 +141,7 @@ namespace DkTools.ErrorTagging
 
 						if (_model != null &&
 							_model.FileContext != FileContext.Include &&
-							ProbeEnvironment.CurrentAppSettings.FileExistsInApp(_model.FileName))
+							ProbeEnvironment.CurrentAppSettings.FileExistsInApp(_model.FilePath))
 						{
 							System.Threading.ThreadPool.QueueUserWorkItem(state =>
 							{
@@ -142,7 +149,7 @@ namespace DkTools.ErrorTagging
 								{
 									if ((e.Priority == DeferPriority_DocumentRefresh && ProbeToolsPackage.Instance.EditorOptions.RunBackgroundFecOnSave))
 									{
-										Compiler.BackgroundFec.RunSync(_model.FileName);
+										Compiler.BackgroundFec.RunSync(_model.FilePath);
 									}
 
 									if ((e.Priority == DeferPriority_DocumentRefresh && ProbeToolsPackage.Instance.EditorOptions.RunCodeAnalysisOnSave) ||

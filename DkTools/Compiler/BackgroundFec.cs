@@ -56,8 +56,7 @@ namespace DkTools.Compiler
 								message: message,
 								type: ErrorType.Error,
 								source: ErrorTaskSource.BackgroundFec,
-								reportedSpan: null,
-								snapshotSpan: null));
+								reportedSpan: null));
 						}
 						return;
 					}
@@ -80,8 +79,7 @@ namespace DkTools.Compiler
 								message: message,
 								type: ErrorType.Warning,
 								source: ErrorTaskSource.BackgroundFec,
-								reportedSpan: null,
-								snapshotSpan: null));
+								reportedSpan: null));
 						}
 						return;
 					}

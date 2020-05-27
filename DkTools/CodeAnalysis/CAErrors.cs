@@ -235,6 +235,12 @@ namespace DkTools.CodeAnalysis
 		[ErrorMessage("Expected select name to follow 'in'.")]
 		CA0068,
 		#endregion
+
+		#region Highlighting
+		[ErrorMessage("This expression writes to the report stream.")]
+		[ReportOutputTag]
+		CA0070,
+		#endregion
 	}
 
 	[AttributeUsage(AttributeTargets.Field, AllowMultiple = false)]
@@ -255,6 +261,11 @@ namespace DkTools.CodeAnalysis
 
 	[AttributeUsage(AttributeTargets.Field, AllowMultiple = false)]
 	class WarningAttribute : Attribute
+	{
+	}
+
+	[AttributeUsage(AttributeTargets.Field, AllowMultiple = false)]
+	class ReportOutputTagAttribute : Attribute
 	{
 	}
 
@@ -280,10 +291,15 @@ namespace DkTools.CodeAnalysis
 			var memInfo = typeof(CAError).GetMember(code.ToString());
 			if (memInfo == null || memInfo.Length == 0) return ErrorType.Error;
 
-			var attrib = memInfo[0].GetCustomAttributes(typeof(WarningAttribute), false);
-			if (attrib == null || attrib.Length == 0) return ErrorType.Error;
+			if (memInfo[0].GetCustomAttributes(typeof(WarningAttribute), false).Any()) return ErrorType.Warning;
+			if (memInfo[0].GetCustomAttributes(typeof(ReportOutputTagAttribute), false).Any()) return ErrorType.ReportOutputTag;
+			return ErrorType.Error;
+		}
 
-			return ErrorType.Warning;
+		public static ErrorType GetCodeTaskErrorType(this ErrorType errorType)
+		{
+			if (errorType == ErrorType.ReportOutputTag) return ErrorType.ReportOutputTag;
+			return errorType;
 		}
 	}
 }

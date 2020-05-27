@@ -5,6 +5,7 @@ using System.ComponentModel.Composition;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows.Media;
 using Microsoft.VisualStudio.Text.Adornments;
 using Microsoft.VisualStudio.Text.Classification;
 using Microsoft.VisualStudio.Utilities;
@@ -119,6 +120,32 @@ namespace DkTools.ErrorTagging
 			[Export(typeof(ErrorTypeDefinition))]
 			[Name(ErrorTagger.CodeAnalysisErrorDark)]
 			internal static ErrorTypeDefinition CodeAnalysisErrorTypeDefinition = null;
+		}
+
+		[Export(typeof(EditorFormatDefinition))]
+		[Name(ErrorTagger.ReportOutputTagLight)]
+		[UserVisible(true)]
+		internal class ReportOutputTagLightDefinition : MarkerFormatDefinition
+		{
+			public ReportOutputTagLightDefinition()
+			{
+				BackgroundColor = Colors.Khaki;
+				DisplayName = ErrorTagger.ReportOutputTagLight;
+				ZOrder = 4;
+			}
+		}
+
+		[Export(typeof(EditorFormatDefinition))]
+		[Name(ErrorTagger.ReportOutputTagDark)]
+		[UserVisible(true)]
+		internal class ReportOutputTagDarkDefinition : MarkerFormatDefinition
+		{
+			public ReportOutputTagDarkDefinition()
+			{
+				BackgroundColor = Colors.SaddleBrown;
+				DisplayName = ErrorTagger.ReportOutputTagDark;
+				ZOrder = 4;
+			}
 		}
 	}
 }
