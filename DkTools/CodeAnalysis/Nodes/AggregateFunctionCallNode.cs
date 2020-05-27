@@ -48,9 +48,15 @@ namespace DkTools.CodeAnalysis.Nodes
 				ret._aggExp = exp;
 			}
 
+			var closedPos = -1;
+
 			while (!code.EndOfFile)
 			{
-				if (code.ReadExact(')')) break;
+				if (code.ReadExact(')'))
+				{
+					closedPos = code.Span.End;
+					break;
+				}
 
 				if (code.ReadExact(','))
 				{
@@ -115,6 +121,9 @@ namespace DkTools.CodeAnalysis.Nodes
 					ret.ReportError(CAError.CA0063);	// Expected ')'.
 				}
 			}
+
+			if (closedPos < 0) closedPos = code.Position;
+			ret.Span = new Span(funcNameSpan.Start, closedPos);
 
 			return ret;
 		}
