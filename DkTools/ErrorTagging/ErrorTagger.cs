@@ -67,12 +67,7 @@ namespace DkTools.ErrorTagging
 			var fileName = VsTextUtil.TryGetDocumentFileName(_view.TextBuffer);
 			_model = _store.GetMostRecentModel(appSettings, fileName, _view.TextSnapshot, "ErrorTagger.GetTags()");
 
-#if DEBUG
-			var tags = ErrorTaskProvider.Instance.GetErrorTagsForFile(_model.FilePath, spans);
-			return tags;
-#else
-			return ErrorTaskProvider.Instance.GetErrorTagsForFile(_model.FileName, spans);
-#endif
+			return ErrorTaskProvider.Instance.GetErrorTagsForFile(_model.FilePath, spans);
 		}
 
 		private void OnRefreshAllDocumentsRequired(object sender, EventArgs e)
