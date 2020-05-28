@@ -142,7 +142,7 @@ namespace DkTools.ErrorTagging
 		{
 			public ReportOutputTagDarkDefinition()
 			{
-				BackgroundColor = Colors.SaddleBrown;
+				BackgroundColor = Colors.Indigo;
 				DisplayName = ErrorTagger.ReportOutputTagDark;
 				ZOrder = 4;
 			}
