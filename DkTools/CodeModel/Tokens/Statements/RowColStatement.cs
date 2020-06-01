@@ -14,14 +14,35 @@ namespace DkTools.CodeModel.Tokens.Statements
 		{
 		}
 
-		public static RowColStatement Parse(Scope scope, KeywordToken rowColToken)
+		public static RowColStatement Parse(Scope scope, KeywordToken keywordToken)
 		{
 			var ret = new RowColStatement(scope);
-			ret.AddToken(rowColToken);
-
 			var code = scope.Code;
-			if (code.PeekExact('+') || code.PeekExact('-')) ret.AddToken(new OperatorToken(scope, code.MovePeekedSpan(), code.Text));
-			if (code.ReadNumber()) ret.AddToken(new NumberToken(scope, code.Span, code.Text));
+
+			while (keywordToken != null)
+			{
+				ret.AddToken(keywordToken);
+
+				switch (keywordToken.Text)
+				{
+					case "col":
+					case "colff":
+					case "page":
+					case "row":
+						if (code.PeekExact('+') || code.PeekExact('-')) ret.AddToken(new OperatorToken(scope, code.MovePeekedSpan(), code.Text));
+						if (code.ReadNumber()) ret.AddToken(new NumberToken(scope, code.Span, code.Text));
+						break;
+				}
+
+				if (Constants.ReportOutputKeywords.Contains(code.PeekWordR()))
+				{
+					keywordToken = new KeywordToken(scope, code.MovePeekedSpan(), code.Text);
+				}
+				else
+				{
+					keywordToken = null;
+				}
+			}
 
 			var exp = ExpressionToken.TryParse(scope, null);
 			if (exp != null) ret.AddToken(exp);

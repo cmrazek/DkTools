@@ -94,6 +94,7 @@ namespace DkTools.CodeModel.Tokens
 								if (callback != null) callback(token);
 								return ret;
 							}
+						case "center":
 						case "col":
 						case "row":
 						case "colff":

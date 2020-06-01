@@ -3,6 +3,7 @@ ________________________________________________________________________________
 Version 1.5.10 - (not yet released):
 
 - Expressions that write to reports are now highlighted. (Can be turned off in options)
+- Added support for 'center' and 'in' keywords.
 - Fixed IndexOutOfRangeException occurring on errors/warnings reported by fec.
 
 ____________________________________________________________________________________________________
