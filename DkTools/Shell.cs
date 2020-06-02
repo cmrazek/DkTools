@@ -199,9 +199,7 @@ namespace DkTools
 			{
 				ThreadHelper.ThrowIfNotOnUIThread();
 
-				var view = ActiveView;
-				if (view != null) return view.TextBuffer;
-				return null;
+				return ActiveView?.TextBuffer;
 			}
 		}
 
@@ -215,7 +213,7 @@ namespace DkTools
 				if (ErrorHandler.Failed(ProbeToolsPackage.Instance.TextManagerService.GetActiveView(1, null, out vsView))) return null;
 				if (vsView == null) return null;
 
-				return ProbeToolsPackage.Instance.EditorAdaptersService.GetWpfTextView(vsView);
+				return ProbeToolsPackage.Instance?.EditorAdaptersService?.GetWpfTextView(vsView);
 			}
 		}
 
@@ -223,7 +221,7 @@ namespace DkTools
 		{
 			ThreadHelper.ThrowIfNotOnUIThread();
 
-			return ProbeToolsPackage.Instance.EditorAdaptersService.GetWpfTextView(vsView);
+			return ProbeToolsPackage.Instance?.EditorAdaptersService?.GetWpfTextView(vsView);
 		}
 
 		internal static void ShowFindInFiles(IEnumerable<string> searchDirs)

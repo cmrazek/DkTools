@@ -31,10 +31,9 @@ namespace DkTools.CodeAnalysis.Nodes
 
 			if (funcName == "count")
 			{
-				if (!code.ReadExact('*'))
+				if (code.ReadExact('*'))
 				{
-					ret.ReportError(CAError.CA0060);	// Expected '*' in count().
-					return ret;
+					code.ReadExact(',');
 				}
 			}
 			else
@@ -60,65 +59,68 @@ namespace DkTools.CodeAnalysis.Nodes
 
 				if (code.ReadExact(','))
 				{
-					if (code.ReadExactWholeWord("where"))
-					{
-						var exp = ExpressionNode.Read(p, null, ",", ")");
-						if (exp == null)
-						{
-							ret.ReportError(code.Span, CAError.CA0062, "where");	// Expected expression to follow '{0}'.
-							return ret;
-						}
-						ret._whereExp = exp;
-					}
-					else if (code.ReadExactWholeWord("group"))
-					{
-						var startPos = code.Position;
-						if (code.ReadWord())
-						{
-							var tableDef = (from d in p.CodeAnalyzer.PreprocessorModel.DefinitionProvider.GetGlobalFromAnywhere(code.Text)
-											where d is TableDefinition || d is ExtractTableDefinition
-											select d).FirstOrDefault();
-							if (tableDef == null)
-							{
-								ret.ReportError(code.Span, CAError.CA0064, code.Text);	// Table '{0}' does not exist.
-								return ret;
-							}
+					continue;
+				}
 
-							if (!code.ReadExact('.'))
-							{
-								ret.ReportError(code.Span, CAError.CA0066);	// Expected '.'
-								return ret;
-							}
+				if (code.ReadExactWholeWord("where"))
+				{
+					var exp = ExpressionNode.Read(p, null, ",", ")");
+					if (exp == null)
+					{
+						ret.ReportError(code.Span, CAError.CA0062, "where");    // Expected expression to follow '{0}'.
+						break;
+					}
+					ret._whereExp = exp;
+				}
+				else if (code.ReadExactWholeWord("group"))
+				{
+					var startPos = code.Position;
+					if (code.ReadWord())
+					{
+						var tableDef = (from d in p.CodeAnalyzer.PreprocessorModel.DefinitionProvider.GetGlobalFromAnywhere(code.Text)
+										where d is TableDefinition || d is ExtractTableDefinition
+										select d).FirstOrDefault();
+						if (tableDef == null)
+						{
+							ret.ReportError(code.Span, CAError.CA0064, code.Text);  // Table '{0}' does not exist.
+							break;
+						}
 
-							Definition fieldDef = null;
-							if (!code.ReadWord() || (fieldDef = tableDef.GetChildDefinitions(code.Text).FirstOrDefault()) == null)
-							{
-								ret.ReportError(code.Span, CAError.CA0067); // Expected column name.
-								return ret;
-							}
-						}
-						else
+						if (!code.ReadExact('.'))
 						{
-							ret.ReportError(code.Span, CAError.CA0065);	// Expected table name to follow 'group'.
-							return ret;
+							ret.ReportError(code.Span, CAError.CA0066); // Expected '.'
+							break;
+						}
+
+						Definition fieldDef = null;
+						if (!code.ReadWord() || (fieldDef = tableDef.GetChildDefinitions(code.Text).FirstOrDefault()) == null)
+						{
+							ret.ReportError(code.Span, CAError.CA0067); // Expected column name.
+							break;
 						}
 					}
-					else if (code.ReadExactWholeWord("all"))
+					else
 					{
-						// Nothing follows 'all'
+						ret.ReportError(code.Span, CAError.CA0065); // Expected table name to follow 'group'.
+						break;
 					}
-					else if (code.ReadExactWholeWord("in"))
+				}
+				else if (code.ReadExactWholeWord("all"))
+				{
+					// Nothing follows 'all'
+				}
+				else if (code.ReadExactWholeWord("in"))
+				{
+					if (!code.ReadStringLiteral() && !code.ReadWord())
 					{
-						if (!code.ReadStringLiteral() && !code.ReadWord())
-						{
-							ret.ReportError(code.Span, CAError.CA0068);	// Expected select name to follow 'in'.
-							return ret;
-						}
+						ret.ReportError(code.Span, CAError.CA0068); // Expected select name to follow 'in'.
+						break;
 					}
 				}
 				else
 				{
-					ret.ReportError(CAError.CA0063);	// Expected ')'.
+					ret.ReportError(CAError.CA0063);    // Expected ')'.
+					break;
 				}
 			}
 

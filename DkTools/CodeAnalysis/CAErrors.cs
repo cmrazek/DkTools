@@ -208,8 +208,8 @@ namespace DkTools.CodeAnalysis
 		#endregion
 
 		#region Aggregate Functions
-		[ErrorMessage("Expected '*' in count().")]
-		CA0060,
+		//[ErrorMessage("Expected '*' in count().")]
+		//CA0060,
 
 		[ErrorMessage("Expected aggregate expression.")]
 		CA0061,
