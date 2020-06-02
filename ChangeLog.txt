@@ -1,6 +1,6 @@
 DkTools ChangeLog
 ____________________________________________________________________________________________________
-Version 1.5.10 - (not yet released):
+Version 1.5.10 - Jun 2, 2020:
 
 - Expressions that write to reports are now highlighted. (Can be turned off in options)
 - Added support for 'center' and 'in' keywords.
