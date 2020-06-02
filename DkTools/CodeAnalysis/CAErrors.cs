@@ -40,10 +40,10 @@ namespace DkTools.CodeAnalysis
 		[ErrorMessage("Syntax error.")]
 		CA0101,
 
-		[ErrorMessage("Cannot write to this identifier.")]
+		[ErrorMessage("Unknown identifier.")]	// For writing
 		CA0102,
 
-		[ErrorMessage("Cannot read from this identifier.")]
+		[ErrorMessage("Unknown identifier.")]	// For reading
 		CA0103,
 		#endregion
 

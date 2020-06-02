@@ -6,6 +6,7 @@ Version 1.5.10 - (not yet released):
 - Added support for 'center' and 'in' keywords.
 - Added support for count(where ...) functions (no asterisk).
 - Fixed IndexOutOfRangeException occurring on errors/warnings reported by fec.
+- Changed wording of warnings CA0102 and CA0103 to be more generic.
 
 ____________________________________________________________________________________________________
 Version 1.5.9 - May 25, 2020:
