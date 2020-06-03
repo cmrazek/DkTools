@@ -1,5 +1,10 @@
 DkTools ChangeLog
 ____________________________________________________________________________________________________
+Version 1.5.11 - (not yet released):
+
+- Text color contrast improvements in dark mode.
+
+____________________________________________________________________________________________________
 Version 1.5.10 - Jun 2, 2020:
 
 - Expressions that write to reports are now highlighted. (Can be turned off in options)

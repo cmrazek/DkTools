@@ -46,7 +46,7 @@ namespace DkTools.Classifier
 		{
 			public NormalFormatDark()
 			{
-				ForegroundColor = Colors.Azure;
+				ForegroundColor = Colors.Silver;
 			}
 		}
 		#endregion
@@ -148,7 +148,7 @@ namespace DkTools.Classifier
 		{
 			public NumberFormatDark()
 			{
-				ForegroundColor = Colors.Brown;
+				ForegroundColor = Colors.Tomato;
 			}
 		}
 		#endregion
@@ -182,7 +182,7 @@ namespace DkTools.Classifier
 		{
 			public StringLiteralFormatDark()
 			{
-				ForegroundColor = Colors.Crimson;
+				ForegroundColor = Colors.Tomato;
 			}
 		}
 		#endregion
@@ -420,7 +420,7 @@ namespace DkTools.Classifier
 		{
 			public FunctionFormatDark()
 			{
-				ForegroundColor = Colors.MediumOrchid;
+				ForegroundColor = Colors.Orchid;
 			}
 		}
 		#endregion
@@ -454,7 +454,7 @@ namespace DkTools.Classifier
 		{
 			public DelimiterFormatDark()
 			{
-				ForegroundColor = Colors.LightGray;
+				ForegroundColor = Colors.LightSlateGray;
 			}
 		}
 		#endregion
@@ -522,7 +522,7 @@ namespace DkTools.Classifier
 		{
 			public VariableFormatDark()
 			{
-				ForegroundColor = Colors.Silver;
+				ForegroundColor = Colors.Azure;
 			}
 		}
 		#endregion
