@@ -18,12 +18,10 @@ namespace DkTools.Classifier
 		private int _pos;
 		private int _posOffset;
 		private int _length;
-		private FunctionFileScanning.FFScanner _functionScanner;
 		private Dictionary<int, Token> _tokenMap;
 
 		public ProbeClassifierScanner()
 		{
-			_functionScanner = ProbeToolsPackage.Instance.FunctionFileScanner;
 		}
 
 		public void SetSource(string source, int offset, VsText.ITextSnapshot snapshot, CodeModel.CodeModel model)

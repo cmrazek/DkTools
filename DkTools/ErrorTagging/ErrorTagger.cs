@@ -36,9 +36,9 @@ namespace DkTools.ErrorTagging
 			_view = view;
 			_store = FileStore.GetOrCreateForTextBuffer(_view.TextBuffer);
 
-			ProbeToolsPackage.Instance.RefreshAllDocumentsRequired += OnRefreshAllDocumentsRequired;
-			ProbeToolsPackage.Instance.RefreshDocumentRequired += OnRefreshDocumentRequired;
-			ErrorTaskProvider.Instance.ErrorTagsChangedForFile += Instance_ErrorTagsChangedForFile;
+			ProbeToolsPackage.RefreshAllDocumentsRequired += OnRefreshAllDocumentsRequired;
+			ProbeToolsPackage.RefreshDocumentRequired += OnRefreshDocumentRequired;
+			ErrorTaskProvider.ErrorTagsChangedForFile += Instance_ErrorTagsChangedForFile;
 
 			_backgroundFecDeferrer = new BackgroundDeferrer(Constants.BackgroundFecDelay);
 			_backgroundFecDeferrer.Idle += _backgroundFecDeferrer_Idle;
@@ -52,8 +52,8 @@ namespace DkTools.ErrorTagging
 
 		~ErrorTagger()
 		{
-			ProbeToolsPackage.Instance.RefreshAllDocumentsRequired -= OnRefreshAllDocumentsRequired;
-			ProbeToolsPackage.Instance.RefreshDocumentRequired -= OnRefreshDocumentRequired;
+			ProbeToolsPackage.RefreshAllDocumentsRequired -= OnRefreshAllDocumentsRequired;
+			ProbeToolsPackage.RefreshDocumentRequired -= OnRefreshDocumentRequired;
 		}
 
 		public event EventHandler<SnapshotSpanEventArgs> TagsChanged;

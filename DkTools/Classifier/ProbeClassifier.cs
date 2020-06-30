@@ -64,16 +64,16 @@ namespace DkTools.Classifier
 
 			_scanner = new ProbeClassifierScanner();
 
-			ProbeToolsPackage.Instance.RefreshAllDocumentsRequired += OnRefreshAllDocumentsRequired;
-			ProbeToolsPackage.Instance.RefreshDocumentRequired += OnRefreshDocumentRequired;
+			ProbeToolsPackage.RefreshAllDocumentsRequired += OnRefreshAllDocumentsRequired;
+			ProbeToolsPackage.RefreshDocumentRequired += OnRefreshDocumentRequired;
 
 			VSTheme.ThemeChanged += VSTheme_ThemeChanged;
 		}
 
 		~ProbeClassifier()
 		{
-			ProbeToolsPackage.Instance.RefreshAllDocumentsRequired -= OnRefreshAllDocumentsRequired;
-			ProbeToolsPackage.Instance.RefreshDocumentRequired -= OnRefreshDocumentRequired;
+			ProbeToolsPackage.RefreshAllDocumentsRequired -= OnRefreshAllDocumentsRequired;
+			ProbeToolsPackage.RefreshDocumentRequired -= OnRefreshDocumentRequired;
 		}
 
 		public IList<ClassificationSpan> GetClassificationSpans(SnapshotSpan span)  // from IClassifier

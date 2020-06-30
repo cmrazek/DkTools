@@ -187,7 +187,7 @@ namespace DkTools.ProbeExplorer
 				var selectedApp = c_appCombo.SelectedItem as string;
 				if (!string.IsNullOrEmpty(selectedApp) && ProbeEnvironment.CurrentAppSettings.Initialized)
 				{
-					ProbeEnvironment.ReloadAsync(selectedApp, true);
+					ProbeEnvironment.Reload(selectedApp, true);
 				}
 			}
 			catch (Exception ex)
@@ -200,7 +200,7 @@ namespace DkTools.ProbeExplorer
 		{
 			try
 			{
-				ProbeEnvironment.ReloadAsync(null, false);
+				ProbeEnvironment.Reload(null, false);
 			}
 			catch (Exception ex)
 			{
@@ -438,7 +438,7 @@ namespace DkTools.ProbeExplorer
 		{
 			try
 			{
-				ProbeEnvironment.ReloadAsync(null, false);
+				ProbeEnvironment.Reload(null, false);
 			}
 			catch (Exception ex)
 			{

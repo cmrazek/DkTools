@@ -11,15 +11,13 @@ namespace DkTools.FunctionFileScanning
 {
 	internal class FFApp
 	{
-		private FFScanner _scanner;
 		private ProbeAppSettings _appSettings;
 		private long _id;
 		private Dictionary<string, FFFile> _files = new Dictionary<string, FFFile>();
 		private Dictionary<string, DateTime> _invisibleFiles = new Dictionary<string, DateTime>();
 
-		public FFApp(FFScanner scanner, FFDatabase db, ProbeAppSettings appSettings)
+		public FFApp(FFDatabase db, ProbeAppSettings appSettings)
 		{
-			_scanner = scanner ?? throw new ArgumentNullException(nameof(scanner));
 			_appSettings = appSettings ?? throw new ArgumentNullException(nameof(appSettings));
 
 			if (!_appSettings.Initialized) return;

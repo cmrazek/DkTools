@@ -20,7 +20,7 @@ namespace DkTools
 		#region Construction
 		public static void Initialize()
 		{
-			ReloadAsync(null, false);
+			Reload(null, false);
 		}
 
 		internal static void OnSettingsSaved()
@@ -105,26 +105,23 @@ namespace DkTools
 			}
 		}
 
-		public static void ReloadAsync(string appName, bool updateDefaultApp)
+		public static void Reload(string appName, bool updateDefaultApp)
 		{
-			_ = Task.Run(() =>
+			var appSettings = ReloadCurrentApp(appName);
+			if (appSettings.Initialized)
 			{
-				var appSettings = ReloadCurrentApp(appName);
-				if (appSettings.Initialized)
+				ReloadTableList(appSettings);
+
+				CurrentAppSettings = appSettings;
+
+				AppChanged?.Invoke(null, EventArgs.Empty);
+				ProbeToolsPackage.Instance.FireRefreshAllDocuments();
+
+				if (updateDefaultApp)
 				{
-					ReloadTableList(appSettings);
-
-					CurrentAppSettings = appSettings;
-
-					AppChanged?.Invoke(null, EventArgs.Empty);
-					ProbeToolsPackage.Instance.FireRefreshAllDocuments();
-
-					if (updateDefaultApp)
-					{
-						CurrentAppSettings.TryUpdateDefaultCurrentApp();
-					}
+					CurrentAppSettings.TryUpdateDefaultCurrentApp();
 				}
-			});
+			}
 		}
 
 		private static string[] LoadSourceDirs(PROBEENVSRVRLib.ProbeEnvApp currentApp)

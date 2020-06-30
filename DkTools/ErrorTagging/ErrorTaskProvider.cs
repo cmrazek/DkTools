@@ -18,7 +18,7 @@ namespace DkTools.ErrorTagging
 		private ConcurrentQueue<ErrorTask> _newTasks = new ConcurrentQueue<ErrorTask>();
 		private ConcurrentQueue<ErrorTask> _delTasks = new ConcurrentQueue<ErrorTask>();
 
-		public event EventHandler<ErrorTaskEventArgs> ErrorTagsChangedForFile;
+		public static event EventHandler<ErrorTaskEventArgs> ErrorTagsChangedForFile;
 		public class ErrorTaskEventArgs : EventArgs
 		{
 			public string FileName { get; set; }

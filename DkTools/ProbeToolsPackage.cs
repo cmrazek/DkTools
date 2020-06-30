@@ -92,7 +92,6 @@ namespace DkTools
 		private static ProbeToolsPackage _instance;
 		private EnvDTE.Events _dteEvents;
 		private EnvDTE.DocumentEvents _dteDocumentEvents;
-		private FunctionFileScanning.FFScanner _functionScanner;
 		private ErrorTagging.ErrorTaskProvider _errorTaskProvider;
 		private uint _errorTaskProviderCookie;
 
@@ -147,7 +146,7 @@ namespace DkTools
 			var mcs = GetService(typeof(IMenuCommandService)) as OleMenuCommandService;
 			if (mcs != null) Commands.InitCommands(mcs);
 
-			_functionScanner = new FunctionFileScanning.FFScanner();
+			FunctionFileScanning.FFScanner.OnStartup();
 
 			// Need to keep a reference to Events and DocumentEvents in order for DocumentSaved to be triggered.
 			_dteEvents = Shell.DTE.Events;
@@ -177,13 +176,6 @@ namespace DkTools
 			catch (Exception ex)
 			{
 				System.Diagnostics.Debug.WriteLine(ex);
-			}
-			
-
-			if (_functionScanner != null)
-			{
-				_functionScanner.Dispose();
-				_functionScanner = null;
 			}
 
 			Log.Close();
@@ -294,11 +286,6 @@ namespace DkTools
 			}
 		}
 
-		internal FunctionFileScanning.FFScanner FunctionFileScanner
-		{
-			get { return _functionScanner; }
-		}
-
 		private void DocumentEvents_DocumentSaved(EnvDTE.Document Document)
 		{
 			ThreadHelper.JoinableTaskFactory.RunAsync(async () =>
@@ -328,7 +315,7 @@ namespace DkTools
 			VSTheme.OnThemeChanged();
 		}
 
-		public event EventHandler RefreshAllDocumentsRequired;
+		public static event EventHandler RefreshAllDocumentsRequired;
 
 		public void FireRefreshAllDocuments()
 		{
@@ -336,7 +323,7 @@ namespace DkTools
 			RefreshAllDocumentsRequired?.Invoke(this, EventArgs.Empty);
 		}
 
-		public event EventHandler<RefreshDocumentEventArgs> RefreshDocumentRequired;
+		public static event EventHandler<RefreshDocumentEventArgs> RefreshDocumentRequired;
 
 		public class RefreshDocumentEventArgs : EventArgs
 		{

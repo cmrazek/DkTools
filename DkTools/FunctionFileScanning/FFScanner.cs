@@ -10,19 +10,19 @@ using DkTools.CodeModel;
 
 namespace DkTools.FunctionFileScanning
 {
-	internal class FFScanner : IDisposable
+	internal static class FFScanner
 	{
-		private Thread _thread;
-		private EventWaitHandle _kill = new EventWaitHandle(false, EventResetMode.ManualReset);
+		private static Thread _thread;
+		private static EventWaitHandle _kill = new EventWaitHandle(false, EventResetMode.ManualReset);
 
-		private ProbeAppSettings _appSettings;
-		private FFApp _currentApp;
-		private object _currentAppLock = new object();
-		private Queue<ScanInfo> _scanQueue;
-		private object _scanLock = new object();
+		private static ProbeAppSettings _appSettings;
+		private static FFApp _currentApp;
+		private static object _currentAppLock = new object();
+		private static Queue<ScanInfo> _scanQueue;
+		private static object _scanLock = new object();
 
-		private DateTime _lastDefinitionPublish = DateTime.MinValue;
-		private bool _definitionPublishRequired = false;
+		private static DateTime _lastDefinitionPublish = DateTime.MinValue;
+		private static bool _definitionPublishRequired = false;
 
 		private const int k_threadWaitIdle = 1000;
 		private const int k_threadWaitActive = 0;
@@ -44,7 +44,7 @@ namespace DkTools.FunctionFileScanning
 			}
 		}
 
-		public FFScanner()
+		public static void OnStartup()
 		{
 			_appSettings = ProbeEnvironment.CurrentAppSettings;
 			LoadCurrentApp();
@@ -58,26 +58,19 @@ namespace DkTools.FunctionFileScanning
 			ProbeAppSettings.FileChanged += ProbeAppSettings_FileChanged;
 		}
 
-		public void OnShutdown()
+		public static void OnShutdown()
 		{
 			Kill();
 		}
 
-		public void Dispose()
-		{
-			Kill();
-
-			if (_kill != null) { _kill.Dispose(); _kill = null; }
-		}
-
-		private void ProbeEnvironment_AppChanged(object sender, EventArgs e)
+		private static void ProbeEnvironment_AppChanged(object sender, EventArgs e)
 		{
 			_appSettings = ProbeEnvironment.CurrentAppSettings;
 			LoadCurrentApp();
 			RestartScanning("Probe app changed");
 		}
 
-		private void Kill()
+		private static void Kill()
 		{
 			if (_thread != null)
 			{
@@ -86,7 +79,7 @@ namespace DkTools.FunctionFileScanning
 			}
 		}
 
-		private void ThreadProc()
+		private static void ThreadProc()
 		{
 			try
 			{
@@ -112,7 +105,7 @@ namespace DkTools.FunctionFileScanning
 			}
 		}
 
-		private void ProcessQueue()
+		private static void ProcessQueue()
 		{
 			if (_currentApp == null) return;
 
@@ -159,7 +152,7 @@ namespace DkTools.FunctionFileScanning
 			}
 		}
 
-		private void ProcessSourceDir(FFApp app, string dir, List<ScanInfo> scanList)
+		private static void ProcessSourceDir(FFApp app, string dir, List<ScanInfo> scanList)
 		{
 			try
 			{
@@ -208,7 +201,7 @@ namespace DkTools.FunctionFileScanning
 			}
 		}
 
-		public void EnqueueChangedFile(string fullPath)
+		public static void EnqueueChangedFile(string fullPath)
 		{
 			var options = ProbeToolsPackage.Instance.EditorOptions;
 			if (options.DisableBackgroundScan) return;
@@ -232,7 +225,7 @@ namespace DkTools.FunctionFileScanning
 			}
 		}
 
-		private void ProcessFile(FFDatabase db, FFApp app, ScanInfo scan)
+		private static void ProcessFile(FFDatabase db, FFApp app, ScanInfo scan)
 		{
 			try
 			{
@@ -311,7 +304,7 @@ namespace DkTools.FunctionFileScanning
 			}
 		}
 
-		private FFApp CurrentApp
+		private static FFApp CurrentApp
 		{
 			get
 			{
@@ -322,7 +315,7 @@ namespace DkTools.FunctionFileScanning
 			}
 		}
 
-		public void RestartScanning(string reason)
+		public static void RestartScanning(string reason)
 		{
 			if (!_appSettings.Initialized) return;
 
@@ -350,7 +343,7 @@ namespace DkTools.FunctionFileScanning
 			}
 		}
 
-		private void LoadCurrentApp()
+		private static void LoadCurrentApp()
 		{
 			try
 			{
@@ -361,7 +354,7 @@ namespace DkTools.FunctionFileScanning
 
 				using (var db = new FFDatabase())
 				{
-					_currentApp = new FFApp(this, db, _appSettings);
+					_currentApp = new FFApp(db, _appSettings);
 				}
 
 				_currentApp.PublishDefinitions();
@@ -376,7 +369,7 @@ namespace DkTools.FunctionFileScanning
 			}
 		}
 
-		private void ProbeAppSettings_FileChanged(object sender, ProbeAppSettings.FileEventArgs e)
+		private static void ProbeAppSettings_FileChanged(object sender, ProbeAppSettings.FileEventArgs e)
 		{
 			try
 			{
@@ -407,7 +400,7 @@ namespace DkTools.FunctionFileScanning
 			}
 		}
 
-		private void EnqueueFilesDependentOnInclude(string includeFileName)
+		private static void EnqueueFilesDependentOnInclude(string includeFileName)
 		{
 			if (_currentApp == null) return;
 

@@ -1,8 +1,12 @@
 DkTools ChangeLog
 ____________________________________________________________________________________________________
-Version 1.5.11 - (not yet released):
+Version 1.5.11 - Jun 30, 2020:
 
 - Text color contrast improvements in dark mode.
+- Don't trigger a background scan when only non-DK files have changed.
+- Remove asynchronous DK environment loading as it just causes further issues when attempting to
+  open files before it has been loaded. This is a problem for developers who don't keep
+  DK Explorer open full-time.
 
 ____________________________________________________________________________________________________
 Version 1.5.10 - Jun 2, 2020:

@@ -317,9 +317,12 @@ namespace DkTools
 			{
 				await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
 
-				Log.Debug("File change detected: {0}", e.FullPath);
+				if (ProbeEnvironment.IsProbeFile(e.FullPath))
+				{
+					Log.Debug("File change detected: {0}", e.FullPath);
 
-				FileChanged?.Invoke(this, new FileEventArgs(e.FullPath));
+					FileChanged?.Invoke(this, new FileEventArgs(e.FullPath));
+				}
 			});
 		}
 
@@ -329,9 +332,12 @@ namespace DkTools
 			{
 				await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
 
-				Log.Debug("File deletion detected: {0}", e.FullPath);
+				if (ProbeEnvironment.IsProbeFile(e.FullPath))
+				{
+					Log.Debug("File deletion detected: {0}", e.FullPath);
 
-				FileDeleted?.Invoke(this, new FileEventArgs(e.FullPath));
+					FileDeleted?.Invoke(this, new FileEventArgs(e.FullPath));
+				}
 			});
 		}
 
@@ -341,9 +347,12 @@ namespace DkTools
 			{
 				await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
 
-				Log.Debug("File rename detected: {0} -> {1}", e.OldFullPath, e.FullPath);
+				if (ProbeEnvironment.IsProbeFile(e.OldFullPath))
+				{
+					Log.Debug("File rename detected: {0} -> {1}", e.OldFullPath, e.FullPath);
 
-				FileDeleted?.Invoke(this, new FileEventArgs(e.OldFullPath));
+					FileDeleted?.Invoke(this, new FileEventArgs(e.OldFullPath));
+				}
 			});
 		}
 

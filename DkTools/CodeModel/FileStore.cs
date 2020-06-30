@@ -30,16 +30,16 @@ namespace DkTools.CodeModel
 		public FileStore()
 		{
 			_guid = Guid.NewGuid();
-			ProbeToolsPackage.Instance.RefreshAllDocumentsRequired += OnRefreshAllDocumentsRequired;
-			ProbeToolsPackage.Instance.RefreshDocumentRequired += OnRefreshDocumentRequired;
+			ProbeToolsPackage.RefreshAllDocumentsRequired += OnRefreshAllDocumentsRequired;
+			ProbeToolsPackage.RefreshDocumentRequired += OnRefreshDocumentRequired;
 			ProbeAppSettings.FileChanged += ProbeAppSettings_FileChanged;
 			ProbeAppSettings.FileDeleted += ProbeAppSettings_FileDeleted;
 		}
 
 		~FileStore()
 		{
-			ProbeToolsPackage.Instance.RefreshAllDocumentsRequired -= OnRefreshAllDocumentsRequired;
-			ProbeToolsPackage.Instance.RefreshDocumentRequired -= OnRefreshDocumentRequired;
+			ProbeToolsPackage.RefreshAllDocumentsRequired -= OnRefreshAllDocumentsRequired;
+			ProbeToolsPackage.RefreshDocumentRequired -= OnRefreshDocumentRequired;
 			ProbeAppSettings.FileChanged -= ProbeAppSettings_FileChanged;
 			ProbeAppSettings.FileDeleted -= ProbeAppSettings_FileDeleted;
 		}
