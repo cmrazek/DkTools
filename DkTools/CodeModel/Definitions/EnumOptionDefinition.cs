@@ -1,4 +1,6 @@
-﻿using System;
+﻿using DkTools.QuickInfo;
+using Microsoft.VisualStudio.Text.Adornments;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -31,12 +33,9 @@ namespace DkTools.CodeModel.Definitions
 			get { return Classifier.ProbeClassifierType.Constant; }
 		}
 
-		public override string QuickInfoTextStr
-		{
-			get { return Name; }
-		}
+		public override string QuickInfoTextStr => Name;
 
-		public override object QuickInfoElements => QuickInfoClassified(QuickInfoRun(Classifier.ProbeClassifierType.Constant, Name));
+		public override QuickInfoLayout QuickInfo => new QuickInfoText(Classifier.ProbeClassifierType.Constant, Name);
 
 		public override string PickText
 		{

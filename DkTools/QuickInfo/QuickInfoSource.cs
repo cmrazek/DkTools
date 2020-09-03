@@ -111,7 +111,7 @@ namespace DkTools.QuickInfo
 			if (tokens.Length == 0) return null;
 
 			var lastToken = tokens.Last();
-			var infoElements = lastToken.GetQuickInfoElements();
+			var infoElements = lastToken.GetQuickInfoElements()?.GenerateElements_VS();
 			if (infoElements != null)
 			{
 				return new TokenInfo { infoElements = infoElements, token = lastToken };

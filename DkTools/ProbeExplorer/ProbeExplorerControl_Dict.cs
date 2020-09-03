@@ -12,7 +12,10 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
+using DkTools.Classifier;
+using DkTools.QuickInfo;
 using Microsoft.VisualStudio.Shell;
+using Microsoft.VisualStudio.Text.Adornments;
 
 namespace DkTools.ProbeExplorer
 {
@@ -45,17 +48,18 @@ namespace DkTools.ProbeExplorer
 			Log.Write(LogLevel.Info, "Finished refreshing DK Explorer dictionary view. (elapsed: {0})", elapsed);
 		}
 
-		private TreeViewItem CreateStandardTvi(BitmapImage img, string title, string titleInfo, UIElement quickInfoText, bool expandable)
+		private TreeViewItem CreateStandardTvi(BitmapImage img, string title, string titleInfo, QuickInfoLayout quickInfo, bool expandable)
 		{
 			var panel = new StackPanel
 			{
 				Orientation = Orientation.Horizontal
 			};
-			if (quickInfoText != null)
+			if (quickInfo != null)
 			{
 				panel.ToolTip = new ToolTip
 				{
-					Content = quickInfoText
+					Content = quickInfo.GenerateElements_WPF(),
+					Background = ToolTipBackgroundBrush
 				};
 			}
 			panel.Children.Add(new Image
@@ -95,7 +99,7 @@ namespace DkTools.ProbeExplorer
 		#region Table
 		private TreeViewItem CreateTableTvi(DkDict.Table table)
 		{
-			var tvi = CreateStandardTvi(_tableImg, table.Name, table.Prompt, new TextBox { Text = table.Definition.QuickInfoTextStr }, true);
+			var tvi = CreateStandardTvi(_tableImg, table.Name, table.Prompt, table.Definition.QuickInfo, true);
 			tvi.Expanded += TableTvi_Expanded;
 			tvi.Tag = table;
 			tvi.MouseRightButtonDown += TableTvi_MouseRightButtonDown;
@@ -121,6 +125,8 @@ namespace DkTools.ProbeExplorer
 
 		private void TableTvi_Expanded(object sender, RoutedEventArgs e)
 		{
+			ThreadHelper.ThrowIfNotOnUIThread();
+
 			try
 			{
 				var tableNode = (sender as TreeViewItem);
@@ -230,7 +236,7 @@ namespace DkTools.ProbeExplorer
 		#region Field
 		private TreeViewItem CreateFieldTvi(DkDict.Column field)
 		{
-			var tvi = CreateStandardTvi(_fieldImg, field.Name, field.Prompt, new TextBox { Text = field.Definition.QuickInfoTextStr }, true);
+			var tvi = CreateStandardTvi(_fieldImg, field.Name, field.Prompt, field.Definition.QuickInfo, true);
 			tvi.Tag = field;
 			tvi.Expanded += FieldTvi_Expanded;
 			tvi.MouseRightButtonDown += FieldTvi_MouseRightButtonDown;
@@ -278,10 +284,10 @@ namespace DkTools.ProbeExplorer
 
 		private void CreateFieldInfoItems(TreeViewItem fieldItem, DkDict.Column field)
 		{
-			fieldItem.Items.Add(CreateInfoTvi("Name", field.Name));
-			if (!string.IsNullOrEmpty(field.Prompt)) fieldItem.Items.Add(CreateInfoTvi("Prompt", field.Prompt));
-			if (!string.IsNullOrEmpty(field.Comment)) fieldItem.Items.Add(CreateInfoTvi("Comment", field.Comment));
-			fieldItem.Items.Add(CreateInfoTvi("Data Type", field.DataType.Name));
+			fieldItem.Items.Add(CreatePlainTextTvi("Name", field.Name));
+			if (!string.IsNullOrEmpty(field.Prompt)) fieldItem.Items.Add(CreatePlainTextTvi("Prompt", field.Prompt));
+			if (!string.IsNullOrEmpty(field.Comment)) fieldItem.Items.Add(CreatePlainTextTvi("Comment", field.Comment));
+			fieldItem.Items.Add(CreateClassifiedStringTvi("Data Type", field.DataType.ShortSource));
 		}
 
 		private void FieldTvi_MouseRightButtonDown(object sender, MouseButtonEventArgs e)
@@ -358,7 +364,7 @@ namespace DkTools.ProbeExplorer
 		private TreeViewItem CreateRelIndTreeViewItem(DkDict.RelInd relind)
 		{
 			var tvi = CreateStandardTvi(relind.Type == DkDict.RelIndType.Index ? _indexImg : _relationshipImg, relind.Name, relind.Prompt,
-				new TextBox { Text = relind.Definition.QuickInfoTextStr }, true);
+				relind.Definition.QuickInfo, true);
 			tvi.Tag = relind;
 			tvi.Expanded += RelIndTvi_Expanded;
 			tvi.MouseRightButtonDown += RelIndTvi_MouseRightButtonDown;
@@ -406,11 +412,11 @@ namespace DkTools.ProbeExplorer
 
 		private void CreateRelIndInfoItems(TreeViewItem item, DkDict.RelInd relind)
 		{
-			item.Items.Add(CreateInfoTvi("Name", relind.Name));
-			if (!string.IsNullOrWhiteSpace(relind.Prompt)) item.Items.Add(CreateInfoTvi("Prompt", relind.Prompt));
-			if (!string.IsNullOrWhiteSpace(relind.Comment)) item.Items.Add(CreateInfoTvi("Comment", relind.Comment));
-			if (!string.IsNullOrWhiteSpace(relind.Description)) item.Items.Add(CreateInfoTvi("Description", relind.Description));
-			if (!string.IsNullOrWhiteSpace(relind.SortedColumnString)) item.Items.Add(CreateInfoTvi("Columns", relind.SortedColumnString));
+			item.Items.Add(CreatePlainTextTvi("Name", relind.Name));
+			if (!string.IsNullOrWhiteSpace(relind.Prompt)) item.Items.Add(CreatePlainTextTvi("Prompt", relind.Prompt));
+			if (!string.IsNullOrWhiteSpace(relind.Comment)) item.Items.Add(CreatePlainTextTvi("Comment", relind.Comment));
+			if (!string.IsNullOrWhiteSpace(relind.Description)) item.Items.Add(CreatePlainTextTvi("Description", relind.Description));
+			if (!string.IsNullOrWhiteSpace(relind.SortedColumnString)) item.Items.Add(CreatePlainTextTvi("Columns", relind.SortedColumnString));
 		}
 
 		private void RelIndFindAllReferences_Click(object sender, RoutedEventArgs e)
@@ -483,8 +489,10 @@ namespace DkTools.ProbeExplorer
 		}
 		#endregion
 
-		private TreeViewItem CreateInfoTvi(string label, string text)
+		private TreeViewItem CreatePlainTextTvi(string label, string text)
 		{
+			if (text == null) text = string.Empty;
+
 			var panel = new StackPanel
 			{
 				Orientation = Orientation.Horizontal
@@ -502,7 +510,9 @@ namespace DkTools.ProbeExplorer
 				ToolTip = new ToolTip
 				{
 					Content = text,
-					Visibility = System.Windows.Visibility.Visible
+					Visibility = System.Windows.Visibility.Visible,
+					Background = ToolTipBackgroundBrush,
+					Foreground = ToolTipForegroundBrush
 				}
 			});
 
@@ -511,10 +521,35 @@ namespace DkTools.ProbeExplorer
 			return tvi;
 		}
 
-		private TreeViewItem CreateInfoTvi(string label, object value)
+		private TreeViewItem CreateClassifiedStringTvi(string label, ProbeClassifiedString text)
 		{
-			var text = value == null ? string.Empty : value.ToString();
-			return CreateInfoTvi(label, value);
+			if (text == null) text = ProbeClassifiedString.Empty;
+
+			var panel = new StackPanel
+			{
+				Orientation = Orientation.Horizontal
+			};
+			panel.Children.Add(new TextBlock
+			{
+				Text = label + ": ",
+				MinWidth = k_fieldInfoLabelWidth,
+				FontWeight = FontWeights.Bold,
+				Margin = new Thickness(0, 0, k_textSpacer, 0)
+			});
+
+			var tb = text.ToWpfTextBlock();
+			tb.ToolTip = new ToolTip
+			{
+				Content = text,
+				Visibility = System.Windows.Visibility.Visible,
+				Background = ToolTipBackgroundBrush,
+				Foreground = ToolTipForegroundBrush
+			};
+			panel.Children.Add(tb);
+
+			var tvi = new TreeViewItem();
+			tvi.Header = panel;
+			return tvi;
 		}
 
 		public void FocusTable(string tableName)

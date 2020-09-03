@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using DkTools.CodeModel.Definitions;
+using DkTools.QuickInfo;
 
 namespace DkTools.CodeModel.Tokens
 {
@@ -26,13 +27,10 @@ namespace DkTools.CodeModel.Tokens
 			}
 		}
 
-		public override object GetQuickInfoElements(Token token = null)
-		{
-			return Definition.QuickInfoStack(
-				Definition.QuickInfoAttributeString("Name", Text),
-				Definition.QuickInfoAttributeElement("Data Type", _dataType.QuickInfoElements)
-			);
-		}
+		public override QuickInfoLayout GetQuickInfoElements(Token token = null) => new QuickInfoStack(
+			new QuickInfoAttribute("Name", Text),
+			new QuickInfoAttribute("Data Type", _dataType.ClassifiedString)
+		);
 
 		public void SetEnumDataType(DataType dataType)
 		{

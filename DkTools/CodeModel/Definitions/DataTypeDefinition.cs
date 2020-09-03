@@ -4,6 +4,8 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using DkTools.CodeModel.Tokens;
+using DkTools.QuickInfo;
+using Microsoft.VisualStudio.Text.Adornments;
 
 namespace DkTools.CodeModel.Definitions
 {
@@ -51,7 +53,7 @@ namespace DkTools.CodeModel.Definitions
 			get { return !string.IsNullOrEmpty(_dataType.InfoText) ? _dataType.InfoText : _dataType.Name; }
 		}
 
-		public override object QuickInfoElements => _dataType.QuickInfoElements;
+		public override QuickInfoLayout QuickInfo => new QuickInfoClassifiedString(_dataType.ClassifiedString);
 
 		public override string PickText
 		{

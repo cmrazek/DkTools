@@ -7,6 +7,7 @@ using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Adornments;
 using DkTools.Classifier;
 using DkTools.CodeModel.Definitions;
+using Microsoft.VisualStudio.Shell;
 
 namespace DkTools.CodeModel
 {
@@ -163,43 +164,6 @@ namespace DkTools.CodeModel
 				}
 
 				return _source;
-			}
-		}
-
-		public IEnumerable<ClassifiedTextRun> QuickInfoRuns
-		{
-			get
-			{
-				var spaceRequired = false;
-
-				if (_dataType != null)
-				{
-					foreach (var run in _dataType.Source.Runs)
-					{
-						yield return run.ToClassifiedTextRun();
-					}
-					spaceRequired = true;
-				}
-
-				switch (_passByMethod)
-				{
-					case PassByMethod.Reference:
-						if (spaceRequired) yield return Definition.QuickInfoRun(Classifier.ProbeClassifierType.Normal, " ");
-						yield return Definition.QuickInfoRun(Classifier.ProbeClassifierType.Operator, "&");
-						spaceRequired = false;
-						break;
-					case PassByMethod.ReferencePlus:
-						if (spaceRequired) yield return Definition.QuickInfoRun(Classifier.ProbeClassifierType.Normal, " ");
-						yield return Definition.QuickInfoRun(Classifier.ProbeClassifierType.Operator, "&+");
-						spaceRequired = false;
-						break;
-				}
-
-				if (!string.IsNullOrEmpty(_name))
-				{
-					if (spaceRequired) yield return Definition.QuickInfoRun(Classifier.ProbeClassifierType.Normal, " ");
-					yield return Definition.QuickInfoRun(Classifier.ProbeClassifierType.Variable, _name);
-				}
 			}
 		}
 

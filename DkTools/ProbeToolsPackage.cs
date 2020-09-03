@@ -14,6 +14,8 @@ using Microsoft.VisualStudio.OLE.Interop;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
 using DkTools.LanguageSvc;
+using Microsoft.VisualStudio.Language.StandardClassification;
+using Microsoft.VisualStudio.Text.Classification;
 
 namespace DkTools
 {
@@ -158,6 +160,8 @@ namespace DkTools
 			ProbeAppSettings.FileDeleted += ProbeAppSettings_FileDeleted;
 
 			Microsoft.VisualStudio.PlatformUI.VSColorTheme.ThemeChanged += VSColorTheme_ThemeChanged;
+
+			DefaultClassificationType = ClassificationTypeRegistryService.GetClassificationType(PredefinedClassificationTypeNames.Other);
 		}
 
 		protected override void Dispose(bool disposing)
@@ -340,6 +344,8 @@ namespace DkTools
 			Log.Debug("Event: RefreshDocumentRequired: {0}", filePath);
 			RefreshDocumentRequired?.Invoke(this, new RefreshDocumentEventArgs(filePath));
 		}
+
+		public IClassificationType DefaultClassificationType { get; private set; }
 
 		#region Settings
 		private const int k_settingsRefreshTime = 5000;	// Only reload settings every 5 seconds
@@ -538,6 +544,25 @@ namespace DkTools
 					if (_taskListService == null) throw new InvalidOperationException("Unable to get service 'Microsoft.VisualStudio.Shell.Interop.IVsTaskList'.");
 				}
 				return _taskListService;
+			}
+		}
+
+		private Microsoft.VisualStudio.Text.Classification.IClassificationTypeRegistryService _classificationtypeRegistryService;
+		internal Microsoft.VisualStudio.Text.Classification.IClassificationTypeRegistryService ClassificationTypeRegistryService
+		{
+			get
+			{
+				ThreadHelper.ThrowIfNotOnUIThread();
+
+				if (_editorAdaptersService == null)
+				{
+					var model = ProbeToolsPackage.Instance.GetService(typeof(Microsoft.VisualStudio.ComponentModelHost.SComponentModel)) as Microsoft.VisualStudio.ComponentModelHost.IComponentModel;
+					if (model == null) throw new InvalidOperationException("Unable to get service 'Microsoft.VisualStudio.ComponentModelHost.SComponentModel'.");
+
+					_classificationtypeRegistryService = model.GetService<Microsoft.VisualStudio.Text.Classification.IClassificationTypeRegistryService>() as Microsoft.VisualStudio.Text.Classification.IClassificationTypeRegistryService;
+					if (_classificationtypeRegistryService == null) throw new InvalidOperationException("Unable to get service 'Microsoft.VisualStudio.Text.Classification.IClassificationTypeRegistryService'.");
+				}
+				return _classificationtypeRegistryService;
 			}
 		}
 		#endregion

@@ -4,6 +4,8 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using DkTools.CodeModel.Tokens;
+using DkTools.QuickInfo;
+using Microsoft.VisualStudio.Text.Adornments;
 
 namespace DkTools.CodeModel.Definitions
 {
@@ -42,10 +44,7 @@ namespace DkTools.CodeModel.Definitions
 			get { return _text; }
 		}
 
-		public override object QuickInfoElements
-		{
-			get { return QuickInfoMainLine(_text); }
-		}
+		public override QuickInfoLayout QuickInfo => new QuickInfoText(Classifier.ProbeClassifierType.Constant, _text);
 
 		public override string PickText
 		{

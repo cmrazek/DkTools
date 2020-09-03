@@ -1,4 +1,6 @@
-﻿using System;
+﻿using DkTools.QuickInfo;
+using Microsoft.VisualStudio.Text.Adornments;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -20,7 +22,7 @@ namespace DkTools.CodeModel.Definitions
 		public override StatementCompletion.ProbeCompletionType CompletionType => StatementCompletion.ProbeCompletionType.Constant;
 		public override Classifier.ProbeClassifierType ClassifierType => Classifier.ProbeClassifierType.Normal;
 		public override string QuickInfoTextStr => LocationText;
-		public override object QuickInfoElements => QuickInfoMainLine(LocationText);
+		public override QuickInfoLayout QuickInfo => new QuickInfoMainLine(LocationText);
 		public override string PickText => LocationText;
 	}
 }

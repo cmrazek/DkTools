@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Xml;
 using DkTools.CodeModel.Definitions;
+using DkTools.QuickInfo;
 
 namespace DkTools.CodeModel.Tokens
 {
@@ -464,11 +465,11 @@ namespace DkTools.CodeModel.Tokens
 		}
 		#endregion
 
-		public virtual object GetQuickInfoElements(Token token = null)
+		public virtual QuickInfoLayout GetQuickInfoElements(Token token = null)
 		{
 			if (_sourceDefinition != null)
 			{
-				var elements = _sourceDefinition.QuickInfoElements;
+				var elements = _sourceDefinition.QuickInfo;
 				if (elements != null) return elements;
 			}
 

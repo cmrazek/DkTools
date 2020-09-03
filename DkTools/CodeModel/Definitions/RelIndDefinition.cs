@@ -3,8 +3,11 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows;
 using DkTools.Classifier;
 using DkTools.DkDict;
+using DkTools.QuickInfo;
+using Microsoft.VisualStudio.Text.Adornments;
 
 namespace DkTools.CodeModel.Definitions
 {
@@ -52,9 +55,9 @@ namespace DkTools.CodeModel.Definitions
 			}
 		}
 
-		public override object QuickInfoElements => QuickInfoStack(
-			_source.ToClassifiedTextElement(),
-			string.IsNullOrWhiteSpace(_devDesc) ? null : QuickInfoDescription(_devDesc)
+		public override QuickInfoLayout QuickInfo => new QuickInfoStack(
+			new QuickInfoClassifiedString(_source),
+			string.IsNullOrWhiteSpace(_devDesc) ? null : new QuickInfoDescription(_devDesc)
 		);
 
 		public string BaseTableName

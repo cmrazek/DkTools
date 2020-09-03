@@ -1,8 +1,11 @@
-﻿using System;
+﻿using DkTools.QuickInfo;
+using Microsoft.VisualStudio.Text.Adornments;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows;
 
 namespace DkTools.CodeModel.Definitions
 {
@@ -76,11 +79,11 @@ namespace DkTools.CodeModel.Definitions
 			}
 		}
 
-		public override object QuickInfoElements => QuickInfoStack(
-			QuickInfoAttributeString("Table", Name),
-			string.IsNullOrWhiteSpace(_prompt) ? null : QuickInfoAttributeString("Prompt", _prompt),
-			string.IsNullOrWhiteSpace(_comment) ? null : QuickInfoAttributeString("Comment", _comment),
-			string.IsNullOrWhiteSpace(_description) ? null : QuickInfoDescription(_description)
+		public override QuickInfoLayout QuickInfo => new QuickInfoStack(
+			new QuickInfoAttribute("Table", Name),
+			string.IsNullOrWhiteSpace(_prompt) ? null : new QuickInfoAttribute("Prompt", _prompt),
+			string.IsNullOrWhiteSpace(_comment) ? null : new QuickInfoAttribute("Comment", _comment),
+			string.IsNullOrWhiteSpace(_description) ? null : new QuickInfoDescription(_description)
 		);
 
 		public void SetPromptComment(string prompt, string comment)

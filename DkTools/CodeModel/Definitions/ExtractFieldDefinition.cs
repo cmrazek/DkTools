@@ -1,4 +1,7 @@
-﻿using System;
+﻿using DkTools.Classifier;
+using DkTools.QuickInfo;
+using Microsoft.VisualStudio.Text.Adornments;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -39,26 +42,26 @@ namespace DkTools.CodeModel.Definitions
 			}
 		}
 
-		public override object QuickInfoElements
+		public override QuickInfoLayout QuickInfo
 		{
 			get
 			{
 				if (_ex == null)
 				{
-					return QuickInfoStack(
-						QuickInfoClassified(QuickInfoRun(Classifier.ProbeClassifierType.TableField, Name)),
-						QuickInfoDescription(_ex.Permanent ? "Permanent extract" : "Temporary extract")
+					return new QuickInfoStack(
+						new QuickInfoText(ProbeClassifierType.TableField, Name),
+						new QuickInfoDescription(_ex.Permanent ? "Permanent extract" : "Temporary extract")
 					);
 				}
 
-				return QuickInfoStack(
-					QuickInfoClassified(
-						QuickInfoRun(Classifier.ProbeClassifierType.TableName, _ex.Name),
-						QuickInfoRun(Classifier.ProbeClassifierType.Delimiter, "."),
-						QuickInfoRun(Classifier.ProbeClassifierType.TableField, Name)
+				return new QuickInfoStack(
+					new QuickInfoClassifiedString(
+						new ProbeClassifiedString(Classifier.ProbeClassifierType.TableName, _ex.Name),
+						new ProbeClassifiedString(Classifier.ProbeClassifierType.Delimiter, "."),
+						new ProbeClassifiedString(Classifier.ProbeClassifierType.TableField, Name)
 					),
-					QuickInfoDescription(_ex.Permanent ? "Permanent extract" : "Temporary extract"),
-					_dataType != null ? _dataType.QuickInfoElements : null
+					new QuickInfoDescription(_ex.Permanent ? "Permanent extract" : "Temporary extract"),
+					_dataType != null ? new QuickInfoClassifiedString(_dataType.ClassifiedString) : null
 				);
 			}
 		}

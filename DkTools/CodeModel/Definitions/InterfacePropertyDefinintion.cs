@@ -1,8 +1,11 @@
-﻿using System;
+﻿using DkTools.QuickInfo;
+using Microsoft.VisualStudio.Text.Adornments;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows;
 
 namespace DkTools.CodeModel.Definitions
 {
@@ -56,10 +59,10 @@ namespace DkTools.CodeModel.Definitions
 			}
 		}
 
-		public override object QuickInfoElements => QuickInfoStack(
-			QuickInfoAttributeString("Name", Name),
-			QuickInfoAttributeElement("Data Type", _dataType.QuickInfoElements),
-			QuickInfoAttributeString("Interface", _intTypeDef.Name)
+		public override QuickInfoLayout QuickInfo => new QuickInfoStack(
+			new QuickInfoAttribute("Name", Name),
+			new QuickInfoAttribute("Data Type", _dataType.ClassifiedString),
+			new QuickInfoAttribute("Interface", _intTypeDef.Name)
 		);
 
 		public override DataType DataType

@@ -1,4 +1,8 @@
-﻿using System;
+﻿using DkTools.Classifier;
+using DkTools.QuickInfo;
+using Microsoft.Internal.VisualStudio.PlatformUI;
+using Microsoft.VisualStudio.Text.Adornments;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -88,19 +92,18 @@ namespace DkTools.CodeModel.Definitions
 			}
 		}
 
-		public override object QuickInfoElements
-		{
-			get
+		public override QuickInfoLayout QuickInfo => new QuickInfoStack(
+			new QuickInfoClassifiedString(new ProbeClassifiedString[]
 			{
-				return QuickInfoStack(
-					QuickInfoMainLine(string.Concat(_tableName, ".", _fieldName)),
-					string.IsNullOrWhiteSpace(_prompt) ? null : QuickInfoAttributeString("Prompt", _prompt),
-					string.IsNullOrWhiteSpace(_comment) ? null : QuickInfoAttributeString("Comment", _comment),
-					_dataType != null ? QuickInfoAttributeElement("Data Type", _dataType.QuickInfoElements) : null,
-					string.IsNullOrWhiteSpace(_repoDesc) ? null : QuickInfoDescription(_repoDesc)
-				);
-			}
-		}
+				new ProbeClassifiedString(ProbeClassifierType.TableName, _tableName),
+				new ProbeClassifiedString(ProbeClassifierType.Delimiter, "."),
+				new ProbeClassifiedString(ProbeClassifierType.TableField, _fieldName)
+			}),
+			string.IsNullOrWhiteSpace(_prompt) ? null : new QuickInfoAttribute("Prompt", _prompt),
+			string.IsNullOrWhiteSpace(_comment) ? null : new QuickInfoAttribute("Comment", _comment),
+			_dataType != null ? new QuickInfoAttribute("Data Type", _dataType.ClassifiedString) : null,
+			string.IsNullOrWhiteSpace(_repoDesc) ? null : new QuickInfoDescription(_repoDesc)
+		);
 
 		public string TableName
 		{

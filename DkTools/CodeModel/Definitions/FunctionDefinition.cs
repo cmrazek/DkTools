@@ -1,10 +1,12 @@
-﻿using System;
+﻿using DkTools.Classifier;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
-using System.Threading.Tasks;
-using DkTools.CodeModel.Tokens;
+using Microsoft.VisualStudio.Text.Adornments;
+using System.Windows;
+using DkTools.QuickInfo;
 
 namespace DkTools.CodeModel.Definitions
 {
@@ -89,9 +91,9 @@ namespace DkTools.CodeModel.Definitions
 			}
 		}
 
-		public override object QuickInfoElements => QuickInfoStack(
-			_sig.QuickInfoElements,
-			string.IsNullOrWhiteSpace(_sig.Description) ? null : QuickInfoDescription(_sig.Description)
+		public override QuickInfoLayout QuickInfo => new QuickInfoStack(
+			new QuickInfoClassifiedString(_sig.ClassifiedString),
+			string.IsNullOrWhiteSpace(_sig.Description) ? null : new QuickInfoDescription(_sig.Description)
 		);
 
 		public int BodyStartPosition

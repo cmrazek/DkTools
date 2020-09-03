@@ -258,6 +258,7 @@
     <Compile Include="BraceHighlighting\BraceHighlightTag.cs" />
     <Compile Include="BraceHighlighting\BraceHighlightTagger.cs" />
     <Compile Include="BraceHighlighting\BraceHighlightTaggerProvider.cs" />
+    <Compile Include="Classifier\ClassifiedStringHelpers.cs" />
     <Compile Include="Classifier\DisabledSectionTracker.cs" />
     <Compile Include="Classifier\ProbeClassifierScanner.cs" />
     <Compile Include="Classifier\ProbeClassifier.cs" />
@@ -547,6 +548,7 @@
     </Compile>
     <Compile Include="QuickInfo\QuickInfoController.cs" />
     <Compile Include="QuickInfo\QuickInfoControllerProvider.cs" />
+    <Compile Include="QuickInfo\QuickInfoLayout.cs" />
     <Compile Include="QuickInfo\QuickInfoSource.cs" />
     <Compile Include="QuickInfo\QuickInfoSourceProvider.cs" />
     <Compile Include="QuickState\QuickStateTracker.cs" />

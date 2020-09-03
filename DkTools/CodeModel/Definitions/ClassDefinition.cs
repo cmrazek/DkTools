@@ -5,6 +5,10 @@ using System.Text;
 using System.Threading.Tasks;
 using Microsoft.VisualStudio.Language.StandardClassification;
 using DkTools.CodeModel.Tokens;
+using Microsoft.VisualStudio.Text.Adornments;
+using Microsoft.VisualStudio.Shell;
+using DkTools.QuickInfo;
+using DkTools.Classifier;
 
 namespace DkTools.CodeModel.Definitions
 {
@@ -39,10 +43,7 @@ namespace DkTools.CodeModel.Definitions
 			get { return string.Concat("Class: ", Name); }
 		}
 
-		public override object QuickInfoElements
-		{
-			get { return QuickInfoAttributeElement("Class", QuickInfoClassified(QuickInfoRun(Classifier.ProbeClassifierType.TableName, Name))); }
-		}
+		public override QuickInfoLayout QuickInfo => new QuickInfoAttribute("Class", new ProbeClassifiedString(ProbeClassifierType.TableName, Name));
 
 		public override string PickText
 		{

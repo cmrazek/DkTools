@@ -1,4 +1,7 @@
-﻿using System;
+﻿using DkTools.QuickInfo;
+using Microsoft.VisualStudio.Shell;
+using Microsoft.VisualStudio.Text.Adornments;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -41,15 +44,9 @@ namespace DkTools.CodeModel.Definitions
 			get { return Classifier.ProbeClassifierType.Function; }
 		}
 
-		public override string QuickInfoTextStr
-		{
-			get
-			{
-				return _sig.PrettySignature;
-			}
-		}
+		public override string QuickInfoTextStr => _sig.PrettySignature;
 
-		public override object QuickInfoElements => _sig.QuickInfoElements;
+		public override QuickInfoLayout QuickInfo => new QuickInfoClassifiedString(_sig.ClassifiedString);
 
 		public override FunctionSignature Signature
 		{

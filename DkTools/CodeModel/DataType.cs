@@ -9,6 +9,7 @@ using DkTools.Classifier;
 using DkTools.CodeModel.Definitions;
 using DkTools.CodeModel.Tokens;
 using DkTools.CodeModel.Tokens.Operators;
+using Microsoft.VisualStudio.Shell;
 
 namespace DkTools.CodeModel
 {
@@ -1398,41 +1399,17 @@ namespace DkTools.CodeModel
 			}
 		}
 
-		/// <summary>
-		/// Returns a string of the data type as it would appear as source code.
-		/// </summary>
-		/// <returns></returns>
-		public string ToSourceString()
-		{
-			if (!string.IsNullOrEmpty(_name)) return _name;
-			return _source.ToString();
-		}
-
-		public object QuickInfoElements
-		{
-			get
-			{
-				return Definition.QuickInfoStack(
-					string.IsNullOrEmpty(_name) ? null : Definition.QuickInfoMainLine(_name),
-					_source.ToClassifiedTextElement()
-				);
-			}
-		}
-
-		/// <summary>
-		/// Gets the data type as it would appear if being displayed as code.
-		/// </summary>
-		public IEnumerable<ClassifiedTextRun> QuickInfoRuns
+		public ProbeClassifiedString ClassifiedString
 		{
 			get
 			{
 				if (!string.IsNullOrWhiteSpace(_name))
 				{
-					return new ClassifiedTextRun[] { new ClassifiedTextRun(Classifier.ProbeClassifier.GetClassificationTypeName(Classifier.ProbeClassifierType.DataType), _name) };
+					return new ProbeClassifiedString(ProbeClassifierType.DataType, _name);
 				}
 				else
 				{
-					return _source.ToClassifiedTextRuns();
+					return _source;
 				}
 			}
 		}

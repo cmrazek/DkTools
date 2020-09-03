@@ -3,7 +3,11 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows;
 using DkTools.CodeModel.Tokens;
+using DkTools.QuickInfo;
+using Microsoft.VisualStudio.Shell;
+using Microsoft.VisualStudio.Text.Adornments;
 
 namespace DkTools.CodeModel.Definitions
 {
@@ -37,17 +41,11 @@ namespace DkTools.CodeModel.Definitions
 			get { return Classifier.ProbeClassifierType.Function; }
 		}
 
-		public override string QuickInfoTextStr
-		{
-			get
-			{
-				return string.Concat(_signature, "\r\n", _body).Trim();
-			}
-		}
+		public override string QuickInfoTextStr => string.Concat(_signature, "\r\n", _body).Trim();
 
-		public override object QuickInfoElements => QuickInfoStack(
-			_signature.QuickInfoElements,
-			QuickInfoDescription(_body.Trim())
+		public override QuickInfoLayout QuickInfo => new QuickInfoStack(
+			new QuickInfoClassifiedString(_signature.ClassifiedString),
+			new QuickInfoDescription(_body.Trim())
 		);
 
 		public override string PickText

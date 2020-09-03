@@ -155,14 +155,6 @@ namespace DkTools.CodeModel
 			}
 		}
 
-		public ClassifiedTextElement QuickInfoElements
-		{
-			get
-			{
-				return ClassifiedString.ToClassifiedTextElement();
-			}
-		}
-
 		public string ToDbString()
 		{
 			var sb = new StringBuilder();

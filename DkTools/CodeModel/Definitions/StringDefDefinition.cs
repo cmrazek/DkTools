@@ -1,8 +1,11 @@
-﻿using System;
+﻿using DkTools.QuickInfo;
+using Microsoft.VisualStudio.Text.Adornments;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows;
 
 namespace DkTools.CodeModel.Definitions
 {
@@ -31,12 +34,9 @@ namespace DkTools.CodeModel.Definitions
 			get { return Classifier.ProbeClassifierType.Constant; }
 		}
 
-		public override string QuickInfoTextStr
-		{
-			get { return _stringDef.Text; }
-		}
+		public override string QuickInfoTextStr => _stringDef.Text;
 
-		public override object QuickInfoElements => QuickInfoMainLine(_stringDef.Text);
+		public override QuickInfoLayout QuickInfo => new QuickInfoText(Classifier.ProbeClassifierType.StringLiteral, CodeParser.StringToStringLiteral(_stringDef.Text));
 
 		public override string PickText
 		{

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Text;
+using Microsoft.VisualStudio.Language.StandardClassification;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Classification;
@@ -19,6 +20,24 @@ namespace DkTools.Classifier
 		public event EventHandler<ClassificationChangedEventArgs> ClassificationChanged;
 
 		public ProbeClassifier(IClassificationTypeRegistryService registry)
+		{
+			InitializeClassifierTypes(registry);
+
+			_scanner = new ProbeClassifierScanner();
+
+			ProbeToolsPackage.RefreshAllDocumentsRequired += OnRefreshAllDocumentsRequired;
+			ProbeToolsPackage.RefreshDocumentRequired += OnRefreshDocumentRequired;
+
+			VSTheme.ThemeChanged += VSTheme_ThemeChanged;
+		}
+
+		~ProbeClassifier()
+		{
+			ProbeToolsPackage.RefreshAllDocumentsRequired -= OnRefreshAllDocumentsRequired;
+			ProbeToolsPackage.RefreshDocumentRequired -= OnRefreshDocumentRequired;
+		}
+
+		private static void InitializeClassifierTypes(IClassificationTypeRegistryService registry)
 		{
 			if (_lightTokenTypes == null)
 			{
@@ -61,19 +80,6 @@ namespace DkTools.Classifier
 				_darkTokenTypes[ProbeClassifierType.Variable] = registry.GetClassificationType("DK.Variable.Dark");
 				_darkTokenTypes[ProbeClassifierType.Interface] = registry.GetClassificationType("DK.Interface.Dark");
 			}
-
-			_scanner = new ProbeClassifierScanner();
-
-			ProbeToolsPackage.RefreshAllDocumentsRequired += OnRefreshAllDocumentsRequired;
-			ProbeToolsPackage.RefreshDocumentRequired += OnRefreshDocumentRequired;
-
-			VSTheme.ThemeChanged += VSTheme_ThemeChanged;
-		}
-
-		~ProbeClassifier()
-		{
-			ProbeToolsPackage.RefreshAllDocumentsRequired -= OnRefreshAllDocumentsRequired;
-			ProbeToolsPackage.RefreshDocumentRequired -= OnRefreshDocumentRequired;
 		}
 
 		public IList<ClassificationSpan> GetClassificationSpans(SnapshotSpan span)  // from IClassifier
@@ -178,6 +184,7 @@ namespace DkTools.Classifier
 			try
 			{
 				UpdateClassification();
+				ProbeClassificationDefinitions.OnVsThemeChanged();
 			}
 			catch (Exception ex)
 			{
@@ -202,13 +209,17 @@ namespace DkTools.Classifier
 				}
 			}
 
-			return null;
+			return ProbeToolsPackage.Instance.DefaultClassificationType;
 		}
 
 		public static string GetClassificationTypeName(ProbeClassifierType type, string defaultValue = null)
 		{
 			var ct = GetClassificationType(type);
-			if (ct == null) return defaultValue;
+			if (ct == null)
+			{
+				if (defaultValue == null) return PredefinedClassificationTypeNames.NaturalLanguage;
+				return defaultValue;
+			}
 			return ct.Classification;
 		}
 	}

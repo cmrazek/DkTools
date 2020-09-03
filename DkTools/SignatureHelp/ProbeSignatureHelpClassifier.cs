@@ -7,6 +7,8 @@ using Microsoft.VisualStudio.Language.Intellisense;
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Classification;
 using DkTools.Classifier;
+using Microsoft.VisualStudio.Language.StandardClassification;
+using Microsoft.VisualStudio.Shell;
 
 namespace DkTools.SignatureHelp
 {
@@ -40,6 +42,7 @@ namespace DkTools.SignatureHelp
 			{
 				spans.Add(new ClassificationSpan(new SnapshotSpan(span.Snapshot, pos, run.Length),
 					ProbeClassifier.GetClassificationType(run.Type)));
+				
 				pos += run.Length;
 			}
 

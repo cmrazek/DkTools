@@ -1017,7 +1017,7 @@ namespace DkTools.ProbeExplorer
 		{
 			ThreadHelper.ThrowIfNotOnUIThread();
 
-			if (!c_functionTab.IsSelected) return;
+			if (!c_functionTab.IsSelected || view == null) return;
 
 			string className = null;
 			var fileName = VsTextUtil.TryGetDocumentFileName(view.TextBuffer);
@@ -1323,6 +1323,8 @@ namespace DkTools.ProbeExplorer
 			{
 				_clearImage = null;
 				_fileImage = null;
+				_toolTipBackgroundBrush = null;
+				_toolTipForegroundBrush = null;
 
 				FirePropertyChanged(NameOf_ClearImage);
 
@@ -1367,6 +1369,48 @@ namespace DkTools.ProbeExplorer
 					_fileImage = VSTheme.CurrentTheme == VSThemeMode.Dark ? Res.FileImg_Dark.ToBitmapImage() : Res.FileImg_Light.ToBitmapImage();
 				}
 				return _fileImage;
+			}
+		}
+
+		private Brush _toolTipBackgroundBrush;
+		public Brush ToolTipBackgroundBrush
+		{
+			get
+			{
+				if (_toolTipBackgroundBrush == null)
+				{
+					switch (VSTheme.CurrentTheme)
+					{
+						case VSThemeMode.Dark:
+							_toolTipBackgroundBrush = new SolidColorBrush(Color.FromRgb(0x42, 0x42, 0x45));
+							break;
+						default:
+							_toolTipBackgroundBrush = Brushes.White;
+							break;
+					}
+				}
+				return _toolTipBackgroundBrush;
+			}
+		}
+
+		private Brush _toolTipForegroundBrush;
+		public Brush ToolTipForegroundBrush
+		{
+			get
+			{
+				if (_toolTipForegroundBrush == null)
+				{
+					switch (VSTheme.CurrentTheme)
+					{
+						case VSThemeMode.Dark:
+							_toolTipForegroundBrush = Brushes.White;
+							break;
+						default:
+							_toolTipForegroundBrush = Brushes.Black;
+							break;
+					}
+				}
+				return _toolTipForegroundBrush;
 			}
 		}
 		#endregion

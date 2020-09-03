@@ -845,14 +845,14 @@ namespace DkTools.StatementCompletion
 				Definition = def
 			}, data =>
 			{
-				return data.Definition.QuickInfoElements;
+				return data.Definition.QuickInfo.GenerateElements_VS();
 			});
 		}
 
 		internal void CreateCompletion(string text, ProbeCompletionType type, string description)
 		{
 			CreateCompletion(text, type, new ItemData { Description = description },
-				data => { return data.Description != null ? Definition.QuickInfoMainLine(data.Description) : null; });
+				data => { return data.Description != null ? Definition.QuickInfoMainLine_VS(data.Description) : null; });
 		}
 		#endregion
 

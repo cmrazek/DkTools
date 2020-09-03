@@ -6,6 +6,9 @@ using System.Threading.Tasks;
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Adornments;
 using DkTools.CodeModel.Tokens;
+using System.Windows;
+using DkTools.Classifier;
+using DkTools.QuickInfo;
 
 namespace DkTools.CodeModel.Definitions
 {
@@ -96,32 +99,35 @@ namespace DkTools.CodeModel.Definitions
 			}
 		}
 
-		public override object QuickInfoElements
+		public ProbeClassifiedString QuickInfoClassifiedString
 		{
 			get
 			{
-				var runs = new List<ClassifiedTextRun>();
+				var pcs = new ProbeClassifiedStringBuilder();
 
 				if (_dataType != null)
 				{
-					runs.AddRange(_dataType.QuickInfoRuns);
-					runs.Add(QuickInfoRun(Classifier.ProbeClassifierType.Normal, " "));
+					pcs.AddClassifiedString(_dataType.ClassifiedString);
+					pcs.AddSpace();
 				}
-				runs.Add(QuickInfoRun(Classifier.ProbeClassifierType.Variable, Name));
+
+				pcs.AddVariable(Name);
 
 				if (_arrayLengths != null)
 				{
 					foreach (var len in _arrayLengths)
 					{
-						runs.Add(QuickInfoRun(Classifier.ProbeClassifierType.Operator, "["));
-						runs.Add(QuickInfoRun(Classifier.ProbeClassifierType.Number, len.ToString()));
-						runs.Add(QuickInfoRun(Classifier.ProbeClassifierType.Operator, "]"));
+						pcs.AddOperator("[");
+						pcs.AddNumber(len.ToString());
+						pcs.AddOperator("]");
 					}
 				}
 
-				return new ClassifiedTextElement(runs);
+				return pcs.ToClassifiedString();
 			}
 		}
+
+		public override QuickInfoLayout QuickInfo => new QuickInfoClassifiedString(QuickInfoClassifiedString);
 
 		public override void DumpTreeInner(System.Xml.XmlWriter xml)
 		{

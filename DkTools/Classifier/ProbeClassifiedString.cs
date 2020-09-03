@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
+using System.Windows.Controls;
 using Microsoft.VisualStudio.Text.Adornments;
 
 namespace DkTools.Classifier
@@ -26,6 +26,14 @@ namespace DkTools.Classifier
 		public ClassifiedTextRun ToClassifiedTextRun()
 		{
 			return new ClassifiedTextRun(ProbeClassifier.GetClassificationTypeName(Type), Text);
+		}
+
+		public System.Windows.Documents.Run ToWpfTextRun()
+		{
+			return new System.Windows.Documents.Run(Text)
+			{
+				Foreground = ProbeClassificationDefinitions.GetForegroundBrush(ProbeClassifier.GetClassificationTypeName(Type))
+			};
 		}
 
 		public int Length
@@ -81,14 +89,15 @@ namespace DkTools.Classifier
 			get { return _runs.Length == 0; }
 		}
 
-		public IEnumerable<ClassifiedTextRun> ToClassifiedTextRuns()
-		{
-			return _runs.Select(r => r.ToClassifiedTextRun()).ToArray();
-		}
+		public IEnumerable<ClassifiedTextRun> ToVsTextRuns() => _runs.Select(r => r.ToClassifiedTextRun()).ToArray();
 
-		public ClassifiedTextElement ToClassifiedTextElement()
+		public ClassifiedTextElement ToVsTextElement() => new ClassifiedTextElement(_runs.Select(r => r.ToClassifiedTextRun()));
+
+		public TextBlock ToWpfTextBlock()
 		{
-			return new ClassifiedTextElement(_runs.Select(r => r.ToClassifiedTextRun()));
+			var tb = new TextBlock();
+			tb.Inlines.AddRange(_runs.Select(r => r.ToWpfTextRun()));
+			return tb;
 		}
 
 		public int Length
@@ -145,99 +154,53 @@ namespace DkTools.Classifier
 			get { return _runs.Count == 0; }
 		}
 
-		public void AddRun(ProbeClassifiedRun run)
-		{
-			_runs.Add(run);
-		}
+		public void AddRun(ProbeClassifiedRun run) => _runs.Add(run);
 
-		public void Add(ProbeClassifierType type, string text)
-		{
-			_runs.Add(new ProbeClassifiedRun(type, text));
-		}
+		public void Add(ProbeClassifierType type, string text) => _runs.Add(new ProbeClassifiedRun(type, text));
 
-		public void AddSpace()
-		{
-			_runs.Add(new ProbeClassifiedRun(ProbeClassifierType.Normal, " "));
-		}
+		public void AddSpace() => _runs.Add(new ProbeClassifiedRun(ProbeClassifierType.Normal, " "));
 
-		public void AddKeyword(string text)
-		{
-			_runs.Add(new ProbeClassifiedRun(ProbeClassifierType.Keyword, text));
-		}
+		public void AddNormal(string text) => _runs.Add(new ProbeClassifiedRun(ProbeClassifierType.Normal, text));
 
-		public void AddDataType(string text)
-		{
-			_runs.Add(new ProbeClassifiedRun(ProbeClassifierType.DataType, text));
-		}
+		public void AddKeyword(string text) => _runs.Add(new ProbeClassifiedRun(ProbeClassifierType.Keyword, text));
 
-		public void AddNumber(string text)
-		{
-			_runs.Add(new ProbeClassifiedRun(ProbeClassifierType.Number, text));
-		}
+		public void AddDataType(string text) => _runs.Add(new ProbeClassifiedRun(ProbeClassifierType.DataType, text));
 
-		public void AddStringLiteral(string text)
-		{
-			_runs.Add(new ProbeClassifiedRun(ProbeClassifierType.StringLiteral, text));
-		}
+		public void AddNumber(string text) => _runs.Add(new ProbeClassifiedRun(ProbeClassifierType.Number, text));
 
-		public void AddOperator(string text)
-		{
-			_runs.Add(new ProbeClassifiedRun(ProbeClassifierType.Operator, text));
-		}
+		public void AddStringLiteral(string text) => _runs.Add(new ProbeClassifiedRun(ProbeClassifierType.StringLiteral, text));
 
-		public void AddDelimiter(string text)
-		{
-			_runs.Add(new ProbeClassifiedRun(ProbeClassifierType.Delimiter, text));
-		}
+		public void AddOperator(string text) => _runs.Add(new ProbeClassifiedRun(ProbeClassifierType.Operator, text));
 
-		public void AddConstant(string text)
-		{
-			_runs.Add(new ProbeClassifiedRun(ProbeClassifierType.Constant, text));
-		}
+		public void AddDelimiter(string text) => _runs.Add(new ProbeClassifiedRun(ProbeClassifierType.Delimiter, text));
 
-		public void AddTableName(string text)
-		{
-			_runs.Add(new ProbeClassifiedRun(ProbeClassifierType.TableName, text));
-		}
+		public void AddConstant(string text) => _runs.Add(new ProbeClassifiedRun(ProbeClassifierType.Constant, text));
 
-		public void AddTableField(string text)
-		{
-			_runs.Add(new ProbeClassifiedRun(ProbeClassifierType.TableField, text));
-		}
+		public void AddTableName(string text) => _runs.Add(new ProbeClassifiedRun(ProbeClassifierType.TableName, text));
 
-		public void AddComment(string text)
-		{
-			_runs.Add(new ProbeClassifiedRun(ProbeClassifierType.Comment, text));
-		}
+		public void AddTableField(string text) => _runs.Add(new ProbeClassifiedRun(ProbeClassifierType.TableField, text));
 
-		public void AddFunction(string text)
-		{
-			_runs.Add(new ProbeClassifiedRun(ProbeClassifierType.Function, text));
-		}
+		public void AddComment(string text) => _runs.Add(new ProbeClassifiedRun(ProbeClassifierType.Comment, text));
 
-		public void AddVariable(string text)
-		{
-			_runs.Add(new ProbeClassifiedRun(ProbeClassifierType.Variable, text));
-		}
+		public void AddFunction(string text) => _runs.Add(new ProbeClassifiedRun(ProbeClassifierType.Function, text));
 
-		public void AddClassifiedString(ProbeClassifiedString pcs)
-		{
-			_runs.AddRange(pcs.Runs);
-		}
+		public void AddVariable(string text) => _runs.Add(new ProbeClassifiedRun(ProbeClassifierType.Variable, text));
 
-		public void AddClassifiedString(ProbeClassifiedStringBuilder pcs)
-		{
-			_runs.AddRange(pcs.Runs);
-		}
+		public void AddClassifiedString(ProbeClassifiedString pcs) => _runs.AddRange(pcs.Runs);
 
-		public int Length
+		public void AddClassifiedString(ProbeClassifiedStringBuilder pcs) => _runs.AddRange(pcs.Runs);
+
+		public int Length => _runs.Sum(x => x.Length);
+
+		public IEnumerable<ClassifiedTextRun> ToVsTextRuns() => _runs.Select(r => r.ToClassifiedTextRun()).ToArray();
+
+		public ClassifiedTextElement ToVsTextElement() => new ClassifiedTextElement(_runs.Select(r => r.ToClassifiedTextRun()));
+
+		public TextBlock ToWpfTextBlock()
 		{
-			get
-			{
-				int len = 0;
-				foreach (var run in _runs) len += run.Text.Length;
-				return len;
-			}
+			var tb = new TextBlock();
+			tb.Inlines.AddRange(_runs.Select(r => r.ToWpfTextRun()));
+			return tb;
 		}
 	}
 }

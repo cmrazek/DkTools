@@ -1,15 +1,14 @@
 ﻿using System;
+using System.CodeDom;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Media;
+using DkTools.Classifier;
+using DkTools.QuickInfo;
 using Microsoft.VisualStudio.Language.StandardClassification;
-using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Adornments;
-using VsUI = Microsoft.VisualStudio.PlatformUI;
-using DkTools.CodeModel.Tokens;
 
 namespace DkTools.CodeModel.Definitions
 {
@@ -23,7 +22,7 @@ namespace DkTools.CodeModel.Definitions
 		public abstract StatementCompletion.ProbeCompletionType CompletionType { get; }
 		public abstract Classifier.ProbeClassifierType ClassifierType { get; }
 		public abstract string QuickInfoTextStr { get; }
-		public abstract object QuickInfoElements { get; }
+		public abstract QuickInfoLayout QuickInfo { get; }
 		public abstract string PickText { get; }
 
 		private const int k_maxWpfWidth = 600;
@@ -112,7 +111,7 @@ namespace DkTools.CodeModel.Definitions
 #endif
 
 		#region Quick Info (VS2017 API)
-		public static object QuickInfoAttributeString(string label, string value)
+		public static ClassifiedTextElement QuickInfoAttribute_VS(string label, string value)
 		{
 			return new ClassifiedTextElement(
 				new ClassifiedTextRun(PredefinedClassificationTypeNames.Comment, label + ": "),
@@ -120,49 +119,60 @@ namespace DkTools.CodeModel.Definitions
 			);
 		}
 
-		public static object QuickInfoAttributeElements(string label, params object[] elements)
+		public static TextBlock QuickInfoAttribute_WPF(string label, string value)
 		{
-			return new ContainerElement(ContainerElementStyle.Wrapped,
-				new object[] {
-					new ClassifiedTextElement(QuickInfoRun(Classifier.ProbeClassifierType.Comment, label + ": "))
-				}.Concat(elements).Where(e => e != null).ToArray()
+			return new ProbeClassifiedString(new ProbeClassifiedRun[]
+			{
+				new ProbeClassifiedRun(ProbeClassifierType.Comment, label + ": "),
+				new ProbeClassifiedRun(ProbeClassifierType.Normal, value)
+			}).ToWpfTextBlock();
+		}
+
+		public static ClassifiedTextElement QuickInfoAttribute_VS(string label, ProbeClassifiedString value)
+		{
+			return new ClassifiedTextElement(
+				new ClassifiedTextRun[] {
+					new ClassifiedTextRun(PredefinedClassificationTypeNames.Comment, label + ": "),
+				}.Concat(value.ToVsTextRuns())
 			);
 		}
 
-		public static object QuickInfoAttributeElement(string label, object element)
+		public static TextBlock QuickInfoAttribute_WPF(string label, ProbeClassifiedString value)
 		{
-			return new ContainerElement(ContainerElementStyle.Wrapped, new object[] {
-				new ClassifiedTextElement(QuickInfoRun(Classifier.ProbeClassifierType.Comment, label + ": ")),
-				element }.Where(x => x != null).ToArray());
+			return new ProbeClassifiedString(
+				new ProbeClassifiedRun[] {
+					new ProbeClassifiedRun(ProbeClassifierType.Comment, label + ": ")
+				}.Concat(value.Runs)
+			).ToWpfTextBlock();
 		}
 
-		public static ClassifiedTextElement QuickInfoClassified(params ClassifiedTextRun[] runs)
-		{
-			return new ClassifiedTextElement(runs.Where(x => x != null).ToArray());
-		}
-
-		public static ClassifiedTextRun QuickInfoRun(Classifier.ProbeClassifierType type, string text)
-		{
-			var typeName = Classifier.ProbeClassifier.GetClassificationTypeName(type, PredefinedClassificationTypeNames.NaturalLanguage);
-			return new ClassifiedTextRun(typeName, text);
-		}
-
-		public static ContainerElement QuickInfoStack(params object[] lines)
+		public static ContainerElement QuickInfoStack_VS(params object[] lines)
 		{
 			return new ContainerElement(ContainerElementStyle.Stacked, lines.Where(x => x != null).ToArray());
 		}
 
-		public static ClassifiedTextElement QuickInfoDescription(string desc)
+		public static StackPanel QuickInfoStack_WPF(params UIElement[] lines)
 		{
-			return new ClassifiedTextElement(QuickInfoRun(Classifier.ProbeClassifierType.Comment, desc));
+			var sp = new StackPanel()
+			{
+				Orientation = Orientation.Vertical
+			};
+
+			foreach (var line in lines)
+			{
+				if (line != null) sp.Children.Add(line);
+			}
+
+			return sp;
 		}
 
-		public static object QuickInfoMainLine(string text)
-		{
-			return new ClassifiedTextElement(
-				new ClassifiedTextRun(PredefinedClassificationTypeNames.NaturalLanguage, text)
-			);
-		}
+		public static ClassifiedTextElement QuickInfoDescription_VS(string desc) => desc.ToVsTextElement(ProbeClassifierType.Comment);
+
+		public static TextBlock QuickInfoDescription_WPF(string desc) => desc.ToWpfTextBlock(ProbeClassifierType.Comment);
+
+		public static ClassifiedTextElement QuickInfoMainLine_VS(string text) => text.ToVsTextElement(ProbeClassifierType.Normal);
+
+		public static TextBlock QuickInfoMainLine_WPF(string text) => text.ToWpfTextBlock(ProbeClassifierType.Normal);
 		#endregion
 
 		public string ExternalRefId

@@ -1,4 +1,7 @@
-﻿using System;
+﻿using DkTools.Classifier;
+using DkTools.QuickInfo;
+using Microsoft.VisualStudio.Text.Adornments;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -41,9 +44,9 @@ namespace DkTools.CodeModel.Definitions
 			}
 		}
 
-		public override object QuickInfoElements => QuickInfoStack(
-			QuickInfoClassified(QuickInfoRun(Classifier.ProbeClassifierType.TableName, Name)),
-			QuickInfoDescription(_permanent ? "Permanent extract" : "Temporary extract")
+		public override QuickInfoLayout QuickInfo => new QuickInfoStack(
+			new QuickInfoText(ProbeClassifierType.TableName, Name),
+			new QuickInfoDescription(_permanent ? "Permanent extract" : "Temporary extract")
 		);
 
 		public void AddField(ExtractFieldDefinition field)
