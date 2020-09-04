@@ -560,50 +560,5 @@ namespace DkTools.Classifier
 			}
 		}
 		#endregion
-
-		private static Dictionary<string, Color> _colors;
-		private static Dictionary<string, Brush> _brushes = new Dictionary<string, Brush>();
-
-		internal static Color GetForegroundColor(string classificationName)
-		{
-			if (_colors == null)
-			{
-				_colors = new Dictionary<string, Color>();
-
-				foreach (var clsType in typeof(ProbeClassificationDefinitions).GetNestedTypes()
-					.Where(x => typeof(ClassificationFormatDefinition).IsAssignableFrom(x)))
-				{
-					var clsTypeAttrib = clsType.GetCustomAttributes(typeof(ClassificationTypeAttribute), inherit: false)
-						.Cast<ClassificationTypeAttribute>()
-						.FirstOrDefault();
-					if (clsTypeAttrib == null) continue;
-
-					var clsTypeName = clsTypeAttrib.ClassificationTypeNames;
-
-					var inst = (ClassificationFormatDefinition)Activator.CreateInstance(clsType);
-					var foreColor = inst.ForegroundColor;
-					if (foreColor.HasValue) _colors[clsTypeName] = foreColor.Value;
-				}
-			}
-
-			if (_colors.TryGetValue(classificationName, out var color)) return color;
-			return Colors.Black;
-		}
-
-		internal static Brush GetForegroundBrush(string classificationName)
-		{
-			if (_brushes.TryGetValue(classificationName, out var brush)) return brush;
-
-			var color = GetForegroundColor(classificationName);
-			brush = new SolidColorBrush(color);
-			_brushes[classificationName] = brush;
-			return brush;
-		}
-
-		internal static void OnVsThemeChanged()
-		{
-			_colors = null;
-			_brushes.Clear();
-		}
 	}
 }

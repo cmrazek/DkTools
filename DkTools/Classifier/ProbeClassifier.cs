@@ -1,9 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
 using System.Text;
-using Microsoft.VisualStudio.Language.StandardClassification;
+using System.Windows.Media;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Classification;
@@ -16,6 +15,7 @@ namespace DkTools.Classifier
 		private ProbeClassifierScanner _scanner;
 		private static Dictionary<ProbeClassifierType, IClassificationType> _lightTokenTypes;
 		private static Dictionary<ProbeClassifierType, IClassificationType> _darkTokenTypes;
+		private static Dictionary<ProbeClassifierType, Brush> _brushes = new Dictionary<ProbeClassifierType, Brush>();
 
 		public event EventHandler<ClassificationChangedEventArgs> ClassificationChanged;
 
@@ -80,6 +80,97 @@ namespace DkTools.Classifier
 				_darkTokenTypes[ProbeClassifierType.Variable] = registry.GetClassificationType("DK.Variable.Dark");
 				_darkTokenTypes[ProbeClassifierType.Interface] = registry.GetClassificationType("DK.Interface.Dark");
 			}
+		}
+
+		public static string GetClassificationTypeName(ProbeClassifierType type)
+		{
+			switch (type)
+			{
+				case ProbeClassifierType.Normal:
+					return VSTheme.CurrentTheme == VSThemeMode.Dark ? "DK.Normal.Dark" : "DK.Normal.Light";
+				case ProbeClassifierType.Comment:
+					return VSTheme.CurrentTheme == VSThemeMode.Dark ? "DK.Comment.Dark" : "DK.Comment.Light";
+				case ProbeClassifierType.Keyword:
+					return VSTheme.CurrentTheme == VSThemeMode.Dark ? "DK.Keyword.Dark" : "DK.Keyword.Light";
+				case ProbeClassifierType.Number:
+					return VSTheme.CurrentTheme == VSThemeMode.Dark ? "DK.Number.Dark" : "DK.Number.Light";
+				case ProbeClassifierType.StringLiteral:
+					return VSTheme.CurrentTheme == VSThemeMode.Dark ? "DK.StringLiteral.Dark" : "DK.StringLiteral.Light";
+				case ProbeClassifierType.Preprocessor:
+					return VSTheme.CurrentTheme == VSThemeMode.Dark ? "DK.Preprocessor.Dark" : "DK.Preprocessor.Light";
+				case ProbeClassifierType.Inactive:
+					return VSTheme.CurrentTheme == VSThemeMode.Dark ? "DK.Inactive.Dark" : "DK.Inactive.Light";
+				case ProbeClassifierType.TableName:
+					return VSTheme.CurrentTheme == VSThemeMode.Dark ? "DK.TableName.Dark" : "DK.TableName.Light";
+				case ProbeClassifierType.TableField:
+					return VSTheme.CurrentTheme == VSThemeMode.Dark ? "DK.TableField.Dark" : "DK.TableField.Light";
+				case ProbeClassifierType.Constant:
+					return VSTheme.CurrentTheme == VSThemeMode.Dark ? "DK.Constant.Dark" : "DK.Constant.Light";
+				case ProbeClassifierType.DataType:
+					return VSTheme.CurrentTheme == VSThemeMode.Dark ? "DK.DataType.Dark" : "DK.DataType.Light";
+				case ProbeClassifierType.Function:
+					return VSTheme.CurrentTheme == VSThemeMode.Dark ? "DK.Function.Dark" : "DK.Function.Light";
+				case ProbeClassifierType.Delimiter:
+					return VSTheme.CurrentTheme == VSThemeMode.Dark ? "DK.Delimiter.Dark" : "DK.Delimiter.Light";
+				case ProbeClassifierType.Operator:
+					return VSTheme.CurrentTheme == VSThemeMode.Dark ? "DK.Operator.Dark" : "DK.Operator.Light";
+				case ProbeClassifierType.Variable:
+					return VSTheme.CurrentTheme == VSThemeMode.Dark ? "DK.Variable.Dark" : "DK.Variable.Light";
+				case ProbeClassifierType.Interface:
+					return VSTheme.CurrentTheme == VSThemeMode.Dark ? "DK.Interface.Dark" : "DK.Interface.Light";
+				default:
+					return VSTheme.CurrentTheme == VSThemeMode.Dark ? "DK.Normal.Dark" : "DK.Normal.Light";
+			}
+		}
+
+		public static Color GetClassificationColor(ProbeClassifierType type)
+		{
+			switch (type)
+			{
+				case ProbeClassifierType.Normal:
+					return VSTheme.CurrentTheme == VSThemeMode.Dark ? Colors.Silver : Colors.Black;
+				case ProbeClassifierType.Comment:
+					return VSTheme.CurrentTheme == VSThemeMode.Dark ? Colors.LimeGreen : Colors.DarkGreen;
+				case ProbeClassifierType.Keyword:
+					return VSTheme.CurrentTheme == VSThemeMode.Dark ? Colors.DeepSkyBlue : Colors.Blue;
+				case ProbeClassifierType.Number:
+					return VSTheme.CurrentTheme == VSThemeMode.Dark ? Colors.Tomato : Colors.DarkRed;
+				case ProbeClassifierType.StringLiteral:
+					return VSTheme.CurrentTheme == VSThemeMode.Dark ? Colors.Tomato : Colors.DarkRed;
+				case ProbeClassifierType.Preprocessor:
+					return VSTheme.CurrentTheme == VSThemeMode.Dark ? Colors.Gray : Colors.Gray;
+				case ProbeClassifierType.Inactive:
+					return VSTheme.CurrentTheme == VSThemeMode.Dark ? Colors.DimGray : Colors.LightGray;
+				case ProbeClassifierType.TableName:
+					return VSTheme.CurrentTheme == VSThemeMode.Dark ? Colors.SkyBlue : Colors.SteelBlue;
+				case ProbeClassifierType.TableField:
+					return VSTheme.CurrentTheme == VSThemeMode.Dark ? Colors.SkyBlue : Colors.SteelBlue;
+				case ProbeClassifierType.Constant:
+					return VSTheme.CurrentTheme == VSThemeMode.Dark ? Colors.DodgerBlue : Colors.DarkBlue;
+				case ProbeClassifierType.DataType:
+					return VSTheme.CurrentTheme == VSThemeMode.Dark ? Colors.LightSeaGreen : Colors.Teal;
+				case ProbeClassifierType.Function:
+					return VSTheme.CurrentTheme == VSThemeMode.Dark ? Colors.Orchid : Colors.DarkMagenta;
+				case ProbeClassifierType.Delimiter:
+					return VSTheme.CurrentTheme == VSThemeMode.Dark ? Colors.LightSlateGray : Colors.DimGray;
+				case ProbeClassifierType.Operator:
+					return VSTheme.CurrentTheme == VSThemeMode.Dark ? Colors.LightSlateGray : Colors.DimGray;
+				case ProbeClassifierType.Variable:
+					return VSTheme.CurrentTheme == VSThemeMode.Dark ? Colors.Azure : Colors.DarkSlateGray;
+				case ProbeClassifierType.Interface:
+					return VSTheme.CurrentTheme == VSThemeMode.Dark ? Colors.DarkOrange : Colors.DarkOrange;
+				default:
+					return VSTheme.CurrentTheme == VSThemeMode.Dark ? Colors.Silver : Colors.Black;
+			}
+		}
+
+		public static Brush GetClassificationBrush(ProbeClassifierType type)
+		{
+			if (_brushes.TryGetValue(type, out var brush)) return brush;
+
+			brush = new SolidColorBrush(GetClassificationColor(type));
+			_brushes[type] = brush;
+			return brush;
 		}
 
 		public IList<ClassificationSpan> GetClassificationSpans(SnapshotSpan span)  // from IClassifier
@@ -184,7 +275,7 @@ namespace DkTools.Classifier
 			try
 			{
 				UpdateClassification();
-				ProbeClassificationDefinitions.OnVsThemeChanged();
+				_brushes.Clear();
 			}
 			catch (Exception ex)
 			{
@@ -210,17 +301,6 @@ namespace DkTools.Classifier
 			}
 
 			return ProbeToolsPackage.Instance.DefaultClassificationType;
-		}
-
-		public static string GetClassificationTypeName(ProbeClassifierType type, string defaultValue = null)
-		{
-			var ct = GetClassificationType(type);
-			if (ct == null)
-			{
-				if (defaultValue == null) return PredefinedClassificationTypeNames.NaturalLanguage;
-				return defaultValue;
-			}
-			return ct.Classification;
 		}
 	}
 }

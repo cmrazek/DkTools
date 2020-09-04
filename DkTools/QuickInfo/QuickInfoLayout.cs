@@ -89,14 +89,14 @@ namespace DkTools.QuickInfo
 		public override object GenerateElements_VS()
 		{
 			return new ProbeClassifiedString(
-				new ProbeClassifiedString(ProbeClassifierType.Normal, _label + ": ").Runs.Concat(_value.Runs)
+				new ProbeClassifiedString(ProbeClassifierType.Comment, _label + ": ").Runs.Concat(_value.Runs)
 			).ToVsTextElement();
 		}
 
 		public override UIElement GenerateElements_WPF()
 		{
 			return new ProbeClassifiedString(
-				new ProbeClassifiedString(ProbeClassifierType.Normal, _label + ": ").Runs.Concat(_value.Runs)
+				new ProbeClassifiedString(ProbeClassifierType.Comment, _label + ": ").Runs.Concat(_value.Runs)
 			).ToWpfTextBlock();
 		}
 	}

@@ -32,7 +32,7 @@ namespace DkTools.Classifier
 		{
 			return new System.Windows.Documents.Run(Text)
 			{
-				Foreground = ProbeClassificationDefinitions.GetForegroundBrush(ProbeClassifier.GetClassificationTypeName(Type))
+				Foreground = ProbeClassifier.GetClassificationBrush(Type)
 			};
 		}
 

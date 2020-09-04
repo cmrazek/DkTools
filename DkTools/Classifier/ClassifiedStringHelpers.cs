@@ -22,7 +22,7 @@ namespace DkTools.Classifier
 
 		public static TextBlock ToWpfTextBlock(this string str, ProbeClassifierType type)
 		{
-			var brush = ProbeClassificationDefinitions.GetForegroundBrush(ProbeClassifier.GetClassificationTypeName(type));
+			var brush = ProbeClassifier.GetClassificationBrush(type);
 			return new TextBlock(new System.Windows.Documents.Run(str) { Foreground = brush });
 		}
 	}

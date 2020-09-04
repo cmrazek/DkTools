@@ -1,5 +1,10 @@
 DkTools ChangeLog
 ____________________________________________________________________________________________________
+Version 1.5.12 - WIP:
+
+- DK Dictionary Explorer tool-tips are now visible in dark mode.
+
+____________________________________________________________________________________________________
 Version 1.5.11 - Jun 30, 2020:
 
 - Text color contrast improvements in dark mode.
