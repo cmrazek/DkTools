@@ -42,6 +42,21 @@ namespace DkTools
 		[Description("Stop scanning files in the background (will cause classes, functions to not be detected properly).")]
 		public bool DisableBackgroundScan { get; set; }
 
+		[Category("Auto-Completion")]
+		[DisplayName("Auto-Complete on Space")]
+		[Description("Typing a space will accept the currently selected auto-completion item.")]
+		public bool AutoCompleteOnSpace { get; set; }
+
+		[Category("Auto-Completion")]
+		[DisplayName("Auto-Complete on Tab")]
+		[Description("Typing a tab will accept the currently selected auto-completion item.")]
+		public bool AutoCompleteOnTab { get; set; }
+
+		[Category("Auto-Completion")]
+		[DisplayName("Auto-Complete on Dot")]
+		[Description("Typing a dot '.' will accept the currently selected auto-completion item.")]
+		public bool AutoCompleteOnDot { get; set; }
+
 		public EditorOptions()
 		{
 			DisableDeadCode = true;
@@ -49,6 +64,9 @@ namespace DkTools
 			RunBackgroundFecOnSave = true;
 			RunCodeAnalysisOnSave = true;
 			RunCodeAnalysisOnUserInput = true;
+			AutoCompleteOnSpace = false;
+			AutoCompleteOnTab = true;
+			AutoCompleteOnDot = true;
 		}
 
 		public override void SaveSettingsToStorage()

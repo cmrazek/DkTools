@@ -22,10 +22,6 @@ namespace DkTools.StatementCompletion
 			' ', ';', '.', '(', ')', ',', '<', '>', '\"', '\'', '-', ':',
 			'0', '1', '2', '3', '4', '5', '6', '7', '8', '9'
 		};
-		private static readonly char[] _acceptSelectionCompletionChars = new char[]
-		{
-			'\n', '\t', ' '
-		};
 
 		public ProbeCompletionCommitManager(ITextView textView)
 		{
@@ -71,7 +67,7 @@ namespace DkTools.StatementCompletion
 
 				return CommitResult.Handled;
 			}
-			else if (!_acceptSelectionCompletionChars.Contains(typedChar))
+			else if (!ShouldAcceptCompletion(typedChar))
 			{
 				// Stick with what the user has typed so far, rather than the selection.
 				if (session != null && !session.IsDismissed)
@@ -85,6 +81,23 @@ namespace DkTools.StatementCompletion
 			{
 				// The selection should override what the user has typed.
 				return CommitResult.Unhandled;  // Use default mechanism
+			}
+		}
+
+		private bool ShouldAcceptCompletion(char typedChar)
+		{
+			if (typedChar == '\n') return true;
+
+			switch (typedChar)
+			{
+				case ' ':
+					return ProbeToolsPackage.Instance.EditorOptions.AutoCompleteOnSpace;
+				case '\t':
+					return ProbeToolsPackage.Instance.EditorOptions.AutoCompleteOnTab;
+				case '.':
+					return ProbeToolsPackage.Instance.EditorOptions.AutoCompleteOnDot;
+				default:
+					return false;
 			}
 		}
 	}
