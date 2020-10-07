@@ -25,7 +25,6 @@ namespace DkTools
 
 		internal static void OnSettingsSaved()
 		{
-			_probeExtensions = null;
 		}
 		#endregion
 
@@ -292,8 +291,6 @@ namespace DkTools
 		#endregion
 
 		#region File Paths
-		private static HashSet<string> _probeExtensions;
-
 		public static string LocateFileInPath(string fileName)
 		{
 			foreach (string path in Environment.GetEnvironmentVariable("path").Split(';'))
@@ -329,8 +326,8 @@ namespace DkTools
 			}
 
 			// Search the file extension list.
-			var fileExt = Path.GetExtension(pathName);
-			return _probeExtensions.Contains(fileExt.ToLower());
+			var fileExt = Path.GetExtension(pathName).TrimStart('.');
+			return Constants.ProbeExtensions.Contains(fileExt.ToLower());
 		}
 
 		private static string[] LoadSourceFiles(ProbeAppSettings appSettings)
