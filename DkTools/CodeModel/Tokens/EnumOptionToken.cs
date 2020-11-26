@@ -29,7 +29,7 @@ namespace DkTools.CodeModel.Tokens
 
 		public override QuickInfoLayout GetQuickInfoElements(Token token = null) => new QuickInfoStack(
 			new QuickInfoAttribute("Name", Text),
-			new QuickInfoAttribute("Data Type", _dataType.ClassifiedString)
+			new QuickInfoAttribute("Data Type", _dataType.GetClassifiedString(shortVersion: false))
 		);
 
 		public void SetEnumDataType(DataType dataType)

@@ -287,7 +287,7 @@ namespace DkTools.ProbeExplorer
 			fieldItem.Items.Add(CreatePlainTextTvi("Name", field.Name));
 			if (!string.IsNullOrEmpty(field.Prompt)) fieldItem.Items.Add(CreatePlainTextTvi("Prompt", field.Prompt));
 			if (!string.IsNullOrEmpty(field.Comment)) fieldItem.Items.Add(CreatePlainTextTvi("Comment", field.Comment));
-			fieldItem.Items.Add(CreateClassifiedStringTvi("Data Type", field.DataType.ShortSource));
+			fieldItem.Items.Add(CreateClassifiedStringTvi("Data Type", field.DataType.GetClassifiedString(shortVersion: false)));
 		}
 
 		private void FieldTvi_MouseRightButtonDown(object sender, MouseButtonEventArgs e)

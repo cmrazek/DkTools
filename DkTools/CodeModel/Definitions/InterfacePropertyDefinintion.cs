@@ -61,7 +61,7 @@ namespace DkTools.CodeModel.Definitions
 
 		public override QuickInfoLayout QuickInfo => new QuickInfoStack(
 			new QuickInfoAttribute("Name", Name),
-			new QuickInfoAttribute("Data Type", _dataType.ClassifiedString),
+			new QuickInfoAttribute("Data Type", _dataType.GetClassifiedString(shortVersion: true)),
 			new QuickInfoAttribute("Interface", _intTypeDef.Name)
 		);
 

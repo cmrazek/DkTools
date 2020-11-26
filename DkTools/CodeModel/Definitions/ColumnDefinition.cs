@@ -101,7 +101,7 @@ namespace DkTools.CodeModel.Definitions
 			}),
 			string.IsNullOrWhiteSpace(_prompt) ? null : new QuickInfoAttribute("Prompt", _prompt),
 			string.IsNullOrWhiteSpace(_comment) ? null : new QuickInfoAttribute("Comment", _comment),
-			_dataType != null ? new QuickInfoAttribute("Data Type", _dataType.ClassifiedString) : null,
+			_dataType != null ? new QuickInfoAttribute("Data Type", _dataType.GetClassifiedString(shortVersion: false)) : null,
 			string.IsNullOrWhiteSpace(_repoDesc) ? null : new QuickInfoDescription(_repoDesc)
 		);
 

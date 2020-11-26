@@ -111,7 +111,7 @@ namespace DkTools.CodeModel
 				if (_returnDataType != null)
 				{
 					if (spaceRequired) pcs.AddSpace();
-					pcs.AddClassifiedString(_returnDataType.ShortSource);
+					pcs.AddClassifiedString(_returnDataType.GetClassifiedString(shortVersion: true));
 					spaceRequired = true;
 				}
 

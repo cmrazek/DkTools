@@ -54,7 +54,7 @@ namespace DkTools.CodeModel.Definitions
 		}
 
 		public override QuickInfoLayout QuickInfo => new QuickInfoStack(
-			new QuickInfoClassifiedString(_intType.DataType.ClassifiedString),
+			new QuickInfoClassifiedString(_intType.DataType.GetClassifiedString(shortVersion: true)),
 			string.IsNullOrWhiteSpace(_devDesc) ? null : new QuickInfoDescription(_devDesc)
 		);
 

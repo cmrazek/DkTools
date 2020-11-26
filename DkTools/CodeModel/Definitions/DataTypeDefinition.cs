@@ -53,7 +53,7 @@ namespace DkTools.CodeModel.Definitions
 			get { return !string.IsNullOrEmpty(_dataType.InfoText) ? _dataType.InfoText : _dataType.Name; }
 		}
 
-		public override QuickInfoLayout QuickInfo => new QuickInfoClassifiedString(_dataType.ClassifiedString);
+		public override QuickInfoLayout QuickInfo => new QuickInfoClassifiedString(_dataType.GetClassifiedString(shortVersion: false));
 
 		public override string PickText
 		{

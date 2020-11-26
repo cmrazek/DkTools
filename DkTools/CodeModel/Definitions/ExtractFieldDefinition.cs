@@ -61,7 +61,7 @@ namespace DkTools.CodeModel.Definitions
 						new ProbeClassifiedString(Classifier.ProbeClassifierType.TableField, Name)
 					),
 					new QuickInfoDescription(_ex.Permanent ? "Permanent extract" : "Temporary extract"),
-					_dataType != null ? new QuickInfoClassifiedString(_dataType.ClassifiedString) : null
+					_dataType != null ? new QuickInfoClassifiedString(_dataType.GetClassifiedString(shortVersion: true)) : null
 				);
 			}
 		}

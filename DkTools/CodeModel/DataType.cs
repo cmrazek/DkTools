@@ -163,15 +163,6 @@ namespace DkTools.CodeModel
 			set { _source = value; }
 		}
 
-		public ProbeClassifiedString ShortSource
-		{
-			get
-			{
-				if (!string.IsNullOrEmpty(_name)) return new ProbeClassifiedString(ProbeClassifierType.DataType, _name);
-				return _source;
-			}
-		}
-
 		public override string ToString()
 		{
 			if (!string.IsNullOrEmpty(_name)) return string.Concat(_name, " (", _source, ")");
@@ -1399,18 +1390,15 @@ namespace DkTools.CodeModel
 			}
 		}
 
-		public ProbeClassifiedString ClassifiedString
+		public ProbeClassifiedString GetClassifiedString(bool shortVersion)
 		{
-			get
+			if (!string.IsNullOrWhiteSpace(_name) && shortVersion)
 			{
-				if (!string.IsNullOrWhiteSpace(_name))
-				{
-					return new ProbeClassifiedString(ProbeClassifierType.DataType, _name);
-				}
-				else
-				{
-					return _source;
-				}
+				return new ProbeClassifiedString(ProbeClassifierType.DataType, _name);
+			}
+			else
+			{
+				return _source;
 			}
 		}
 

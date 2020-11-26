@@ -107,7 +107,7 @@ namespace DkTools.CodeModel.Definitions
 
 				if (_dataType != null)
 				{
-					pcs.AddClassifiedString(_dataType.ClassifiedString);
+					pcs.AddClassifiedString(_dataType.GetClassifiedString(shortVersion: true));
 					pcs.AddSpace();
 				}
 
