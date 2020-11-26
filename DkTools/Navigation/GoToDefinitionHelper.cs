@@ -25,7 +25,7 @@ namespace DkTools.Navigation
 				var caretPt = caretPtTest.Value;
 
 				var def = GetDefinitionAtPoint(caretPt);
-				if (!def.FilePosition.IsEmpty)
+				if (def != null && !def.FilePosition.IsEmpty)
 				{
 					Shell.OpenDocument(def.FilePosition);
 				}
@@ -112,7 +112,7 @@ namespace DkTools.Navigation
 		{
 			ThreadHelper.ThrowIfNotOnUIThread();
 
-			if (!def.FilePosition.IsEmpty)
+			if (def != null && !def.FilePosition.IsEmpty)
 			{
 				Shell.OpenDocument(def.FilePosition);
 			}
