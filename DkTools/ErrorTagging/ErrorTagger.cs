@@ -144,6 +144,7 @@ namespace DkTools.ErrorTagging
 								{
 									if ((e.Priority == DeferPriority_DocumentRefresh && ProbeToolsPackage.Instance.EditorOptions.RunBackgroundFecOnSave))
 									{
+										Shell.Status($"FEC: {_model.FilePath}");
 										Compiler.BackgroundFec.RunSync(_model.FilePath);
 									}
 

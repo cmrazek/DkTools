@@ -94,13 +94,13 @@ namespace DkTools.Compiler
 				var exitCode = runner.CaptureProcess("fec.exe", string.Concat("\"", sourceFilePath, "\""), workingDir, output);
 				if (exitCode == 0)
 				{
-					ErrorTaskProvider.Instance.ReplaceForSourceAndInvokingFile(ErrorTaskSource.BackgroundFec, sourceFilePath, tasks);
 					Log.Debug("Background FEC completed successfully.");
 				}
 				else
 				{
 					Log.Write(LogLevel.Warning, "FEC.exe returned exit code {0} when running background FEC for file '{1}'.", exitCode, sourceFilePath);
 				}
+				ErrorTaskProvider.Instance.ReplaceForSourceAndInvokingFile(ErrorTaskSource.BackgroundFec, sourceFilePath, tasks);
 			}
 			catch (Exception ex)
 			{
