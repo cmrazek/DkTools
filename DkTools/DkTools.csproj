@@ -258,6 +258,9 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="BackgroundDeferrer.cs" />
+    <Compile Include="BraceCompletion\DkBraceCompletionSession.cs" />
+    <Compile Include="BraceCompletion\DkBraceCompletionSessionProvider.cs" />
+    <Compile Include="BraceCompletion\ProvideBraceCompletionAttribute.cs" />
     <Compile Include="BraceHighlighting\BraceHighlightDefinition.cs" />
     <Compile Include="BraceHighlighting\BraceHighlightParser.cs" />
     <Compile Include="BraceHighlighting\BraceHighlightTag.cs" />
@@ -763,6 +766,7 @@
     <Analyzer Include="..\packages\Microsoft.VisualStudio.SDK.Analyzers.15.8.33\analyzers\cs\Microsoft.VisualStudio.SDK.Analyzers.dll" />
     <Analyzer Include="..\packages\Microsoft.VisualStudio.Threading.Analyzers.15.8.122\analyzers\cs\Microsoft.VisualStudio.Threading.Analyzers.dll" />
   </ItemGroup>
+  <ItemGroup />
   <PropertyGroup>
     <UseCodebase>true</UseCodebase>
   </PropertyGroup>

@@ -17,6 +17,7 @@ using DkTools.LanguageSvc;
 using Microsoft.VisualStudio.Language.StandardClassification;
 using Microsoft.VisualStudio.Text.Classification;
 using System.Threading;
+using DkTools.BraceCompletion;
 
 namespace DkTools
 {
@@ -91,6 +92,7 @@ namespace DkTools
 	[ProvideLanguageCodeExpansion(typeof(ProbeLanguageService), Constants.DkContentType, 0, Constants.DkContentType,
 		"%LocalAppData%\\DkTools2012\\SnippetIndex.xml",
 		SearchPaths = "%LocalAppData%\\DkTools2012\\Snippets\\;%MyDocs%\\Code Snippets\\DK\\My Code Snippets\\")]
+	[ProvideBraceCompletion(Constants.DkContentType)]
 	public sealed partial class ProbeToolsPackage : AsyncPackage, IOleComponent
 	{
 		private uint _componentId;
