@@ -71,6 +71,11 @@
 			<Group guid="guidProbeToolsCmdSet" id="tbSettingsGroup" priority="0x0070">
 				<Parent guid="guidProbeToolsCmdSet" id="tbProbeToolbar" />
 			</Group>
+      
+      <!-- Context Menu groups -->
+      <Group guid="guidProbeToolsCmdSet" id="cmDkGroup" priority="0x0000">
+        <Parent guid="guidSHLMainMenu" id="IDM_VS_CTXT_CODEWIN"/>
+      </Group>
 		</Groups>
 		
 		<Buttons>
@@ -80,7 +85,7 @@
 				<Icon guid="guidImages" id="bmpProbeExplorer" />
 				<Strings>
 					<CommandName>cmdShowProbeExplorer</CommandName>
-					<ButtonText>DK Explorer</ButtonText>
+					<ButtonText>DK ExploreR</ButtonText>
 				</Strings>
 			</Button>
 			<!-- DK Menu -> Probe Explorer -->
@@ -629,6 +634,17 @@
 					<ButtonText>DK Platform Documentation</ButtonText>
 				</Strings>
 			</Button>
+
+      <!-- Context Menu -> Peek Definition -->
+      <Button guid="guidProbeToolsCmdSet" id="cmdPeekDefinition" priority="0x0600" type="Button">
+        <Parent guid="guidProbeToolsCmdSet" id="cmDkGroup"/>
+        <Icon guid="guidViewDefinitionIcon" id="1" />
+        <CommandFlag>DynamicVisibility</CommandFlag>
+        <Strings>
+          <CommandName>cmdPeekDefinition</CommandName>
+          <ButtonText>Peek Definition</ButtonText>
+        </Strings>
+      </Button>
       
     </Buttons>
 
@@ -788,6 +804,7 @@
       <IDSymbol name="cmdShowCodeAnalysis" value="0x0129"/>
 			<IDSymbol name="cmdClearErrors" value="0x012a"/>
 			<IDSymbol name="cmdShowDict" value="0x012b"/>
+      <IDSymbol name="cmdPeekDefinition" value="0x012c"/>
 
 			<IDSymbol name="tbProbeToolbar" value="0x2000" />
 			<IDSymbol name="tbFileOperationsGroup" value="0x2001" />
@@ -797,6 +814,8 @@
 			<IDSymbol name="tbRunGroup" value="0x2005" />
 			<IDSymbol name="tbSettingsGroup" value="0x2006" />
       <IDSymbol name="tbEditorOptionsGroup" value="0x2007"/>
+
+      <IDSymbol name="cmDkGroup" value="0x3000"/>
 		</GuidSymbol>
 
 		<GuidSymbol name="guidImages" value="{82669F39-2B5C-4B32-96E7-D17DCDA9B803}">
@@ -832,5 +851,5 @@
 			<IDSymbol name="bmpShowDict" value="0x001e"/>
 		</GuidSymbol>
 	</Symbols>
-	
+
 </CommandTable>

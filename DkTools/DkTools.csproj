@@ -167,6 +167,11 @@
     <Reference Include="Microsoft.VisualStudio.Shell.Interop.15.3.DesignTime, Version=15.3.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
       <EmbedInteropTypes>True</EmbedInteropTypes>
     </Reference>
+    <Reference Include="Microsoft.VisualStudio.Shell.Interop.15.6.DesignTime, Version=15.6.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <EmbedInteropTypes>True</EmbedInteropTypes>
+      <HintPath>..\..\..\Program Files (x86)\Microsoft Visual Studio\2019\Professional\VSSDK\VisualStudioIntegration\Common\Assemblies\v4.0\Microsoft.VisualStudio.Shell.Interop.15.6.DesignTime.dll</HintPath>
+    </Reference>
     <Reference Include="Microsoft.VisualStudio.Shell.Interop.15.8.DesignTime, Version=15.8.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
       <EmbedInteropTypes>True</EmbedInteropTypes>
     </Reference>
@@ -509,6 +514,7 @@
     <Compile Include="PeekDefinition\DkPeekableItem.cs" />
     <Compile Include="PeekDefinition\DkPeekableItemSource.cs" />
     <Compile Include="PeekDefinition\DkPeekableItemSourceProvider.cs" />
+    <Compile Include="PeekDefinition\DkPeekDefinition.cs" />
     <Compile Include="PeekDefinition\DkPeekRelationship.cs" />
     <Compile Include="PeekDefinition\DkPeekResultSource.cs" />
     <Compile Include="Navigation\Navigator.cs" />

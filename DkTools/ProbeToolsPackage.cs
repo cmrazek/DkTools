@@ -16,6 +16,7 @@ using Microsoft.VisualStudio.Shell.Interop;
 using DkTools.LanguageSvc;
 using Microsoft.VisualStudio.Language.StandardClassification;
 using Microsoft.VisualStudio.Text.Classification;
+using System.Threading;
 
 namespace DkTools
 {
@@ -30,9 +31,11 @@ namespace DkTools
 	/// register itself and its components with the shell.
 	/// </summary>
 	[System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1001:TypesThatOwnDisposableFieldsShouldBeDisposable", Justification = "This class is part of MPF.")]
-	[PackageRegistration(UseManagedResourcesOnly = true)]
+	[PackageRegistration(UseManagedResourcesOnly = true, AllowsBackgroundLoading = true)]
 	[InstalledProductRegistration("#110", "#112", "1.0", IconResourceID = 400)]
 	[Guid(GuidList.strProbeToolsPkg)]
+	[ProvideAutoLoad("ADFC4E64-0397-11D1-9F4E-00A0C911004F", PackageAutoLoadFlags.BackgroundLoad)]
+	[ProvideAutoLoad("F1536EF8-92EC-443C-9ED7-FDADF150DA82", PackageAutoLoadFlags.BackgroundLoad)]
 	[ProvideService(typeof(ProbeLanguageService), ServiceName = Constants.DkContentType)]
 	[ProvideLanguageService(typeof(ProbeLanguageService), "DK", /*50433*/ 0,
 		RequestStockColors = true,
@@ -80,7 +83,7 @@ namespace DkTools
 	[ProvideLanguageExtension(typeof(ProbeLanguageService), ".id")]
 	[ProvideLanguageExtension(typeof(ProbeLanguageService), ".ie")]
 	[ProvideToolWindow(typeof(ProbeExplorer.ProbeExplorerToolWindow))]
-	[ProvideMenuResource("Menus.ctmenu", 1)]
+	[ProvideMenuResource("Menus.ctmenu", 2)]
 	[ProvideOptionPage(typeof(ProbeExplorer.ProbeExplorerOptions), "DK", "DkTools Options", 101, 106, true)]
 	[ProvideOptionPage(typeof(Tagging.TaggingOptions), "DK", "Tagging", 101, 107, true)]
 	[ProvideOptionPage(typeof(EditorOptions), "DK", "Editor", 101, 108, true)]
@@ -88,7 +91,7 @@ namespace DkTools
 	[ProvideLanguageCodeExpansion(typeof(ProbeLanguageService), Constants.DkContentType, 0, Constants.DkContentType,
 		"%LocalAppData%\\DkTools2012\\SnippetIndex.xml",
 		SearchPaths = "%LocalAppData%\\DkTools2012\\Snippets\\;%MyDocs%\\Code Snippets\\DK\\My Code Snippets\\")]
-	public sealed partial class ProbeToolsPackage : Package, IOleComponent
+	public sealed partial class ProbeToolsPackage : AsyncPackage, IOleComponent
 	{
 		private uint _componentId;
 		private static ProbeToolsPackage _instance;
@@ -113,9 +116,9 @@ namespace DkTools
 		/// Initialization of the package; this method is called right after the package is sited, so this is the place
 		/// where you can put all the initilaization code that rely on services provided by VisualStudio.
 		/// </summary>
-		protected override void Initialize()
+		protected override async System.Threading.Tasks.Task InitializeAsync(CancellationToken cancellationToken, IProgress<ServiceProgressData> progress)
 		{
-			base.Initialize();
+			await base.InitializeAsync(cancellationToken, progress);
 
 			Log.Initialize();
 			ProbeEnvironment.Initialize();
@@ -123,7 +126,7 @@ namespace DkTools
 			Snippets.SnippetDeploy.DeploySnippets();
 			CodeModel.SignatureDocumentor.Initialize();
 
-			ThreadHelper.ThrowIfNotOnUIThread();
+			await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
 
 			// Proffer the service.	http://msdn.microsoft.com/en-us/library/bb166498.aspx
 			var langService = new ProbeLanguageService(this);
@@ -131,7 +134,7 @@ namespace DkTools
 			(this as IServiceContainer).AddService(typeof(ProbeLanguageService), langService, true);
 
 			// Register a timer to call our language service during idle periods.
-			var mgr = GetService(typeof(SOleComponentManager)) as IOleComponentManager;
+			var mgr = await GetServiceAsync(typeof(SOleComponentManager)) as IOleComponentManager;
 			if (_componentId == 0 && mgr != null)
 			{
 				OLECRINFO[] crinfo = new OLECRINFO[1];
@@ -145,7 +148,7 @@ namespace DkTools
 			_errorTaskProvider = new ErrorTagging.ErrorTaskProvider(this);
 			TaskListService.RegisterTaskProvider(_errorTaskProvider, out _errorTaskProviderCookie);
 
-			var mcs = GetService(typeof(IMenuCommandService)) as OleMenuCommandService;
+			var mcs = await GetServiceAsync(typeof(IMenuCommandService)) as OleMenuCommandService;
 			if (mcs != null) Commands.InitCommands(mcs);
 
 			FunctionFileScanning.FFScanner.OnStartup();
@@ -573,16 +576,21 @@ namespace DkTools
 		{
 			ThreadHelper.JoinableTaskFactory.RunAsync(async () =>
 			{
-				await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
-
-				if (_statusBarService == null)
-				{
-					_statusBarService = this.GetService(typeof(SVsStatusbar)) as IVsStatusbar;
-					if (_statusBarService == null) throw new InvalidOperationException("Unable to get service 'Microsoft.VisualStudio.Shell.Interop.IVsStatusbar'.");
-				}
-
-				_statusBarService.SetText(text);
+				await SetStatusTextAsync(text);
 			});
+		}
+
+		internal async System.Threading.Tasks.Task SetStatusTextAsync(string text)
+        {
+			await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
+
+			if (_statusBarService == null)
+			{
+				_statusBarService = await this.GetServiceAsync(typeof(SVsStatusbar)) as IVsStatusbar;
+				if (_statusBarService == null) throw new InvalidOperationException("Unable to get service 'Microsoft.VisualStudio.Shell.Interop.IVsStatusbar'.");
+			}
+
+			_statusBarService.SetText(text);
 		}
 		#endregion
 
@@ -596,7 +604,7 @@ namespace DkTools
 
 				if (_errorListService == null)
 				{
-					_errorListService = this.GetService(typeof(SVsErrorList)) as IVsErrorList;
+					_errorListService = await this.GetServiceAsync(typeof(SVsErrorList)) as IVsErrorList;
 					if (_statusBarService == null) throw new InvalidOperationException("Unable to get service 'Microsoft.VisualStudio.Shell.Interop.IVsErrorList'.");
 				}
 
