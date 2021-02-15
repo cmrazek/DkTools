@@ -32,6 +32,9 @@ namespace DkTools.BraceHighlighting
 			InsertEnd
 		}
 
+		private bool TokenOpen(TokenType type) => type == TokenType.BracketOpen || type == TokenType.BraceOpen || type == TokenType.ArrayBraceOpen;
+		private bool TokenClose(TokenType type) => type == TokenType.BracketClose || type == TokenType.BraceClose || type == TokenType.ArrayBraceClose;
+
 		private struct Token
 		{
 			public int pos;
@@ -68,7 +71,30 @@ namespace DkTools.BraceHighlighting
 			if (!search) yield break;
 
 			var tokens = GetTokensForScope(cursorPos);
-			var ids = (from t in tokens where t.Intersects(cursorPos) select t.id).ToArray();
+
+			var nearTokens = new List<Token>();
+			foreach (var token in tokens)
+            {
+				if (token.Intersects(cursorPos))
+                {
+					if (TokenOpen(token.type))
+                    {
+						nearTokens.RemoveAll(t => TokenOpen(t.type) || TokenClose(t.type));
+						nearTokens.Add(token);
+					}
+					else if (TokenClose(token.type))
+                    {
+						if (!nearTokens.Any(t => TokenOpen(t.type) || TokenClose(t.type))) nearTokens.Add(token);
+					}
+					else
+                    {
+						nearTokens.Add(token);
+                    }
+                }
+            }
+
+			var ids = (from t in nearTokens where t.Intersects(cursorPos) select t.id).ToArray();
+
 			foreach (var token in (from t in tokens where ids.Contains(t.id) select t))
 			{
 				yield return new SnapshotSpan(snapshot, token.pos, token.length);

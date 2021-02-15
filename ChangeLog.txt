@@ -2,10 +2,12 @@ DkTools ChangeLog
 ____________________________________________________________________________________________________
 Version 1.5.12 - WIP:
 
+- Added automatic brace completion (can be turned off in options).
+- Fixed Peek Definitions not showing in later version of Visual Studio.
+- Brace highlighting will now select only one set of braces at a time.
+- Fixed FEC errors not showing up in Error list.
 - DK Dictionary Explorer tool-tips are now visible in dark mode.
 - Disabled auto-completion replacing typed text on space key (can be customized in options).
-- Fixed FEC errors not showing up in Error list.
-- Fixed Peek Definitions not showing in later version of Visual Studio.
 
 ____________________________________________________________________________________________________
 Version 1.5.11 - Jun 30, 2020:
