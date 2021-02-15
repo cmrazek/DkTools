@@ -146,11 +146,6 @@ namespace DkTools
             var cmd = _cmds.FirstOrDefault(x => x.id == id);
             if (cmd != null)
             {
-                if (id == CommandId.PeekDefinition)
-                {
-                    var TODO = 0;
-                }
-
                 var visible = true;
                 if (cmd.visibleCallback != null)
                 {
