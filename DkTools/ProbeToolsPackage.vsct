@@ -640,6 +640,7 @@
         <Parent guid="guidProbeToolsCmdSet" id="cmDkGroup"/>
         <Icon guid="guidViewDefinitionIcon" id="1" />
         <CommandFlag>DynamicVisibility</CommandFlag>
+        <CommandFlag>DefaultInvisible</CommandFlag>
         <Strings>
           <CommandName>cmdPeekDefinition</CommandName>
           <ButtonText>Peek Definition</ButtonText>
