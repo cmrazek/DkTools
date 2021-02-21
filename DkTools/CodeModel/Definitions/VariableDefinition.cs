@@ -154,23 +154,14 @@ namespace DkTools.CodeModel.Definitions
 			get { return false; }
 		}
 
-		public override IEnumerable<Definition> GetChildDefinitions(string name)
+		public override IEnumerable<Definition> GetChildDefinitions(string name, ProbeAppSettings appSettings)
 		{
 			if (_dataType != null)
 			{
-				foreach (var opt in _dataType.CompletionOptions)
+				foreach (var opt in _dataType.GetCompletionOptions(appSettings))
 				{
 					if (opt.Name == name) yield return opt;
 				}
-			}
-		}
-
-		public override IEnumerable<Definition> ChildDefinitions
-		{
-			get
-			{
-				if (_dataType != null) return _dataType.CompletionOptions;
-				return Definition.EmptyArray;
 			}
 		}
 

@@ -15,10 +15,10 @@ namespace DkTools.CodeModel.Tokens
 			SourceDefinition = classDef;
 		}
 
-		public ClassToken(Scope scope, Span span, string text, FunctionFileScanning.FFClass ffClass)
+		public ClassToken(Scope scope, Span span, string text, GlobalData.RepoClass ffClass)
 			: base(scope, span, text)
 		{
-			SourceDefinition = ffClass.ClassDefinition;
+			SourceDefinition = new ClassDefinition(ffClass.Name, ffClass.FileName);
 		}
 	}
 }

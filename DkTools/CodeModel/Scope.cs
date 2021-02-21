@@ -18,13 +18,11 @@ namespace DkTools.CodeModel
 		private IBreakOwner _breakOwner;
 		private IContinueOwner _continueOwner;
 		private DataType _returnDataType;
+		ProbeAppSettings _appSettings;
 
 		public Scope(CodeModel model)
 		{
-#if DEBUG
-			if (model == null) throw new ArgumentNullException("model");
-#endif
-			_file = model.File;
+			_file = (model ?? throw new ArgumentNullException("model")).File;
 			_hint = default(ScopeHint);
 			_depth = 0;
 			_visible = false;
@@ -34,29 +32,27 @@ namespace DkTools.CodeModel
 			_breakOwner = null;
 			_continueOwner = null;
 			_returnDataType = null;
+			_appSettings = model.AppSettings;
 		}
 
-		public Scope(CodeFile file, int depth, ScopeHint hint, bool visible, DefinitionProvider defProvider)
+		public Scope(CodeFile file, int depth, ScopeHint hint, bool visible, DefinitionProvider defProvider, ProbeAppSettings app)
 		{
-#if DEBUG
-			if (file == null) throw new ArgumentNullException("file");
-			if (defProvider == null) throw new InvalidOperationException("Model has no definition provider.");
-#endif
-			_file = file;
+			_file = file ?? throw new ArgumentNullException("file");
 			_depth = depth;
 			_hint = hint;
 			_visible = visible;
-			_defProvider = defProvider;
+			_defProvider = defProvider ?? throw new InvalidOperationException("Model has no definition provider.");
 			_className = null;
 			_code = file.CodeParser;
 			_breakOwner = null;
 			_continueOwner = null;
 			_returnDataType = null;
+			_appSettings = app ?? throw new ArgumentNullException(nameof(app));
 		}
 
 		public Scope Clone()
 		{
-			return new Scope(_file, _depth, _hint, _visible, _defProvider)
+			return new Scope(_file, _depth, _hint, _visible, _defProvider, _appSettings)
 			{
 				_className = _className,
 				_breakOwner = _breakOwner,
@@ -135,6 +131,8 @@ namespace DkTools.CodeModel
 		{
 			get { return _file != null ? _file.Model : null; }
 		}
+
+		public ProbeAppSettings AppSettings => _appSettings;
 
 		public string ClassName
 		{

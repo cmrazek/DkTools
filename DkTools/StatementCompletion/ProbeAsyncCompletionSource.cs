@@ -58,6 +58,8 @@ namespace DkTools.StatementCompletion
 			InitImages();
 		}
 
+		internal ProbeAppSettings AppSettings => _appSettings;
+
 		enum CompletionMode
 		{
 			None,
@@ -393,7 +395,7 @@ namespace DkTools.StatementCompletion
 					var dataType = opToken.CompletionDataType;
 					if (dataType != null && dataType.HasCompletionOptions)
 					{
-						foreach (var opt in dataType.CompletionOptions)
+						foreach (var opt in dataType.GetCompletionOptions(_appSettings))
 						{
 							CreateCompletion(opt);
 						}
@@ -498,7 +500,7 @@ namespace DkTools.StatementCompletion
 				var dt = switchToken.ExpressionDataType;
 				if (dt != null && dt.HasCompletionOptions)
 				{
-					foreach (var opt in dt.CompletionOptions)
+					foreach (var opt in dt.GetCompletionOptions(_appSettings))
 					{
 						CreateCompletion(opt);
 					}
@@ -539,7 +541,7 @@ namespace DkTools.StatementCompletion
 					var dataType = funcDef.Definition.DataType;
 					if (dataType != null && dataType.HasCompletionOptions)
 					{
-						foreach (var opt in dataType.CompletionOptions)
+						foreach (var opt in dataType.GetCompletionOptions(_appSettings))
 						{
 							CreateCompletion(opt);
 						}
@@ -586,7 +588,7 @@ namespace DkTools.StatementCompletion
 
 		private void HandleAfterOrderBy()
 		{
-			foreach (var relind in DkDict.Dict.RelInds)
+			foreach (var relind in _appSettings.Dict.RelInds)
 			{
 				CreateCompletion(relind.Definition);
 			}
@@ -610,7 +612,7 @@ namespace DkTools.StatementCompletion
 			var dataType = arg.DataType;
 			if (dataType == null) return;
 
-			foreach (var option in dataType.CompletionOptions)
+			foreach (var option in dataType.GetCompletionOptions(_appSettings))
 			{
 				CreateCompletion(option);
 			}
@@ -621,7 +623,7 @@ namespace DkTools.StatementCompletion
 			// Typing a table.field.
 
 			// Table and field
-			var table = DkDict.Dict.GetTable(word1);
+			var table = _appSettings.Dict.GetTable(word1);
 			if (table != null)
 			{
 				foreach (var def in table.ColumnDefinitions)
@@ -631,7 +633,7 @@ namespace DkTools.StatementCompletion
 			}
 
 			// Relationship and field
-			var relInd = DkDict.Dict.GetRelInd(word1);
+			var relInd = _appSettings.Dict.GetRelInd(word1);
 			if (relInd != null)
 			{
 				foreach (var def in relInd.ColumnDefinitions)
@@ -656,10 +658,10 @@ namespace DkTools.StatementCompletion
 			}
 
 			// Class and method
-			var ds = DefinitionStore.Current;
-			if (ds != null)
+			var appSettings = ProbeEnvironment.CurrentAppSettings;
+			if (appSettings != null)
 			{
-				foreach (var cls in ds.GetClasses(word1))
+				foreach (var cls in appSettings.Repo.GetClassDefinitions(word1))
 				{
 					foreach (var def in cls.Functions)
 					{
@@ -667,7 +669,7 @@ namespace DkTools.StatementCompletion
 					}
 				}
 
-				foreach (var permex in ds.GetPermanentExtracts(word1))
+				foreach (var permex in appSettings.Repo.GetPermanentExtractDefinitions(word1))
 				{
 					foreach (var field in permex.Fields)
 					{
@@ -690,7 +692,7 @@ namespace DkTools.StatementCompletion
 						var varDef = def as VariableDefinition;
 						if (varDef.AllowsChild)
 						{
-							foreach (var childDef in varDef.ChildDefinitions)
+							foreach (var childDef in varDef.GetChildDefinitions(appSettings))
 							{
 								CreateCompletion(childDef);
 							}
@@ -725,19 +727,6 @@ namespace DkTools.StatementCompletion
 			foreach (var d in Constants.DataTypeKeywords)
 			{
 				CreateCompletion(d, ProbeCompletionType.DataType, null);
-			}
-
-			// Don't show functions when on the root.
-			if (tokens.Any(t => !t.IsOnRoot))
-			{
-				var ds = DefinitionStore.Current;
-				if (ds != null)
-				{
-					foreach (var f in ds.GlobalDefinitions)
-					{
-						CreateCompletion(f);
-					}
-				}
 			}
 
 			var bottomToken = tokens.LastOrDefault();

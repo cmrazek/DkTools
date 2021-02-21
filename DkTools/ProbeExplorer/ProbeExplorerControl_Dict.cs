@@ -31,12 +31,15 @@ namespace DkTools.ProbeExplorer
 
 		private void RefreshDictTree()
 		{
+			var app = ProbeEnvironment.CurrentAppSettings;
+			if (app == null) return;
+
 			Log.Write(LogLevel.Info, "Refreshing DK Explorer dictionary view...");
 			var startTime = DateTime.Now;
 
 			c_dictTree.Items.Clear();
 
-			var tables = DkDict.Dict.Tables.ToList();
+			var tables = app.Dict.Tables.ToList();
 			tables.Sort((a, b) => a.Name.CompareTo(b.Name));
 
 			foreach (var table in tables)

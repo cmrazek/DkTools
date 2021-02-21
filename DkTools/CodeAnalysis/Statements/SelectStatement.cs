@@ -226,7 +226,7 @@ namespace DkTools.CodeAnalysis.Statements
 					return false;
 				}
 
-				var fieldDef = tableDef.GetChildDefinitions(code.Text).FirstOrDefault();
+				var fieldDef = tableDef.GetChildDefinitions(code.Text, p.AppSettings).FirstOrDefault();
 				if (fieldDef == null)
 				{
 					ReportError(code.Span, CAError.CA0040, tableDef.Name, code.Text);	// Table '{0}' has no column '{1}'.

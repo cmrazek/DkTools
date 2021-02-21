@@ -17,7 +17,7 @@ namespace DkTools.CodeModel.Definitions
 		private List<FunctionDefinition> _funcs = new List<FunctionDefinition>();
 
 		public ClassDefinition(string name, string fileName)
-			: base(name, new FilePosition(fileName, 0, true), FunctionFileScanning.FFClass.GetExternalRefId(name))
+			: base(name, new FilePosition(fileName, 0, true), GetExternalRefId(name))
 		{
 		}
 
@@ -60,7 +60,7 @@ namespace DkTools.CodeModel.Definitions
 			get { return true; }
 		}
 
-		public override IEnumerable<Definition> GetChildDefinitions(string name)
+		public override IEnumerable<Definition> GetChildDefinitions(string name, ProbeAppSettings appSettings)
 		{
 			foreach (var func in _funcs)
 			{
@@ -68,13 +68,7 @@ namespace DkTools.CodeModel.Definitions
 			}
 		}
 
-		public override IEnumerable<Definition> ChildDefinitions
-		{
-			get
-			{
-				return _funcs.Cast<Definition>();
-			}
-		}
+		public override IEnumerable<Definition> GetChildDefinitions(ProbeAppSettings appSettings) => _funcs.Cast<Definition>();
 
 		public override bool ArgumentsRequired
 		{
@@ -99,6 +93,11 @@ namespace DkTools.CodeModel.Definitions
 		public void ClearFunctions()
 		{
 			_funcs.Clear();
+		}
+
+		public static string GetExternalRefId(string className)
+		{
+			return string.Concat("class:", className);
 		}
 	}
 }

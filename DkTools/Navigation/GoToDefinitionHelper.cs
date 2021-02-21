@@ -44,6 +44,8 @@ namespace DkTools.Navigation
 			if (fileStore == null) return null;
 
 			var appSettings = ProbeEnvironment.CurrentAppSettings;
+			if (appSettings == null) return null;
+
 			var fileName = VsTextUtil.TryGetDocumentFileName(point.Snapshot.TextBuffer);
 			var model = fileStore.GetCurrentModel(appSettings, fileName, point.Snapshot, "Go to definition");
 			var modelPos = model.AdjustPosition(point.Position, point.Snapshot);
@@ -64,17 +66,13 @@ namespace DkTools.Navigation
 
 					if (funcDef.Extern)
 					{
-						var ds = DefinitionStore.Current;
-						if (ds != null)
+						foreach (var def2 in appSettings.Repo.SearchForFunctionDefinitions(funcDef.Name))
 						{
-							foreach (var def2 in ds.SearchForFunctionDefinitions(funcDef.Name))
+							if (def2 == def || (def2.SourceFileName == def.SourceFileName && def2.SourceStartPos == def.SourceStartPos))
 							{
-								if (def2 == def || (def2.SourceFileName == def.SourceFileName && def2.SourceStartPos == def.SourceStartPos))
-								{
-									continue;
-								}
-								funcList.Add(def2);
+								continue;
 							}
+							funcList.Add(def2);
 						}
 
 						// If there is one true function definition and the list, and the others are externs, then just go straight to the true definition.
@@ -251,40 +249,12 @@ namespace DkTools.Navigation
 		{
 			if (string.IsNullOrEmpty(extRefId)) throw new ArgumentException("Definition has no external ref ID.");
 
-			var ds = DefinitionStore.Current;
-			if (ds == null) yield break;
+			var app = ProbeEnvironment.CurrentAppSettings;
+			if (app == null) yield break;
 
-			using (var db = new FunctionFileScanning.FFDatabase())
+			foreach (var rf in app.Repo.FindAllReferences(extRefId))
 			{
-				var appId = db.ExecuteScalar<long>("select rowid from app where name = @app_name collate nocase",
-					"@app_name", ds.AppName);
-
-				using (var cmd = db.CreateCommand(@"
-select file_.file_name, ref.pos, alt_file.file_name as true_file_name from ref
-inner join file_ on file_.rowid = ref.file_id
-left outer join alt_file on alt_file.rowid = ref.alt_file_id
-where ref.ext_ref_id = @ext_ref_id
-and ref.app_id = @app_id",
-					"@ext_ref_id", extRefId, "@app_id", appId))
-				{
-					using (var rdr = cmd.ExecuteReader())
-					{
-						var ordFileName = rdr.GetOrdinal("file_name");
-						var ordPos = rdr.GetOrdinal("pos");
-						var ordTrueFileName = rdr.GetOrdinal("true_file_name");
-
-						while (rdr.Read())
-						{
-							var fileName = rdr.GetString(ordFileName);
-							var pos = rdr.GetInt32(ordPos);
-							var trueFileName = FunctionFileScanning.FFUtil.GetStringOrNull(rdr, ordTrueFileName);
-
-							if (!string.IsNullOrEmpty(trueFileName)) fileName = trueFileName;
-
-							yield return new Reference(fileName, pos, true);
-						}
-					}
-				}
+				yield return new Reference(rf.FileName, rf.Position, global: true);
 			}
 		}
 

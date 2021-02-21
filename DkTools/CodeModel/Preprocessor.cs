@@ -1,13 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Data.Entity.Infrastructure;
-using System.Diagnostics;
 using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
-using System.Windows.Forms;
 using DkTools.CodeModel.Definitions;
-using DkTools.CodeModel.Tokens;
 
 namespace DkTools.CodeModel
 {
@@ -60,7 +55,7 @@ namespace DkTools.CodeModel
 			if (_defines == null)
 			{
 				_defines = new Dictionary<string, PreprocessorDefine>();
-				_defines["_WINDOWS"] = new PreprocessorDefine("_WINDOWS", string.Empty, null, FilePosition.Empty);
+				_defines["_WINDOWS"] = new PreprocessorDefine("_WINDOWS", string.Empty, null, FilePosition.Empty, _appSettings);
 			}
 
 			if (p.stdlibDefines != null)
@@ -337,7 +332,7 @@ namespace DkTools.CodeModel
 
 			if (!p.suppress)
 			{
-				var define = new PreprocessorDefine(name, sb.ToString().Trim(), paramNames, linkFilePos);
+				var define = new PreprocessorDefine(name, sb.ToString().Trim(), paramNames, linkFilePos, _appSettings);
 				_defines[name] = define;
 				if (nameFilePos.IsInFile) _refs.Add(new Reference(define.Definition, nameFilePos, rawPosition: linkRawPos));
 			}
@@ -493,7 +488,7 @@ namespace DkTools.CodeModel
 				if (args == null) args = new List<PreprocessorDefine>();
 				for (int i = 0, ii = paramList.Count; i < ii; i++)
 				{
-					args.Add(new PreprocessorDefine(define.ParamNames[i], paramList[i], null, FilePosition.Empty));
+					args.Add(new PreprocessorDefine(define.ParamNames[i], paramList[i], null, FilePosition.Empty, _appSettings));
 				}
 			}
 			if (p.args != null && p.args.Any())

@@ -174,6 +174,8 @@ namespace DkTools
 			{
 				ThreadHelper.ThrowIfNotOnUIThread();
 
+				FunctionFileScanning.FFScanner.OnShutdown();
+
 				if (_componentId != 0)
 				{
 					var mgr = GetService(typeof(SOleComponentManager)) as IOleComponentManager;

@@ -128,16 +128,16 @@ namespace DkTools.CodeModel
 				};
 			}
 			AddGlobalFromAnywhere(_builtInDefs);
-			AddGlobalFromAnywhere(DkDict.Dict.AllDictDefinitions);
+			AddGlobalFromAnywhere(appSettings.Dict.AllDictDefinitions);
 			if (string.IsNullOrEmpty(fileName) || !System.IO.Path.GetFileName(fileName).Equals("stdlib.i", StringComparison.OrdinalIgnoreCase))
 			{
 				AddGlobalFromAnywhere(FileStore.GetStdLibModel(appSettings).PreprocessorModel.DefinitionProvider.GlobalsFromFile);
 			}
 
-			var ds = DefinitionStore.Current;
-			if (ds != null)
+			var app = ProbeEnvironment.CurrentAppSettings;
+			if (app != null)
 			{
-				AddGlobalFromAnywhere(ds.GlobalDefinitions);
+				AddGlobalFromAnywhere(app.Repo.GetGlobalDefinitions());
 			}
 		}
 

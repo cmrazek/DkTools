@@ -77,5 +77,7 @@ namespace DkTools.CodeModel
 		{
 			get { return string.IsNullOrEmpty(_fileName); }
 		}
+
+		public override string ToString() => $"{_fileName}({_pos})";
 	}
 }

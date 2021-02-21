@@ -93,7 +93,7 @@ namespace DkTools.CodeAnalysis.Nodes
 						}
 
 						Definition fieldDef = null;
-						if (!code.ReadWord() || (fieldDef = tableDef.GetChildDefinitions(code.Text).FirstOrDefault()) == null)
+						if (!code.ReadWord() || (fieldDef = tableDef.GetChildDefinitions(code.Text, p.AppSettings).FirstOrDefault()) == null)
 						{
 							ret.ReportError(code.Span, CAError.CA0067); // Expected column name.
 							break;

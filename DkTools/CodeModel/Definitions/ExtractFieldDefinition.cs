@@ -18,6 +18,12 @@ namespace DkTools.CodeModel.Definitions
 			: base(name, filePos, tableDef.Permanent ? GetExternalRefId(tableDef.Name, name) : null)
 		{ }
 
+		public ExtractFieldDefinition(string name, FilePosition filePos, ExtractTableDefinition tableDef, DataType dataType)
+			: base(name, filePos, tableDef.Permanent ? GetExternalRefId(tableDef.Name, name) : null)
+		{
+			_dataType = dataType;
+		}
+
 		public override bool CompletionVisible
 		{
 			get { return true; }

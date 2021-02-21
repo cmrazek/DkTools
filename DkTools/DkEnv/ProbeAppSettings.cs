@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using DkTools.GlobalData;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.Win32;
 
@@ -28,6 +29,8 @@ namespace DkTools
 		public string[] SourceFiles { get; set; }
 		public string[] IncludeFiles { get; set; }
 		public string[] SourceAndIncludeFiles { get; set; }
+		public AppRepo Repo { get; set; }
+		public DkDict.Dict Dict { get; set; }
 
 		public ProbeAppSettings()
 		{
@@ -47,6 +50,8 @@ namespace DkTools
 			SourceFiles = new string[0];
 			IncludeFiles = new string[0];
 			SourceAndIncludeFiles = new string[0];
+			Dict = new DkDict.Dict();
+			Repo = new AppRepo(this);
 		}
 
 		public void Deactivate()
@@ -274,13 +279,15 @@ namespace DkTools
 					_watchers.Add(watcher);
 
 					watcher.Path = dir;
-					watcher.Filter = "*";
+					watcher.Filter = "*.*";
 					watcher.NotifyFilter = NotifyFilters.LastWrite | NotifyFilters.DirectoryName | NotifyFilters.FileName;
 					watcher.IncludeSubdirectories = true;
 
 					watcher.Changed += OnFileChanged;
 					watcher.Deleted += OnFileDeleted;
 					watcher.Renamed += OnFileRenamed;
+					watcher.Created += OnFileCreated;
+					watcher.Error += OnError;
 
 					watcher.EnableRaisingEvents = true;
 				}
@@ -353,7 +360,33 @@ namespace DkTools
 
 					FileDeleted?.Invoke(this, new FileEventArgs(e.OldFullPath));
 				}
+				else if (ProbeEnvironment.IsProbeFile(e.FullPath))
+				{
+					Log.Debug("File rename detected: {0} -> {1}", e.OldFullPath, e.FullPath);
+
+					FileChanged?.Invoke(this, new FileEventArgs(e.FullPath));
+				}
 			});
+		}
+
+		private void OnFileCreated(object sender, FileSystemEventArgs e)
+		{
+			ThreadHelper.JoinableTaskFactory.RunAsync(async () =>
+			{
+				await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
+
+				if (ProbeEnvironment.IsProbeFile(e.FullPath))
+				{
+					Log.Debug("File create detected: {0}", e.FullPath);
+
+					FileChanged?.Invoke(this, new FileEventArgs(e.FullPath));
+				}
+			});
+		}
+
+		private void OnError(object sender, ErrorEventArgs e)
+		{
+			Log.Warning("File system watcher error: {0}", e.GetException());
 		}
 
 		public class FileEventArgs : EventArgs

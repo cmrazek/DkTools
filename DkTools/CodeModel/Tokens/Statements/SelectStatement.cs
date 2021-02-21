@@ -37,7 +37,7 @@ namespace DkTools.CodeModel.Tokens
 
 			if (code.ReadWord())
 			{
-				if ((table = DkDict.Dict.GetTable(code.Text)) != null) ret.AddToken(new TableToken(scope, code.Span, code.Text, table.Definition));
+				if ((table = scope.AppSettings.Dict.GetTable(code.Text)) != null) ret.AddToken(new TableToken(scope, code.Span, code.Text, table.Definition));
 				else if ((extractDef = scope.DefinitionProvider.GetAny<ExtractTableDefinition>(code.TokenStartPostion, code.Text).FirstOrDefault()) != null)
 					ret.AddToken(new IdentifierToken(scope, code.Span, code.Text, extractDef));
 				else ret.AddToken(new UnknownToken(scope, code.Span, code.Text));
@@ -49,7 +49,7 @@ namespace DkTools.CodeModel.Tokens
 
 				if (code.ReadWord())
 				{
-					if ((table = DkDict.Dict.GetTable(code.Text)) != null) ret.AddToken(new TableToken(scope, code.Span, code.Text, table.Definition));
+					if ((table = scope.AppSettings.Dict.GetTable(code.Text)) != null) ret.AddToken(new TableToken(scope, code.Span, code.Text, table.Definition));
 					else ret.AddToken(new UnknownToken(scope, code.Span, code.Text));
 				}
 			}
@@ -73,7 +73,7 @@ namespace DkTools.CodeModel.Tokens
 					}
 					else if (code.ReadWord())
 					{
-						if ((table = DkDict.Dict.GetTable(code.Text)) != null) ret.AddToken(new TableToken(scope, code.Span, code.Text, table.Definition));
+						if ((table = scope.AppSettings.Dict.GetTable(code.Text)) != null) ret.AddToken(new TableToken(scope, code.Span, code.Text, table.Definition));
 						else ret.AddToken(new UnknownToken(scope, code.Span, code.Text));
 						expectingComma = true;
 					}
@@ -202,7 +202,7 @@ namespace DkTools.CodeModel.Tokens
 			{
 				var wordPos = code.TokenStartPostion;
 
-				var table = DkDict.Dict.GetTable(code.Text);
+				var table = scope.AppSettings.Dict.GetTable(code.Text);
 				if (table != null)
 				{
 					var tableToken = new TableToken(scope, code.Span, code.Text, table.Definition);
@@ -230,7 +230,7 @@ namespace DkTools.CodeModel.Tokens
 
 				if (allowRelInd)
 				{
-					var relind = DkDict.Dict.GetRelInd(code.Text);
+					var relind = scope.AppSettings.Dict.GetRelInd(code.Text);
 					if (relind != null)
 					{
 						parent.AddToken(new RelIndToken(scope, code.Span, code.Text, relind.Definition));
@@ -247,7 +247,7 @@ namespace DkTools.CodeModel.Tokens
 						var word = code.PeekWordR();
 						if (!string.IsNullOrEmpty(word))
 						{
-							var childDef = extractDef.GetChildDefinitions(word).FirstOrDefault();
+							var childDef = extractDef.GetChildDefinitions(word, scope.AppSettings).FirstOrDefault();
 							if (childDef != null)
 							{
 								parent.AddToken(new IdentifierToken(scope, code.MovePeekedSpan(), word, childDef));

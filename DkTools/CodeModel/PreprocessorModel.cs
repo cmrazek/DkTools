@@ -11,6 +11,7 @@ namespace DkTools.CodeModel
 {
 	internal class PreprocessorModel
 	{
+		private ProbeAppSettings _appSettings;
 		private CodeSource _source;
 		private CodeParser _code;
 		private DefinitionProvider _defProv;
@@ -25,8 +26,9 @@ namespace DkTools.CodeModel
 		private Preprocessor _prep;
 		private List<Definition> _globalDefs = new List<Definition>();
 
-		public PreprocessorModel(CodeSource source, DefinitionProvider definitionProvider, string fileName, bool visible, IEnumerable<Preprocessor.IncludeDependency> includeDependencies)
+		public PreprocessorModel(ProbeAppSettings appSettings, CodeSource source, DefinitionProvider definitionProvider, string fileName, bool visible, IEnumerable<Preprocessor.IncludeDependency> includeDependencies)
 		{
+			_appSettings = appSettings ?? throw new ArgumentNullException(nameof(appSettings));
 			_source = source ?? throw new ArgumentNullException(nameof(source));
 			_code = new CodeParser(source.Text);
 			_defProv = definitionProvider ?? throw new ArgumentNullException(nameof(definitionProvider));
@@ -141,9 +143,8 @@ namespace DkTools.CodeModel
 
 		private void AfterRootStatic(int startPos)
 		{
-			var dataType = DataType.TryParse(new DataType.ParseArgs
+			var dataType = DataType.TryParse(new DataType.ParseArgs(_code, _appSettings)
 			{
-				Code = _code,
 				DataTypeCallback = GlobalDataTypeCallback,
 				VariableCallback = GlobalVariableCallback
 			});
@@ -156,9 +157,8 @@ namespace DkTools.CodeModel
 		private void AfterRootExtern(int startPos)
 		{
 			var dataTypeStartPos = _code.Position;
-			var dataType = DataType.TryParse(new DataType.ParseArgs
+			var dataType = DataType.TryParse(new DataType.ParseArgs(_code, _appSettings)
 			{
-				Code = _code,
 				DataTypeCallback = GlobalDataTypeCallback,
 				VariableCallback = GlobalVariableCallback
 			});
@@ -185,9 +185,8 @@ namespace DkTools.CodeModel
 		{
 			_code.SkipWhiteSpace();
 			var dataTypeStartPos = _code.Position;
-			var dataType = DataType.TryParse(new DataType.ParseArgs
+			var dataType = DataType.TryParse(new DataType.ParseArgs(_code, _appSettings)
 			{
-				Code = _code,
 				DataTypeCallback = GlobalDataTypeCallback,
 				VariableCallback = GlobalVariableCallback
 			});
@@ -210,9 +209,8 @@ namespace DkTools.CodeModel
 		{
 			_code.SkipWhiteSpace();
 			var pos = _code.Position;
-			var dataType = DataType.TryParse(new DataType.ParseArgs
+			var dataType = DataType.TryParse(new DataType.ParseArgs(_code, _appSettings)
 			{
-				Code = _code,
 				DataTypeCallback = GlobalDataTypeCallback,
 				VariableCallback = GlobalVariableCallback
 			});
@@ -482,9 +480,8 @@ namespace DkTools.CodeModel
 
 		private bool TryReadFunctionArgument(CodeScope scope, bool createDefinitions, List<ArgumentDescriptor> args, List<PrepVariable> newDefList)
 		{
-			var dataType = DataType.TryParse(new DataType.ParseArgs
+			var dataType = DataType.TryParse(new DataType.ParseArgs(_code, _appSettings)
 			{
-				Code = _code,
 				DataTypeCallback = GlobalDataTypeCallback,
 				VariableCallback = GlobalVariableCallback
 			});
@@ -529,9 +526,8 @@ namespace DkTools.CodeModel
 
 		private bool TryReadVariableDeclaration(CodeScope scope, List<PrepVariable> newDefList)
 		{
-			var dataType = DataType.TryParse(new DataType.ParseArgs
+			var dataType = DataType.TryParse(new DataType.ParseArgs(_code, _appSettings)
 			{
-				Code = _code,
 				DataTypeCallback = GlobalDataTypeCallback,
 				VariableCallback = GlobalVariableCallback
 			});

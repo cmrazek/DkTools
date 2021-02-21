@@ -16,7 +16,7 @@ namespace DkTools.CodeModel.Tokens
 			if (def != null) SourceDefinition = def;
 			else
 			{
-				var table = DkDict.Dict.GetTable(text);
+				var table = scope.AppSettings.Dict.GetTable(text);
 				if (table != null) this.SourceDefinition = table.Definition;
 			}
 		}

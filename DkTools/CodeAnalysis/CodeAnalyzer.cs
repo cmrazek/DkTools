@@ -60,17 +60,17 @@ namespace DkTools.CodeAnalysis
 		private void AnalyzeFunction(CodeModel.PreprocessorModel.LocalFunction func)
 		{
 			var body = _fullSource.Substring(func.StartPos, func.EndPos - func.StartPos);
-			if (body.EndsWith("}")) body = body.Substring(0, body.Length - 1);	// End pos is just after the closing brace
+			if (body.EndsWith("}")) body = body.Substring(0, body.Length - 1);  // End pos is just after the closing brace
 
-			_read = new ReadParams
-			{
-				CodeAnalyzer = this,
-				Code = new CodeParser(body),
-				FuncOffset = func.StartPos,
-				FuncDef = func.Definition
-			};
+			_read = new ReadParams(
+				codeAnalyzer: this,
+				code: new CodeParser(body),
+				statement: null,
+				funcOffset: func.StartPos,
+				funcDef: func.Definition,
+				appSettings: _codeModel.AppSettings);
 
-			_scope = new RunScope(this, func.Definition, func.StartPos);
+			_scope = new RunScope(this, func.Definition, func.StartPos, _codeModel.AppSettings);
 			_stmts = new List<Statement>();
 
 			// Parse the function body
@@ -314,11 +314,30 @@ namespace DkTools.CodeAnalysis
 
 	class ReadParams
 	{
-		public CodeAnalyzer CodeAnalyzer { get; set; }
-		public CodeParser Code { get; set; }
-		public Statement Statement { get; set; }
-		public int FuncOffset { get; set; }
-		public FunctionDefinition FuncDef { get; set; }
+		public CodeAnalyzer CodeAnalyzer { get; private set; }
+		public CodeParser Code { get; private set; }
+		public Statement Statement { get; private set; }
+		public int FuncOffset { get; private set; }
+		public FunctionDefinition FuncDef { get; private set; }
+		public ProbeAppSettings AppSettings { get; private set; }
+
+		public ReadParams(
+			CodeAnalyzer codeAnalyzer,
+			CodeParser code,
+			Statement statement,
+			int funcOffset,
+			FunctionDefinition funcDef,
+			ProbeAppSettings appSettings)
+		{
+			CodeAnalyzer = codeAnalyzer;
+			Code = code;
+			Statement = statement;
+			FuncOffset = funcOffset;
+			FuncDef = funcDef;
+			AppSettings = appSettings;
+		}
+
+		private ReadParams() { }
 
 		public ReadParams Clone(Statement stmt)
 		{
@@ -328,7 +347,8 @@ namespace DkTools.CodeAnalysis
 				Code = Code,
 				Statement = stmt,
 				FuncOffset = FuncOffset,
-				FuncDef = FuncDef
+				FuncDef = FuncDef,
+				AppSettings = AppSettings
 			};
 		}
 	}

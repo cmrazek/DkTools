@@ -36,9 +36,8 @@ namespace DkTools.CodeModel.Tokens
 
 			var exp = new ExpressionToken(scope);
 
-			var dataTypeArgs = new DataType.ParseArgs
+			var dataTypeArgs = new DataType.ParseArgs(code, scope.AppSettings)
 			{
-				Code = code,
 				DataTypeCallback = (name) =>
 				{
 					return scope.DefinitionProvider.GetAny<DataTypeDefinition>(code.Position, name).FirstOrDefault();
@@ -245,7 +244,7 @@ namespace DkTools.CodeModel.Tokens
 						if (def.AllowsChild)
 						{
 							// When arguments are present, take only the definitions that accept arguments
-							var childDefs = def.GetChildDefinitions(word2).Where(x => argsPresent ? x.ArgumentsRequired : true).ToArray();
+							var childDefs = def.GetChildDefinitions(word2, scope.AppSettings).Where(x => argsPresent ? x.ArgumentsRequired : true).ToArray();
 							if (childDefs.Any())
 							{
 								ArgsToken argsToken = null;
