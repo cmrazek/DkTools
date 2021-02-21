@@ -9,11 +9,23 @@ namespace DkTools.GlobalData
 {
 	internal class StringRepo
 	{
-		private List<string> _strings = new List<string>();
-		private List<int> _index = new List<int>();
+		private List<string> _strings;
+		private List<int> _index;
 
 		public StringRepo()
 		{
+			_strings = new List<string>();
+			_index = new List<int>();
+
+			_strings.Add(string.Empty);
+			_index.Add(0);
+		}
+
+		public StringRepo(int initialCapacity)
+		{
+			_strings = new List<string>(initialCapacity);
+			_index = new List<int>(initialCapacity);
+
 			_strings.Add(string.Empty);
 			_index.Add(0);
 		}

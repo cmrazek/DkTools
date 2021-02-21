@@ -318,12 +318,14 @@ namespace DkTools.GlobalData
 			if (model == null) throw new ArgumentNullException(nameof(model));
 
 			var data = new List<int>();
-			var scanDate = DateTime.Now.Ticks;
+			var scanDate = scanMode == FFScanMode.Exports ? DateTime.MinValue.Ticks : DateTime.Now.Ticks;
 
-			var depends = model.PreprocessorModel.IncludeDependencies.ToList();	// TODO: remove duplicates from this list
+			var depends = GetDistinctIncludeDependencies(model);
 			var funcs = GetFunctionsFromModel(model);
 			var refs = scanMode == FFScanMode.Deep ? (IEnumerable<Reference>)GetReferencesFromModel(model) : new Reference[0];
 			var permExs = scanMode == FFScanMode.Deep ? (IEnumerable<ExtractStatement>)GetPermanentExtractsFromModel(model) : new ExtractStatement[0];
+
+			// Any changes made to this layout must also be mirrored in ShrinkStrings()
 
 			data.Add(Version);
 			data.Add(_strings.Store(model.FilePath.ToLower()));
@@ -373,6 +375,74 @@ namespace DkTools.GlobalData
 			}
 
 			return data;
+		}
+
+		private void ShrinkStrings()
+		{
+			Log.Debug("Shrinking DK repo strings");
+
+			var strings = new StringRepo(_strings.Count);
+
+			IterateFiles(file =>
+			{
+				_data[file + (int)FileLayout.FileName] = strings.Store(File_GetFileName(file));
+				_data[file + (int)FileLayout.ClassName] = strings.Store(File_GetClassName(file));
+
+				File_IterateDeps(file, dep =>
+				{
+					_data[dep + (int)DepLayout.FileName] = strings.Store(Dep_GetFileName(dep));
+					return true;
+				});
+
+				File_IterateFuncs(file, func =>
+				{
+					_data[func + (int)FuncLayout.Name] = strings.Store(Func_GetName(func));
+					_data[func + (int)FuncLayout.FileName] = strings.Store(Func_GetFilePosition(func).FileName);
+					_data[func + (int)FuncLayout.Signature] = strings.Store(Func_GetSignature(func));
+					return true;
+				});
+
+				File_IterateRefs(file, rf =>
+				{
+					_data[rf + (int)RefLayout.ExtRefId] = strings.Store(Ref_GetExtRef(rf));
+					_data[rf + (int)RefLayout.FileName] = strings.Store(Ref_GetFilePosition(rf).FileName);
+					return true;
+				});
+
+				File_IteratePermExs(file, px =>
+				{
+					_data[px + (int)PermExLayout.Name] = strings.Store(PermEx_GetName(px));
+					_data[px + (int)PermExLayout.FileName] = strings.Store(PermEx_GetFilePosition(px).FileName);
+
+					return PermEx_IterateCols(px, col =>
+					{
+						_data[col + (int)PermExColLayout.Name] = strings.Store(PermExCol_GetName(col));
+						_data[col + (int)PermExColLayout.DataType] = strings.Store(_strings.GetString(_data[col + (int)PermExColLayout.DataType]));
+						_data[col + (int)PermExColLayout.FileName] = strings.Store(PermExCol_GetFilePosition(col).FileName);
+						return true;
+					});
+				});
+
+				return true;
+			});
+
+			_strings = strings;
+			Log.Debug("Finished shrinking DK repository strings.");
+		}
+
+		private List<Preprocessor.IncludeDependency> GetDistinctIncludeDependencies(CodeModel.CodeModel model)
+		{
+			var results = new List<Preprocessor.IncludeDependency>();
+
+			foreach (var incl in model.PreprocessorModel.IncludeDependencies)
+			{
+				if (!results.Any(x => x.FileName.EqualsI(incl.FileName)))
+				{
+					results.Add(incl);
+				}
+			}
+
+			return results;
 		}
 
 		private List<FunctionDefinition> GetFunctionsFromModel(CodeModel.CodeModel model)
@@ -439,10 +509,26 @@ namespace DkTools.GlobalData
 			return model.File.FindDownward<ExtractStatement>().Where(x => x.IsPermanent).ToList();
 		}
 
+		private void PurgeNonexistentFiles()
+		{
+			IterateFiles(file =>
+			{
+				if (!File.Exists(File_GetFileName(file)))
+				{
+					ClearFileNode(file);
+				}
+
+				return true;
+			});
+		}
+
 		public void OnScanComplete()
 		{
 			lock (this)
 			{
+				PurgeNonexistentFiles();
+				ShrinkStrings();
+
 				Log.Info("Scan Complete: File Data: {0} String Count: {1}", _data.Count * 4, _strings.Count);
 
 #if DEBUG
@@ -1027,6 +1113,6 @@ Permanent Extracts:
 		[string]	Actual file name (lower)
 		[int]		Position in actual file
 */
-		#endregion
-	}
+				#endregion
+			}
 }
