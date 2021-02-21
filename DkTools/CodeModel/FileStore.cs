@@ -497,10 +497,10 @@ namespace DkTools.CodeModel
 			Log.Debug("Getting include file parent definitions: {0}", includePathName);
 
 			IEnumerable<string> parentFileNames;
-			var ds = DefinitionStore.Current;
-			if (ds != null)
+			var app = FunctionFileScanning.FFScanner.CurrentApp;
+			if (app != null)
 			{
-				parentFileNames = ds.GetIncludeParentFiles(includePathName, NumberOfIncludeParentFiles);
+				parentFileNames = app.Repo.GetDependentFiles(includePathName, NumberOfIncludeParentFiles);
 			}
 			else
 			{

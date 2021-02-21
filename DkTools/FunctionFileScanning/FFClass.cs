@@ -1,69 +1,71 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Data.SQLite;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿// TODO: remove
 
-namespace DkTools.FunctionFileScanning
-{
-	internal class FFClass
-	{
-		private FFApp _app;
-		private FFFile _file;
-		private string _name;
-		private CodeModel.Definitions.ClassDefinition _def;
+//using System;
+//using System.Collections.Generic;
+//using System.Data.SQLite;
+//using System.Linq;
+//using System.Text;
+//using System.Threading.Tasks;
 
-		private FFClass()
-		{ }
+//namespace DkTools.FunctionFileScanning
+//{
+//	internal class FFClass
+//	{
+//		private FFApp _app;
+//		private FFFile _file;
+//		private string _name;
+//		private CodeModel.Definitions.ClassDefinition _def;
 
-		public FFClass(FFApp app, FFFile file, string name)
-		{
-#if DEBUG
-			if (app == null) throw new ArgumentNullException("app");
-			if (file == null) throw new ArgumentNullException("file");
-			if (string.IsNullOrWhiteSpace(name)) throw new ArgumentNullException("name");
-#endif
+//		private FFClass()
+//		{ }
 
-			_app = app;
-			_file = file;
-			_name = name;
-			_def = new CodeModel.Definitions.ClassDefinition(_name, _file.FileName);
-		}
+//		public FFClass(FFApp app, FFFile file, string name)
+//		{
+//#if DEBUG
+//			if (app == null) throw new ArgumentNullException("app");
+//			if (file == null) throw new ArgumentNullException("file");
+//			if (string.IsNullOrWhiteSpace(name)) throw new ArgumentNullException("name");
+//#endif
 
-		public string Name
-		{
-			get { return _name; }
-		}
+//			_app = app;
+//			_file = file;
+//			_name = name;
+//			_def = new CodeModel.Definitions.ClassDefinition(_name, _file.FileName);
+//		}
 
-		public CodeModel.Definitions.ClassDefinition ClassDefinition
-		{
-			get { return _def; }
-		}
+//		public string Name
+//		{
+//			get { return _name; }
+//		}
 
-		public IEnumerable<CodeModel.Definitions.FunctionDefinition> GetFunctionDefinitions(string name)
-		{
-			foreach (var func in _file.GetFunctions(name)) yield return func.Definition;
-		}
+//		public CodeModel.Definitions.ClassDefinition ClassDefinition
+//		{
+//			get { return _def; }
+//		}
 
-		public FFFile File
-		{
-			get { return _file; }
-		}
+//		public IEnumerable<CodeModel.Definitions.FunctionDefinition> GetFunctionDefinitions(string name)
+//		{
+//			foreach (var func in _file.GetFunctions(name)) yield return func.Definition;
+//		}
 
-		public static string GetExternalRefId(string className)
-		{
-			return string.Concat("class:", className);
-		}
+//		public FFFile File
+//		{
+//			get { return _file; }
+//		}
 
-		public void ClearFunctions()
-		{
-			_def.ClearFunctions();
-		}
+//		public static string GetExternalRefId(string className)
+//		{
+//			return string.Concat("class:", className);
+//		}
 
-		public void AddFunction(FFFunction func)
-		{
-			_def.AddFunction(func.Definition);
-		}
-	}
-}
+//		public void ClearFunctions()
+//		{
+//			_def.ClearFunctions();
+//		}
+
+//		public void AddFunction(FFFunction func)
+//		{
+//			_def.AddFunction(func.Definition);
+//		}
+//	}
+//}

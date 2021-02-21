@@ -168,5 +168,40 @@ namespace DkTools.CodeModel.Definitions
 				}
 			}
 		}
+
+		public void RemoveAll<T>()
+		{
+			List<string> keysToRemove = null;
+			List<Definition> defsToRemove = null;
+
+			foreach (var kv in _defs)
+			{
+				foreach (var def in kv.Value)
+				{
+					if (def is T)
+					{
+						if (defsToRemove == null) defsToRemove = new List<Definition>();
+						defsToRemove.Add(def);
+					}
+				}
+
+				if (defsToRemove != null && defsToRemove.Count > 0)
+				{
+					foreach (var def in defsToRemove) kv.Value.Remove(def);
+					defsToRemove.Clear();
+
+					if (kv.Value.Count == 0)
+					{
+						if (keysToRemove == null) keysToRemove = new List<string>();
+						keysToRemove.Add(kv.Key);
+					}
+				}
+			}
+
+			if (keysToRemove != null && keysToRemove.Count > 0)
+			{
+				foreach (var key in keysToRemove) _defs.Remove(key);
+			}
+		}
 	}
 }

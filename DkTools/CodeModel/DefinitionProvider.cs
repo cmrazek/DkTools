@@ -134,10 +134,10 @@ namespace DkTools.CodeModel
 				AddGlobalFromAnywhere(FileStore.GetStdLibModel(appSettings).PreprocessorModel.DefinitionProvider.GlobalsFromFile);
 			}
 
-			var ds = DefinitionStore.Current;
-			if (ds != null)
+			var app = FunctionFileScanning.FFScanner.CurrentApp;
+			if (app != null)
 			{
-				AddGlobalFromAnywhere(ds.GlobalDefinitions);
+				AddGlobalFromAnywhere(app.Repo.GetGlobalDefinitions());
 			}
 		}
 

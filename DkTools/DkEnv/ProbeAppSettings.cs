@@ -274,13 +274,15 @@ namespace DkTools
 					_watchers.Add(watcher);
 
 					watcher.Path = dir;
-					watcher.Filter = "*";
+					watcher.Filter = "*.*";
 					watcher.NotifyFilter = NotifyFilters.LastWrite | NotifyFilters.DirectoryName | NotifyFilters.FileName;
 					watcher.IncludeSubdirectories = true;
 
 					watcher.Changed += OnFileChanged;
 					watcher.Deleted += OnFileDeleted;
 					watcher.Renamed += OnFileRenamed;
+					watcher.Created += OnFileCreated;
+					watcher.Error += OnError;
 
 					watcher.EnableRaisingEvents = true;
 				}
@@ -353,7 +355,33 @@ namespace DkTools
 
 					FileDeleted?.Invoke(this, new FileEventArgs(e.OldFullPath));
 				}
+				else if (ProbeEnvironment.IsProbeFile(e.FullPath))
+				{
+					Log.Debug("File rename detected: {0} -> {1}", e.OldFullPath, e.FullPath);
+
+					FileChanged?.Invoke(this, new FileEventArgs(e.FullPath));
+				}
 			});
+		}
+
+		private void OnFileCreated(object sender, FileSystemEventArgs e)
+		{
+			ThreadHelper.JoinableTaskFactory.RunAsync(async () =>
+			{
+				await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
+
+				if (ProbeEnvironment.IsProbeFile(e.FullPath))
+				{
+					Log.Debug("File create detected: {0}", e.FullPath);
+
+					FileChanged?.Invoke(this, new FileEventArgs(e.FullPath));
+				}
+			});
+		}
+
+		private void OnError(object sender, ErrorEventArgs e)
+		{
+			Log.Warning("File system watcher error: {0}", e.GetException());
 		}
 
 		public class FileEventArgs : EventArgs

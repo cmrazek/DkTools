@@ -656,10 +656,10 @@ namespace DkTools.StatementCompletion
 			}
 
 			// Class and method
-			var ds = DefinitionStore.Current;
-			if (ds != null)
+			var app = FunctionFileScanning.FFScanner.CurrentApp;
+			if (app != null)
 			{
-				foreach (var cls in ds.GetClasses(word1))
+				foreach (var cls in app.Repo.GetClassDefinitions(word1))
 				{
 					foreach (var def in cls.Functions)
 					{
@@ -667,7 +667,7 @@ namespace DkTools.StatementCompletion
 					}
 				}
 
-				foreach (var permex in ds.GetPermanentExtracts(word1))
+				foreach (var permex in app.Repo.GetPermanentExtractDefinitions(word1))
 				{
 					foreach (var field in permex.Fields)
 					{
@@ -730,12 +730,12 @@ namespace DkTools.StatementCompletion
 			// Don't show functions when on the root.
 			if (tokens.Any(t => !t.IsOnRoot))
 			{
-				var ds = DefinitionStore.Current;
-				if (ds != null)
+				var app = FunctionFileScanning.FFScanner.CurrentApp;
+				if (app != null)
 				{
-					foreach (var f in ds.GlobalDefinitions)
+					foreach (var def in app.Repo.GetGlobalDefinitions())
 					{
-						CreateCompletion(f);
+						CreateCompletion(def);
 					}
 				}
 			}

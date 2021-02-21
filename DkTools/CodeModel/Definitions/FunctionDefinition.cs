@@ -7,6 +7,7 @@ using System.Text.RegularExpressions;
 using Microsoft.VisualStudio.Text.Adornments;
 using System.Windows;
 using DkTools.QuickInfo;
+using DkTools.GlobalData;
 
 namespace DkTools.CodeModel.Definitions
 {
@@ -32,6 +33,14 @@ namespace DkTools.CodeModel.Definitions
 			_argsEndPos = argsEndPos;
 			_bodyStartPos = bodyStartPos;
 			_entireSpan = entireSpan;
+		}
+
+		public FunctionDefinition(FunctionSignature signature, FilePosition filePos)
+			: base(signature.FunctionName, filePos, MakeExtRefId(signature.ClassName, signature.FunctionName))
+		{
+			_sig = signature ?? throw new ArgumentNullException(nameof(signature));
+			_argsStartPos = _argsEndPos = _bodyStartPos = 0;
+			_entireSpan = Span.Empty;
 		}
 
 		public FunctionDefinition(FunctionSignature signature)

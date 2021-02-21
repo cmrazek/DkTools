@@ -17,7 +17,7 @@ namespace DkTools.CodeModel.Definitions
 		private List<FunctionDefinition> _funcs = new List<FunctionDefinition>();
 
 		public ClassDefinition(string name, string fileName)
-			: base(name, new FilePosition(fileName, 0, true), FunctionFileScanning.FFClass.GetExternalRefId(name))
+			: base(name, new FilePosition(fileName, 0, true), GetExternalRefId(name))
 		{
 		}
 
@@ -99,6 +99,11 @@ namespace DkTools.CodeModel.Definitions
 		public void ClearFunctions()
 		{
 			_funcs.Clear();
+		}
+
+		public static string GetExternalRefId(string className)
+		{
+			return string.Concat("class:", className);
 		}
 	}
 }

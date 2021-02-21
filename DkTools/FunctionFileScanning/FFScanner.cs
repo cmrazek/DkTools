@@ -21,9 +21,6 @@ namespace DkTools.FunctionFileScanning
 		private static Queue<ScanInfo> _scanQueue;
 		private static object _scanLock = new object();
 
-		private static DateTime _lastDefinitionPublish = DateTime.MinValue;
-		private static bool _definitionPublishRequired = false;
-
 		private const int k_threadWaitIdle = 1000;
 		private const int k_threadWaitActive = 0;
 
@@ -33,7 +30,6 @@ namespace DkTools.FunctionFileScanning
 		{
 			public FFScanMode mode;
 			public string fileName;
-			public bool forceScan;	// Ignore modified date?
 
 			public int CompareTo(ScanInfo other)
 			{
@@ -109,45 +105,37 @@ namespace DkTools.FunctionFileScanning
 		{
 			if (_currentApp == null) return;
 
-			using (var db = new FFDatabase())
-			{
-				var scanStartTime = DateTime.Now;
+			var scanStartTime = DateTime.Now;
 
-				while (!_kill.WaitOne(k_threadWaitActive))
+			while (!_kill.WaitOne(k_threadWaitActive))
+			{
+				ScanInfo? scanInfo = null;
+				lock (_scanLock)
 				{
-					ScanInfo? scanInfo = null;
+					if (_scanQueue != null && _scanQueue.Count > 0)
+					{
+						scanInfo = _scanQueue.Dequeue();
+					}
+				}
+
+				if (scanInfo.HasValue)
+				{
+					ProcessFile(CurrentApp, scanInfo.Value);
+				}
+				else
+				{
+					ProbeToolsPackage.Instance.SetStatusText("DkTools shrinking repository...");
+					CurrentApp.Repo.OnScanComplete();
+					CurrentApp.Repo.Save();
+
+					var scanElapsed = DateTime.Now.Subtract(scanStartTime);
+
+					ProbeToolsPackage.Instance.SetStatusText(string.Format("DkTools background scanning complete.  (elapsed: {0})", scanElapsed));
 					lock (_scanLock)
 					{
-						if (_scanQueue != null && _scanQueue.Count > 0)
-						{
-							scanInfo = _scanQueue.Dequeue();
-						}
+						_scanQueue = null;
 					}
-
-					if (scanInfo.HasValue)
-					{
-						ProcessFile(db, CurrentApp, scanInfo.Value);
-					}
-					else
-					{
-						_currentApp.PublishDefinitions();
-
-						ProbeToolsPackage.Instance.SetStatusText("DkTools background purging...");
-						using (var txn = db.BeginTransaction())
-						{
-							_currentApp.PurgeData(db);
-							txn.Commit();
-						}
-
-						var scanElapsed = DateTime.Now.Subtract(scanStartTime);
-
-						ProbeToolsPackage.Instance.SetStatusText(string.Format("DkTools background scanning complete.  (elapsed: {0})", scanElapsed));
-						lock (_scanLock)
-						{
-							_scanQueue = null;
-						}
-						return;
-					}
+					return;
 				}
 			}
 		}
@@ -209,23 +197,11 @@ namespace DkTools.FunctionFileScanning
 			var fileContext = FileContextUtil.GetFileContextFromFileName(fullPath);
 			if (fileContext != FileContext.Include && fileContext != FileContext.Dictionary)
 			{
-				lock (_scanLock)
-				{
-					if (_scanQueue == null) _scanQueue = new Queue<ScanInfo>();
-					if (!_scanQueue.Any(s => string.Equals(s.fileName, fullPath, StringComparison.OrdinalIgnoreCase)))
-					{
-						_scanQueue.Enqueue(new ScanInfo
-						{
-							fileName = fullPath,
-							mode = FFScanMode.Deep,
-							forceScan = true
-						});
-					}
-				}
+				_currentApp.Repo.ResetScanDateOnFile(fullPath);
 			}
 		}
 
-		private static void ProcessFile(FFDatabase db, FFApp app, ScanInfo scan)
+		private static void ProcessFile(FFApp app, ScanInfo scan)
 		{
 			try
 			{
@@ -236,25 +212,14 @@ namespace DkTools.FunctionFileScanning
 				if (fileContext == FileContext.Include) return;
 
 				DateTime modified;
-				if (!app.TryGetFileDate(scan.fileName, out modified)) modified = DateTime.MinValue;
+				if (!app.Repo.TryGetFileDate(scan.fileName, out modified)) modified = DateTime.MinValue;
 
 				var fileModified = File.GetLastWriteTime(scan.fileName);
-				if (!scan.forceScan)
-				{
-					if (modified != DateTime.MinValue && fileModified.Subtract(modified).TotalSeconds < 1.0) return;
-				}
-
-				var ffFile = app.GetFileForScan(db, scan.fileName);
+				if (modified != DateTime.MinValue && fileModified.Subtract(modified).TotalSeconds < 1.0) return;
 
 				Log.Debug("Processing file: {0} (modified={1}, last modified={2})", scan.fileName, fileModified, modified);
 				if (scan.mode == FFScanMode.Exports) ProbeToolsPackage.Instance.SetStatusText(string.Format("DkTools background scanning file: {0} (exports only)", scan.fileName));
 				else ProbeToolsPackage.Instance.SetStatusText(string.Format("DkTools background scanning file: {0}", scan.fileName));
-
-				// Make sure all definitions are available when starting deep scanning.
-				if (scan.mode != FFScanMode.Exports && _definitionPublishRequired)
-				{
-					app.PublishDefinitions();
-				}
 
 				var fileTitle = Path.GetFileNameWithoutExtension(scan.fileName);
 
@@ -271,32 +236,7 @@ namespace DkTools.FunctionFileScanning
 				var model = fileStore.CreatePreprocessedModel(_appSettings, merger.MergedContent, scan.fileName, false, string.Concat("Function file processing: ", scan.fileName), includeDependencies);
 				var className = fileContext.IsClass() ? Path.GetFileNameWithoutExtension(scan.fileName) : null;
 
-				using (var txn = db.BeginTransaction())
-				{
-					ffFile.UpdateFromModel(model, db, fileStore, fileModified, scan.mode);
-					txn.Commit();
-				}
-
-				if (ffFile.Visible)
-				{
-					app.OnVisibleFileChanged(ffFile);
-				}
-				else
-				{
-					app.OnInvisibleFileChanged(ffFile);
-				}
-
-				if (scan.mode == FFScanMode.Exports)
-				{
-					_definitionPublishRequired = true;
-
-					if (DateTime.Now.Subtract(_lastDefinitionPublish).TotalSeconds > 5.0)
-					{
-						app.PublishDefinitions();
-						_definitionPublishRequired = false;
-						_lastDefinitionPublish = DateTime.Now;
-					}
-				}
+				app.Repo.UpdateFile(model, scan.mode);
 			}
 			catch (Exception ex)
 			{
@@ -304,7 +244,7 @@ namespace DkTools.FunctionFileScanning
 			}
 		}
 
-		private static FFApp CurrentApp
+		public static FFApp CurrentApp
 		{
 			get
 			{
@@ -349,22 +289,17 @@ namespace DkTools.FunctionFileScanning
 			{
 				if (!_appSettings.Initialized) return;
 
-				Log.Write(LogLevel.Info, "Loading function file database...");
+				Log.Write(LogLevel.Info, "Loading DK repository...");
 				var startTime = DateTime.Now;
 
-				using (var db = new FFDatabase())
-				{
-					_currentApp = new FFApp(db, _appSettings);
-				}
-
-				_currentApp.PublishDefinitions();
+				_currentApp = new FFApp(_appSettings);
 
 				var elapsed = DateTime.Now.Subtract(startTime);
-				Log.Write(LogLevel.Info, "Function file database loaded. (elapsed: {0})", elapsed);
+				Log.Write(LogLevel.Info, "DK repository loaded. (elapsed: {0})", elapsed);
 			}
 			catch (Exception ex)
 			{
-				Log.Error(ex, "Error when loading function file database.");
+				Log.Error(ex, "Error when loading DK repository.");
 				_currentApp = null;
 			}
 		}
@@ -391,6 +326,8 @@ namespace DkTools.FunctionFileScanning
 
 							EnqueueFilesDependentOnInclude(e.FilePath);
 						}
+
+						RestartScanning("File changed.");
 					}
 				}
 			}
@@ -407,58 +344,7 @@ namespace DkTools.FunctionFileScanning
 			var options = ProbeToolsPackage.Instance.EditorOptions;
 			if (options.DisableBackgroundScan) return;
 
-			using (var db = new FFDatabase())
-			{
-				var fileIds = new Dictionary<long, string>();
-
-				using (var cmd = db.CreateCommand(@"
-					select file_id, file_name from include_depends
-					inner join file_ on file_.rowid = include_depends.file_id
-					where include_depends.app_id = @app_id
-					and include_depends.include_file_name = @include_file_name
-					"))
-				{
-					cmd.Parameters.AddWithValue("@app_id", _currentApp.Id);
-					cmd.Parameters.AddWithValue("@include_file_name", includeFileName);
-
-					using (var rdr = cmd.ExecuteReader())
-					{
-						while (rdr.Read())
-						{
-							var fileName = rdr.GetString(1);
-							var context = FileContextUtil.GetFileContextFromFileName(fileName);
-							if (context != FileContext.Include && context != FileContext.Dictionary)
-							{
-								fileIds[rdr.GetInt64(0)] = fileName;
-							}
-						}
-					}
-
-				}
-
-				if (fileIds.Any())
-				{
-					Log.Debug("Resetting modified date on {0} file(s).", fileIds.Count);
-
-					using (var txn = db.BeginTransaction())
-					{
-						using (var cmd = db.CreateCommand("update file_ set modified = '1900-01-01' where rowid = @id"))
-						{
-							foreach (var item in fileIds)
-							{
-								cmd.Parameters.Clear();
-								cmd.Parameters.AddWithValue("@id", item.Key);
-								cmd.ExecuteNonQuery();
-
-								_currentApp.TrySetFileDate(item.Value, DateTime.MinValue);
-							}
-						}
-						txn.Commit();
-					}
-				}
-			}
-
-			RestartScanning("Include file changed; scanning dependent files.");
+			_currentApp.Repo.ResetScanDateOnDependentFiles(includeFileName);
 		}
 	}
 

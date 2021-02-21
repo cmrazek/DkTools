@@ -395,6 +395,7 @@
     <Compile Include="DkDict\Tag.cs" />
     <Compile Include="DkDict\Typedef.cs" />
     <Compile Include="DkEnv\ProbeAppSettings.cs" />
+    <Compile Include="DumpWriter.cs" />
     <Compile Include="ErrorDialog.xaml.cs">
       <DependentUpon>ErrorDialog.xaml</DependentUpon>
     </Compile>
@@ -509,6 +510,10 @@
     </Compile>
     <Compile Include="FunctionFileScanning\FFUtil.cs" />
     <Compile Include="FunctionFileScanning\FFScanner.cs" />
+    <Compile Include="GlobalData\AppRepo.cs" />
+    <Compile Include="GlobalData\GlobalDataExceptions.cs" />
+    <Compile Include="GlobalData\RepoClass.cs" />
+    <Compile Include="GlobalData\StringRepo.cs" />
     <Compile Include="GroupedList.cs" />
     <Compile Include="Guids.cs" />
     <Compile Include="IniFile.cs" />
