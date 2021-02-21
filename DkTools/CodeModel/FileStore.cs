@@ -296,7 +296,7 @@ namespace DkTools.CodeModel
 			var midTime1 = DateTime.Now;
 #endif
 
-			var prepModel = new PreprocessorModel(prepSource, defProvider, fileName, visible, prep.IncludeDependencies)
+			var prepModel = new PreprocessorModel(appSettings, prepSource, defProvider, fileName, visible, prep.IncludeDependencies)
 			{
 				Preprocessor = prep
 			};

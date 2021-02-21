@@ -22,9 +22,8 @@ namespace DkTools.CodeModel.Tokens.Statements
 			var ret = new ExternStatement(scope);
 			ret.AddToken(keywordToken);
 
-			var dataType = DataType.TryParse(new DataType.ParseArgs
+			var dataType = DataType.TryParse(new DataType.ParseArgs(code, scope.AppSettings)
 			{
-				Code = code,
 				Scope = scope,
 				VariableCallback = (name) =>
 				{

@@ -215,7 +215,7 @@ namespace DkTools.CodeModel
 			return sb.ToString();
 		}
 
-		public static FunctionSignature ParseFromDb(string str)
+		public static FunctionSignature ParseFromDb(string str, ProbeAppSettings appSettings)
 		{
 			var code = new CodeParser(str);
 
@@ -246,7 +246,7 @@ namespace DkTools.CodeModel
 						else
 						{
 							var dtString = CodeParser.StringLiteralToString(code.Text);
-							returnDataType = DataType.TryParse(new DataType.ParseArgs { Code = new CodeParser(dtString) });
+							returnDataType = DataType.TryParse(new DataType.ParseArgs(new CodeParser(dtString), appSettings));
 							if (returnDataType == null)
 							{
 								Log.Debug("Unable to parse return data type from: {0}", dtString);
@@ -272,7 +272,7 @@ namespace DkTools.CodeModel
 						else
 						{
 							var argString = CodeParser.StringLiteralToString(code.Text);
-							var arg = ArgumentDescriptor.ParseFromDb(argString);
+							var arg = ArgumentDescriptor.ParseFromDb(argString, appSettings);
 							if (arg == null) Log.Debug("Unable to parse argument from: {0}", argString);
 							else args.Add(arg);
 						}

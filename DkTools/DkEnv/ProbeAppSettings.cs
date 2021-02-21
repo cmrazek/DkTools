@@ -30,6 +30,7 @@ namespace DkTools
 		public string[] IncludeFiles { get; set; }
 		public string[] SourceAndIncludeFiles { get; set; }
 		public AppRepo Repo { get; set; }
+		public DkDict.Dict Dict { get; set; }
 
 		public ProbeAppSettings()
 		{
@@ -49,6 +50,7 @@ namespace DkTools
 			SourceFiles = new string[0];
 			IncludeFiles = new string[0];
 			SourceAndIncludeFiles = new string[0];
+			Dict = new DkDict.Dict();
 			Repo = new AppRepo(this);
 		}
 

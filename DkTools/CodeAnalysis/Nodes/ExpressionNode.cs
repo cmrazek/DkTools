@@ -95,9 +95,8 @@ namespace DkTools.CodeAnalysis.Nodes
 									var opText = code.Text;
 									var startPos = code.Span.Start;
 									var resumePos = code.Position;
-									var dataType = DataType.TryParse(new DataType.ParseArgs
+									var dataType = DataType.TryParse(new DataType.ParseArgs(code, p.AppSettings)
 									{
-										Code = code,
 										Flags = DataType.ParseFlag.Strict,
 										DataTypeCallback = name =>
 											{
@@ -115,7 +114,7 @@ namespace DkTools.CodeAnalysis.Nodes
 												{
 													if (tableDef.AllowsChild)
 													{
-														foreach (var fieldDef in tableDef.GetChildDefinitions(fieldName))
+														foreach (var fieldDef in tableDef.GetChildDefinitions(fieldName, p.AppSettings))
 														{
 															return new Definition[] { tableDef, fieldDef };
 														}
@@ -230,7 +229,7 @@ namespace DkTools.CodeAnalysis.Nodes
 												   where d.AllowsChild
 												   select d))
 						{
-							var childDef = parentDef.ChildDefinitions.FirstOrDefault(c => c.Name == childWord && c.ArgumentsRequired);
+							var childDef = parentDef.GetChildDefinitions(p.AppSettings).FirstOrDefault(c => c.Name == childWord && c.ArgumentsRequired);
 							if (childDef != null)
 							{
 								return FunctionCallNode.Read(p, combinedSpan, combinedWord, childDef);
@@ -246,7 +245,7 @@ namespace DkTools.CodeAnalysis.Nodes
 												   where d.AllowsChild
 												   select d))
 						{
-							var childDef = parentDef.ChildDefinitions.FirstOrDefault(c => c.Name == childWord && !c.ArgumentsRequired);
+							var childDef = parentDef.GetChildDefinitions(p.AppSettings).FirstOrDefault(c => c.Name == childWord && !c.ArgumentsRequired);
 							if (childDef != null)
 							{
 								return TryReadSubscript(p, combinedSpan, combinedWord, childDef);
@@ -376,16 +375,16 @@ namespace DkTools.CodeAnalysis.Nodes
 				{
 					case ValType.Table:
 						{
-							var table = DkDict.Dict.GetTable(word);
+							var table = p.AppSettings.Dict.GetTable(word);
 							if (table != null) return new IdentifierNode(p.Statement, wordSpan, word, table.Definition);
 
-							var indrel = DkDict.Dict.GetRelInd(word);
+							var indrel = p.AppSettings.Dict.GetRelInd(word);
 							if (indrel != null) return new IdentifierNode(p.Statement, wordSpan, word, indrel.Definition);
 						}
 						break;
 					case ValType.IndRel:
 						{
-							var indrel = DkDict.Dict.GetRelInd(word);
+							var indrel = p.AppSettings.Dict.GetRelInd(word);
 							if (indrel != null) return new IdentifierNode(p.Statement, wordSpan, word, indrel.Definition);
 						}
 						break;

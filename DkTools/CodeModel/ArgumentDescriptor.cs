@@ -82,7 +82,7 @@ namespace DkTools.CodeModel
 			return sb.ToString();
 		}
 
-		public static ArgumentDescriptor ParseFromDb(string str)
+		public static ArgumentDescriptor ParseFromDb(string str, ProbeAppSettings appSettings)
 		{
 			string name = null;
 			PassByMethod passByMethod = PassByMethod.Value;
@@ -110,7 +110,7 @@ namespace DkTools.CodeModel
 
 			if (code.ReadExactWholeWord("dt"))
 			{
-				dataType = DataType.TryParse(new DataType.ParseArgs { Code = code });
+				dataType = DataType.TryParse(new DataType.ParseArgs(code, appSettings));
 				if (dataType == null)
 				{
 					Log.Debug("Unable to parse data type from: {0}", str);

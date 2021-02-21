@@ -93,19 +93,16 @@ namespace DkTools.CodeModel.Definitions
 			get { return true; }
 		}
 
-		public override IEnumerable<Definition> GetChildDefinitions(string name)
+		public override IEnumerable<Definition> GetChildDefinitions(string name, ProbeAppSettings appSettings)
 		{
 			foreach (var def in _intType.GetMethods(name)) yield return def;
 			foreach (var def in _intType.GetProperties(name)) yield return def;
 		}
 
-		public override IEnumerable<Definition> ChildDefinitions
+		public override IEnumerable<Definition> GetChildDefinitions(ProbeAppSettings appSettings)
 		{
-			get
-			{
-				foreach (var def in _intType.MethodDefinitions) yield return def;
-				foreach (var def in _intType.PropertyDefinitions) yield return def;
-			}
+			foreach (var def in _intType.MethodDefinitions) yield return def;
+			foreach (var def in _intType.PropertyDefinitions) yield return def;
 		}
 
 		public override bool ArgumentsRequired

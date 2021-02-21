@@ -12,44 +12,41 @@ namespace DkTools.FunctionFileScanning
 {
 	internal static class FFScanner
 	{
-		private static Thread _thread;
+		private static List<Thread> _threads = new List<Thread>();
 		private static EventWaitHandle _kill = new EventWaitHandle(false, EventResetMode.ManualReset);
+		private static List<ScanJob> _pendingQueue = new List<ScanJob>();
+		private static List<ScanJob> _runningQueue = new List<ScanJob>();
+		private static object _queueLock = new object();
+		private static DateTime _scanStartTime;
 
-		private static ProbeAppSettings _appSettings;
-		private static object _currentAppLock = new object();
-		private static Queue<ScanInfo> _scanQueue;
-		private static object _scanLock = new object();
-
-		private const int k_threadWaitIdle = 1000;
-		private const int k_threadWaitActive = 0;
-
-		private const string k_noProbeApp = "(none)";
-
-		private struct ScanInfo : IComparable<ScanInfo>
+		private class ScanJob : IComparable<ScanJob>
 		{
-			public FFScanMode mode;
-			public string fileName;
+			public FFScanMode Mode { get; private set; }
+			public string Path { get; private set; }
+			public ProbeAppSettings App { get; private set; }
 
-			public int CompareTo(ScanInfo other)
+			public ScanJob(FFScanMode mode, string path, ProbeAppSettings app)
 			{
-				var ret = mode.CompareTo(other.mode);
+				Mode = mode;
+				Path = path;
+				App = app ?? throw new ArgumentNullException(nameof(app));
+			}
+
+			public int CompareTo(ScanJob other)
+			{
+				var ret = Mode.CompareTo(other.Mode);
 				if (ret != 0) return ret;
 
-				return string.Compare(fileName, other.fileName, true);
+				return string.Compare(Path, other.Path, true);
 			}
 		}
 
 		public static void OnStartup()
 		{
-			_appSettings = ProbeEnvironment.CurrentAppSettings;
-
-			_thread = new Thread(new ThreadStart(ThreadProc));
-			_thread.Name = "Function File Scanner";
-			_thread.Priority = ThreadPriority.BelowNormal;
-			_thread.Start();
-
 			ProbeEnvironment.AppChanged += new EventHandler(ProbeEnvironment_AppChanged);
 			ProbeAppSettings.FileChanged += ProbeAppSettings_FileChanged;
+
+			StartScanning("Startup");
 		}
 
 		public static void OnShutdown()
@@ -59,16 +56,72 @@ namespace DkTools.FunctionFileScanning
 
 		private static void ProbeEnvironment_AppChanged(object sender, EventArgs e)
 		{
-			_appSettings = ProbeEnvironment.CurrentAppSettings;
-			RestartScanning("Probe app changed");
+			StartScanning("DK app changed");
 		}
 
 		private static void Kill()
 		{
-			if (_thread != null)
+			if (_threads.Any(t => t.IsAlive))
 			{
+				Log.Debug("Stopping existing scan threads.");
 				_kill.Set();
-				_thread.Join();
+
+				var remainingThread = _threads.FirstOrDefault(t => t.IsAlive);
+				while (remainingThread != null)
+				{
+					remainingThread.Join();
+				}
+			}
+		}
+
+		private static void StartScanning(string reason)
+		{
+			Log.Info("Starting background scanning ({0})", reason);
+
+			Kill();
+			_kill.Reset();
+			_threads.Clear();
+
+			var options = ProbeToolsPackage.Instance.EditorOptions;
+			if (options.DisableBackgroundScan)
+			{
+				Log.Info("Scanning aborted because it's disabled in the options.");
+				return;
+			}
+
+			var app = ProbeEnvironment.CurrentAppSettings;
+			if (app == null)
+			{
+				Log.Warning("Scanning aborted because there is no current app.");
+				return;
+			}
+
+			_scanStartTime = DateTime.Now;
+
+			lock (_queueLock)
+			{
+				_pendingQueue.Clear();
+				_runningQueue.Clear();
+
+				foreach (var sourceDir in app.SourceDirs)
+				{
+					_pendingQueue.Add(new ScanJob(FFScanMode.FolderSearch, sourceDir, app));
+				}
+
+				_pendingQueue.Add(new ScanJob(FFScanMode.Completion, null, app));
+				_pendingQueue.Sort();
+			}
+
+			var numThreads = Environment.ProcessorCount - 1;
+			if (numThreads < 1) numThreads = 1;
+			Log.Debug("Starting {0} worker threads.", numThreads);
+
+			for (int i = 0; i < numThreads; i++)
+			{
+				var thread = new Thread(new ThreadStart(ThreadProc));
+				thread.Name = $"FFScanner {i + 1}";
+				thread.Priority = ThreadPriority.BelowNormal;
+				thread.Start();
 			}
 		}
 
@@ -76,71 +129,136 @@ namespace DkTools.FunctionFileScanning
 		{
 			try
 			{
-				RestartScanning("Start of FFScanner thread");
+				Log.Debug("FFScanner thread starting.");
 
-				while (!_kill.WaitOne(k_threadWaitIdle))
+				ScanJob job;
+				int timeout = 0;
+
+				while (!_kill.WaitOne(timeout))
 				{
-					var gotActivity = false;
-					lock (_scanLock)
+					if (!GetJobFromQueue(out job)) break;
+					if (job != null)
 					{
-						if (_scanQueue != null && _scanQueue.Count > 0) gotActivity = true;
+						ProcessJob(job);
+						timeout = 0;
+					}
+					else
+					{
+						timeout = 10;
+					}
+				}
+
+				Log.Debug("FFScanner thread stopping.");
+			}
+			catch (Exception ex)
+			{
+				Log.Error(ex, "Exception in FFScanner thread.");
+			}
+		}
+
+		private static bool GetJobFromQueue(out ScanJob job)
+		{
+			// This function will return true if there is still more jobs remaining in the queue.
+			// It may return a job of null but true when the thread needs to wait for other jobs in a previous phase to complete first.
+
+			lock (_queueLock)
+			{
+				if (_pendingQueue.Count > 0)
+				{
+					var nextJob = _pendingQueue[0];
+
+					if (_runningQueue.Any(x => x.Mode != nextJob.Mode))
+					{
+						// Other threads are still process jobs of a previous phase.
+						// Tell the thread to wait for now.
+						job = null;
+					}
+					else
+					{
+						job = nextJob;
+						_pendingQueue.RemoveAt(0);
+						_runningQueue.Add(nextJob);
 					}
 
-					if (gotActivity)
-					{
-						ProcessQueue();
-					}
+					return true;
+				}
+				else if (_runningQueue.Count > 0)
+				{
+					// There's nothing in the queue, but other threads are still processing jobs.
+					// Tell the thread to wait for now.
+					job = null;
+					return true;
+				}
+				else
+				{
+					// All jobs finished. Time to exit the threads.
+					job = null;
+					return false;
+				}
+			}
+		}
+
+		private static void CompleteJob(ScanJob job)
+		{
+			lock (_queueLock)
+			{
+				_runningQueue.Remove(job);
+			}
+		}
+
+		private static void ProcessJob(ScanJob job)
+		{
+			try
+			{
+				Log.Debug("FFScanner [{2}] Job: {0} {1}", job.Mode, job.Path, Thread.CurrentThread.ManagedThreadId);
+
+				switch (job.Mode)
+				{
+					case FFScanMode.FolderSearch:
+						{
+							var scanList = new List<ScanJob>();
+							ProcessSourceDir(job.App, job.Path, scanList);
+							if (scanList.Count > 0)
+							{
+								lock (_queueLock)
+								{
+									_pendingQueue.AddRange(scanList);
+									_pendingQueue.Sort();
+								}
+							}
+						}
+						break;
+
+					case FFScanMode.Exports:
+					case FFScanMode.Deep:
+						ProcessFile(job.App, job);
+						break;
+
+					case FFScanMode.Completion:
+						{
+							ProbeToolsPackage.Instance.SetStatusText("Finalizing DK repository...");
+							job.App.Repo.OnScanComplete();
+
+							ProbeToolsPackage.Instance.SetStatusText("Saving DK repository...");
+							job.App.Repo.Save();
+
+							var scanElapsed = DateTime.Now.Subtract(_scanStartTime);
+							ProbeToolsPackage.Instance.SetStatusText(string.Format("DkTools background scanning complete.  (elapsed: {0})", scanElapsed));
+						}
+						break;
 				}
 			}
 			catch (Exception ex)
 			{
-				Log.Error(ex, "Exception in function file scanner.");
+				Log.Error(ex, "FFScanner job exception.");
 			}
-		}
-
-		private static void ProcessQueue()
-		{
-			var app = _appSettings;
-			if (app == null) return;
-
-			var scanStartTime = DateTime.Now;
-
-			while (!_kill.WaitOne(k_threadWaitActive))
+			finally
 			{
-				ScanInfo? scanInfo = null;
-				lock (_scanLock)
-				{
-					if (_scanQueue != null && _scanQueue.Count > 0)
-					{
-						scanInfo = _scanQueue.Dequeue();
-					}
-				}
-
-				if (scanInfo.HasValue)
-				{
-					ProcessFile(app, scanInfo.Value);
-				}
-				else
-				{
-					ProbeToolsPackage.Instance.SetStatusText("Finalizing DK repository...");
-					app.Repo.OnScanComplete();
-
-					ProbeToolsPackage.Instance.SetStatusText("Saving DK repository...");
-					app.Repo.Save();
-
-					var scanElapsed = DateTime.Now.Subtract(scanStartTime);
-
-					ProbeToolsPackage.Instance.SetStatusText(string.Format("DkTools background scanning complete.  (elapsed: {0})", scanElapsed));
-					lock (_scanLock)
-					{
-						_scanQueue = null;
-					}
-					return;
-				}
+				CompleteJob(job);
 			}
 		}
 
-		private static void ProcessSourceDir(ProbeAppSettings app, string dir, List<ScanInfo> scanList)
+		private static void ProcessSourceDir(ProbeAppSettings app, string dir, List<ScanJob> scanList)
 		{
 			try
 			{
@@ -157,7 +275,10 @@ namespace DkTools.FunctionFileScanning
 
 							case FileContext.Dictionary:
 								// Deep scan for dictionary only; no exports produced.
-								scanList.Add(new ScanInfo { fileName = fileName, mode = FFScanMode.Deep });
+								if (FileRequiresScan(app, fileName))
+								{
+									scanList.Add(new ScanJob(FFScanMode.Deep, fileName, app));
+								}
 								break;
 
 							case FileContext.Function:
@@ -167,12 +288,18 @@ namespace DkTools.FunctionFileScanning
 							case FileContext.ServerProgram:
 								// Files that export global functions must be scanned twice:
 								// First for the exports before everything else, then again for the deep info.
-								scanList.Add(new ScanInfo { fileName = fileName, mode = FFScanMode.Exports });
-								scanList.Add(new ScanInfo { fileName = fileName, mode = FFScanMode.Deep });
+								if (FileRequiresScan(app, fileName))
+								{
+									scanList.Add(new ScanJob(FFScanMode.Exports, fileName, app));
+									scanList.Add(new ScanJob(FFScanMode.Deep, fileName, app));
+								}
 								break;
 
 							default:
-								scanList.Add(new ScanInfo { fileName = fileName, mode = FFScanMode.Deep });
+								if (FileRequiresScan(app, fileName))
+								{
+									scanList.Add(new ScanJob(FFScanMode.Deep, fileName, app));
+								}
 								break;
 						}
 					}
@@ -189,86 +316,56 @@ namespace DkTools.FunctionFileScanning
 			}
 		}
 
-		public static void EnqueueChangedFile(ProbeAppSettings app, string fullPath)
+		private static bool FileRequiresScan(ProbeAppSettings app, string fileName)
 		{
-			var options = ProbeToolsPackage.Instance.EditorOptions;
-			if (options.DisableBackgroundScan) return;
+			var modified = File.GetLastWriteTime(fileName);
 
-			var fileContext = FileContextUtil.GetFileContextFromFileName(fullPath);
-			if (fileContext != FileContext.Include && fileContext != FileContext.Dictionary)
-			{
-				app.Repo.ResetScanDateOnFile(fullPath);
-			}
+			if (!app.Repo.TryGetFileDate(fileName, out var scanDate)) return true;
+			if (scanDate.AddSeconds(1) < modified) return true;
+
+			return false;
 		}
 
-		private static void ProcessFile(ProbeAppSettings app, ScanInfo scan)
+		private static void ProcessFile(ProbeAppSettings app, ScanJob scan)
 		{
 			try
 			{
-				if (!File.Exists(scan.fileName)) return;
-				if (FileContextUtil.IsLocalizedFile(scan.fileName)) return;
+				if (!File.Exists(scan.Path)) return;
+				if (FileContextUtil.IsLocalizedFile(scan.Path)) return;
 
-				var fileContext = CodeModel.FileContextUtil.GetFileContextFromFileName(scan.fileName);
+				var fileContext = CodeModel.FileContextUtil.GetFileContextFromFileName(scan.Path);
 				if (fileContext == FileContext.Include) return;
 
 				DateTime modified;
-				if (!app.Repo.TryGetFileDate(scan.fileName, out modified)) modified = DateTime.MinValue;
+				if (!app.Repo.TryGetFileDate(scan.Path, out modified)) modified = DateTime.MinValue;
 
-				var fileModified = File.GetLastWriteTime(scan.fileName);
+				var fileModified = File.GetLastWriteTime(scan.Path);
 				if (modified != DateTime.MinValue && fileModified.Subtract(modified).TotalSeconds < 1.0) return;
 
-				Log.Debug("Processing file: {0} (modified={1}, last modified={2})", scan.fileName, fileModified, modified);
-				if (scan.mode == FFScanMode.Exports) ProbeToolsPackage.Instance.SetStatusText(string.Format("DkTools background scanning file: {0} (exports only)", scan.fileName));
-				else ProbeToolsPackage.Instance.SetStatusText(string.Format("DkTools background scanning file: {0}", scan.fileName));
+				Log.Debug("Processing file: {0} (modified={1}, last modified={2})", scan.Path, fileModified, modified);
+				if (scan.Mode == FFScanMode.Exports) ProbeToolsPackage.Instance.SetStatusText(string.Format("DK Scan: {0} (exports only)", scan.Path));
+				else ProbeToolsPackage.Instance.SetStatusText(string.Format("DK Scan: {0}", scan.Path));
 
-				var fileTitle = Path.GetFileNameWithoutExtension(scan.fileName);
+				var fileTitle = Path.GetFileNameWithoutExtension(scan.Path);
 
-				var defProvider = new CodeModel.DefinitionProvider(app, scan.fileName);
+				var defProvider = new CodeModel.DefinitionProvider(app, scan.Path);
 
-				var fileContent = File.ReadAllText(scan.fileName);
+				var fileContent = File.ReadAllText(scan.Path);
 				var fileStore = new CodeModel.FileStore();
 
 				var merger = new FileMerger();
-				merger.MergeFile(app, scan.fileName, null, false, true);
+				merger.MergeFile(app, scan.Path, null, false, true);
 				var includeDependencies = (from f in merger.FileNames
 										   select new Preprocessor.IncludeDependency(f, false, true, merger.GetFileContent(f))).ToArray();
 
-				var model = fileStore.CreatePreprocessedModel(app, merger.MergedContent, scan.fileName, false, string.Concat("Function file processing: ", scan.fileName), includeDependencies);
-				var className = fileContext.IsClass() ? Path.GetFileNameWithoutExtension(scan.fileName) : null;
+				var model = fileStore.CreatePreprocessedModel(app, merger.MergedContent, scan.Path, false, string.Concat("Function file processing: ", scan.Path), includeDependencies);
+				var className = fileContext.IsClass() ? Path.GetFileNameWithoutExtension(scan.Path) : null;
 
-				app.Repo.UpdateFile(model, scan.mode);
+				app.Repo.UpdateFile(model, scan.Mode);
 			}
 			catch (Exception ex)
 			{
-				Log.Error(ex, "Exception when background processing function name: {0} (mode: {1})", scan.fileName, scan.mode);
-			}
-		}
-
-		public static void RestartScanning(string reason)
-		{
-			if (!_appSettings.Initialized) return;
-
-			Log.Debug("Starting FF scanning ({0})", reason);
-
-			lock (_scanLock)
-			{
-				_scanQueue = new Queue<ScanInfo>();
-			}
-
-			var options = ProbeToolsPackage.Instance.EditorOptions;
-			if (!options.DisableBackgroundScan)
-			{
-				var scanList = new List<ScanInfo>();
-				foreach (var dir in _appSettings.SourceDirs)
-				{
-					ProcessSourceDir(_appSettings, dir, scanList);
-				}
-
-				scanList.Sort();
-				lock (_scanLock)
-				{
-					foreach (var scanItem in scanList) _scanQueue.Enqueue(scanItem);
-				}
+				Log.Error(ex, "Exception when background processing function name: {0} (mode: {1})", scan.Path, scan.Mode);
 			}
 		}
 
@@ -276,7 +373,7 @@ namespace DkTools.FunctionFileScanning
 		{
 			try
 			{
-				var app = _appSettings;
+				var app = ProbeEnvironment.CurrentAppSettings;
 				if (app == null) return;
 
 				var options = ProbeToolsPackage.Instance.EditorOptions;
@@ -289,16 +386,16 @@ namespace DkTools.FunctionFileScanning
 						{
 							Log.Debug("Scanner detected a saved file: {0}", e.FilePath);
 
-							EnqueueChangedFile(app, e.FilePath);
+							ResetDateOnFile(app, e.FilePath);
 						}
 						else
 						{
 							Log.Debug("Scanner detected an include file was saved: {0}", e.FilePath);
 
-							EnqueueFilesDependentOnInclude(app, e.FilePath);
+							ResetDateOnDependentFiles(app, e.FilePath);
 						}
 
-						RestartScanning("File changed.");
+						StartScanning("File changed.");
 					}
 				}
 			}
@@ -308,7 +405,19 @@ namespace DkTools.FunctionFileScanning
 			}
 		}
 
-		private static void EnqueueFilesDependentOnInclude(ProbeAppSettings app, string includeFileName)
+		public static void ResetDateOnFile(ProbeAppSettings app, string fullPath)
+		{
+			var options = ProbeToolsPackage.Instance.EditorOptions;
+			if (options.DisableBackgroundScan) return;
+
+			var fileContext = FileContextUtil.GetFileContextFromFileName(fullPath);
+			if (fileContext != FileContext.Include && fileContext != FileContext.Dictionary)
+			{
+				app.Repo.ResetScanDateOnFile(fullPath);
+			}
+		}
+
+		private static void ResetDateOnDependentFiles(ProbeAppSettings app, string includeFileName)
 		{
 			var options = ProbeToolsPackage.Instance.EditorOptions;
 			if (options.DisableBackgroundScan) return;
@@ -319,7 +428,9 @@ namespace DkTools.FunctionFileScanning
 
 	public enum FFScanMode
 	{
+		FolderSearch,
 		Exports,
-		Deep
+		Deep,
+		Completion
 	}
 }

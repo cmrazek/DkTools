@@ -46,9 +46,8 @@ namespace DkTools.CodeModel.Tokens
 			ret.AddToken(ret._openToken = new OpenBracketToken(scope, openBracketSpan, ret));
 
 			List<Token> dataTypeTokens = null;
-			var dataType = DataType.TryParse(new DataType.ParseArgs
+			var dataType = DataType.TryParse(new DataType.ParseArgs(code, scope.AppSettings)
 			{
-				Code = code,
 				Scope = scope,
 				DataTypeCallback = name =>
 				{
@@ -64,7 +63,7 @@ namespace DkTools.CodeModel.Tokens
 					{
 						if (tableDef.AllowsChild)
 						{
-							foreach (var fieldDef in tableDef.GetChildDefinitions(fieldName))
+							foreach (var fieldDef in tableDef.GetChildDefinitions(fieldName, indentScope.AppSettings))
 							{
 								return new Defs.Definition[] { tableDef, fieldDef };
 							}

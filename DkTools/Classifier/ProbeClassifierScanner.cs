@@ -210,7 +210,7 @@ namespace DkTools.Classifier
 						_pos = match.Index + match.Length;
 					}
 
-					stmt = StatementCompletion.StatementLayout.ProcessWord(word, stmt);
+					stmt = StatementCompletion.StatementLayout.ProcessWord(word, stmt, _model.AppSettings);
 					state = (((long)(stmt.IValue)) << State.StatementShift) | (state & ~State.StatementMask);
 				}
 			}

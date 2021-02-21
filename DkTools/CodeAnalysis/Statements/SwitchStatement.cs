@@ -135,7 +135,7 @@ namespace DkTools.CodeAnalysis.Statements
 				dataType = _condExp.ReadValue(scope).DataType;
 				if (dataType != null && dataType.HasCompletionOptions)
 				{
-					enumOptions = dataType.CompletionOptions.ToList();
+					enumOptions = dataType.GetCompletionOptions(scope.AppSettings).ToList();
 				}
 			}
 

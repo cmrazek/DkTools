@@ -11,21 +11,24 @@ using DkTools.CodeModel.Definitions;
 
 namespace DkTools.DkDict
 {
-	static class Dict
+	class Dict
 	{
-		private static CodeParser _code;
-		private static CodeSource _source;
-		private static Dictionary<string, Table> _tables = new Dictionary<string, Table>();
-		private static Dictionary<string, RelInd> _relinds = new Dictionary<string, RelInd>();
-		private static Dictionary<string, Stringdef> _stringdefs = new Dictionary<string, Stringdef>();
-		private static Dictionary<string, Typedef> _typedefs = new Dictionary<string, Typedef>();
-		private static Dictionary<string, Interface> _interfaces = new Dictionary<string, Interface>();
-		private static Dictionary<string, Interface> _impliedInterfaces = new Dictionary<string, Interface>();
+		private ProbeAppSettings _appSettings;
+		private CodeParser _code;
+		private CodeSource _source;
+		private Dictionary<string, Table> _tables = new Dictionary<string, Table>();
+		private Dictionary<string, RelInd> _relinds = new Dictionary<string, RelInd>();
+		private Dictionary<string, Stringdef> _stringdefs = new Dictionary<string, Stringdef>();
+		private Dictionary<string, Typedef> _typedefs = new Dictionary<string, Typedef>();
+		private Dictionary<string, Interface> _interfaces = new Dictionary<string, Interface>();
+		private Dictionary<string, Interface> _impliedInterfaces = new Dictionary<string, Interface>();
 
-		public static void Load(ProbeAppSettings appSettings)
+		public void Load(ProbeAppSettings appSettings)
 		{
 			try
 			{
+				_appSettings = appSettings ?? throw new ArgumentNullException(nameof(appSettings));
+
 				Log.Write(LogLevel.Info, "Parsing DICT...");
 				var startTime = DateTime.Now;
 
@@ -79,7 +82,7 @@ namespace DkTools.DkDict
 			}
 		}
 
-		private static void LoadDkRepo(ProbeAppSettings appSettings)
+		private void LoadDkRepo(ProbeAppSettings appSettings)
 		{
 			Log.Info("Loading WBDK Repository.");
 			var startTime = DateTime.Now;
@@ -104,12 +107,12 @@ namespace DkTools.DkDict
 					Interface existingIntf;
 					if (_interfaces.TryGetValue(intfName, out existingIntf))
 					{
-						existingIntf.LoadFromRepo(intf);
+						existingIntf.LoadFromRepo(intf, appSettings);
 					}
 					else
 					{
 						existingIntf = new Interface(intfName, FilePosition.Empty);
-						existingIntf.LoadFromRepo(intf);
+						existingIntf.LoadFromRepo(intf, appSettings);
 						_interfaces[intfName] = existingIntf;
 					}
 				}
@@ -136,17 +139,17 @@ namespace DkTools.DkDict
 			Log.Info("WBDK repository loading complete. (elapsed: {0})", elapsed);
 		}
 
-		private static void ReportError(int pos, string message)
+		private void ReportError(int pos, string message)
 		{
 			Log.Write(LogLevel.Warning, "DICT offset {1}: {0}", message, pos);
 		}
 
-		private static void ReportError(int pos, string format, params object[] args)
+		private void ReportError(int pos, string format, params object[] args)
 		{
 			ReportError(pos, string.Format(format, args));
 		}
 
-		private static void ReadDict()
+		private void ReadDict()
 		{
 			var suppressErrors = false;
 
@@ -205,7 +208,7 @@ namespace DkTools.DkDict
 			AddImplicitTables();
 		}
 
-		private static void ReadCreate()
+		private void ReadCreate()
 		{
 			if (_code.ReadWord())
 			{
@@ -265,7 +268,7 @@ namespace DkTools.DkDict
 			}
 		}
 
-		private static void ReadAlter()
+		private void ReadAlter()
 		{
 			if (_code.ReadWord())
 			{
@@ -297,7 +300,7 @@ namespace DkTools.DkDict
 			}
 		}
 
-		private static void ReadDrop()
+		private void ReadDrop()
 		{
 			if (_code.ReadWord())
 			{
@@ -333,7 +336,7 @@ namespace DkTools.DkDict
 			}
 		}
 
-		public static IEnumerable<Definition> AllDictDefinitions
+		public IEnumerable<Definition> AllDictDefinitions
 		{
 			get
 			{
@@ -349,7 +352,7 @@ namespace DkTools.DkDict
 		}
 
 		#region Tables
-		private static void ReadCreateTable()
+		private void ReadCreateTable()
 		{
 			if (!_code.ReadWord())
 			{
@@ -416,7 +419,7 @@ namespace DkTools.DkDict
 			}
 		}
 
-		private static void ReadTableAttributes(Table table, params string[] endTokens)
+		private void ReadTableAttributes(Table table, params string[] endTokens)
 		{
 			while (!_code.EndOfFile)
 			{
@@ -492,7 +495,7 @@ namespace DkTools.DkDict
 			}
 		}
 
-		private static void ReadAlterTable()
+		private void ReadAlterTable()
 		{
 			if (!_code.ReadWord())
 			{
@@ -585,9 +588,8 @@ namespace DkTools.DkDict
 
 					if (!_code.ReadExactWholeWordI("sametype"))
 					{
-						var dataType = DataType.TryParse(new DataType.ParseArgs
+						var dataType = DataType.TryParse(new DataType.ParseArgs(_code, _appSettings)
 						{
-							Code = _code,
 							DataTypeCallback = (name) =>
 								{
 									Typedef td;
@@ -644,7 +646,7 @@ namespace DkTools.DkDict
 			}
 		}
 
-		private static void ReadDropTable()
+		private void ReadDropTable()
 		{
 			var name = _code.ReadWordR();
 			if (string.IsNullOrEmpty(name))
@@ -663,7 +665,7 @@ namespace DkTools.DkDict
 			_tables.Remove(name);
 		}
 
-		public static Table GetTable(string tableName)
+		public Table GetTable(string tableName)
 		{
 			Table table;
 			if (_tables.TryGetValue(tableName, out table)) return table;
@@ -677,17 +679,17 @@ namespace DkTools.DkDict
 			return null;
 		}
 
-		public static IEnumerable<Table> Tables
+		public IEnumerable<Table> Tables
 		{
 			get { return _tables.Values; }
 		}
 
-		public static bool IsTable(string name)
+		public bool IsTable(string name)
 		{
 			return _tables.ContainsKey(name);
 		}
 
-		private static void AddImplicitTables()
+		private void AddImplicitTables()
 		{
 			Table updates;
 			FilePosition updatesFilePos = FilePosition.Empty;
@@ -734,7 +736,7 @@ namespace DkTools.DkDict
 		#endregion
 
 		#region Columns
-		private static Column TryReadColumn(string tableName)
+		private Column TryReadColumn(string tableName)
 		{
 			if (!_code.ReadWord())
 			{
@@ -744,9 +746,8 @@ namespace DkTools.DkDict
 			var colName = _code.Text;
 			var colNamePos = _code.TokenStartPostion;
 			
-			var dataType = DataType.TryParse(new DataType.ParseArgs
+			var dataType = DataType.TryParse(new DataType.ParseArgs(_code, _appSettings)
 			{
-				Code = _code,
 				DataTypeCallback = (name) =>
 				{
 					Typedef td;
@@ -768,7 +769,7 @@ namespace DkTools.DkDict
 			return col;
 		}
 
-		private static void ReadColumnAttributes(Column col)
+		private void ReadColumnAttributes(Column col)
 		{
 			while (!_code.EndOfFile)
 			{
@@ -856,7 +857,7 @@ namespace DkTools.DkDict
 		#endregion
 
 		#region Application
-		private static void ReadAlterApplication()
+		private void ReadAlterApplication()
 		{
 			while (!_code.EndOfFile)
 			{
@@ -915,7 +916,7 @@ namespace DkTools.DkDict
 		#endregion
 
 		#region Stringdef
-		private static void ReadStringdef(bool create, bool alter)
+		private void ReadStringdef(bool create, bool alter)
 		{
 			if (!_code.ReadWord())
 			{
@@ -985,21 +986,21 @@ namespace DkTools.DkDict
 			_code.ReadExact(';');
 		}
 
-		public static Stringdef GetStringdef(string name)
+		public Stringdef GetStringdef(string name)
 		{
 			Stringdef sd;
 			if (_stringdefs.TryGetValue(name, out sd)) return sd;
 			return null;
 		}
 
-		public static IEnumerable<Stringdef> Stringdefs
+		public IEnumerable<Stringdef> Stringdefs
 		{
 			get { return _stringdefs.Values; }
 		}
 		#endregion
 
 		#region Typedef
-		private static void ReadCreateTypedef()
+		private void ReadCreateTypedef()
 		{
 			var name = _code.ReadWordR();
 			if (string.IsNullOrEmpty(name))
@@ -1008,9 +1009,8 @@ namespace DkTools.DkDict
 				return;
 			}
 
-			var dataType = DataType.TryParse(new DataType.ParseArgs
+			var dataType = DataType.TryParse(new DataType.ParseArgs(_code, _appSettings)
 			{
-				Code = _code,
 				AllowTags = true
 			});
 			if (dataType == null)
@@ -1022,7 +1022,7 @@ namespace DkTools.DkDict
 			_typedefs[name] = new Typedef(name, dataType);
 		}
 
-		private static void ReadAlterTypedef()
+		private void ReadAlterTypedef()
 		{
 			var name = _code.ReadWordR();
 			if (string.IsNullOrEmpty(name))
@@ -1034,21 +1034,21 @@ namespace DkTools.DkDict
 			// Alter typedef is not supported at this time
 		}
 
-		public static Typedef GetTypedef(string name)
+		public Typedef GetTypedef(string name)
 		{
 			Typedef td;
 			if (_typedefs.TryGetValue(name, out td)) return td;
 			return null;
 		}
 
-		public static IEnumerable<Typedef> Typedefs
+		public IEnumerable<Typedef> Typedefs
 		{
 			get { return _typedefs.Values; }
 		}
 		#endregion
 
 		#region Indexes / Relationships
-		private static void ReadCreateUnique()
+		private void ReadCreateUnique()
 		{
 			var primary = false;
 			var nopick = false;
@@ -1077,7 +1077,7 @@ namespace DkTools.DkDict
 			ReadCreateIndex(true, primary, nopick);
 		}
 
-		private static void ReadCreatePrimary()
+		private void ReadCreatePrimary()
 		{
 			if (!_code.PeekWordR().Equals("index", StringComparison.OrdinalIgnoreCase))
 			{
@@ -1089,7 +1089,7 @@ namespace DkTools.DkDict
 			ReadCreateIndex(false, true, false);
 		}
 
-		private static void ReadCreateNoPick()
+		private void ReadCreateNoPick()
 		{
 			if (!_code.PeekWordR().Equals("index", StringComparison.OrdinalIgnoreCase))
 			{
@@ -1101,7 +1101,7 @@ namespace DkTools.DkDict
 			ReadCreateIndex(false, false, true);
 		}
 
-		private static void ReadCreateIndex(bool unique, bool primary, bool nopick)
+		private void ReadCreateIndex(bool unique, bool primary, bool nopick)
 		{
 			if (!_code.ReadWord())
 			{
@@ -1182,7 +1182,7 @@ namespace DkTools.DkDict
 			if (table != null) table.AddRelInd(relind);
 		}
 
-		private static void ReadCreateRelationship()
+		private void ReadCreateRelationship()
 		{
 			if (!_code.ReadWord())
 			{
@@ -1457,7 +1457,7 @@ namespace DkTools.DkDict
 			}
 		}
 
-		private static void ReadCreateTime()
+		private void ReadCreateTime()
 		{
 			if (!_code.ReadExactWholeWordI("relationship"))
 			{
@@ -1659,7 +1659,7 @@ namespace DkTools.DkDict
 			}
 		}
 
-		private static void ReadDropIndex()
+		private void ReadDropIndex()
 		{
 			var name = _code.ReadWordR();
 			if (string.IsNullOrEmpty(name))
@@ -1692,7 +1692,7 @@ namespace DkTools.DkDict
 			_relinds.Remove(name);
 		}
 
-		private static void ReadDropRelationship()
+		private void ReadDropRelationship()
 		{
 			var name = _code.ReadWordR();
 			if (string.IsNullOrEmpty(name))
@@ -1711,7 +1711,7 @@ namespace DkTools.DkDict
 			_relinds.Remove(name);
 		}
 
-		private static void ReadDropTime()
+		private void ReadDropTime()
 		{
 			if (!_code.ReadExactWholeWordI("relationship"))
 			{
@@ -1736,21 +1736,21 @@ namespace DkTools.DkDict
 			_relinds.Remove(name);
 		}
 
-		public static RelInd GetRelInd(string name)
+		public RelInd GetRelInd(string name)
 		{
 			RelInd relind;
 			if (_relinds.TryGetValue(name, out relind)) return relind;
 			return null;
 		}
 
-		public static IEnumerable<RelInd> RelInds
+		public IEnumerable<RelInd> RelInds
 		{
 			get { return _relinds.Values; }
 		}
 		#endregion
 
 		#region Attributes
-		private static Tag ReadTagAttribute()
+		private Tag ReadTagAttribute()
 		{
 			if (!_code.ReadTagName())
 			{
@@ -1769,7 +1769,7 @@ namespace DkTools.DkDict
 			return new Tag(tagName, tagValue);
 		}
 
-		private static string ReadDescriptionAttribute()
+		private string ReadDescriptionAttribute()
 		{
 			var sb = new StringBuilder();
 			while (_code.ReadStringLiteral())
@@ -1780,7 +1780,7 @@ namespace DkTools.DkDict
 			return sb.ToString();
 		}
 
-		private static string ReadAccelSequence()
+		private string ReadAccelSequence()
 		{
 			var sb = new StringBuilder();
 
@@ -1814,7 +1814,7 @@ namespace DkTools.DkDict
 			return sb.ToString();
 		}
 
-		private static string ReadPromptOrCommentAttribute()
+		private string ReadPromptOrCommentAttribute()
 		{
 			// WBDK dict parser has a quirk where if there are multiple string separated by a space, then only the last string takes effect.
 			var ret = string.Empty;
@@ -1846,7 +1846,7 @@ namespace DkTools.DkDict
 		#endregion
 
 		#region Interfaces
-		private static void ReadCreateInterfaceType()
+		private void ReadCreateInterfaceType()
 		{
 			var name = _code.ReadWordR();
 			if (string.IsNullOrEmpty(name))
@@ -1928,19 +1928,19 @@ namespace DkTools.DkDict
 			}
 		}
 
-		public static IEnumerable<Interface> Interfaces
+		public IEnumerable<Interface> Interfaces
 		{
 			get { return _interfaces.Values; }
 		}
 
-		public static Interface GetInterface(string name)
+		public Interface GetInterface(string name)
 		{
 			Interface intf;
 			if (_interfaces.TryGetValue(name, out intf)) return intf;
 			return null;
 		}
 
-		private static void ReadDropInterfaceType()
+		private void ReadDropInterfaceType()
 		{
 			var name = _code.ReadWordR();
 			if (string.IsNullOrEmpty(name))
@@ -1958,12 +1958,12 @@ namespace DkTools.DkDict
 			_interfaces.Remove(name);
 		}
 
-		public static void AddImpliedInterface(string name, Interface intf)
+		public void AddImpliedInterface(string name, Interface intf)
 		{
 			_impliedInterfaces[name] = intf;
 		}
 
-		public static Interface GetImpliedInterface(string name)
+		public Interface GetImpliedInterface(string name)
 		{
 			Interface intf;
 			if (_impliedInterfaces.TryGetValue(name, out intf)) return intf;
@@ -1972,7 +1972,7 @@ namespace DkTools.DkDict
 		#endregion
 
 		#region Workspaces
-		private static void ReadCreateWorkspace()
+		private void ReadCreateWorkspace()
 		{
 			var name = _code.ReadWordR();
 			if (string.IsNullOrEmpty(name))
@@ -1994,7 +1994,7 @@ namespace DkTools.DkDict
 			}
 		}
 
-		private static void ReadAlterWorkspace()
+		private void ReadAlterWorkspace()
 		{
 			var name = _code.ReadWordR();
 			if (string.IsNullOrEmpty(name))
@@ -2027,7 +2027,7 @@ namespace DkTools.DkDict
 			}
 		}
 
-		private static void ReadWorkspaceAttributes()
+		private void ReadWorkspaceAttributes()
 		{
 			while (!_code.EndOfFile)
 			{
@@ -2055,7 +2055,7 @@ namespace DkTools.DkDict
 			}
 		}
 
-		private static bool ReadWorkspaceItem()
+		private bool ReadWorkspaceItem()
 		{
 			// FileName
 			if (!_code.ReadWord())
@@ -2099,7 +2099,7 @@ namespace DkTools.DkDict
 			return true;
 		}
 
-		private static void ReadDropWorkspace()
+		private void ReadDropWorkspace()
 		{
 			var name = _code.ReadWordR();
 			if (string.IsNullOrEmpty(name))

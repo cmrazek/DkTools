@@ -129,7 +129,7 @@ namespace DkTools.CodeModel.Tokens.Statements
 
 			// Table name
 			if (!code.ReadWord()) return;
-			var table = DkDict.Dict.GetTable(code.Text);
+			var table = Scope.AppSettings.Dict.GetTable(code.Text);
 			if (table != null) AddToken(new IdentifierToken(Scope, code.Span, code.Text, table.Definition));
 			else AddToken(new UnknownToken(Scope, code.Span, code.Text));
 
@@ -243,7 +243,7 @@ namespace DkTools.CodeModel.Tokens.Statements
 			ExpressionToken exp;
 			
 			var word = code.PeekWordR();
-			if (!string.IsNullOrEmpty(word) && (table = DkDict.Dict.GetTable(word)) != null)
+			if (!string.IsNullOrEmpty(word) && (table = Scope.AppSettings.Dict.GetTable(word)) != null)
 			{
 				AddToken(new IdentifierToken(Scope, code.MovePeekedSpan(), word, table.Definition));
 			}
@@ -297,10 +297,8 @@ namespace DkTools.CodeModel.Tokens.Statements
 			}
 			else
 			{
-				var dataType = DataType.TryParse(new DataType.ParseArgs
+				var dataType = DataType.TryParse(new DataType.ParseArgs(code, Scope.AppSettings)
 				{
-					Code = code,
-					Scope = Scope,
 					TokenCreateCallback = token =>
 					{
 						AddToken(token);
@@ -331,7 +329,7 @@ namespace DkTools.CodeModel.Tokens.Statements
 				{
 					if (!string.IsNullOrEmpty(word = code.PeekWordR()))
 					{
-						var childDef = parentDef.GetChildDefinitions(word).FirstOrDefault();
+						var childDef = parentDef.GetChildDefinitions(word, scope.AppSettings).FirstOrDefault();
 						if (childDef != null)
 						{
 							parent.AddToken(new IdentifierToken(scope, code.MovePeekedSpan(), code.Text, childDef));
@@ -424,7 +422,7 @@ namespace DkTools.CodeModel.Tokens.Statements
 
 			var code = Code;
 			var word = code.PeekWordR();
-			var relind = DkDict.Dict.GetRelInd(word);
+			var relind = Scope.AppSettings.Dict.GetRelInd(word);
 			if (relind != null)
 			{
 				AddToken(new IdentifierToken(Scope, code.MovePeekedSpan(), word, relind.Definition));
@@ -461,7 +459,7 @@ namespace DkTools.CodeModel.Tokens.Statements
 						word = code.PeekWordR();
 						if (!string.IsNullOrEmpty(word))
 						{
-							table = DkDict.Dict.GetTable(word);
+							table = Scope.AppSettings.Dict.GetTable(word);
 							if (table != null)
 							{
 								AddToken(new IdentifierToken(Scope, code.MovePeekedSpan(), word, table.Definition));
@@ -488,7 +486,7 @@ namespace DkTools.CodeModel.Tokens.Statements
 							word = code.PeekWordR();
 							if (!string.IsNullOrEmpty(word))
 							{
-								table = DkDict.Dict.GetTable(word);
+								table = Scope.AppSettings.Dict.GetTable(word);
 								if (table != null)
 								{
 									AddToken(new IdentifierToken(Scope, code.MovePeekedSpan(), word, table.Definition));
@@ -590,7 +588,7 @@ namespace DkTools.CodeModel.Tokens.Statements
 
 			if (!string.IsNullOrEmpty(word = code.PeekWordR()))
 			{
-				if ((relind = DkDict.Dict.GetRelInd(word)) != null)
+				if ((relind = Scope.AppSettings.Dict.GetRelInd(word)) != null)
 				{
 					AddToken(new IdentifierToken(Scope, code.MovePeekedSpan(), word, relind.Definition));
 				}
@@ -611,7 +609,7 @@ namespace DkTools.CodeModel.Tokens.Statements
 				AddToken(new KeywordToken(Scope, code.Span, "on"));
 
 				if (!string.IsNullOrEmpty(word = code.PeekWordR()) &&
-					(table = DkDict.Dict.GetTable(word)) != null)
+					(table = Scope.AppSettings.Dict.GetTable(word)) != null)
 				{
 					AddToken(new IdentifierToken(Scope, code.MovePeekedSpan(), word, table.Definition));
 				}
@@ -697,7 +695,7 @@ namespace DkTools.CodeModel.Tokens.Statements
 			var code = Code;
 
 			var word = code.PeekWordR();
-			var sd = DkDict.Dict.GetStringdef(word);
+			var sd = Scope.AppSettings.Dict.GetStringdef(word);
 			if (sd != null)
 			{
 				AddToken(new IdentifierToken(Scope, code.Span, word, sd.Definition));
@@ -745,7 +743,7 @@ namespace DkTools.CodeModel.Tokens.Statements
 			var word = code.PeekWordR();
 			if (!string.IsNullOrEmpty(word))
 			{
-				var td = DkDict.Dict.GetTypedef(word);
+				var td = Scope.AppSettings.Dict.GetTypedef(word);
 				if (td != null)
 				{
 					AddToken(new IdentifierToken(Scope, code.Span, word, td.Definition));
@@ -756,9 +754,8 @@ namespace DkTools.CodeModel.Tokens.Statements
 					if (exp != null) AddToken(exp);
 				}
 
-				var dt = DataType.TryParse(new DataType.ParseArgs
+				var dt = DataType.TryParse(new DataType.ParseArgs(code, Scope.AppSettings)
 				{
-					Code = code,
 					Scope = Scope,
 					TokenCreateCallback = token =>
 					{
@@ -786,7 +783,7 @@ namespace DkTools.CodeModel.Tokens.Statements
 		{
 			var code = Code;
 			var word = code.PeekWordR();
-			var relind = DkDict.Dict.GetRelInd(word);
+			var relind = Scope.AppSettings.Dict.GetRelInd(word);
 			if (relind != null)
 			{
 				AddToken(new IdentifierToken(Scope, code.MovePeekedSpan(), word, relind.Definition));
@@ -843,7 +840,7 @@ namespace DkTools.CodeModel.Tokens.Statements
 					{
 						AddToken(new KeywordToken(Scope, code.MovePeekedSpan(), "to"));
 
-						if ((table = DkDict.Dict.GetTable(word)) != null)
+						if ((table = Scope.AppSettings.Dict.GetTable(word)) != null)
 						{
 							AddToken(new IdentifierToken(Scope, code.Span, word, table.Definition));
 						}
@@ -853,7 +850,7 @@ namespace DkTools.CodeModel.Tokens.Statements
 							if (exp != null) AddToken(exp);
 						}
 					}
-					else if ((table = DkDict.Dict.GetTable(word)) != null)
+					else if ((table = Scope.AppSettings.Dict.GetTable(word)) != null)
 					{
 						AddToken(new IdentifierToken(Scope, code.MovePeekedSpan(), word, table.Definition));
 
@@ -861,7 +858,7 @@ namespace DkTools.CodeModel.Tokens.Statements
 						{
 							AddToken(new KeywordToken(Scope, code.Span, "to"));
 
-							if ((table = DkDict.Dict.GetTable(word)) != null)
+							if ((table = Scope.AppSettings.Dict.GetTable(word)) != null)
 							{
 								AddToken(new IdentifierToken(Scope, code.Span, word, table.Definition));
 							}
@@ -960,7 +957,7 @@ namespace DkTools.CodeModel.Tokens.Statements
 						DkDict.Table table = null;
 						do
 						{
-							table = DkDict.Dict.GetTable(code.PeekWordR());
+							table = Scope.AppSettings.Dict.GetTable(code.PeekWordR());
 							if (table != null)
 							{
 								brackets.AddToken(new IdentifierToken(Scope, code.MovePeekedSpan(), code.Text, table.Definition));

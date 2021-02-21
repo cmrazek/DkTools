@@ -25,8 +25,7 @@ namespace DkTools.CodeModel.Tokens
 		public CodeFile(CodeModel model)
 			: base(new Scope(model))
 		{
-			if (model == null) throw new ArgumentNullException("model");
-			_model = model;
+			_model = model ?? throw new ArgumentNullException(nameof(model));
 		}
 
 		public string FileName
@@ -258,15 +257,14 @@ namespace DkTools.CodeModel.Tokens
 
 		public void Parse(CodeSource source, string fileName, IEnumerable<string> parentFiles, bool visible)
 		{
-			if (source == null) throw new ArgumentNullException("source");
-			_source = source;
+			_source = source ?? throw new ArgumentNullException(nameof(source));
 			_code = new CodeParser(_source.Text);
 			_fileName = fileName;
 			_parentFiles = parentFiles.ToArray();
 
 			FunctionFileScanning.FFUtil.FileNameIsClass(_fileName, out _className);
 
-			var scope = new Scope(this, 0, ScopeHint.None, visible, _model.DefinitionProvider);
+			var scope = new Scope(this, 0, ScopeHint.None, visible, _model.DefinitionProvider, _model.AppSettings);
 			scope.ClassName = _className;
 			Scope = scope;
 

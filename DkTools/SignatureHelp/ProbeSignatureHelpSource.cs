@@ -85,7 +85,7 @@ namespace DkTools.SignatureHelp
 						foreach (var word1Def in model.DefinitionProvider.GetAny(modelPos, word1))
 						{
 							if (!word1Def.AllowsChild) continue;
-							foreach (var word2Def in word1Def.GetChildDefinitions(funcName))
+							foreach (var word2Def in word1Def.GetChildDefinitions(funcName, model.AppSettings))
 							{
 								if (!word2Def.ArgumentsRequired) continue;
 								if (applicableToSpan == null) applicableToSpan = snapshot.CreateTrackingSpan(new VsText.Span(_triggerPos, 0), VsText.SpanTrackingMode.EdgeInclusive);
@@ -211,7 +211,7 @@ namespace DkTools.SignatureHelp
 						var varDef = def1 as CodeModel.Definitions.VariableDefinition;
 						var dataType = varDef.DataType;
 
-						foreach (var opt in dataType.CompletionOptions)
+						foreach (var opt in dataType.GetCompletionOptions(model.AppSettings))
 						{
 							if (opt.ArgumentsRequired) yield return opt.ArgumentsSignature;
 						}

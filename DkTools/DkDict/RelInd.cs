@@ -203,23 +203,9 @@ namespace DkTools.DkDict
 			}
 		}
 
-		public string TableName
-		{
-			get { return _tableName; }
-			set
-			{
-				if (!string.IsNullOrEmpty(value) && _tableName != value)
-				{
-					var table = Dict.GetTable(value);
-					if (table != null) table.AddRelInd(this);
-				}
-			}
-		}
+		public string TableName => _tableName;
 
-		public RelIndType Type
-		{
-			get { return _type; }
-		}
+		public RelIndType Type => _type;
 	}
 
 	enum RelIndType

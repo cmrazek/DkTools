@@ -180,40 +180,37 @@ namespace DkTools.CodeModel
 			get { return _completionOptionsType != CompletionOptionsType.None; }
 		}
 
-		public IEnumerable<Definition> CompletionOptions
+		public IEnumerable<Definition> GetCompletionOptions(ProbeAppSettings appSettings)
 		{
-			get
+			switch (_completionOptionsType)
 			{
-				switch (_completionOptionsType)
-				{
-					case CompletionOptionsType.EnumOptionsList:
-						if (_completionOptions != null)
-						{
-							foreach (var opt in _completionOptions) yield return opt;
-						}
-						break;
+				case CompletionOptionsType.EnumOptionsList:
+					if (_completionOptions != null)
+					{
+						foreach (var opt in _completionOptions) yield return opt;
+					}
+					break;
 
-					case CompletionOptionsType.Tables:
-						foreach (var table in DkDict.Dict.Tables)
-						{
-							foreach (var def in table.Definitions) yield return def;
-						}
-						break;
+				case CompletionOptionsType.Tables:
+					foreach (var table in appSettings.Dict.Tables)
+					{
+						foreach (var def in table.Definitions) yield return def;
+					}
+					break;
 
-					case CompletionOptionsType.RelInds:
-						yield return RelIndDefinition.Physical;
-						foreach (var r in DkDict.Dict.RelInds) yield return r.Definition;
-						break;
+				case CompletionOptionsType.RelInds:
+					yield return RelIndDefinition.Physical;
+					foreach (var r in appSettings.Dict.RelInds) yield return r.Definition;
+					break;
 
-					case CompletionOptionsType.InterfaceMembers:
-						if (_intf != null)
-						{
-							foreach (var def in _intf.MethodDefinitions) yield return def;
-							foreach (var def in _intf.PropertyDefinitions) yield return def;
-						}
-						break;
+				case CompletionOptionsType.InterfaceMembers:
+					if (_intf != null)
+					{
+						foreach (var def in _intf.MethodDefinitions) yield return def;
+						foreach (var def in _intf.PropertyDefinitions) yield return def;
+					}
+					break;
 
-				}
 			}
 		}
 
@@ -227,10 +224,21 @@ namespace DkTools.CodeModel
 
 		public class ParseArgs
 		{
+			public ParseArgs(CodeParser code, ProbeAppSettings appSettings)
+			{
+				Code = code ?? throw new ArgumentNullException(nameof(code));
+				AppSettings = appSettings ?? throw new ArgumentNullException(nameof(appSettings));
+			}
+
 			/// <summary>
 			/// The token parser to read from.
 			/// </summary>
 			public CodeParser Code { get; set; }
+
+			/// <summary>
+			/// The current DK profile.
+			/// </summary>
+			public ProbeAppSettings AppSettings { get; set; }
 
 			/// <summary>
 			/// (optional) Flags to control the parsing behaviour.
@@ -1073,7 +1081,7 @@ namespace DkTools.CodeModel
 						var word2 = code.Text;
 						var word2Span = code.Span;
 
-						var table = DkDict.Dict.GetTable(word1);
+						var table = a.AppSettings.Dict.GetTable(word1);
 						if (table != null)
 						{
 							var field = table.GetColumn(word2);
@@ -1249,7 +1257,7 @@ namespace DkTools.CodeModel
 			{
 				var intfName = code.Text;
 
-				var intf = DkDict.Dict.GetInterface(code.Text);
+				var intf = a.AppSettings.Dict.GetInterface(code.Text);
 				if (intf != null)
 				{
 					if (a.TokenCreateCallback != null)

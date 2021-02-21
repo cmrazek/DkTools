@@ -32,21 +32,26 @@ File data layout:
 [int]				Number of references
 [int]				Number of permanent extracts
 Dependent Files:
+	[int]			Signature
 	[string]		Path name of dependent file
 Functions:
+	[int]			Signature
 	[string]		Function name
 	[string]		Actual file name (lower)
 	[int]			Position in actual file
 	[string]		Signature
 References:
+	[int]			Signature
 	[string]		Ext Ref ID
 	[string]		Actual file name (lower)
 	[int]			Position in actual file
 Permanent Extracts:
+	[int]			Signature
 	[string]		Name of permanent extract
 	[string]		Actual file name (lower)
 	[int]			Position in actual file
 	[int]			Number of columns
+		[int]		Signature
 		[string]	Column name
 		[string]	Data type
 		[string]	Actual file name (lower)
@@ -66,9 +71,14 @@ namespace DkTools.GlobalData
 		#region File Layout
 		private const string RepoBaseDir = ".dk";
 
-		private const int RepoSignature = 1869636978;	// 'repo'
+		private const int RepoSignature = 1869636978;		// 'repo'
 		private const int Version = 1;
-		private const int FileSignature = 1701603686;	// 'file'
+		private const int FileSignature = 1701603686;		// 'file'
+		private const int DepSignature = 544236900;			// 'dep '
+		private const int RefSignature = 543581554;			// 'ref'
+		private const int FuncSignature = 1668183398;		// 'func'
+		private const int PermExSignature = 2020438640;		// 'prmx'
+		private const int PermExColSignature = 1818458224;	// 'pxcl'
 
 		private enum FileLayout
 		{
@@ -88,12 +98,14 @@ namespace DkTools.GlobalData
 
 		private enum DepLayout : int
 		{
+			Signature,
 			FileName,
 			Size
 		}
 
 		private enum RefLayout
 		{
+			Signature,
 			ExtRefId,
 			FileName,
 			Position,
@@ -102,15 +114,17 @@ namespace DkTools.GlobalData
 
 		private enum FuncLayout
 		{
+			Signature,
 			Name,
 			FileName,
 			Position,
-			Signature,
+			FunctionSignature,
 			Size
 		}
 
 		private enum PermExLayout
 		{
+			Signature,
 			Name,
 			FileName,
 			Position,
@@ -120,6 +134,7 @@ namespace DkTools.GlobalData
 
 		private enum PermExColLayout
 		{
+			Signature,
 			Name,
 			DataType,
 			FileName,
@@ -218,6 +233,36 @@ namespace DkTools.GlobalData
 			if (_data[address + (int)FileLayout.Signature] != FileSignature) throw new InvalidAddressException();
 		}
 
+		private void CheckDepAddress(int addr)
+		{
+			if (addr < 0 || addr >= _data.Count) throw new InvalidAddressException();
+			if (_data[addr + (int)DepLayout.Signature] != DepSignature) throw new InvalidAddressException();
+		}
+
+		private void CheckFuncAddress(int addr)
+		{
+			if (addr < 0 || addr >= _data.Count) throw new InvalidAddressException();
+			if (_data[addr + (int)FuncLayout.Signature] != FuncSignature) throw new InvalidAddressException();
+		}
+
+		private void CheckRefAddress(int addr)
+		{
+			if (addr < 0 || addr >= _data.Count) throw new InvalidAddressException();
+			if (_data[addr + (int)RefLayout.Signature] != RefSignature) throw new InvalidAddressException();
+		}
+
+		private void CheckPermExAddress(int addr)
+		{
+			if (addr < 0 || addr >= _data.Count) throw new InvalidAddressException();
+			if (_data[addr + (int)PermExLayout.Signature] != PermExSignature) throw new InvalidAddressException();
+		}
+
+		private void CheckPermExColAddress(int addr)
+		{
+			if (addr < 0 || addr >= _data.Count) throw new InvalidAddressException();
+			if (_data[addr + (int)PermExColLayout.Signature] != PermExColSignature) throw new InvalidAddressException();
+		}
+
 		private void ReplaceFileNode(int address, List<int> fileData)
 		{
 #if DEBUG
@@ -260,6 +305,11 @@ namespace DkTools.GlobalData
 			return -1;
 		}
 
+		/// <summary>
+		/// Finds a free node fitting a minimum size.
+		/// </summary>
+		/// <param name="minLength">The length of data to go into the node (excluding nextAddr and signature)</param>
+		/// <returns>The best fitting node, or -1 if no suitable node could be found.</returns>
 		private int FindUnusedAddress(int minLength)
 		{
 			var addr = 0;
@@ -273,7 +323,7 @@ namespace DkTools.GlobalData
 
 				if (_data[addr + (int)FileLayout.FileName] == 0)
 				{
-					var length = nextAddr - addr - 1;
+					var length = nextAddr - addr - 2;
 					if (length == minLength) return addr;
 					if (length < minLength)
 					{
@@ -341,11 +391,13 @@ namespace DkTools.GlobalData
 
 			foreach (var dep in depends)
 			{
+				data.Add(DepSignature);
 				data.Add(_strings.Store(dep.FileName.ToLower()));
 			}
 
 			foreach (var func in funcs)
 			{
+				data.Add(FuncSignature);
 				data.Add(_strings.Store(func.Name));
 				data.Add(_strings.Store(func.FilePosition.FileName.ToLower()));
 				data.Add(func.FilePosition.Position);
@@ -354,6 +406,7 @@ namespace DkTools.GlobalData
 
 			foreach (var rf in refs)
 			{
+				data.Add(RefSignature);
 				data.Add(_strings.Store(rf.ExternalRefId));
 				data.Add(_strings.Store(rf.FilePosition.FileName.ToLower()));
 				data.Add(rf.FilePosition.Position);
@@ -363,12 +416,14 @@ namespace DkTools.GlobalData
 			{
 				var fields = permEx.Fields.ToList();
 
+				data.Add(PermExSignature);
 				data.Add(_strings.Store(permEx.Name));
 				data.Add(_strings.Store(permEx.FilePosition.FileName.ToLower()));
 				data.Add(permEx.FilePosition.Position);
 				data.Add(fields.Count);
 				foreach (var field in fields)
 				{
+					data.Add(PermExColSignature);
 					data.Add(_strings.Store(field.Name));
 					data.Add(_strings.Store((field.DataType ?? DataType.Int).ToCodeString()));
 					data.Add(_strings.Store(field.FilePosition.FileName.ToLower()));
@@ -400,7 +455,7 @@ namespace DkTools.GlobalData
 				{
 					_data[func + (int)FuncLayout.Name] = strings.Store(Func_GetName(func));
 					_data[func + (int)FuncLayout.FileName] = strings.Store(Func_GetFilePosition(func).FileName);
-					_data[func + (int)FuncLayout.Signature] = strings.Store(Func_GetSignature(func));
+					_data[func + (int)FuncLayout.FunctionSignature] = strings.Store(Func_GetSignature(func));
 					return true;
 				});
 
@@ -632,8 +687,21 @@ namespace DkTools.GlobalData
 			return true;
 		}
 
-		private int Dep_GetFileNameId(int depAddr) =>_data[depAddr + (int)DepLayout.FileName];
-		private string Dep_GetFileName(int depAddr) => _strings.GetString(_data[depAddr + (int)DepLayout.FileName]);
+		private int Dep_GetFileNameId(int depAddr)
+		{
+#if DEBUG
+			CheckDepAddress(depAddr);
+#endif
+			return _data[depAddr + (int)DepLayout.FileName];
+		}
+
+		private string Dep_GetFileName(int depAddr)
+		{
+#if DEBUG
+			CheckDepAddress(depAddr);
+#endif
+			return _strings.GetString(_data[depAddr + (int)DepLayout.FileName]);
+		}
 		#endregion
 
 		#region Funcs
@@ -654,10 +722,37 @@ namespace DkTools.GlobalData
 			return true;
 		}
 
-		private int Func_GetNameId(int funcAddr) => _data[funcAddr + (int)FuncLayout.Name];
-		private string Func_GetName(int funcAddr) => _strings.GetString(_data[funcAddr + (int)FuncLayout.Name]);
-		private string Func_GetSignature(int funcAddr) => _strings.GetString(_data[funcAddr + (int)FuncLayout.Signature]);
-		private FilePosition Func_GetFilePosition(int funcAddr) => new FilePosition(_strings.GetString(_data[funcAddr + (int)FuncLayout.FileName]), _data[funcAddr + (int)FuncLayout.Position]);
+		private int Func_GetNameId(int funcAddr)
+		{
+#if DEBUG
+			CheckFuncAddress(funcAddr);
+#endif
+			return _data[funcAddr + (int)FuncLayout.Name];
+		}
+
+		private string Func_GetName(int funcAddr)
+		{
+#if DEBUG
+			CheckFuncAddress(funcAddr);
+#endif
+			return _strings.GetString(_data[funcAddr + (int)FuncLayout.Name]);
+		}
+
+		private string Func_GetSignature(int funcAddr)
+		{
+#if DEBUG
+			CheckFuncAddress(funcAddr);
+#endif
+			return _strings.GetString(_data[funcAddr + (int)FuncLayout.FunctionSignature]);
+		}
+
+		private FilePosition Func_GetFilePosition(int funcAddr)
+		{
+#if DEBUG
+			CheckFuncAddress(funcAddr);
+#endif
+			return new FilePosition(_strings.GetString(_data[funcAddr + (int)FuncLayout.FileName]), _data[funcAddr + (int)FuncLayout.Position]);
+		}
 		#endregion
 
 		#region Refs
@@ -679,9 +774,29 @@ namespace DkTools.GlobalData
 			return true;
 		}
 
-		private int Ref_GetExtRefId(int refAddr) => _data[refAddr + (int)RefLayout.ExtRefId];
-		private string Ref_GetExtRef(int refAddr) => _strings.GetString(_data[refAddr + (int)RefLayout.ExtRefId]);
-		private FilePosition Ref_GetFilePosition(int refAddr) => new FilePosition(_strings.GetString(_data[refAddr + (int)RefLayout.FileName]), _data[refAddr + (int)RefLayout.Position]);
+		private int Ref_GetExtRefId(int refAddr)
+		{
+#if DEBUG
+			CheckRefAddress(refAddr);
+#endif
+			return _data[refAddr + (int)RefLayout.ExtRefId];
+		}
+
+		private string Ref_GetExtRef(int refAddr)
+		{
+#if DEBUG
+			CheckRefAddress(refAddr);
+#endif
+			return _strings.GetString(_data[refAddr + (int)RefLayout.ExtRefId]);
+		}
+
+		private FilePosition Ref_GetFilePosition(int refAddr)
+		{
+#if DEBUG
+			CheckRefAddress(refAddr);
+#endif
+			return new FilePosition(_strings.GetString(_data[refAddr + (int)RefLayout.FileName]), _data[refAddr + (int)RefLayout.Position]);
+		}
 		#endregion
 
 		#region PermExs
@@ -695,7 +810,7 @@ namespace DkTools.GlobalData
 			var numRefs = _data[fileAddr + (int)FileLayout.NumRefs];
 			var permExAddr = fileAddr + (int)FileLayout.ArrStart + numDeps * (int)DepLayout.Size + numFuncs * (int)FuncLayout.Size + numRefs * (int)RefLayout.Size;
 
-			while (numRefs-- != 0)
+			while (numPermExs-- != 0)
 			{
 				if (!callback(permExAddr)) return false;
 
@@ -706,9 +821,29 @@ namespace DkTools.GlobalData
 			return true;
 		}
 
-		private int PermEx_GetNameId(int addr) => _data[addr + (int)PermExLayout.Name];
-		private string PermEx_GetName(int addr) => _strings.GetString(_data[addr + (int)PermExLayout.Name]);
-		private FilePosition PermEx_GetFilePosition(int addr) => new FilePosition(_strings.GetString(_data[addr + (int)PermExLayout.FileName]), _data[addr + (int)PermExLayout.Position]);
+		private int PermEx_GetNameId(int addr)
+		{
+#if DEBUG
+			CheckPermExAddress(addr);
+#endif
+			return _data[addr + (int)PermExLayout.Name];
+		}
+
+		private string PermEx_GetName(int addr)
+		{
+#if DEBUG
+			CheckPermExAddress(addr);
+#endif
+			return _strings.GetString(_data[addr + (int)PermExLayout.Name]);
+		}
+
+		private FilePosition PermEx_GetFilePosition(int addr)
+		{
+#if DEBUG
+			CheckPermExAddress(addr);
+#endif
+			return new FilePosition(_strings.GetString(_data[addr + (int)PermExLayout.FileName]), _data[addr + (int)PermExLayout.Position]);
+		}
 		#endregion
 
 		#region PermExCols
@@ -728,9 +863,29 @@ namespace DkTools.GlobalData
 			return true;
 		}
 
-		private string PermExCol_GetName(int addr) => _strings.GetString(_data[addr + (int)PermExColLayout.Name]);
-		private FilePosition PermExCol_GetFilePosition(int addr) => new FilePosition(_strings.GetString(_data[addr + (int)PermExColLayout.FileName]), _data[addr + (int)PermExColLayout.Position]);
-		private DataType PermExCol_GetDataType(int addr) => DataType.TryParse(new DataType.ParseArgs { Code = new CodeParser(_strings.GetString(_data[addr + (int)PermExColLayout.DataType])) }) ?? DataType.Int;
+		private string PermExCol_GetName(int addr)
+		{
+#if DEBUG
+			CheckPermExColAddress(addr);
+#endif
+			return _strings.GetString(_data[addr + (int)PermExColLayout.Name]);
+		}
+
+		private FilePosition PermExCol_GetFilePosition(int addr)
+		{
+#if DEBUG
+			CheckPermExColAddress(addr);
+#endif
+			return new FilePosition(_strings.GetString(_data[addr + (int)PermExColLayout.FileName]), _data[addr + (int)PermExColLayout.Position]);
+		}
+
+		private DataType PermExCol_GetDataType(int addr)
+		{
+#if DEBUG
+			CheckPermExColAddress(addr);
+#endif
+			return DataType.TryParse(new DataType.ParseArgs(new CodeParser(_strings.GetString(_data[addr + (int)PermExColLayout.DataType])), _appSettings)) ?? DataType.Int;
+		}
 		#endregion
 		#endregion
 
@@ -987,7 +1142,7 @@ namespace DkTools.GlobalData
 						if (Func_GetNameId(func) == funcNameId)
 						{
 							results.Add(new FunctionDefinition(
-								signature: FunctionSignature.ParseFromDb(Func_GetSignature(func)),
+								signature: FunctionSignature.ParseFromDb(Func_GetSignature(func), _appSettings),
 								filePos: Func_GetFilePosition(func)
 							));
 						}
@@ -1015,7 +1170,7 @@ namespace DkTools.GlobalData
 
 					File_IterateFuncs(file, func =>
 					{
-						var sig = FunctionSignature.ParseFromDb(Func_GetSignature(func));
+						var sig = FunctionSignature.ParseFromDb(Func_GetSignature(func), _appSettings);
 						var funcDef = new FunctionDefinition(sig, Func_GetFilePosition(func));
 						classDef.AddFunction(funcDef);
 						return true;
@@ -1027,7 +1182,7 @@ namespace DkTools.GlobalData
 				{
 					File_IterateFuncs(file, func =>
 					{
-						var sig = FunctionSignature.ParseFromDb(Func_GetSignature(func));
+						var sig = FunctionSignature.ParseFromDb(Func_GetSignature(func), _appSettings);
 						var funcDef = new FunctionDefinition(sig, Func_GetFilePosition(func));
 						results.Add(funcDef);
 						return true;

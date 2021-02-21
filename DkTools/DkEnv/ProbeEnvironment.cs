@@ -82,8 +82,13 @@ namespace DkTools
 					appSettings.SourceFiles = LoadSourceFiles(appSettings);
 					appSettings.IncludeFiles = LoadIncludeFiles(appSettings);
 					appSettings.SourceAndIncludeFiles = appSettings.SourceFiles.Concat(appSettings.IncludeFiles.Where(i => !appSettings.SourceFiles.Contains(i))).ToArray();
-					appSettings.CreateFileSystemWatcher();
+
+					appSettings.Dict = new DkDict.Dict();
+					appSettings.Dict.Load(appSettings);
+
 					appSettings.Repo = new GlobalData.AppRepo(appSettings);
+
+					appSettings.CreateFileSystemWatcher();
 				}
 
 				var elapsed = DateTime.Now.Subtract(startTime);
@@ -279,7 +284,7 @@ namespace DkTools
 				Log.Write(LogLevel.Info, "Loading dictionary...");
 				var startTime = DateTime.Now;
 
-				DkDict.Dict.Load(appSettings);
+				appSettings.Dict.Load(appSettings);
 
 				var elapsed = DateTime.Now.Subtract(startTime);
 				Log.Write(LogLevel.Info, "Successfully loaded dictionary (elapsed: {0})", elapsed);

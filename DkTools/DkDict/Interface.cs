@@ -103,7 +103,7 @@ namespace DkTools.DkDict
 			foreach (var prop in _properties) yield return prop.Definition;
 		}
 
-		public void LoadFromRepo(DICTSRVRLib.IPInterfaceType repoIntf)
+		public void LoadFromRepo(DICTSRVRLib.IPInterfaceType repoIntf, ProbeAppSettings appSettings)
 		{
 			var str = repoIntf.InterfaceName;
 			if (!string.IsNullOrEmpty(str))
@@ -111,7 +111,7 @@ namespace DkTools.DkDict
 				str = CleanInterfaceName(str);
 				if (str != _name)
 				{
-					Dict.AddImpliedInterface(str, this);
+					appSettings.Dict.AddImpliedInterface(str, this);
 					_dataType.Name = _dataType.Source.ToString();
 					_dataType.Source = new Classifier.ProbeClassifiedString(Classifier.ProbeClassifierType.Interface, str);
 				}
@@ -120,13 +120,13 @@ namespace DkTools.DkDict
 			for (int m = 1, mm = repoIntf.MethodCount; m <= mm; m++)
 			{
 				var funcName = repoIntf.MethodName[m];
-				var returnDataType = ConvertRepoDataType(_name, funcName, repoIntf.MethodDataDef[m]);
+				var returnDataType = ConvertRepoDataType(_name, funcName, repoIntf.MethodDataDef[m], appSettings);
 
 				var args = new List<ArgumentDescriptor>();
 				for (int a = 1, aa = repoIntf.MethodParamCount[m]; a <= aa; a++)
 				{
 					args.Add(new ArgumentDescriptor(repoIntf.MethodParamName[m, a],
-						ConvertRepoDataType(_name, funcName, repoIntf.MethodParamDataDef[m, a])));
+						ConvertRepoDataType(_name, funcName, repoIntf.MethodParamDataDef[m, a], appSettings)));
 				}
 
 				var sig = new FunctionSignature(false, FunctionPrivacy.Public, returnDataType, null, funcName, null, args);
@@ -137,13 +137,13 @@ namespace DkTools.DkDict
 			for (int p = 1, pp = repoIntf.PropertyCount; p <= pp; p++)
 			{
 				var propName = repoIntf.PropertyName[p];
-				var propDataType = ConvertRepoDataType(_name, propName, repoIntf.PropertyDataDef[p]);
+				var propDataType = ConvertRepoDataType(_name, propName, repoIntf.PropertyDataDef[p], appSettings);
 
 				_properties.Add(new InterfaceProperty(_def, propName, propDataType));
 			}
 		}
 
-		private DataType ConvertRepoDataType(string intfName, string fieldName, DICTSRVRLib.PDataDef dataDef)
+		private DataType ConvertRepoDataType(string intfName, string fieldName, DICTSRVRLib.PDataDef dataDef, ProbeAppSettings appSettings)
 		{
 			if (dataDef == null) return DataType.Void;
 
@@ -152,10 +152,10 @@ namespace DkTools.DkDict
 			{
 				str = CleanInterfaceName(str);
 
-				var intf = Dict.GetInterface(str);
+				var intf = appSettings.Dict.GetInterface(str);
 				if (intf != null) return intf._dataType;
 
-				intf = Dict.GetImpliedInterface(str);
+				intf = appSettings.Dict.GetImpliedInterface(str);
 				if (intf != null) return intf._dataType;
 
 				return new DataType(ValType.Interface, null,
@@ -163,10 +163,7 @@ namespace DkTools.DkDict
 			}
 
 			var code = new CodeParser(dataDef.TypeText[0]);
-			var dataType = DataType.TryParse(new DataType.ParseArgs
-			{
-				Code = code
-			});
+			var dataType = DataType.TryParse(new DataType.ParseArgs(code, appSettings));
 
 			if (dataType == null)
 			{

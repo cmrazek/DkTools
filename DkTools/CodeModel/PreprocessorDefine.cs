@@ -17,7 +17,7 @@ namespace DkTools.CodeModel
 		private DataType _dataType;
 		private Definition _def;
 
-		public PreprocessorDefine(string name, string content, List<string> paramNames, FilePosition filePos)
+		public PreprocessorDefine(string name, string content, List<string> paramNames, FilePosition filePos, ProbeAppSettings appSettings)
 		{
 			_name = name;
 			_content = content;
@@ -27,11 +27,7 @@ namespace DkTools.CodeModel
 			if (_paramNames == null)
 			{
 				var parser = new CodeParser(_content);
-				var dataType = DataType.TryParse(new DataType.ParseArgs
-				{
-					Code = parser,
-					//TypeName = _name
-				});
+				var dataType = DataType.TryParse(new DataType.ParseArgs(parser, appSettings));
 				if (dataType != null)
 				{
 					// If the data type does not consume the entire string, then this is not a data type definition.

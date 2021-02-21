@@ -9,7 +9,7 @@ namespace DkTools.StatementCompletion
 {
 	internal class StatementLayout
 	{
-		public static StatementState ProcessWord(string word, StatementState state)
+		public static StatementState ProcessWord(string word, StatementState state, ProbeAppSettings appSettings)
 		{
 			switch (state.Section)
 			{
@@ -69,7 +69,7 @@ namespace DkTools.StatementCompletion
 					break;
 
 				case StatementSection.SelectFrom:
-					if (DkDict.Dict.IsTable(word)) return new StatementState(StatementSection.SelectFromTable);
+					if (appSettings.Dict.IsTable(word)) return new StatementState(StatementSection.SelectFromTable);
 					break;
 
 				case StatementSection.SelectFromTable:
@@ -78,11 +78,11 @@ namespace DkTools.StatementCompletion
 					break;
 
 				case StatementSection.SelectFromTableComma:
-					if (DkDict.Dict.IsTable(word)) return new StatementState(StatementSection.SelectFromTableList);
+					if (appSettings.Dict.IsTable(word)) return new StatementState(StatementSection.SelectFromTableList);
 					break;
 
 				case StatementSection.SelectFromTableOf:
-					if (DkDict.Dict.IsTable(word)) return new StatementState(StatementSection.SelectFromTableOfTable);
+					if (appSettings.Dict.IsTable(word)) return new StatementState(StatementSection.SelectFromTableOfTable);
 					break;
 
 				case StatementSection.Order:
@@ -586,7 +586,7 @@ namespace DkTools.StatementCompletion
 				case StatementSection.SelectFrom:
 				case StatementSection.SelectFromTableComma:
 				case StatementSection.SelectFromTableOf:
-					foreach (var table in DkDict.Dict.Tables)
+					foreach (var table in completionSource.AppSettings.Dict.Tables)
 					{
 						foreach (var def in table.Definitions)
 						{
@@ -607,7 +607,7 @@ namespace DkTools.StatementCompletion
 
 				#region interface
 				case StatementSection.Interface:
-					foreach (var intf in DkDict.Dict.Interfaces)
+					foreach (var intf in completionSource.AppSettings.Dict.Interfaces)
 					{
 						completionSource.CreateCompletion(intf.Definition);
 					}
@@ -616,21 +616,21 @@ namespace DkTools.StatementCompletion
 
 				#region alter
 				case StatementSection.AlterTable:
-					foreach (var table in DkDict.Dict.Tables)
+					foreach (var table in completionSource.AppSettings.Dict.Tables)
 					{
 						completionSource.CreateCompletion(table.Definition);
 					}
 					break;
 
 				case StatementSection.AlterStringdef:
-					foreach (var sd in DkDict.Dict.Stringdefs)
+					foreach (var sd in completionSource.AppSettings.Dict.Stringdefs)
 					{
 						completionSource.CreateCompletion(sd.Definition);
 					}
 					break;
 
 				case StatementSection.AlterTypedef:
-					foreach (var td in DkDict.Dict.Typedefs)
+					foreach (var td in completionSource.AppSettings.Dict.Typedefs)
 					{
 						completionSource.CreateCompletion(td.Definition);
 					}

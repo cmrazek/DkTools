@@ -42,7 +42,7 @@ namespace DkTools.CodeAnalysis.Statements
 					ReportError(new Span(code.Position, code.Position + 1), CAError.CA0046);	// Expected extract column name.
 					return;
 				}
-				var colDef = def.GetChildDefinitions(code.Text).FirstOrDefault();
+				var colDef = def.GetChildDefinitions(code.Text, p.AppSettings).FirstOrDefault();
 				if (colDef == null)
 				{
 					ReportError(code.Span, CAError.CA0046);	// Expected extract column name.

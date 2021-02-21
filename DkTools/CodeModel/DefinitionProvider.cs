@@ -128,7 +128,7 @@ namespace DkTools.CodeModel
 				};
 			}
 			AddGlobalFromAnywhere(_builtInDefs);
-			AddGlobalFromAnywhere(DkDict.Dict.AllDictDefinitions);
+			AddGlobalFromAnywhere(appSettings.Dict.AllDictDefinitions);
 			if (string.IsNullOrEmpty(fileName) || !System.IO.Path.GetFileName(fileName).Equals("stdlib.i", StringComparison.OrdinalIgnoreCase))
 			{
 				AddGlobalFromAnywhere(FileStore.GetStdLibModel(appSettings).PreprocessorModel.DefinitionProvider.GlobalsFromFile);
