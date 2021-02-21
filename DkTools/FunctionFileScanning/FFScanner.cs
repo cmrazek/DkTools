@@ -16,7 +16,6 @@ namespace DkTools.FunctionFileScanning
 		private static EventWaitHandle _kill = new EventWaitHandle(false, EventResetMode.ManualReset);
 
 		private static ProbeAppSettings _appSettings;
-		private static FFApp _currentApp;
 		private static object _currentAppLock = new object();
 		private static Queue<ScanInfo> _scanQueue;
 		private static object _scanLock = new object();
@@ -43,7 +42,6 @@ namespace DkTools.FunctionFileScanning
 		public static void OnStartup()
 		{
 			_appSettings = ProbeEnvironment.CurrentAppSettings;
-			LoadCurrentApp();
 
 			_thread = new Thread(new ThreadStart(ThreadProc));
 			_thread.Name = "Function File Scanner";
@@ -62,7 +60,6 @@ namespace DkTools.FunctionFileScanning
 		private static void ProbeEnvironment_AppChanged(object sender, EventArgs e)
 		{
 			_appSettings = ProbeEnvironment.CurrentAppSettings;
-			LoadCurrentApp();
 			RestartScanning("Probe app changed");
 		}
 
@@ -103,7 +100,8 @@ namespace DkTools.FunctionFileScanning
 
 		private static void ProcessQueue()
 		{
-			if (_currentApp == null) return;
+			var app = _appSettings;
+			if (app == null) return;
 
 			var scanStartTime = DateTime.Now;
 
@@ -120,15 +118,15 @@ namespace DkTools.FunctionFileScanning
 
 				if (scanInfo.HasValue)
 				{
-					ProcessFile(CurrentApp, scanInfo.Value);
+					ProcessFile(app, scanInfo.Value);
 				}
 				else
 				{
 					ProbeToolsPackage.Instance.SetStatusText("Finalizing DK repository...");
-					CurrentApp.Repo.OnScanComplete();
+					app.Repo.OnScanComplete();
 
 					ProbeToolsPackage.Instance.SetStatusText("Saving DK repository...");
-					CurrentApp.Repo.Save();
+					app.Repo.Save();
 
 					var scanElapsed = DateTime.Now.Subtract(scanStartTime);
 
@@ -142,7 +140,7 @@ namespace DkTools.FunctionFileScanning
 			}
 		}
 
-		private static void ProcessSourceDir(FFApp app, string dir, List<ScanInfo> scanList)
+		private static void ProcessSourceDir(ProbeAppSettings app, string dir, List<ScanInfo> scanList)
 		{
 			try
 			{
@@ -191,7 +189,7 @@ namespace DkTools.FunctionFileScanning
 			}
 		}
 
-		public static void EnqueueChangedFile(string fullPath)
+		public static void EnqueueChangedFile(ProbeAppSettings app, string fullPath)
 		{
 			var options = ProbeToolsPackage.Instance.EditorOptions;
 			if (options.DisableBackgroundScan) return;
@@ -199,11 +197,11 @@ namespace DkTools.FunctionFileScanning
 			var fileContext = FileContextUtil.GetFileContextFromFileName(fullPath);
 			if (fileContext != FileContext.Include && fileContext != FileContext.Dictionary)
 			{
-				_currentApp.Repo.ResetScanDateOnFile(fullPath);
+				app.Repo.ResetScanDateOnFile(fullPath);
 			}
 		}
 
-		private static void ProcessFile(FFApp app, ScanInfo scan)
+		private static void ProcessFile(ProbeAppSettings app, ScanInfo scan)
 		{
 			try
 			{
@@ -225,17 +223,17 @@ namespace DkTools.FunctionFileScanning
 
 				var fileTitle = Path.GetFileNameWithoutExtension(scan.fileName);
 
-				var defProvider = new CodeModel.DefinitionProvider(_appSettings, scan.fileName);
+				var defProvider = new CodeModel.DefinitionProvider(app, scan.fileName);
 
 				var fileContent = File.ReadAllText(scan.fileName);
 				var fileStore = new CodeModel.FileStore();
 
 				var merger = new FileMerger();
-				merger.MergeFile(_appSettings, scan.fileName, null, false, true);
+				merger.MergeFile(app, scan.fileName, null, false, true);
 				var includeDependencies = (from f in merger.FileNames
 										   select new Preprocessor.IncludeDependency(f, false, true, merger.GetFileContent(f))).ToArray();
 
-				var model = fileStore.CreatePreprocessedModel(_appSettings, merger.MergedContent, scan.fileName, false, string.Concat("Function file processing: ", scan.fileName), includeDependencies);
+				var model = fileStore.CreatePreprocessedModel(app, merger.MergedContent, scan.fileName, false, string.Concat("Function file processing: ", scan.fileName), includeDependencies);
 				var className = fileContext.IsClass() ? Path.GetFileNameWithoutExtension(scan.fileName) : null;
 
 				app.Repo.UpdateFile(model, scan.mode);
@@ -243,17 +241,6 @@ namespace DkTools.FunctionFileScanning
 			catch (Exception ex)
 			{
 				Log.Error(ex, "Exception when background processing function name: {0} (mode: {1})", scan.fileName, scan.mode);
-			}
-		}
-
-		public static FFApp CurrentApp
-		{
-			get
-			{
-				lock (_currentAppLock)
-				{
-					return _currentApp;
-				}
 			}
 		}
 
@@ -274,7 +261,7 @@ namespace DkTools.FunctionFileScanning
 				var scanList = new List<ScanInfo>();
 				foreach (var dir in _appSettings.SourceDirs)
 				{
-					ProcessSourceDir(_currentApp, dir, scanList);
+					ProcessSourceDir(_appSettings, dir, scanList);
 				}
 
 				scanList.Sort();
@@ -285,31 +272,13 @@ namespace DkTools.FunctionFileScanning
 			}
 		}
 
-		private static void LoadCurrentApp()
-		{
-			try
-			{
-				if (!_appSettings.Initialized) return;
-
-				Log.Write(LogLevel.Info, "Loading DK repository...");
-				var startTime = DateTime.Now;
-
-				_currentApp = new FFApp(_appSettings);
-
-				var elapsed = DateTime.Now.Subtract(startTime);
-				Log.Write(LogLevel.Info, "DK repository loaded. (elapsed: {0})", elapsed);
-			}
-			catch (Exception ex)
-			{
-				Log.Error(ex, "Error when loading DK repository.");
-				_currentApp = null;
-			}
-		}
-
 		private static void ProbeAppSettings_FileChanged(object sender, ProbeAppSettings.FileEventArgs e)
 		{
 			try
 			{
+				var app = _appSettings;
+				if (app == null) return;
+
 				var options = ProbeToolsPackage.Instance.EditorOptions;
 				if (!options.DisableBackgroundScan)
 				{
@@ -320,13 +289,13 @@ namespace DkTools.FunctionFileScanning
 						{
 							Log.Debug("Scanner detected a saved file: {0}", e.FilePath);
 
-							EnqueueChangedFile(e.FilePath);
+							EnqueueChangedFile(app, e.FilePath);
 						}
 						else
 						{
 							Log.Debug("Scanner detected an include file was saved: {0}", e.FilePath);
 
-							EnqueueFilesDependentOnInclude(e.FilePath);
+							EnqueueFilesDependentOnInclude(app, e.FilePath);
 						}
 
 						RestartScanning("File changed.");
@@ -339,14 +308,12 @@ namespace DkTools.FunctionFileScanning
 			}
 		}
 
-		private static void EnqueueFilesDependentOnInclude(string includeFileName)
+		private static void EnqueueFilesDependentOnInclude(ProbeAppSettings app, string includeFileName)
 		{
-			if (_currentApp == null) return;
-
 			var options = ProbeToolsPackage.Instance.EditorOptions;
 			if (options.DisableBackgroundScan) return;
 
-			_currentApp.Repo.ResetScanDateOnDependentFiles(includeFileName);
+			app.Repo.ResetScanDateOnDependentFiles(includeFileName);
 		}
 	}
 

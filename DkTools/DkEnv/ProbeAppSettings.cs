@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using DkTools.GlobalData;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.Win32;
 
@@ -28,6 +29,7 @@ namespace DkTools
 		public string[] SourceFiles { get; set; }
 		public string[] IncludeFiles { get; set; }
 		public string[] SourceAndIncludeFiles { get; set; }
+		public AppRepo Repo { get; set; }
 
 		public ProbeAppSettings()
 		{
@@ -47,6 +49,7 @@ namespace DkTools
 			SourceFiles = new string[0];
 			IncludeFiles = new string[0];
 			SourceAndIncludeFiles = new string[0];
+			Repo = new AppRepo(this);
 		}
 
 		public void Deactivate()

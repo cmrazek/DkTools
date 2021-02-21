@@ -1,13 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Data.Entity.Infrastructure;
-using System.Diagnostics;
 using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
-using System.Windows.Forms;
 using DkTools.CodeModel.Definitions;
-using DkTools.CodeModel.Tokens;
 
 namespace DkTools.CodeModel
 {

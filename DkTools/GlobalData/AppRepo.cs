@@ -146,8 +146,10 @@ namespace DkTools.GlobalData
 					_repoFileName = Path.Combine(_repoDir, AppNameEncode(_appSettings.AppName));
 					if (File.Exists(_repoFileName))
 					{
+						Log.Debug("Loading DK repository.");
 						Read();
 						GenerateGlobalDefinitions();
+						Log.Debug("DK repository loaded.");
 					}
 					else
 					{

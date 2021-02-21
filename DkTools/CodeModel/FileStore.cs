@@ -497,7 +497,7 @@ namespace DkTools.CodeModel
 			Log.Debug("Getting include file parent definitions: {0}", includePathName);
 
 			IEnumerable<string> parentFileNames;
-			var app = FunctionFileScanning.FFScanner.CurrentApp;
+			var app = ProbeEnvironment.CurrentAppSettings;
 			if (app != null)
 			{
 				parentFileNames = app.Repo.GetDependentFiles(includePathName, NumberOfIncludeParentFiles);

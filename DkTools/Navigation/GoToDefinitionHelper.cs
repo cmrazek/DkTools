@@ -44,6 +44,8 @@ namespace DkTools.Navigation
 			if (fileStore == null) return null;
 
 			var appSettings = ProbeEnvironment.CurrentAppSettings;
+			if (appSettings == null) return null;
+
 			var fileName = VsTextUtil.TryGetDocumentFileName(point.Snapshot.TextBuffer);
 			var model = fileStore.GetCurrentModel(appSettings, fileName, point.Snapshot, "Go to definition");
 			var modelPos = model.AdjustPosition(point.Position, point.Snapshot);
@@ -64,7 +66,7 @@ namespace DkTools.Navigation
 
 					if (funcDef.Extern)
 					{
-						foreach (var def2 in FunctionFileScanning.FFScanner.CurrentApp.Repo.SearchForFunctionDefinitions(funcDef.Name))
+						foreach (var def2 in appSettings.Repo.SearchForFunctionDefinitions(funcDef.Name))
 						{
 							if (def2 == def || (def2.SourceFileName == def.SourceFileName && def2.SourceStartPos == def.SourceStartPos))
 							{
@@ -247,7 +249,7 @@ namespace DkTools.Navigation
 		{
 			if (string.IsNullOrEmpty(extRefId)) throw new ArgumentException("Definition has no external ref ID.");
 
-			var app = FunctionFileScanning.FFScanner.CurrentApp;
+			var app = ProbeEnvironment.CurrentAppSettings;
 			if (app == null) yield break;
 
 			foreach (var rf in app.Repo.FindAllReferences(extRefId))

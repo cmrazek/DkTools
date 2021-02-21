@@ -83,6 +83,7 @@ namespace DkTools
 					appSettings.IncludeFiles = LoadIncludeFiles(appSettings);
 					appSettings.SourceAndIncludeFiles = appSettings.SourceFiles.Concat(appSettings.IncludeFiles.Where(i => !appSettings.SourceFiles.Contains(i))).ToArray();
 					appSettings.CreateFileSystemWatcher();
+					appSettings.Repo = new GlobalData.AppRepo(appSettings);
 				}
 
 				var elapsed = DateTime.Now.Subtract(startTime);

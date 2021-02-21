@@ -134,7 +134,7 @@ namespace DkTools.CodeModel
 				AddGlobalFromAnywhere(FileStore.GetStdLibModel(appSettings).PreprocessorModel.DefinitionProvider.GlobalsFromFile);
 			}
 
-			var app = FunctionFileScanning.FFScanner.CurrentApp;
+			var app = ProbeEnvironment.CurrentAppSettings;
 			if (app != null)
 			{
 				AddGlobalFromAnywhere(app.Repo.GetGlobalDefinitions());

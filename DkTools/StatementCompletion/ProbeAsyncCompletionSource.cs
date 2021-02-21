@@ -656,7 +656,7 @@ namespace DkTools.StatementCompletion
 			}
 
 			// Class and method
-			var app = FunctionFileScanning.FFScanner.CurrentApp;
+			var app = ProbeEnvironment.CurrentAppSettings;
 			if (app != null)
 			{
 				foreach (var cls in app.Repo.GetClassDefinitions(word1))
@@ -725,19 +725,6 @@ namespace DkTools.StatementCompletion
 			foreach (var d in Constants.DataTypeKeywords)
 			{
 				CreateCompletion(d, ProbeCompletionType.DataType, null);
-			}
-
-			// Don't show functions when on the root.
-			if (tokens.Any(t => !t.IsOnRoot))
-			{
-				var app = FunctionFileScanning.FFScanner.CurrentApp;
-				if (app != null)
-				{
-					foreach (var def in app.Repo.GetGlobalDefinitions())
-					{
-						CreateCompletion(def);
-					}
-				}
 			}
 
 			var bottomToken = tokens.LastOrDefault();
