@@ -18,6 +18,7 @@ namespace DkTools.FunctionFileScanning
 		private static List<ScanJob> _runningQueue = new List<ScanJob>();
 		private static object _queueLock = new object();
 		private static DateTime _scanStartTime;
+		private static BackgroundDeferrer _scanDelay = new BackgroundDeferrer();
 
 		private class ScanJob : IComparable<ScanJob>
 		{
@@ -45,8 +46,9 @@ namespace DkTools.FunctionFileScanning
 		{
 			ProbeEnvironment.AppChanged += new EventHandler(ProbeEnvironment_AppChanged);
 			ProbeAppSettings.FileChanged += ProbeAppSettings_FileChanged;
+			_scanDelay.Idle += ScanTimerElapsed;
 
-			StartScanning("Startup");
+			StartScanning();
 		}
 
 		public static void OnShutdown()
@@ -56,36 +58,33 @@ namespace DkTools.FunctionFileScanning
 
 		private static void ProbeEnvironment_AppChanged(object sender, EventArgs e)
 		{
-			StartScanning("DK app changed");
+			StartScanning();
 		}
 
 		private static void Kill()
 		{
-			if (_threads.Any(t => t.IsAlive))
+			lock (_queueLock)
 			{
-				Log.Debug("Stopping existing scan threads.");
-				_kill.Set();
-
-				var remainingThread = _threads.FirstOrDefault(t => t.IsAlive);
-				while (remainingThread != null)
+				if (_threads.Any(t => t.IsAlive))
 				{
-					remainingThread.Join();
+					Log.Debug("Stopping existing scan threads.");
+					_kill.Set();
+
+					var remainingThread = _threads.FirstOrDefault(t => t.IsAlive);
+					while (remainingThread != null)
+					{
+						remainingThread.Join();
+					}
 				}
 			}
 		}
 
-		private static void StartScanning(string reason)
+		private static void StartScanningLater()
 		{
-			Log.Info("Starting background scanning ({0})", reason);
-
-			Kill();
-			_kill.Reset();
-			_threads.Clear();
-
 			var options = ProbeToolsPackage.Instance.EditorOptions;
 			if (options.DisableBackgroundScan)
 			{
-				Log.Info("Scanning aborted because it's disabled in the options.");
+				Log.Debug("Scanning aborted because it's disabled in the options.");
 				return;
 			}
 
@@ -96,10 +95,50 @@ namespace DkTools.FunctionFileScanning
 				return;
 			}
 
-			_scanStartTime = DateTime.Now;
+			lock (_queueLock)
+			{
+				if (_threads.Any(x => x.IsAlive))
+				{
+					Log.Debug("FFScanner already in progress.");
+					return;
+				}
+			}
+
+			Log.Debug("FFScanner defer...");
+			_scanDelay.OnActivity();
+		}
+
+		private static void ScanTimerElapsed(object sender, BackgroundDeferrer.IdleEventArgs e)
+		{
+			Log.Debug("FFScanner delay elapsed.");
+			StartScanning();
+		}
+
+		private static void StartScanning()
+		{
+			var options = ProbeToolsPackage.Instance.EditorOptions;
+			if (options.DisableBackgroundScan)
+			{
+				Log.Debug("Scanning aborted because it's disabled in the options.");
+				return;
+			}
+
+			var app = ProbeEnvironment.CurrentAppSettings;
+			if (app == null)
+			{
+				Log.Warning("Scanning aborted because there is no current app.");
+				return;
+			}
 
 			lock (_queueLock)
 			{
+				Log.Info("FFScanner starting.");
+
+				Kill();
+				_kill.Reset();
+				_threads.Clear();
+
+				_scanStartTime = DateTime.Now;
 				_pendingQueue.Clear();
 				_runningQueue.Clear();
 
@@ -110,18 +149,18 @@ namespace DkTools.FunctionFileScanning
 
 				_pendingQueue.Add(new ScanJob(FFScanMode.Completion, null, app));
 				_pendingQueue.Sort();
-			}
 
-			var numThreads = Environment.ProcessorCount - 1;
-			if (numThreads < 1) numThreads = 1;
-			Log.Debug("Starting {0} worker threads.", numThreads);
+				var numThreads = Environment.ProcessorCount - 1;
+				if (numThreads < 1) numThreads = 1;
+				Log.Debug("Starting {0} worker threads.", numThreads);
 
-			for (int i = 0; i < numThreads; i++)
-			{
-				var thread = new Thread(new ThreadStart(ThreadProc));
-				thread.Name = $"FFScanner {i + 1}";
-				thread.Priority = ThreadPriority.BelowNormal;
-				thread.Start();
+				for (int i = 0; i < numThreads; i++)
+				{
+					var thread = new Thread(new ThreadStart(ThreadProc));
+					thread.Name = $"FFScanner {i + 1}";
+					thread.Priority = ThreadPriority.BelowNormal;
+					thread.Start();
+				}
 			}
 		}
 
@@ -395,7 +434,7 @@ namespace DkTools.FunctionFileScanning
 							ResetDateOnDependentFiles(app, e.FilePath);
 						}
 
-						StartScanning("File changed.");
+						StartScanningLater();
 					}
 				}
 			}

@@ -588,10 +588,10 @@ namespace DkTools.GlobalData
 
 				Log.Info("Scan Complete: File Data: {0} String Count: {1}", _data.Count * 4, _strings.Count);
 
-#if DEBUG
-				_strings.DumpToFile(_repoFileName + "-strings.txt");
-				DumpToFile(_repoFileName + "-repo.txt");
-#endif
+//#if DEBUG
+//				_strings.DumpToFile(_repoFileName + "-strings.txt");
+//				DumpToFile(_repoFileName + "-repo.txt");
+//#endif
 
 				GenerateGlobalDefinitions();
 			}

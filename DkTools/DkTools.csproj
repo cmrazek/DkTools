@@ -644,12 +644,6 @@
     <None Include="Key.snk" />
   </ItemGroup>
   <ItemGroup>
-    <Content Include="x64\SQLite.Interop.dll">
-      <IncludeInVSIX>true</IncludeInVSIX>
-    </Content>
-    <Content Include="x86\SQLite.Interop.dll">
-      <IncludeInVSIX>true</IncludeInVSIX>
-    </Content>
     <EmbeddedResource Include="Snippets\SnippetIndex.xml" />
     <None Include="Resources\Relationship.png" />
     <None Include="Resources\Table.png" />
