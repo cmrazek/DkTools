@@ -175,5 +175,13 @@ namespace DkTools.CodeAnalysis.Values
 			if (o == null || o._value == null) return false;
 			return _value == o._value;
 		}
+
+		public override void CheckTypeConversion(RunScope scope, Span span, DataType dataType)
+		{
+			if (_value != null && dataType.HasEnumOptions && _value.IsWord())
+			{
+				scope.CodeAnalyzer.ReportError(span, CAError.CA0058);   // Use non-string enum values when possible.
+			}
+		}
 	}
 }

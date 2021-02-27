@@ -205,6 +205,10 @@ namespace DkTools.CodeAnalysis
 
 		[ErrorMessage("Function expects {0} argument(s).")]
 		CA0057,
+
+		[ErrorMessage("Use non-string enum values when possible.")]
+		[Warning]
+		CA0058,
 		#endregion
 
 		#region Aggregate Functions

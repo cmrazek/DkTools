@@ -159,5 +159,9 @@ namespace DkTools.CodeAnalysis.Values
 
 			return CreateUnknownFromDataType(dataType);
 		}
+
+		public virtual void CheckTypeConversion(RunScope scope, Span span, DataType dataType)
+		{
+		}
 	}
 }

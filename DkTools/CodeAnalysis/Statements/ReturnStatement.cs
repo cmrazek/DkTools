@@ -11,6 +11,7 @@ namespace DkTools.CodeAnalysis.Statements
 	class ReturnStatement : Statement
 	{
 		private ExpressionNode _exp;
+		private DataType _returnDataType;
 
 		public ReturnStatement(ReadParams p, Span keywordSpan)
 			: base(p.CodeAnalyzer, keywordSpan)
@@ -20,6 +21,7 @@ namespace DkTools.CodeAnalysis.Statements
 			var retDataType = p.FuncDef.DataType;
 			if (retDataType != null && !retDataType.IsVoid)
 			{
+				_returnDataType = retDataType;
 				_exp = ExpressionNode.Read(p, retDataType);
 				if (_exp == null)
 				{
@@ -39,7 +41,8 @@ namespace DkTools.CodeAnalysis.Statements
 			if (_exp != null)
 			{
 				var returnScope = scope.Clone();
-				_exp.ReadValue(returnScope);
+				var returnValue = _exp.ReadValue(returnScope);
+				returnValue.CheckTypeConversion(scope, _exp.Span, _returnDataType);
 				scope.Merge(returnScope);
 			}
 

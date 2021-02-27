@@ -189,7 +189,8 @@ namespace DkTools.CodeAnalysis.Nodes
 					{
 						var readScope = scope.Clone();
 						readScope.SuppressInitializedCheck = true;
-						arg.ReadValue(readScope);
+						var argValue = arg.ReadValue(readScope);
+						if (argValue != null && defArg.DataType != null) argValue.CheckTypeConversion(scope, arg.Span, defArg.DataType);
 						scope.Merge(readScope);
 
 						var writeScope = scope.Clone();
@@ -198,7 +199,8 @@ namespace DkTools.CodeAnalysis.Nodes
 					}
 					else
 					{
-						arg.ReadValue(scope);
+						var argValue = arg.ReadValue(scope);
+						if (argValue != null && defArg.DataType != null) argValue.CheckTypeConversion(scope, arg.Span, defArg.DataType);
 					}
 				}
 				else
