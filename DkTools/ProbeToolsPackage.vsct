@@ -85,7 +85,7 @@
 				<Icon guid="guidImages" id="bmpProbeExplorer" />
 				<Strings>
 					<CommandName>cmdShowProbeExplorer</CommandName>
-					<ButtonText>DK ExploreR</ButtonText>
+					<ButtonText>DK Explorer</ButtonText>
 				</Strings>
 			</Button>
 			<!-- DK Menu -> Probe Explorer -->
