@@ -1,12 +1,14 @@
 DkTools ChangeLog
 ____________________________________________________________________________________________________
-Version 1.5.13 - WIP:
-Requires Visual Studio 16.8.5 or higher.
+Version 1.5.13:
+
+Note: Requires Visual Studio 16.8.5 or higher.
 
 - Added automatic brace completion (can be turned off in options).
 - Fixed Peek Definitions not showing in later version of Visual Studio.
 - Brace highlighting will now select only one set of braces at a time.
 - Background scanning has been completely rewritten, improving speed and reliability.
+- Added code analysis for enum option usage.
 
 ____________________________________________________________________________________________________
 Version 1.5.12 - Nov 27, 2020:
