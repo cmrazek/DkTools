@@ -40,9 +40,11 @@ namespace DkTools.SignatureHelp
 			int pos = span.Start.Position;
 			foreach (var run in sig.ClassifiedContent.Runs)
 			{
-				spans.Add(new ClassificationSpan(new SnapshotSpan(span.Snapshot, pos, run.Length),
-					ProbeClassifier.GetClassificationType(run.Type)));
-				
+				var classificationType = ProbeClassifier.GetClassificationType(run.Type);
+				if (classificationType != null)
+				{
+					spans.Add(new ClassificationSpan(new SnapshotSpan(span.Snapshot, pos, run.Length), classificationType));
+				}
 				pos += run.Length;
 			}
 
@@ -51,9 +53,13 @@ namespace DkTools.SignatureHelp
 
 		private IList<ClassificationSpan> GetFallbackClassificationSpans(SnapshotSpan span)
 		{
-			var cs = new ClassificationSpan(span, Classifier.ProbeClassifier.GetClassificationType(Classifier.ProbeClassifierType.Normal));
 			var ret = new List<ClassificationSpan>();
-			ret.Add(cs);
+			var classificationType = Classifier.ProbeClassifier.GetClassificationType(Classifier.ProbeClassifierType.Normal);
+			if (classificationType != null)
+			{
+				var cs = new ClassificationSpan(span, classificationType);
+				ret.Add(cs);
+			}
 			return ret;
 		}
 

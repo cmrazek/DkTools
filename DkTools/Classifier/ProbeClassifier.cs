@@ -300,7 +300,7 @@ namespace DkTools.Classifier
 				}
 			}
 
-			return ProbeToolsPackage.Instance.DefaultClassificationType;
+			return null;
 		}
 	}
 }

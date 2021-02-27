@@ -32,7 +32,7 @@ namespace DkTools
 	/// register itself and its components with the shell.
 	/// </summary>
 	[System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1001:TypesThatOwnDisposableFieldsShouldBeDisposable", Justification = "This class is part of MPF.")]
-	[PackageRegistration(UseManagedResourcesOnly = true)]
+	[PackageRegistration(UseManagedResourcesOnly = true, AllowsBackgroundLoading = true)]
 	[InstalledProductRegistration("#110", "#112", "1.0", IconResourceID = 400)]
 	[Guid(GuidList.strProbeToolsPkg)]
 	[ProvideService(typeof(ProbeLanguageService), ServiceName = Constants.DkContentType)]
@@ -91,7 +91,7 @@ namespace DkTools
 		"%LocalAppData%\\DkTools2012\\SnippetIndex.xml",
 		SearchPaths = "%LocalAppData%\\DkTools2012\\Snippets\\;%MyDocs%\\Code Snippets\\DK\\My Code Snippets\\")]
 	[ProvideBraceCompletion(Constants.DkContentType)]
-	public sealed partial class ProbeToolsPackage : Package, IOleComponent
+	public sealed partial class ProbeToolsPackage : AsyncPackage, IOleComponent
 	{
 		private uint _componentId;
 		private static ProbeToolsPackage _instance;
@@ -116,12 +116,12 @@ namespace DkTools
 		/// Initialization of the package; this method is called right after the package is sited, so this is the place
 		/// where you can put all the initilaization code that rely on services provided by VisualStudio.
 		/// </summary>
-		protected override void Initialize()
+		protected override async System.Threading.Tasks.Task InitializeAsync(CancellationToken cancellationToken, IProgress<ServiceProgressData> progress)
 		{
 			base.Initialize();
 			Log.Initialize();
 
-			ThreadHelper.ThrowIfNotOnUIThread();
+			await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync(cancellationToken);
 
 			ProbeEnvironment.Initialize();
 			TempManager.Init(TempDir);
@@ -131,10 +131,13 @@ namespace DkTools
 			// Proffer the service.	http://msdn.microsoft.com/en-us/library/bb166498.aspx
 			var langService = new ProbeLanguageService(this);
 			langService.SetSite(this);
-			(this as IServiceContainer).AddService(typeof(ProbeLanguageService), langService, true);
+
+			var serviceContainer = this as IServiceContainer;
+			if (serviceContainer != null) serviceContainer.AddService(typeof(ProbeLanguageService), langService, true);
+			else Log.Warning("Failed to get service container.");
 
 			// Register a timer to call our language service during idle periods.
-			var mgr = GetService(typeof(SOleComponentManager)) as IOleComponentManager;
+			var mgr = await GetServiceAsync(typeof(SOleComponentManager)) as IOleComponentManager;
 			if (_componentId == 0 && mgr != null)
 			{
 				OLECRINFO[] crinfo = new OLECRINFO[1];
@@ -148,7 +151,7 @@ namespace DkTools
 			_errorTaskProvider = new ErrorTagging.ErrorTaskProvider(this);
 			TaskListService.RegisterTaskProvider(_errorTaskProvider, out _errorTaskProviderCookie);
 
-			var mcs = GetService(typeof(IMenuCommandService)) as OleMenuCommandService;
+			var mcs = await GetServiceAsync(typeof(IMenuCommandService)) as OleMenuCommandService;
 			if (mcs != null) Commands.InitCommands(mcs);
 
 			FunctionFileScanning.FFScanner.OnStartup();
@@ -163,9 +166,6 @@ namespace DkTools
 			ProbeAppSettings.FileDeleted += ProbeAppSettings_FileDeleted;
 
 			Microsoft.VisualStudio.PlatformUI.VSColorTheme.ThemeChanged += VSColorTheme_ThemeChanged;
-
-			var classificationTypeRegistryService = ClassificationTypeRegistryService ?? throw new InvalidOperationException("Failed to load ClassificationTypeRegistryService.");
-			DefaultClassificationType = classificationTypeRegistryService.GetClassificationType(PredefinedClassificationTypeNames.Other);
 		}
 
 		protected override void Dispose(bool disposing)
@@ -350,8 +350,6 @@ namespace DkTools
 			Log.Debug("Event: RefreshDocumentRequired: {0}", filePath);
 			RefreshDocumentRequired?.Invoke(this, new RefreshDocumentEventArgs(filePath));
 		}
-
-		public IClassificationType DefaultClassificationType { get; private set; }
 
 		#region Settings
 		private const int k_settingsRefreshTime = 5000;	// Only reload settings every 5 seconds
@@ -583,7 +581,7 @@ namespace DkTools
 
 				if (_statusBarService == null)
 				{
-					_statusBarService = this.GetService(typeof(SVsStatusbar)) as IVsStatusbar;
+					_statusBarService = await this.GetServiceAsync(typeof(SVsStatusbar)) as IVsStatusbar;
 					if (_statusBarService == null) throw new InvalidOperationException("Unable to get service 'Microsoft.VisualStudio.Shell.Interop.IVsStatusbar'.");
 				}
 
@@ -602,7 +600,7 @@ namespace DkTools
 
 				if (_errorListService == null)
 				{
-					_errorListService = this.GetService(typeof(SVsErrorList)) as IVsErrorList;
+					_errorListService = await this.GetServiceAsync(typeof(SVsErrorList)) as IVsErrorList;
 					if (_statusBarService == null) throw new InvalidOperationException("Unable to get service 'Microsoft.VisualStudio.Shell.Interop.IVsErrorList'.");
 				}
 
