@@ -17,6 +17,7 @@ namespace DkTools.ErrorTagging
 		private ErrorType _type;
 		private CodeModel.Span? _reportedSpan;
 		private Dictionary<ITextBuffer, SnapshotSpan> _snapshotSpans;
+		private CodeAnalysis.CAError? _errorCode;
 
 		/// <summary>
 		/// Creates a new error/warning task.
@@ -40,7 +41,8 @@ namespace DkTools.ErrorTagging
 			string message,
 			ErrorType type,
 			ErrorTaskSource source,
-			CodeModel.Span? reportedSpan)
+			CodeModel.Span? reportedSpan,
+			CodeAnalysis.CAError? errorCode = null)
 		{
 			_invokingFilePath = invokingFilePath;
 			Document = filePath;
@@ -64,6 +66,7 @@ namespace DkTools.ErrorTagging
 			_source = source;
 			_type = type;
 			_reportedSpan = reportedSpan;
+			_errorCode = errorCode;
 
 			Navigate += ErrorTask_Navigate;
 		}
@@ -76,6 +79,8 @@ namespace DkTools.ErrorTagging
 		public ErrorTaskSource Source => _source;
 		public override string ToString() => string.Concat(Document, "(", Line, ", ", Column, ") ", Type, ": ", Text);
 		public ErrorType Type => _type;
+		public CodeModel.Span? ReportedSpan => _reportedSpan;
+		public CodeAnalysis.CAError? ErrorCode => _errorCode;
 
 		private void ErrorTask_Navigate(object sender, EventArgs e)
 		{

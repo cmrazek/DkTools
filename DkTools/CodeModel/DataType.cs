@@ -1410,9 +1410,16 @@ namespace DkTools.CodeModel
 			}
 		}
 
-		public static string NormalizeEnumOption(string option)
+		public static string NormalizeEnumOption(string option, bool strict = false)
 		{
-			if (string.IsNullOrWhiteSpace(option)) return "\" \"";
+			if (strict)
+			{
+				if (option == null) return "\"\"";
+			}
+			else
+			{
+				if (string.IsNullOrWhiteSpace(option)) return "\" \"";
+			}
 
 			if (option.IsWord()) return option;
 
@@ -1445,12 +1452,12 @@ namespace DkTools.CodeModel
 			get { return _completionOptionsType == CompletionOptionsType.EnumOptionsList; }
 		}
 
-		public bool IsValidEnumOption(string optionText)
+		public bool IsValidEnumOption(string optionText, bool strict = false)
 		{
 			if (_completionOptionsType != CompletionOptionsType.EnumOptionsList) return false;
 			if (_completionOptions == null) return false;
 
-			optionText = NormalizeEnumOption(optionText);
+			optionText = NormalizeEnumOption(optionText, strict);
 
 			foreach (var opt in _completionOptions)
 			{

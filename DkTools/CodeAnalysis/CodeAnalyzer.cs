@@ -183,6 +183,14 @@ namespace DkTools.CodeAnalysis
 
 		private void ReportErrorLocal_Internal(string filePath, Span fileSpan, string fileContent, CAError errorCode, params object[] args)
 		{
+			if (_tasks.Any(x => x.ErrorCode.HasValue && x.ErrorCode.Value == errorCode &&
+				x.ReportedSpan.HasValue && x.ReportedSpan.Value == fileSpan &&
+				x.Document.EqualsI(filePath)))
+			{
+				// This is a duplicate error report.
+				return;
+			}
+
 			int lineNum = 0, linePos = 0;
 
 			var type = errorCode.GetErrorType();
@@ -235,9 +243,6 @@ namespace DkTools.CodeAnalysis
 					break;
 			}
 
-
-			Log.Debug("{0}({1},{2}) : {3} : {4} Span [{5}]", filePath, lineNum + 1, linePos + 1, type, message, fileSpan);
-
 			if ((type & ErrorType.ErrorMarkerMask) != 0)
 			{
 				var tag = new ErrorMarkerTag(
@@ -258,7 +263,8 @@ namespace DkTools.CodeAnalysis
 					message: message,
 					type: ErrorType.CodeAnalysisError,
 					source: ErrorTaskSource.CodeAnalysis,
-					reportedSpan: fileSpan);
+					reportedSpan: fileSpan,
+					errorCode: errorCode);
 
 				_tasks.Add(task);
 			}

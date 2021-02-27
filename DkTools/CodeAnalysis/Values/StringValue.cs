@@ -178,9 +178,23 @@ namespace DkTools.CodeAnalysis.Values
 
 		public override void CheckTypeConversion(RunScope scope, Span span, DataType dataType)
 		{
-			if (_value != null && dataType.HasEnumOptions && _value.IsWord())
+			if (_value != null && dataType.HasEnumOptions)
 			{
-				scope.CodeAnalyzer.ReportError(span, CAError.CA0058);   // Use non-string enum values when possible.
+				if (!dataType.IsValidEnumOption(_value, strict: true))
+				{
+					if (_value.Length == 0 && dataType.IsValidEnumOption(" "))
+					{
+						scope.CodeAnalyzer.ReportError(span, CAError.CA0060, "\"\"");   // Enum option {0} does not exist; use a single space instead of a blank string.
+					}
+					else
+					{
+						scope.CodeAnalyzer.ReportError(span, CAError.CA0059, CodeParser.StringToStringLiteral(_value));   // Enum option {0} does not exist.
+					}
+				}
+				else if (_value.IsWord())
+				{
+					scope.CodeAnalyzer.ReportError(span, CAError.CA0058);   // Use non-string enum values when possible.
+				}
 			}
 		}
 	}

@@ -209,6 +209,14 @@ namespace DkTools.CodeAnalysis
 		[ErrorMessage("Use non-string enum values when possible.")]
 		[Warning]
 		CA0058,
+
+		[ErrorMessage("Enum option {0} does not exist.")]
+		[Warning]
+		CA0059,
+
+		[ErrorMessage("Enum option {0} does not exist; use a single space instead of an empty string.")]
+		[Warning]
+		CA0060,
 		#endregion
 
 		#region Aggregate Functions
