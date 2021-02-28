@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using DkTools.CodeModel;
 using DkTools.GlobalData;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.Win32;
@@ -328,6 +329,7 @@ namespace DkTools
 				{
 					Log.Debug("File change detected: {0}", e.FullPath);
 
+					IncludeFileCache.OnFileChanged(e.FullPath);
 					FileChanged?.Invoke(this, new FileEventArgs(e.FullPath));
 				}
 			});
@@ -343,6 +345,7 @@ namespace DkTools
 				{
 					Log.Debug("File deletion detected: {0}", e.FullPath);
 
+					IncludeFileCache.OnFileChanged(e.FullPath);
 					FileDeleted?.Invoke(this, new FileEventArgs(e.FullPath));
 				}
 			});
@@ -358,12 +361,14 @@ namespace DkTools
 				{
 					Log.Debug("File rename detected: {0} -> {1}", e.OldFullPath, e.FullPath);
 
+					IncludeFileCache.OnFileChanged(e.OldFullPath);
 					FileDeleted?.Invoke(this, new FileEventArgs(e.OldFullPath));
 				}
 				else if (ProbeEnvironment.IsProbeFile(e.FullPath))
 				{
 					Log.Debug("File rename detected: {0} -> {1}", e.OldFullPath, e.FullPath);
 
+					IncludeFileCache.OnFileChanged(e.FullPath);
 					FileChanged?.Invoke(this, new FileEventArgs(e.FullPath));
 				}
 			});
@@ -379,6 +384,7 @@ namespace DkTools
 				{
 					Log.Debug("File create detected: {0}", e.FullPath);
 
+					IncludeFileCache.OnFileChanged(e.FullPath);
 					FileChanged?.Invoke(this, new FileEventArgs(e.FullPath));
 				}
 			});

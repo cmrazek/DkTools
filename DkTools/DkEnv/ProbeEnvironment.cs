@@ -7,6 +7,7 @@ using System.Runtime.InteropServices;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using DkTools.CodeModel;
 using Microsoft.Win32;
 
 namespace DkTools
@@ -119,6 +120,7 @@ namespace DkTools
 
 				CurrentAppSettings = appSettings;
 
+				IncludeFileCache.OnAppChanged();
 				AppChanged?.Invoke(null, EventArgs.Empty);
 				ProbeToolsPackage.Instance.FireRefreshAllDocuments();
 

@@ -57,6 +57,7 @@ namespace DkTools.CodeModel
 		}
 
 		public int Position => _length;
+		public int Length => _length;
 
 		public void Flush()
 		{
