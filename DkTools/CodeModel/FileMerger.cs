@@ -8,7 +8,7 @@ using System.Text.RegularExpressions;
 
 namespace DkTools.CodeModel
 {
-	class FileMerger
+	internal class FileMerger
 	{
 		private List<Line> _lines;
 		private string _origFileName = "";
@@ -16,7 +16,6 @@ namespace DkTools.CodeModel
 		private string _currentLocalFileName = "";
 		private int _currentLocalLine = 0;
 		private MergeMode _mode = MergeMode.Normal;
-		private List<Line> _local;
 		private List<Line> _replace = new List<Line>();
 		private int _replaceLine;
 		private List<LabelPos> _labels;
@@ -53,25 +52,29 @@ namespace DkTools.CodeModel
 		public FileMerger()
 		{ }
 
-		public void MergeFile(ProbeAppSettings appSettings, string fileName, string content, bool showMergeComments, bool fileIsPrimary)
+		public void MergeFile(ProbeAppSettings appSettings, string fullPathName, string content, bool showMergeComments, bool fileIsPrimary)
 		{
 			if (appSettings == null) throw new ArgumentNullException(nameof(appSettings));
 
 			_appSettings = appSettings;
 
 			// Locate all needed copies of files
-			_primaryFileName = fileName;
+			_primaryFileName = fullPathName;
 			_origFileName = "";
 			_localFileNames.Clear();
 			_showMergeComments = showMergeComments;
 
-			var rawFileName = fileName;
-			if (Path.IsPathRooted(fileName)) fileName = UnrootFileName(fileName);
-			FindFiles(fileName);
+			var relativeFileName = fullPathName;
+			if (Path.IsPathRooted(fullPathName)) fullPathName = UnrootFileName(fullPathName);
+			FindFiles(fullPathName);
 
 			if (string.IsNullOrEmpty(_origFileName))
 			{
-				throw new FileMergeException(string.Format("Could not find base file for '{0}'.", rawFileName));
+				_origFileName = fullPathName;
+				_mergedContent = new CodeSource();
+				_mergedContent.Append(content, fullPathName, fileStartPos: 0, fileEndPos: content.Length, actualContent: true, primaryFile: true, disabled: false);
+				_mergedContent.Flush();
+				return;
 			}
 
 			if (content == null) _origContent = File.ReadAllText(_origFileName);
@@ -87,7 +90,7 @@ namespace DkTools.CodeModel
 				}
 				catch (Exception ex)
 				{
-					Log.Error(ex, "Error when merging local file '{0}' into '{1}'.", localFileName, fileName);
+					Log.Error(ex, "Error when merging local file '{0}' into '{1}'.", localFileName, fullPathName);
 				}
 			}
 
@@ -241,7 +244,6 @@ namespace DkTools.CodeModel
 
 			AnalyzeOrigFile();
 
-			_local = new List<Line>();
 			_currentLocalFileName = localFileName;
 			_currentLocalLine = 1;
 
@@ -314,7 +316,11 @@ namespace DkTools.CodeModel
 					{
 						var labelName = line.text.Substring(match.Index + match.Length).Trim();
 						_insertLine = GetLabelInsert(labelName);
-						if (_insertLine < 0) throw new FileMergeException(this._currentLocalFileName + ": #label '" + labelName + "' not found");
+						if (_insertLine < 0)
+						{
+							Log.Warning("{0}: #label '{1}' not found.", _currentLocalFileName, labelName);
+							_insertLine = _lines.Count;
+						}
 
 						if (_showMergeComments)
 						{
@@ -334,19 +340,29 @@ namespace DkTools.CodeModel
 				case MergeMode.ReplaceStart:
 					if ((match = _rxWithLine.Match(line.text)).Success)
 					{
-						if (_replace.Count == 0) throw new FileMergeException(this._currentLocalFileName + ": empty #replace statement");
-
-						_replaceLine = FindReplace();
-						if (_replaceLine < 0) throw new FileMergeException(this._currentLocalFileName + ": #replace at line " + this._currentLocalLine.ToString() + " not found");
-
-						_lines.RemoveRange(_replaceLine, _replace.Count);
-						BumpLabels(_replaceLine, -_replace.Count);
-
-						if (_showMergeComments)
+						if (_replace.Count == 0)
 						{
-							_lines.Insert(_replaceLine, new Line(string.Empty, 0, string.Format("// replace from {0}({1})", _currentLocalFileName, _currentLocalLine)));
-							BumpLabels(_replaceLine, 1);
-							_replaceLine += 1;
+							Log.Warning("{0}: empty #replace statement.", _currentLocalFileName);
+						}
+						else
+						{
+							_replaceLine = FindReplace();
+							if (_replaceLine < 0)
+							{
+								Log.Warning("{0}: #replace at line {1} not found.", _currentLocalFileName, _currentLocalLine);
+							}
+							else
+							{
+								_lines.RemoveRange(_replaceLine, _replace.Count);
+								BumpLabels(_replaceLine, -_replace.Count);
+
+								if (_showMergeComments)
+								{
+									_lines.Insert(_replaceLine, new Line(string.Empty, 0, string.Format("// replace from {0}({1})", _currentLocalFileName, _currentLocalLine)));
+									BumpLabels(_replaceLine, 1);
+									_replaceLine += 1;
+								}
+							}
 						}
 
 						_replace.Clear();
@@ -514,10 +530,10 @@ namespace DkTools.CodeModel
 		{
 			if (string.Equals(_origFileName, localFileName, StringComparison.OrdinalIgnoreCase)) return _origContent;
 
-			string content;
-			if (_localFileContent.TryGetValue(localFileName.ToLower(), out content)) return content;
+			if (_localFileContent.TryGetValue(localFileName.ToLower(), out var content)) return content;
 
-			throw new ArgumentOutOfRangeException(string.Format("File name '{0}' does not exist."));
+			Log.Warning("File does not exist: {0}", localFileName);
+			return string.Empty;
 		}
 	}
 }

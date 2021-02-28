@@ -190,23 +190,6 @@ namespace DkTools.CodeModel
 			set { _disabledSections = value; }
 		}
 
-		#region Include Files
-		private List<CodeFile> _implicitIncludes = new List<CodeFile>();
-
-		public CodeFile GetIncludeFile(string sourceFileName, string fileName, bool searchCurrentDir, IEnumerable<string> parentFiles)
-		{
-			var includeFile = _store.GetIncludeFile(_appSettings, sourceFileName, fileName, searchCurrentDir, parentFiles);
-			if (includeFile == null) return null;
-
-			return includeFile.GetCodeFile(_appSettings, this, parentFiles);
-		}
-
-		public IEnumerable<CodeFile> ImplicitIncludes
-		{
-			get { return _implicitIncludes; }
-		}
-		#endregion
-
 		#region Definitions
 		public DefinitionProvider DefinitionProvider
 		{

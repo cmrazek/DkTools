@@ -9,6 +9,8 @@ namespace DkTools
 {
 	internal static class StringUtil
 	{
+		public static readonly string[] EmptyStringArray = new string[0];
+
 		public static string Combine(this IEnumerable<string> list)
 		{
 			var sb = new StringBuilder();

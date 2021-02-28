@@ -147,6 +147,7 @@ namespace DkTools.FunctionFileScanning
 					_pendingQueue.Add(new ScanJob(FFScanMode.FolderSearch, sourceDir, app));
 				}
 
+				_pendingQueue.Add(new ScanJob(FFScanMode.ExportsComplete, null, app));
 				_pendingQueue.Add(new ScanJob(FFScanMode.Completion, null, app));
 				_pendingQueue.Sort();
 
@@ -271,6 +272,10 @@ namespace DkTools.FunctionFileScanning
 					case FFScanMode.Exports:
 					case FFScanMode.Deep:
 						ProcessFile(job.App, job);
+						break;
+
+					case FFScanMode.ExportsComplete:
+						job.App.Repo.OnExportsComplete();
 						break;
 
 					case FFScanMode.Completion:
@@ -469,6 +474,7 @@ namespace DkTools.FunctionFileScanning
 	{
 		FolderSearch,
 		Exports,
+		ExportsComplete,
 		Deep,
 		Completion
 	}

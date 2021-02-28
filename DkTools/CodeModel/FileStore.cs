@@ -363,7 +363,7 @@ namespace DkTools.CodeModel
 		private static void CreateStdLibModel(ProbeAppSettings appSettings)
 		{
 			var tempStore = new FileStore();
-			var includeFile = tempStore.GetIncludeFile(appSettings, null, "stdlib.i", false, new string[0]);
+			var includeFile = tempStore.GetIncludeFile(appSettings, sourceFileName: null, "stdlib.i", searchSameDir: false, StringUtil.EmptyStringArray);
 			if (includeFile != null)
 			{
 				_stdLibModel = tempStore.CreatePreprocessedModel(appSettings, includeFile.GetSource(appSettings),

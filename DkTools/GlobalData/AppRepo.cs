@@ -579,6 +579,14 @@ namespace DkTools.GlobalData
 			});
 		}
 
+		public void OnExportsComplete()
+		{
+			lock (this)
+			{
+				GenerateGlobalDefinitions();
+			}
+		}
+
 		public void OnScanComplete()
 		{
 			lock (this)
@@ -1271,5 +1279,5 @@ Permanent Extracts:
 		[int]		Position in actual file
 */
 				#endregion
-			}
+	}
 }

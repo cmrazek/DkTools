@@ -31,56 +31,15 @@ namespace DkTools.CodeModel
 		{
 			if (_source == null)
 			{
-				try
+				_source = IncludeFileCache.GetIncludeFileSource(_fullPathName);
+				if (_source == null)
 				{
-					var merger = new FileMerger();
-					merger.MergeFile(appSettings, _fullPathName, null, false, false);
-					_source = merger.MergedContent;
-
-					var fileInfo = new FileInfo(_fullPathName);
-					_lastModifiedDate = fileInfo.LastWriteTime;
-					_lastCheck = DateTime.Now;
-
-					foreach (var mergeFileName in merger.FileNames)
-					{
-						var content = merger.GetFileContent(mergeFileName);
-						if (content == null) throw new InvalidOperationException("Merger content is null.");
-						_preMergeContent[mergeFileName.ToLower()] = content;
-					}
-				}
-				catch (Exception ex)
-				{
-					Log.Error(ex, "Exception when attempting to read content of include file '{0}'.", _fullPathName);
-					_source = null;
+					_source = new CodeSource();
+					_source.Append(string.Empty, _fullPathName, 0, 0, true, false, false);
+					_source.Flush();
 				}
 			}
 			return _source;
-		}
-
-		public CodeFile GetCodeFile(ProbeAppSettings appSettings, CodeModel model, IEnumerable<string> parentFiles)
-		{
-			if (_codeFile == null)
-			{
-				try
-				{
-					Log.Debug("Processing include file: {0}", _fullPathName);
-
-					var content = GetSource(appSettings);
-					if (content == null) return null;
-
-					var file = new CodeFile(model);
-					file.Parse(content, _fullPathName, parentFiles, false);
-					_codeFile = file;
-				}
-				catch (Exception ex)
-				{
-					Log.Error(ex, "Exception when processing include file '{0}'.", _fullPathName);
-					_codeFile = null;
-				}
-
-				_lastCheck = DateTime.Now;
-			}
-			return _codeFile;
 		}
 
 		public string FullPathName
