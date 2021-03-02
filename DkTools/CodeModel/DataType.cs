@@ -202,15 +202,6 @@ namespace DkTools.CodeModel
 					yield return RelIndDefinition.Physical;
 					foreach (var r in appSettings.Dict.RelInds) yield return r.Definition;
 					break;
-
-				case CompletionOptionsType.InterfaceMembers:
-					if (_intf != null)
-					{
-						foreach (var def in _intf.MethodDefinitions) yield return def;
-						foreach (var def in _intf.PropertyDefinitions) yield return def;
-					}
-					break;
-
 			}
 		}
 

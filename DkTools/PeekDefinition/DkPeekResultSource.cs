@@ -1,5 +1,4 @@
-﻿using DICTSRVRLib;
-using EnvDTE;
+﻿using EnvDTE;
 using Microsoft.VisualStudio.Imaging.Interop;
 using Microsoft.VisualStudio.Language.Intellisense;
 using System;
