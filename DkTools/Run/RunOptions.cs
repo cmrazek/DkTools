@@ -47,7 +47,7 @@ namespace DkTools.Run
 
 		internal string CreateSamArgsString()
 		{
-			var appSettings = ProbeEnvironment.CurrentAppSettings;
+			var appSettings = DkEnvironment.CurrentAppSettings;
 
 			var sb = new StringBuilder();
 			sb.Append(string.Format("/N{0}", CleanSamName(string.Concat(appSettings.AppName, "_", System.Environment.UserName))));
@@ -70,7 +70,7 @@ namespace DkTools.Run
 
 		internal string CreateCamArgsString()
 		{
-			var appSettings = ProbeEnvironment.CurrentAppSettings;
+			var appSettings = DkEnvironment.CurrentAppSettings;
 
 			StringBuilder sb = new StringBuilder();
 			sb.Append("appname=" + appSettings.AppName);

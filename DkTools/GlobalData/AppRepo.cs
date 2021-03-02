@@ -62,7 +62,7 @@ namespace DkTools.GlobalData
 {
 	internal class AppRepo
 	{
-		private ProbeAppSettings _appSettings;
+		private DkAppSettings _appSettings;
 		private string _repoDir;
 		private string _repoFileName;
 		private StringRepo _strings;
@@ -144,7 +144,7 @@ namespace DkTools.GlobalData
 		#endregion
 
 		#region Construction
-		public AppRepo(ProbeAppSettings appSettings)
+		public AppRepo(DkAppSettings appSettings)
 		{
 			_appSettings = appSettings ?? throw new ArgumentNullException(nameof(appSettings));
 
@@ -610,6 +610,8 @@ namespace DkTools.GlobalData
 		#region Files
 		private bool IterateFiles(Func<int, bool> callback)
 		{
+			if (_data == null) return true;
+
 			var addr = 0;
 			var end = _data.Count;
 

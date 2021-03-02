@@ -24,9 +24,9 @@ namespace DkTools.FunctionFileScanning
 		{
 			public FFScanMode Mode { get; private set; }
 			public string Path { get; private set; }
-			public ProbeAppSettings App { get; private set; }
+			public DkAppSettings App { get; private set; }
 
-			public ScanJob(FFScanMode mode, string path, ProbeAppSettings app)
+			public ScanJob(FFScanMode mode, string path, DkAppSettings app)
 			{
 				Mode = mode;
 				Path = path;
@@ -44,8 +44,8 @@ namespace DkTools.FunctionFileScanning
 
 		public static void OnStartup()
 		{
-			ProbeEnvironment.AppChanged += new EventHandler(ProbeEnvironment_AppChanged);
-			ProbeAppSettings.FileChanged += ProbeAppSettings_FileChanged;
+			DkEnvironment.AppChanged += new EventHandler(ProbeEnvironment_AppChanged);
+			DkAppSettings.FileChanged += ProbeAppSettings_FileChanged;
 			_scanDelay.Idle += ScanTimerElapsed;
 
 			StartScanning();
@@ -88,7 +88,7 @@ namespace DkTools.FunctionFileScanning
 				return;
 			}
 
-			var app = ProbeEnvironment.CurrentAppSettings;
+			var app = DkEnvironment.CurrentAppSettings;
 			if (app == null)
 			{
 				Log.Warning("Scanning aborted because there is no current app.");
@@ -123,7 +123,7 @@ namespace DkTools.FunctionFileScanning
 				return;
 			}
 
-			var app = ProbeEnvironment.CurrentAppSettings;
+			var app = DkEnvironment.CurrentAppSettings;
 			if (app == null)
 			{
 				Log.Warning("Scanning aborted because there is no current app.");
@@ -302,7 +302,7 @@ namespace DkTools.FunctionFileScanning
 			}
 		}
 
-		private static void ProcessSourceDir(ProbeAppSettings app, string dir, List<ScanJob> scanList)
+		private static void ProcessSourceDir(DkAppSettings app, string dir, List<ScanJob> scanList)
 		{
 			try
 			{
@@ -360,7 +360,7 @@ namespace DkTools.FunctionFileScanning
 			}
 		}
 
-		private static bool FileRequiresScan(ProbeAppSettings app, string fileName)
+		private static bool FileRequiresScan(DkAppSettings app, string fileName)
 		{
 			var modified = File.GetLastWriteTime(fileName);
 
@@ -370,7 +370,7 @@ namespace DkTools.FunctionFileScanning
 			return false;
 		}
 
-		private static void ProcessFile(ProbeAppSettings app, ScanJob scan)
+		private static void ProcessFile(DkAppSettings app, ScanJob scan)
 		{
 			try
 			{
@@ -413,18 +413,18 @@ namespace DkTools.FunctionFileScanning
 			}
 		}
 
-		private static void ProbeAppSettings_FileChanged(object sender, ProbeAppSettings.FileEventArgs e)
+		private static void ProbeAppSettings_FileChanged(object sender, DkAppSettings.FileEventArgs e)
 		{
 			try
 			{
-				var app = ProbeEnvironment.CurrentAppSettings;
+				var app = DkEnvironment.CurrentAppSettings;
 				if (app == null) return;
 
 				var options = ProbeToolsPackage.Instance.EditorOptions;
 				if (!options.DisableBackgroundScan)
 				{
 					var fileContext = FileContextUtil.GetFileContextFromFileName(e.FilePath);
-					if (ProbeEnvironment.CurrentAppSettings.FileExistsInApp(e.FilePath))
+					if (DkEnvironment.CurrentAppSettings.FileExistsInApp(e.FilePath))
 					{
 						if (fileContext != FileContext.Include && !FileContextUtil.IsLocalizedFile(e.FilePath))
 						{
@@ -449,7 +449,7 @@ namespace DkTools.FunctionFileScanning
 			}
 		}
 
-		public static void ResetDateOnFile(ProbeAppSettings app, string fullPath)
+		public static void ResetDateOnFile(DkAppSettings app, string fullPath)
 		{
 			var options = ProbeToolsPackage.Instance.EditorOptions;
 			if (options.DisableBackgroundScan) return;
@@ -461,7 +461,7 @@ namespace DkTools.FunctionFileScanning
 			}
 		}
 
-		private static void ResetDateOnDependentFiles(ProbeAppSettings app, string includeFileName)
+		private static void ResetDateOnDependentFiles(DkAppSettings app, string includeFileName)
 		{
 			var options = ProbeToolsPackage.Instance.EditorOptions;
 			if (options.DisableBackgroundScan) return;

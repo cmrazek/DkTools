@@ -127,7 +127,7 @@ namespace DkTools.Tagging
 						var fileStore = CodeModel.FileStore.GetOrCreateForTextBuffer(buf);
 						if (fileStore != null)
 						{
-							var appSettings = ProbeEnvironment.CurrentAppSettings;
+							var appSettings = DkEnvironment.CurrentAppSettings;
 							var fileName = VsTextUtil.TryGetDocumentFileName(buf);
 							var funcs = fileStore.GetFunctionDropDownList(appSettings, fileName, buf.CurrentSnapshot);
 							var model = fileStore.GetMostRecentModel(appSettings, fileName, buf.CurrentSnapshot, "Insert diag");
@@ -152,7 +152,7 @@ namespace DkTools.Tagging
 
 				if (!string.IsNullOrWhiteSpace(selText))
 				{
-					sb.Append(ProbeEnvironment.StringEscape(selText));
+					sb.Append(DkEnvironment.StringEscape(selText));
 					sb.Append(" [\", ");
 					sb.Append(selText);
 					sb.Append(", \"]");

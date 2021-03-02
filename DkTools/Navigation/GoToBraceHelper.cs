@@ -28,7 +28,7 @@ namespace DkTools.Navigation
 			var store = FileStore.GetOrCreateForTextBuffer(view.TextBuffer);
 			if (store == null) return;
 
-			var appSettings = ProbeEnvironment.CurrentAppSettings;
+			var appSettings = DkEnvironment.CurrentAppSettings;
 			var fileName = VsTextUtil.TryGetDocumentFileName(view.TextBuffer);
 			var model = store.GetMostRecentModel(appSettings, fileName, view.TextSnapshot, "GoToBraceHelper.Trigger()");
 

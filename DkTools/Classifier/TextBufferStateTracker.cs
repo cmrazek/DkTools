@@ -64,12 +64,12 @@ namespace DkTools.Classifier
 			}
 		}
 
-		public long GetStateForPosition(SnapshotPoint snapPt, string fileName, ProbeAppSettings appSettings)
+		public long GetStateForPosition(SnapshotPoint snapPt, string fileName, DkAppSettings appSettings)
 		{
 			return GetStateForPosition(snapPt.Position, snapPt.Snapshot, fileName, appSettings);
 		}
 
-		public long GetStateForPosition(int pos, ITextSnapshot snapshot, string fileName, ProbeAppSettings appSettings)
+		public long GetStateForPosition(int pos, ITextSnapshot snapshot, string fileName, DkAppSettings appSettings)
 		{
 			lock (this)
 			{
@@ -102,7 +102,7 @@ namespace DkTools.Classifier
 			}
 		}
 
-		public long GetStateForLineStart(int lineNum, ITextSnapshot snapshot, string fileName, ProbeAppSettings appSettings)
+		public long GetStateForLineStart(int lineNum, ITextSnapshot snapshot, string fileName, DkAppSettings appSettings)
 		{
 			lock (this)
 			{
@@ -158,7 +158,7 @@ namespace DkTools.Classifier
 		/// <summary>
 		/// Returns true if the position is not inside a comment, string literal or disabled code.
 		/// </summary>
-		public bool IsPositionInLiveCode(int pos, ITextSnapshot snapshot, string fileName, ProbeAppSettings appSettings)
+		public bool IsPositionInLiveCode(int pos, ITextSnapshot snapshot, string fileName, DkAppSettings appSettings)
 		{
             return State.IsInLiveCode(GetStateForPosition(pos, snapshot, fileName, appSettings));
 		}

@@ -11,7 +11,7 @@ namespace DkTools.CodeModel
 {
 	internal class PreprocessorModel
 	{
-		private ProbeAppSettings _appSettings;
+		private DkAppSettings _appSettings;
 		private CodeSource _source;
 		private CodeParser _code;
 		private DefinitionProvider _defProv;
@@ -26,7 +26,7 @@ namespace DkTools.CodeModel
 		private Preprocessor _prep;
 		private List<Definition> _globalDefs = new List<Definition>();
 
-		public PreprocessorModel(ProbeAppSettings appSettings, CodeSource source, DefinitionProvider definitionProvider, string fileName, bool visible, IEnumerable<Preprocessor.IncludeDependency> includeDependencies)
+		public PreprocessorModel(DkAppSettings appSettings, CodeSource source, DefinitionProvider definitionProvider, string fileName, bool visible, IEnumerable<Preprocessor.IncludeDependency> includeDependencies)
 		{
 			_appSettings = appSettings ?? throw new ArgumentNullException(nameof(appSettings));
 			_source = source ?? throw new ArgumentNullException(nameof(source));

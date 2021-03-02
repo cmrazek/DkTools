@@ -32,16 +32,16 @@ namespace DkTools.CodeModel
 			_guid = Guid.NewGuid();
 			ProbeToolsPackage.RefreshAllDocumentsRequired += OnRefreshAllDocumentsRequired;
 			ProbeToolsPackage.RefreshDocumentRequired += OnRefreshDocumentRequired;
-			ProbeAppSettings.FileChanged += ProbeAppSettings_FileChanged;
-			ProbeAppSettings.FileDeleted += ProbeAppSettings_FileDeleted;
+			DkAppSettings.FileChanged += ProbeAppSettings_FileChanged;
+			DkAppSettings.FileDeleted += ProbeAppSettings_FileDeleted;
 		}
 
 		~FileStore()
 		{
 			ProbeToolsPackage.RefreshAllDocumentsRequired -= OnRefreshAllDocumentsRequired;
 			ProbeToolsPackage.RefreshDocumentRequired -= OnRefreshDocumentRequired;
-			ProbeAppSettings.FileChanged -= ProbeAppSettings_FileChanged;
-			ProbeAppSettings.FileDeleted -= ProbeAppSettings_FileDeleted;
+			DkAppSettings.FileChanged -= ProbeAppSettings_FileChanged;
+			DkAppSettings.FileDeleted -= ProbeAppSettings_FileDeleted;
 		}
 
 		public static FileStore GetOrCreateForTextBuffer(VsText.ITextBuffer buf)
@@ -59,7 +59,7 @@ namespace DkTools.CodeModel
 			return cache;
 		}
 
-		public IncludeFile GetIncludeFile(ProbeAppSettings appSettings, string sourceFileName, string fileName, bool searchSameDir, IEnumerable<string> parentFiles)
+		public IncludeFile GetIncludeFile(DkAppSettings appSettings, string sourceFileName, string fileName, bool searchSameDir, IEnumerable<string> parentFiles)
 		{
 #if DEBUG
 			if (parentFiles == null) throw new ArgumentNullException("parentFiles");
@@ -90,7 +90,7 @@ namespace DkTools.CodeModel
 				if (File.Exists(pathName))
 				{
 					if (CheckForCyclicalInclude(pathName, parentFiles)) return null;
-					file = new IncludeFile(this, pathName);
+					file = new IncludeFile(pathName);
 					_sameDirIncludeFiles[fileNameLower] = file;
 					return file;
 				}
@@ -105,7 +105,7 @@ namespace DkTools.CodeModel
 					if (File.Exists(pathName))
 					{
 						if (CheckForCyclicalInclude(pathName, parentFiles)) return null;
-						file = new IncludeFile(this, pathName);
+						file = new IncludeFile(pathName);
 						_globalIncludeFiles[fileNameLower] = file;
 						return file;
 					}
@@ -115,7 +115,7 @@ namespace DkTools.CodeModel
 			return null;
 		}
 
-		public string LocateIncludeFile(ProbeAppSettings appSettings, string sourceFileName, string fileName, bool searchSameDir)
+		public string LocateIncludeFile(DkAppSettings appSettings, string sourceFileName, string fileName, bool searchSameDir)
 		{
 			if (string.IsNullOrEmpty(fileName)) return null;
 
@@ -169,7 +169,7 @@ namespace DkTools.CodeModel
 			return false;
 		}
 
-		public CodeModel GetCurrentModel(ProbeAppSettings appSettings, string fileName, VsText.ITextSnapshot snapshot, string reason)
+		public CodeModel GetCurrentModel(DkAppSettings appSettings, string fileName, VsText.ITextSnapshot snapshot, string reason)
 		{
 #if DEBUG
 			if (snapshot == null) throw new ArgumentNullException("snapshot");
@@ -196,7 +196,7 @@ namespace DkTools.CodeModel
 			return _model;
 		}
 
-		public CodeModel GetMostRecentModel(ProbeAppSettings appSettings, string fileName, VsText.ITextSnapshot snapshot, string reason)
+		public CodeModel GetMostRecentModel(DkAppSettings appSettings, string fileName, VsText.ITextSnapshot snapshot, string reason)
 		{
 #if DEBUG
 			if (snapshot == null) throw new ArgumentNullException("snapshot");
@@ -212,7 +212,7 @@ namespace DkTools.CodeModel
 			return _model;
 		}
 
-		public CodeModel RegenerateModel(ProbeAppSettings appSettings, string fileName, VsText.ITextSnapshot snapshot, string reason)
+		public CodeModel RegenerateModel(DkAppSettings appSettings, string fileName, VsText.ITextSnapshot snapshot, string reason)
 		{
 #if DEBUG
 			if (snapshot == null) throw new ArgumentNullException("snapshot");
@@ -226,7 +226,7 @@ namespace DkTools.CodeModel
 			return _model;
 		}
 
-		public CodeModel CreatePreprocessedModel(ProbeAppSettings appSettings, string fileName, VsText.ITextSnapshot snapshot, string reason)
+		public CodeModel CreatePreprocessedModel(DkAppSettings appSettings, string fileName, VsText.ITextSnapshot snapshot, string reason)
 		{
 			if (string.IsNullOrEmpty(fileName)) throw new ArgumentNullException(nameof(fileName));
 
@@ -239,7 +239,7 @@ namespace DkTools.CodeModel
 			return model;
 		}
 
-		public CodeModel CreatePreprocessedModel(ProbeAppSettings appSettings, string fileName, VsText.ITextSnapshot snapshot, bool visible, string reason)
+		public CodeModel CreatePreprocessedModel(DkAppSettings appSettings, string fileName, VsText.ITextSnapshot snapshot, bool visible, string reason)
 		{
 			if (string.IsNullOrEmpty(fileName)) throw new ArgumentNullException(nameof(fileName));
 
@@ -266,7 +266,7 @@ namespace DkTools.CodeModel
 			return model;
 		}
 
-		public CodeModel CreatePreprocessedModel(ProbeAppSettings appSettings, CodeSource source, string fileName,
+		public CodeModel CreatePreprocessedModel(DkAppSettings appSettings, CodeSource source, string fileName,
 			bool visible, string reason, IEnumerable<Preprocessor.IncludeDependency> includeDependencies)
 		{
 			if (string.IsNullOrEmpty(fileName)) throw new ArgumentNullException(nameof(fileName));
@@ -337,7 +337,7 @@ namespace DkTools.CodeModel
 			get { return _model; }
 		}
 
-		public IEnumerable<FunctionDropDownItem> GetFunctionDropDownList(ProbeAppSettings appSettings,
+		public IEnumerable<FunctionDropDownItem> GetFunctionDropDownList(DkAppSettings appSettings,
 			string fileName, VsText.ITextSnapshot snapshot)
 		{
 			var model = GetMostRecentModel(appSettings, fileName, snapshot, "Function drop-down list.");
@@ -360,7 +360,7 @@ namespace DkTools.CodeModel
 			get { return _guid; }
 		}
 
-		private static void CreateStdLibModel(ProbeAppSettings appSettings)
+		private static void CreateStdLibModel(DkAppSettings appSettings)
 		{
 			var tempStore = new FileStore();
 			var includeFile = tempStore.GetIncludeFile(appSettings, sourceFileName: null, "stdlib.i", searchSameDir: false, StringUtil.EmptyStringArray);
@@ -381,7 +381,7 @@ namespace DkTools.CodeModel
 			_stdLibDefines = _stdLibModel.PreprocessorModel.Preprocessor.Defines.ToArray();
 		}
 
-		public static CodeModel GetStdLibModel(ProbeAppSettings appSettings)
+		public static CodeModel GetStdLibModel(DkAppSettings appSettings)
 		{
 			if (_stdLibModel == null) CreateStdLibModel(appSettings);
 			return _stdLibModel;
@@ -400,7 +400,7 @@ namespace DkTools.CodeModel
 			}
 		}
 
-		private void ProbeAppSettings_FileChanged(object sender, ProbeAppSettings.FileEventArgs e)
+		private void ProbeAppSettings_FileChanged(object sender, DkAppSettings.FileEventArgs e)
 		{
 			try
 			{
@@ -412,7 +412,7 @@ namespace DkTools.CodeModel
 			}
 		}
 
-		private void ProbeAppSettings_FileDeleted(object sender, ProbeAppSettings.FileEventArgs e)
+		private void ProbeAppSettings_FileDeleted(object sender, DkAppSettings.FileEventArgs e)
 		{
 			try
 			{
@@ -489,7 +489,7 @@ namespace DkTools.CodeModel
 			}
 		}
 
-		public Definition[] GetIncludeParentDefinitions(ProbeAppSettings appSettings, string includePathName)
+		public Definition[] GetIncludeParentDefinitions(DkAppSettings appSettings, string includePathName)
 		{
 			Definition[] cachedDefs;
 			if (_includeParentDefs.TryGetValue(includePathName.ToLower(), out cachedDefs)) return cachedDefs;
@@ -497,7 +497,7 @@ namespace DkTools.CodeModel
 			Log.Debug("Getting include file parent definitions: {0}", includePathName);
 
 			IEnumerable<string> parentFileNames;
-			var app = ProbeEnvironment.CurrentAppSettings;
+			var app = DkEnvironment.CurrentAppSettings;
 			if (app != null)
 			{
 				parentFileNames = app.Repo.GetDependentFiles(includePathName, NumberOfIncludeParentFiles);

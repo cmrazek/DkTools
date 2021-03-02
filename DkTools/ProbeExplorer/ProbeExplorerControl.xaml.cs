@@ -80,7 +80,7 @@ namespace DkTools.ProbeExplorer
 			_relationshipImg = Res.RelationshipImg.ToBitmapImage();
 			if (_functionImg == null) _functionImg = Res.FunctionImg.ToBitmapImage();
 
-			ProbeEnvironment.AppChanged += new EventHandler(Probe_AppChanged);
+			DkEnvironment.AppChanged += new EventHandler(Probe_AppChanged);
 			_dictTreeDeferrer.Idle += DictTreeDeferrer_Idle;
 		}
 
@@ -103,7 +103,7 @@ namespace DkTools.ProbeExplorer
 		{
 			try
 			{
-				var appSettings = ProbeEnvironment.CurrentAppSettings;
+				var appSettings = DkEnvironment.CurrentAppSettings;
 				RefreshAppCombo(appSettings);
 				RefreshFileTree(appSettings);
 				RefreshDictTree();
@@ -128,7 +128,7 @@ namespace DkTools.ProbeExplorer
 		#endregion
 
 		#region App Combo
-		private void RefreshAppCombo(ProbeAppSettings appSettings)
+		private void RefreshAppCombo(DkAppSettings appSettings)
 		{
 			_suppressAppChange = true;
 			try
@@ -163,7 +163,7 @@ namespace DkTools.ProbeExplorer
 				{
 					await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
 
-					var appSettings = ProbeEnvironment.CurrentAppSettings;
+					var appSettings = DkEnvironment.CurrentAppSettings;
 					c_appCombo.SelectedItem = (from a in c_appCombo.Items.Cast<string>() where a == appSettings.AppName select a).FirstOrDefault();
 
 					RefreshAppCombo(appSettings);
@@ -185,9 +185,9 @@ namespace DkTools.ProbeExplorer
 				if (_suppressAppChange) return;
 
 				var selectedApp = c_appCombo.SelectedItem as string;
-				if (!string.IsNullOrEmpty(selectedApp) && ProbeEnvironment.CurrentAppSettings.Initialized)
+				if (!string.IsNullOrEmpty(selectedApp) && DkEnvironment.CurrentAppSettings.Initialized)
 				{
-					ProbeEnvironment.Reload(selectedApp, true);
+					DkEnvironment.Reload(selectedApp, true);
 				}
 			}
 			catch (Exception ex)
@@ -200,7 +200,7 @@ namespace DkTools.ProbeExplorer
 		{
 			try
 			{
-				ProbeEnvironment.Reload(null, false);
+				DkEnvironment.Reload(null, false);
 			}
 			catch (Exception ex)
 			{
@@ -216,7 +216,7 @@ namespace DkTools.ProbeExplorer
 			public string path;
 		}
 
-		private void RefreshFileTree(ProbeAppSettings appSettings)
+		private void RefreshFileTree(DkAppSettings appSettings)
 		{
 			c_fileTree.Items.Clear();
 
@@ -438,7 +438,7 @@ namespace DkTools.ProbeExplorer
 		{
 			try
 			{
-				ProbeEnvironment.Reload(null, false);
+				DkEnvironment.Reload(null, false);
 			}
 			catch (Exception ex)
 			{
@@ -551,7 +551,7 @@ namespace DkTools.ProbeExplorer
 				var numItems = 0;
 
 				var hiddenExt = GetHiddenExtensions();
-				var appSettings = ProbeEnvironment.CurrentAppSettings;
+				var appSettings = DkEnvironment.CurrentAppSettings;
 
 				var filter = new TextFilter(filterText);
 				foreach (var file in appSettings.SourceAndIncludeFiles)
@@ -1004,7 +1004,7 @@ namespace DkTools.ProbeExplorer
 
 			Shell.OpenDocument(fileName);
 
-			RefreshFileTree(ProbeEnvironment.CurrentAppSettings);
+			RefreshFileTree(DkEnvironment.CurrentAppSettings);
 			SelectFileInTree(fileName);
 		}
 
@@ -1034,7 +1034,7 @@ namespace DkTools.ProbeExplorer
 						_activeView = view;
 						_activeSnapshot = snapshot;
 
-						var appSettings = ProbeEnvironment.CurrentAppSettings;
+						var appSettings = DkEnvironment.CurrentAppSettings;
 						_activeFunctions = (from f in fileStore.GetFunctionDropDownList(appSettings, fileName, snapshot)
 											orderby f.Name.ToLower()
 											select new FunctionListItem(f)).ToArray();

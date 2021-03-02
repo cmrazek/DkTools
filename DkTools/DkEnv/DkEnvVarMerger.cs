@@ -20,7 +20,7 @@ namespace DkTools.DkEnv
 
 		private string _platformFolder;
 
-		public EnvVarList CreateMergedVarList(ProbeAppSettings app)
+		public EnvVarList CreateMergedVarList(DkAppSettings app)
 		{
 			if (app == null) throw new ArgumentNullException("app");
 
@@ -30,17 +30,10 @@ namespace DkTools.DkEnv
 
 			mergedVars["pcurrentapp"] = app.AppName;
 
-			var appEnv = app as PROBEENVSRVRLib.IProbeEnvPlatform;
-			if (appEnv != null)
-			{
-				_platformFolder = appEnv.Folder;
-				mergedVars["WbdkFrameworkVersion"] = appEnv.Version;
-			}
-			else
-			{
-				_platformFolder = null;
-			}
+			_platformFolder = DkEnvironment.WbdkPlatformFolder;
 
+			var platformVersion = DkEnvironment.WbdkPlatformVersion;
+			if (platformVersion != null) mergedVars["WbdkFrameworkVersion"] = platformVersion;
 
 			// Add Exe paths
 			var path = new List<string>();

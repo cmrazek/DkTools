@@ -36,12 +36,12 @@ namespace DkTools.SmartIndenting
             _tabSize = _view.GetTabSize();
 			_keepTabs = _view.GetKeepTabs();
 
-			var appSettings = ProbeEnvironment.CurrentAppSettings;
+			var appSettings = DkEnvironment.CurrentAppSettings;
 
 			return GetDesiredIndentation(line.Snapshot.TextBuffer, line, _tabSize, _keepTabs, appSettings);
 		}
 
-		public static int? GetDesiredIndentation(ITextBuffer buffer, ITextSnapshotLine line, int tabSize, bool keepTabs, ProbeAppSettings appSettings)
+		public static int? GetDesiredIndentation(ITextBuffer buffer, ITextSnapshotLine line, int tabSize, bool keepTabs, DkAppSettings appSettings)
 		{
 			ThreadHelper.ThrowIfNotOnUIThread();
 
@@ -189,7 +189,7 @@ namespace DkTools.SmartIndenting
 			}
 		}
 
-		public static void FixIndentingBetweenLines(ITextBuffer buffer, int startLineNumber, int endLineNumber, int tabSize, bool keepTabs, ProbeAppSettings appSettings)
+		public static void FixIndentingBetweenLines(ITextBuffer buffer, int startLineNumber, int endLineNumber, int tabSize, bool keepTabs, DkAppSettings appSettings)
 		{
             ThreadHelper.ThrowIfNotOnUIThread();
 

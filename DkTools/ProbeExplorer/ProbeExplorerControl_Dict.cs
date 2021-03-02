@@ -31,7 +31,7 @@ namespace DkTools.ProbeExplorer
 
 		private void RefreshDictTree()
 		{
-			var app = ProbeEnvironment.CurrentAppSettings;
+			var app = DkEnvironment.CurrentAppSettings;
 			if (app == null) return;
 
 			Log.Write(LogLevel.Info, "Refreshing DK Explorer dictionary view...");

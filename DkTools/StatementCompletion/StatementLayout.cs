@@ -9,7 +9,7 @@ namespace DkTools.StatementCompletion
 {
 	internal class StatementLayout
 	{
-		public static StatementState ProcessWord(string word, StatementState state, ProbeAppSettings appSettings)
+		public static StatementState ProcessWord(string word, StatementState state, DkAppSettings appSettings)
 		{
 			switch (state.Section)
 			{
@@ -91,11 +91,11 @@ namespace DkTools.StatementCompletion
 
 				case StatementSection.OrderBy:
 				case StatementSection.OrderByTableFieldComma:
-					if (ProbeEnvironment.IsValidTableName(word)) return new StatementState(StatementSection.OrderByTable);
+					if (DkEnvironment.IsValidTableName(word)) return new StatementState(StatementSection.OrderByTable);
 					break;
 
 				case StatementSection.OrderByTableDot:
-					if (ProbeEnvironment.IsValidFieldName(word)) return new StatementState(StatementSection.OrderByTableField);
+					if (DkEnvironment.IsValidFieldName(word)) return new StatementState(StatementSection.OrderByTableField);
 					break;
 
 				case StatementSection.OrderByTable:
@@ -155,7 +155,7 @@ namespace DkTools.StatementCompletion
 					break;
 
 				case StatementSection.AlterColumn:
-					if (ProbeEnvironment.IsValidFieldName(word)) return new StatementState(StatementSection.AlterColumnName);
+					if (DkEnvironment.IsValidFieldName(word)) return new StatementState(StatementSection.AlterColumnName);
 					break;
 
 				case StatementSection.AlterApplication:

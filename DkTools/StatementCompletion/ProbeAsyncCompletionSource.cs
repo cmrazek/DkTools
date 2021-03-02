@@ -33,7 +33,7 @@ namespace DkTools.StatementCompletion
 		private Dictionary<CompletionItem, ItemDataNode> _items = new Dictionary<CompletionItem, ItemDataNode>();
 		private HashSet<string> _itemNames = new HashSet<string>();
 		private string _fileName;
-		private ProbeAppSettings _appSettings;
+		private DkAppSettings _appSettings;
 
 		// Completion trigger parameters
 		private CompletionMode _mode = CompletionMode.None;
@@ -58,7 +58,7 @@ namespace DkTools.StatementCompletion
 			InitImages();
 		}
 
-		internal ProbeAppSettings AppSettings => _appSettings;
+		internal DkAppSettings AppSettings => _appSettings;
 
 		enum CompletionMode
 		{
@@ -121,7 +121,7 @@ namespace DkTools.StatementCompletion
 			{
 				_mode = CompletionMode.None;
 				_fileName = VsTextUtil.TryGetDocumentFileName(_textView.TextBuffer);
-				_appSettings = ProbeEnvironment.CurrentAppSettings;
+				_appSettings = DkEnvironment.CurrentAppSettings;
 
 				var state = triggerPt.GetQuickState();
 				if (QuickState.IsInLiveCode(state))
@@ -658,7 +658,7 @@ namespace DkTools.StatementCompletion
 			}
 
 			// Class and method
-			var appSettings = ProbeEnvironment.CurrentAppSettings;
+			var appSettings = DkEnvironment.CurrentAppSettings;
 			if (appSettings != null)
 			{
 				foreach (var cls in appSettings.Repo.GetClassDefinitions(word1))

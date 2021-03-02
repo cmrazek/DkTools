@@ -68,7 +68,7 @@ namespace DkTools.Navigation
 				return;
 			}
 
-			var appSettings = ProbeEnvironment.CurrentAppSettings;
+			var appSettings = DkEnvironment.CurrentAppSettings;
 			var fileName = VsTextUtil.TryGetDocumentFileName(_view.TextBuffer);
 			var model = fileStore.GetMostRecentModel(appSettings, fileName, _view.TextSnapshot, "ReferenceScroller.GoToNextReference()");
 

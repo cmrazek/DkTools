@@ -11,7 +11,7 @@ namespace DkTools.CodeModel
 	{
 		private static Definition[] _builtInDefs;
 
-		public DefinitionProvider(ProbeAppSettings appSettings, string fileName)
+		public DefinitionProvider(DkAppSettings appSettings, string fileName)
 		{
 			// Add definitions from external sources
 			if (_builtInDefs == null)
@@ -134,7 +134,7 @@ namespace DkTools.CodeModel
 				AddGlobalFromAnywhere(FileStore.GetStdLibModel(appSettings).PreprocessorModel.DefinitionProvider.GlobalsFromFile);
 			}
 
-			var app = ProbeEnvironment.CurrentAppSettings;
+			var app = DkEnvironment.CurrentAppSettings;
 			if (app != null)
 			{
 				AddGlobalFromAnywhere(app.Repo.GetGlobalDefinitions());

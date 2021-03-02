@@ -8,14 +8,14 @@ namespace DkTools.CodeModel
 {
 	internal class Preprocessor
 	{
-		private ProbeAppSettings _appSettings;
+		private DkAppSettings _appSettings;
 		private FileStore _store;
 		private Dictionary<string, PreprocessorDefine> _defines;
 		private List<IncludeDependency> _includeDependencies = new List<IncludeDependency>();
 		private List<Reference> _refs = new List<Reference>();
 		private WarningSuppressionTracker _warningSuppressions = new WarningSuppressionTracker();
 
-		public Preprocessor(ProbeAppSettings appSettings, FileStore store)
+		public Preprocessor(DkAppSettings appSettings, FileStore store)
 		{
 			_appSettings = appSettings ?? throw new ArgumentNullException(nameof(appSettings));
 			_store = store ?? throw new ArgumentNullException(nameof(store));

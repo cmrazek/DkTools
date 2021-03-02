@@ -134,7 +134,7 @@ namespace DkTools.Compiler
 		private void CompileThread()
 		{
 			var startTime = DateTime.Now;
-			var appSettings = ProbeEnvironment.CurrentAppSettings;
+			var appSettings = DkEnvironment.CurrentAppSettings;
 			if (!appSettings.Initialized)
 			{
 				WriteLine("Aborting compile because no current WBDK app is loaded.");
@@ -203,7 +203,7 @@ namespace DkTools.Compiler
 			}
 		}
 
-		private bool DoCompile(ProbeAppSettings appSettings)
+		private bool DoCompile(DkAppSettings appSettings)
 		{
 			try
 			{
@@ -322,7 +322,7 @@ namespace DkTools.Compiler
 			}
 		}
 
-		private bool DoDccmp(ProbeAppSettings appSettings)
+		private bool DoDccmp(DkAppSettings appSettings)
 		{
 			try 
 			{
@@ -388,7 +388,7 @@ namespace DkTools.Compiler
 			}
 		}
 
-		private bool DoCredelix(ProbeAppSettings appSettings)
+		private bool DoCredelix(DkAppSettings appSettings)
 		{
 			try
 			{
@@ -674,7 +674,7 @@ namespace DkTools.Compiler
 			return ProbeToolsPackage.Instance.ProbeExplorerOptions.CompileArguments;
 		}
 
-		private string GenerateDccmpSwitches(ProbeAppSettings appSettings)
+		private string GenerateDccmpSwitches(DkAppSettings appSettings)
 		{
 			var sb = new StringBuilder();
 			sb.Append("/P \"");
@@ -691,7 +691,7 @@ namespace DkTools.Compiler
 			return sb.ToString();
 		}
 
-		private string GenerateCredelixSwitches(ProbeAppSettings appSettings)
+		private string GenerateCredelixSwitches(DkAppSettings appSettings)
 		{
 			var sb = new StringBuilder();
 			sb.Append("/P \"");

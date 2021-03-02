@@ -12,7 +12,7 @@ using Microsoft.Win32;
 
 namespace DkTools
 {
-	internal static class ProbeEnvironment
+	internal static class DkEnvironment
 	{
 		#region Events
 		public static event EventHandler AppChanged;
@@ -30,9 +30,9 @@ namespace DkTools
 		#endregion
 
 		#region PSelect
-		private static ProbeAppSettings _currentApp = new ProbeAppSettings();
+		private static DkAppSettings _currentApp = new DkAppSettings();
 
-		public static ProbeAppSettings CurrentAppSettings
+		public static DkAppSettings CurrentAppSettings
 		{
 			get { return _currentApp; }
 			set
@@ -45,70 +45,64 @@ namespace DkTools
 			}
 		}
 
-		private static ProbeAppSettings ReloadCurrentApp(string appName = "")
+		private static DkAppSettings ReloadCurrentApp(string appName = "")
 		{
 			Log.Write(LogLevel.Info, "Loading application settings...");
 			var startTime = DateTime.Now;
 
-			var appSettings = new ProbeAppSettings();
+			var appSettings = new DkAppSettings();
 
-			PROBEENVSRVRLib.ProbeEnv env = null;
-			PROBEENVSRVRLib.ProbeEnvApp currentApp = null;
-			try
+			if (string.IsNullOrEmpty(appName)) appName = GetDefaultAppName();
+			if (string.IsNullOrEmpty(appName))
 			{
-				env = new PROBEENVSRVRLib.ProbeEnv();
-				if (!string.IsNullOrEmpty(appName)) currentApp = env.FindApp(appName);
-				if (currentApp == null) currentApp = env.FindApp(env.DefaultAppName);
-				if (currentApp == null)
-				{
-					Debug.WriteLine("No current app found.");
-					appSettings.Initialized = true;
-				}
-				else
-				{
-					Debug.WriteLine("Current App: " + currentApp.Name);
-					appSettings.AppName = currentApp.Name;
-					appSettings.Initialized = true;
-					appSettings.PlatformPath = (env as PROBEENVSRVRLib.IProbeEnvPlatform).Folder;
-					appSettings.AllAppNames = LoadAppNames(env);
-					appSettings.SourceDirs = LoadSourceDirs(currentApp);
-					appSettings.IncludeDirs = LoadIncludeDirs(currentApp, appSettings);
-					appSettings.LibDirs = LoadLibDirs(currentApp, appSettings);
-					appSettings.ExeDirs = LoadExeDirs(currentApp);
-					appSettings.ObjectDir = currentApp.ObjectPath;
-					appSettings.TempDir = currentApp.TempPath;
-					appSettings.ReportDir = currentApp.ListingsPath;
-					appSettings.DataDir = currentApp.DataPath;
-					appSettings.LogDir = currentApp.LogPath;
-					appSettings.SourceFiles = LoadSourceFiles(appSettings);
-					appSettings.IncludeFiles = LoadIncludeFiles(appSettings);
-					appSettings.SourceAndIncludeFiles = appSettings.SourceFiles.Concat(appSettings.IncludeFiles.Where(i => !appSettings.SourceFiles.Contains(i))).ToArray();
-
-					appSettings.Dict = new DkDict.Dict();
-					appSettings.Dict.Load(appSettings);
-
-					appSettings.Repo = new GlobalData.AppRepo(appSettings);
-
-					appSettings.CreateFileSystemWatcher();
-				}
-
-				var elapsed = DateTime.Now.Subtract(startTime);
-				Log.Write(LogLevel.Info, "Application settings reloaded (elapsed: {0})", elapsed);
+				Log.Warning("No current app found.");
+				appSettings.Initialized = true;
 				return appSettings;
 			}
-			finally
+
+			Log.Info("Current App: {0}", appName);
+			var appKey = GetReadOnlyAppKey(appName);
+			if (appKey == null)
 			{
-				if (currentApp != null)
-				{
-					Marshal.ReleaseComObject(currentApp);
-					currentApp = null;
-				}
-				if (env != null)
-				{
-					Marshal.ReleaseComObject(env);
-					env = null;
-				}
+				Log.Warning("Registry key for current app not found.");
+				appSettings.Initialized = true;
+				return appSettings;
 			}
+
+			var rootPath = appKey.GetString("RootPath");
+
+			appSettings.AppName = appName;
+			appSettings.Initialized = true;
+			appSettings.PlatformPath = WbdkPlatformFolder;
+			appSettings.AllAppNames = GetAllAppNames();
+			appSettings.SourceDirs = appKey.LoadWbdkMultiPath("SourcePaths", rootPath);
+			appSettings.IncludeDirs = appKey.LoadWbdkMultiPath("IncludePaths", rootPath)
+				.Concat(new string[] { string.IsNullOrEmpty(appSettings.PlatformPath)
+					? string.Empty
+					: Path.Combine(appSettings.PlatformPath, "include") })
+				.Where(x => !string.IsNullOrWhiteSpace(x))
+				.ToArray();
+			appSettings.LibDirs = appKey.LoadWbdkMultiPath("LibPaths", rootPath);
+			appSettings.ExeDirs = appKey.LoadWbdkMultiPath("ExecutablePaths", rootPath);
+			appSettings.ObjectDir = appKey.LoadWbdkPath("ObjectPath", rootPath);
+			appSettings.TempDir = appKey.LoadWbdkPath("DiagPath", rootPath);
+			appSettings.ReportDir = appKey.LoadWbdkPath("ListingPath", rootPath);
+			appSettings.DataDir = appKey.LoadWbdkPath("DataPath", rootPath);
+			appSettings.LogDir = appKey.LoadWbdkPath("LogPath", rootPath);
+			appSettings.SourceFiles = LoadSourceFiles(appSettings);
+			appSettings.IncludeFiles = LoadIncludeFiles(appSettings);
+			appSettings.SourceAndIncludeFiles = appSettings.SourceFiles.Concat(appSettings.IncludeFiles.Where(i => !appSettings.SourceFiles.Contains(i))).ToArray();
+
+			appSettings.Dict = new DkDict.Dict();
+			appSettings.Dict.Load(appSettings);
+
+			appSettings.Repo = new GlobalData.AppRepo(appSettings);
+
+			appSettings.CreateFileSystemWatcher();
+
+			var elapsed = DateTime.Now.Subtract(startTime);
+			Log.Write(LogLevel.Info, "Application settings reloaded (elapsed: {0})", elapsed);
+			return appSettings;
 		}
 
 		public static void Reload(string appName, bool updateDefaultApp)
@@ -131,155 +125,115 @@ namespace DkTools
 			}
 		}
 
-		private static string[] LoadSourceDirs(PROBEENVSRVRLib.ProbeEnvApp currentApp)
+		private const string BaseKey64 = @"SOFTWARE\WOW6432Node\Fincentric\WBDK";
+		private const string BaseKey32 = @"SOFTWARE\Fincentric\WBDK";
+		private const string CurrentConfigName = "CurrentConfig";
+
+		private const string ConfigurationsKey64 = @"SOFTWARE\WOW6432Node\Fincentric\WBDK\Configurations";
+		private const string ConfigurationsKey32 = @"SOFTWARE\Fincentric\WBDK\Configurations";
+
+		private const string AppKey64 = @"SOFTWARE\WOW6432Node\Fincentric\WBDK\Configurations\{0}";
+		private const string AppKey32 = @"SOFTWARE\Fincentric\WBDK\Configurations\{0}";
+
+		private static string GetDefaultAppName()
 		{
-			if (currentApp == null) throw new ArgumentNullException(nameof(currentApp));
-
-			var sourceDirs = new List<string>();
-			for (int i = 1, ii = currentApp.NumSourcePath; i <= ii; i++)
+			using (var key = Registry.LocalMachine.OpenSubKey(BaseKey64, writable: false))
 			{
-				try
-				{
-					var path = currentApp.SourcePath[i];
-					if (string.IsNullOrWhiteSpace(path))
-					{
-						Log.Warning("PROBE environment has returned a blank source path in slot {0}.", i);
-					}
-					else if (!Directory.Exists(path))
-					{
-						Log.Warning("Source directory [{0}] does not exist.", path);
-					}
-					else
-					{
-						sourceDirs.Add(path);
-					}
-				}
-				catch (Exception ex)
-				{
-					Log.Error(ex, "Exception when attempting to retrieve source dir in slot{0}", i);
-				}
-
+				var value = key?.GetValue(CurrentConfigName);
+				if (value != null) return value.ToString();
 			}
-			return sourceDirs.ToArray();
+
+			using (var key = Registry.LocalMachine.OpenSubKey(BaseKey32, writable: false))
+			{
+				var value = key?.GetValue(CurrentConfigName);
+				if (value != null) return value.ToString();
+			}
+
+			return null;
 		}
 
-		private static string[] LoadExeDirs(PROBEENVSRVRLib.ProbeEnvApp currentApp)
+		private static string[] GetAllAppNames()
 		{
-			if (currentApp == null) throw new ArgumentNullException(nameof(currentApp));
-
-			var exeDirs = new List<string>();
-			for (int i = 1, ii = currentApp.NumExePath; i <= ii; i++)
+			using (var key = Registry.LocalMachine.OpenSubKey(ConfigurationsKey64, writable: false))
 			{
-				try
-				{
-					var path = currentApp.ExePath[i];
-					if (string.IsNullOrWhiteSpace(path))
-					{
-						Log.Warning("PROBE has returned a blank exe path in slot {0}", i);
-					}
-					else if (!Directory.Exists(path))
-					{
-						Log.Warning("Exe directory [{0}] does not exist.", path);
-					}
-					else
-					{
-						exeDirs.Add(path);
-					}
-				}
-				catch (Exception ex)
-				{
-					Log.Error(ex, "Exception when attempting to retrieve exe path in slot {0}", i);
-				}
+				if (key != null) return key.GetSubKeyNames();
 			}
 
-			return exeDirs.ToArray();
-		}
-		
-		private static string[] LoadLibDirs(PROBEENVSRVRLib.ProbeEnvApp currentApp, ProbeAppSettings appSettings)
-		{
-			var list = new List<string>();
-
-			for (int i = 1, ii = currentApp.NumLibraryPath; i <= ii; i++)
+			using (var key = Registry.LocalMachine.OpenSubKey(ConfigurationsKey32, writable: false))
 			{
-				try
-				{
-					var path = currentApp.LibraryPath[i];
-					if (string.IsNullOrWhiteSpace(path))
-					{
-						Log.Warning("PROBE returned blank lib path in slot {0}", i);
-					}
-					else if (!Directory.Exists(path))
-					{
-						Log.Warning("Lib directory [{0}] does not exist.", path);
-					}
-					else
-					{
-						list.Add(path);
-					}
-				}
-				catch (Exception ex)
-				{
-					Log.Error(ex, "Exception when attempting to retrieve lib path in slot {0}", i);
-				}
-
+				if (key != null) return key.GetSubKeyNames();
 			}
-			if (!string.IsNullOrEmpty(appSettings.PlatformPath)) list.Add(appSettings.PlatformPath);
 
-			return list.ToArray();
+			return StringUtil.EmptyStringArray;
 		}
 
-		private static string[] LoadIncludeDirs(PROBEENVSRVRLib.ProbeEnvApp currentApp, ProbeAppSettings appSettings)
+		private static RegistryKey GetReadOnlyAppKey(string appName)
 		{
-			var list = new List<string>();
+			if (string.IsNullOrEmpty(appName)) return null;
 
-			for (int i = 1, ii = currentApp.NumIncludePath; i <= ii; i++)
-			{
-				try
-				{
-					var path = currentApp.IncludePath[i];
-					if (string.IsNullOrWhiteSpace(path))
-					{
-						Log.Warning("PROBE has returned blank include path in slot {0}", i);
-					}
-					else if (!Directory.Exists(path))
-					{
-						Log.Warning("Lib directory [{0}] does not exist.", path);
-					}
-					else
-					{
-						list.Add(path);
-					}
-				}
-				catch (Exception ex)
-				{
-					Log.Error(ex, "Exception when attempting to retrieve include path slot {0}", i);
-				}
-			}
+			var key = Registry.LocalMachine.OpenSubKey(string.Format(AppKey64, appName), writable: false);
+			if (key != null) return key;
 
-			if (!string.IsNullOrEmpty(appSettings.PlatformPath))
-			{
-				var includePath = Path.Combine(appSettings.PlatformPath, "include");
-				if (Directory.Exists(includePath)) list.Add(includePath);
-			}
+			key = Registry.LocalMachine.OpenSubKey(string.Format(AppKey32, appName), writable: false);
+			if (key != null) return key;
 
-			return list.ToArray();
+			return null;
 		}
 
-		private static string[] LoadAppNames(PROBEENVSRVRLib.ProbeEnv env)
+		private static string _wbdkPlatformVersion = null;
+		private static string _wbdkPlatformFolder = null;
+
+		private static void GetWbdkPlatformInfo()
 		{
-			var list = new List<string>();
-			var e = env.EnumApps();
-			// One-based array
-			for (int i = 1, ii = e.Count; i <= ii; i++)
+			// FEC.exe will be located in the platform folder, and the version number
+			// on that file is the same as the WBDK platform version.
+			try
 			{
-				list.Add(e.Element(i).Name);
+				foreach (var path in Environment.GetEnvironmentVariable("PATH").Split(';').Select(x => x.Trim()))
+				{
+					var fileName = Path.Combine(path, "fec.exe");
+					if (File.Exists(fileName))
+					{
+						Log.Debug("Located FEC.exe: {0}", fileName);
+						_wbdkPlatformVersion = FileVersionInfo.GetVersionInfo(fileName)?.FileVersion ?? string.Empty;
+						_wbdkPlatformFolder = path;
+						Log.Debug("WBDK Platform Directory: {0}", _wbdkPlatformFolder);
+						Log.Debug("WBDK Platform Version: {0}", _wbdkPlatformVersion);
+						return;
+					}
+				}
+
+				throw new FileNotFoundException("FEC.exe could not be found.");
 			}
-			return list.ToArray();
+			catch (Exception ex)
+			{
+				Log.Warning("Failed to get WBDK platform info from FEC.exe: {0}", ex);
+				if (_wbdkPlatformFolder == null) _wbdkPlatformFolder = string.Empty;
+				if (_wbdkPlatformVersion == null) _wbdkPlatformVersion = string.Empty;
+			}
+		}
+
+		public static string WbdkPlatformVersion
+		{
+			get
+			{
+				if (_wbdkPlatformVersion == null) GetWbdkPlatformInfo();
+				return _wbdkPlatformVersion;
+			}
+		}
+
+		public static string WbdkPlatformFolder
+		{
+			get
+			{
+				if (_wbdkPlatformFolder == null) GetWbdkPlatformInfo();
+				return _wbdkPlatformFolder;
+			}
 		}
 		#endregion
 
 		#region Table List
-		private static void ReloadTableList(ProbeAppSettings appSettings)
+		private static void ReloadTableList(DkAppSettings appSettings)
 		{
 			try
 			{
@@ -338,7 +292,7 @@ namespace DkTools
 			return Constants.ProbeExtensions.Contains(fileExt.ToLower());
 		}
 
-		private static string[] LoadSourceFiles(ProbeAppSettings appSettings)
+		private static string[] LoadSourceFiles(DkAppSettings appSettings)
 		{
 			var sourceFiles = new List<string>();
 			foreach (var dir in appSettings.SourceDirs)
@@ -366,7 +320,7 @@ namespace DkTools
 			}
 		}
 
-		private static string[] LoadIncludeFiles(ProbeAppSettings appSettings)
+		private static string[] LoadIncludeFiles(DkAppSettings appSettings)
 		{
 			var includeFiles = new List<string>();
 

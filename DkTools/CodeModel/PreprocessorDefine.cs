@@ -17,7 +17,7 @@ namespace DkTools.CodeModel
 		private DataType _dataType;
 		private Definition _def;
 
-		public PreprocessorDefine(string name, string content, List<string> paramNames, FilePosition filePos, ProbeAppSettings appSettings)
+		public PreprocessorDefine(string name, string content, List<string> paramNames, FilePosition filePos, DkAppSettings appSettings)
 		{
 			_name = name;
 			_content = content;

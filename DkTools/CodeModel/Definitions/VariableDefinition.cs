@@ -154,7 +154,7 @@ namespace DkTools.CodeModel.Definitions
 			get { return false; }
 		}
 
-		public override IEnumerable<Definition> GetChildDefinitions(string name, ProbeAppSettings appSettings)
+		public override IEnumerable<Definition> GetChildDefinitions(string name, DkAppSettings appSettings)
 		{
 			if (_dataType != null)
 			{

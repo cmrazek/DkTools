@@ -25,7 +25,7 @@ namespace DkTools.CodeModel
 		private string _primaryFileName;
 		private string _origContent;
 		private Dictionary<string, string> _localFileContent = new Dictionary<string, string>();
-		private ProbeAppSettings _appSettings;
+		private DkAppSettings _appSettings;
 
 		private enum MergeMode
 		{
@@ -52,7 +52,7 @@ namespace DkTools.CodeModel
 		public FileMerger()
 		{ }
 
-		public void MergeFile(ProbeAppSettings appSettings, string fullPathName, string content, bool showMergeComments, bool fileIsPrimary)
+		public void MergeFile(DkAppSettings appSettings, string fullPathName, string content, bool showMergeComments, bool fileIsPrimary)
 		{
 			if (appSettings == null) throw new ArgumentNullException(nameof(appSettings));
 

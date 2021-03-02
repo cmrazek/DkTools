@@ -13,7 +13,7 @@ namespace DkTools.DkDict
 {
 	class Dict
 	{
-		private ProbeAppSettings _appSettings;
+		private DkAppSettings _appSettings;
 		private CodeParser _code;
 		private CodeSource _source;
 		private Dictionary<string, Table> _tables = new Dictionary<string, Table>();
@@ -23,7 +23,7 @@ namespace DkTools.DkDict
 		private Dictionary<string, Interface> _interfaces = new Dictionary<string, Interface>();
 		private Dictionary<string, Interface> _impliedInterfaces = new Dictionary<string, Interface>();
 
-		public void Load(ProbeAppSettings appSettings)
+		public void Load(DkAppSettings appSettings)
 		{
 			try
 			{
@@ -300,7 +300,7 @@ namespace DkTools.DkDict
 				ReportError(_code.Position, "Expected table name after 'create table'.");
 				return;
 			}
-			if (!ProbeEnvironment.IsValidTableName(_code.Text))
+			if (!DkEnvironment.IsValidTableName(_code.Text))
 			{
 				ReportError(_code.TokenStartPostion, "Invalid table name '{0}'.", _code.Text);
 				return;

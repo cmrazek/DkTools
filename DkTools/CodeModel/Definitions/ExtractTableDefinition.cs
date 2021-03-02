@@ -89,7 +89,7 @@ namespace DkTools.CodeModel.Definitions
 			get { return true; }
 		}
 
-		public override IEnumerable<Definition> GetChildDefinitions(string name, ProbeAppSettings appSettings)
+		public override IEnumerable<Definition> GetChildDefinitions(string name, DkAppSettings appSettings)
 		{
 			foreach (var field in _fields)
 			{
@@ -97,7 +97,7 @@ namespace DkTools.CodeModel.Definitions
 			}
 		}
 
-		public override IEnumerable<Definition> GetChildDefinitions(ProbeAppSettings appSettings) => _fields;
+		public override IEnumerable<Definition> GetChildDefinitions(DkAppSettings appSettings) => _fields;
 
 		public override bool ArgumentsRequired
 		{

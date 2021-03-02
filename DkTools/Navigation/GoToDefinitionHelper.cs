@@ -43,7 +43,7 @@ namespace DkTools.Navigation
 			var fileStore = CodeModel.FileStore.GetOrCreateForTextBuffer(point.Snapshot.TextBuffer);
 			if (fileStore == null) return null;
 
-			var appSettings = ProbeEnvironment.CurrentAppSettings;
+			var appSettings = DkEnvironment.CurrentAppSettings;
 			if (appSettings == null) return null;
 
 			var fileName = VsTextUtil.TryGetDocumentFileName(point.Snapshot.TextBuffer);
@@ -149,7 +149,7 @@ namespace DkTools.Navigation
 				var fileStore = CodeModel.FileStore.GetOrCreateForTextBuffer(snapPt.Snapshot.TextBuffer);
 				if (fileStore == null) return;
 
-				var appSettings = ProbeEnvironment.CurrentAppSettings;
+				var appSettings = DkEnvironment.CurrentAppSettings;
 				var fileName = VsTextUtil.TryGetDocumentFileName(textView.TextBuffer);
 				var fullModel = fileStore.CreatePreprocessedModel(appSettings, fileName, snapPt.Snapshot, false, "Find Local References");
 				var fullModelPos = fullModel.PreprocessorModel.Source.PrimaryFilePositionToSource(fullModel.AdjustPosition(snapPt));
@@ -249,7 +249,7 @@ namespace DkTools.Navigation
 		{
 			if (string.IsNullOrEmpty(extRefId)) throw new ArgumentException("Definition has no external ref ID.");
 
-			var app = ProbeEnvironment.CurrentAppSettings;
+			var app = DkEnvironment.CurrentAppSettings;
 			if (app == null) yield break;
 
 			foreach (var rf in app.Repo.FindAllReferences(extRefId))

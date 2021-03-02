@@ -215,7 +215,7 @@ namespace DkTools.CodeModel
 			return sb.ToString();
 		}
 
-		public static FunctionSignature ParseFromDb(string str, ProbeAppSettings appSettings)
+		public static FunctionSignature ParseFromDb(string str, DkAppSettings appSettings)
 		{
 			var code = new CodeParser(str);
 

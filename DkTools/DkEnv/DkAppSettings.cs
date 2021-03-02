@@ -12,7 +12,7 @@ using Microsoft.Win32;
 
 namespace DkTools
 {
-	class ProbeAppSettings
+	class DkAppSettings
 	{
 		public string AppName { get; set; }
 		public bool Initialized { get; set; }
@@ -33,7 +33,7 @@ namespace DkTools
 		public AppRepo Repo { get; set; }
 		public DkDict.Dict Dict { get; set; }
 
-		public ProbeAppSettings()
+		public DkAppSettings()
 		{
 			AppName = string.Empty;
 			Initialized = false;
@@ -325,7 +325,7 @@ namespace DkTools
 			{
 				await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
 
-				if (ProbeEnvironment.IsProbeFile(e.FullPath))
+				if (DkEnvironment.IsProbeFile(e.FullPath))
 				{
 					Log.Debug("File change detected: {0}", e.FullPath);
 
@@ -341,7 +341,7 @@ namespace DkTools
 			{
 				await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
 
-				if (ProbeEnvironment.IsProbeFile(e.FullPath))
+				if (DkEnvironment.IsProbeFile(e.FullPath))
 				{
 					Log.Debug("File deletion detected: {0}", e.FullPath);
 
@@ -357,14 +357,14 @@ namespace DkTools
 			{
 				await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
 
-				if (ProbeEnvironment.IsProbeFile(e.OldFullPath))
+				if (DkEnvironment.IsProbeFile(e.OldFullPath))
 				{
 					Log.Debug("File rename detected: {0} -> {1}", e.OldFullPath, e.FullPath);
 
 					IncludeFileCache.OnFileChanged(e.OldFullPath);
 					FileDeleted?.Invoke(this, new FileEventArgs(e.OldFullPath));
 				}
-				else if (ProbeEnvironment.IsProbeFile(e.FullPath))
+				else if (DkEnvironment.IsProbeFile(e.FullPath))
 				{
 					Log.Debug("File rename detected: {0} -> {1}", e.OldFullPath, e.FullPath);
 
@@ -380,7 +380,7 @@ namespace DkTools
 			{
 				await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
 
-				if (ProbeEnvironment.IsProbeFile(e.FullPath))
+				if (DkEnvironment.IsProbeFile(e.FullPath))
 				{
 					Log.Debug("File create detected: {0}", e.FullPath);
 

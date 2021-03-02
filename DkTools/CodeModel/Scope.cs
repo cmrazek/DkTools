@@ -18,7 +18,7 @@ namespace DkTools.CodeModel
 		private IBreakOwner _breakOwner;
 		private IContinueOwner _continueOwner;
 		private DataType _returnDataType;
-		ProbeAppSettings _appSettings;
+		DkAppSettings _appSettings;
 
 		public Scope(CodeModel model)
 		{
@@ -35,7 +35,7 @@ namespace DkTools.CodeModel
 			_appSettings = model.AppSettings;
 		}
 
-		public Scope(CodeFile file, int depth, ScopeHint hint, bool visible, DefinitionProvider defProvider, ProbeAppSettings app)
+		public Scope(CodeFile file, int depth, ScopeHint hint, bool visible, DefinitionProvider defProvider, DkAppSettings app)
 		{
 			_file = file ?? throw new ArgumentNullException("file");
 			_depth = depth;
@@ -132,7 +132,7 @@ namespace DkTools.CodeModel
 			get { return _file != null ? _file.Model : null; }
 		}
 
-		public ProbeAppSettings AppSettings => _appSettings;
+		public DkAppSettings AppSettings => _appSettings;
 
 		public string ClassName
 		{

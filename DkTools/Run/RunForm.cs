@@ -22,12 +22,12 @@ namespace DkTools.Run
 
 		private Control _focusControl = null;
 		private RunOptions _options;
-		private ProbeAppSettings _appSettings;
+		private DkAppSettings _appSettings;
 		
 		public RunForm()
 		{
 			_options = ProbeToolsPackage.Instance.RunOptions;
-			_appSettings = ProbeEnvironment.CurrentAppSettings;
+			_appSettings = DkEnvironment.CurrentAppSettings;
 
 			InitializeComponent();
 		}

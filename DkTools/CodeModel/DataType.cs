@@ -180,7 +180,7 @@ namespace DkTools.CodeModel
 			get { return _completionOptionsType != CompletionOptionsType.None; }
 		}
 
-		public IEnumerable<Definition> GetCompletionOptions(ProbeAppSettings appSettings)
+		public IEnumerable<Definition> GetCompletionOptions(DkAppSettings appSettings)
 		{
 			switch (_completionOptionsType)
 			{
@@ -215,7 +215,7 @@ namespace DkTools.CodeModel
 
 		public class ParseArgs
 		{
-			public ParseArgs(CodeParser code, ProbeAppSettings appSettings)
+			public ParseArgs(CodeParser code, DkAppSettings appSettings)
 			{
 				Code = code ?? throw new ArgumentNullException(nameof(code));
 				AppSettings = appSettings ?? throw new ArgumentNullException(nameof(appSettings));
@@ -229,7 +229,7 @@ namespace DkTools.CodeModel
 			/// <summary>
 			/// The current DK profile.
 			/// </summary>
-			public ProbeAppSettings AppSettings { get; set; }
+			public DkAppSettings AppSettings { get; set; }
 
 			/// <summary>
 			/// (optional) Flags to control the parsing behaviour.
@@ -1297,7 +1297,7 @@ namespace DkTools.CodeModel
 							var resetPos = code.Position;
 							if (code.ReadTagName())
 							{
-								if (ProbeEnvironment.IsValidTagName(code.Text))
+								if (DkEnvironment.IsValidTagName(code.Text))
 								{
 									pcs.AddSpace();
 									pcs.AddKeyword(code.Text);

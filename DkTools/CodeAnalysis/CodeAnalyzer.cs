@@ -325,7 +325,7 @@ namespace DkTools.CodeAnalysis
 		public Statement Statement { get; private set; }
 		public int FuncOffset { get; private set; }
 		public FunctionDefinition FuncDef { get; private set; }
-		public ProbeAppSettings AppSettings { get; private set; }
+		public DkAppSettings AppSettings { get; private set; }
 
 		public ReadParams(
 			CodeAnalyzer codeAnalyzer,
@@ -333,7 +333,7 @@ namespace DkTools.CodeAnalysis
 			Statement statement,
 			int funcOffset,
 			FunctionDefinition funcDef,
-			ProbeAppSettings appSettings)
+			DkAppSettings appSettings)
 		{
 			CodeAnalyzer = codeAnalyzer;
 			Code = code;
