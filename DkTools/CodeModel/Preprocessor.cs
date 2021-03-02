@@ -676,11 +676,6 @@ namespace DkTools.CodeModel
 			p.result.Merge(Preprocess(parms));
 
 			p.writer.Append(includeSource);
-
-			foreach (var preMergeFileName in includeNode.PreMergeFileNames)
-			{
-				AddIncludeDependency(preMergeFileName, true, false, includeNode.GetPreMergeContent(preMergeFileName));
-			}
 		}
 
 		public void AddIncludeDependency(string fullPathName, bool include, bool localizedFile, string content)

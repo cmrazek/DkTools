@@ -12,7 +12,6 @@ namespace DkTools.CodeModel
 	{
 		private string _fullPathName;
 		private CodeSource _source;
-		private Dictionary<string, string> _preMergeContent = new Dictionary<string, string>();
 
 		public IncludeFile(string fileName)
 		{
@@ -39,21 +38,6 @@ namespace DkTools.CodeModel
 		public string FullPathName
 		{
 			get { return _fullPathName; }
-		}
-
-		public IEnumerable<string> PreMergeFileNames
-		{
-			get
-			{
-				return _preMergeContent.Keys;
-			}
-		}
-
-		public string GetPreMergeContent(string fileName)
-		{
-			string content;
-			if (_preMergeContent.TryGetValue(fileName.ToLower(), out content)) return content;
-			return null;
 		}
 	}
 }
