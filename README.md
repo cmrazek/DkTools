@@ -18,6 +18,9 @@ Visual Studio Extension for WBDK
 
 ## Change Log
 
+**Version 1.5.14 Changes:** (upcoming)
+- Removed dependencies on WBDK DLLs.
+
 **Version 1.5.13 Changes:**
 - Added automatic brace completion (can be turned off in options).
 - Fixed Peek Definitions not showing in later version of Visual Studio.
