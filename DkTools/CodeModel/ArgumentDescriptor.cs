@@ -82,7 +82,7 @@ namespace DkTools.CodeModel
 			return sb.ToString();
 		}
 
-		public static ArgumentDescriptor ParseFromDb(string str, ProbeAppSettings appSettings)
+		public static ArgumentDescriptor ParseFromDb(string str, DkAppSettings appSettings)
 		{
 			string name = null;
 			PassByMethod passByMethod = PassByMethod.Value;

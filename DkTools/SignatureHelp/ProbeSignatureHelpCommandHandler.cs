@@ -105,7 +105,7 @@ namespace DkTools.SignatureHelp
 								var fileStore = CodeModel.FileStore.GetOrCreateForTextBuffer(_textView.TextBuffer);
 								if (fileStore != null)
 								{
-									var appSettings = ProbeEnvironment.CurrentAppSettings;
+									var appSettings = DkEnvironment.CurrentAppSettings;
 									var fileName = VsTextUtil.TryGetDocumentFileName(_textView.TextBuffer);
 									var model = fileStore.GetMostRecentModel(appSettings, fileName, _textView.TextSnapshot, "Signature help command handler - after ','");
 									var modelPos = _textView.Caret.Position.BufferPosition.TranslateTo(model.Snapshot, PointTrackingMode.Negative).Position;

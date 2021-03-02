@@ -63,16 +63,6 @@ namespace DkTools.CodeModel.Definitions
 			get { return _intType; }
 		}
 
-		public IEnumerable<InterfaceMethodDefinition> GetMethods(string name)
-		{
-			foreach (var meth in _intType.GetMethods(name)) yield return meth;
-		}
-
-		public IEnumerable<InterfacePropertyDefinition> GetProperties(string name)
-		{
-			foreach (var prop in _intType.GetProperties(name)) yield return prop;
-		}
-
 		public override string PickText
 		{
 			get { return QuickInfoTextStr; }
@@ -91,18 +81,6 @@ namespace DkTools.CodeModel.Definitions
 		public override bool AllowsChild
 		{
 			get { return true; }
-		}
-
-		public override IEnumerable<Definition> GetChildDefinitions(string name, ProbeAppSettings appSettings)
-		{
-			foreach (var def in _intType.GetMethods(name)) yield return def;
-			foreach (var def in _intType.GetProperties(name)) yield return def;
-		}
-
-		public override IEnumerable<Definition> GetChildDefinitions(ProbeAppSettings appSettings)
-		{
-			foreach (var def in _intType.MethodDefinitions) yield return def;
-			foreach (var def in _intType.PropertyDefinitions) yield return def;
 		}
 
 		public override bool ArgumentsRequired

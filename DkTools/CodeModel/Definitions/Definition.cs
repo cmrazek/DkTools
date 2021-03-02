@@ -233,12 +233,12 @@ namespace DkTools.CodeModel.Definitions
 			return false;
 		}
 
-		public virtual IEnumerable<Definition> GetChildDefinitions(string name, ProbeAppSettings appSettings)
+		public virtual IEnumerable<Definition> GetChildDefinitions(string name, DkAppSettings appSettings)
 		{
 			return Definition.EmptyArray;
 		}
 
-		public virtual IEnumerable<Definition> GetChildDefinitions(ProbeAppSettings appSettings)
+		public virtual IEnumerable<Definition> GetChildDefinitions(DkAppSettings appSettings)
 		{
 			return Definition.EmptyArray;
 		}

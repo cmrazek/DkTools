@@ -123,7 +123,7 @@ namespace DkTools
 
 			await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync(cancellationToken);
 
-			ProbeEnvironment.Initialize();
+			DkEnvironment.Initialize();
 			TempManager.Init(TempDir);
 			Snippets.SnippetDeploy.DeploySnippets();
 			CodeModel.SignatureDocumentor.Initialize();
@@ -162,8 +162,8 @@ namespace DkTools
 			_dteDocumentEvents = _dteEvents.DocumentEvents;
 			_dteDocumentEvents.DocumentSaved += DocumentEvents_DocumentSaved;
 
-			ProbeAppSettings.FileChanged += ProbeAppSettings_FileChanged;
-			ProbeAppSettings.FileDeleted += ProbeAppSettings_FileDeleted;
+			DkAppSettings.FileChanged += ProbeAppSettings_FileChanged;
+			DkAppSettings.FileDeleted += ProbeAppSettings_FileDeleted;
 
 			Microsoft.VisualStudio.PlatformUI.VSColorTheme.ThemeChanged += VSColorTheme_ThemeChanged;
 		}
@@ -306,14 +306,14 @@ namespace DkTools
 			});
 		}
 
-		private void ProbeAppSettings_FileChanged(object sender, ProbeAppSettings.FileEventArgs e)
+		private void ProbeAppSettings_FileChanged(object sender, DkAppSettings.FileEventArgs e)
 		{
 			ThreadHelper.ThrowIfNotOnUIThread();
 
 			FireRefreshDocument(e.FilePath);
 		}
 
-		private void ProbeAppSettings_FileDeleted(object sender, ProbeAppSettings.FileEventArgs e)
+		private void ProbeAppSettings_FileDeleted(object sender, DkAppSettings.FileEventArgs e)
 		{
 			ThreadHelper.ThrowIfNotOnUIThread();
 

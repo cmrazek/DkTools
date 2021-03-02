@@ -13,7 +13,7 @@ namespace DkTools.DkDict
 {
 	class Dict
 	{
-		private ProbeAppSettings _appSettings;
+		private DkAppSettings _appSettings;
 		private CodeParser _code;
 		private CodeSource _source;
 		private Dictionary<string, Table> _tables = new Dictionary<string, Table>();
@@ -23,7 +23,7 @@ namespace DkTools.DkDict
 		private Dictionary<string, Interface> _interfaces = new Dictionary<string, Interface>();
 		private Dictionary<string, Interface> _impliedInterfaces = new Dictionary<string, Interface>();
 
-		public void Load(ProbeAppSettings appSettings)
+		public void Load(DkAppSettings appSettings)
 		{
 			try
 			{
@@ -73,70 +73,11 @@ namespace DkTools.DkDict
 
 				elapsed = DateTime.Now.Subtract(curTime);
 				Log.Write(LogLevel.Info, "DICT parsing complete. (elapsed: {0})", elapsed);
-
-				LoadDkRepo(appSettings);
 			}
 			catch (Exception ex)
 			{
 				Log.Error(ex, "Error when reading DICT file.");
 			}
-		}
-
-		private void LoadDkRepo(ProbeAppSettings appSettings)
-		{
-			Log.Info("Loading WBDK Repository.");
-			var startTime = DateTime.Now;
-
-			DICTSRVRLib.PRepository repo = null;
-			DICTSRVRLib.PDictionary dict = null;
-			try
-			{
-				repo = new DICTSRVRLib.PRepository();
-				dict = repo.LoadDictionary(appSettings.AppName, string.Empty, DICTSRVRLib.PDS_Access.Access_READ);
-				if (dict == null)
-				{
-					Log.Info("The WBDK repository for app '{0}' does not exist.", appSettings.AppName);
-					return;
-				}
-
-				for (int i = 1, ii = dict.InterfaceTypeCount; i <= ii; i++)
-				{
-					var intf = dict.InterfaceTypes[i];
-					var intfName = intf.Name;
-
-					Interface existingIntf;
-					if (_interfaces.TryGetValue(intfName, out existingIntf))
-					{
-						existingIntf.LoadFromRepo(intf, appSettings);
-					}
-					else
-					{
-						existingIntf = new Interface(intfName, FilePosition.Empty);
-						existingIntf.LoadFromRepo(intf, appSettings);
-						_interfaces[intfName] = existingIntf;
-					}
-				}
-			}
-			catch (Exception ex)
-			{
-				Log.Error(ex, "Error when loading WBDK repository.");
-			}
-			finally
-			{
-				if (dict != null)
-				{
-					Marshal.ReleaseComObject(dict);
-					dict = null;
-				}
-				if (repo != null)
-				{
-					Marshal.ReleaseComObject(repo);
-					repo = null;
-				}
-			}
-
-			var elapsed = DateTime.Now.Subtract(startTime);
-			Log.Info("WBDK repository loading complete. (elapsed: {0})", elapsed);
 		}
 
 		private void ReportError(int pos, string message)
@@ -359,7 +300,7 @@ namespace DkTools.DkDict
 				ReportError(_code.Position, "Expected table name after 'create table'.");
 				return;
 			}
-			if (!ProbeEnvironment.IsValidTableName(_code.Text))
+			if (!DkEnvironment.IsValidTableName(_code.Text))
 			{
 				ReportError(_code.TokenStartPostion, "Invalid table name '{0}'.", _code.Text);
 				return;

@@ -395,7 +395,7 @@ namespace DkTools.CodeModel.Tokens.Statements
 			parent.AddToken(tagToken);
 
 			var resetPos = code.Position;
-			if (code.ReadTagName() && ProbeEnvironment.IsValidTagName(code.Text))
+			if (code.ReadTagName() && DkEnvironment.IsValidTagName(code.Text))
 			{
 				parent.AddToken(new KeywordToken(scope, code.Span, code.Text));
 				if (code.ReadStringLiteral())

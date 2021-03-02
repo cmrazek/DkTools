@@ -179,7 +179,7 @@ namespace DkTools.Classifier
 
 			_snapshot = span.Snapshot;
 
-			var appSettings = ProbeEnvironment.CurrentAppSettings;
+			var appSettings = DkEnvironment.CurrentAppSettings;
 			var fileName = VsTextUtil.TryGetDocumentFileName(span.Snapshot.TextBuffer);
 
 			var tracker = TextBufferStateTracker.GetTrackerForTextBuffer(span.Snapshot.TextBuffer);

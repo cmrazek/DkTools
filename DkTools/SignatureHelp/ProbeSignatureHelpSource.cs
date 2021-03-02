@@ -40,14 +40,14 @@ namespace DkTools.SignatureHelp
 
 			if (ProbeSignatureHelpCommandHandler.s_typedChar == '(')
 			{
-				foreach (var sig in HandleOpenBracket(snapshot, ProbeEnvironment.CurrentAppSettings))
+				foreach (var sig in HandleOpenBracket(snapshot, DkEnvironment.CurrentAppSettings))
 				{
 					signatures.Add(sig);
 				}
 			}
 			else if (ProbeSignatureHelpCommandHandler.s_typedChar == ',')
 			{
-				foreach (var sig in HandleComma(snapshot, ProbeEnvironment.CurrentAppSettings))
+				foreach (var sig in HandleComma(snapshot, DkEnvironment.CurrentAppSettings))
 				{
 					signatures.Add(sig);
 				}
@@ -56,7 +56,7 @@ namespace DkTools.SignatureHelp
 
 		private Regex _rxFuncBeforeBracket = new Regex(@"((\w+)\s*\.\s*)?(\w+)\s*$");
 
-		private IEnumerable<ISignature> HandleOpenBracket(VsText.ITextSnapshot snapshot, ProbeAppSettings appSettings)
+		private IEnumerable<ISignature> HandleOpenBracket(VsText.ITextSnapshot snapshot, DkAppSettings appSettings)
 		{
 			ThreadHelper.ThrowIfNotOnUIThread();
 
@@ -113,7 +113,7 @@ namespace DkTools.SignatureHelp
 			}
 		}
 
-		private IEnumerable<ISignature> HandleComma(VsText.ITextSnapshot snapshot, ProbeAppSettings appSettings)
+		private IEnumerable<ISignature> HandleComma(VsText.ITextSnapshot snapshot, DkAppSettings appSettings)
 		{
 			ThreadHelper.ThrowIfNotOnUIThread();
 

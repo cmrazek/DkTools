@@ -14,7 +14,7 @@ namespace DkTools.CodeAnalysis
 		private Dictionary<string, Variable> _vars = new Dictionary<string, Variable>();
 		private FunctionDefinition _funcDef;
 		private int _funcOffset;
-		private ProbeAppSettings _appSettings;
+		private DkAppSettings _appSettings;
 
 		private TriState _returned;
 		private TriState _breaked;
@@ -25,7 +25,7 @@ namespace DkTools.CodeAnalysis
 		private bool _suppressInitializedCheck;
 		private bool _removeHeaderString;			// Does not inherit on clone
 
-		public RunScope(CodeAnalyzer ca, FunctionDefinition funcDef, int funcOffset, ProbeAppSettings appSettings)
+		public RunScope(CodeAnalyzer ca, FunctionDefinition funcDef, int funcOffset, DkAppSettings appSettings)
 		{
 			_ca = ca;
 			_funcDef = funcDef;
@@ -33,7 +33,7 @@ namespace DkTools.CodeAnalysis
 			_appSettings = appSettings ?? throw new ArgumentNullException(nameof(appSettings));
 		}
 
-		public ProbeAppSettings AppSettings => _appSettings;
+		public DkAppSettings AppSettings => _appSettings;
 
 		public RunScope Clone(bool? canBreak = null, bool? canContinue = null)
 		{

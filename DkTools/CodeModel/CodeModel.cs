@@ -16,7 +16,7 @@ namespace DkTools.CodeModel
 		private string _fileName;
 		private string _fileTitle;
 		private Microsoft.VisualStudio.Text.ITextSnapshot _snapshot;
-		private ProbeAppSettings _appSettings;
+		private DkAppSettings _appSettings;
 		private FileStore _store;
 		private DefinitionProvider _defProvider;
 		private PreprocessorModel _prepModel;
@@ -29,13 +29,13 @@ namespace DkTools.CodeModel
 		private CodeModel()
 		{ }
 
-		private CodeModel(ProbeAppSettings appSettings, FileStore store)
+		private CodeModel(DkAppSettings appSettings, FileStore store)
 		{
 			_appSettings = appSettings ?? throw new ArgumentNullException(nameof(appSettings));
 			_store = store ?? throw new ArgumentNullException(nameof(store));
 		}
 
-		public static CodeModel CreateVisibleModelForPreprocessed(CodeSource visibleSource, ProbeAppSettings appSettings, FileStore store, PreprocessorModel prepModel)
+		public static CodeModel CreateVisibleModelForPreprocessed(CodeSource visibleSource, DkAppSettings appSettings, FileStore store, PreprocessorModel prepModel)
 		{
 			var model = new CodeModel(appSettings, store);
 			var codeFile = new CodeFile(model);
@@ -44,7 +44,7 @@ namespace DkTools.CodeModel
 			return model;
 		}
 
-		public static CodeModel CreateFullModelForPreprocessed(CodeSource source, ProbeAppSettings appSettings, FileStore store, PreprocessorModel prepModel)
+		public static CodeModel CreateFullModelForPreprocessed(CodeSource source, DkAppSettings appSettings, FileStore store, PreprocessorModel prepModel)
 		{
 			var model = new CodeModel(appSettings, store);
 			var codeFile = new CodeFile(model);
@@ -174,7 +174,7 @@ namespace DkTools.CodeModel
 			get { return _file; }
 		}
 
-		public ProbeAppSettings AppSettings
+		public DkAppSettings AppSettings
 		{
 			get { return _appSettings; }
 		}

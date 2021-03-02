@@ -10,24 +10,17 @@ namespace DkTools.CodeModel
 {
 	sealed class IncludeFile
 	{
-		private FileStore _store;
 		private string _fullPathName;
 		private CodeSource _source;
-		private CodeFile _codeFile;
-		private DateTime _lastCheck;
-		private DateTime _lastModifiedDate;
-		private Dictionary<string, string> _preMergeContent = new Dictionary<string, string>();
 
-		public IncludeFile(FileStore store, string fileName)
+		public IncludeFile(string fileName)
 		{
-			if (store == null) throw new ArgumentNullException("store");
 			if (string.IsNullOrEmpty(fileName)) throw new ArgumentNullException("fileName");
 
-			_store = store;
 			_fullPathName = fileName;
 		}
 
-		public CodeSource GetSource(ProbeAppSettings appSettings)
+		public CodeSource GetSource(DkAppSettings appSettings)
 		{
 			if (_source == null)
 			{
@@ -45,21 +38,6 @@ namespace DkTools.CodeModel
 		public string FullPathName
 		{
 			get { return _fullPathName; }
-		}
-
-		public IEnumerable<string> PreMergeFileNames
-		{
-			get
-			{
-				return _preMergeContent.Keys;
-			}
-		}
-
-		public string GetPreMergeContent(string fileName)
-		{
-			string content;
-			if (_preMergeContent.TryGetValue(fileName.ToLower(), out content)) return content;
-			return null;
 		}
 	}
 }

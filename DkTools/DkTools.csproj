@@ -73,10 +73,6 @@
       <EmbedInteropTypes>False</EmbedInteropTypes>
       <HintPath>..\..\..\Program Files (x86)\Common Files\Microsoft Shared\MSEnv\PublicAssemblies\envdte.dll</HintPath>
     </Reference>
-    <Reference Include="Interop.DictSrvrLib">
-      <HintPath>.\Interop.DictSrvrLib.dll</HintPath>
-      <EmbedInteropTypes>True</EmbedInteropTypes>
-    </Reference>
     <Reference Include="Microsoft.Build.Utilities.v4.0" />
     <Reference Include="Microsoft.CSharp" />
     <Reference Include="microsoft.msxml, Version=8.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
@@ -221,15 +217,6 @@
     <Reference Include="WindowsBase" />
   </ItemGroup>
   <ItemGroup>
-    <COMReference Include="PROBEENVSRVRLib">
-      <Guid>{DE4B7250-40F5-11D1-9FA9-0000E819715A}</Guid>
-      <VersionMajor>1</VersionMajor>
-      <VersionMinor>0</VersionMinor>
-      <Lcid>0</Lcid>
-      <WrapperTool>tlbimp</WrapperTool>
-      <Isolated>False</Isolated>
-      <EmbedInteropTypes>True</EmbedInteropTypes>
-    </COMReference>
     <COMReference Include="stdole">
       <Guid>{00020430-0000-0000-C000-000000000046}</Guid>
       <VersionMajor>2</VersionMajor>
@@ -372,14 +359,12 @@
     <Compile Include="DkDict\Column.cs" />
     <Compile Include="DkDict\Dict.cs" />
     <Compile Include="DkDict\Interface.cs" />
-    <Compile Include="DkDict\InterfaceMethod.cs" />
-    <Compile Include="DkDict\InterfaceProperty.cs" />
     <Compile Include="DkDict\RelInd.cs" />
     <Compile Include="DkDict\Stringdef.cs" />
     <Compile Include="DkDict\Table.cs" />
     <Compile Include="DkDict\Tag.cs" />
     <Compile Include="DkDict\Typedef.cs" />
-    <Compile Include="DkEnv\ProbeAppSettings.cs" />
+    <Compile Include="DkEnv\DkAppSettings.cs" />
     <Compile Include="DumpWriter.cs" />
     <Compile Include="ErrorDialog.xaml.cs">
       <DependentUpon>ErrorDialog.xaml</DependentUpon>
@@ -518,7 +503,7 @@
     <Compile Include="ProbeExplorer\ProbeExplorerOptions.cs">
       <SubType>Component</SubType>
     </Compile>
-    <Compile Include="DkEnv\ProbeEnvironment.cs" />
+    <Compile Include="DkEnv\DkEnvironment.cs" />
     <Compile Include="ProbeException.cs" />
     <Compile Include="ProbeExplorer\ProbeExplorerControl.xaml.cs">
       <DependentUpon>ProbeExplorerControl.xaml</DependentUpon>
@@ -542,6 +527,7 @@
     <Compile Include="QuickInfo\QuickInfoSource.cs" />
     <Compile Include="QuickInfo\QuickInfoSourceProvider.cs" />
     <Compile Include="QuickState\QuickStateTracker.cs" />
+    <Compile Include="RegistryExtensions.cs" />
     <Compile Include="Res.Designer.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>

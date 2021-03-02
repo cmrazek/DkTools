@@ -62,7 +62,7 @@ namespace DkTools.ErrorTagging
 		{
 			ThreadHelper.ThrowIfNotOnUIThread();
 
-			var appSettings = ProbeEnvironment.CurrentAppSettings;
+			var appSettings = DkEnvironment.CurrentAppSettings;
 
 			var fileName = VsTextUtil.TryGetDocumentFileName(_view.TextBuffer);
 			_model = _store.GetMostRecentModel(appSettings, fileName, _view.TextSnapshot, "ErrorTagger.GetTags()");
@@ -136,7 +136,7 @@ namespace DkTools.ErrorTagging
 
 						if (_model != null &&
 							_model.FileContext != FileContext.Include &&
-							ProbeEnvironment.CurrentAppSettings.FileExistsInApp(_model.FilePath))
+							DkEnvironment.CurrentAppSettings.FileExistsInApp(_model.FilePath))
 						{
 							System.Threading.ThreadPool.QueueUserWorkItem(state =>
 							{

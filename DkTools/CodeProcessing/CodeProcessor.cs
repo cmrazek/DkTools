@@ -9,7 +9,7 @@ namespace DkTools.CodeProcessing
 {
 	internal class CodeProcessor
 	{
-		private ProbeAppSettings _appSettings;
+		private DkAppSettings _appSettings;
 		private string _fileName = string.Empty;
 		private List<CodeFile> _files = new List<CodeFile>();
 		private List<CodeLine> _lines = new List<CodeLine>();
@@ -31,7 +31,7 @@ namespace DkTools.CodeProcessing
 		public CodeProcessor()
 		{ }
 
-		public void ProcessFile(ProbeAppSettings appSettings, string fileName)
+		public void ProcessFile(DkAppSettings appSettings, string fileName)
 		{
 			if (appSettings == null) throw new ArgumentNullException(nameof(appSettings));
 

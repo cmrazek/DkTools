@@ -85,13 +85,13 @@ namespace DkTools.CodeModel.Definitions
 			get { return false; }
 		}
 
-		public override IEnumerable<Definition> GetChildDefinitions(string name, ProbeAppSettings appSettings)
+		public override IEnumerable<Definition> GetChildDefinitions(string name, DkAppSettings appSettings)
 		{
 			var col = _relind.GetColumn(name);
 			if (col != null) yield return col.Definition;
 		}
 
-		public override IEnumerable<Definition> GetChildDefinitions(ProbeAppSettings appSettings) => _relind.ColumnDefinitions;
+		public override IEnumerable<Definition> GetChildDefinitions(DkAppSettings appSettings) => _relind.ColumnDefinitions;
 
 		public override bool ArgumentsRequired
 		{

@@ -128,7 +128,7 @@ namespace DkTools.Snippets
 			{
 				var tabSize = _view.GetTabSize();
 				var keepTabs = _view.GetKeepTabs();
-				var appSettings = ProbeEnvironment.CurrentAppSettings;
+				var appSettings = DkEnvironment.CurrentAppSettings;
 
 				foreach (var span in ts)
 				{
