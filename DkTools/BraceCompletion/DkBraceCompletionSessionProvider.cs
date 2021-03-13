@@ -18,7 +18,7 @@ namespace DkTools.BraceCompletion
     [BracePair('{', '}')]
     [BracePair('[', ']')]
     [BracePair('"', '"')]
-    [BracePair('\"', '\"')]
+    [BracePair('\'', '\'')]
     public class DkBraceCompletionSessionProvider : IBraceCompletionSessionProvider
     {
         [Import]
