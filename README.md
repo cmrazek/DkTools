@@ -18,7 +18,7 @@ Visual Studio Extension for WBDK
 
 ## Change Log
 
-**Version 1.5.14 Changes:** (upcoming)
+**Version 1.5.14 Changes:**
 - Removed dependencies on WBDK DLLs.
 - Fixed automatic brace completion when pressing enter after '{', and enabled for single-quotes.
 
