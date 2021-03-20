@@ -285,7 +285,7 @@ namespace DkTools.CodeAnalysis.Statements
 			public bool isDefault;
 		}
 
-		public override void Execute(RunScope scope)
+		public override void Execute(CAScope scope)
 		{
 			base.Execute(scope);
 
@@ -316,7 +316,7 @@ namespace DkTools.CodeAnalysis.Statements
 				}
 			}
 
-			scope.Merge(new RunScope[] { foundScope, defaultScope }, false, false);
+			scope.Merge(new CAScope[] { foundScope, defaultScope }, false, false);
 		}
 	}
 }

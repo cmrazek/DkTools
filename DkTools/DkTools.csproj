@@ -275,7 +275,7 @@
     <Compile Include="CodeAnalysis\Statements\IfStatement.cs" />
     <Compile Include="CodeAnalysis\Statements\PageStatement.cs" />
     <Compile Include="CodeAnalysis\Statements\ReturnStatement.cs" />
-    <Compile Include="CodeAnalysis\RunScope.cs" />
+    <Compile Include="CodeAnalysis\CAScope.cs" />
     <Compile Include="CodeAnalysis\Statements\RowStatement.cs" />
     <Compile Include="CodeAnalysis\Statements\SelectStatement.cs" />
     <Compile Include="CodeAnalysis\Statements\SimpleStatement.cs" />

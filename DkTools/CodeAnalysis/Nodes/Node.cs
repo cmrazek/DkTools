@@ -35,28 +35,28 @@ namespace DkTools.CodeAnalysis.Nodes
 		public virtual int Precedence => 0;
 		public virtual DataType DataType => _dataType;
 
-		public virtual void Simplify(RunScope scope)
+		public virtual void Simplify(CAScope scope)
 		{
 			throw new NotImplementedException();
 		}
 
-		public virtual void Execute(RunScope scope)
+		public virtual void Execute(CAScope scope)
 		{
 			ReportError(Span, CAError.CA0101);  // Syntax error.
 		}
 
-		public virtual Value ReadValue(RunScope scope)
+		public virtual Value ReadValue(CAScope scope)
 		{
 			ReportError(Span, CAError.CA0103);	// Cannot read from this identifier.
 			return Value.Void;
 		}
 
-		public virtual void WriteValue(RunScope scope, Value value)
+		public virtual void WriteValue(CAScope scope, Value value)
 		{
 			ReportError(Span, CAError.CA0102);	// Cannot write to this identifier.
 		}
 
-		public virtual bool CanAssignValue(RunScope scope)
+		public virtual bool CanAssignValue(CAScope scope)
 		{
 			return false;
 		}

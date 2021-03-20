@@ -34,7 +34,7 @@ namespace DkTools.CodeAnalysis.Statements
 
 		public override string ToString() => new string[] { "return", _exp.ToString() }.Combine(" ");
 
-		public override void Execute(RunScope scope)
+		public override void Execute(CAScope scope)
 		{
 			base.Execute(scope);
 

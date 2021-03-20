@@ -79,11 +79,11 @@ namespace DkTools.CodeAnalysis.Statements
 			}
 		}
 
-		public override void Execute(RunScope scope)
+		public override void Execute(CAScope scope)
 		{
 			base.Execute(scope);
 
-			var scopes = new List<RunScope>();
+			var scopes = new List<CAScope>();
 
 			for (int i = 0, ii = _conditions.Count > _trueBodies.Count ? _conditions.Count : _trueBodies.Count; i < ii; i++)
 			{

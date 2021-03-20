@@ -13,12 +13,12 @@ namespace DkTools.CodeAnalysis.Values
 
 		public static readonly Value Void = new VoidValue();
 
-		public abstract decimal? ToNumber(RunScope scope, Span span);
-		public abstract string ToStringValue(RunScope scope, Span span);
-		public abstract DkDate? ToDate(RunScope scope, Span span);
-		public abstract DkTime? ToTime(RunScope scope, Span span);
-		public abstract char? ToChar(RunScope scope, Span span);
-		public abstract Value Convert(RunScope scope, Span span, Value value);
+		public abstract decimal? ToNumber(CAScope scope, Span span);
+		public abstract string ToStringValue(CAScope scope, Span span);
+		public abstract DkDate? ToDate(CAScope scope, Span span);
+		public abstract DkTime? ToTime(CAScope scope, Span span);
+		public abstract char? ToChar(CAScope scope, Span span);
+		public abstract Value Convert(CAScope scope, Span span, Value value);
 		public abstract bool IsEqualTo(Value other);
 
 		protected Value(DataType dataType)
@@ -68,73 +68,73 @@ namespace DkTools.CodeAnalysis.Values
 			}
 		}
 
-		public virtual Value Multiply(RunScope scope, Span span, Value rightValue)
+		public virtual Value Multiply(CAScope scope, Span span, Value rightValue)
 		{
 			scope.CodeAnalyzer.ReportError(span, CAError.CA0050, "Multiplication");	// {0} cannot be used with this value.
 			return this;
 		}
 
-		public virtual Value Divide(RunScope scope, Span span, Value rightValue)
+		public virtual Value Divide(CAScope scope, Span span, Value rightValue)
 		{
 			scope.CodeAnalyzer.ReportError(span, CAError.CA0050, "Division");	// {0} cannot be used with this value.
 			return this;
 		}
 
-		public virtual Value ModulusDivide(RunScope scope, Span span, Value rightValue)
+		public virtual Value ModulusDivide(CAScope scope, Span span, Value rightValue)
 		{
 			scope.CodeAnalyzer.ReportError(span, CAError.CA0050, "Modulus division");	// {0} cannot be used with this value.
 			return this;
 		}
 
-		public virtual Value Add(RunScope scope, Span span, Value rightValue)
+		public virtual Value Add(CAScope scope, Span span, Value rightValue)
 		{
 			scope.CodeAnalyzer.ReportError(span, CAError.CA0050, "Addition");	// {0} cannot be used with this value.
 			return this;
 		}
 
-		public virtual Value Subtract(RunScope scope, Span span, Value rightValue)
+		public virtual Value Subtract(CAScope scope, Span span, Value rightValue)
 		{
 			scope.CodeAnalyzer.ReportError(span, CAError.CA0050, "Subtraction");	// {0} cannot be used with this value.
 			return this;
 		}
 
-		public virtual Value Invert(RunScope scope, Span span)
+		public virtual Value Invert(CAScope scope, Span span)
 		{
 			scope.CodeAnalyzer.ReportError(span, CAError.CA0050, "Unary minus");	// {0} cannot be used with this value.
 			return this;
 		}
 
-		public virtual Value CompareEqual(RunScope scope, Span span, Value rightValue)
+		public virtual Value CompareEqual(CAScope scope, Span span, Value rightValue)
 		{
 			scope.CodeAnalyzer.ReportError(span, CAError.CA0050, "Equals Comparison");	// {0} cannot be used with this value.
 			return this;
 		}
 
-		public virtual Value CompareNotEqual(RunScope scope, Span span, Value rightValue)
+		public virtual Value CompareNotEqual(CAScope scope, Span span, Value rightValue)
 		{
 			scope.CodeAnalyzer.ReportError(span, CAError.CA0050, "Not-equal comparison");	// {0} cannot be used with this value.
 			return this;
 		}
 
-		public virtual Value CompareLessThan(RunScope scope, Span span, Value rightValue)
+		public virtual Value CompareLessThan(CAScope scope, Span span, Value rightValue)
 		{
 			scope.CodeAnalyzer.ReportError(span, CAError.CA0050, "Less-than comparison");	// {0} cannot be used with this value.
 			return this;
 		}
 
-		public virtual Value CompareGreaterThan(RunScope scope, Span span, Value rightValue)
+		public virtual Value CompareGreaterThan(CAScope scope, Span span, Value rightValue)
 		{
 			scope.CodeAnalyzer.ReportError(span, CAError.CA0050, "Greater-than comparison");	// {0} cannot be used with this value.
 			return this;
 		}
 
-		public virtual Value CompareLessEqual(RunScope scope, Span span, Value rightValue)
+		public virtual Value CompareLessEqual(CAScope scope, Span span, Value rightValue)
 		{
 			scope.CodeAnalyzer.ReportError(span, CAError.CA0050, "Less-than-or-equal-to comparison");	// {0} cannot be used with this value.
 			return this;
 		}
 
-		public virtual Value CompareGreaterEqual(RunScope scope, Span span, Value rightValue)
+		public virtual Value CompareGreaterEqual(CAScope scope, Span span, Value rightValue)
 		{
 			scope.CodeAnalyzer.ReportError(span, CAError.CA0050, "Greater-than-or-equal-to comparison");	// {0} cannot be used with this value.
 			return this;
@@ -160,7 +160,7 @@ namespace DkTools.CodeAnalysis.Values
 			return CreateUnknownFromDataType(dataType);
 		}
 
-		public virtual void CheckTypeConversion(RunScope scope, Span span, DataType dataType)
+		public virtual void CheckTypeConversion(CAScope scope, Span span, DataType dataType)
 		{
 		}
 	}

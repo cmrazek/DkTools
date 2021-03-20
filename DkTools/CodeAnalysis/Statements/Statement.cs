@@ -89,7 +89,7 @@ namespace DkTools.CodeAnalysis.Statements
 
 
 
-		public virtual void Execute(RunScope scope)
+		public virtual void Execute(CAScope scope)
 		{
 			if (scope.Returned == TriState.True ||
 				scope.Breaked == TriState.True ||

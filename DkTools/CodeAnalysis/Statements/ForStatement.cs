@@ -75,7 +75,7 @@ namespace DkTools.CodeAnalysis.Statements
 			}
 		}
 
-		public override void Execute(RunScope scope)
+		public override void Execute(CAScope scope)
 		{
 			base.Execute(scope);
 

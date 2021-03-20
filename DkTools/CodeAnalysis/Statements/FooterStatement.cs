@@ -34,7 +34,7 @@ namespace DkTools.CodeAnalysis.Statements
 
 		public override string ToString() => "footer...";
 
-		public override void Execute(RunScope scope)
+		public override void Execute(CAScope scope)
 		{
 			var footerScope = scope.Clone();
 			foreach (var stmt in _body)

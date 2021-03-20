@@ -130,7 +130,7 @@ namespace DkTools.CodeAnalysis.Nodes
 			return ret;
 		}
 
-		public override void Execute(RunScope scope)
+		public override void Execute(CAScope scope)
 		{
 			if (_whereExp != null)
 			{
@@ -143,7 +143,7 @@ namespace DkTools.CodeAnalysis.Nodes
 			}
 		}
 
-		public override Values.Value ReadValue(RunScope scope)
+		public override Values.Value ReadValue(CAScope scope)
 		{
 			if (_whereExp != null)
 			{

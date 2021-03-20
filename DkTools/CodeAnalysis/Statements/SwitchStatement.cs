@@ -124,7 +124,7 @@ namespace DkTools.CodeAnalysis.Statements
 			}
 		}
 
-		public override void Execute(RunScope scope)
+		public override void Execute(CAScope scope)
 		{
 			base.Execute(scope);
 
@@ -139,8 +139,8 @@ namespace DkTools.CodeAnalysis.Statements
 				}
 			}
 
-			var bodyScopes = new List<RunScope>();
-			var currentBodyScope = (RunScope)null;
+			var bodyScopes = new List<CAScope>();
+			var currentBodyScope = (CAScope)null;
 
 			for (int c = 0; c < _cases.Count; c++)
 			{

@@ -19,7 +19,7 @@ namespace DkTools.CodeAnalysis.Values
 
 		public override string ToString() => _time.HasValue ? _time.Value.ToString() : "(null-time)";
 
-		public override Value Multiply(RunScope scope, Span span, Value rightValue)
+		public override Value Multiply(CAScope scope, Span span, Value rightValue)
 		{
 			if (_time.HasValue)
 			{
@@ -40,7 +40,7 @@ namespace DkTools.CodeAnalysis.Values
 			return new TimeValue(DataType, null);
 		}
 
-		public override Value Divide(RunScope scope, Span span, Value rightValue)
+		public override Value Divide(CAScope scope, Span span, Value rightValue)
 		{
 			if (_time.HasValue)
 			{
@@ -68,7 +68,7 @@ namespace DkTools.CodeAnalysis.Values
 			return new TimeValue(DataType, null);
 		}
 
-		public override Value ModulusDivide(RunScope scope, Span span, Value rightValue)
+		public override Value ModulusDivide(CAScope scope, Span span, Value rightValue)
 		{
 			if (_time.HasValue)
 			{
@@ -96,7 +96,7 @@ namespace DkTools.CodeAnalysis.Values
 			return new TimeValue(DataType, null);
 		}
 
-		public override Value Add(RunScope scope, Span span, Value rightValue)
+		public override Value Add(CAScope scope, Span span, Value rightValue)
 		{
 			if (_time.HasValue)
 			{
@@ -117,7 +117,7 @@ namespace DkTools.CodeAnalysis.Values
 			return new TimeValue(DataType, null);
 		}
 
-		public override Value Subtract(RunScope scope, Span span, Value rightValue)
+		public override Value Subtract(CAScope scope, Span span, Value rightValue)
 		{
 			if (_time.HasValue)
 			{
@@ -138,13 +138,13 @@ namespace DkTools.CodeAnalysis.Values
 			return new TimeValue(DataType, null);
 		}
 
-		public override Value Invert(RunScope scope, Span span)
+		public override Value Invert(CAScope scope, Span span)
 		{
 			scope.CodeAnalyzer.ReportError(span, CAError.CA0054);	// Time math results in an out-of-bounds value.
 			return new TimeValue(DataType, null);
 		}
 
-		public override Value CompareEqual(RunScope scope, Span span, Value rightValue)
+		public override Value CompareEqual(CAScope scope, Span span, Value rightValue)
 		{
 			if (_time.HasValue)
 			{
@@ -158,7 +158,7 @@ namespace DkTools.CodeAnalysis.Values
 			return new TimeValue(DataType, null);
 		}
 
-		public override Value CompareNotEqual(RunScope scope, Span span, Value rightValue)
+		public override Value CompareNotEqual(CAScope scope, Span span, Value rightValue)
 		{
 			if (_time.HasValue)
 			{
@@ -172,7 +172,7 @@ namespace DkTools.CodeAnalysis.Values
 			return new TimeValue(DataType, null);
 		}
 
-		public override Value CompareLessThan(RunScope scope, Span span, Value rightValue)
+		public override Value CompareLessThan(CAScope scope, Span span, Value rightValue)
 		{
 			if (_time.HasValue)
 			{
@@ -186,7 +186,7 @@ namespace DkTools.CodeAnalysis.Values
 			return new TimeValue(DataType, null);
 		}
 
-		public override Value CompareGreaterThan(RunScope scope, Span span, Value rightValue)
+		public override Value CompareGreaterThan(CAScope scope, Span span, Value rightValue)
 		{
 			if (_time.HasValue)
 			{
@@ -200,7 +200,7 @@ namespace DkTools.CodeAnalysis.Values
 			return new TimeValue(DataType, null);
 		}
 
-		public override Value CompareLessEqual(RunScope scope, Span span, Value rightValue)
+		public override Value CompareLessEqual(CAScope scope, Span span, Value rightValue)
 		{
 			if (_time.HasValue)
 			{
@@ -214,7 +214,7 @@ namespace DkTools.CodeAnalysis.Values
 			return new TimeValue(DataType, null);
 		}
 
-		public override Value CompareGreaterEqual(RunScope scope, Span span, Value rightValue)
+		public override Value CompareGreaterEqual(CAScope scope, Span span, Value rightValue)
 		{
 			if (_time.HasValue)
 			{
@@ -246,17 +246,17 @@ namespace DkTools.CodeAnalysis.Values
 			}
 		}
 
-		public override DkTime? ToTime(RunScope scope, Span span)
+		public override DkTime? ToTime(CAScope scope, Span span)
 		{
 			return _time;
 		}
 
-		public override string ToStringValue(RunScope scope, Span span)
+		public override string ToStringValue(CAScope scope, Span span)
 		{
 			return _time.HasValue ? _time.Value.ToString() : null;
 		}
 
-		public override DkDate? ToDate(RunScope scope, Span span)
+		public override DkDate? ToDate(CAScope scope, Span span)
 		{
 			scope.CodeAnalyzer.ReportError(span, CAError.CA0055, "time", "date");	// Converting {0} to {1}.
 
@@ -264,20 +264,20 @@ namespace DkTools.CodeAnalysis.Values
 			return null;
 		}
 
-		public override decimal? ToNumber(RunScope scope, Span span)
+		public override decimal? ToNumber(CAScope scope, Span span)
 		{
 			if (_time.HasValue) return _time.Value.Ticks;
 			return null;
 		}
 
-		public override char? ToChar(RunScope scope, Span span)
+		public override char? ToChar(CAScope scope, Span span)
 		{
 			scope.CodeAnalyzer.ReportError(span, CAError.CA0055, "time", "char");	// Converting {0} to {1}.
 			if (_time.HasValue) return (char)_time.Value.Ticks;
 			return null;
 		}
 
-		public override Value Convert(RunScope scope, Span span, Value value)
+		public override Value Convert(CAScope scope, Span span, Value value)
 		{
 			return new TimeValue(DataType, value.ToTime(scope, span));
 		}

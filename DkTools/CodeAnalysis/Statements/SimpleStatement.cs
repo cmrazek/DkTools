@@ -29,7 +29,7 @@ namespace DkTools.CodeAnalysis.Statements
 			else if (!_root.Span.IsEmpty) Span = Span.Envelope(_root.Span);
 		}
 
-		public override void Execute(RunScope scope)
+		public override void Execute(CAScope scope)
 		{
 			base.Execute(scope);
 
