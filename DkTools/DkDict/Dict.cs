@@ -62,7 +62,7 @@ namespace DkTools.DkDict
 				Log.Write(LogLevel.Info, "DICT preprocessing completed. (elapsed: {0})", elapsed);
 
 				var dictContent = _source.Text;
-				File.WriteAllText(Path.Combine(ProbeToolsPackage.AppDataDir, "dict.txt"), dictContent);
+				//File.WriteAllText(Path.Combine(ProbeToolsPackage.AppDataDir, "dict.txt"), dictContent);
 
 				_code = new CodeParser(dictContent);
 				ReadDict();

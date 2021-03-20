@@ -7,10 +7,8 @@ namespace DkTools
 {
 	class Constants
 	{
-		public const string AppDataDir = "DkTools2012";
-		public const string EventLogSource = "DkTools2012";
+		public const string AppDataDir = "DkTools";
 		public const string TempDir = "Temp";
-		public const string SettingsRegKey = "Software\\DkTools2012";
 		public const string WbdkRegKey = "Software\\Fincentric\\WBDK";
 		public const string CompileOutputPaneTitle = "DK Compile";
 		public const string FindReferencesOutputPaneTitle = "DK References";
