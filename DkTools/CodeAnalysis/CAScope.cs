@@ -20,6 +20,7 @@ namespace DkTools.CodeAnalysis
 		private TriState _breaked;
 		private TriState _continued;
 		private TriState _terminated;
+		private TriState _unreachableCodeReported;
 		private bool _canBreak;
 		private bool _canContinue;
 		private bool _suppressInitializedCheck;
@@ -42,7 +43,8 @@ namespace DkTools.CodeAnalysis
 				_returned = _returned,
 				_canBreak = _canBreak,
 				_canContinue = _canContinue,
-				_suppressInitializedCheck = _suppressInitializedCheck
+				_suppressInitializedCheck = _suppressInitializedCheck,
+				_unreachableCodeReported = _unreachableCodeReported
 			};
 
 			if (canBreak.HasValue) scope._canBreak = canBreak.Value;
@@ -204,6 +206,12 @@ namespace DkTools.CodeAnalysis
 				if (value == TriState.True) _terminated = TriState.True;
 				else if (value == TriState.Indeterminate && _terminated == TriState.False) _terminated = TriState.Indeterminate;
 			}
+		}
+
+		public TriState UnreachableCodeReported
+		{
+			get => _unreachableCodeReported;
+			set => _unreachableCodeReported = value;
 		}
 
 		public TriState Terminated => _terminated;
