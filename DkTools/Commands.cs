@@ -321,14 +321,14 @@ namespace DkTools
                     var activeDoc = Shell.DTE.ActiveDocument;
                     if (activeDoc == null)
                     {
-                        Shell.ShowError("No file is open.");
+                        Shell.Status("No file is open.");
                         return;
                     }
 
-                    string baseFileName = DkEnvironment.CurrentAppSettings.FindBaseFile(activeDoc.FullName);
+                    var baseFileName = activeDoc.FullName;
                     if (string.IsNullOrEmpty(baseFileName))
                     {
-                        Shell.ShowError("Base file could not be found.");
+                        Shell.Status("Document has no file name.");
                         return;
                     }
 
@@ -344,7 +344,7 @@ namespace DkTools
 
                             if (exitCode != 0)
                             {
-                                Shell.ShowError(string.Format("FEC returned exit code {0}.", exitCode));
+                                Shell.Status(string.Format("FEC returned exit code {0}.", exitCode));
                                 return;
                             }
                         }
@@ -371,14 +371,14 @@ namespace DkTools
                     var activeDoc = Shell.DTE.ActiveDocument;
                     if (activeDoc == null)
                     {
-                        Shell.ShowError("No file is open.");
+                        Shell.Status("No file is open.");
                         return;
                     }
 
-                    string baseFileName = DkEnvironment.CurrentAppSettings.FindBaseFile(activeDoc.FullName);
+                    var baseFileName = activeDoc.FullName;
                     if (string.IsNullOrEmpty(baseFileName))
                     {
-                        Shell.ShowError("Base file could not be found.");
+                        Shell.Status("Document has no file name.");
                         return;
                     }
 
@@ -392,7 +392,7 @@ namespace DkTools
 
                         if (exitCode != 0)
                         {
-                            Shell.ShowError(string.Format("FEC returned exit code {0}\r\n\r\n{1}", exitCode, output.Text));
+                            Shell.Status(string.Format("FEC returned exit code {0}\r\n\r\n{1}", exitCode, output.Text));
                             return;
                         }
                     }
@@ -401,7 +401,7 @@ namespace DkTools
                         string.Concat(Path.GetFileNameWithoutExtension(baseFileName), ".c"));
                     if (!File.Exists(cFileName))
                     {
-                        Shell.ShowError("Unable to find .c file produced by FEC.");
+                        Shell.Status("Unable to find .c file produced by FEC.");
                         return;
                     }
 
