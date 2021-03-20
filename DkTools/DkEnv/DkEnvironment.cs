@@ -76,19 +76,28 @@ namespace DkTools
 			appSettings.PlatformPath = WbdkPlatformFolder;
 			appSettings.AllAppNames = GetAllAppNames();
 			appSettings.SourceDirs = appKey.LoadWbdkMultiPath("SourcePaths", rootPath);
+			foreach (var dir in appSettings.SourceDirs) Log.Info("Source Dir: {0}", dir);
 			appSettings.IncludeDirs = appKey.LoadWbdkMultiPath("IncludePaths", rootPath)
 				.Concat(new string[] { string.IsNullOrEmpty(appSettings.PlatformPath)
 					? string.Empty
 					: Path.Combine(appSettings.PlatformPath, "include") })
 				.Where(x => !string.IsNullOrWhiteSpace(x))
 				.ToArray();
+			foreach (var dir in appSettings.IncludeDirs) Log.Info("Include Dir: {0}", dir);
 			appSettings.LibDirs = appKey.LoadWbdkMultiPath("LibPaths", rootPath);
+			foreach (var dir in appSettings.LibDirs) Log.Info("Lib Dir: {0}", dir);
 			appSettings.ExeDirs = appKey.LoadWbdkMultiPath("ExecutablePaths", rootPath);
+			foreach (var dir in appSettings.ExeDirs) Log.Info("Executable Dir: {0}", dir);
 			appSettings.ObjectDir = appKey.LoadWbdkPath("ObjectPath", rootPath);
+			Log.Info("Object Dir: {0}", appSettings.ObjectDir);
 			appSettings.TempDir = appKey.LoadWbdkPath("DiagPath", rootPath);
+			Log.Info("Temp Dir: {0}", appSettings.TempDir);
 			appSettings.ReportDir = appKey.LoadWbdkPath("ListingPath", rootPath);
+			Log.Info("Report Dir: {0}", appSettings.ReportDir);
 			appSettings.DataDir = appKey.LoadWbdkPath("DataPath", rootPath);
+			Log.Info("Data Dir: {0}", appSettings.DataDir);
 			appSettings.LogDir = appKey.LoadWbdkPath("LogPath", rootPath);
+			Log.Info("Log Dir: {0}", appSettings.LogDir);
 			appSettings.SourceFiles = LoadSourceFiles(appSettings);
 			appSettings.IncludeFiles = LoadIncludeFiles(appSettings);
 			appSettings.SourceAndIncludeFiles = appSettings.SourceFiles.Concat(appSettings.IncludeFiles.Where(i => !appSettings.SourceFiles.Contains(i))).ToArray();
