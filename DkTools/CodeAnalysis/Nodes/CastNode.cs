@@ -23,12 +23,12 @@ namespace DkTools.CodeAnalysis.Nodes
 
 		public override string ToString() => $"(cast to {DataType.ToCodeString()})";
 
-		public override void Execute(RunScope scope)
+		public override void Execute(CAScope scope)
 		{
 			base.Execute(scope);
 		}
 
-		public override Value ReadValue(RunScope scope)
+		public override Value ReadValue(CAScope scope)
 		{
 			var castScope = scope.Clone();
 			var value = base.ReadValue(castScope);

@@ -98,7 +98,6 @@ namespace DkTools
 		private EnvDTE.Events _dteEvents;
 		private EnvDTE.DocumentEvents _dteDocumentEvents;
 		private ErrorTagging.ErrorTaskProvider _errorTaskProvider;
-		private uint _errorTaskProviderCookie;
 
 		/// <summary>
 		/// Default constructor of the package.
@@ -120,6 +119,7 @@ namespace DkTools
 		{
 			base.Initialize();
 			Log.Initialize();
+			Log.Info("DkTools {0}", System.Reflection.Assembly.GetExecutingAssembly().GetName().Version);
 
 			await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync(cancellationToken);
 
@@ -149,7 +149,7 @@ namespace DkTools
 			}
 
 			_errorTaskProvider = new ErrorTagging.ErrorTaskProvider(this);
-			TaskListService.RegisterTaskProvider(_errorTaskProvider, out _errorTaskProviderCookie);
+			TaskListService.RegisterTaskProvider(_errorTaskProvider, out _);
 
 			var mcs = await GetServiceAsync(typeof(IMenuCommandService)) as OleMenuCommandService;
 			if (mcs != null) Commands.InitCommands(mcs);

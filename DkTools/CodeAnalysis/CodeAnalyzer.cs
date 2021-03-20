@@ -22,7 +22,7 @@ namespace DkTools.CodeAnalysis
 		private string _filePath;
 
 		private List<Statement> _stmts;
-		private RunScope _scope;
+		private CAScope _scope;
 		private ReadParams _read;
 		private List<ErrorTask> _tasks = new List<ErrorTask>();
 		private List<ErrorMarkerTag> _tags = new List<ErrorMarkerTag>();
@@ -70,7 +70,7 @@ namespace DkTools.CodeAnalysis
 				funcDef: func.Definition,
 				appSettings: _codeModel.AppSettings);
 
-			_scope = new RunScope(this, func.Definition, func.StartPos, _codeModel.AppSettings);
+			_scope = new CAScope(this, func.Definition, func.StartPos, _codeModel.AppSettings);
 			_stmts = new List<Statement>();
 
 			// Parse the function body

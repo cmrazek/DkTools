@@ -34,7 +34,7 @@ namespace DkTools.CodeAnalysis.Statements
 
 		public override string ToString() => "header...";
 
-		public override void Execute(RunScope scope)
+		public override void Execute(CAScope scope)
 		{
 			var headerScope = scope.Clone();
 			foreach (var stmt in _body)

@@ -19,32 +19,32 @@ namespace DkTools.CodeAnalysis.Values
 
 		public override string ToString() => _indRelName;
 
-		public override string ToStringValue(RunScope scope, Span span)
+		public override string ToStringValue(CAScope scope, Span span)
 		{
 			return null;
 		}
 
-		public override decimal? ToNumber(RunScope scope, Span span)
+		public override decimal? ToNumber(CAScope scope, Span span)
 		{
 			return null;
 		}
 
-		public override DkDate? ToDate(RunScope scope, Span span)
+		public override DkDate? ToDate(CAScope scope, Span span)
 		{
 			return null;
 		}
 
-		public override DkTime? ToTime(RunScope scope, Span span)
+		public override DkTime? ToTime(CAScope scope, Span span)
 		{
 			return null;
 		}
 
-		public override char? ToChar(RunScope scope, Span span)
+		public override char? ToChar(CAScope scope, Span span)
 		{
 			return null;
 		}
 
-		public override Value Convert(RunScope scope, Span span, Value value)
+		public override Value Convert(CAScope scope, Span span, Value value)
 		{
 			return new VoidValue();
 		}

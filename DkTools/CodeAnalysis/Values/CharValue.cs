@@ -19,38 +19,38 @@ namespace DkTools.CodeAnalysis.Values
 
 		public override string ToString() => $"'{_char}'";
 
-		public override string ToStringValue(RunScope scope, Span span)
+		public override string ToStringValue(CAScope scope, Span span)
 		{
 			if (_char != null) return _char.Value.ToString();
 			return null;
 		}
 
-		public override decimal? ToNumber(RunScope scope, Span span)
+		public override decimal? ToNumber(CAScope scope, Span span)
 		{
 			if (_char != null) return (decimal)((int)_char.Value);
 			return null;
 		}
 
-		public override char? ToChar(RunScope scope, Span span)
+		public override char? ToChar(CAScope scope, Span span)
 		{
 			return _char;
 		}
 
-		public override DkDate? ToDate(RunScope scope, Span span)
+		public override DkDate? ToDate(CAScope scope, Span span)
 		{
 			scope.CodeAnalyzer.ReportError(span, CAError.CA0055, "char", "date");	// Converting {0} to {1}.
 			if (_char.HasValue) return new DkDate((int)_char.Value);
 			return null;
 		}
 
-		public override DkTime? ToTime(RunScope scope, Span span)
+		public override DkTime? ToTime(CAScope scope, Span span)
 		{
 			scope.CodeAnalyzer.ReportError(span, CAError.CA0055, "char", "time");	// Converting {0} to {1}.
 			if (_char.HasValue) return new DkTime((int)_char.Value);
 			return null;
 		}
 
-		public override Value Multiply(RunScope scope, Span span, Value rightValue)
+		public override Value Multiply(CAScope scope, Span span, Value rightValue)
 		{
 			if (_char.HasValue)
 			{
@@ -71,7 +71,7 @@ namespace DkTools.CodeAnalysis.Values
 			return new CharValue(DataType, null);
 		}
 
-		public override Value Divide(RunScope scope, Span span, Value rightValue)
+		public override Value Divide(CAScope scope, Span span, Value rightValue)
 		{
 			if (_char.HasValue)
 			{
@@ -99,7 +99,7 @@ namespace DkTools.CodeAnalysis.Values
 			return new CharValue(DataType, null);
 		}
 
-		public override Value ModulusDivide(RunScope scope, Span span, Value rightValue)
+		public override Value ModulusDivide(CAScope scope, Span span, Value rightValue)
 		{
 			if (_char.HasValue)
 			{
@@ -127,7 +127,7 @@ namespace DkTools.CodeAnalysis.Values
 			return new CharValue(DataType, null);
 		}
 
-		public override Value Add(RunScope scope, Span span, Value rightValue)
+		public override Value Add(CAScope scope, Span span, Value rightValue)
 		{
 			if (_char.HasValue)
 			{
@@ -148,7 +148,7 @@ namespace DkTools.CodeAnalysis.Values
 			return new CharValue(DataType, null);
 		}
 
-		public override Value Subtract(RunScope scope, Span span, Value rightValue)
+		public override Value Subtract(CAScope scope, Span span, Value rightValue)
 		{
 			if (_char.HasValue)
 			{
@@ -169,13 +169,13 @@ namespace DkTools.CodeAnalysis.Values
 			return new CharValue(DataType, null);
 		}
 
-		public override Value Invert(RunScope scope, Span span)
+		public override Value Invert(CAScope scope, Span span)
 		{
 			scope.CodeAnalyzer.ReportError(span, CAError.CA0056);	// Char math results in an out-of-bounds value.
 			return new CharValue(DataType, null);
 		}
 
-		public override Value CompareEqual(RunScope scope, Span span, Value rightValue)
+		public override Value CompareEqual(CAScope scope, Span span, Value rightValue)
 		{
 			if (_char.HasValue)
 			{
@@ -189,7 +189,7 @@ namespace DkTools.CodeAnalysis.Values
 			return new NumberValue(DataType.Int, null);
 		}
 
-		public override Value CompareNotEqual(RunScope scope, Span span, Value rightValue)
+		public override Value CompareNotEqual(CAScope scope, Span span, Value rightValue)
 		{
 			if (_char.HasValue)
 			{
@@ -203,7 +203,7 @@ namespace DkTools.CodeAnalysis.Values
 			return new NumberValue(DataType.Int, null);
 		}
 
-		public override Value CompareLessThan(RunScope scope, Span span, Value rightValue)
+		public override Value CompareLessThan(CAScope scope, Span span, Value rightValue)
 		{
 			if (_char.HasValue)
 			{
@@ -217,7 +217,7 @@ namespace DkTools.CodeAnalysis.Values
 			return new NumberValue(DataType.Int, null);
 		}
 
-		public override Value CompareGreaterThan(RunScope scope, Span span, Value rightValue)
+		public override Value CompareGreaterThan(CAScope scope, Span span, Value rightValue)
 		{
 			if (_char.HasValue)
 			{
@@ -231,7 +231,7 @@ namespace DkTools.CodeAnalysis.Values
 			return new NumberValue(DataType.Int, null);
 		}
 
-		public override Value CompareLessEqual(RunScope scope, Span span, Value rightValue)
+		public override Value CompareLessEqual(CAScope scope, Span span, Value rightValue)
 		{
 			if (_char.HasValue)
 			{
@@ -245,7 +245,7 @@ namespace DkTools.CodeAnalysis.Values
 			return new NumberValue(DataType.Int, null);
 		}
 
-		public override Value CompareGreaterEqual(RunScope scope, Span span, Value rightValue)
+		public override Value CompareGreaterEqual(CAScope scope, Span span, Value rightValue)
 		{
 			if (_char.HasValue)
 			{
@@ -277,7 +277,7 @@ namespace DkTools.CodeAnalysis.Values
 			}
 		}
 
-		public override Value Convert(RunScope scope, Span span, Value value)
+		public override Value Convert(CAScope scope, Span span, Value value)
 		{
 			var str = value.ToStringValue(scope, span);
 			if (str != null && str.Length == 1) return new CharValue(DataType, str[0]);

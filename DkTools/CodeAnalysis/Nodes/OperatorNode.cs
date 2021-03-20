@@ -99,7 +99,7 @@ namespace DkTools.CodeAnalysis.Nodes
 			}
 		}
 
-		public override void Simplify(RunScope scope)
+		public override void Simplify(CAScope scope)
 		{
 			if (Parent == null) throw new InvalidOperationException("Operator node must have a parent.");
 
@@ -141,7 +141,7 @@ namespace DkTools.CodeAnalysis.Nodes
 			}
 		}
 
-		private void ExecuteMath(RunScope scope)	// * / % + -
+		private void ExecuteMath(CAScope scope)	// * / % + -
 		{
 			var leftNode = Parent.GetLeftSibling(scope, this);
 			var rightNode = Parent.GetRightSibling(scope, this);
@@ -192,7 +192,7 @@ namespace DkTools.CodeAnalysis.Nodes
 			}
 		}
 
-		private void ExecuteMinus(RunScope scope)
+		private void ExecuteMinus(CAScope scope)
 		{
 			var rightNode = Parent.GetRightSibling(scope, this);
 			if (rightNode == null) ReportError(Span, CAError.CA0008, Text);	// Operator '{0}' expects value on right.
@@ -205,7 +205,7 @@ namespace DkTools.CodeAnalysis.Nodes
 			}
 		}
 
-		private void ExecuteComparison(RunScope scope)	// < > <= >= == !=
+		private void ExecuteComparison(CAScope scope)	// < > <= >= == !=
 		{
 			var leftNode = Parent.GetLeftSibling(scope, this);
 			var rightNode = Parent.GetRightSibling(scope, this);
@@ -282,7 +282,7 @@ namespace DkTools.CodeAnalysis.Nodes
 			}
 		}
 
-		private void ExecuteAssignment(RunScope scope)	// = *= /= %= += -=
+		private void ExecuteAssignment(CAScope scope)	// = *= /= %= += -=
 		{
 			var leftNode = Parent.GetLeftSibling(scope, this);
 			var rightNode = Parent.GetRightSibling(scope, this);

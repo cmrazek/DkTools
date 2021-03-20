@@ -154,13 +154,13 @@ namespace DkTools.CodeAnalysis.Nodes
 			}
 		}
 
-		public override void Execute(RunScope scope)
+		public override void Execute(CAScope scope)
 		{
 			// Running has the same effect as reading, since DK function cannot return references
 			ReadValue(scope);
 		}
 
-		public override Value ReadValue(RunScope scope)
+		public override Value ReadValue(CAScope scope)
 		{
 			switch (_name)
 			{
@@ -214,7 +214,7 @@ namespace DkTools.CodeAnalysis.Nodes
 			return Value.CreateUnknownFromDataType(_def.DataType);
 		}
 
-		public override bool CanAssignValue(RunScope scope)
+		public override bool CanAssignValue(CAScope scope)
 		{
 			return false;
 		}
@@ -224,7 +224,7 @@ namespace DkTools.CodeAnalysis.Nodes
 			get { return 0; }
 		}
 
-		private Value Read_oldvalue(RunScope scope)
+		private Value Read_oldvalue(CAScope scope)
 		{
 			if (_args.Count != 1)
 			{
@@ -234,7 +234,7 @@ namespace DkTools.CodeAnalysis.Nodes
 			return Value.CreateUnknownFromDataType(_args[0].ReadValue(scope).DataType);
 		}
 
-		private Value Read_abs(RunScope scope)
+		private Value Read_abs(CAScope scope)
 		{
 			if (_args.Count != 1)
 			{
@@ -245,7 +245,7 @@ namespace DkTools.CodeAnalysis.Nodes
 			//return Value.CreateUnknownFromDataType(_args[0].DataType);
 		}
 
-		private Value Read_count(RunScope scope)
+		private Value Read_count(CAScope scope)
 		{
 			if (_args.Count < 1 || _args.Count > 2)
 			{
@@ -255,7 +255,7 @@ namespace DkTools.CodeAnalysis.Nodes
 			return Value.CreateUnknownFromDataType(DataType.Int);
 		}
 
-		private Value Read_sum(RunScope scope)
+		private Value Read_sum(CAScope scope)
 		{
 			if (_args.Count < 1 || _args.Count > 2)
 			{
@@ -265,7 +265,7 @@ namespace DkTools.CodeAnalysis.Nodes
 			return Value.CreateUnknownFromDataType(DataType.Int);
 		}
 
-		private Value Read_max(RunScope scope)
+		private Value Read_max(CAScope scope)
 		{
 			if (_args.Count != 1)
 			{
@@ -275,7 +275,7 @@ namespace DkTools.CodeAnalysis.Nodes
 			return Value.CreateUnknownFromDataType(_args[0].ReadValue(scope).DataType);
 		}
 
-		private Value Read_min(RunScope scope)
+		private Value Read_min(CAScope scope)
 		{
 			if (_args.Count != 1)
 			{

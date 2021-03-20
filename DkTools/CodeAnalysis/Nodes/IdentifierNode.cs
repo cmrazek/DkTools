@@ -42,17 +42,17 @@ namespace DkTools.CodeAnalysis.Nodes
 		public override bool IsReportable { get => _reportable && _dataType != null && _dataType.IsReportable; set => _reportable = false; }
 		public override string ToString() => _def.Name;
 
-		public override bool CanAssignValue(RunScope scope)
+		public override bool CanAssignValue(CAScope scope)
 		{
 			return _def.CanWrite;
 		}
 
-		public override void Execute(RunScope scope)
+		public override void Execute(CAScope scope)
 		{
 			// Don't read from the identifier.
 		}
 
-		public override Value ReadValue(RunScope scope)
+		public override Value ReadValue(CAScope scope)
 		{
 			if (_arrayAccessExps != null)
 			{
@@ -106,7 +106,7 @@ namespace DkTools.CodeAnalysis.Nodes
 			return base.ReadValue(scope);
 		}
 
-		public override void WriteValue(RunScope scope, Value value)
+		public override void WriteValue(CAScope scope, Value value)
 		{
 			if (_arrayAccessExps != null)
 			{
@@ -149,7 +149,7 @@ namespace DkTools.CodeAnalysis.Nodes
 			}
 		}
 
-		public Definition GetDefinition(RunScope scope)
+		public Definition GetDefinition(CAScope scope)
 		{
 			return _def;
 		}

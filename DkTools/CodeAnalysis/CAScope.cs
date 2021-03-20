@@ -8,7 +8,7 @@ using DkTools.CodeModel.Definitions;
 
 namespace DkTools.CodeAnalysis
 {
-	class RunScope
+	class CAScope
 	{
 		private CodeAnalyzer _ca;
 		private Dictionary<string, Variable> _vars = new Dictionary<string, Variable>();
@@ -20,12 +20,13 @@ namespace DkTools.CodeAnalysis
 		private TriState _breaked;
 		private TriState _continued;
 		private TriState _terminated;
+		private TriState _unreachableCodeReported;
 		private bool _canBreak;
 		private bool _canContinue;
 		private bool _suppressInitializedCheck;
 		private bool _removeHeaderString;			// Does not inherit on clone
 
-		public RunScope(CodeAnalyzer ca, FunctionDefinition funcDef, int funcOffset, DkAppSettings appSettings)
+		public CAScope(CodeAnalyzer ca, FunctionDefinition funcDef, int funcOffset, DkAppSettings appSettings)
 		{
 			_ca = ca;
 			_funcDef = funcDef;
@@ -35,14 +36,15 @@ namespace DkTools.CodeAnalysis
 
 		public DkAppSettings AppSettings => _appSettings;
 
-		public RunScope Clone(bool? canBreak = null, bool? canContinue = null)
+		public CAScope Clone(bool? canBreak = null, bool? canContinue = null)
 		{
-			var scope = new RunScope(_ca, _funcDef, _funcOffset, _appSettings)
+			var scope = new CAScope(_ca, _funcDef, _funcOffset, _appSettings)
 			{
 				_returned = _returned,
 				_canBreak = _canBreak,
 				_canContinue = _canContinue,
-				_suppressInitializedCheck = _suppressInitializedCheck
+				_suppressInitializedCheck = _suppressInitializedCheck,
+				_unreachableCodeReported = _unreachableCodeReported
 			};
 
 			if (canBreak.HasValue) scope._canBreak = canBreak.Value;
@@ -56,7 +58,7 @@ namespace DkTools.CodeAnalysis
 			return scope;
 		}
 
-		public void Merge(RunScope scope, bool promoteBreak = true, bool promoteContinue = true)
+		public void Merge(CAScope scope, bool promoteBreak = true, bool promoteContinue = true)
 		{
 			if (scope.Returned > _returned) _returned = scope.Returned;
 			if (promoteBreak && scope.Breaked > _breaked) _breaked = scope.Breaked;
@@ -84,7 +86,7 @@ namespace DkTools.CodeAnalysis
 			}
 		}
 
-		public void Merge(IEnumerable<RunScope> scopes, bool promoteBreak = true, bool promoteContinue = true)
+		public void Merge(IEnumerable<CAScope> scopes, bool promoteBreak = true, bool promoteContinue = true)
 		{
 			if (!scopes.Any(x => x != null)) return;
 
@@ -204,6 +206,12 @@ namespace DkTools.CodeAnalysis
 				if (value == TriState.True) _terminated = TriState.True;
 				else if (value == TriState.Indeterminate && _terminated == TriState.False) _terminated = TriState.Indeterminate;
 			}
+		}
+
+		public TriState UnreachableCodeReported
+		{
+			get => _unreachableCodeReported;
+			set => _unreachableCodeReported = value;
 		}
 
 		public TriState Terminated => _terminated;

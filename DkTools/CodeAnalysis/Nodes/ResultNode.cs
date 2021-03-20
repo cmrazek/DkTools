@@ -27,11 +27,11 @@ namespace DkTools.CodeAnalysis.Nodes
 			if (_source == ResultSource.Conditional1) _prec = 10;
 		}
 
-		public override void Execute(RunScope scope) { }
+		public override void Execute(CAScope scope) { }
 		public override bool IsReportable => _reportable;
 		public override string ToString() => _value.ToString();
 
-		public override Value ReadValue(RunScope scope)
+		public override Value ReadValue(CAScope scope)
 		{
 			return _value;
 		}
@@ -49,7 +49,7 @@ namespace DkTools.CodeAnalysis.Nodes
 			}
 		}
 
-		public override void Simplify(RunScope scope)
+		public override void Simplify(CAScope scope)
 		{
 			if (_source == ResultSource.Conditional1)
 			{

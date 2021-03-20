@@ -77,7 +77,7 @@ namespace DkTools.CodeAnalysis.Nodes
 			}
 		}
 
-		public override void Simplify(RunScope scope)
+		public override void Simplify(CAScope scope)
 		{
 			if (Parent == null) throw new InvalidOperationException("Conditional operator must have a parent.");
 

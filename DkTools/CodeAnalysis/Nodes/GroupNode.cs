@@ -107,7 +107,7 @@ namespace DkTools.CodeAnalysis.Nodes
 			ReplaceNodes(new ResultNode(Statement, span, value, source, errRep, resultIsReportable), nodes);
 		}
 
-		private void SimplifyGroup(RunScope scope)
+		private void SimplifyGroup(CAScope scope)
 		{
 			var reduceRetries = 3;
 
@@ -166,7 +166,7 @@ namespace DkTools.CodeAnalysis.Nodes
 			}
 		}
 
-		public Node GetLeftSibling(RunScope scope, Node node)
+		public Node GetLeftSibling(CAScope scope, Node node)
 		{
 			Node last = null;
 
@@ -179,7 +179,7 @@ namespace DkTools.CodeAnalysis.Nodes
 			return null;
 		}
 
-		public Node GetRightSibling(RunScope scope, Node node)
+		public Node GetRightSibling(CAScope scope, Node node)
 		{
 			Node last = null;
 
@@ -192,7 +192,7 @@ namespace DkTools.CodeAnalysis.Nodes
 			return null;
 		}
 
-		public override void Execute(RunScope scope)
+		public override void Execute(CAScope scope)
 		{
 			SimplifyGroup(scope);
 
@@ -215,7 +215,7 @@ namespace DkTools.CodeAnalysis.Nodes
 			ReportError(Span, CAError.CA0101);  // Syntax error.
 		}
 
-		public override Value ReadValue(RunScope scope)
+		public override Value ReadValue(CAScope scope)
 		{
 			SimplifyGroup(scope);
 
@@ -228,7 +228,7 @@ namespace DkTools.CodeAnalysis.Nodes
 			return Value.Void;
 		}
 
-		public override void WriteValue(RunScope scope, Value value)
+		public override void WriteValue(CAScope scope, Value value)
 		{
 			SimplifyGroup(scope);
 			if (_nodes.Count == 1)

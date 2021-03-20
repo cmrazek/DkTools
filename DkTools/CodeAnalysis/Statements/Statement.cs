@@ -89,13 +89,17 @@ namespace DkTools.CodeAnalysis.Statements
 
 
 
-		public virtual void Execute(RunScope scope)
+		public virtual void Execute(CAScope scope)
 		{
 			if (scope.Returned == TriState.True ||
 				scope.Breaked == TriState.True ||
 				scope.Continued == TriState.True)
 			{
-				ReportError(Span, CAError.CA0016);	// Unreachable code.
+				if (scope.UnreachableCodeReported != TriState.True)
+				{
+					ReportError(Span, CAError.CA0016);  // Unreachable code.
+					scope.UnreachableCodeReported = TriState.True;
+				}
 			}
 		}
 
