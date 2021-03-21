@@ -24,7 +24,7 @@ namespace DkTools.CodeModel
 		{
 			if (_source == null)
 			{
-				_source = IncludeFileCache.GetIncludeFileSource(_fullPathName);
+				_source = IncludeFileCache.GetIncludeFileSource(appSettings, _fullPathName, FileContextUtil.IncludeFileShouldBeMerged(_fullPathName));
 				if (_source == null)
 				{
 					_source = new CodeSource();
