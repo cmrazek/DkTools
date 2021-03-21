@@ -18,10 +18,11 @@ Visual Studio Extension for WBDK
 
 ## Change Log
 
-**Version 1.5.15 Changes**
+**Version 1.5.15 Changes:**
 - FEC and FEC to Visual C commands will no longer error out when the file is not within a source path.
 - Renamed 'app data' folder to DkTools (finally).
 - Code Analysis will now only report "Unreachable code" once per code path.
+- Now recognizes localization for .t files. (merges .t+, .t& files)
 
 **Version 1.5.14 Changes:**
 - Removed dependencies on WBDK DLLs.

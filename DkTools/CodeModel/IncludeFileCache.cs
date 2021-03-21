@@ -22,7 +22,7 @@ namespace DkTools.CodeModel
 			public CodeSource Source { get; set; }
 		}
 
-		public static CodeSource GetIncludeFileSource(string fullPathName)
+		public static CodeSource GetIncludeFileSource(DkAppSettings appSettings, string fullPathName, bool doMerge)
 		{
 			lock (_files)
 			{
@@ -41,9 +41,19 @@ namespace DkTools.CodeModel
 				{
 					var fileContent = File.ReadAllText(fullPathName);
 
-					var source = new CodeSource();
-					source.Append(fileContent, fullPathName, fileStartPos: 0, fileEndPos: fileContent.Length, actualContent: true, primaryFile: false, disabled: false);
-					source.Flush();
+					CodeSource source;
+					if (doMerge)
+					{
+						var merger = new FileMerger();
+						merger.MergeFile(appSettings, fullPathName, fileContent, showMergeComments: false, fileIsPrimary: false);
+						source = merger.MergedContent;
+					}
+					else
+					{
+						source = new CodeSource();
+						source.Append(fileContent, fullPathName, fileStartPos: 0, fileEndPos: fileContent.Length, actualContent: true, primaryFile: false, disabled: false);
+						source.Flush();
+					}
 
 					lock (_files)
 					{

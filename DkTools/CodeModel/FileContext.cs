@@ -92,5 +92,7 @@ namespace DkTools.CodeModel
 			var ext = System.IO.Path.GetExtension(fileName);
 			return ext.EndsWith("+") || ext.EndsWith("&");
 		}
+
+		public static bool IncludeFileShouldBeMerged(string fileName) => System.IO.Path.GetExtension(fileName).EqualsI(".t");
 	}
 }
