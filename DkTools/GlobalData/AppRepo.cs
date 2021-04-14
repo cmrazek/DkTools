@@ -67,6 +67,9 @@ namespace DkTools.GlobalData
 		private string _repoFileName;
 		private StringRepo _strings;
 		private List<int> _data;
+		private DateTime _lastShrink = DateTime.MinValue;
+
+		private const int ShrinkIntervalSeconds = 180;
 
 		#region File Layout
 		private const string RepoBaseDir = ".dk";
@@ -592,7 +595,14 @@ namespace DkTools.GlobalData
 			lock (this)
 			{
 				PurgeNonexistentFiles();
-				ShrinkStrings();
+
+				if (DateTime.Now.Subtract(_lastShrink).TotalSeconds > ShrinkIntervalSeconds)
+				{
+					ShrinkStrings();
+					_lastShrink = DateTime.Now;
+				}
+
+				Write();
 
 				Log.Info("Scan Complete: File Data: {0} String Count: {1}", _data.Count * 4, _strings.Count);
 
@@ -900,14 +910,6 @@ namespace DkTools.GlobalData
 		#endregion
 
 		#region Saving / Loading
-		public void Save()
-		{
-			lock (this)
-			{
-				Write();
-			}
-		}
-
 		private void Write()
 		{
 			if (string.IsNullOrEmpty(_repoFileName)) return;
