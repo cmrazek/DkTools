@@ -29,7 +29,7 @@ namespace DkTools.FunctionFileScanning
 				case ".sc":
 				case ".sc&":
 				case ".sc+":
-					className = System.IO.Path.GetFileNameWithoutExtension(fileName).ToLower();
+					className = System.IO.Path.GetFileNameWithoutExtension(fileName);
 					return true;
 				default:
 					className = null;

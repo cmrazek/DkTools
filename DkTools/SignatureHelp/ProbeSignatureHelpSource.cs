@@ -187,7 +187,7 @@ namespace DkTools.SignatureHelp
 				foreach (var def in model.DefinitionProvider.GetGlobalFromAnywhere<CodeModel.Definitions.FunctionDefinition>(funcName))
 				{
 					var funcDef = (def as CodeModel.Definitions.FunctionDefinition);
-					if (string.IsNullOrEmpty(funcDef.ClassName) || funcDef.ClassName == model.ClassName)
+					if (string.IsNullOrEmpty(funcDef.ClassName) || funcDef.ClassName.EqualsI(model.ClassName))
 					{
 						yield return def.Signature;
 					}
@@ -197,7 +197,7 @@ namespace DkTools.SignatureHelp
 			{
 				foreach (var def in model.DefinitionProvider.GetGlobalFromAnywhere<CodeModel.Definitions.FunctionDefinition>(funcName))
 				{
-					if ((def as CodeModel.Definitions.FunctionDefinition).ClassName == className)
+					if ((def as CodeModel.Definitions.FunctionDefinition).ClassName.EqualsI(className))
 					{
 						yield return def.Signature;
 						yield break;
