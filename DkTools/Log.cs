@@ -47,6 +47,28 @@ namespace DkTools
 			}
 		}
 
+		public static LogLevel Level
+		{
+			get
+			{
+				lock (_lock)
+				{
+					return _level;
+				}
+			}
+			set
+			{
+				lock (_lock)
+				{
+					if (_level != value)
+					{
+						_level = value;
+						Log.Info("Log level changed to {0}.", _level);
+					}
+				}
+			}
+		}
+
 		public static void CheckStream()
 		{
 			if (_writer == null)
