@@ -1221,6 +1221,8 @@ namespace DkTools.GlobalData
 
 			_defs.Clear();
 			_defs.Add(results);
+
+			Log.Debug("Global definitions refreshed: Count [{0}]", _defs.Count);
 		}
 		#endregion
 
