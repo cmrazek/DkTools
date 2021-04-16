@@ -1,7 +1,7 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <PackageManifest Version="2.0.0" xmlns="http://schemas.microsoft.com/developer/vsx-schema/2011" xmlns:d="http://schemas.microsoft.com/developer/vsx-schema-design/2011">
     <Metadata>
-        <Identity Id="A0EF133B-F328-4137-8CCB-9A09EC7E665E" Version="1.5.16.1" Language="en-US" Publisher="Chris Mrazek" />
+        <Identity Id="A0EF133B-F328-4137-8CCB-9A09EC7E665E" Version="1.5.16.2" Language="en-US" Publisher="Chris Mrazek" />
         <DisplayName>DkTools</DisplayName>
         <Description xml:space="preserve">WBDK 7 development tools for Visual Studio</Description>
         <!--<MoreInfo>http://www.fabrikam.com/Extension1/</MoreInfo>-->
