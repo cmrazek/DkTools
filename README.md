@@ -18,6 +18,11 @@ Visual Studio Extension for WBDK
 
 ## Change Log
 
+**Version 1.5.16 Changes:**
+- Class names are no longer forced to lowercase.
+- Background scanning database is 'shrunk' less often, improving performance when saving a file.
+- Fixed statement completion on class method arguments.
+
 **Version 1.5.15 Changes:**
 - FEC and FEC to Visual C commands will no longer error out when the file is not within a source path.
 - Renamed 'app data' folder to DkTools (finally).

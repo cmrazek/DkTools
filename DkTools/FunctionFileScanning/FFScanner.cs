@@ -283,11 +283,8 @@ namespace DkTools.FunctionFileScanning
 							ProbeToolsPackage.Instance.SetStatusText("Finalizing DK repository...");
 							job.App.Repo.OnScanComplete();
 
-							ProbeToolsPackage.Instance.SetStatusText("Saving DK repository...");
-							job.App.Repo.Save();
-
 							var scanElapsed = DateTime.Now.Subtract(_scanStartTime);
-							ProbeToolsPackage.Instance.SetStatusText(string.Format("DkTools background scanning complete.  (elapsed: {0})", scanElapsed));
+							ProbeToolsPackage.Instance.SetStatusText(string.Format("DkTools scan complete.  (elapsed: {0})", scanElapsed));
 						}
 						break;
 				}

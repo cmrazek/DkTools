@@ -21,7 +21,6 @@ namespace DkTools.DkDict
 		private Dictionary<string, Stringdef> _stringdefs = new Dictionary<string, Stringdef>();
 		private Dictionary<string, Typedef> _typedefs = new Dictionary<string, Typedef>();
 		private Dictionary<string, Interface> _interfaces = new Dictionary<string, Interface>();
-		private Dictionary<string, Interface> _impliedInterfaces = new Dictionary<string, Interface>();
 
 		public void Load(DkAppSettings appSettings)
 		{
@@ -29,7 +28,7 @@ namespace DkTools.DkDict
 			{
 				_appSettings = appSettings ?? throw new ArgumentNullException(nameof(appSettings));
 
-				Log.Write(LogLevel.Info, "Parsing DICT...");
+				Log.Info("Parsing DICT...");
 				var startTime = DateTime.Now;
 
 				// Find the dict file
@@ -43,7 +42,7 @@ namespace DkTools.DkDict
 
 				if (string.IsNullOrEmpty(dictPathName))
 				{
-					Log.Write(LogLevel.Warning, "No DICT file could be found.");
+					Log.Warning("No DICT file could be found.");
 					return;
 				}
 				var merger = new FileMerger();
@@ -59,7 +58,7 @@ namespace DkTools.DkDict
 
 				var curTime = DateTime.Now;
 				var elapsed = curTime.Subtract(startTime);
-				Log.Write(LogLevel.Info, "DICT preprocessing completed. (elapsed: {0})", elapsed);
+				Log.Info("DICT preprocessing completed. (elapsed: {0})", elapsed);
 
 				var dictContent = _source.Text;
 				//File.WriteAllText(Path.Combine(ProbeToolsPackage.AppDataDir, "dict.txt"), dictContent);
@@ -72,7 +71,9 @@ namespace DkTools.DkDict
 				_source = null;	// So it can be GC'd
 
 				elapsed = DateTime.Now.Subtract(curTime);
-				Log.Write(LogLevel.Info, "DICT parsing complete. (elapsed: {0})", elapsed);
+				Log.Info("DICT parsing complete. (elapsed: {0})", elapsed);
+				Log.Debug("DICT Tables [{0}] RelInds [{1}] Stringdefs [{2}] Typedefs [{3}] Interfaces [{4}]",
+					_tables.Count, _relinds.Count, _stringdefs.Count, _typedefs.Count, _interfaces.Count);
 			}
 			catch (Exception ex)
 			{
@@ -1897,18 +1898,6 @@ namespace DkTools.DkDict
 			}
 
 			_interfaces.Remove(name);
-		}
-
-		public void AddImpliedInterface(string name, Interface intf)
-		{
-			_impliedInterfaces[name] = intf;
-		}
-
-		public Interface GetImpliedInterface(string name)
-		{
-			Interface intf;
-			if (_impliedInterfaces.TryGetValue(name, out intf)) return intf;
-			return null;
 		}
 		#endregion
 

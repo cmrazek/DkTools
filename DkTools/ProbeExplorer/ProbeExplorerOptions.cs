@@ -51,6 +51,11 @@ namespace DkTools.ProbeExplorer
 		[Description("Arguments passed to 'credelix'\r\n(/P automatically appended to specify current app)")]
 		public string CredelixArguments { get; set; }
 
+		[Category("Extension")]
+		[DisplayName("Logging Level")]
+		[Description("Log detail level.")]
+		public LogLevel LogLevel { get; set; }
+
 		public ProbeExplorerOptions()
 		{
 			ShowFilesInTree = false;
@@ -60,6 +65,18 @@ namespace DkTools.ProbeExplorer
 			DccmpArguments = "/z /D";
 			CredelixArguments = "/p";
 			AutoScrollToFunctions = true;
+#if DEBUG
+			LogLevel = LogLevel.Debug;
+#else
+			LogLevel = LogLevel.Info;
+#endif
+		}
+
+		public override void SaveSettingsToStorage()
+		{
+			base.SaveSettingsToStorage();
+
+			Log.Level = LogLevel;
 		}
 	}
 }

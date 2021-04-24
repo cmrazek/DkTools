@@ -139,6 +139,8 @@ namespace DkTools.CodeModel
 			{
 				AddGlobalFromAnywhere(app.Repo.GetGlobalDefinitions());
 			}
+
+			Log.Debug("DefinitionProvider ctor: Built-in [{0}] Anywhere Global [{1}]", _builtInDefs.Length, _anywhereGlobalDefs.Count);
 		}
 
 		#region Global Definitions
