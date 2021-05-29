@@ -1,20 +1,19 @@
-﻿using System;
+﻿using DK.Modeling;
+using DK.Modeling.Tokens;
+using DK.Syntax;
+using Microsoft.VisualStudio.Text;
+using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Text.RegularExpressions;
-using VsText = Microsoft.VisualStudio.Text;
-using DkTools.CodeModel;
-using DkTools.CodeModel.Definitions;
-using DkTools.CodeModel.Tokens;
 
 namespace DkTools.Classifier
 {
 	class ProbeClassifierScanner
 	{
-		private CodeModel.CodeModel _model;
+		private CodeModel _model;
 		private string _source;
-		private VsText.ITextSnapshot _snapshot;
+		private ITextSnapshot _snapshot;
 		private int _pos;
 		private int _posOffset;
 		private int _length;
@@ -24,7 +23,7 @@ namespace DkTools.Classifier
 		{
 		}
 
-		public void SetSource(string source, int offset, VsText.ITextSnapshot snapshot, CodeModel.CodeModel model)
+		public void SetSource(string source, int offset, ITextSnapshot snapshot, CodeModel model)
 		{
 			_source = source ?? throw new ArgumentNullException(nameof(source));
 			_snapshot = snapshot ?? throw new ArgumentNullException(nameof(snapshot));
@@ -34,10 +33,11 @@ namespace DkTools.Classifier
 			_length = _source.Length;
 
 			int transStart, transEnd;
-			if (_model.Snapshot != null)
+			var modelSnapshot = _model.Snapshot as ITextSnapshot;
+			if (modelSnapshot != null)
 			{
-				transStart = snapshot.TranslateOffsetToSnapshot(offset, _model.Snapshot);
-				transEnd = snapshot.TranslateOffsetToSnapshot(offset + source.Length, _model.Snapshot);
+				transStart = snapshot.TranslateOffsetToSnapshot(offset, modelSnapshot);
+				transEnd = snapshot.TranslateOffsetToSnapshot(offset + source.Length, modelSnapshot);
 			}
 			else
 			{
@@ -48,7 +48,7 @@ namespace DkTools.Classifier
 			_tokenMap = new Dictionary<int, Token>();
 			foreach (var token in _model.File.FindDownward(transStart, transEnd - transStart))
 			{
-				var snapStart = _model.Snapshot != null ? _model.Snapshot.TranslateOffsetToSnapshot(token.Span.Start, snapshot) : token.Span.Start;
+				var snapStart = modelSnapshot != null ? modelSnapshot.TranslateOffsetToSnapshot(token.Span.Start, snapshot) : token.Span.Start;
 				_tokenMap[snapStart] = token;
 			}
 		}
@@ -386,14 +386,15 @@ namespace DkTools.Classifier
 			get { return _posOffset; }
 		}
 
-		public IEnumerable<CodeModel.Tokens.Token> TokensAtPos()
+		public IEnumerable<Token> TokensAtPos()
 		{
 			var modelPos = _pos + _posOffset;
-			if (_snapshot != null && _model.Snapshot != null) modelPos = _snapshot.TranslateOffsetToSnapshot(modelPos, _model.Snapshot);
+			var modelSnapshot = _model.Snapshot as ITextSnapshot;
+			if (_snapshot != null && modelSnapshot != null) modelPos = _snapshot.TranslateOffsetToSnapshot(modelPos, modelSnapshot);
 			return _model.FindTokens(modelPos);
 		}
 
-		public CodeModel.CodeModel CodeModel
+		public CodeModel CodeModel
 		{
 			get { return _model; }
 		}

@@ -1,12 +1,14 @@
-﻿using DkTools.CodeModel;
-using DkTools.CodeModel.Definitions;
+﻿using DK.AppEnvironment;
+using DK.Code;
+using DK.Definitions;
+using DK.Modeling.Tokens;
+using DkTools.CodeModeling;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Editor;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 
 namespace DkTools.Navigation
 {
@@ -40,7 +42,7 @@ namespace DkTools.Navigation
 		{
 			ThreadHelper.ThrowIfNotOnUIThread();
 
-			var fileStore = CodeModel.FileStore.GetOrCreateForTextBuffer(point.Snapshot.TextBuffer);
+			var fileStore = FileStoreHelper.GetOrCreateForTextBuffer(point.Snapshot.TextBuffer);
 			if (fileStore == null) return null;
 
 			var appSettings = DkEnvironment.CurrentAppSettings;
@@ -92,7 +94,7 @@ namespace DkTools.Navigation
 
 			if (!realCodeOnly)
 			{
-				var includeToken = selTokens.LastOrDefault(t => t is CodeModel.Tokens.IncludeToken) as CodeModel.Tokens.IncludeToken;
+				var includeToken = selTokens.LastOrDefault(t => t is IncludeToken) as IncludeToken;
 				if (includeToken != null)
 				{
 					var pathName = includeToken.FullPathName;
@@ -106,7 +108,7 @@ namespace DkTools.Navigation
 			return null;
 		}
 
-		internal static bool BrowseToDefinition(CodeModel.Definitions.Definition def)
+		internal static bool BrowseToDefinition(Definition def)
 		{
 			ThreadHelper.ThrowIfNotOnUIThread();
 
@@ -146,12 +148,12 @@ namespace DkTools.Navigation
 
 				var snapPt = textView.Caret.Position.BufferPosition;
 
-				var fileStore = CodeModel.FileStore.GetOrCreateForTextBuffer(snapPt.Snapshot.TextBuffer);
+				var fileStore = FileStoreHelper.GetOrCreateForTextBuffer(snapPt.Snapshot.TextBuffer);
 				if (fileStore == null) return;
 
 				var appSettings = DkEnvironment.CurrentAppSettings;
 				var fileName = VsTextUtil.TryGetDocumentFileName(textView.TextBuffer);
-				var fullModel = fileStore.CreatePreprocessedModel(appSettings, fileName, snapPt.Snapshot, false, "Find Local References");
+				var fullModel = fileStore.CreatePreprocessedModel(appSettings, fileName, snapPt.Snapshot, visible: false, "Find Local References");
 				var fullModelPos = fullModel.PreprocessorModel.Source.PrimaryFilePositionToSource(fullModel.AdjustPosition(snapPt));
 
 				var fullToken = fullModel.File.FindDownward(fullModelPos, t => t.SourceDefinition != null).FirstOrDefault();

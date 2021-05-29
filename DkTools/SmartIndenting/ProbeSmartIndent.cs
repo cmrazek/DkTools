@@ -1,13 +1,12 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Text.RegularExpressions;
+﻿using DK.AppEnvironment;
+using DK.Code;
+using DK.Modeling.Tokens;
+using DkTools.CodeModeling;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Editor;
-using Microsoft.VisualStudio.Utilities;
-using DkTools.Classifier;
+using System.Linq;
+using System.Text.RegularExpressions;
 
 namespace DkTools.SmartIndenting
 {
@@ -75,20 +74,24 @@ namespace DkTools.SmartIndenting
 				// User is typing a 'case' inside a switch.
 
 				// Try to find the braces that contain the 'case'.
-				var fileStore = CodeModel.FileStore.GetOrCreateForTextBuffer(buffer);
+				var fileStore = FileStoreHelper.GetOrCreateForTextBuffer(buffer);
 				if (fileStore != null)
 				{
 					var fileName = VsTextUtil.TryGetDocumentFileName(buffer);
 					var model = fileStore.GetCurrentModel(appSettings, fileName, buffer.CurrentSnapshot, "Smart indenting - case inside switch");
-					var offset = line.Snapshot.TranslateOffsetToSnapshot(line.Start.Position, model.Snapshot);
-					var bracesToken = model.File.FindDownward(offset, t => t is CodeModel.Tokens.BracesToken).LastOrDefault() as CodeModel.Tokens.BracesToken;
-					if (bracesToken != null)
+					var modelSnapshot = model.Snapshot as ITextSnapshot;
+					if (modelSnapshot != null)
 					{
-						// Get the indent of the line where the opening brace resides.
-						var openOffset = bracesToken.OpenToken.Span.Start;
-						openOffset = model.Snapshot.TranslateOffsetToSnapshot(openOffset, line.Snapshot);
-						var openLine = line.Snapshot.GetLineFromPosition(openOffset);
-						return openLine.GetText().GetIndentCount(tabSize);
+						var offset = line.Snapshot.TranslateOffsetToSnapshot(line.Start.Position, modelSnapshot);
+						var bracesToken = model.File.FindDownward(offset, t => t is BracesToken).LastOrDefault() as BracesToken;
+						if (bracesToken != null)
+						{
+							// Get the indent of the line where the opening brace resides.
+							var openOffset = bracesToken.OpenToken.Span.Start;
+							openOffset = modelSnapshot.TranslateOffsetToSnapshot(openOffset, line.Snapshot);
+							var openLine = line.Snapshot.GetLineFromPosition(openOffset);
+							return openLine.GetText().GetIndentCount(tabSize);
+						}
 					}
 				}
 			}

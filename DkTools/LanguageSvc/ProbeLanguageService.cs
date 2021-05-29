@@ -1,14 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Configuration;
-using System.Diagnostics;
-using System.Drawing;
-using System.Linq;
-using System.Runtime.InteropServices;
-using System.Text;
-using Microsoft.VisualStudio;
+﻿using DK.Diagnostics;
 using Microsoft.VisualStudio.Package;
 using Microsoft.VisualStudio.TextManager.Interop;
+using System;
+using System.Runtime.InteropServices;
 
 namespace DkTools.LanguageSvc
 {

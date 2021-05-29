@@ -1,11 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Collections.ObjectModel;
-using System.ComponentModel.Composition;
-using System.Linq;
-using System.Runtime.InteropServices;
+﻿using DK;
+using DK.AppEnvironment;
+using DK.Diagnostics;
+using DK.Modeling.Tokens;
+using DkTools.CodeModeling;
 using Microsoft.VisualStudio;
-using Microsoft.VisualStudio.Editor;
 using Microsoft.VisualStudio.Language.Intellisense;
 using Microsoft.VisualStudio.OLE.Interop;
 using Microsoft.VisualStudio.Shell;
@@ -13,9 +11,9 @@ using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Editor;
 using Microsoft.VisualStudio.Text.Operations;
 using Microsoft.VisualStudio.TextManager.Interop;
-using Microsoft.VisualStudio.Utilities;
-using DkTools.CodeModel;
-using DkTools.CodeModel.Tokens;
+using System;
+using System.Linq;
+using System.Runtime.InteropServices;
 
 namespace DkTools.SignatureHelp
 {
@@ -102,19 +100,23 @@ namespace DkTools.SignatureHelp
 							}
 							else if (typedChar == ',' && (_session == null || _session.IsDismissed))
 							{
-								var fileStore = CodeModel.FileStore.GetOrCreateForTextBuffer(_textView.TextBuffer);
+								var fileStore = FileStoreHelper.GetOrCreateForTextBuffer(_textView.TextBuffer);
 								if (fileStore != null)
 								{
 									var appSettings = DkEnvironment.CurrentAppSettings;
 									var fileName = VsTextUtil.TryGetDocumentFileName(_textView.TextBuffer);
 									var model = fileStore.GetMostRecentModel(appSettings, fileName, _textView.TextSnapshot, "Signature help command handler - after ','");
-									var modelPos = _textView.Caret.Position.BufferPosition.TranslateTo(model.Snapshot, PointTrackingMode.Negative).Position;
-
-									var argsToken = model.File.FindDownward<CodeModel.Tokens.ArgsToken>(modelPos).Where(t => t.Span.Start < modelPos && (t.Span.End > modelPos || !t.IsTerminated)).LastOrDefault();
-									if (argsToken != null)
+									var modelSnapshot = model.Snapshot as ITextSnapshot;
+									if (modelSnapshot != null)
 									{
-										s_typedChar = typedChar;
-										_session = _broker.TriggerSignatureHelp(_textView);
+										var modelPos = _textView.Caret.Position.BufferPosition.TranslateTo(modelSnapshot, PointTrackingMode.Negative).Position;
+
+										var argsToken = model.File.FindDownward<ArgsToken>(modelPos).Where(t => t.Span.Start < modelPos && (t.Span.End > modelPos || !t.IsTerminated)).LastOrDefault();
+										if (argsToken != null)
+										{
+											s_typedChar = typedChar;
+											_session = _broker.TriggerSignatureHelp(_textView);
+										}
 									}
 								}
 							}

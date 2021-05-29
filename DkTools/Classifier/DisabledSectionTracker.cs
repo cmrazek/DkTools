@@ -1,19 +1,14 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using DkTools.CodeModel;
+﻿using DK.Code;
 
 namespace DkTools.Classifier
 {
 	internal class DisabledSectionTracker
 	{
-		private Span[] _sections;
+		private CodeSpan[] _sections;
 		private bool _disabled;
 		private int _sectionIndex;
 
-		public DisabledSectionTracker(Span[] disabledSections)
+		public DisabledSectionTracker(CodeSpan[] disabledSections)
 		{
 			_sections = disabledSections;
 		}

@@ -1,9 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
+using DK.AppEnvironment;
+using DkTools.CodeModeling;
 using EnvDTE;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Text;
@@ -124,20 +125,24 @@ namespace DkTools.Tagging
 					var buf = Shell.ActiveBuffer;
 					if (buf != null)
 					{
-						var fileStore = CodeModel.FileStore.GetOrCreateForTextBuffer(buf);
+						var fileStore = FileStoreHelper.GetOrCreateForTextBuffer(buf);
 						if (fileStore != null)
 						{
 							var appSettings = DkEnvironment.CurrentAppSettings;
 							var fileName = VsTextUtil.TryGetDocumentFileName(buf);
 							var funcs = fileStore.GetFunctionDropDownList(appSettings, fileName, buf.CurrentSnapshot);
 							var model = fileStore.GetMostRecentModel(appSettings, fileName, buf.CurrentSnapshot, "Insert diag");
-							var modelPos = model.AdjustPosition(Shell.ActiveView.Caret.Position.BufferPosition.Position, model.Snapshot);
-							foreach (var func in funcs)
+							var modelSnapshot = model.Snapshot as ITextSnapshot;
+							if (modelSnapshot != null)
 							{
-								if (func.EntireFunctionSpan.Contains(modelPos))
+								var modelPos = model.AdjustPosition(Shell.ActiveView.Caret.Position.BufferPosition.Position, modelSnapshot);
+								foreach (var func in funcs)
 								{
-									funcName = func.Name;
-									break;
+									if (func.EntireFunctionSpan.Contains(modelPos))
+									{
+										funcName = func.Name;
+										break;
+									}
 								}
 							}
 						}

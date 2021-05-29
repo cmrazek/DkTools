@@ -1,22 +1,21 @@
-﻿using System;
+﻿using DK;
+using DK.AppEnvironment;
+using DK.Code;
+using DK.Definitions;
+using DK.Diagnostics;
+using DkTools.CodeModeling;
+using DkTools.Navigation;
+using Microsoft.VisualStudio.Shell;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
 using System.Text;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
-using DkTools.CodeModel;
-using DkTools.CodeModel.Definitions;
-using DkTools.Navigation;
-using Microsoft.VisualStudio.Shell;
-using Microsoft.VisualStudio.Shell.Interop;
 using IO = System.IO;
 using VsText=Microsoft.VisualStudio.Text;
 using VsTextEditor=Microsoft.VisualStudio.Text.Editor;
@@ -80,7 +79,7 @@ namespace DkTools.ProbeExplorer
 			_relationshipImg = Res.RelationshipImg.ToBitmapImage();
 			if (_functionImg == null) _functionImg = Res.FunctionImg.ToBitmapImage();
 
-			DkEnvironment.AppChanged += new EventHandler(Probe_AppChanged);
+			GlobalEvents.AppChanged += new EventHandler(Probe_AppChanged);
 			_dictTreeDeferrer.Idle += DictTreeDeferrer_Idle;
 		}
 
@@ -109,9 +108,6 @@ namespace DkTools.ProbeExplorer
 				RefreshDictTree();
 
 				UpdateForFileFilter();
-#if DEBUG
-				c_appLabel.MouseRightButtonUp += new MouseButtonEventHandler(AppLabel_MouseRightButtonUp);
-#endif
 			}
 			catch (Exception ex)
 			{
@@ -169,7 +165,7 @@ namespace DkTools.ProbeExplorer
 					RefreshAppCombo(appSettings);
 					RefreshFileTree(appSettings);
 					RefreshDictTree();
-					ProbeToolsPackage.Instance.FireRefreshAllDocuments();
+					GlobalEvents.OnRefreshAllDocumentsRequired();
 				});
 			}
 			catch (Exception ex)
@@ -187,7 +183,32 @@ namespace DkTools.ProbeExplorer
 				var selectedApp = c_appCombo.SelectedItem as string;
 				if (!string.IsNullOrEmpty(selectedApp) && DkEnvironment.CurrentAppSettings.Initialized)
 				{
-					DkEnvironment.Reload(selectedApp, true);
+					try
+					{
+						DkEnvironment.CurrentAppSettings.TryUpdateDefaultCurrentApp();
+					}
+					catch (System.Security.SecurityException ex)
+					{
+						var options = ProbeToolsPackage.Instance.ErrorSuppressionOptions;
+						if (!options.DkAppChangeAdminFailure)
+						{
+							var msg = "The system-wide default DK application can't be changed because access was denied. To resolve this problem, run Visual Studio as an administrator.";
+							var dlg = new ErrorDialog(msg, ex.ToString())
+							{
+								ShowUserSuppress = true,
+								Owner = System.Windows.Application.Current.MainWindow
+							};
+							dlg.ShowDialog();
+
+							if (options.DkAppChangeAdminFailure != dlg.UserSuppress)
+							{
+								options.DkAppChangeAdminFailure = dlg.UserSuppress;
+								options.SaveSettingsToStorage();
+							}
+						}
+					}
+
+					DkEnvironment.Reload(selectedApp);
 				}
 			}
 			catch (Exception ex)
@@ -200,7 +221,7 @@ namespace DkTools.ProbeExplorer
 		{
 			try
 			{
-				DkEnvironment.Reload(null, false);
+				DkEnvironment.Reload(null);
 			}
 			catch (Exception ex)
 			{
@@ -438,7 +459,7 @@ namespace DkTools.ProbeExplorer
 		{
 			try
 			{
-				DkEnvironment.Reload(null, false);
+				DkEnvironment.Reload(null);
 			}
 			catch (Exception ex)
 			{
@@ -580,7 +601,7 @@ namespace DkTools.ProbeExplorer
 		{
 			var hiddenExt = ProbeToolsPackage.Instance.ProbeExplorerOptions.HiddenExtensions;
 			if (string.IsNullOrWhiteSpace(hiddenExt)) hiddenExt = Constants.DefaultHiddenExtensions;
-			var hiddenExtList = new HashSet<string>(from e in Util.ParseWordList(hiddenExt)
+			var hiddenExtList = new HashSet<string>(from e in StringHelper.ParseWordList(hiddenExt)
 													select e.StartsWith(".") ? e.ToLower() : string.Concat(".", e.ToLower()));
 			return hiddenExtList;
 		}
@@ -817,179 +838,6 @@ namespace DkTools.ProbeExplorer
 		}
 		#endregion
 
-		#region Debug
-#if DEBUG
-		void AppLabel_MouseRightButtonUp(object sender, MouseButtonEventArgs e)
-		{
-			try
-			{
-				var menu = new ContextMenu();
-
-				var menuItem = new MenuItem();
-				menuItem.Header = "Show Code Model";
-				menuItem.Click += ShowCodeModelDump_Click;
-				menu.Items.Add(menuItem);
-
-				menuItem = new MenuItem();
-				menuItem.Header = "Show StdLib.i Code Model";
-				menuItem.Click += ShowStdLibCodeModelDump_Click;
-				menu.Items.Add(menuItem);
-
-				menuItem = new MenuItem();
-				menuItem.Header = "Show Definitions";
-				menuItem.Click += ShowDefinitions_Click;
-				menu.Items.Add(menuItem);
-
-				menuItem = new MenuItem();
-				menuItem.Header = "Show Preprocessor";
-				menuItem.Click += ShowPreprocessor_Click;
-				menu.Items.Add(menuItem);
-
-				menuItem = new MenuItem();
-				menuItem.Header = "Show Preprocessor Dump";
-				menuItem.Click += ShowPreprocessorDump_Click;
-				menu.Items.Add(menuItem);
-
-				menuItem = new MenuItem();
-				menuItem.Header = "Show Preprocessor Model";
-				menuItem.Click += ShowPreprocessorModel_Click;
-				menu.Items.Add(menuItem);
-
-				menuItem = new MenuItem();
-				menuItem.Header = "Show QuickState";
-				menuItem.Click += ShowQuickState_Click;
-				menu.Items.Add(menuItem);
-
-				menu.PlacementTarget = c_appLabel;
-				menu.IsOpen = true;
-			}
-			catch (Exception ex)
-			{
-				this.ShowError(ex);
-			}
-		}
-
-		private void ShowCodeModelDump_Click(object sender, RoutedEventArgs e)
-		{
-			ThreadHelper.JoinableTaskFactory.RunAsync(async () =>
-			{
-				await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
-
-				try
-				{
-					Commands.DebugCommands.ShowCodeModelDump();
-				}
-				catch (Exception ex)
-				{
-					this.ShowError(ex);
-				}
-			});
-		}
-
-		private void ShowStdLibCodeModelDump_Click(object sender, RoutedEventArgs e)
-		{
-			ThreadHelper.JoinableTaskFactory.RunAsync(async () =>
-			{
-				await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
-
-				try
-				{
-					Commands.DebugCommands.ShowStdLibCodeModelDump();
-				}
-				catch (Exception ex)
-				{
-					this.ShowError(ex);
-				}
-			});
-		}
-
-		private void ShowDefinitions_Click(object sender, RoutedEventArgs e)
-		{
-			ThreadHelper.JoinableTaskFactory.RunAsync(async () =>
-			{
-				await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
-
-				try
-				{
-					Commands.DebugCommands.ShowDefinitions();
-				}
-				catch (Exception ex)
-				{
-					this.ShowError(ex);
-				}
-			});
-		}
-
-		private void ShowPreprocessor_Click(object sender, RoutedEventArgs e)
-		{
-			ThreadHelper.JoinableTaskFactory.RunAsync(async () =>
-			{
-				await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
-
-				try
-				{
-					Commands.DebugCommands.ShowPreprocessor();
-				}
-				catch (Exception ex)
-				{
-					this.ShowError(ex);
-				}
-			});
-		}
-
-		private void ShowPreprocessorDump_Click(object sender, RoutedEventArgs e)
-		{
-			ThreadHelper.JoinableTaskFactory.RunAsync(async () =>
-			{
-				await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
-
-				try
-				{
-					Commands.DebugCommands.ShowPreprocessorDump();
-				}
-				catch (Exception ex)
-				{
-					this.ShowError(ex);
-				}
-			});
-		}
-
-		private void ShowPreprocessorModel_Click(object sender, RoutedEventArgs e)
-		{
-			ThreadHelper.JoinableTaskFactory.RunAsync(async () =>
-			{
-				await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
-
-				try
-				{
-					Commands.DebugCommands.ShowPreprocessorFullModelDump();
-				}
-				catch (Exception ex)
-				{
-					this.ShowError(ex);
-				}
-			});
-		}
-
-		private void ShowQuickState_Click(object sender, RoutedEventArgs e)
-		{
-			ThreadHelper.JoinableTaskFactory.RunAsync(async () =>
-			{
-				await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
-
-				try
-				{
-					Commands.DebugCommands.ShowQuickState();
-				}
-				catch (Exception ex)
-				{
-					this.ShowError(ex);
-				}
-			});
-		}
-#endif
-		#endregion
-
 		private void CreateNewFile(string fileName)
 		{
 			if (System.IO.File.Exists(fileName))
@@ -1021,11 +869,11 @@ namespace DkTools.ProbeExplorer
 
 			string className = null;
 			var fileName = VsTextUtil.TryGetDocumentFileName(view.TextBuffer);
-			if (!string.IsNullOrEmpty(fileName)) className = FileContextUtil.GetClassNameFromFileName(fileName);
+			if (!string.IsNullOrEmpty(fileName)) className = FileContextHelper.GetClassNameFromFileName(fileName);
 
 			if (view != null)
 			{
-				var fileStore = CodeModel.FileStore.GetOrCreateForTextBuffer(view.TextBuffer);
+				var fileStore = FileStoreHelper.GetOrCreateForTextBuffer(view.TextBuffer);
 				if (fileStore != null)
 				{
 					var snapshot = view.TextSnapshot;
@@ -1074,12 +922,12 @@ namespace DkTools.ProbeExplorer
 		internal class FunctionListItem : INotifyPropertyChanged
 		{
 			private FunctionDefinition _def;
-			private CodeModel.Span _span;
+			private CodeSpan _span;
 			private bool _visible = true;
 
 			public event PropertyChangedEventHandler PropertyChanged;
 
-			internal FunctionListItem(CodeModel.FileStore.FunctionDropDownItem func)
+			internal FunctionListItem(FunctionDropDownItem func)
 			{
 				_span = func.Span;
 				_def = func.Definition;
@@ -1087,7 +935,7 @@ namespace DkTools.ProbeExplorer
 
 			public FunctionDefinition Definition => _def;
 			public string Name => _def.Name;
-			public CodeModel.Span Span => _span;
+			public CodeSpan Span => _span;
 
 			public bool Visible
 			{

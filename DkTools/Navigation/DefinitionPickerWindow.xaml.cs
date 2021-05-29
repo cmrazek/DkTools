@@ -1,16 +1,7 @@
-﻿using System;
+﻿using DK.Definitions;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
 using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Shapes;
-using DkTools.CodeModel.Definitions;
 
 namespace DkTools.Navigation
 {
@@ -19,8 +10,8 @@ namespace DkTools.Navigation
 	/// </summary>
 	public partial class DefinitionPickerWindow : Window
 	{
-		private List<CodeModel.Definitions.Definition> _defs = new List<CodeModel.Definitions.Definition>();
-		internal CodeModel.Definitions.Definition SelectedItem { get; private set; }
+		private List<Definition> _defs = new List<Definition>();
+		internal Definition SelectedItem { get; private set; }
 
 		public DefinitionPickerWindow()
 		{
@@ -35,7 +26,7 @@ namespace DkTools.Navigation
 			c_defList.Focus();
 		}
 
-		internal IEnumerable<CodeModel.Definitions.Definition> Definitions
+		internal IEnumerable<Definition> Definitions
 		{
 			get { return _defs; }
 			set
@@ -47,7 +38,7 @@ namespace DkTools.Navigation
 
 		private bool CheckItemActivated()
 		{
-			var selItem = c_defList.SelectedItem as CodeModel.Definitions.Definition;
+			var selItem = c_defList.SelectedItem as Definition;
 			SelectedItem = selItem;
 			return selItem != null;
 		}

@@ -1,13 +1,6 @@
-﻿using DkTools.CodeModel;
-using EnvDTE;
-using Microsoft.VisualStudio.Shell.FindResults;
-using System;
-using System.CodeDom;
+﻿using DK;
+using DK.Code;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Windows.Forms;
 
 namespace DkTools.SignatureHelp
 {
@@ -17,9 +10,9 @@ namespace DkTools.SignatureHelp
 		{
 			public string ClassName { get; private set; }
 			public string FunctionName { get; private set; }
-			public Span FunctionNameSpan { get; private set; }
+			public CodeSpan FunctionNameSpan { get; private set; }
 			public int ArgumentIndex { get; private set; }
-			public Span ArgumentsSpan { get; private set; }
+			public CodeSpan ArgumentsSpan { get; private set; }
 
 			public FindResult(BracketScope foundScope, int argumentsEnd)
 			{
@@ -27,7 +20,7 @@ namespace DkTools.SignatureHelp
 				FunctionName = foundScope.Name;
 				FunctionNameSpan = foundScope.NameSpan;
 				ArgumentIndex = foundScope.ArgumentIndex;
-				ArgumentsSpan = new Span(foundScope.ArgumentsStart, argumentsEnd);
+				ArgumentsSpan = new CodeSpan(foundScope.ArgumentsStart, argumentsEnd);
 			}
 		}
 
@@ -35,13 +28,13 @@ namespace DkTools.SignatureHelp
 		{
 			private string _className;
 			private string _name;
-			private Span _nameSpan;
+			private CodeSpan _nameSpan;
 			private int _argIndex;
 			private int _argStart;
 
 			public static readonly BracketScope Empty = new BracketScope();
 
-			public BracketScope(string className, string name, Span nameSpan, int argStart)
+			public BracketScope(string className, string name, CodeSpan nameSpan, int argStart)
 			{
 				_className = className;
 				_name = name;
@@ -50,7 +43,7 @@ namespace DkTools.SignatureHelp
 				_argStart = argStart;
 			}
 
-			private BracketScope(string className, string name, Span nameSpan, int argStart, int argIndex)
+			private BracketScope(string className, string name, CodeSpan nameSpan, int argStart, int argIndex)
 			{
 				_className = className;
 				_name = name;
@@ -66,7 +59,7 @@ namespace DkTools.SignatureHelp
 
 			public string ClassName => _className;
 			public string Name => _name;
-			public Span NameSpan => _nameSpan;
+			public CodeSpan NameSpan => _nameSpan;
 			public int ArgumentIndex => _argIndex;
 			public int ArgumentsStart => _argStart;
 			public bool IsFunctionCall => _name.IsWord();
@@ -111,7 +104,7 @@ namespace DkTools.SignatureHelp
 				switch (code.Type)
 				{
 					case CodeType.Word:
-						if (!Constants.GlobalKeywords.Contains(code.Text))
+						if (!DK.Constants.GlobalKeywords.Contains(code.Text))
 						{
 							lastFuncName = code.Text;
 						}
@@ -129,11 +122,11 @@ namespace DkTools.SignatureHelp
 								}
 								else
 								{
-									scopes.Push(new BracketScope(null, "(", Span.Empty, 0));
+									scopes.Push(new BracketScope(null, "(", CodeSpan.Empty, 0));
 								}
 								break;
 							case "[":
-								scopes.Push(new BracketScope(null, "[", Span.Empty, 0));
+								scopes.Push(new BracketScope(null, "[", CodeSpan.Empty, 0));
 								break;
 
 							// Tokens that close off a bracket scope

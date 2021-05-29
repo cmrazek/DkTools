@@ -1,9 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using Microsoft.VisualStudio.Shell;
+﻿using DK.AppEnvironment;
+using DK.Modeling;
+using DkTools.CodeModeling;
 using Microsoft.VisualStudio.Text;
+using System;
+using System.Collections.Generic;
 
 namespace DkTools.Classifier
 {
@@ -82,7 +82,7 @@ namespace DkTools.Classifier
 				var state = GetStateForLineStart(line.LineNumber, snapshot, fileName, appSettings);
 				var lineStartPos = line.Start.Position;
 
-				var fileStore = CodeModel.FileStore.GetOrCreateForTextBuffer(snapshot.TextBuffer);
+				var fileStore = FileStoreHelper.GetOrCreateForTextBuffer(snapshot.TextBuffer);
 				if (fileStore == null) return 0;
 
 				var model = fileStore.GetMostRecentModel(appSettings, fileName, snapshot, "GetStateForPosition");
@@ -117,7 +117,7 @@ namespace DkTools.Classifier
 					var stateLineNum = _states.Count - 1;
 					var state = _states[stateLineNum];
 
-					var fileStore = CodeModel.FileStore.GetOrCreateForTextBuffer(snapshot.TextBuffer);
+					var fileStore = FileStoreHelper.GetOrCreateForTextBuffer(snapshot.TextBuffer);
 					if (fileStore == null) return 0;
 
 					var model = fileStore.GetMostRecentModel(appSettings, fileName, snapshot, "GetStateForLine()");

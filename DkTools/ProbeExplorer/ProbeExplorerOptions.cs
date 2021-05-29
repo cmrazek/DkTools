@@ -1,10 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Linq;
-using System.Runtime.InteropServices;
-using System.Text;
+﻿using DK.Diagnostics;
 using Microsoft.VisualStudio.Shell;
+using System;
+using System.ComponentModel;
+using System.Runtime.InteropServices;
 
 namespace DkTools.ProbeExplorer
 {

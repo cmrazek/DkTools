@@ -1,9 +1,6 @@
-﻿using System;
+﻿using DK.AppEnvironment;
+using DK.Code;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Microsoft.VisualStudio.Language.Intellisense;
 
 namespace DkTools.StatementCompletion
 {

@@ -1,10 +1,7 @@
-﻿using DkTools.CodeModel;
-using System;
+﻿using DK;
+using DK.Code;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace DkTools
 {
@@ -43,7 +40,7 @@ namespace DkTools
 				return false;
 			}
 
-			Util.CalcLineAndPosFromOffset(content, filePos.Position, out lineNumOut, out linePosOut);
+			StringHelper.CalcLineAndPosFromOffset(content, filePos.Position, out lineNumOut, out linePosOut);
 			return true;
 		}
 

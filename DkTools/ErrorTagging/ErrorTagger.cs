@@ -1,14 +1,16 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using DK;
+using DK.AppEnvironment;
+using DK.Code;
+using DK.CodeAnalysis;
+using DK.Diagnostics;
+using DK.Modeling;
+using DkTools.CodeModeling;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Editor;
 using Microsoft.VisualStudio.Text.Tagging;
-using DkTools.CodeModel;
-using System.CodeDom;
+using System;
+using System.Collections.Generic;
 
 namespace DkTools.ErrorTagging
 {
@@ -16,7 +18,7 @@ namespace DkTools.ErrorTagging
 	{
 		private ITextView _view;
 		private FileStore _store;
-		private CodeModel.CodeModel _model;
+		private CodeModel _model;
 		private BackgroundDeferrer _backgroundFecDeferrer;
 
 		public const string CodeErrorLight = "DkCodeError.Light";
@@ -34,10 +36,10 @@ namespace DkTools.ErrorTagging
 		public ErrorTagger(ITextView view)
 		{
 			_view = view;
-			_store = FileStore.GetOrCreateForTextBuffer(_view.TextBuffer);
+			_store = FileStoreHelper.GetOrCreateForTextBuffer(_view.TextBuffer);
 
-			ProbeToolsPackage.RefreshAllDocumentsRequired += OnRefreshAllDocumentsRequired;
-			ProbeToolsPackage.RefreshDocumentRequired += OnRefreshDocumentRequired;
+			GlobalEvents.RefreshAllDocumentsRequired += OnRefreshAllDocumentsRequired;
+			GlobalEvents.RefreshDocumentRequired += OnRefreshDocumentRequired;
 			ErrorTaskProvider.ErrorTagsChangedForFile += Instance_ErrorTagsChangedForFile;
 
 			_backgroundFecDeferrer = new BackgroundDeferrer(Constants.BackgroundFecDelay);
@@ -52,8 +54,8 @@ namespace DkTools.ErrorTagging
 
 		~ErrorTagger()
 		{
-			ProbeToolsPackage.RefreshAllDocumentsRequired -= OnRefreshAllDocumentsRequired;
-			ProbeToolsPackage.RefreshDocumentRequired -= OnRefreshDocumentRequired;
+			GlobalEvents.RefreshAllDocumentsRequired -= OnRefreshAllDocumentsRequired;
+			GlobalEvents.RefreshDocumentRequired -= OnRefreshDocumentRequired;
 		}
 
 		public event EventHandler<SnapshotSpanEventArgs> TagsChanged;
@@ -85,7 +87,7 @@ namespace DkTools.ErrorTagging
 			}
 		}
 
-		private void OnRefreshDocumentRequired(object sender, ProbeToolsPackage.RefreshDocumentEventArgs e)
+		private void OnRefreshDocumentRequired(object sender, RefreshDocumentEventArgs e)
 		{
 			try
 			{
@@ -152,15 +154,23 @@ namespace DkTools.ErrorTagging
 									if ((e.Priority == DeferPriority_DocumentRefresh && ProbeToolsPackage.Instance.EditorOptions.RunCodeAnalysisOnSave) ||
 										(e.Priority == DeferPriority_UserInput && ProbeToolsPackage.Instance.EditorOptions.RunCodeAnalysisOnUserInput))
 									{
-										var textBuffer = _model.Snapshot.TextBuffer;
-										var fileStore = FileStore.GetOrCreateForTextBuffer(textBuffer);
-										if (fileStore != null)
+										var modelSnapshot = _model.Snapshot as ITextSnapshot;
+										if (modelSnapshot != null)
 										{
-											var preprocessedModel = fileStore.CreatePreprocessedModel(_model.AppSettings, fileName,
-												textBuffer.CurrentSnapshot, false, "Background Code Analysis");
+											var textBuffer = modelSnapshot.TextBuffer;
+											var fileStore = FileStoreHelper.GetOrCreateForTextBuffer(textBuffer);
+											if (fileStore != null)
+											{
+												var preprocessedModel = fileStore.CreatePreprocessedModel(
+													appSettings: _model.AppSettings,
+													fileName: fileName,
+													snapshot: textBuffer.CurrentSnapshot,
+													visible: false,
+													reason: "Background Code Analysis");
 
-											var ca = new CodeAnalysis.CodeAnalyzer(null, preprocessedModel);
-											ca.Run();
+												var ca = new CodeAnalyzer(preprocessedModel);
+												ca.Run();
+											}
 										}
 									}
 								}

@@ -1,12 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using DK.Code;
+using DK.CodeAnalysis;
 using Microsoft.VisualStudio.Shell;
-using VsShell = Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Adornments;
+using System;
+using System.Collections.Generic;
+using VsShell = Microsoft.VisualStudio.Shell;
 
 namespace DkTools.ErrorTagging
 {
@@ -15,9 +14,9 @@ namespace DkTools.ErrorTagging
 		private ErrorTaskSource _source;
 		private string _invokingFilePath;
 		private ErrorType _type;
-		private CodeModel.Span? _reportedSpan;
+		private CodeSpan? _reportedSpan;
 		private Dictionary<ITextBuffer, SnapshotSpan> _snapshotSpans;
-		private CodeAnalysis.CAError? _errorCode;
+		private CAError? _errorCode;
 
 		/// <summary>
 		/// Creates a new error/warning task.
@@ -41,8 +40,8 @@ namespace DkTools.ErrorTagging
 			string message,
 			ErrorType type,
 			ErrorTaskSource source,
-			CodeModel.Span? reportedSpan,
-			CodeAnalysis.CAError? errorCode = null)
+			CodeSpan? reportedSpan,
+			CAError? errorCode = null)
 		{
 			_invokingFilePath = invokingFilePath;
 			Document = filePath;
@@ -79,8 +78,8 @@ namespace DkTools.ErrorTagging
 		public ErrorTaskSource Source => _source;
 		public override string ToString() => string.Concat(Document, "(", Line, ", ", Column, ") ", Type, ": ", Text);
 		public ErrorType Type => _type;
-		public CodeModel.Span? ReportedSpan => _reportedSpan;
-		public CodeAnalysis.CAError? ErrorCode => _errorCode;
+		public CodeSpan? ReportedSpan => _reportedSpan;
+		public CAError? ErrorCode => _errorCode;
 
 		private void ErrorTask_Navigate(object sender, EventArgs e)
 		{
@@ -118,7 +117,7 @@ namespace DkTools.ErrorTagging
 
 			if (_reportedSpan.HasValue)
 			{
-				var clampedSpan = _reportedSpan.Value.Intersection(new CodeModel.Span(0, currentSnapshot.Length));
+				var clampedSpan = _reportedSpan.Value.Intersection(new CodeSpan(0, currentSnapshot.Length));
 				if (clampedSpan.IsEmpty) return null;
 				taskSnapshotSpan = clampedSpan.ToVsTextSnapshotSpan(currentSnapshot);
 			}

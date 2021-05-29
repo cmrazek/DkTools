@@ -1,12 +1,16 @@
-﻿using System;
+﻿using DK.AppEnvironment;
+using DK.Code;
+using DK.Definitions;
+using DK.Diagnostics;
+using DK.Modeling;
+using DK.Preprocessing;
+using DK.Scanning;
+using DkTools.CodeModeling;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Text;
-using System.Text.RegularExpressions;
 using System.Threading;
-using System.Windows.Forms;
-using DkTools.CodeModel;
 
 namespace DkTools.FunctionFileScanning
 {
@@ -44,8 +48,8 @@ namespace DkTools.FunctionFileScanning
 
 		public static void OnStartup()
 		{
-			DkEnvironment.AppChanged += new EventHandler(ProbeEnvironment_AppChanged);
-			DkAppSettings.FileChanged += ProbeAppSettings_FileChanged;
+			GlobalEvents.AppChanged += new EventHandler(ProbeEnvironment_AppChanged);
+			GlobalEvents.FileChanged += ProbeAppSettings_FileChanged;
 			_scanDelay.Idle += ScanTimerElapsed;
 
 			StartScanning();
@@ -305,9 +309,9 @@ namespace DkTools.FunctionFileScanning
 			{
 				foreach (var fileName in Directory.GetFiles(dir))
 				{
-					if (!FileContextUtil.IsLocalizedFile(fileName))
+					if (!FileContextHelper.IsLocalizedFile(fileName))
 					{
-						var fileContext = FileContextUtil.GetFileContextFromFileName(fileName);
+						var fileContext = FileContextHelper.GetFileContextFromFileName(fileName);
 						switch (fileContext)
 						{
 							case FileContext.Include:
@@ -372,9 +376,9 @@ namespace DkTools.FunctionFileScanning
 			try
 			{
 				if (!File.Exists(scan.Path)) return;
-				if (FileContextUtil.IsLocalizedFile(scan.Path)) return;
+				if (FileContextHelper.IsLocalizedFile(scan.Path)) return;
 
-				var fileContext = CodeModel.FileContextUtil.GetFileContextFromFileName(scan.Path);
+				var fileContext = FileContextHelper.GetFileContextFromFileName(scan.Path);
 				if (fileContext == FileContext.Include) return;
 
 				DateTime modified;
@@ -389,17 +393,24 @@ namespace DkTools.FunctionFileScanning
 
 				var fileTitle = Path.GetFileNameWithoutExtension(scan.Path);
 
-				var defProvider = new CodeModel.DefinitionProvider(app, scan.Path);
+				var defProvider = new DefinitionProvider(app, scan.Path);
 
 				var fileContent = File.ReadAllText(scan.Path);
-				var fileStore = new CodeModel.FileStore();
+				var fileStore = new FileStore();
 
 				var merger = new FileMerger();
 				merger.MergeFile(app, scan.Path, null, false, true);
 				var includeDependencies = (from f in merger.FileNames
-										   select new Preprocessor.IncludeDependency(f, false, true, merger.GetFileContent(f))).ToArray();
+										   select new IncludeDependency(f, false, true, merger.GetFileContent(f))).ToArray();
 
-				var model = fileStore.CreatePreprocessedModel(app, merger.MergedContent, scan.Path, false, string.Concat("Function file processing: ", scan.Path), includeDependencies);
+				var model = fileStore.CreatePreprocessedModel(
+					appSettings: app,
+					source: merger.MergedContent,
+					fileName: scan.Path,
+					visible: false,
+					reason: string.Concat("Function file processing: ", scan.Path),
+					includeDependencies: includeDependencies);
+
 				var className = fileContext.IsClass() ? Path.GetFileNameWithoutExtension(scan.Path) : null;
 
 				app.Repo.UpdateFile(model, scan.Mode);
@@ -410,7 +421,7 @@ namespace DkTools.FunctionFileScanning
 			}
 		}
 
-		private static void ProbeAppSettings_FileChanged(object sender, DkAppSettings.FileEventArgs e)
+		private static void ProbeAppSettings_FileChanged(object sender, FileEventArgs e)
 		{
 			try
 			{
@@ -420,10 +431,10 @@ namespace DkTools.FunctionFileScanning
 				var options = ProbeToolsPackage.Instance.EditorOptions;
 				if (!options.DisableBackgroundScan)
 				{
-					var fileContext = FileContextUtil.GetFileContextFromFileName(e.FilePath);
+					var fileContext = FileContextHelper.GetFileContextFromFileName(e.FilePath);
 					if (DkEnvironment.CurrentAppSettings.FileExistsInApp(e.FilePath))
 					{
-						if (fileContext != FileContext.Include && !FileContextUtil.IsLocalizedFile(e.FilePath))
+						if (fileContext != FileContext.Include && !FileContextHelper.IsLocalizedFile(e.FilePath))
 						{
 							Log.Debug("Scanner detected a saved file: {0}", e.FilePath);
 
@@ -451,7 +462,7 @@ namespace DkTools.FunctionFileScanning
 			var options = ProbeToolsPackage.Instance.EditorOptions;
 			if (options.DisableBackgroundScan) return;
 
-			var fileContext = FileContextUtil.GetFileContextFromFileName(fullPath);
+			var fileContext = FileContextHelper.GetFileContextFromFileName(fullPath);
 			if (fileContext != FileContext.Include && fileContext != FileContext.Dictionary)
 			{
 				app.Repo.ResetScanDateOnFile(fullPath);
@@ -465,14 +476,5 @@ namespace DkTools.FunctionFileScanning
 
 			app.Repo.ResetScanDateOnDependentFiles(includeFileName);
 		}
-	}
-
-	public enum FFScanMode
-	{
-		FolderSearch,
-		Exports,
-		ExportsComplete,
-		Deep,
-		Completion
 	}
 }

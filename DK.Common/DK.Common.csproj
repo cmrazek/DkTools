@@ -1,0 +1,269 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{C8AD0B7E-6B3C-4B85-8EE7-9735256C5193}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>DK</RootNamespace>
+    <AssemblyName>DK.Common</AssemblyName>
+    <TargetFrameworkVersion>v4.7.2</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+    <Deterministic>true</Deterministic>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup>
+    <SignAssembly>true</SignAssembly>
+  </PropertyGroup>
+  <PropertyGroup>
+    <AssemblyOriginatorKeyFile>StrongNameKey.pfx</AssemblyOriginatorKeyFile>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="System" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Xml.Linq" />
+    <Reference Include="System.Data.DataSetExtensions" />
+    <Reference Include="Microsoft.CSharp" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Net.Http" />
+    <Reference Include="System.Xml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="AppEnvironment\DkAppSettings.cs" />
+    <Compile Include="AppEnvironment\DkEnvironment.cs" />
+    <Compile Include="AppEnvironment\DkEnvVarMerger.cs" />
+    <Compile Include="AppEnvironment\EnvVarList.cs" />
+    <Compile Include="AppEnvironment\FileHelper.cs" />
+    <Compile Include="AppEnvironment\GlobalEvents.cs" />
+    <Compile Include="AppEnvironment\RegistryKeyHelper.cs" />
+    <Compile Include="CodeAnalysis\CAErrorMarker.cs" />
+    <Compile Include="CodeAnalysis\CAErrors.cs" />
+    <Compile Include="CodeAnalysis\CAErrorTask.cs" />
+    <Compile Include="CodeAnalysis\CAErrorType.cs" />
+    <Compile Include="CodeAnalysis\CAOptions.cs" />
+    <Compile Include="CodeAnalysis\CAScope.cs" />
+    <Compile Include="CodeAnalysis\CodeAnalysisResults.cs" />
+    <Compile Include="CodeAnalysis\CodeAnalyzer.cs" />
+    <Compile Include="CodeAnalysis\Nodes\AggregateFunctionCallNode.cs" />
+    <Compile Include="CodeAnalysis\Nodes\BracketsNode.cs" />
+    <Compile Include="CodeAnalysis\Nodes\CastNode.cs" />
+    <Compile Include="CodeAnalysis\Nodes\CharLiteralNode.cs" />
+    <Compile Include="CodeAnalysis\Nodes\ConditionalNode.cs" />
+    <Compile Include="CodeAnalysis\Nodes\EmptyNode.cs" />
+    <Compile Include="CodeAnalysis\Nodes\ExpressionNode.cs" />
+    <Compile Include="CodeAnalysis\Nodes\FunctionCallNode.cs" />
+    <Compile Include="CodeAnalysis\Nodes\GroupNode.cs" />
+    <Compile Include="CodeAnalysis\Nodes\IdentifierNode.cs" />
+    <Compile Include="CodeAnalysis\Nodes\Node.cs" />
+    <Compile Include="CodeAnalysis\Nodes\NumberNode.cs" />
+    <Compile Include="CodeAnalysis\Nodes\OperatorNode.cs" />
+    <Compile Include="CodeAnalysis\Nodes\ResultNode.cs" />
+    <Compile Include="CodeAnalysis\Nodes\StringLiteralNode.cs" />
+    <Compile Include="CodeAnalysis\Nodes\TextNode.cs" />
+    <Compile Include="CodeAnalysis\Nodes\UnknownNode.cs" />
+    <Compile Include="CodeAnalysis\Statements\BreakStatement.cs" />
+    <Compile Include="CodeAnalysis\Statements\CenterStatement.cs" />
+    <Compile Include="CodeAnalysis\Statements\ColStatement.cs" />
+    <Compile Include="CodeAnalysis\Statements\ContinueStatement.cs" />
+    <Compile Include="CodeAnalysis\Statements\ExtractStatement.cs" />
+    <Compile Include="CodeAnalysis\Statements\FooterStatement.cs" />
+    <Compile Include="CodeAnalysis\Statements\FormatStatement.cs" />
+    <Compile Include="CodeAnalysis\Statements\ForStatement.cs" />
+    <Compile Include="CodeAnalysis\Statements\HeaderStatement.cs" />
+    <Compile Include="CodeAnalysis\Statements\IfStatement.cs" />
+    <Compile Include="CodeAnalysis\Statements\PageStatement.cs" />
+    <Compile Include="CodeAnalysis\Statements\ReturnStatement.cs" />
+    <Compile Include="CodeAnalysis\Statements\RowStatement.cs" />
+    <Compile Include="CodeAnalysis\Statements\SelectStatement.cs" />
+    <Compile Include="CodeAnalysis\Statements\SimpleStatement.cs" />
+    <Compile Include="CodeAnalysis\Statements\Statement.cs" />
+    <Compile Include="CodeAnalysis\Statements\SwitchStatement.cs" />
+    <Compile Include="CodeAnalysis\Statements\WhileStatement.cs" />
+    <Compile Include="CodeAnalysis\Values\CharValue.cs" />
+    <Compile Include="CodeAnalysis\Values\DateValue.cs" />
+    <Compile Include="CodeAnalysis\Values\EnumValue.cs" />
+    <Compile Include="CodeAnalysis\Values\IndRelValue.cs" />
+    <Compile Include="CodeAnalysis\Values\NumberValue.cs" />
+    <Compile Include="CodeAnalysis\Values\StringValue.cs" />
+    <Compile Include="CodeAnalysis\Values\TableValue.cs" />
+    <Compile Include="CodeAnalysis\Values\TimeValue.cs" />
+    <Compile Include="CodeAnalysis\Values\Value.cs" />
+    <Compile Include="CodeAnalysis\Values\VoidValue.cs" />
+    <Compile Include="CodeAnalysis\Variable.cs" />
+    <Compile Include="Code\CodeParser.cs" />
+    <Compile Include="Code\CodeType.cs" />
+    <Compile Include="Code\FilePosition.cs" />
+    <Compile Include="Code\ProbeCompletionType.cs" />
+    <Compile Include="Constants.cs" />
+    <Compile Include="Definitions\ClassDefinition.cs" />
+    <Compile Include="Definitions\ColumnDefinition.cs" />
+    <Compile Include="Definitions\ConstantDefinition.cs" />
+    <Compile Include="Definitions\DataTypeDefinition.cs" />
+    <Compile Include="Definitions\Definition.cs" />
+    <Compile Include="Definitions\DefinitionCollection.cs" />
+    <Compile Include="Definitions\EnumOptionDefinition.cs" />
+    <Compile Include="Definitions\ExtractFieldDefinition.cs" />
+    <Compile Include="Definitions\ExtractTableDefinition.cs" />
+    <Compile Include="Definitions\FilePositionDefinition.cs" />
+    <Compile Include="Definitions\FunctionDefinition.cs" />
+    <Compile Include="Definitions\InterfaceMethodDefinition.cs" />
+    <Compile Include="Definitions\InterfacePropertyDefinintion.cs" />
+    <Compile Include="Definitions\InterfaceTypeDefinition.cs" />
+    <Compile Include="Definitions\MacroDefinition.cs" />
+    <Compile Include="Definitions\RelIndDefinition.cs" />
+    <Compile Include="Definitions\StringDefDefinition.cs" />
+    <Compile Include="Definitions\TableDefinition.cs" />
+    <Compile Include="Definitions\VariableDefinition.cs" />
+    <Compile Include="Diagnostics\DumpWriter.cs" />
+    <Compile Include="Diagnostics\Log.cs" />
+    <Compile Include="Diagnostics\Output.cs" />
+    <Compile Include="Modeling\SignatureDocumentor.cs" />
+    <Compile Include="Preprocessing\IncludeDependency.cs" />
+    <Compile Include="Schema\Column.cs" />
+    <Compile Include="Schema\Dict.cs" />
+    <Compile Include="Schema\Interface.cs" />
+    <Compile Include="Schema\RelInd.cs" />
+    <Compile Include="Schema\Stringdef.cs" />
+    <Compile Include="Schema\Table.cs" />
+    <Compile Include="Schema\Tag.cs" />
+    <Compile Include="Schema\Typedef.cs" />
+    <Compile Include="Repository\AppRepo.cs" />
+    <Compile Include="Repository\RespositoryExceptions.cs" />
+    <Compile Include="Repository\RepoClass.cs" />
+    <Compile Include="Repository\StringRepo.cs" />
+    <Compile Include="Modeling\ArgumentDescriptor.cs" />
+    <Compile Include="Modeling\CodeModel.cs" />
+    <Compile Include="Definitions\DefinitionProvider.cs" />
+    <Compile Include="Code\FileContext.cs" />
+    <Compile Include="Modeling\FunctionPrivacy.cs" />
+    <Compile Include="Modeling\FunctionSignature.cs" />
+    <Compile Include="Modeling\OutliningRegion.cs" />
+    <Compile Include="Modeling\PassByMethod.cs" />
+    <Compile Include="Code\CodeSource.cs" />
+    <Compile Include="Modeling\DataType.cs" />
+    <Compile Include="Modeling\FileStore.cs" />
+    <Compile Include="Modeling\Scope.cs" />
+    <Compile Include="Modeling\Tokens\ArgsToken.cs" />
+    <Compile Include="Modeling\Tokens\ArrayBracesToken.cs" />
+    <Compile Include="Modeling\Tokens\ArrayBraceToken.cs" />
+    <Compile Include="Modeling\Tokens\BracesToken.cs" />
+    <Compile Include="Modeling\Tokens\BraceToken.cs" />
+    <Compile Include="Modeling\Tokens\BracketsToken.cs" />
+    <Compile Include="Modeling\Tokens\ClassAndFunctionToken.cs" />
+    <Compile Include="Modeling\Tokens\ClassToken.cs" />
+    <Compile Include="Modeling\Tokens\CodeFile.cs" />
+    <Compile Include="Modeling\Tokens\CompositeToken.cs" />
+    <Compile Include="Modeling\Tokens\ConstantToken.cs" />
+    <Compile Include="Modeling\Tokens\DataTypeKeywordToken.cs" />
+    <Compile Include="Modeling\Tokens\DataTypeToken.cs" />
+    <Compile Include="Modeling\Tokens\DelimiterToken.cs" />
+    <Compile Include="Modeling\Tokens\DotToken.cs" />
+    <Compile Include="Modeling\Tokens\EnumOptionToken.cs" />
+    <Compile Include="Modeling\Tokens\ExpressionToken.cs" />
+    <Compile Include="Modeling\Tokens\ExternalToken.cs" />
+    <Compile Include="Modeling\Tokens\ExtractFieldToken.cs" />
+    <Compile Include="Modeling\Tokens\ExtractTableAndFieldToken.cs" />
+    <Compile Include="Modeling\Tokens\ExtractTableToken.cs" />
+    <Compile Include="Modeling\Tokens\FunctionCallToken.cs" />
+    <Compile Include="Modeling\Tokens\FunctionPlaceholderToken.cs" />
+    <Compile Include="Modeling\Tokens\GroupToken.cs" />
+    <Compile Include="Modeling\Tokens\IBraceMatchingToken.cs" />
+    <Compile Include="Modeling\Tokens\IBreakOwner.cs" />
+    <Compile Include="Modeling\Tokens\IContinueOwner.cs" />
+    <Compile Include="Modeling\Tokens\IDataTypeToken.cs" />
+    <Compile Include="Modeling\Tokens\IdentifierToken.cs" />
+    <Compile Include="Modeling\Tokens\IncludeToken.cs" />
+    <Compile Include="Modeling\Tokens\InsertToken.cs" />
+    <Compile Include="Modeling\Tokens\InterfaceMethodCallToken.cs" />
+    <Compile Include="Modeling\Tokens\InterfacePropertyToken.cs" />
+    <Compile Include="Modeling\Tokens\InterfaceTypeToken.cs" />
+    <Compile Include="Modeling\Tokens\KeywordToken.cs" />
+    <Compile Include="Modeling\Tokens\MacroCallToken.cs" />
+    <Compile Include="Modeling\Tokens\NumberToken.cs" />
+    <Compile Include="Modeling\Tokens\Operators\AssignmentOperator.cs" />
+    <Compile Include="Modeling\Tokens\Operators\ComparisonOperator.cs" />
+    <Compile Include="Modeling\Tokens\Operators\CompletionOperator.cs" />
+    <Compile Include="Modeling\Tokens\Operators\ConditionalOperator.cs" />
+    <Compile Include="Modeling\Tokens\Operators\OperatorToken.cs" />
+    <Compile Include="Modeling\Tokens\PreprocessorToken.cs" />
+    <Compile Include="Modeling\Tokens\ReferenceToken.cs" />
+    <Compile Include="Modeling\Tokens\RelIndAndFieldToken.cs" />
+    <Compile Include="Modeling\Tokens\RelIndFieldToken.cs" />
+    <Compile Include="Modeling\Tokens\RelIndToken.cs" />
+    <Compile Include="Modeling\Tokens\ReplaceToken.cs" />
+    <Compile Include="Modeling\Tokens\StatementEndToken.cs" />
+    <Compile Include="Modeling\Tokens\Statements\BreakStatement.cs" />
+    <Compile Include="Modeling\Tokens\Statements\CastStatement.cs" />
+    <Compile Include="Modeling\Tokens\Statements\ContinueStatement.cs" />
+    <Compile Include="Modeling\Tokens\Statements\CreateStatement.cs" />
+    <Compile Include="Modeling\Tokens\Statements\ExternStatement.cs" />
+    <Compile Include="Modeling\Tokens\Statements\ExtractStatement.cs" />
+    <Compile Include="Modeling\Tokens\Statements\FooterStatement.cs" />
+    <Compile Include="Modeling\Tokens\Statements\FormatStatement.cs" />
+    <Compile Include="Modeling\Tokens\Statements\ForStatement.cs" />
+    <Compile Include="Modeling\Tokens\Statements\HeaderStatement.cs" />
+    <Compile Include="Modeling\Tokens\Statements\IfStatement.cs" />
+    <Compile Include="Modeling\Tokens\Statements\ReturnStatement.cs" />
+    <Compile Include="Modeling\Tokens\Statements\RowColStatement.cs" />
+    <Compile Include="Modeling\Tokens\Statements\SelectStatement.cs" />
+    <Compile Include="Modeling\Tokens\Statements\StatementToken.cs" />
+    <Compile Include="Modeling\Tokens\Statements\SwitchStatement.cs" />
+    <Compile Include="Modeling\Tokens\Statements\WhileStatement.cs" />
+    <Compile Include="Modeling\Tokens\StringLiteralToken.cs" />
+    <Compile Include="Modeling\Tokens\TableAndFieldToken.cs" />
+    <Compile Include="Modeling\Tokens\TableFieldToken.cs" />
+    <Compile Include="Modeling\Tokens\TableToken.cs" />
+    <Compile Include="Modeling\Tokens\TagToken.cs" />
+    <Compile Include="Modeling\Tokens\Token.cs" />
+    <Compile Include="Modeling\Tokens\UnknownToken.cs" />
+    <Compile Include="Modeling\Tokens\VariableToken.cs" />
+    <Compile Include="Modeling\Tokens\WordToken.cs" />
+    <Compile Include="Modeling\ValType.cs" />
+    <Compile Include="Modeling\WarningSuppressionTracker.cs" />
+    <Compile Include="Preprocessing\FileMerger.cs" />
+    <Compile Include="Preprocessing\IncludeFile.cs" />
+    <Compile Include="Preprocessing\IncludeFileCache.cs" />
+    <Compile Include="Preprocessing\IPreprocessorReader.cs" />
+    <Compile Include="Preprocessing\IPreprocessorWriter.cs" />
+    <Compile Include="Preprocessing\Preprocessor.cs" />
+    <Compile Include="Preprocessing\PreprocessorDefine.cs" />
+    <Compile Include="Preprocessing\PreprocessorModel.cs" />
+    <Compile Include="Preprocessing\StringPreprocessorReader.cs" />
+    <Compile Include="Preprocessing\StringPreprocessorWriter.cs" />
+    <Compile Include="Preprocessing\Tokens\ErrorToken.cs" />
+    <Compile Include="Preprocessing\Tokens\GroupToken.cs" />
+    <Compile Include="Preprocessing\Tokens\NumberToken.cs" />
+    <Compile Include="Preprocessing\Tokens\OperatorToken.cs" />
+    <Compile Include="Preprocessing\Tokens\Token.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Code\CodeSpan.cs" />
+    <Compile Include="StringHelper.cs" />
+    <Compile Include="Scanning\FFScanMode.cs" />
+    <Compile Include="Syntax\ProbeClassifiedString.cs" />
+    <Compile Include="Syntax\ProbeClassifierType.cs" />
+    <Compile Include="Syntax\QuickInfoLayout.cs" />
+    <Compile Include="TriState.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="StrongNameKey.pfx" />
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+</Project>

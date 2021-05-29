@@ -1,12 +1,8 @@
-﻿using DkTools.CodeModel;
-using Microsoft.VisualStudio.Shell.Interop;
+﻿using DK.Code;
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Tagging;
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace DkTools.ErrorTagging
 {
@@ -14,10 +10,10 @@ namespace DkTools.ErrorTagging
 	{
 		private ErrorTaskSource _source;
 		private string _filePath;
-		private CodeModel.Span _span;
+		private CodeSpan _span;
 		private Dictionary<ITextBuffer, SnapshotSpan> _snapshotSpans;
 
-		public ErrorMarkerTag(ErrorTaskSource source, string tagType, string filePath, CodeModel.Span span)
+		public ErrorMarkerTag(ErrorTaskSource source, string tagType, string filePath, CodeSpan span)
 			: base(tagType)
 		{
 			_source = source;
@@ -45,7 +41,7 @@ namespace DkTools.ErrorTagging
 				return taskSnapshotSpan;
 			}
 
-			var clampedSpan = _span.Intersection(new CodeModel.Span(0, currentSnapshot.Length));
+			var clampedSpan = _span.Intersection(new CodeSpan(0, currentSnapshot.Length));
 			if (clampedSpan.IsEmpty) return null;
 			taskSnapshotSpan = clampedSpan.ToVsTextSnapshotSpan(currentSnapshot);
 

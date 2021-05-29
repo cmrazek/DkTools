@@ -1,13 +1,13 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using DK.AppEnvironment;
+using DK.Diagnostics;
+using DkTools.ErrorTagging;
+using Microsoft.VisualStudio.Shell;
+using System;
 using System.Diagnostics;
 using System.IO;
-using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
-using Microsoft.VisualStudio.Shell;
-using DkTools.ErrorTagging;
 
 namespace DkTools.Compiler
 {

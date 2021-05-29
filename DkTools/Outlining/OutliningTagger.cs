@@ -1,13 +1,11 @@
-﻿using System;
+﻿using DK.AppEnvironment;
+using DkTools.CodeModeling;
+using Microsoft.VisualStudio.Shell;
+using Microsoft.VisualStudio.Text.Tagging;
+using Microsoft.VisualStudio.Text;
+using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.ComponentModel.Composition;
-using Microsoft.VisualStudio.Shell;
-using Microsoft.VisualStudio.Text.Outlining;
-using Microsoft.VisualStudio.Text.Tagging;
-using Microsoft.VisualStudio.Utilities;
-using Microsoft.VisualStudio.Text;
 
 namespace DkTools.Outlining
 {
@@ -81,22 +79,25 @@ namespace DkTools.Outlining
 
 			_modelRegions.Clear();
 			_snapshot = _buffer.CurrentSnapshot;
-			var fileStore = CodeModel.FileStore.GetOrCreateForTextBuffer(_buffer);
+			var fileStore = FileStoreHelper.GetOrCreateForTextBuffer(_buffer);
 			if (fileStore != null)
 			{
 				var appSettings = DkEnvironment.CurrentAppSettings;
 				var fileName = VsTextUtil.TryGetDocumentFileName(_buffer);
 				var model = fileStore.GetCurrentModel(appSettings, fileName, _snapshot, "OutliningTagger.Reparse()");
-
-				foreach (var region in model.OutliningRegions.OrderBy(r => r.Span.Start))
+				var modelSnapshot = model.Snapshot as ITextSnapshot;
+				if (modelSnapshot != null)
 				{
-					_modelRegions.Add(new ModelRegion
+					foreach (var region in model.OutliningRegions.OrderBy(r => r.Span.Start))
 					{
-						span = new SnapshotSpan(model.Snapshot, new Span(region.Span.Start, region.Span.End - region.Span.Start)),
-						isFunction = region.CollapseToDefinition,
-						text = region.Text,
-						tooltipText = region.TooltipText
-					});
+						_modelRegions.Add(new ModelRegion
+						{
+							span = new SnapshotSpan(modelSnapshot, new Span(region.Span.Start, region.Span.End - region.Span.Start)),
+							isFunction = region.CollapseToDefinition,
+							text = region.Text,
+							tooltipText = region.TooltipText
+						});
+					}
 				}
 			}
 		}

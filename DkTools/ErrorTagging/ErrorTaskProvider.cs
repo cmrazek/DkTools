@@ -4,6 +4,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using DK.AppEnvironment;
+using DK.Diagnostics;
+using DkTools.CodeModeling;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Editor;
@@ -195,7 +198,7 @@ namespace DkTools.ErrorTagging
 			{
 				await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
 
-				var fileStore = CodeModel.FileStore.GetOrCreateForTextBuffer(textView.TextBuffer);
+				var fileStore = FileStoreHelper.GetOrCreateForTextBuffer(textView.TextBuffer);
 				if (fileStore != null)
 				{
 					var appSettings = DkEnvironment.CurrentAppSettings;

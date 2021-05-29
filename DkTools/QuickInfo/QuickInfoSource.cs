@@ -1,18 +1,12 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Collections.ObjectModel;
-using System.ComponentModel.Composition;
-using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
-using System.Windows;
+﻿using DK.Modeling.Tokens;
+using DkTools.CodeModeling;
 using Microsoft.VisualStudio.Language.Intellisense;
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Adornments;
-using Microsoft.VisualStudio.Text.Editor;
-using Microsoft.VisualStudio.Text.Operations;
-using Microsoft.VisualStudio.Text.Tagging;
-using Microsoft.VisualStudio.Utilities;
+using System;
+using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace DkTools.QuickInfo
 {
@@ -23,7 +17,7 @@ namespace DkTools.QuickInfo
 
 		private struct TokenInfo
 		{
-			public CodeModel.Tokens.Token token;
+			public Token token;
 			public object infoElements;
 		}
 
@@ -40,13 +34,13 @@ namespace DkTools.QuickInfo
 			var subjectTriggerPoint = session.GetTriggerPoint(_subjectBuffer.CurrentSnapshot);
 			if (!subjectTriggerPoint.HasValue) return null;
 			var snapshotPoint = subjectTriggerPoint.Value;
-			var currentSnapshot = snapshotPoint.Snapshot;
 
-			var fileStore = CodeModel.FileStore.GetOrCreateForTextBuffer(_subjectBuffer);
+			var fileStore = FileStoreHelper.GetOrCreateForTextBuffer(_subjectBuffer);
 			if (fileStore != null)
 			{
 				var model = fileStore.Model;
-				if (model != null && model.Snapshot != null)
+				var modelSnapshot = model?.Snapshot as ITextSnapshot;
+				if (model != null && modelSnapshot != null)
 				{
 					var modelPos = model.AdjustPosition(snapshotPoint.Position, snapshotPoint.Snapshot);
 
@@ -60,8 +54,8 @@ namespace DkTools.QuickInfo
 						elements = info.Value.infoElements;
 
 						var tokenSpan = info.Value.token.Span;
-						var snapSpan = new SnapshotSpan(model.Snapshot, tokenSpan.Start, tokenSpan.Length);
-						applicableToSpan = model.Snapshot.CreateTrackingSpan(info.Value.token.Span.ToVsTextSpan(), SpanTrackingMode.EdgeInclusive);
+						var snapSpan = new SnapshotSpan(modelSnapshot, tokenSpan.Start, tokenSpan.Length);
+						applicableToSpan = modelSnapshot.CreateTrackingSpan(info.Value.token.Span.ToVsTextSpan(), SpanTrackingMode.EdgeInclusive);
 					}
 
 					var tasks = await ErrorTagging.ErrorTaskProvider.Instance.GetErrorMessagesAtPointAsync(model.FilePath, snapshotPoint);
@@ -81,7 +75,7 @@ namespace DkTools.QuickInfo
 							var snapshotSpan = task.TryGetSnapshotSpan(snapshotPoint.Snapshot);
 							if (snapshotSpan.HasValue)
 							{
-								applicableToSpan = model.Snapshot.CreateTrackingSpan(snapshotSpan.Value, SpanTrackingMode.EdgeInclusive);
+								applicableToSpan = modelSnapshot.CreateTrackingSpan(snapshotSpan.Value, SpanTrackingMode.EdgeInclusive);
 							}
 						}
 					}
@@ -106,7 +100,7 @@ namespace DkTools.QuickInfo
 			}
 		}
 
-		private TokenInfo? GetQuickInfoForTokens(CodeModel.Tokens.Token[] tokens)
+		private TokenInfo? GetQuickInfoForTokens(Token[] tokens)
 		{
 			if (tokens.Length == 0) return null;
 

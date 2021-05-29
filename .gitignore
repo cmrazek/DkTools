@@ -3,6 +3,8 @@
 *.suo
 
 /.vs/
+/DK.Common/bin/
+/DK.Common/obj/
 /DkTools/bin/
 /DkTools/obj/
 /TestResults/

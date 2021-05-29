@@ -1,10 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using DK.Diagnostics;
 using DkTools.ErrorTagging;
-using VsText = Microsoft.VisualStudio.Text;
+using System;
+using System.Collections.Generic;
 
 namespace DkTools.Compiler
 {

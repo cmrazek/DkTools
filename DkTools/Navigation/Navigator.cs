@@ -3,6 +3,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using DK.AppEnvironment;
+using DK.Diagnostics;
+using DkTools.CodeModeling;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Editor;
@@ -61,7 +64,7 @@ namespace DkTools.Navigation
 		{
 			ThreadHelper.ThrowIfNotOnUIThread();
 
-			var fileStore = CodeModel.FileStore.GetOrCreateForTextBuffer(_view.TextBuffer);
+			var fileStore = FileStoreHelper.GetOrCreateForTextBuffer(_view.TextBuffer);
 			if (fileStore == null)
 			{
 				Log.Debug("No file store available.");
@@ -80,7 +83,13 @@ namespace DkTools.Navigation
 				return;
 			}
 			var caretPt = caretPtTest.Value;
-			var modelPos = caretPt.Snapshot.TranslateOffsetToSnapshot(caretPt.Position, model.Snapshot);
+			var modelSnapshot = model.Snapshot as ITextSnapshot;
+			if (modelSnapshot == null)
+			{
+				Log.Debug("Model has no snapshot.");
+				return;
+			}
+			var modelPos = caretPt.Snapshot.TranslateOffsetToSnapshot(caretPt.Position, modelSnapshot);
 
 			// Get the token the cursor is currently on
 			var token = model.File.FindDownward(modelPos).LastOrDefault(x => x.SourceDefinition != null);
@@ -128,8 +137,8 @@ namespace DkTools.Navigation
 			}
 			var nextToken = refs[nextIndex];
 
-			var snapStart = model.Snapshot.TranslateOffsetToSnapshot(nextToken.Span.Start, caretPt.Snapshot);
-			var snapEnd = model.Snapshot.TranslateOffsetToSnapshot(nextToken.Span.End, caretPt.Snapshot);
+			var snapStart = modelSnapshot.TranslateOffsetToSnapshot(nextToken.Span.Start, caretPt.Snapshot);
+			var snapEnd = modelSnapshot.TranslateOffsetToSnapshot(nextToken.Span.End, caretPt.Snapshot);
 			var snapSpan = new SnapshotSpan(caretPt.Snapshot, snapStart, snapEnd - snapStart);
 			MoveTo(snapSpan);
 

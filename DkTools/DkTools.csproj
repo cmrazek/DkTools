@@ -237,211 +237,29 @@
     <Compile Include="BraceHighlighting\BraceHighlightTag.cs" />
     <Compile Include="BraceHighlighting\BraceHighlightTagger.cs" />
     <Compile Include="BraceHighlighting\BraceHighlightTaggerProvider.cs" />
-    <Compile Include="Classifier\ClassifiedStringHelpers.cs" />
     <Compile Include="Classifier\DisabledSectionTracker.cs" />
     <Compile Include="Classifier\ProbeClassifierScanner.cs" />
     <Compile Include="Classifier\ProbeClassifier.cs" />
     <Compile Include="Classifier\ProbeClassifierDefinition.cs" />
     <Compile Include="Classifier\ProbeClassifierProvider.cs" />
-    <Compile Include="Classifier\ProbeClassifiedString.cs" />
-    <Compile Include="Classifier\ProbeClassifierType.cs" />
     <Compile Include="Classifier\State.cs" />
+    <Compile Include="Classifier\SyntaxHelper.cs" />
     <Compile Include="Classifier\TextBufferStateTracker.cs" />
-    <Compile Include="CodeAnalysis\Nodes\AggregateFunctionCallNode.cs" />
-    <Compile Include="CodeAnalysis\Nodes\BracketsNode.cs" />
-    <Compile Include="CodeAnalysis\CAErrors.cs" />
-    <Compile Include="CodeAnalysis\CodeAnalyzer.cs" />
-    <Compile Include="CodeAnalysis\Nodes\CastNode.cs" />
-    <Compile Include="CodeAnalysis\Nodes\CharLiteralNode.cs" />
-    <Compile Include="CodeAnalysis\Nodes\ConditionalNode.cs" />
-    <Compile Include="CodeAnalysis\Nodes\EmptyNode.cs" />
-    <Compile Include="CodeAnalysis\Nodes\ExpressionNode.cs" />
-    <Compile Include="CodeAnalysis\Nodes\FunctionCallNode.cs" />
-    <Compile Include="CodeAnalysis\Nodes\GroupNode.cs" />
-    <Compile Include="CodeAnalysis\Nodes\IdentifierNode.cs" />
-    <Compile Include="CodeAnalysis\Nodes\Node.cs" />
-    <Compile Include="CodeAnalysis\Nodes\NumberNode.cs" />
-    <Compile Include="CodeAnalysis\Nodes\OperatorNode.cs" />
-    <Compile Include="CodeAnalysis\Nodes\ResultNode.cs" />
-    <Compile Include="CodeAnalysis\Statements\BreakStatement.cs" />
-    <Compile Include="CodeAnalysis\Statements\CenterStatement.cs" />
-    <Compile Include="CodeAnalysis\Statements\ColStatement.cs" />
-    <Compile Include="CodeAnalysis\Statements\ContinueStatement.cs" />
-    <Compile Include="CodeAnalysis\Statements\ExtractStatement.cs" />
-    <Compile Include="CodeAnalysis\Statements\FooterStatement.cs" />
-    <Compile Include="CodeAnalysis\Statements\FormatStatement.cs" />
-    <Compile Include="CodeAnalysis\Statements\ForStatement.cs" />
-    <Compile Include="CodeAnalysis\Statements\HeaderStatement.cs" />
-    <Compile Include="CodeAnalysis\Statements\IfStatement.cs" />
-    <Compile Include="CodeAnalysis\Statements\PageStatement.cs" />
-    <Compile Include="CodeAnalysis\Statements\ReturnStatement.cs" />
-    <Compile Include="CodeAnalysis\CAScope.cs" />
-    <Compile Include="CodeAnalysis\Statements\RowStatement.cs" />
-    <Compile Include="CodeAnalysis\Statements\SelectStatement.cs" />
-    <Compile Include="CodeAnalysis\Statements\SimpleStatement.cs" />
-    <Compile Include="CodeAnalysis\Statements\Statement.cs" />
-    <Compile Include="CodeAnalysis\Nodes\StringLiteralNode.cs" />
-    <Compile Include="CodeAnalysis\Nodes\TextNode.cs" />
-    <Compile Include="CodeAnalysis\Nodes\UnknownNode.cs" />
-    <Compile Include="CodeAnalysis\Statements\SwitchStatement.cs" />
-    <Compile Include="CodeAnalysis\Statements\WhileStatement.cs" />
-    <Compile Include="CodeAnalysis\Values\CharValue.cs" />
-    <Compile Include="CodeAnalysis\Values\DateValue.cs" />
-    <Compile Include="CodeAnalysis\Values\EnumValue.cs" />
-    <Compile Include="CodeAnalysis\Values\IndRelValue.cs" />
-    <Compile Include="CodeAnalysis\Values\NumberValue.cs" />
-    <Compile Include="CodeAnalysis\Values\StringValue.cs" />
-    <Compile Include="CodeAnalysis\Values\TableValue.cs" />
-    <Compile Include="CodeAnalysis\Values\TimeValue.cs" />
-    <Compile Include="CodeAnalysis\Values\Value.cs" />
-    <Compile Include="CodeAnalysis\Values\VoidValue.cs" />
-    <Compile Include="CodeAnalysis\Variable.cs" />
     <Compile Include="CodeInfoStore.cs" />
-    <Compile Include="CodeModel\ArgumentDescriptor.cs" />
-    <Compile Include="CodeModel\Definitions\DefinitionStore.cs" />
-    <Compile Include="CodeModel\Definitions\FilePositionDefinition.cs" />
-    <Compile Include="CodeModel\FunctionSignature.cs" />
-    <Compile Include="CodeModel\IncludeFile.cs" />
-    <Compile Include="CodeModel\IncludeFileCache.cs" />
-    <Compile Include="CodeModel\PassByMethod.cs" />
-    <Compile Include="CodeModel\PreprocessorDefine.cs" />
-    <Compile Include="CodeModel\SignatureDocumentor.cs" />
-    <Compile Include="CodeModel\Tokens\ArgsToken.cs" />
-    <Compile Include="CodeModel\Tokens\Operators\AssignmentOperator.cs" />
-    <Compile Include="CodeModel\Tokens\Operators\ConditionalOperator.cs" />
-    <Compile Include="CodeModel\Tokens\Statements\BreakStatement.cs" />
-    <Compile Include="CodeModel\Tokens\Operators\ComparisonOperator.cs" />
-    <Compile Include="CodeModel\Tokens\CompositeToken.cs" />
-    <Compile Include="CodeModel\Tokens\Statements\CastStatement.cs" />
-    <Compile Include="CodeModel\Tokens\Statements\ContinueStatement.cs" />
-    <Compile Include="CodeModel\Tokens\EnumOptionToken.cs" />
-    <Compile Include="CodeModel\Tokens\ExpressionToken.cs" />
-    <Compile Include="CodeModel\Tokens\Statements\ExternStatement.cs" />
-    <Compile Include="CodeModel\Tokens\IBreakOwner.cs" />
-    <Compile Include="CodeModel\Tokens\IContinueOwner.cs" />
-    <Compile Include="CodeModel\Tokens\Statements\CreateStatement.cs" />
-    <Compile Include="CodeModel\Tokens\Statements\FooterStatement.cs" />
-    <Compile Include="CodeModel\Tokens\Statements\FormatStatement.cs" />
-    <Compile Include="CodeModel\Tokens\Statements\ForStatement.cs" />
-    <Compile Include="CodeModel\Tokens\Statements\HeaderStatement.cs" />
-    <Compile Include="CodeModel\Tokens\Statements\ReturnStatement.cs" />
-    <Compile Include="CodeModel\Tokens\Statements\RowColStatement.cs" />
-    <Compile Include="CodeModel\Tokens\Statements\StatementToken.cs" />
-    <Compile Include="CodeModel\Tokens\Operators\CompletionOperator.cs" />
-    <Compile Include="CodeModel\ValType.cs" />
-    <Compile Include="CodeModel\CodeSource.cs" />
-    <Compile Include="CodeModel\DefinitionProvider.cs" />
-    <Compile Include="CodeModel\Definitions\ClassDefinition.cs" />
-    <Compile Include="CodeModel\Definitions\ConstantDefinition.cs" />
-    <Compile Include="CodeModel\Definitions\DataTypeDefinition.cs" />
-    <Compile Include="CodeModel\Definitions\DefinitionCollection.cs" />
-    <Compile Include="CodeModel\Definitions\EnumOptionDefinition.cs" />
-    <Compile Include="CodeModel\Definitions\ExtractTableDefinition.cs" />
-    <Compile Include="CodeModel\Definitions\ExtractFieldDefinition.cs" />
-    <Compile Include="CodeModel\Definitions\FunctionDefinition.cs" />
-    <Compile Include="CodeModel\Definitions\InterfaceMethodDefinition.cs" />
-    <Compile Include="CodeModel\Definitions\InterfacePropertyDefinintion.cs" />
-    <Compile Include="CodeModel\Definitions\InterfaceTypeDefinition.cs" />
-    <Compile Include="CodeModel\Definitions\MacroDefinition.cs" />
-    <Compile Include="CodeModel\Definitions\RelIndDefinition.cs" />
-    <Compile Include="CodeModel\Definitions\StringDefDefinition.cs" />
-    <Compile Include="CodeModel\Definitions\TableDefinition.cs" />
-    <Compile Include="CodeModel\Definitions\ColumnDefinition.cs" />
-    <Compile Include="CodeModel\Definitions\VariableDefinition.cs" />
-    <Compile Include="CodeModel\Tokens\InterfaceMethodCallToken.cs" />
-    <Compile Include="CodeModel\Tokens\InterfacePropertyToken.cs" />
-    <Compile Include="CodeModel\Tokens\InterfaceTypeToken.cs" />
-    <Compile Include="CodeModel\Tokens\TagToken.cs" />
-    <Compile Include="CodeModel\WarningSuppressionTracker.cs" />
+    <Compile Include="CodeModeling\CodeAnalyzerHelper.cs" />
+    <Compile Include="CodeModeling\CodeModelHelper.cs" />
+    <Compile Include="CodeModeling\DefinitionHelper.cs" />
+    <Compile Include="CodeModeling\FileStoreHelper.cs" />
     <Compile Include="Compiler\BackgroundFec.cs" />
     <Compile Include="CsvWriter.cs" />
     <Compile Include="DictTextViewListener.cs" />
-    <Compile Include="DkDict\Column.cs" />
-    <Compile Include="DkDict\Dict.cs" />
-    <Compile Include="DkDict\Interface.cs" />
-    <Compile Include="DkDict\RelInd.cs" />
-    <Compile Include="DkDict\Stringdef.cs" />
-    <Compile Include="DkDict\Table.cs" />
-    <Compile Include="DkDict\Tag.cs" />
-    <Compile Include="DkDict\Typedef.cs" />
-    <Compile Include="DkEnv\DkAppSettings.cs" />
-    <Compile Include="DumpWriter.cs" />
     <Compile Include="ErrorDialog.xaml.cs">
       <DependentUpon>ErrorDialog.xaml</DependentUpon>
     </Compile>
     <Compile Include="ErrorSuppressionOptions.cs">
       <SubType>Component</SubType>
     </Compile>
-    <Compile Include="CodeModel\FunctionPrivacy.cs" />
-    <Compile Include="CodeModel\FilePosition.cs" />
-    <Compile Include="CodeModel\Preprocessor.cs" />
-    <Compile Include="CodeModel\IPreprocessorReader.cs" />
-    <Compile Include="CodeModel\IPreprocessorWriter.cs" />
-    <Compile Include="CodeModel\PreprocessorTokens\ErrorToken.cs" />
-    <Compile Include="CodeModel\PreprocessorTokens\GroupToken.cs" />
-    <Compile Include="CodeModel\PreprocessorTokens\NumberToken.cs" />
-    <Compile Include="CodeModel\PreprocessorTokens\OperatorToken.cs" />
-    <Compile Include="CodeModel\PreprocessorTokens\Token.cs" />
-    <Compile Include="CodeModel\FileContext.cs" />
-    <Compile Include="CodeModel\StringPreprocessorReader.cs" />
-    <Compile Include="CodeModel\StringPreprocessorWriter.cs" />
-    <Compile Include="CodeModel\Tokens\ClassAndFunctionToken.cs" />
-    <Compile Include="CodeModel\Tokens\ClassToken.cs" />
-    <Compile Include="CodeModel\Tokens\ConstantToken.cs" />
-    <Compile Include="CodeModel\DataType.cs" />
-    <Compile Include="CodeModel\Tokens\DataTypeKeywordToken.cs" />
-    <Compile Include="CodeModel\Definitions\Definition.cs" />
-    <Compile Include="CodeModel\Tokens\ExternalToken.cs" />
-    <Compile Include="CodeModel\Tokens\Statements\ExtractStatement.cs" />
-    <Compile Include="CodeModel\Tokens\ExtractTableAndFieldToken.cs" />
-    <Compile Include="CodeModel\Tokens\ExtractFieldToken.cs" />
-    <Compile Include="CodeModel\Tokens\ExtractTableToken.cs" />
-    <Compile Include="CodeModel\Tokens\FunctionPlaceholderToken.cs" />
-    <Compile Include="CodeModel\Tokens\GroupToken.cs" />
-    <Compile Include="CodeModel\IContextSource.cs" />
-    <Compile Include="CodeModel\Tokens\IDataTypeToken.cs" />
-    <Compile Include="CodeModel\Tokens\ArrayBracesToken.cs" />
-    <Compile Include="CodeModel\Tokens\ArrayBraceToken.cs" />
-    <Compile Include="CodeModel\Tokens\BracesToken.cs" />
-    <Compile Include="CodeModel\Tokens\BraceToken.cs" />
-    <Compile Include="CodeModel\Tokens\BracketsToken.cs" />
-    <Compile Include="CodeModel\Tokens\CodeFile.cs" />
-    <Compile Include="CodeModel\CodeModel.cs" />
-    <Compile Include="CodeModel\Tokens\DataTypeToken.cs" />
-    <Compile Include="CodeModel\Tokens\FunctionCallToken.cs" />
-    <Compile Include="CodeModel\Tokens\Statements\IfStatement.cs" />
-    <Compile Include="CodeModel\FileStore.cs" />
-    <Compile Include="CodeModel\Tokens\IncludeToken.cs" />
-    <Compile Include="CodeModel\Tokens\InsertToken.cs" />
-    <Compile Include="CodeModel\Tokens\KeywordToken.cs" />
-    <Compile Include="CodeModel\Tokens\MacroCallToken.cs" />
-    <Compile Include="CodeModel\OutliningRegion.cs" />
-    <Compile Include="CodeModel\Tokens\RelIndAndFieldToken.cs" />
-    <Compile Include="CodeModel\Tokens\RelIndFieldToken.cs" />
-    <Compile Include="CodeModel\Tokens\RelIndToken.cs" />
-    <Compile Include="CodeModel\Scope.cs" />
-    <Compile Include="CodeModel\Tokens\DelimiterToken.cs" />
-    <Compile Include="CodeModel\Tokens\DotToken.cs" />
-    <Compile Include="CodeModel\Tokens\IBraceMatchingToken.cs" />
-    <Compile Include="CodeModel\Tokens\IdentifierToken.cs" />
-    <Compile Include="CodeModel\Tokens\NumberToken.cs" />
-    <Compile Include="CodeModel\Tokens\Operators\OperatorToken.cs" />
-    <Compile Include="CodeModel\Tokens\PreprocessorToken.cs" />
-    <Compile Include="CodeModel\Tokens\ReferenceToken.cs" />
-    <Compile Include="CodeModel\Tokens\ReplaceToken.cs" />
-    <Compile Include="CodeModel\Tokens\Statements\SelectStatement.cs" />
-    <Compile Include="CodeModel\Span.cs" />
-    <Compile Include="CodeModel\Tokens\StatementEndToken.cs" />
-    <Compile Include="CodeModel\Tokens\StringLiteralToken.cs" />
-    <Compile Include="CodeModel\Tokens\Statements\SwitchStatement.cs" />
-    <Compile Include="CodeModel\Tokens\TableAndFieldToken.cs" />
-    <Compile Include="CodeModel\Tokens\TableFieldToken.cs" />
-    <Compile Include="CodeModel\Tokens\TableToken.cs" />
-    <Compile Include="CodeModel\Tokens\Token.cs" />
-    <Compile Include="CodeModel\Tokens\UnknownToken.cs" />
-    <Compile Include="CodeModel\Tokens\VariableToken.cs" />
-    <Compile Include="CodeModel\Tokens\Statements\WhileStatement.cs" />
-    <Compile Include="CodeModel\Tokens\WordToken.cs" />
+    <Compile Include="CodeModeling\IContextSource.cs" />
     <Compile Include="CodeProcessing\CodeError.cs" />
     <Compile Include="CodeProcessing\CodeFile.cs" />
     <Compile Include="CodeProcessing\CodeLine.cs" />
@@ -449,9 +267,6 @@
     <Compile Include="Commands.cs" />
     <Compile Include="Compiler\ProbeCompiler.cs" />
     <Compile Include="Constants.cs" />
-    <Compile Include="DkEnv\DkEnvVarMerger.cs" />
-    <Compile Include="DkEnv\EnvVarList.cs" />
-    <Compile Include="DkEnv\RegUtil.cs" />
     <Compile Include="EditorOptions.cs">
       <SubType>Component</SubType>
     </Compile>
@@ -467,19 +282,13 @@
     <Compile Include="ErrorTagging\ErrorType.cs" />
     <Compile Include="DkGenericTextViewListener.cs" />
     <Compile Include="FileMergeException.cs" />
-    <Compile Include="CodeModel\FileMerger.cs" />
     <Compile Include="FileUtil.cs" />
-    <Compile Include="FunctionFileScanning\FFUtil.cs" />
     <Compile Include="FunctionFileScanning\FFScanner.cs" />
-    <Compile Include="GlobalData\AppRepo.cs" />
-    <Compile Include="GlobalData\GlobalDataExceptions.cs" />
-    <Compile Include="GlobalData\RepoClass.cs" />
-    <Compile Include="GlobalData\StringRepo.cs" />
     <Compile Include="GroupedList.cs" />
     <Compile Include="Guids.cs" />
     <Compile Include="IniFile.cs" />
     <Compile Include="LockedValue.cs" />
-    <Compile Include="Log.cs" />
+    <Compile Include="Output.cs" />
     <Compile Include="PeekDefinition\DkPeekableItem.cs" />
     <Compile Include="PeekDefinition\DkPeekableItemSource.cs" />
     <Compile Include="PeekDefinition\DkPeekableItemSourceProvider.cs" />
@@ -489,13 +298,11 @@
     <Compile Include="Navigation\Navigator.cs" />
     <Compile Include="Outlining\OutliningTagger.cs" />
     <Compile Include="Outlining\OutliningTaggerProvider.cs" />
-    <Compile Include="Output.cs" />
     <Compile Include="LanguageSvc\ProbeAuthoringScope.cs" />
     <Compile Include="LanguageSvc\ProbeLanguageService.cs" />
     <Compile Include="LanguageSvc\ProbeScanner.cs" />
     <Compile Include="LanguageSvc\ProbeDropDownHelper.cs" />
     <Compile Include="OutputPane.cs" />
-    <Compile Include="CodeModel\PreprocessorModel.cs" />
     <Compile Include="ProbeExplorer\CreateFileDialog.xaml.cs">
       <DependentUpon>CreateFileDialog.xaml</DependentUpon>
     </Compile>
@@ -503,7 +310,6 @@
     <Compile Include="ProbeExplorer\ProbeExplorerOptions.cs">
       <SubType>Component</SubType>
     </Compile>
-    <Compile Include="DkEnv\DkEnvironment.cs" />
     <Compile Include="ProbeException.cs" />
     <Compile Include="ProbeExplorer\ProbeExplorerControl.xaml.cs">
       <DependentUpon>ProbeExplorerControl.xaml</DependentUpon>
@@ -523,11 +329,10 @@
     </Compile>
     <Compile Include="QuickInfo\QuickInfoController.cs" />
     <Compile Include="QuickInfo\QuickInfoControllerProvider.cs" />
-    <Compile Include="QuickInfo\QuickInfoLayout.cs" />
+    <Compile Include="QuickInfo\QuickInfoLayoutHelper.cs" />
     <Compile Include="QuickInfo\QuickInfoSource.cs" />
     <Compile Include="QuickInfo\QuickInfoSourceProvider.cs" />
     <Compile Include="QuickState\QuickStateTracker.cs" />
-    <Compile Include="RegistryExtensions.cs" />
     <Compile Include="Res.Designer.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
@@ -567,23 +372,19 @@
     <Compile Include="Snippets\SnippetCommandHandler.cs" />
     <Compile Include="Snippets\SnippetCommandProvider.cs" />
     <Compile Include="Snippets\SnippetDeploy.cs" />
+    <Compile Include="CodeSpanUtil.cs" />
     <Compile Include="StatementCompletion\ProbeAsyncCompletionSource.cs" />
     <Compile Include="StatementCompletion\ProbeAsyncCompletionSourceProvider.cs" />
     <Compile Include="StatementCompletion\ProbeCompletionCommitManager.cs" />
     <Compile Include="StatementCompletion\ProbeCompletionCommitManagerProvider.cs" />
-    <Compile Include="StatementCompletion\ProbeCompletionType.cs" />
     <Compile Include="StatementCompletion\StatementLayout.cs" />
     <Compile Include="StatementCompletion\StatementState.cs" />
-    <Compile Include="StringUtil.cs" />
     <Compile Include="Tagging\Tagger.cs" />
     <Compile Include="Tagging\TaggingOptions.cs">
       <SubType>Component</SubType>
     </Compile>
     <Compile Include="TempManager.cs" />
     <Compile Include="TextFilter.cs" />
-    <Compile Include="CodeParser.cs" />
-    <Compile Include="CodeType.cs" />
-    <Compile Include="TriState.cs" />
     <Compile Include="TypeUtil.cs" />
     <Compile Include="Util.cs" />
     <Compile Include="VsTextUtil.cs" />
@@ -723,7 +524,15 @@
     <Analyzer Include="..\packages\Microsoft.VisualStudio.SDK.Analyzers.15.8.33\analyzers\cs\Microsoft.VisualStudio.SDK.Analyzers.dll" />
     <Analyzer Include="..\packages\Microsoft.VisualStudio.Threading.Analyzers.15.8.122\analyzers\cs\Microsoft.VisualStudio.Threading.Analyzers.dll" />
   </ItemGroup>
-  <ItemGroup />
+  <ItemGroup>
+    <ProjectReference Include="..\DK.Common\DK.Common.csproj">
+      <Project>{c8ad0b7e-6b3c-4b85-8ee7-9735256c5193}</Project>
+      <Name>DK.Common</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="DkEnv\" />
+  </ItemGroup>
   <PropertyGroup>
     <UseCodebase>true</UseCodebase>
   </PropertyGroup>

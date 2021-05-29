@@ -1,13 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using DK.AppEnvironment;
+using DK.Diagnostics;
+using DK.Modeling.Tokens;
+using DkTools.CodeModeling;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Editor;
-using DkTools.CodeModel;
-using DkTools.CodeModel.Tokens;
+using System.Linq;
 
 namespace DkTools.Navigation
 {
@@ -25,7 +23,7 @@ namespace DkTools.Navigation
 			}
 			var caretPt = caretPtTest.Value;
 
-			var store = FileStore.GetOrCreateForTextBuffer(view.TextBuffer);
+			var store = FileStoreHelper.GetOrCreateForTextBuffer(view.TextBuffer);
 			if (store == null) return;
 
 			var appSettings = DkEnvironment.CurrentAppSettings;
@@ -59,12 +57,16 @@ namespace DkTools.Navigation
 
 				if (selToken != null)
 				{
-					var snapPos = model.Snapshot.TranslateOffsetToSnapshot(selToken.Span.Start, caretPt.Snapshot);
+					var modelSnapshot = model.Snapshot as ITextSnapshot;
+					if (modelSnapshot != null)
+					{
+						var snapPos = modelSnapshot.TranslateOffsetToSnapshot(selToken.Span.Start, caretPt.Snapshot);
 
-					var snapPt = new SnapshotPoint(caretPt.Snapshot, snapPos);
-					view.Caret.MoveTo(snapPt);
-					view.Selection.Select(new SnapshotSpan(snapPt, 0), false);
-					view.ViewScroller.EnsureSpanVisible(new SnapshotSpan(snapPt, 0));
+						var snapPt = new SnapshotPoint(caretPt.Snapshot, snapPos);
+						view.Caret.MoveTo(snapPt);
+						view.Selection.Select(new SnapshotSpan(snapPt, 0), false);
+						view.ViewScroller.EnsureSpanVisible(new SnapshotSpan(snapPt, 0));
+					}
 				}
 			}
 			else
@@ -72,15 +74,19 @@ namespace DkTools.Navigation
 				var token = selTokens.LastOrDefault(t => t is BracesToken) as BracesToken;
 				if (token != null)
 				{
-					var startPos = model.Snapshot.TranslateOffsetToSnapshot(token.OpenToken.Span.Start, caretPt.Snapshot);
-					var endPos = model.Snapshot.TranslateOffsetToSnapshot(token.CloseToken.Span.End, caretPt.Snapshot);
+					var modelSnapshot = model.Snapshot as ITextSnapshot;
+					if (modelSnapshot != null)
+					{
+						var startPos = modelSnapshot.TranslateOffsetToSnapshot(token.OpenToken.Span.Start, caretPt.Snapshot);
+						var endPos = modelSnapshot.TranslateOffsetToSnapshot(token.CloseToken.Span.End, caretPt.Snapshot);
 
-					var snapPt = new SnapshotPoint(caretPt.Snapshot, startPos);
-					view.Caret.MoveTo(snapPt);
+						var snapPt = new SnapshotPoint(caretPt.Snapshot, startPos);
+						view.Caret.MoveTo(snapPt);
 
-					var snapSpan = new SnapshotSpan(caretPt.Snapshot, startPos, endPos - startPos);
-					view.Selection.Select(snapSpan, false);
-					view.ViewScroller.EnsureSpanVisible(snapSpan);
+						var snapSpan = new SnapshotSpan(caretPt.Snapshot, startPos, endPos - startPos);
+						view.Selection.Select(snapSpan, false);
+						view.ViewScroller.EnsureSpanVisible(snapSpan);
+					}
 				}
 			}
 		}

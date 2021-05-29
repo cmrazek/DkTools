@@ -1,23 +1,16 @@
-﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel.Design;
-using System.Diagnostics;
-using System.Globalization;
-using System.IO;
-using System.Linq;
-using System.Runtime.InteropServices;
-using System.Text;
-using Microsoft.Win32;
-using Microsoft.VisualStudio;
-using Microsoft.VisualStudio.Imaging.Interop;
+﻿using DK.AppEnvironment;
+using DK.Diagnostics;
+using DkTools.BraceCompletion;
+using DkTools.LanguageSvc;
 using Microsoft.VisualStudio.OLE.Interop;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
-using DkTools.LanguageSvc;
-using Microsoft.VisualStudio.Language.StandardClassification;
-using Microsoft.VisualStudio.Text.Classification;
+using System;
+using System.Collections.Generic;
+using System.ComponentModel.Design;
+using System.IO;
+using System.Runtime.InteropServices;
 using System.Threading;
-using DkTools.BraceCompletion;
 
 namespace DkTools
 {
@@ -95,8 +88,6 @@ namespace DkTools
 	{
 		private uint _componentId;
 		private static ProbeToolsPackage _instance;
-		private EnvDTE.Events _dteEvents;
-		private EnvDTE.DocumentEvents _dteDocumentEvents;
 		private ErrorTagging.ErrorTaskProvider _errorTaskProvider;
 
 		/// <summary>
@@ -118,7 +109,7 @@ namespace DkTools
 		protected override async System.Threading.Tasks.Task InitializeAsync(CancellationToken cancellationToken, IProgress<ServiceProgressData> progress)
 		{
 			base.Initialize();
-			Log.Initialize();
+			Log.Initialize(LogDir, Constants.LogFileNameFormat);
 			Log.Info("DkTools {0}", System.Reflection.Assembly.GetExecutingAssembly().GetName().Version);
 
 			await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync(cancellationToken);
@@ -126,7 +117,6 @@ namespace DkTools
 			DkEnvironment.Initialize();
 			TempManager.Init(TempDir);
 			Snippets.SnippetDeploy.DeploySnippets();
-			CodeModel.SignatureDocumentor.Initialize();
 
 			// Proffer the service.	http://msdn.microsoft.com/en-us/library/bb166498.aspx
 			var langService = new ProbeLanguageService(this);
@@ -155,15 +145,6 @@ namespace DkTools
 			if (mcs != null) Commands.InitCommands(mcs);
 
 			FunctionFileScanning.FFScanner.OnStartup();
-
-			// Need to keep a reference to Events and DocumentEvents in order for DocumentSaved to be triggered.
-			_dteEvents = Shell.DTE.Events;
-
-			_dteDocumentEvents = _dteEvents.DocumentEvents;
-			_dteDocumentEvents.DocumentSaved += DocumentEvents_DocumentSaved;
-
-			DkAppSettings.FileChanged += ProbeAppSettings_FileChanged;
-			DkAppSettings.FileDeleted += ProbeAppSettings_FileDeleted;
 
 			Microsoft.VisualStudio.PlatformUI.VSColorTheme.ThemeChanged += VSColorTheme_ThemeChanged;
 		}
@@ -296,59 +277,9 @@ namespace DkTools
 			}
 		}
 
-		private void DocumentEvents_DocumentSaved(EnvDTE.Document Document)
-		{
-			ThreadHelper.JoinableTaskFactory.RunAsync(async () =>
-			{
-				await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
-
-				FireRefreshDocument(Document.FullName);
-			});
-		}
-
-		private void ProbeAppSettings_FileChanged(object sender, DkAppSettings.FileEventArgs e)
-		{
-			ThreadHelper.ThrowIfNotOnUIThread();
-
-			FireRefreshDocument(e.FilePath);
-		}
-
-		private void ProbeAppSettings_FileDeleted(object sender, DkAppSettings.FileEventArgs e)
-		{
-			ThreadHelper.ThrowIfNotOnUIThread();
-
-			FireRefreshDocument(e.FilePath);
-		}
-
 		private void VSColorTheme_ThemeChanged(Microsoft.VisualStudio.PlatformUI.ThemeChangedEventArgs e)
 		{
 			VSTheme.OnThemeChanged();
-		}
-
-		public static event EventHandler RefreshAllDocumentsRequired;
-
-		public void FireRefreshAllDocuments()
-		{
-			Log.Debug("Event: RefreshAllDocumentsRequired");
-			RefreshAllDocumentsRequired?.Invoke(this, EventArgs.Empty);
-		}
-
-		public static event EventHandler<RefreshDocumentEventArgs> RefreshDocumentRequired;
-
-		public class RefreshDocumentEventArgs : EventArgs
-		{
-			public string FilePath { get; private set; }
-
-			public RefreshDocumentEventArgs(string filePath)
-			{
-				FilePath = filePath;
-			}
-		}
-
-		public void FireRefreshDocument(string filePath)
-		{
-			Log.Debug("Event: RefreshDocumentRequired: {0}", filePath);
-			RefreshDocumentRequired?.Invoke(this, new RefreshDocumentEventArgs(filePath));
 		}
 
 		#region Settings

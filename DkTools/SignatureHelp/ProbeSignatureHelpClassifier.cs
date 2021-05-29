@@ -1,14 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using DK.Syntax;
+using DkTools.Classifier;
 using Microsoft.VisualStudio.Language.Intellisense;
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Classification;
-using DkTools.Classifier;
-using Microsoft.VisualStudio.Language.StandardClassification;
-using Microsoft.VisualStudio.Shell;
+using System;
+using System.Collections.Generic;
 
 namespace DkTools.SignatureHelp
 {
@@ -54,7 +50,7 @@ namespace DkTools.SignatureHelp
 		private IList<ClassificationSpan> GetFallbackClassificationSpans(SnapshotSpan span)
 		{
 			var ret = new List<ClassificationSpan>();
-			var classificationType = Classifier.ProbeClassifier.GetClassificationType(Classifier.ProbeClassifierType.Normal);
+			var classificationType = ProbeClassifier.GetClassificationType(ProbeClassifierType.Normal);
 			if (classificationType != null)
 			{
 				var cs = new ClassificationSpan(span, classificationType);

@@ -1,18 +1,17 @@
-﻿using System;
+﻿using DK.AppEnvironment;
+using DK.Diagnostics;
+using DK.CodeAnalysis;
+using DkTools.CodeModeling;
+using DkTools.Compiler;
+using DkTools.PeekDefinition;
+using Microsoft.VisualStudio.Shell;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel.Design;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
-using Microsoft.Win32;
-using Microsoft.VisualStudio;
-using Microsoft.VisualStudio.Shell.Interop;
-using Microsoft.VisualStudio.OLE.Interop;
-using Microsoft.VisualStudio.Shell;
-using Microsoft.VisualStudio.Text.Editor;
-using DkTools.Compiler;
-using DkTools.PeekDefinition;
 
 namespace DkTools
 {
@@ -903,15 +902,15 @@ namespace DkTools
 
                     var fileName = VsTextUtil.TryGetDocumentFileName(view.TextBuffer);
 
-                    var fileStore = CodeModel.FileStore.GetOrCreateForTextBuffer(view.TextBuffer);
+                    var fileStore = FileStoreHelper.GetOrCreateForTextBuffer(view.TextBuffer);
                     if (fileStore == null) return;
-                    var model = fileStore.CreatePreprocessedModel(appSettings, fileName, view.TextSnapshot, false, "Code Analysis");
+                    var model = fileStore.CreatePreprocessedModel(appSettings, fileName, view.TextSnapshot, visible: false, "Code Analysis");
 
                     var pane = Shell.CreateOutputPane(GuidList.guidCodeAnalysisPane, "DK Code Analysis");
                     pane.Clear();
                     pane.Show();
 
-                    var ca = new CodeAnalysis.CodeAnalyzer(pane, model);
+                    var ca = new CodeAnalyzer(model);
                     ca.Run();
                 }
                 catch (Exception ex)
@@ -934,194 +933,5 @@ namespace DkTools
                 }
             });
         }
-
-#if DEBUG
-        internal static class DebugCommands
-        {
-            private static CodeModel.CodeModel GetModelForActiveDoc(DkAppSettings appSettings)
-            {
-                ThreadHelper.ThrowIfNotOnUIThread();
-
-                var view = Shell.ActiveView;
-                if (view == null) return null;
-
-                var store = CodeModel.FileStore.GetOrCreateForTextBuffer(view.TextBuffer);
-                if (store == null) return null;
-
-                var fileName = VsTextUtil.TryGetDocumentFileName(view.TextBuffer);
-                return store.GetMostRecentModel(appSettings, fileName, view.TextSnapshot, "Debug Commands");
-            }
-
-            public static void ShowCodeModelDump()
-            {
-                ThreadHelper.JoinableTaskFactory.RunAsync(async () =>
-                {
-                    await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
-
-                    var appSettings = DkEnvironment.CurrentAppSettings;
-
-                    var view = Shell.ActiveView;
-                    if (view == null) return;
-
-                    var fileStore = CodeModel.FileStore.GetOrCreateForTextBuffer(view.TextBuffer);
-                    if (fileStore == null) return;
-
-                    var fileName = VsTextUtil.TryGetDocumentFileName(view.TextBuffer);
-                    var model = fileStore.GetCurrentModel(appSettings, fileName, view.TextSnapshot, "Debug:ShowCodeModelDump");
-
-                    Shell.OpenTempContent(model.DumpTree(), Path.GetFileName(model.FilePath), ".model.xml");
-                });
-            }
-
-            public static void ShowStdLibCodeModelDump()
-            {
-                ThreadHelper.JoinableTaskFactory.RunAsync(async () =>
-                {
-                    await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
-
-                    var appSettings = DkEnvironment.CurrentAppSettings;
-
-                    var model = CodeModel.FileStore.GetStdLibModel(appSettings);
-
-                    Shell.OpenTempContent(model.DumpTree(), "stdlib", ".model.xml");
-                });
-            }
-
-            public static void ShowDefinitions()
-            {
-                ThreadHelper.JoinableTaskFactory.RunAsync(async () =>
-                {
-                    await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
-
-                    var appSettings = DkEnvironment.CurrentAppSettings;
-
-                    var model = GetModelForActiveDoc(appSettings);
-                    if (model != null)
-                    {
-                        Shell.OpenTempContent(model.DefinitionProvider.DumpDefinitions(), Path.GetFileName(model.FilePath), ".txt");
-                    }
-                });
-            }
-
-            private static CodeModel.CodeSource GetCodeSourceForActiveView(out string fileName)
-            {
-                ThreadHelper.ThrowIfNotOnUIThread();
-
-                var view = Shell.ActiveView;
-                if (view != null)
-                {
-                    fileName = VsTextUtil.TryGetDocumentFileName(view.TextBuffer);
-                    var content = view.TextBuffer.CurrentSnapshot.GetText();
-
-                    try
-                    {
-                        var merger = new CodeModel.FileMerger();
-                        merger.MergeFile(DkEnvironment.CurrentAppSettings, fileName, content, true, true);
-                        return merger.MergedContent;
-                    }
-                    catch (Exception ex)
-                    {
-                        Log.WriteEx(ex);
-
-                        var codeSource = new CodeModel.CodeSource();
-                        codeSource.Append(content, new CodeModel.CodeAttributes(fileName, 0, content.Length, true, true, false));
-                        codeSource.Flush();
-
-                        return codeSource;
-                    }
-                }
-
-                fileName = null;
-                return null;
-            }
-
-            public static void ShowPreprocessor()
-            {
-                ThreadHelper.JoinableTaskFactory.RunAsync(async () =>
-                {
-                    await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
-
-                    var appSettings = DkEnvironment.CurrentAppSettings;
-
-                    string fileName;
-                    var codeSource = GetCodeSourceForActiveView(out fileName);
-                    if (codeSource == null) return;
-
-                    var store = new CodeModel.FileStore();
-                    var model = store.CreatePreprocessedModel(appSettings, codeSource, fileName, false,
-                        "Commands.Debug.ShowPreprocessor()", null);
-
-                    Shell.OpenTempContent(model.Source.Text, Path.GetFileName(fileName), ".preprocessor.txt");
-                });
-            }
-
-            public static void ShowPreprocessorDump()
-            {
-                ThreadHelper.JoinableTaskFactory.RunAsync(async () =>
-                {
-                    await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
-
-                    var appSettings = DkEnvironment.CurrentAppSettings;
-
-                    var model = GetModelForActiveDoc(appSettings);
-                    if (model == null)
-                    {
-                        Shell.ShowError("No model found.");
-                        return;
-                    }
-
-                    var prepModel = model.PreprocessorModel;
-                    if (prepModel == null)
-                    {
-                        Shell.ShowError("No preprocessor model found.");
-                        return;
-                    }
-
-                    //Shell.OpenTempContent(prepModel.File.CodeSource.Dump(), Path.GetFileName(model.FileName), ".ppsegs.txt");
-                    Shell.OpenTempContent(prepModel.Dump(), Path.GetFileName(model.FilePath), ".prep.txt");
-                });
-            }
-
-            public static void ShowPreprocessorFullModelDump()
-            {
-                ThreadHelper.JoinableTaskFactory.RunAsync(async () =>
-                {
-                    await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
-
-                    var appSettings = DkEnvironment.CurrentAppSettings;
-
-                    var view = Shell.ActiveView;
-                    if (view == null) return;
-
-                    var fileName = VsTextUtil.TryGetDocumentFileName(view.TextBuffer);
-
-                    var fileStore = CodeModel.FileStore.GetOrCreateForTextBuffer(view.TextBuffer);
-                    if (fileStore == null) return;
-                    var model = fileStore.CreatePreprocessedModel(appSettings, fileName, view.TextSnapshot, false,
-                        "Debug:ShowPreprocessorFullModelDump");
-
-                    Shell.OpenTempContent(model.DumpTree(), Path.GetFileName(model.FilePath), ".prepmodel.xml");
-                });
-            }
-
-            public static void ShowQuickState()
-            {
-                ThreadHelper.ThrowIfNotOnUIThread();
-
-                var view = Shell.ActiveView;
-                var caretPtTest = view.Caret.Position.Point.GetPoint(buf => (!buf.ContentType.IsOfType("projection")),
-                    Microsoft.VisualStudio.Text.PositionAffinity.Predecessor);
-                if (!caretPtTest.HasValue)
-                {
-                    Log.Debug("Couldn't get caret point.");
-                    return;
-                }
-                var caretPt = caretPtTest.Value;
-
-                var state = caretPt.GetQuickState();
-                Log.Info("State: 0x{0:X8}", state);
-            }
-        }
-#endif
     }
 }
