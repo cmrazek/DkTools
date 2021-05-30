@@ -53,6 +53,7 @@ namespace DK.Modeling
 		public string ClassName => _className;
 		public string FunctionName => _funcName;
 		public string FullName => !string.IsNullOrEmpty(_className) ? string.Concat(_className, ".", _funcName) : _funcName;
+		public override string ToString() => PrettySignature;
 
 		public string Description
 		{

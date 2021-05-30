@@ -1424,21 +1424,6 @@ namespace DK.Modeling
 			return CodeParser.StringToStringLiteral(option);
 		}
 
-#if DEBUG
-		// TODO: remove if not referenced
-		internal static void CheckDataTypeParsing(string dataTypeText, CodeParser usedParser, DataType dataType)
-		{
-			if (dataType == null)
-			{
-				Log.Debug("WARNING: DataType.Parse was unable to parse [{0}]", dataTypeText);
-			}
-			else if (usedParser.Read())
-			{
-				Log.Debug("WARNING: DataType.Parse stopped before end of text [{0}] got [{1}]", dataTypeText, dataType.Name);
-			}
-		}
-#endif
-
 		public bool HasEnumOptions
 		{
 			get { return _completionOptionsType == CompletionOptionsType.EnumOptionsList; }

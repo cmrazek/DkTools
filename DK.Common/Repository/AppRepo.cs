@@ -1188,7 +1188,6 @@ namespace DK.Repository
 						var sig = FunctionSignature.ParseFromDb(Func_GetSignature(func), _appSettings);
 						var funcDef = new FunctionDefinition(sig, Func_GetFilePosition(func));
 						classDef.AddFunction(funcDef);
-						results.Add(funcDef);
 						return true;
 					});
 

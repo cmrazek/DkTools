@@ -461,12 +461,6 @@ namespace DK.Modeling.Tokens
 			get { return _sourceDefinition; }
 			set { _sourceDefinition = value; }
 		}
-
-		// TODO: remove if not needed
-		//protected DefinitionProvider DefinitionProvider
-		//{
-		//	get { return _scope.File.Model.DefinitionProvider; }
-		//}
 		#endregion
 
 		public virtual QuickInfoLayout GetQuickInfoElements(Token token = null)

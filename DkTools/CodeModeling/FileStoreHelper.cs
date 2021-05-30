@@ -70,15 +70,6 @@ namespace DkTools.CodeModeling
 			return fileStore.Model;
 		}
 
-		// TODO: remove
-		//public static CodeModel RegenerateModel(this FileStore fileStore, DkAppSettings appSettings, string fileName, ITextSnapshot snapshot, string reason)
-		//{
-		//	if (snapshot == null) throw new ArgumentNullException(nameof(snapshot));
-
-		//	fileStore.Model = fileStore.CreatePreprocessedModel(appSettings, fileName, snapshot, visible: true, reason);
-		//	return fileStore.Model;
-		//}
-
 		public static CodeModel CreatePreprocessedModel(this FileStore fileStore,
 			DkAppSettings appSettings,
 			string fileName,

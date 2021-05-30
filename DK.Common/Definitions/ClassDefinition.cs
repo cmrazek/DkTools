@@ -17,6 +17,7 @@ namespace DK.Definitions
 		}
 
 		public IEnumerable<FunctionDefinition> Functions => _funcs;
+		public override string ToString() => $"Class: {Name}";
 
 		public override bool CompletionVisible
 		{

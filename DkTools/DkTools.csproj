@@ -259,7 +259,6 @@
     <Compile Include="ErrorSuppressionOptions.cs">
       <SubType>Component</SubType>
     </Compile>
-    <Compile Include="CodeModeling\IContextSource.cs" />
     <Compile Include="CodeProcessing\CodeError.cs" />
     <Compile Include="CodeProcessing\CodeFile.cs" />
     <Compile Include="CodeProcessing\CodeLine.cs" />
@@ -390,7 +389,6 @@
     <Compile Include="VsTextUtil.cs" />
     <Compile Include="VSTheme.cs" />
     <Compile Include="WpfUtil.cs" />
-    <Compile Include="XmlUtil.cs" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="PromptForm.resx">

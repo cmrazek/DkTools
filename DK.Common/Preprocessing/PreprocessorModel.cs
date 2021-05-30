@@ -750,67 +750,6 @@ namespace DK.Preprocessing
 			set { _prep = value; }
 		}
 
-#if DEBUG
-		// TODO: remove if not needed
-		internal string Dump()
-		{
-			var sb = new StringBuilder();
-			if (!string.IsNullOrEmpty(_fileName))
-			{
-				sb.Append("File Name: ");
-				sb.AppendLine(_fileName);
-			}
-			if (!string.IsNullOrEmpty(_className))
-			{
-				sb.Append("Class Name: ");
-				sb.AppendLine(_className);
-			}
-
-			sb.AppendLine();
-			sb.AppendLine("Global Variables:");
-			var count = 0;
-			foreach (var def in _globalVars.Values)
-			{
-				sb.AppendLine(def.Dump());
-				count++;
-			}
-			sb.AppendFormat("{0} global variable(s)", count);
-			sb.AppendLine();
-			sb.AppendLine();
-
-			sb.AppendLine("Extern Functions:");
-			count = 0;
-			foreach (var def in _externFuncs.Values)
-			{
-				sb.AppendLine(def.Dump());
-				count++;
-			}
-			sb.AppendFormat("{0} extern func(s)", count);
-			sb.AppendLine();
-			sb.AppendLine();
-
-			sb.AppendLine("Local Functions:");
-			count = 0;
-			foreach (var def in _localFuncs)
-			{
-				sb.AppendLine(def.Definition.Dump());
-				count++;
-			}
-			sb.AppendFormat("{0} local func(s)", count);
-			sb.AppendLine();
-			sb.AppendLine();
-
-			sb.AppendLine("--- Definition Provider ---");
-			sb.Append(_defProv.DumpDefinitions());
-
-			sb.AppendLine();
-			sb.AppendLine();
-
-			sb.Append(_source.Text);
-			return sb.ToString();
-		}
-#endif
-
 		private class CodeScope
 		{
 			private CodeScope _parent;

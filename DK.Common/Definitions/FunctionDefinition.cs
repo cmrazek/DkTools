@@ -56,6 +56,7 @@ namespace DK.Definitions
 		/// Gets the full name "className.funcName" or "funcName" of this function.
 		/// </summary>
 		public string FullName => _sig.FullName;
+		public override string ToString() => _sig.ToString();
 
 		public override DataType DataType
 		{
