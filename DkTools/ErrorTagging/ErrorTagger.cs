@@ -11,6 +11,7 @@ using Microsoft.VisualStudio.Text.Editor;
 using Microsoft.VisualStudio.Text.Tagging;
 using System;
 using System.Collections.Generic;
+using System.Threading;
 
 namespace DkTools.ErrorTagging
 {
@@ -67,7 +68,7 @@ namespace DkTools.ErrorTagging
 			var appSettings = DkEnvironment.CurrentAppSettings;
 
 			var fileName = VsTextUtil.TryGetDocumentFileName(_view.TextBuffer);
-			_model = _store.GetMostRecentModel(appSettings, fileName, _view.TextSnapshot, "ErrorTagger.GetTags()");
+			_model = _store.GetMostRecentModel(appSettings, fileName, _view.TextSnapshot, "ErrorTagger.GetTags()", CancellationToken.None);
 
 			return ErrorTaskProvider.Instance.GetErrorTagsForFile(_model.FilePath, spans);
 		}
@@ -140,14 +141,14 @@ namespace DkTools.ErrorTagging
 							_model.FileContext != FileContext.Include &&
 							DkEnvironment.CurrentAppSettings.FileExistsInApp(_model.FilePath))
 						{
-							System.Threading.ThreadPool.QueueUserWorkItem(state =>
+							ThreadPool.QueueUserWorkItem(state =>
 							{
 								try
 								{
 									if ((e.Priority == DeferPriority_DocumentRefresh && ProbeToolsPackage.Instance.EditorOptions.RunBackgroundFecOnSave))
 									{
 										Shell.Status($"FEC: {_model.FilePath} (running)");
-										Compiler.BackgroundFec.RunSync(_model.FilePath);
+										Compiler.BackgroundFec.RunSync(_model.FilePath, e.CancellationToken);
 										Shell.Status($"FEC: {_model.FilePath} (complete)");
 									}
 
@@ -166,17 +167,22 @@ namespace DkTools.ErrorTagging
 													fileName: fileName,
 													snapshot: textBuffer.CurrentSnapshot,
 													visible: false,
+													cancel: e.CancellationToken,
 													reason: "Background Code Analysis");
 
 												var ca = new CodeAnalyzer(preprocessedModel);
-												ca.Run();
+												ca.Run(e.CancellationToken);
 											}
 										}
 									}
 								}
+								catch (OperationCanceledException ex)
+								{
+									Log.Debug(ex);
+								}
 								catch (Exception ex)
 								{
-									Log.WriteEx(ex);
+									Log.Error(ex);
 								}
 							});
 						}

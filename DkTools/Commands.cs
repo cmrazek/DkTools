@@ -12,6 +12,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Threading;
 
 namespace DkTools
 {
@@ -339,7 +340,7 @@ namespace DkTools
                         using (ProcessRunner pr = new ProcessRunner())
                         {
                             int exitCode = pr.CaptureProcess("fec.exe", "/p \"" + baseFileName + "\"",
-                                Path.GetDirectoryName(baseFileName), output);
+                                Path.GetDirectoryName(baseFileName), output, CancellationToken.None);
 
                             if (exitCode != 0)
                             {
@@ -387,7 +388,7 @@ namespace DkTools
 
                         var output = new StringOutput();
 
-                        var exitCode = pr.CaptureProcess("fec.exe", args, Path.GetDirectoryName(baseFileName), output);
+                        var exitCode = pr.CaptureProcess("fec.exe", args, Path.GetDirectoryName(baseFileName), output, CancellationToken.None);
 
                         if (exitCode != 0)
                         {
@@ -477,7 +478,7 @@ namespace DkTools
 
                     using (var pr = new ProcessRunner())
                     {
-                        exitCode = pr.CaptureProcess("ptd.exe", "", DkEnvironment.CurrentAppSettings.TempDir, output);
+                        exitCode = pr.CaptureProcess("ptd.exe", "", DkEnvironment.CurrentAppSettings.TempDir, output, CancellationToken.None);
                     }
                     if (exitCode != 0)
                     {
@@ -594,7 +595,7 @@ namespace DkTools
                 await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
                 try
                 {
-                    Tagging.Tagger.InsertDiag();
+                    Tagging.Tagger.InsertDiag(CancellationToken.None);
                 }
                 catch (Exception ex)
                 {
@@ -862,7 +863,7 @@ namespace DkTools
                 try
                 {
                     var nav = Navigation.Navigator.TryGetForView(Shell.ActiveView);
-                    if (nav != null) nav.GoToNextOrPrevReference(true);
+                    if (nav != null) nav.GoToNextOrPrevReference(true, CancellationToken.None);
                 }
                 catch (Exception ex)
                 {
@@ -879,7 +880,7 @@ namespace DkTools
                 try
                 {
                     var nav = Navigation.Navigator.TryGetForView(Shell.ActiveView);
-                    if (nav != null) nav.GoToNextOrPrevReference(false);
+                    if (nav != null) nav.GoToNextOrPrevReference(false, CancellationToken.None);
                 }
                 catch (Exception ex)
                 {
@@ -904,14 +905,14 @@ namespace DkTools
 
                     var fileStore = FileStoreHelper.GetOrCreateForTextBuffer(view.TextBuffer);
                     if (fileStore == null) return;
-                    var model = fileStore.CreatePreprocessedModel(appSettings, fileName, view.TextSnapshot, visible: false, "Code Analysis");
+                    var model = fileStore.CreatePreprocessedModel(appSettings, fileName, view.TextSnapshot, visible: false, "Code Analysis", CancellationToken.None);
 
                     var pane = Shell.CreateOutputPane(GuidList.guidCodeAnalysisPane, "DK Code Analysis");
                     pane.Clear();
                     pane.Show();
 
                     var ca = new CodeAnalyzer(model);
-                    ca.Run();
+                    ca.Run(CancellationToken.None);
                 }
                 catch (Exception ex)
                 {

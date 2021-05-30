@@ -1,15 +1,12 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using DK.AppEnvironment;
+﻿using DK.AppEnvironment;
 using DK.Diagnostics;
 using DkTools.CodeModeling;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Editor;
 using Microsoft.VisualStudio.Text.Outlining;
+using System.Linq;
+using System.Threading;
 
 namespace DkTools.Navigation
 {
@@ -60,7 +57,7 @@ namespace DkTools.Navigation
 			MoveTo(new SnapshotSpan(pt.Snapshot, new Span(pt.Position, 0)));
 		}
 
-		public void GoToNextOrPrevReference(bool next)
+		public void GoToNextOrPrevReference(bool next, CancellationToken cancel)
 		{
 			ThreadHelper.ThrowIfNotOnUIThread();
 
@@ -73,7 +70,7 @@ namespace DkTools.Navigation
 
 			var appSettings = DkEnvironment.CurrentAppSettings;
 			var fileName = VsTextUtil.TryGetDocumentFileName(_view.TextBuffer);
-			var model = fileStore.GetMostRecentModel(appSettings, fileName, _view.TextSnapshot, "ReferenceScroller.GoToNextReference()");
+			var model = fileStore.GetMostRecentModel(appSettings, fileName, _view.TextSnapshot, "ReferenceScroller.GoToNextReference()", cancel);
 
 			// Get the caret position
 			var caretPtTest = _view.Caret.Position.Point.GetPoint(buf => (!buf.ContentType.IsOfType("projection")), Microsoft.VisualStudio.Text.PositionAffinity.Predecessor);

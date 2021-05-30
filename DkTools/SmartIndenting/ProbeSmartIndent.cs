@@ -7,6 +7,7 @@ using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Editor;
 using System.Linq;
 using System.Text.RegularExpressions;
+using System.Threading;
 
 namespace DkTools.SmartIndenting
 {
@@ -37,10 +38,10 @@ namespace DkTools.SmartIndenting
 
 			var appSettings = DkEnvironment.CurrentAppSettings;
 
-			return GetDesiredIndentation(line.Snapshot.TextBuffer, line, _tabSize, _keepTabs, appSettings);
+			return GetDesiredIndentation(line.Snapshot.TextBuffer, line, _tabSize, _keepTabs, appSettings, CancellationToken.None);
 		}
 
-		public static int? GetDesiredIndentation(ITextBuffer buffer, ITextSnapshotLine line, int tabSize, bool keepTabs, DkAppSettings appSettings)
+		public static int? GetDesiredIndentation(ITextBuffer buffer, ITextSnapshotLine line, int tabSize, bool keepTabs, DkAppSettings appSettings, CancellationToken cancel)
 		{
 			ThreadHelper.ThrowIfNotOnUIThread();
 
@@ -78,7 +79,7 @@ namespace DkTools.SmartIndenting
 				if (fileStore != null)
 				{
 					var fileName = VsTextUtil.TryGetDocumentFileName(buffer);
-					var model = fileStore.GetCurrentModel(appSettings, fileName, buffer.CurrentSnapshot, "Smart indenting - case inside switch");
+					var model = fileStore.GetCurrentModel(appSettings, fileName, buffer.CurrentSnapshot, "Smart indenting - case inside switch", cancel);
 					var modelSnapshot = model.Snapshot as ITextSnapshot;
 					if (modelSnapshot != null)
 					{
@@ -192,14 +193,14 @@ namespace DkTools.SmartIndenting
 			}
 		}
 
-		public static void FixIndentingBetweenLines(ITextBuffer buffer, int startLineNumber, int endLineNumber, int tabSize, bool keepTabs, DkAppSettings appSettings)
+		public static void FixIndentingBetweenLines(ITextBuffer buffer, int startLineNumber, int endLineNumber, int tabSize, bool keepTabs, DkAppSettings appSettings, CancellationToken cancel)
 		{
             ThreadHelper.ThrowIfNotOnUIThread();
 
             for (int lineNumber = startLineNumber; lineNumber <= endLineNumber; lineNumber++)
 			{
 				var line = buffer.CurrentSnapshot.GetLineFromLineNumber(lineNumber);
-				var indent = GetDesiredIndentation(buffer, line, tabSize, keepTabs, appSettings);
+				var indent = GetDesiredIndentation(buffer, line, tabSize, keepTabs, appSettings, cancel);
 				if (!indent.HasValue) continue;
 				var desiredIndent = indent.Value;
 

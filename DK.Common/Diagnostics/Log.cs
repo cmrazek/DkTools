@@ -231,6 +231,11 @@ namespace DK.Diagnostics
 			Write(LogLevel.Debug, string.Format(format, args));
 		}
 
+		public static void Debug(Exception ex)
+		{
+			Write(LogLevel.Debug, ex.ToString());
+		}
+
 		public static void Info(string message)
 		{
 			if (_level > LogLevel.Info) return;
@@ -245,6 +250,11 @@ namespace DK.Diagnostics
 			Write(LogLevel.Info, string.Format(format, args));
 		}
 
+		public static void Info(Exception ex)
+		{
+			Write(LogLevel.Info, ex.ToString());
+		}
+
 		public static void Warning(string message)
 		{
 			if (_level > LogLevel.Warning) return;
@@ -257,6 +267,11 @@ namespace DK.Diagnostics
 			if (_level > LogLevel.Warning) return;
 
 			Write(LogLevel.Warning, string.Format(format, args));
+		}
+
+		public static void Warning(Exception ex)
+		{
+			Write(LogLevel.Warning, ex.ToString());
 		}
 
 		public static void Error(string message)

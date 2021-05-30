@@ -1,19 +1,18 @@
 ﻿using DK.CodeAnalysis;
-using DK.Diagnostics;
 using DkTools.ErrorTagging;
-using System.Diagnostics;
 using System.Linq;
+using System.Threading;
 
 namespace DkTools.CodeModeling
 {
 	static class CodeAnalyzerHelper
 	{
-		public static void Run(this CodeAnalyzer ca)
+		public static void Run(this CodeAnalyzer ca, CancellationToken cancel)
 		{
 			var results = ca.RunAndGetResults(new CAOptions
 			{
 				HighlightReportOutput = ProbeToolsPackage.Instance.EditorOptions.HighlightReportOutput
-			});
+			}, cancel);
 
 			ErrorTaskProvider.Instance.ReplaceForSourceAndInvokingFile(ErrorTaskSource.CodeAnalysis, ca.CodeModel.FilePath, results.Tasks.Select(x => x.ToErrorTask()));
 			ErrorMarkerTaggerProvider.ReplaceForSourceAndFile(ErrorTaskSource.CodeAnalysis, ca.CodeModel.FilePath, results.Markers.Select(x => x.ToErrorMarkerTag()));

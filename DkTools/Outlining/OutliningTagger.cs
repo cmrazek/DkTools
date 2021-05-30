@@ -6,6 +6,7 @@ using Microsoft.VisualStudio.Text;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 
 namespace DkTools.Outlining
 {
@@ -84,7 +85,7 @@ namespace DkTools.Outlining
 			{
 				var appSettings = DkEnvironment.CurrentAppSettings;
 				var fileName = VsTextUtil.TryGetDocumentFileName(_buffer);
-				var model = fileStore.GetCurrentModel(appSettings, fileName, _snapshot, "OutliningTagger.Reparse()");
+				var model = fileStore.GetCurrentModel(appSettings, fileName, _snapshot, "OutliningTagger.Reparse()", CancellationToken.None);
 				var modelSnapshot = model.Snapshot as ITextSnapshot;
 				if (modelSnapshot != null)
 				{

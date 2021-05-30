@@ -7,6 +7,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
+using System.Threading;
 
 namespace DK.Preprocessing
 {
@@ -26,8 +27,16 @@ namespace DK.Preprocessing
 		private IncludeDependency[] _includeDependencies;
 		private Preprocessor _prep;
 		private List<Definition> _globalDefs = new List<Definition>();
+		private CancellationToken _cancel;
 
-		internal PreprocessorModel(DkAppSettings appSettings, CodeSource source, DefinitionProvider definitionProvider, string fileName, bool visible, IEnumerable<IncludeDependency> includeDependencies)
+		internal PreprocessorModel(
+			DkAppSettings appSettings,
+			CodeSource source,
+			DefinitionProvider definitionProvider,
+			string fileName,
+			bool visible,
+			IEnumerable<IncludeDependency> includeDependencies,
+			CancellationToken cancel)
 		{
 			_appSettings = appSettings ?? throw new ArgumentNullException(nameof(appSettings));
 			_source = source ?? throw new ArgumentNullException(nameof(source));
@@ -37,6 +46,7 @@ namespace DK.Preprocessing
 			FileContextHelper.FileNameIsClass(_fileName, out _className);
 			_fileContext = FileContextHelper.GetFileContextFromFileName(fileName);
 			_visible = visible;
+			_cancel = cancel;
 
 			if (includeDependencies != null) _includeDependencies = includeDependencies.ToArray();
 			else _includeDependencies = IncludeDependency.EmptyArray;
@@ -59,6 +69,8 @@ namespace DK.Preprocessing
 
 			while (!_code.EndOfFile)
 			{
+				_cancel.ThrowIfCancellationRequested();
+
 				if (TryReadDataType(out dataType, out pos))
 				{
 					AfterRootDataType(dataType, pos, FunctionPrivacy.Public, false);

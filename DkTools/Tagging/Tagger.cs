@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Text;
 using System.Text.RegularExpressions;
+using System.Threading;
 using DK.AppEnvironment;
 using DkTools.CodeModeling;
 using EnvDTE;
@@ -91,7 +92,7 @@ namespace DkTools.Tagging
 			}
 		}
 
-		public static void InsertDiag()
+		public static void InsertDiag(CancellationToken cancel)
 		{
 			ThreadHelper.ThrowIfNotOnUIThread();
 
@@ -131,7 +132,7 @@ namespace DkTools.Tagging
 							var appSettings = DkEnvironment.CurrentAppSettings;
 							var fileName = VsTextUtil.TryGetDocumentFileName(buf);
 							var funcs = fileStore.GetFunctionDropDownList(appSettings, fileName, buf.CurrentSnapshot);
-							var model = fileStore.GetMostRecentModel(appSettings, fileName, buf.CurrentSnapshot, "Insert diag");
+							var model = fileStore.GetMostRecentModel(appSettings, fileName, buf.CurrentSnapshot, "Insert diag", cancel);
 							var modelSnapshot = model.Snapshot as ITextSnapshot;
 							if (modelSnapshot != null)
 							{

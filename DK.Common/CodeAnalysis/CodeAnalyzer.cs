@@ -11,6 +11,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
+using System.Threading;
 
 namespace DK.CodeAnalysis
 {
@@ -22,6 +23,7 @@ namespace DK.CodeAnalysis
 		private WarningSuppressionTracker _warningSuppressions;
 		private string _filePath;
 		private CAOptions _options;
+		private CancellationToken _cancel;
 
 		private List<Statement> _stmts;
 		private CAScope _scope;
@@ -42,9 +44,10 @@ namespace DK.CodeAnalysis
 		public CodeModel CodeModel => _codeModel;
 		public CAOptions Options => _options;
 
-		public CodeAnalysisResults RunAndGetResults(CAOptions options)
+		public CodeAnalysisResults RunAndGetResults(CAOptions options, CancellationToken cancel)
 		{
 			_options = options ?? throw new ArgumentNullException(nameof(options));
+			_cancel = cancel;
 
 			Log.Debug("Starting code analysis on file: {0}", _codeModel.FilePath);
 			var startTime = DateTime.Now;
@@ -55,6 +58,8 @@ namespace DK.CodeAnalysis
 
 			foreach (var func in _prepModel.LocalFunctions)
 			{
+				_cancel.ThrowIfCancellationRequested();
+
 				AnalyzeFunction(func);
 			}
 
@@ -81,6 +86,8 @@ namespace DK.CodeAnalysis
 			// Parse the function body
 			while (!_read.Code.EndOfFile)
 			{
+				_cancel.ThrowIfCancellationRequested();
+
 				var stmt = Statement.Read(_read);
 				if (stmt == null) break;
 				_stmts.Add(stmt);

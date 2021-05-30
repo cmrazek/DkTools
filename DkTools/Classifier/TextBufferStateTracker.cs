@@ -1,9 +1,9 @@
 ﻿using DK.AppEnvironment;
-using DK.Modeling;
 using DkTools.CodeModeling;
 using Microsoft.VisualStudio.Text;
 using System;
 using System.Collections.Generic;
+using System.Threading;
 
 namespace DkTools.Classifier
 {
@@ -64,12 +64,12 @@ namespace DkTools.Classifier
 			}
 		}
 
-		public long GetStateForPosition(SnapshotPoint snapPt, string fileName, DkAppSettings appSettings)
+		public long GetStateForPosition(SnapshotPoint snapPt, string fileName, DkAppSettings appSettings, CancellationToken cancel)
 		{
-			return GetStateForPosition(snapPt.Position, snapPt.Snapshot, fileName, appSettings);
+			return GetStateForPosition(snapPt.Position, snapPt.Snapshot, fileName, appSettings, cancel);
 		}
 
-		public long GetStateForPosition(int pos, ITextSnapshot snapshot, string fileName, DkAppSettings appSettings)
+		public long GetStateForPosition(int pos, ITextSnapshot snapshot, string fileName, DkAppSettings appSettings, CancellationToken cancel)
 		{
 			lock (this)
 			{
@@ -79,13 +79,13 @@ namespace DkTools.Classifier
 				if (pos > snapshot.Length) pos = snapshot.Length;
 
 				var line = _snapshot.GetLineFromPosition(pos);
-				var state = GetStateForLineStart(line.LineNumber, snapshot, fileName, appSettings);
+				var state = GetStateForLineStart(line.LineNumber, snapshot, fileName, appSettings, cancel);
 				var lineStartPos = line.Start.Position;
 
 				var fileStore = FileStoreHelper.GetOrCreateForTextBuffer(snapshot.TextBuffer);
 				if (fileStore == null) return 0;
 
-				var model = fileStore.GetMostRecentModel(appSettings, fileName, snapshot, "GetStateForPosition");
+				var model = fileStore.GetMostRecentModel(appSettings, fileName, snapshot, "GetStateForPosition", cancel);
 
 				if (lineStartPos <= pos)
 				{
@@ -102,7 +102,7 @@ namespace DkTools.Classifier
 			}
 		}
 
-		public long GetStateForLineStart(int lineNum, ITextSnapshot snapshot, string fileName, DkAppSettings appSettings)
+		public long GetStateForLineStart(int lineNum, ITextSnapshot snapshot, string fileName, DkAppSettings appSettings, CancellationToken cancel)
 		{
 			lock (this)
 			{
@@ -120,7 +120,7 @@ namespace DkTools.Classifier
 					var fileStore = FileStoreHelper.GetOrCreateForTextBuffer(snapshot.TextBuffer);
 					if (fileStore == null) return 0;
 
-					var model = fileStore.GetMostRecentModel(appSettings, fileName, snapshot, "GetStateForLine()");
+					var model = fileStore.GetMostRecentModel(appSettings, fileName, snapshot, "GetStateForLine()", cancel);
 					_snapshot = snapshot;
 
 					var tokenInfo = new ProbeClassifierScanner.TokenInfo();
@@ -158,9 +158,9 @@ namespace DkTools.Classifier
 		/// <summary>
 		/// Returns true if the position is not inside a comment, string literal or disabled code.
 		/// </summary>
-		public bool IsPositionInLiveCode(int pos, ITextSnapshot snapshot, string fileName, DkAppSettings appSettings)
+		public bool IsPositionInLiveCode(int pos, ITextSnapshot snapshot, string fileName, DkAppSettings appSettings, CancellationToken cancel)
 		{
-            return State.IsInLiveCode(GetStateForPosition(pos, snapshot, fileName, appSettings));
+            return State.IsInLiveCode(GetStateForPosition(pos, snapshot, fileName, appSettings, cancel));
 		}
 	}
 }

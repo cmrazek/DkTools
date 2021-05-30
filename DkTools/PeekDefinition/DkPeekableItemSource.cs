@@ -2,13 +2,9 @@
 using Microsoft.VisualStudio.Language.Intellisense;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Text;
-using Microsoft.VisualStudio.Text.Editor;
 using System;
 using System.Collections.Generic;
-using System.ComponentModel.Composition;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using System.Threading;
 
 namespace DkTools.PeekDefinition
 {
@@ -30,7 +26,7 @@ namespace DkTools.PeekDefinition
 			ThreadHelper.ThrowIfNotOnUIThread();
 
 			var triggerPoint = session.GetTriggerPoint(_textBuffer).GetPoint(session.TextView.TextSnapshot);
-			var def = GoToDefinitionHelper.GetDefinitionAtPoint(triggerPoint);
+			var def = GoToDefinitionHelper.GetDefinitionAtPoint(triggerPoint, CancellationToken.None);
 			if (def == null || def.FilePosition.IsEmpty)
 			{
 				ProbeToolsPackage.Instance.SetStatusText("No definition found at cursor.");

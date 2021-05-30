@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
+using System.Threading;
 
 namespace DK.Modeling.Tokens
 {
@@ -249,7 +250,7 @@ namespace DK.Modeling.Tokens
 		private string _fileName;
 		private CodeParser _code;
 
-		public void Parse(CodeSource source, string fileName, IEnumerable<string> parentFiles, bool visible)
+		public void Parse(CodeSource source, string fileName, IEnumerable<string> parentFiles, bool visible, CancellationToken cancel)
 		{
 			_source = source ?? throw new ArgumentNullException(nameof(source));
 			_code = new CodeParser(_source.Text);
@@ -264,6 +265,8 @@ namespace DK.Modeling.Tokens
 
 			while (_code.SkipWhiteSpace())
 			{
+				cancel.ThrowIfCancellationRequested();
+
 				var stmt = StatementToken.TryParse(scope);
 				if (stmt != null) AddToken(stmt);
 			}

@@ -7,6 +7,7 @@ using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Classification;
 using System;
 using System.Collections.Generic;
+using System.Threading;
 using System.Windows.Media;
 
 namespace DkTools.Classifier
@@ -186,13 +187,13 @@ namespace DkTools.Classifier
 
 			var tracker = TextBufferStateTracker.GetTrackerForTextBuffer(span.Snapshot.TextBuffer);
 			var spans = new List<ClassificationSpan>();
-			var state = tracker.GetStateForPosition(span.Start.Position, span.Snapshot, fileName, appSettings);
+			var state = tracker.GetStateForPosition(span.Start.Position, span.Snapshot, fileName, appSettings, CancellationToken.None);
 			var tokenInfo = new ProbeClassifierScanner.TokenInfo();
 
 			var fileStore = FileStoreHelper.GetOrCreateForTextBuffer(span.Snapshot.TextBuffer);
 			if (fileStore == null) return new List<ClassificationSpan>();
 
-			var model = fileStore.GetMostRecentModel(appSettings, fileName, span.Snapshot, "GetClassificationSpans");
+			var model = fileStore.GetMostRecentModel(appSettings, fileName, span.Snapshot, "GetClassificationSpans", CancellationToken.None);
 			_scanner.SetSource(span.GetText(), span.Start.Position, span.Snapshot, model);
 
 			var disableDeadCode = ProbeToolsPackage.Instance.EditorOptions.DisableDeadCode;

@@ -143,7 +143,7 @@ namespace DkTools.BraceHighlighting
 				{
 					var appSettings = DkEnvironment.CurrentAppSettings;
 					var fileName = VsTextUtil.TryGetDocumentFileName(_sourceBuffer);
-					var model = fileStore.GetCurrentModel(appSettings, fileName, _sourceBuffer.CurrentSnapshot, "Word select idle");
+					var model = fileStore.GetCurrentModel(appSettings, fileName, _sourceBuffer.CurrentSnapshot, "Word select idle", e.CancellationToken);
 					var modelPos = model.AdjustPosition(snapPt);
 					var caretToken = model.File.FindDownwardTouching(modelPos).LastOrDefault(t => t.SourceDefinition != null);
 					if (caretToken == null)

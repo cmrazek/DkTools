@@ -3,6 +3,7 @@ using System;
 using System.Diagnostics;
 using System.Collections;
 using System.IO;
+using System.Threading;
 
 namespace DkTools
 {
@@ -34,10 +35,10 @@ namespace DkTools
 			}
 		}
 
-		public int CaptureProcess(string fileName, string args, string workingDir, Output output)
+		public int CaptureProcess(string fileName, string args, string workingDir, Output output, CancellationToken cancel)
 		{
 			_output = output;
-			return DoCapture(fileName, args, workingDir);
+			return DoCapture(fileName, args, workingDir, cancel);
 		}
 
 		public int ExecuteProcess(string fileName, string args, string workingDir, bool waitForExit)
@@ -65,7 +66,7 @@ namespace DkTools
 			}
 		}
 
-		private int DoCapture(string fileName, string args, string workingDir)
+		private int DoCapture(string fileName, string args, string workingDir, CancellationToken cancel)
 		{
 			Kill();
 
@@ -103,6 +104,12 @@ namespace DkTools
 			while ((_outputThread != null && _outputThread.IsAlive) ||
 				(_errorThread != null && _errorThread.IsAlive))
 			{
+				if (cancel.IsCancellationRequested)
+				{
+					Kill();
+					throw new OperationCanceledException(cancel);
+				}
+
 				lock(_outputLines)
 				{
 					while (_outputLines.Count > 0)
@@ -197,7 +204,7 @@ namespace DkTools
 		{
 			bool _doErrors = false;
 			ProcessRunner _runner = null;
-			System.Threading.Thread _thread = null;
+			Thread _thread = null;
 			Process _proc = null;
 			StreamReader _reader = null;
 
@@ -229,7 +236,7 @@ namespace DkTools
 						if (line != null) _runner.OutputLine(line);
 					}
 				}
-				catch(Exception ex)
+				catch (Exception ex)
 				{
 					_runner.OutputLine("Exception: " + ex.Message);
 					_runner.OutputLine(ex.StackTrace);

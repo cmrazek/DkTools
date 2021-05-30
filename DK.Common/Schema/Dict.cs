@@ -10,6 +10,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Threading;
 
 namespace DK.Schema
 {
@@ -56,7 +57,7 @@ namespace DK.Schema
 				var fileStore = new FileStore();
 				var preprocessor = new Preprocessor(appSettings, fileStore);
 				_source = new CodeSource();
-				preprocessor.Preprocess(mergedReader, _source, dictPathName, null, FileContext.Dictionary);
+				preprocessor.Preprocess(mergedReader, _source, dictPathName, null, FileContext.Dictionary, CancellationToken.None);
 
 				var curTime = DateTime.Now;
 				var elapsed = curTime.Subtract(startTime);

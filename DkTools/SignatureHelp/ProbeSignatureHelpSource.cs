@@ -12,6 +12,7 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Text.RegularExpressions;
+using System.Threading;
 
 namespace DkTools.SignatureHelp
 {
@@ -73,7 +74,7 @@ namespace DkTools.SignatureHelp
 						ITrackingSpan applicableToSpan = null;
 
 						var fileName = VsTextUtil.TryGetDocumentFileName(snapshot.TextBuffer);
-						var model = fileStore.GetMostRecentModel(appSettings, fileName, snapshot, "Signature help after '(' - dot separated words");
+						var model = fileStore.GetMostRecentModel(appSettings, fileName, snapshot, "Signature help after '(' - dot separated words", CancellationToken.None);
 						var modelPos = model.AdjustPosition(word1Start, snapshot);
 
 						foreach (var word1Def in model.DefinitionProvider.GetAny(modelPos, word1))
@@ -92,7 +93,7 @@ namespace DkTools.SignatureHelp
 						ITrackingSpan applicableToSpan = null;
 
 						var fileName = VsTextUtil.TryGetDocumentFileName(snapshot.TextBuffer);
-						var model = fileStore.GetMostRecentModel(appSettings, fileName, snapshot, "Signature help after '('");
+						var model = fileStore.GetMostRecentModel(appSettings, fileName, snapshot, "Signature help after '('", CancellationToken.None);
 						var modelPos = model.AdjustPosition(funcNameStart, snapshot);
 						foreach (var def in model.DefinitionProvider.GetAny(modelPos, funcName))
 						{
@@ -115,7 +116,7 @@ namespace DkTools.SignatureHelp
 			if (fileStore != null)
 			{
 				var fileName = VsTextUtil.TryGetDocumentFileName(_textBuffer);
-				var model = fileStore.GetMostRecentModel(appSettings, fileName, snapshot, "Signature help after ','");
+				var model = fileStore.GetMostRecentModel(appSettings, fileName, snapshot, "Signature help after ','", CancellationToken.None);
 				var modelSnapshot = model.Snapshot as ITextSnapshot;
 				if (modelSnapshot != null)
 				{

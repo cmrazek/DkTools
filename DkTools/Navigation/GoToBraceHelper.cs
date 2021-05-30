@@ -6,12 +6,13 @@ using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Editor;
 using System.Linq;
+using System.Threading;
 
 namespace DkTools.Navigation
 {
 	internal class GoToBraceHelper
 	{
-		public static void Trigger(ITextView view, bool extend)
+		public static void Trigger(ITextView view, bool extend, CancellationToken cancel)
 		{
 			ThreadHelper.ThrowIfNotOnUIThread();
 
@@ -28,7 +29,7 @@ namespace DkTools.Navigation
 
 			var appSettings = DkEnvironment.CurrentAppSettings;
 			var fileName = VsTextUtil.TryGetDocumentFileName(view.TextBuffer);
-			var model = store.GetMostRecentModel(appSettings, fileName, view.TextSnapshot, "GoToBraceHelper.Trigger()");
+			var model = store.GetMostRecentModel(appSettings, fileName, view.TextSnapshot, "GoToBraceHelper.Trigger()", cancel);
 
 			var modelPos = model.AdjustPosition(caretPt.Position, caretPt.Snapshot);
 			var selTokens = model.File.FindDownwardTouching(modelPos).ToArray();

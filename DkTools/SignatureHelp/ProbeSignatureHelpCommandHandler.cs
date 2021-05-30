@@ -14,6 +14,7 @@ using Microsoft.VisualStudio.TextManager.Interop;
 using System;
 using System.Linq;
 using System.Runtime.InteropServices;
+using System.Threading;
 
 namespace DkTools.SignatureHelp
 {
@@ -64,12 +65,12 @@ namespace DkTools.SignatureHelp
 				{
 					if (nCmdID == (uint)VSConstants.VSStd97CmdID.GotoDefn)
 					{
-						Navigation.GoToDefinitionHelper.TriggerGoToDefinition(_textView);
+						Navigation.GoToDefinitionHelper.TriggerGoToDefinition(_textView, CancellationToken.None);
 						return VSConstants.S_OK;
 					}
 					else if (nCmdID == (uint)VSConstants.VSStd97CmdID.FindReferences)
 					{
-						Navigation.GoToDefinitionHelper.TriggerFindReferences(_textView);
+						Navigation.GoToDefinitionHelper.TriggerFindReferences(_textView, CancellationToken.None);
 						return VSConstants.S_OK;
 					}
 				}
@@ -105,7 +106,7 @@ namespace DkTools.SignatureHelp
 								{
 									var appSettings = DkEnvironment.CurrentAppSettings;
 									var fileName = VsTextUtil.TryGetDocumentFileName(_textView.TextBuffer);
-									var model = fileStore.GetMostRecentModel(appSettings, fileName, _textView.TextSnapshot, "Signature help command handler - after ','");
+									var model = fileStore.GetMostRecentModel(appSettings, fileName, _textView.TextSnapshot, "Signature help command handler - after ','", CancellationToken.None);
 									var modelSnapshot = model.Snapshot as ITextSnapshot;
 									if (modelSnapshot != null)
 									{
@@ -124,12 +125,12 @@ namespace DkTools.SignatureHelp
 					}
 					else if (nCmdID == (uint)VSConstants.VSStd2KCmdID.GOTOBRACE)
 					{
-						Navigation.GoToBraceHelper.Trigger(_textView, false);
+						Navigation.GoToBraceHelper.Trigger(_textView, false, CancellationToken.None);
 						return VSConstants.S_OK;
 					}
 					else if (nCmdID == (uint)VSConstants.VSStd2KCmdID.GOTOBRACE_EXT)
 					{
-						Navigation.GoToBraceHelper.Trigger(_textView, true);
+						Navigation.GoToBraceHelper.Trigger(_textView, true, CancellationToken.None);
 						return VSConstants.S_OK;
 					}
 					else if (nCmdID == (uint)VSConstants.VSStd2KCmdID.COMMENT_BLOCK)

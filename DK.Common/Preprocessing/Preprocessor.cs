@@ -8,6 +8,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Threading;
 
 namespace DK.Preprocessing
 {
@@ -39,14 +40,20 @@ namespace DK.Preprocessing
 		/// <param name="fileContext">The type of file.</param>
 		/// <returns>True if the preprocessor changed a part of the document and the document should be re-run through this function again.
 		/// False if the document has finished preprocessing.</returns>
-		public PreprocessorResult Preprocess(IPreprocessorReader reader, IPreprocessorWriter writer, string fileName,
-			IEnumerable<string> parentFiles, FileContext fileContext, string stopAtIncludeFile = null,
+		public PreprocessorResult Preprocess(
+			IPreprocessorReader reader,
+			IPreprocessorWriter writer,
+			string fileName,
+			IEnumerable<string> parentFiles,
+			FileContext fileContext,
+			CancellationToken cancel,
+			string stopAtIncludeFile = null,
 			IEnumerable<PreprocessorDefine> stdlibDefines = null)
 		{
 			if (reader == null) throw new ArgumentNullException("reader");
 
 			return Preprocess(new PreprocessorParams(reader, writer, fileName, parentFiles, fileContext,
-				ContentType.File, stopAtIncludeFile)
+				ContentType.File, stopAtIncludeFile, cancel)
 			{
 				isMainSource = true,
 				stdlibDefines = stdlibDefines
@@ -75,6 +82,8 @@ namespace DK.Preprocessing
 
 			while (!rdr.EOF && !p.result.IncludeFileReached)
 			{
+				p.cancel.ThrowIfCancellationRequested();
+
 				str = rdr.PeekToken(false);
 				if (string.IsNullOrEmpty(str)) continue;
 
@@ -432,7 +441,7 @@ namespace DK.Preprocessing
 						rdr.Ignore(1);
 
 						var argText = ApplySubstitutions(sb.ToString(), p.args);
-						var resolvedParamText = ResolveMacros(argText, p.restrictedDefines, null, p.fileContext, p.contentType);
+						var resolvedParamText = ResolveMacros(argText, p.restrictedDefines, null, p.fileContext, p.contentType, p.cancel);
 						paramList.Add(resolvedParamText.Trim());
 
 						sb.Clear();
@@ -477,7 +486,7 @@ namespace DK.Preprocessing
 				if (sb.Length > 0)
 				{
 					var argText = ApplySubstitutions(sb.ToString(), p.args);
-					var resolvedParamText = ResolveMacros(argText, p.restrictedDefines, null, p.fileContext, p.contentType);
+					var resolvedParamText = ResolveMacros(argText, p.restrictedDefines, null, p.fileContext, p.contentType, p.cancel);
 					paramList.Add(resolvedParamText.Trim());
 				}
 
@@ -507,7 +516,7 @@ namespace DK.Preprocessing
 			else restrictedDefines = new string[] { name };
 
 			var textToAdd = ApplySubstitutions(define.Content, args);
-			textToAdd = ResolveMacros(textToAdd, restrictedDefines, null, p.fileContext, p.contentType);
+			textToAdd = ResolveMacros(textToAdd, restrictedDefines, null, p.fileContext, p.contentType, p.cancel);
 			rdr.Insert(textToAdd);
 
 			p.args = oldArgs;
@@ -525,7 +534,7 @@ namespace DK.Preprocessing
 
 			var content = rdr.ReadAndIgnoreNestableContent(")");
 			content = ApplySubstitutions(content, p.args);
-			content = ResolveMacros(content, p.restrictedDefines, null, p.fileContext, p.contentType);
+			content = ResolveMacros(content, p.restrictedDefines, null, p.fileContext, p.contentType, p.cancel);
 
 			p.reader.Insert(EscapeString(content));
 		}
@@ -551,12 +560,12 @@ namespace DK.Preprocessing
 		}
 
 		private string ResolveMacros(string source, IEnumerable<string> restrictedDefines, IEnumerable<PreprocessorDefine> args,
-			FileContext serverContext, ContentType contentType)
+			FileContext serverContext, ContentType contentType, CancellationToken cancel)
 		{
 			var reader = new StringPreprocessorReader(source);
 			var writer = new StringPreprocessorWriter();
 
-			var parms = new PreprocessorParams(reader, writer, string.Empty, null, serverContext, contentType, null);
+			var parms = new PreprocessorParams(reader, writer, string.Empty, parentFiles: null, serverContext, contentType, stopAtIncludeFile: null, cancel);
 			parms.restrictedDefines = restrictedDefines;
 			parms.args = args;
 			parms.resolvingMacros = true;
@@ -566,6 +575,8 @@ namespace DK.Preprocessing
 
 			while (Preprocess(parms).DocumentAltered && counter <= 32)
 			{
+				cancel.ThrowIfCancellationRequested();
+
 				var newText = writer.Text;
 				if (newText == lastText) break;
 				lastText = newText;
@@ -677,7 +688,7 @@ namespace DK.Preprocessing
 
 			// Run the preprocessor on the include file.
 			var includeSource = new CodeSource();
-			var parms = new PreprocessorParams(reader, includeSource, includeNode.FullPathName, parentFiles, p.fileContext, p.contentType, p.stopAtIncludeFile);
+			var parms = new PreprocessorParams(reader, includeSource, includeNode.FullPathName, parentFiles, p.fileContext, p.contentType, p.stopAtIncludeFile, p.cancel);
 			p.result.Merge(Preprocess(parms));
 
 			p.writer.Append(includeSource);
@@ -828,13 +839,13 @@ namespace DK.Preprocessing
 
 							case ConditionResult.Negative:
 								// No previous #if was true, so this could be the one...
-								ifLevel.result = EvaluateCondition(p, conditionStr, conditionFileName, conditionPosition);
+								ifLevel.result = EvaluateCondition(p, conditionStr, conditionFileName, conditionPosition, p.cancel);
 								if (ifLevel.result == ConditionResult.Positive) ifLevel.prevResult = ConditionResult.Positive;
 								break;
 
 							case ConditionResult.Indeterminate:
 								// An error on a previous #if
-								ifLevel.result = EvaluateCondition(p, conditionStr, conditionFileName, conditionPosition);
+								ifLevel.result = EvaluateCondition(p, conditionStr, conditionFileName, conditionPosition, p.cancel);
 								ifLevel.prevResult = ifLevel.result;
 								break;
 						}
@@ -842,7 +853,7 @@ namespace DK.Preprocessing
 				}
 				else
 				{
-					var result = EvaluateCondition(p, conditionStr, conditionFileName, conditionPosition);
+					var result = EvaluateCondition(p, conditionStr, conditionFileName, conditionPosition, p.cancel);
 					p.ifStack.Push(new ConditionScope(result, result, p.suppress));
 				}
 			}
@@ -858,7 +869,7 @@ namespace DK.Preprocessing
 				}
 				else
 				{
-					var result = EvaluateCondition(p, conditionStr, conditionFileName, conditionPosition);
+					var result = EvaluateCondition(p, conditionStr, conditionFileName, conditionPosition, p.cancel);
 					p.ifStack.Push(new ConditionScope(result, result, p.suppress));
 				}
 			}
@@ -1053,9 +1064,11 @@ namespace DK.Preprocessing
 			public string stopAtIncludeFile;
 			public PreprocessorResult result = new PreprocessorResult();
 			public IEnumerable<PreprocessorDefine> stdlibDefines;
+			public CancellationToken cancel;
 
 			public PreprocessorParams(IPreprocessorReader reader, IPreprocessorWriter writer, string fileName,
-				IEnumerable<string> parentFiles, FileContext serverContext, ContentType contentType, string stopAtIncludeFile)
+				IEnumerable<string> parentFiles, FileContext serverContext, ContentType contentType, string stopAtIncludeFile,
+				CancellationToken cancel)
 			{
 				this.reader = reader;
 				this.writer = writer;
@@ -1064,6 +1077,7 @@ namespace DK.Preprocessing
 				this.fileContext = serverContext;
 				this.contentType = contentType;
 				this.stopAtIncludeFile = stopAtIncludeFile;
+				this.cancel = cancel;
 			}
 		}
 
@@ -1079,12 +1093,12 @@ namespace DK.Preprocessing
 			}
 		}
 
-		private ConditionResult EvaluateCondition(PreprocessorParams p, string conditionStr, string fileName, int pos)
+		private ConditionResult EvaluateCondition(PreprocessorParams p, string conditionStr, string fileName, int pos, CancellationToken cancel)
 		{
 			// Run preprocessor on the condition string
 			var reader = new StringPreprocessorReader(conditionStr);
 			var writer = new StringPreprocessorWriter();
-			var parms = new PreprocessorParams(reader, writer, string.Empty, null, p.fileContext, ContentType.Condition, null);
+			var parms = new PreprocessorParams(reader, writer, string.Empty, null, p.fileContext, ContentType.Condition, stopAtIncludeFile: null, cancel);
 			parms.allowDirectives = false;
 			parms.args = p.args;
 			Preprocess(parms);

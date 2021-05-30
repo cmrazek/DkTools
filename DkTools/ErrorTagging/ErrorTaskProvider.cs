@@ -203,8 +203,7 @@ namespace DkTools.ErrorTagging
 				{
 					var appSettings = DkEnvironment.CurrentAppSettings;
 					var fileName = VsTextUtil.TryGetDocumentFileName(textView.TextBuffer);
-					var model = fileStore.GetMostRecentModel(appSettings, fileName, textView.TextSnapshot, "ErrorTaskProvider.OnDocumentClosed()");
-					RemoveAllForSourceAndInvokingFile(ErrorTaskSource.BackgroundFec, model.FilePath);
+					RemoveAllForSourceAndInvokingFile(ErrorTaskSource.BackgroundFec, fileName);
 				}
 			});
 		}

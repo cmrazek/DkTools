@@ -17,7 +17,7 @@ namespace DkTools.FunctionFileScanning
 	internal static class FFScanner
 	{
 		private static List<Thread> _threads = new List<Thread>();
-		private static EventWaitHandle _kill = new EventWaitHandle(false, EventResetMode.ManualReset);
+		private static CancellationTokenSource _cancel;
 		private static List<ScanJob> _pendingQueue = new List<ScanJob>();
 		private static List<ScanJob> _runningQueue = new List<ScanJob>();
 		private static object _queueLock = new object();
@@ -72,7 +72,7 @@ namespace DkTools.FunctionFileScanning
 				if (_threads.Any(t => t.IsAlive))
 				{
 					Log.Debug("Stopping existing scan threads.");
-					_kill.Set();
+					_cancel?.Cancel();
 
 					var remainingThread = _threads.FirstOrDefault(t => t.IsAlive);
 					while (remainingThread != null)
@@ -139,7 +139,7 @@ namespace DkTools.FunctionFileScanning
 				Log.Info("FFScanner starting.");
 
 				Kill();
-				_kill.Reset();
+				_cancel = new CancellationTokenSource();
 				_threads.Clear();
 
 				_scanStartTime = DateTime.Now;
@@ -161,38 +161,46 @@ namespace DkTools.FunctionFileScanning
 
 				for (int i = 0; i < numThreads; i++)
 				{
-					var thread = new Thread(new ThreadStart(ThreadProc));
+					var thread = new Thread(new ParameterizedThreadStart(ThreadProc));
 					thread.Name = $"FFScanner {i + 1}";
 					thread.Priority = ThreadPriority.BelowNormal;
-					thread.Start();
+					thread.Start(_cancel.Token);
 				}
 			}
 		}
 
-		private static void ThreadProc()
+		private static void ThreadProc(object cancelToken)
 		{
 			try
 			{
+				var cancel = (CancellationToken)cancelToken;
+
 				Log.Debug("FFScanner thread starting.");
 
 				ScanJob job;
 				int timeout = 0;
 
-				while (!_kill.WaitOne(timeout))
+				while (!cancel.IsCancellationRequested)
 				{
 					if (!GetJobFromQueue(out job)) break;
 					if (job != null)
 					{
-						ProcessJob(job);
+						ProcessJob(job, cancel);
 						timeout = 0;
 					}
 					else
 					{
 						timeout = 10;
 					}
+
+					if (timeout > 0) Thread.Sleep(timeout);
 				}
 
 				Log.Debug("FFScanner thread stopping.");
+			}
+			catch (OperationCanceledException ex)
+			{
+				Log.Debug(ex);
 			}
 			catch (Exception ex)
 			{
@@ -250,7 +258,7 @@ namespace DkTools.FunctionFileScanning
 			}
 		}
 
-		private static void ProcessJob(ScanJob job)
+		private static void ProcessJob(ScanJob job, CancellationToken cancel)
 		{
 			try
 			{
@@ -275,7 +283,7 @@ namespace DkTools.FunctionFileScanning
 
 					case FFScanMode.Exports:
 					case FFScanMode.Deep:
-						ProcessFile(job.App, job);
+						ProcessFile(job.App, job, cancel);
 						break;
 
 					case FFScanMode.ExportsComplete:
@@ -292,6 +300,10 @@ namespace DkTools.FunctionFileScanning
 						}
 						break;
 				}
+			}
+			catch (OperationCanceledException ex)
+			{
+				Log.Debug(ex);
 			}
 			catch (Exception ex)
 			{
@@ -371,7 +383,7 @@ namespace DkTools.FunctionFileScanning
 			return false;
 		}
 
-		private static void ProcessFile(DkAppSettings app, ScanJob scan)
+		private static void ProcessFile(DkAppSettings app, ScanJob scan, CancellationToken cancel)
 		{
 			try
 			{
@@ -409,6 +421,7 @@ namespace DkTools.FunctionFileScanning
 					fileName: scan.Path,
 					visible: false,
 					reason: string.Concat("Function file processing: ", scan.Path),
+					cancel: cancel,
 					includeDependencies: includeDependencies);
 
 				var className = fileContext.IsClass() ? Path.GetFileNameWithoutExtension(scan.Path) : null;

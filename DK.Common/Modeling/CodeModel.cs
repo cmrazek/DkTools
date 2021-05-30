@@ -7,6 +7,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Threading;
 
 namespace DK.Modeling
 {
@@ -34,25 +35,35 @@ namespace DK.Modeling
 			_store = store ?? throw new ArgumentNullException(nameof(store));
 		}
 
-		public static CodeModel CreateVisibleModelForPreprocessed(CodeSource visibleSource, DkAppSettings appSettings, FileStore store, PreprocessorModel prepModel)
+		public static CodeModel CreateVisibleModelForPreprocessed(
+			CodeSource visibleSource,
+			DkAppSettings appSettings,
+			FileStore store,
+			PreprocessorModel prepModel,
+			CancellationToken cancel)
 		{
 			var model = new CodeModel(appSettings, store);
 			var codeFile = new CodeFile(model);
 
-			model.Init(visibleSource, codeFile, prepModel.FileName, true, prepModel.DefinitionProvider);
+			model.Init(visibleSource, codeFile, prepModel.FileName, true, prepModel.DefinitionProvider, cancel);
 			return model;
 		}
 
-		public static CodeModel CreateFullModelForPreprocessed(CodeSource source, DkAppSettings appSettings, FileStore store, PreprocessorModel prepModel)
+		public static CodeModel CreateFullModelForPreprocessed(
+			CodeSource source,
+			DkAppSettings appSettings,
+			FileStore store,
+			PreprocessorModel prepModel,
+			CancellationToken cancel)
 		{
 			var model = new CodeModel(appSettings, store);
 			var codeFile = new CodeFile(model);
 
-			model.Init(source, codeFile, prepModel.FileName, false, prepModel.DefinitionProvider);
+			model.Init(source, codeFile, prepModel.FileName, false, prepModel.DefinitionProvider, cancel);
 			return model;
 		}
 
-		private void Init(CodeSource source, CodeFile file, string fileName, bool visible, DefinitionProvider defProvider)
+		private void Init(CodeSource source, CodeFile file, string fileName, bool visible, DefinitionProvider defProvider, CancellationToken cancel)
 		{
 #if DEBUG
 			if (defProvider == null) throw new ArgumentNullException("defProvider");
@@ -80,7 +91,7 @@ namespace DK.Modeling
 			_defProvider = defProvider;
 			_file = new CodeFile(this);
 
-			_file.Parse(source, _fileName, new string[0], visible);
+			_file.Parse(source, _fileName, new string[0], visible, cancel);
 
 			this.RefreshTime = DateTime.Now;
 		}

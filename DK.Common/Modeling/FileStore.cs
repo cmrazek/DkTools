@@ -7,6 +7,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Threading;
 
 namespace DK.Modeling
 {
@@ -151,13 +152,14 @@ namespace DK.Modeling
 			return false;
 		}
 
-		public CodeModel CreatePreprocessedModel(DkAppSettings appSettings, CodeSource source, string fileName, bool visible, string reason)
-		{
-			return CreatePreprocessedModel(appSettings, source, fileName, visible, reason, includeDependencies: null);
-		}
-
-		public CodeModel CreatePreprocessedModel(DkAppSettings appSettings, CodeSource source, string fileName,
-			bool visible, string reason, IEnumerable<IncludeDependency> includeDependencies)
+		public CodeModel CreatePreprocessedModel(
+			DkAppSettings appSettings,
+			CodeSource source,
+			string fileName,
+			bool visible,
+			string reason,
+			CancellationToken cancel,
+			IEnumerable<IncludeDependency> includeDependencies = null)
 		{
 			if (string.IsNullOrEmpty(fileName)) throw new ArgumentNullException(nameof(fileName));
 #if DEBUG
@@ -173,12 +175,12 @@ namespace DK.Modeling
 			var fileContext = FileContextHelper.GetFileContextFromFileName(fileName);
 			var prep = new Preprocessor(appSettings, this);
 			if (includeDependencies != null) prep.AddIncludeDependencies(includeDependencies);
-			prep.Preprocess(reader, prepSource, fileName, new string[0], fileContext, stdlibDefines: _stdLibDefines);
+			prep.Preprocess(reader, prepSource, fileName, new string[0], fileContext, stdlibDefines: _stdLibDefines, cancel: cancel);
 			prep.AddDefinitionsToProvider(defProvider);
 
 			if (fileContext == FileContext.Include && !string.IsNullOrEmpty(fileName))
 			{
-				var includeParentDefs = GetIncludeParentDefinitions(appSettings, fileName);
+				var includeParentDefs = GetIncludeParentDefinitions(appSettings, fileName, cancel);
 				defProvider.AddGlobalFromFile(includeParentDefs);
 			}
 
@@ -186,7 +188,7 @@ namespace DK.Modeling
 			var midTime1 = DateTime.Now;
 #endif
 
-			var prepModel = new PreprocessorModel(appSettings, prepSource, defProvider, fileName, visible, prep.IncludeDependencies)
+			var prepModel = new PreprocessorModel(appSettings, prepSource, defProvider, fileName, visible, prep.IncludeDependencies, cancel)
 			{
 				Preprocessor = prep
 			};
@@ -198,13 +200,13 @@ namespace DK.Modeling
 			CodeModel modelToReturn;
 			if (visible)
 			{
-				modelToReturn = CodeModel.CreateVisibleModelForPreprocessed(source, appSettings, this, prepModel);
+				modelToReturn = CodeModel.CreateVisibleModelForPreprocessed(source, appSettings, this, prepModel, cancel);
 				modelToReturn.PreprocessorModel = prepModel;
 				modelToReturn.DisabledSections = prepSource.GenerateDisabledSections().ToArray();
 			}
 			else
 			{
-				modelToReturn = CodeModel.CreateFullModelForPreprocessed(prepSource, appSettings, this, prepModel);
+				modelToReturn = CodeModel.CreateFullModelForPreprocessed(prepSource, appSettings, this, prepModel, cancel);
 				modelToReturn.PreprocessorModel = prepModel;
 			}
 
@@ -235,7 +237,7 @@ namespace DK.Modeling
 			if (includeFile != null)
 			{
 				_stdLibModel = tempStore.CreatePreprocessedModel(appSettings, includeFile.GetSource(appSettings),
-					includeFile.FullPathName, false, "stdlib.i model", null);
+					includeFile.FullPathName, false, "stdlib.i model", CancellationToken.None, includeDependencies: null);
 			}
 			else
 			{
@@ -243,7 +245,7 @@ namespace DK.Modeling
 				blankSource.Flush();
 
 				_stdLibModel = tempStore.CreatePreprocessedModel(appSettings, blankSource, "stdlib.i", false,
-					"stdlib.i model (blank)", null);
+					"stdlib.i model (blank)", CancellationToken.None, includeDependencies: null);
 			}
 
 			_stdLibDefines = _stdLibModel.PreprocessorModel.Preprocessor.Defines.ToArray();
@@ -357,7 +359,7 @@ namespace DK.Modeling
 			}
 		}
 
-		public Definition[] GetIncludeParentDefinitions(DkAppSettings appSettings, string includePathName)
+		public Definition[] GetIncludeParentDefinitions(DkAppSettings appSettings, string includePathName, CancellationToken cancel)
 		{
 			Definition[] cachedDefs;
 			if (_includeParentDefs.TryGetValue(includePathName.ToLower(), out cachedDefs)) return cachedDefs;
@@ -398,7 +400,7 @@ namespace DK.Modeling
 
 				var fileContext = FileContextHelper.GetFileContextFromFileName(parentPathName);
 				var prep = new Preprocessor(appSettings, this);
-				var prepResult = prep.Preprocess(reader, prepSource, parentPathName, new string[0], fileContext, includePathName);
+				var prepResult = prep.Preprocess(reader, prepSource, parentPathName, new string[0], fileContext, cancel, stopAtIncludeFile: includePathName);
 				if (!prepResult.IncludeFileReached)
 				{
 					Log.Warning("Include file not reached when preprocessing parent.\r\nInclude File: {0}\r\nParent File: {1}",
