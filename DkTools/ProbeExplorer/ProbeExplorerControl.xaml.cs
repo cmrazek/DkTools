@@ -106,6 +106,7 @@ namespace DkTools.ProbeExplorer
 				RefreshAppCombo(appSettings);
 				RefreshFileTree(appSettings);
 				RefreshDictTree();
+				c_run.AppSettings = appSettings;
 
 				UpdateForFileFilter();
 			}
@@ -165,6 +166,7 @@ namespace DkTools.ProbeExplorer
 					RefreshAppCombo(appSettings);
 					RefreshFileTree(appSettings);
 					RefreshDictTree();
+					c_run.AppSettings = appSettings;
 					GlobalEvents.OnRefreshAllDocumentsRequired();
 				});
 			}

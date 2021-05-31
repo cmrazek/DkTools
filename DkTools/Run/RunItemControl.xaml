@@ -1,0 +1,42 @@
+﻿<UserControl x:Class="DkTools.Run.RunItemControl"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:local="clr-namespace:DkTools.Run"
+             mc:Ignorable="d" 
+             d:DesignHeight="400" d:DesignWidth="400">
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*"/>
+            <ColumnDefinition Width="Auto"/>
+        </Grid.ColumnDefinitions>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+        <Button Name="RunButton" Grid.Row="0" Grid.Column="0" Content="{Binding RunButtonDisplayText}" Margin="4,4,4,4"/>
+        <Button Name="ExpandButton" Grid.Row="0" Grid.Column="1" Content="+" Margin="0,4,4,4" Click="ExpandButton_Click"/>
+        <Grid Name="OptionsGrid" Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2" Visibility="{Binding OptionsPaneVisibility}">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
+            <Label Content="Title:" Grid.Row="0" Grid.Column="0"/>
+            <TextBox Text="{Binding Title, Mode=TwoWay}" Grid.Row="0" Grid.Column="1"/>
+            <Label Content="File:" Grid.Row="1" Grid.Column="0"/>
+            <TextBox Text="{Binding FilePath, Mode=TwoWay}" Grid.Row="1" Grid.Column="1"/>
+            <Label Content="Arguments:" Grid.Row="2" Grid.Column="0"/>
+            <TextBox Text="{Binding Arguments, Mode=TwoWay}" Grid.Row="2" Grid.Column="1"/>
+            <Label Content="Working Dir:" Grid.Row="3" Grid.Column="0"/>
+            <TextBox Text="{Binding WorkingDirectory, Mode=TwoWay}" Grid.Row="3" Grid.Column="1"/>
+        </Grid>
+    </Grid>
+</UserControl>
