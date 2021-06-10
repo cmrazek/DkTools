@@ -1,15 +1,10 @@
-﻿using DkTools.SignatureHelp;
-using Microsoft.VisualStudio.Editor;
+﻿using Microsoft.VisualStudio.Editor;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Text.Editor;
 using Microsoft.VisualStudio.TextManager.Interop;
 using Microsoft.VisualStudio.Utilities;
 using System;
-using System.Collections.Generic;
 using System.ComponentModel.Composition;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace DkTools
 {
@@ -52,7 +47,7 @@ namespace DkTools
 
             var ext = System.IO.Path.GetExtension(filePath).ToLower();
             if (ext.StartsWith(".")) ext = ext.Substring(1);
-            if (Constants.ProbeExtensions.Contains(ext) || Constants.IncludeExtensions.Contains(ext))
+            if (DK.Constants.ProbeExtensions.Contains(ext) || DK.Constants.IncludeExtensions.Contains(ext))
             {
                 return true;
             }

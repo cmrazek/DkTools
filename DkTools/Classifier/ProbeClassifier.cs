@@ -1,11 +1,14 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Windows.Media;
+﻿using DK.AppEnvironment;
+using DK.Diagnostics;
+using DK.Syntax;
+using DkTools.CodeModeling;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Classification;
+using System;
+using System.Collections.Generic;
+using System.Threading;
+using System.Windows.Media;
 
 namespace DkTools.Classifier
 {
@@ -25,16 +28,16 @@ namespace DkTools.Classifier
 
 			_scanner = new ProbeClassifierScanner();
 
-			ProbeToolsPackage.RefreshAllDocumentsRequired += OnRefreshAllDocumentsRequired;
-			ProbeToolsPackage.RefreshDocumentRequired += OnRefreshDocumentRequired;
+			GlobalEvents.RefreshAllDocumentsRequired += OnRefreshAllDocumentsRequired;
+			GlobalEvents.RefreshDocumentRequired += OnRefreshDocumentRequired;
 
 			VSTheme.ThemeChanged += VSTheme_ThemeChanged;
 		}
 
 		~ProbeClassifier()
 		{
-			ProbeToolsPackage.RefreshAllDocumentsRequired -= OnRefreshAllDocumentsRequired;
-			ProbeToolsPackage.RefreshDocumentRequired -= OnRefreshDocumentRequired;
+			GlobalEvents.RefreshAllDocumentsRequired -= OnRefreshAllDocumentsRequired;
+			GlobalEvents.RefreshDocumentRequired -= OnRefreshDocumentRequired;
 		}
 
 		private static void InitializeClassifierTypes(IClassificationTypeRegistryService registry)
@@ -184,13 +187,13 @@ namespace DkTools.Classifier
 
 			var tracker = TextBufferStateTracker.GetTrackerForTextBuffer(span.Snapshot.TextBuffer);
 			var spans = new List<ClassificationSpan>();
-			var state = tracker.GetStateForPosition(span.Start.Position, span.Snapshot, fileName, appSettings);
+			var state = tracker.GetStateForPosition(span.Start.Position, span.Snapshot, fileName, appSettings, CancellationToken.None);
 			var tokenInfo = new ProbeClassifierScanner.TokenInfo();
 
-			var fileStore = CodeModel.FileStore.GetOrCreateForTextBuffer(span.Snapshot.TextBuffer);
+			var fileStore = FileStoreHelper.GetOrCreateForTextBuffer(span.Snapshot.TextBuffer);
 			if (fileStore == null) return new List<ClassificationSpan>();
 
-			var model = fileStore.GetMostRecentModel(appSettings, fileName, span.Snapshot, "GetClassificationSpans");
+			var model = fileStore.GetMostRecentModel(appSettings, fileName, span.Snapshot, "GetClassificationSpans", CancellationToken.None);
 			_scanner.SetSource(span.GetText(), span.Start.Position, span.Snapshot, model);
 
 			var disableDeadCode = ProbeToolsPackage.Instance.EditorOptions.DisableDeadCode;
@@ -250,24 +253,27 @@ namespace DkTools.Classifier
 			}
 		}
 
-		private void OnRefreshDocumentRequired(object sender, ProbeToolsPackage.RefreshDocumentEventArgs e)
+		private void OnRefreshDocumentRequired(object sender, RefreshDocumentEventArgs e)
 		{
-			ThreadHelper.ThrowIfNotOnUIThread();
+			if (_snapshot == null) return;
 
-			try
+			ThreadHelper.JoinableTaskFactory.RunAsync(async () =>
 			{
-				if (_snapshot == null) return;
+				await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
 
-				var filePath = VsTextUtil.TryGetDocumentFileName(_snapshot.TextBuffer);
-				if (string.Equals(filePath, e.FilePath, StringComparison.OrdinalIgnoreCase))
+				try
 				{
-					UpdateClassification();
+					var filePath = VsTextUtil.TryGetDocumentFileName(_snapshot.TextBuffer);
+					if (string.Equals(filePath, e.FilePath, StringComparison.OrdinalIgnoreCase))
+					{
+						UpdateClassification();
+					}
 				}
-			}
-			catch (Exception ex)
-			{
-				Log.Error(ex);
-			}
+				catch (Exception ex)
+				{
+					Log.Error(ex);
+				}
+			});
 		}
 
 		void VSTheme_ThemeChanged(object sender, EventArgs e)

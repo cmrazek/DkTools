@@ -1,19 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Collections.ObjectModel;
-using System.ComponentModel.Composition;
-using System.Linq;
-using System.Runtime.InteropServices;
+﻿using DK.Code;
+using DK.Modeling;
+using DK.Syntax;
 using Microsoft.VisualStudio.Language.Intellisense;
 using Microsoft.VisualStudio.Text;
-using Microsoft.VisualStudio.Text.Editor;
-using Microsoft.VisualStudio.Utilities;
-using Microsoft.VisualStudio.Editor;
-using Microsoft.VisualStudio.Text.Operations;
-using Microsoft.VisualStudio;
-using Microsoft.VisualStudio.TextManager.Interop;
-using Microsoft.VisualStudio.OLE.Interop;
-using DkTools.Classifier;
+using System;
+using System.Collections.ObjectModel;
 
 namespace DkTools.SignatureHelp
 {
@@ -24,13 +15,13 @@ namespace DkTools.SignatureHelp
     {
         private ITextBuffer _subjectBuffer;
         private IParameter _currentParam;
-		private CodeModel.FunctionSignature _sig;
+		private FunctionSignature _sig;
         private ITrackingSpan _applicableToSpan;
         private ReadOnlyCollection<IParameter> _params;
 
         public event EventHandler<CurrentParameterChangedEventArgs> CurrentParameterChanged;
 
-        public ProbeSignature(ITextBuffer subjectBuffer, CodeModel.FunctionSignature sig, ReadOnlyCollection<IParameter> parameters)
+        public ProbeSignature(ITextBuffer subjectBuffer, FunctionSignature sig, ReadOnlyCollection<IParameter> parameters)
         {
             _subjectBuffer = subjectBuffer;
 			_sig = sig;

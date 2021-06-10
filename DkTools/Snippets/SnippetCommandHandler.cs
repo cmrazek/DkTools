@@ -1,15 +1,13 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Runtime.InteropServices;
-using System.Text;
-using System.Text.RegularExpressions;
-using System.Threading.Tasks;
+﻿using DK.AppEnvironment;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.OLE.Interop;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Text.Editor;
 using Microsoft.VisualStudio.TextManager.Interop;
+using System;
+using System.Runtime.InteropServices;
+using System.Text.RegularExpressions;
+using System.Threading;
 
 namespace DkTools.Snippets
 {
@@ -119,7 +117,7 @@ namespace DkTools.Snippets
 			return VSConstants.S_OK;
 		}
 
-		public int FormatSpan(IVsTextLines pBuffer, TextSpan[] ts)
+		public int FormatSpan(IVsTextLines pBuffer, TextSpan[] ts)  // IVsExpansionClient
 		{
             ThreadHelper.ThrowIfNotOnUIThread();
 
@@ -132,7 +130,7 @@ namespace DkTools.Snippets
 
 				foreach (var span in ts)
 				{
-					SmartIndenting.ProbeSmartIndent.FixIndentingBetweenLines(buf, span.iStartLine, span.iEndLine, tabSize, keepTabs, appSettings);
+					SmartIndenting.ProbeSmartIndent.FixIndentingBetweenLines(buf, span.iStartLine, span.iEndLine, tabSize, keepTabs, appSettings, CancellationToken.None);
 				}
 			}
 

@@ -1,16 +1,14 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using DK.Diagnostics;
 using DkTools.ErrorTagging;
-using VsText = Microsoft.VisualStudio.Text;
+using System;
+using System.Collections.Generic;
+using System.Threading;
 
 namespace DkTools.Compiler
 {
 	class BackgroundFec
 	{
-		public static void RunSync(string sourceFilePath)
+		public static void RunSync(string sourceFilePath, CancellationToken cancel)
 		{
 			if (string.IsNullOrWhiteSpace(sourceFilePath)) return;
 
@@ -19,6 +17,8 @@ namespace DkTools.Compiler
 			var counter = 10;
 			while (counter > 0)
 			{
+				cancel.ThrowIfCancellationRequested();
+
 				if (!ProbeCompiler.Instance.Mutex.WaitOne(1000))
 				{
 					Log.Debug("Waiting for other compile/FEC operation to complete...");
@@ -91,7 +91,7 @@ namespace DkTools.Compiler
 				runner.CaptureOutput = true;
 				runner.CaptureError = true;
 
-				var exitCode = runner.CaptureProcess("fec.exe", string.Concat("\"", sourceFilePath, "\""), workingDir, output);
+				var exitCode = runner.CaptureProcess("fec.exe", string.Concat("\"", sourceFilePath, "\""), workingDir, output, cancel);
 				if (exitCode == 0)
 				{
 					Log.Debug("Background FEC completed successfully.");

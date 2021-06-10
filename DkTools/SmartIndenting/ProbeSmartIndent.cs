@@ -1,13 +1,13 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Text.RegularExpressions;
+﻿using DK.AppEnvironment;
+using DK.Code;
+using DK.Modeling.Tokens;
+using DkTools.CodeModeling;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Editor;
-using Microsoft.VisualStudio.Utilities;
-using DkTools.Classifier;
+using System.Linq;
+using System.Text.RegularExpressions;
+using System.Threading;
 
 namespace DkTools.SmartIndenting
 {
@@ -38,10 +38,10 @@ namespace DkTools.SmartIndenting
 
 			var appSettings = DkEnvironment.CurrentAppSettings;
 
-			return GetDesiredIndentation(line.Snapshot.TextBuffer, line, _tabSize, _keepTabs, appSettings);
+			return GetDesiredIndentation(line.Snapshot.TextBuffer, line, _tabSize, _keepTabs, appSettings, CancellationToken.None);
 		}
 
-		public static int? GetDesiredIndentation(ITextBuffer buffer, ITextSnapshotLine line, int tabSize, bool keepTabs, DkAppSettings appSettings)
+		public static int? GetDesiredIndentation(ITextBuffer buffer, ITextSnapshotLine line, int tabSize, bool keepTabs, DkAppSettings appSettings, CancellationToken cancel)
 		{
 			ThreadHelper.ThrowIfNotOnUIThread();
 
@@ -75,20 +75,24 @@ namespace DkTools.SmartIndenting
 				// User is typing a 'case' inside a switch.
 
 				// Try to find the braces that contain the 'case'.
-				var fileStore = CodeModel.FileStore.GetOrCreateForTextBuffer(buffer);
+				var fileStore = FileStoreHelper.GetOrCreateForTextBuffer(buffer);
 				if (fileStore != null)
 				{
 					var fileName = VsTextUtil.TryGetDocumentFileName(buffer);
-					var model = fileStore.GetCurrentModel(appSettings, fileName, buffer.CurrentSnapshot, "Smart indenting - case inside switch");
-					var offset = line.Snapshot.TranslateOffsetToSnapshot(line.Start.Position, model.Snapshot);
-					var bracesToken = model.File.FindDownward(offset, t => t is CodeModel.Tokens.BracesToken).LastOrDefault() as CodeModel.Tokens.BracesToken;
-					if (bracesToken != null)
+					var model = fileStore.GetCurrentModel(appSettings, fileName, buffer.CurrentSnapshot, "Smart indenting - case inside switch", cancel);
+					var modelSnapshot = model.Snapshot as ITextSnapshot;
+					if (modelSnapshot != null)
 					{
-						// Get the indent of the line where the opening brace resides.
-						var openOffset = bracesToken.OpenToken.Span.Start;
-						openOffset = model.Snapshot.TranslateOffsetToSnapshot(openOffset, line.Snapshot);
-						var openLine = line.Snapshot.GetLineFromPosition(openOffset);
-						return openLine.GetText().GetIndentCount(tabSize);
+						var offset = line.Snapshot.TranslateOffsetToSnapshot(line.Start.Position, modelSnapshot);
+						var bracesToken = model.File.FindDownward(offset, t => t is BracesToken).LastOrDefault() as BracesToken;
+						if (bracesToken != null)
+						{
+							// Get the indent of the line where the opening brace resides.
+							var openOffset = bracesToken.OpenToken.Span.Start;
+							openOffset = modelSnapshot.TranslateOffsetToSnapshot(openOffset, line.Snapshot);
+							var openLine = line.Snapshot.GetLineFromPosition(openOffset);
+							return openLine.GetText().GetIndentCount(tabSize);
+						}
 					}
 				}
 			}
@@ -189,14 +193,14 @@ namespace DkTools.SmartIndenting
 			}
 		}
 
-		public static void FixIndentingBetweenLines(ITextBuffer buffer, int startLineNumber, int endLineNumber, int tabSize, bool keepTabs, DkAppSettings appSettings)
+		public static void FixIndentingBetweenLines(ITextBuffer buffer, int startLineNumber, int endLineNumber, int tabSize, bool keepTabs, DkAppSettings appSettings, CancellationToken cancel)
 		{
             ThreadHelper.ThrowIfNotOnUIThread();
 
             for (int lineNumber = startLineNumber; lineNumber <= endLineNumber; lineNumber++)
 			{
 				var line = buffer.CurrentSnapshot.GetLineFromLineNumber(lineNumber);
-				var indent = GetDesiredIndentation(buffer, line, tabSize, keepTabs, appSettings);
+				var indent = GetDesiredIndentation(buffer, line, tabSize, keepTabs, appSettings, cancel);
 				if (!indent.HasValue) continue;
 				var desiredIndent = indent.Value;
 

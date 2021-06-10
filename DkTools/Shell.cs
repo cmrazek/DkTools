@@ -1,4 +1,5 @@
-﻿using DkTools.CodeModel;
+﻿using DK.Code;
+using DK.Diagnostics;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
@@ -37,7 +38,7 @@ namespace DkTools
 			});
 		}
 
-		internal static void OpenDocument(string fileName, CodeModel.Span selectSpan)
+		internal static void OpenDocument(string fileName, CodeSpan selectSpan)
 		{
 			ThreadHelper.JoinableTaskFactory.RunAsync(async () =>
 			{
@@ -109,7 +110,7 @@ namespace DkTools
 				await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
 
 				if (pos < 0) pos = 0;
-				OpenDocument(fileName, new CodeModel.Span(pos, pos));
+				OpenDocument(fileName, new CodeSpan(pos, pos));
 			});
 		}
 
@@ -121,7 +122,7 @@ namespace DkTools
 			{
 				await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
 
-				OpenDocument(filePos.FileName, new CodeModel.Span(filePos.Position, filePos.Position));
+				OpenDocument(filePos.FileName, new CodeSpan(filePos.Position, filePos.Position));
 			});
 		}
 

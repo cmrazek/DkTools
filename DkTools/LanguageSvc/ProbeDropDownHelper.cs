@@ -1,12 +1,10 @@
-﻿using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using Microsoft.VisualStudio;
+﻿using DK.AppEnvironment;
+using DkTools.CodeModeling;
 using Microsoft.VisualStudio.Package;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.TextManager.Interop;
+using System.Collections;
+using System.Linq;
 
 namespace DkTools.LanguageSvc
 {
@@ -35,7 +33,7 @@ namespace DkTools.LanguageSvc
 
 			int caretPos, virtualSpaces;
 			textView.GetNearestPosition(line, col, out caretPos, out virtualSpaces);
-			var fileStore = CodeModel.FileStore.GetOrCreateForTextBuffer(buf);
+			var fileStore = FileStoreHelper.GetOrCreateForTextBuffer(buf);
 			if (fileStore == null) return false;
 
 			var index = 0;

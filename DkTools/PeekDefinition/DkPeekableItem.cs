@@ -1,12 +1,7 @@
-﻿using DkTools.CodeModel.Definitions;
-using EnvDTE;
+﻿using DK.Definitions;
 using Microsoft.VisualStudio.Language.Intellisense;
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Windows.Forms;
 
 namespace DkTools.PeekDefinition
 {

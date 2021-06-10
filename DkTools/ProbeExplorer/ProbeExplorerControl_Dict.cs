@@ -1,21 +1,19 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
+﻿using DK.AppEnvironment;
+using DK.Definitions;
+using DK.Diagnostics;
+using DK.Schema;
+using DK.Syntax;
 using DkTools.Classifier;
 using DkTools.QuickInfo;
 using Microsoft.VisualStudio.Shell;
-using Microsoft.VisualStudio.Text.Adornments;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Windows;
+using System.Windows.Controls;
+using System.Windows.Input;
+using System.Windows.Media.Imaging;
 
 namespace DkTools.ProbeExplorer
 {
@@ -100,7 +98,7 @@ namespace DkTools.ProbeExplorer
 		}
 
 		#region Table
-		private TreeViewItem CreateTableTvi(DkDict.Table table)
+		private TreeViewItem CreateTableTvi(Table table)
 		{
 			var tvi = CreateStandardTvi(_tableImg, table.Name, table.Prompt, table.Definition.QuickInfo, true);
 			tvi.Expanded += TableTvi_Expanded;
@@ -135,7 +133,7 @@ namespace DkTools.ProbeExplorer
 				var tableNode = (sender as TreeViewItem);
 				if (tableNode != null)
 				{
-					var table = tableNode.Tag as DkDict.Table;
+					var table = tableNode.Tag as Table;
 					if (table != null)
 					{
 						tableNode.Items.Clear();
@@ -194,10 +192,10 @@ namespace DkTools.ProbeExplorer
 					var menuItem = (sender as MenuItem);
 					if (menuItem != null)
 					{
-						var table = menuItem.Tag as DkDict.Table;
+						var table = menuItem.Tag as Table;
 						if (table != null)
 						{
-							Navigation.GoToDefinitionHelper.TriggerFindReferences(DkDict.Table.GetExternalRefId(table.Name), table.Name);
+							Navigation.GoToDefinitionHelper.TriggerFindReferences(Table.GetExternalRefId(table.Name), table.Name);
 							e.Handled = true;
 						}
 					}
@@ -220,7 +218,7 @@ namespace DkTools.ProbeExplorer
 					var menuItem = (sender as MenuItem);
 					if (menuItem != null)
 					{
-						var table = menuItem.Tag as DkDict.Table;
+						var table = menuItem.Tag as Table;
 						if (table != null)
 						{
 							Navigation.GoToDefinitionHelper.BrowseToDefinition(table.Definition);
@@ -237,7 +235,7 @@ namespace DkTools.ProbeExplorer
 		#endregion
 
 		#region Field
-		private TreeViewItem CreateFieldTvi(DkDict.Column field)
+		private TreeViewItem CreateFieldTvi(Column field)
 		{
 			var tvi = CreateStandardTvi(_fieldImg, field.Name, field.Prompt, field.Definition.QuickInfo, true);
 			tvi.Tag = field;
@@ -270,7 +268,7 @@ namespace DkTools.ProbeExplorer
 				var fieldItem = (sender as TreeViewItem);
 				if (fieldItem != null)
 				{
-					var field = fieldItem.Tag as DkDict.Column;
+					var field = fieldItem.Tag as Column;
 					if (field != null)
 					{
 						fieldItem.Items.Clear();
@@ -285,7 +283,7 @@ namespace DkTools.ProbeExplorer
 			}
 		}
 
-		private void CreateFieldInfoItems(TreeViewItem fieldItem, DkDict.Column field)
+		private void CreateFieldInfoItems(TreeViewItem fieldItem, Column field)
 		{
 			fieldItem.Items.Add(CreatePlainTextTvi("Name", field.Name));
 			if (!string.IsNullOrEmpty(field.Prompt)) fieldItem.Items.Add(CreatePlainTextTvi("Prompt", field.Prompt));
@@ -321,10 +319,10 @@ namespace DkTools.ProbeExplorer
 					var menuItem = (sender as MenuItem);
 					if (menuItem != null)
 					{
-						var field = menuItem.Tag as DkDict.Column;
+						var field = menuItem.Tag as Column;
 						if (field != null)
 						{
-							Navigation.GoToDefinitionHelper.TriggerFindReferences(DkDict.Column.GetTableFieldExternalRefId(field.TableName, field.Name), field.Name);
+							Navigation.GoToDefinitionHelper.TriggerFindReferences(Column.GetTableFieldExternalRefId(field.TableName, field.Name), field.Name);
 							e.Handled = true;
 						}
 					}
@@ -347,7 +345,7 @@ namespace DkTools.ProbeExplorer
 					var menuItem = (sender as MenuItem);
 					if (menuItem != null)
 					{
-						var field = menuItem.Tag as DkDict.Column;
+						var field = menuItem.Tag as Column;
 						if (field != null)
 						{
 							Navigation.GoToDefinitionHelper.BrowseToDefinition(field.Definition);
@@ -364,9 +362,9 @@ namespace DkTools.ProbeExplorer
 		#endregion
 
 		#region RelInd
-		private TreeViewItem CreateRelIndTreeViewItem(DkDict.RelInd relind)
+		private TreeViewItem CreateRelIndTreeViewItem(RelInd relind)
 		{
-			var tvi = CreateStandardTvi(relind.Type == DkDict.RelIndType.Index ? _indexImg : _relationshipImg, relind.Name, relind.Prompt,
+			var tvi = CreateStandardTvi(relind.Type == RelIndType.Index ? _indexImg : _relationshipImg, relind.Name, relind.Prompt,
 				relind.Definition.QuickInfo, true);
 			tvi.Tag = relind;
 			tvi.Expanded += RelIndTvi_Expanded;
@@ -398,11 +396,11 @@ namespace DkTools.ProbeExplorer
 				var relindItem = (sender as TreeViewItem);
 				if (relindItem != null)
 				{
-					var relind = relindItem.Tag as DkDict.RelInd;
+					var relind = relindItem.Tag as RelInd;
 					if (relind != null)
 					{
 						relindItem.Items.Clear();
-						CreateRelIndInfoItems(relindItem, relindItem.Tag as DkDict.RelInd);
+						CreateRelIndInfoItems(relindItem, relindItem.Tag as RelInd);
 						e.Handled = true;
 					}
 				}
@@ -413,7 +411,7 @@ namespace DkTools.ProbeExplorer
 			}
 		}
 
-		private void CreateRelIndInfoItems(TreeViewItem item, DkDict.RelInd relind)
+		private void CreateRelIndInfoItems(TreeViewItem item, RelInd relind)
 		{
 			item.Items.Add(CreatePlainTextTvi("Name", relind.Name));
 			if (!string.IsNullOrWhiteSpace(relind.Prompt)) item.Items.Add(CreatePlainTextTvi("Prompt", relind.Prompt));
@@ -433,10 +431,10 @@ namespace DkTools.ProbeExplorer
 					var menuItem = (sender as MenuItem);
 					if (menuItem != null)
 					{
-						var relInd = menuItem.Tag as DkDict.RelInd;
+						var relInd = menuItem.Tag as RelInd;
 						if (relInd != null)
 						{
-							Navigation.GoToDefinitionHelper.TriggerFindReferences(CodeModel.Definitions.RelIndDefinition.GetExternalRefId(relInd.TableName, relInd.Name), relInd.Name);
+							Navigation.GoToDefinitionHelper.TriggerFindReferences(RelIndDefinition.GetExternalRefId(relInd.TableName, relInd.Name), relInd.Name);
 							e.Handled = true;
 						}
 					}
@@ -476,7 +474,7 @@ namespace DkTools.ProbeExplorer
 					var menuItem = (sender as MenuItem);
 					if (menuItem != null)
 					{
-						var relInd = menuItem.Tag as DkDict.RelInd;
+						var relInd = menuItem.Tag as RelInd;
 						if (relInd != null)
 						{
 							Navigation.GoToDefinitionHelper.BrowseToDefinition(relInd.Definition);
@@ -561,7 +559,7 @@ namespace DkTools.ProbeExplorer
 
 			foreach (TreeViewItem tableNode in c_dictTree.Items)
 			{
-				var table = tableNode.Tag as DkDict.Table;
+				var table = tableNode.Tag as Table;
 				if (table.Name == tableName)
 				{
 					tableNode.IsSelected = true;
@@ -582,13 +580,13 @@ namespace DkTools.ProbeExplorer
 
 			foreach (TreeViewItem tableNode in c_dictTree.Items)
 			{
-				var table = tableNode.Tag as DkDict.Table;
+				var table = tableNode.Tag as Table;
 				if (table.Name == tableName)
 				{
 					tableNode.IsExpanded = true;
 					foreach (TreeViewItem fieldNode in tableNode.Items)
 					{
-						var field = fieldNode.Tag as DkDict.Column;
+						var field = fieldNode.Tag as Column;
 						if (field != null && field.Name == fieldName)
 						{
 							fieldNode.IsSelected = true;
@@ -611,13 +609,13 @@ namespace DkTools.ProbeExplorer
 
 			foreach (TreeViewItem tableNode in c_dictTree.Items)
 			{
-				var table = tableNode.Tag as DkDict.Table;
+				var table = tableNode.Tag as Table;
 				if (table.Name == tableName)
 				{
 					tableNode.IsExpanded = true;
 					foreach (TreeViewItem relIndNode in tableNode.Items)
 					{
-						var relInd = relIndNode.Tag as DkDict.RelInd;
+						var relInd = relIndNode.Tag as RelInd;
 						if (relInd != null && relInd.Name == relIndName)
 						{
 							relIndNode.IsSelected = true;
@@ -645,7 +643,7 @@ namespace DkTools.ProbeExplorer
 
 				foreach (TreeViewItem tableNode in c_dictTree.Items)
 				{
-					var table = tableNode.Tag as DkDict.Table;
+					var table = tableNode.Tag as Table;
 					if (table == null) continue;
 
 					if (empty)
@@ -852,17 +850,17 @@ namespace DkTools.ProbeExplorer
 				var tag = tvi.Tag;
 				if (tag == null) continue;
 
-				if (tag is DkDict.Table)
+				if (tag is Table)
 				{
-					if ((tag as DkDict.Table).Name.StartsWith(typedText, StringComparison.CurrentCultureIgnoreCase)) return tvi;
+					if ((tag as Table).Name.StartsWith(typedText, StringComparison.CurrentCultureIgnoreCase)) return tvi;
 				}
-				else if (tag is DkDict.Column)
+				else if (tag is Column)
 				{
-					if ((tag as DkDict.Column).Name.StartsWith(typedText, StringComparison.CurrentCultureIgnoreCase)) return tvi;
+					if ((tag as Column).Name.StartsWith(typedText, StringComparison.CurrentCultureIgnoreCase)) return tvi;
 				}
-				else if (tag is DkDict.RelInd)
+				else if (tag is RelInd)
 				{
-					if ((tag as DkDict.RelInd).Name.StartsWith(typedText, StringComparison.CurrentCultureIgnoreCase)) return tvi;
+					if ((tag as RelInd).Name.StartsWith(typedText, StringComparison.CurrentCultureIgnoreCase)) return tvi;
 				}
 
 				if (tvi.IsExpanded && tvi.Items.Count > 0)

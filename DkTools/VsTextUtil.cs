@@ -1,13 +1,13 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+﻿using DK.Code;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Editor;
 using Microsoft.VisualStudio.Text.Operations;
 using Microsoft.VisualStudio.TextManager.Interop;
+using System;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace DkTools
 {
@@ -44,7 +44,7 @@ namespace DkTools
 			}
 		}
 
-		public static SnapshotSpan ModelSpanToVsSnapshotSpan(ITextSnapshot modelSnapshot, CodeModel.Span modelSpan, ITextSnapshot targetSnapshot, SpanTrackingMode trackingMode = SpanTrackingMode.EdgeExclusive)
+		public static SnapshotSpan ModelSpanToVsSnapshotSpan(ITextSnapshot modelSnapshot, CodeSpan modelSpan, ITextSnapshot targetSnapshot, SpanTrackingMode trackingMode = SpanTrackingMode.EdgeExclusive)
 		{
 #if DEBUG
 			if (modelSnapshot == null) throw new ArgumentNullException("modelSnapshot");

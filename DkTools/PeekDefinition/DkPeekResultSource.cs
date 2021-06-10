@@ -1,13 +1,9 @@
-﻿using EnvDTE;
+﻿using DK;
 using Microsoft.VisualStudio.Imaging.Interop;
 using Microsoft.VisualStudio.Language.Intellisense;
 using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System.Text;
 using System.Threading;
-using System.Threading.Tasks;
 
 namespace DkTools.PeekDefinition
 {
@@ -35,7 +31,7 @@ namespace DkTools.PeekDefinition
 			{
 				var pos = def.FilePosition.Position;
 				var fileContent = File.ReadAllText(filePath);
-				Util.CalcLineAndPosFromOffset(fileContent, pos, out startLine, out startLinePos);
+				StringHelper.CalcLineAndPosFromOffset(fileContent, pos, out startLine, out startLinePos);
 			}
 
 			var displayInfo = new PeekResultDisplayInfo2(

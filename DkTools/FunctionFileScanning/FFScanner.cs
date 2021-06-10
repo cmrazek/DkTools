@@ -1,19 +1,23 @@
-﻿using System;
+﻿using DK.AppEnvironment;
+using DK.Code;
+using DK.Definitions;
+using DK.Diagnostics;
+using DK.Modeling;
+using DK.Preprocessing;
+using DK.Scanning;
+using DkTools.CodeModeling;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Text;
-using System.Text.RegularExpressions;
 using System.Threading;
-using System.Windows.Forms;
-using DkTools.CodeModel;
 
 namespace DkTools.FunctionFileScanning
 {
 	internal static class FFScanner
 	{
 		private static List<Thread> _threads = new List<Thread>();
-		private static EventWaitHandle _kill = new EventWaitHandle(false, EventResetMode.ManualReset);
+		private static CancellationTokenSource _cancel;
 		private static List<ScanJob> _pendingQueue = new List<ScanJob>();
 		private static List<ScanJob> _runningQueue = new List<ScanJob>();
 		private static object _queueLock = new object();
@@ -44,8 +48,8 @@ namespace DkTools.FunctionFileScanning
 
 		public static void OnStartup()
 		{
-			DkEnvironment.AppChanged += new EventHandler(ProbeEnvironment_AppChanged);
-			DkAppSettings.FileChanged += ProbeAppSettings_FileChanged;
+			GlobalEvents.AppChanged += new EventHandler(ProbeEnvironment_AppChanged);
+			GlobalEvents.FileChanged += ProbeAppSettings_FileChanged;
 			_scanDelay.Idle += ScanTimerElapsed;
 
 			StartScanning();
@@ -68,7 +72,7 @@ namespace DkTools.FunctionFileScanning
 				if (_threads.Any(t => t.IsAlive))
 				{
 					Log.Debug("Stopping existing scan threads.");
-					_kill.Set();
+					_cancel?.Cancel();
 
 					var remainingThread = _threads.FirstOrDefault(t => t.IsAlive);
 					while (remainingThread != null)
@@ -135,7 +139,7 @@ namespace DkTools.FunctionFileScanning
 				Log.Info("FFScanner starting.");
 
 				Kill();
-				_kill.Reset();
+				_cancel = new CancellationTokenSource();
 				_threads.Clear();
 
 				_scanStartTime = DateTime.Now;
@@ -157,38 +161,46 @@ namespace DkTools.FunctionFileScanning
 
 				for (int i = 0; i < numThreads; i++)
 				{
-					var thread = new Thread(new ThreadStart(ThreadProc));
+					var thread = new Thread(new ParameterizedThreadStart(ThreadProc));
 					thread.Name = $"FFScanner {i + 1}";
 					thread.Priority = ThreadPriority.BelowNormal;
-					thread.Start();
+					thread.Start(_cancel.Token);
 				}
 			}
 		}
 
-		private static void ThreadProc()
+		private static void ThreadProc(object cancelToken)
 		{
 			try
 			{
+				var cancel = (CancellationToken)cancelToken;
+
 				Log.Debug("FFScanner thread starting.");
 
 				ScanJob job;
 				int timeout = 0;
 
-				while (!_kill.WaitOne(timeout))
+				while (!cancel.IsCancellationRequested)
 				{
 					if (!GetJobFromQueue(out job)) break;
 					if (job != null)
 					{
-						ProcessJob(job);
+						ProcessJob(job, cancel);
 						timeout = 0;
 					}
 					else
 					{
 						timeout = 10;
 					}
+
+					if (timeout > 0) Thread.Sleep(timeout);
 				}
 
 				Log.Debug("FFScanner thread stopping.");
+			}
+			catch (OperationCanceledException ex)
+			{
+				Log.Debug(ex);
 			}
 			catch (Exception ex)
 			{
@@ -246,7 +258,7 @@ namespace DkTools.FunctionFileScanning
 			}
 		}
 
-		private static void ProcessJob(ScanJob job)
+		private static void ProcessJob(ScanJob job, CancellationToken cancel)
 		{
 			try
 			{
@@ -271,7 +283,7 @@ namespace DkTools.FunctionFileScanning
 
 					case FFScanMode.Exports:
 					case FFScanMode.Deep:
-						ProcessFile(job.App, job);
+						ProcessFile(job.App, job, cancel);
 						break;
 
 					case FFScanMode.ExportsComplete:
@@ -289,6 +301,10 @@ namespace DkTools.FunctionFileScanning
 						break;
 				}
 			}
+			catch (OperationCanceledException ex)
+			{
+				Log.Debug(ex);
+			}
 			catch (Exception ex)
 			{
 				Log.Error(ex, "FFScanner job exception.");
@@ -305,9 +321,9 @@ namespace DkTools.FunctionFileScanning
 			{
 				foreach (var fileName in Directory.GetFiles(dir))
 				{
-					if (!FileContextUtil.IsLocalizedFile(fileName))
+					if (!FileContextHelper.IsLocalizedFile(fileName))
 					{
-						var fileContext = FileContextUtil.GetFileContextFromFileName(fileName);
+						var fileContext = FileContextHelper.GetFileContextFromFileName(fileName);
 						switch (fileContext)
 						{
 							case FileContext.Include:
@@ -367,14 +383,14 @@ namespace DkTools.FunctionFileScanning
 			return false;
 		}
 
-		private static void ProcessFile(DkAppSettings app, ScanJob scan)
+		private static void ProcessFile(DkAppSettings app, ScanJob scan, CancellationToken cancel)
 		{
 			try
 			{
 				if (!File.Exists(scan.Path)) return;
-				if (FileContextUtil.IsLocalizedFile(scan.Path)) return;
+				if (FileContextHelper.IsLocalizedFile(scan.Path)) return;
 
-				var fileContext = CodeModel.FileContextUtil.GetFileContextFromFileName(scan.Path);
+				var fileContext = FileContextHelper.GetFileContextFromFileName(scan.Path);
 				if (fileContext == FileContext.Include) return;
 
 				DateTime modified;
@@ -389,17 +405,25 @@ namespace DkTools.FunctionFileScanning
 
 				var fileTitle = Path.GetFileNameWithoutExtension(scan.Path);
 
-				var defProvider = new CodeModel.DefinitionProvider(app, scan.Path);
+				var defProvider = new DefinitionProvider(app, scan.Path);
 
 				var fileContent = File.ReadAllText(scan.Path);
-				var fileStore = new CodeModel.FileStore();
+				var fileStore = new FileStore();
 
 				var merger = new FileMerger();
 				merger.MergeFile(app, scan.Path, null, false, true);
 				var includeDependencies = (from f in merger.FileNames
-										   select new Preprocessor.IncludeDependency(f, false, true, merger.GetFileContent(f))).ToArray();
+										   select new IncludeDependency(f, false, true, merger.GetFileContent(f))).ToArray();
 
-				var model = fileStore.CreatePreprocessedModel(app, merger.MergedContent, scan.Path, false, string.Concat("Function file processing: ", scan.Path), includeDependencies);
+				var model = fileStore.CreatePreprocessedModel(
+					appSettings: app,
+					source: merger.MergedContent,
+					fileName: scan.Path,
+					visible: false,
+					reason: string.Concat("Function file processing: ", scan.Path),
+					cancel: cancel,
+					includeDependencies: includeDependencies);
+
 				var className = fileContext.IsClass() ? Path.GetFileNameWithoutExtension(scan.Path) : null;
 
 				app.Repo.UpdateFile(model, scan.Mode);
@@ -410,7 +434,7 @@ namespace DkTools.FunctionFileScanning
 			}
 		}
 
-		private static void ProbeAppSettings_FileChanged(object sender, DkAppSettings.FileEventArgs e)
+		private static void ProbeAppSettings_FileChanged(object sender, FileEventArgs e)
 		{
 			try
 			{
@@ -420,10 +444,10 @@ namespace DkTools.FunctionFileScanning
 				var options = ProbeToolsPackage.Instance.EditorOptions;
 				if (!options.DisableBackgroundScan)
 				{
-					var fileContext = FileContextUtil.GetFileContextFromFileName(e.FilePath);
+					var fileContext = FileContextHelper.GetFileContextFromFileName(e.FilePath);
 					if (DkEnvironment.CurrentAppSettings.FileExistsInApp(e.FilePath))
 					{
-						if (fileContext != FileContext.Include && !FileContextUtil.IsLocalizedFile(e.FilePath))
+						if (fileContext != FileContext.Include && !FileContextHelper.IsLocalizedFile(e.FilePath))
 						{
 							Log.Debug("Scanner detected a saved file: {0}", e.FilePath);
 
@@ -451,7 +475,7 @@ namespace DkTools.FunctionFileScanning
 			var options = ProbeToolsPackage.Instance.EditorOptions;
 			if (options.DisableBackgroundScan) return;
 
-			var fileContext = FileContextUtil.GetFileContextFromFileName(fullPath);
+			var fileContext = FileContextHelper.GetFileContextFromFileName(fullPath);
 			if (fileContext != FileContext.Include && fileContext != FileContext.Dictionary)
 			{
 				app.Repo.ResetScanDateOnFile(fullPath);
@@ -465,14 +489,5 @@ namespace DkTools.FunctionFileScanning
 
 			app.Repo.ResetScanDateOnDependentFiles(includeFileName);
 		}
-	}
-
-	public enum FFScanMode
-	{
-		FolderSearch,
-		Exports,
-		ExportsComplete,
-		Deep,
-		Completion
 	}
 }

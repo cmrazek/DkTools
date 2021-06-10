@@ -1,11 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Collections.Immutable;
-using System.Linq;
-using System.Text;
-using System.Text.RegularExpressions;
-using System.Threading;
-using System.Threading.Tasks;
+﻿using DK.AppEnvironment;
+using DK.Code;
+using DK.Definitions;
+using DK.Modeling.Tokens;
+using DkTools.Classifier;
+using DkTools.CodeModeling;
+using DkTools.QuickInfo;
 using Microsoft.VisualStudio.Core.Imaging;
 using Microsoft.VisualStudio.Imaging;
 using Microsoft.VisualStudio.Shell;
@@ -14,10 +13,14 @@ using Microsoft.VisualStudio.Language.Intellisense.AsyncCompletion.Data;
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Adornments;
 using Microsoft.VisualStudio.Text.Editor;
-using DkTools.Classifier;
-using DkTools.CodeModel.Definitions;
-using DkTools.CodeModel.Tokens;
-using DkTools.CodeModel.Tokens.Operators;
+using System;
+using System.Collections.Generic;
+using System.Collections.Immutable;
+using System.Linq;
+using System.Text;
+using System.Text.RegularExpressions;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace DkTools.StatementCompletion
 {
@@ -305,7 +308,7 @@ namespace DkTools.StatementCompletion
 		}
 
 		public Task<CompletionContext> GetCompletionContextAsync(IAsyncCompletionSession session, CompletionTrigger trigger, SnapshotPoint triggerPt,
-			SnapshotSpan applicableToSpan, CancellationToken token)
+			SnapshotSpan applicableToSpan, CancellationToken cancel)
 		{
 			_items.Clear();
 			_itemNames.Clear();
@@ -313,52 +316,52 @@ namespace DkTools.StatementCompletion
 			switch (_mode)
 			{
 				case CompletionMode.AfterAssignOrCompare:
-					HandleAfterAssignOrCompare(applicableToSpan, _params.str, _params.pt, _fileName);
+					HandleAfterAssignOrCompare(applicableToSpan, _params.str, _params.pt, _fileName, cancel);
 					break;
 				case CompletionMode.AfterIfDef:
-					HandleAfterIfDef(_fileName);
+					HandleAfterIfDef(_fileName, cancel);
 					break;
 				case CompletionMode.AfterComma:
-					HandleAfterComma(applicableToSpan, _fileName);
+					HandleAfterComma(applicableToSpan, _fileName, cancel);
 					break;
 				case CompletionMode.AfterCase:
-					HandleAfterCase(applicableToSpan, _fileName);
+					HandleAfterCase(applicableToSpan, _fileName, cancel);
 					break;
 				case CompletionMode.AfterExtract:
-					HandleAfterExtract(applicableToSpan, _params.str, _fileName);
+					HandleAfterExtract(applicableToSpan, _params.str, _fileName, cancel);
 					break;
 				case CompletionMode.AfterReturn:
-					HandleAfterReturn(applicableToSpan, _fileName);
+					HandleAfterReturn(applicableToSpan, _fileName, cancel);
 					break;
 				case CompletionMode.AfterTag:
 					HandleAfterTag();
 					break;
 				case CompletionMode.AfterWord:
-					HandleAfterWord(_params.str, triggerPt, _params.snapshot, _fileName);
+					HandleAfterWord(_params.str, triggerPt, _params.snapshot, _fileName, cancel);
 					break;
 				case CompletionMode.AfterSymbol:
-					HandleAfterSymbol(triggerPt, _fileName);
+					HandleAfterSymbol(triggerPt, _fileName, cancel);
 					break;
 				case CompletionMode.AfterNumber:
-					HandleAfterSymbol(triggerPt, _fileName);
+					HandleAfterSymbol(triggerPt, _fileName, cancel);
 					break;
 				case CompletionMode.AfterStringLiteral:
-					HandleAfterStringLiteral(triggerPt, _fileName);
+					HandleAfterStringLiteral(triggerPt, _fileName, cancel);
 					break;
 				case CompletionMode.AfterOrderBy:
 					HandleAfterOrderBy();
 					break;
 				case CompletionMode.DotSeparatedWords:
-					HandleDotSeparatedWords(applicableToSpan, _params.str, _params.str2, _fileName);
+					HandleDotSeparatedWords(applicableToSpan, _params.str, _params.str2, _fileName, cancel);
 					break;
 				case CompletionMode.Word:
-					GetWordCompletions(triggerPt, _params.pt, _fileName);
+					GetWordCompletions(triggerPt, _params.pt, _fileName, cancel);
 					break;
 				case CompletionMode.ClassFunction:
-					HandleAfterMethodArgsStart(triggerPt, _params.str, _params.str2, _fileName);
+					HandleAfterMethodArgsStart(triggerPt, _params.str, _params.str2, _fileName, cancel);
 					break;
 				case CompletionMode.Function:
-					HandleAfterFunctionArgsStart(triggerPt, _params.str, _fileName);
+					HandleAfterFunctionArgsStart(triggerPt, _params.str, _fileName, cancel);
 					break;
 				case CompletionMode.Include:
 					HandleAfterInclude(_params.str, _fileName);
@@ -382,34 +385,38 @@ namespace DkTools.StatementCompletion
 		}
 
 		#region Completion Fulfillment Logic
-		private void HandleAfterAssignOrCompare(SnapshotSpan completionSpan, string operatorText, SnapshotPoint operatorPt, string fileName)
+		private void HandleAfterAssignOrCompare(SnapshotSpan completionSpan, string operatorText, SnapshotPoint operatorPt, string fileName, CancellationToken cancel)
 		{
-			var store = CodeModel.FileStore.GetOrCreateForTextBuffer(_textView.TextBuffer);
+			var store = FileStoreHelper.GetOrCreateForTextBuffer(_textView.TextBuffer);
 			if (store != null)
 			{
-				var model = store.GetCurrentModel(_appSettings, fileName, completionSpan.Snapshot, "Auto-completion after assign or compare");
-				var modelPos = operatorPt.TranslateTo(model.Snapshot, PointTrackingMode.Negative);
-				var opToken = model.File.FindDownward<CompletionOperator>(modelPos.Position).LastOrDefault();
-				if (opToken != null)
+				var model = store.GetCurrentModel(_appSettings, fileName, completionSpan.Snapshot, "Auto-completion after assign or compare", cancel);
+				var modelSnapshot = model.Snapshot as ITextSnapshot;
+				if (modelSnapshot != null)
 				{
-					var dataType = opToken.CompletionDataType;
-					if (dataType != null && dataType.HasCompletionOptions)
+					var modelPos = operatorPt.TranslateTo(modelSnapshot, PointTrackingMode.Negative);
+					var opToken = model.File.FindDownward<CompletionOperator>(modelPos.Position).LastOrDefault();
+					if (opToken != null)
 					{
-						foreach (var opt in dataType.GetCompletionOptions(_appSettings))
+						var dataType = opToken.CompletionDataType;
+						if (dataType != null && dataType.HasCompletionOptions)
 						{
-							CreateCompletion(opt);
+							foreach (var opt in dataType.GetCompletionOptions(_appSettings))
+							{
+								CreateCompletion(opt);
+							}
 						}
 					}
 				}
 			}
 		}
 
-		private void HandleAfterIfDef(string fileName)
+		private void HandleAfterIfDef(string fileName, CancellationToken cancel)
 		{
-			var fileStore = CodeModel.FileStore.GetOrCreateForTextBuffer(_textView.TextBuffer);
+			var fileStore = FileStoreHelper.GetOrCreateForTextBuffer(_textView.TextBuffer);
 			if (fileStore != null)
 			{
-				var model = fileStore.GetCurrentModel(_appSettings, fileName, _textView.TextBuffer.CurrentSnapshot, "Auto-completion after #ifdef");
+				var model = fileStore.GetCurrentModel(_appSettings, fileName, _textView.TextBuffer.CurrentSnapshot, "Auto-completion after #ifdef", cancel);
 
 				foreach (var def in model.DefinitionProvider.GetGlobalFromAnywhere<ConstantDefinition>())
 				{
@@ -419,7 +426,7 @@ namespace DkTools.StatementCompletion
 		}
 
 		#region After Comma
-		private void HandleAfterComma(SnapshotSpan completionSpan, string fileName)
+		private void HandleAfterComma(SnapshotSpan completionSpan, string fileName, CancellationToken cancel)
 		{
 			var snapPt = completionSpan.Start;
 			string className;
@@ -427,7 +434,7 @@ namespace DkTools.StatementCompletion
 			int argIndex;
 			if (GetInsideFunction(completionSpan.Snapshot, completionSpan.Start.Position, out className, out funcName, out argIndex))
 			{
-				GetOptionsForFunctionArg(fileName, className, funcName, argIndex, snapPt);
+				GetOptionsForFunctionArg(fileName, className, funcName, argIndex, snapPt, cancel);
 			}
 		}
 
@@ -488,60 +495,22 @@ namespace DkTools.StatementCompletion
 		}
 		#endregion
 
-		private void HandleAfterCase(SnapshotSpan completionSpan, string fileName)
+		private void HandleAfterCase(SnapshotSpan completionSpan, string fileName, CancellationToken cancel)
 		{
-			var store = CodeModel.FileStore.GetOrCreateForTextBuffer(_textView.TextBuffer);
-			var model = store.GetMostRecentModel(_appSettings, fileName, _textView.TextBuffer.CurrentSnapshot, "Auto-completion after case");
-			var modelPos = completionSpan.Start.TranslateTo(model.Snapshot, PointTrackingMode.Positive);
-
-			var switchToken = (from t in model.FindTokens(modelPos) where t is SwitchStatement select t as SwitchStatement).LastOrDefault();
-			if (switchToken != null)
+			var store = FileStoreHelper.GetOrCreateForTextBuffer(_textView.TextBuffer);
+			var model = store.GetMostRecentModel(_appSettings, fileName, _textView.TextBuffer.CurrentSnapshot, "Auto-completion after case", cancel);
+			var modelSnapshot = model.Snapshot as ITextSnapshot;
+			if (modelSnapshot != null)
 			{
-				var dt = switchToken.ExpressionDataType;
-				if (dt != null && dt.HasCompletionOptions)
+				var modelPos = completionSpan.Start.TranslateTo(modelSnapshot, PointTrackingMode.Positive);
+
+				var switchToken = (from t in model.FindTokens(modelPos) where t is SwitchStatement select t as SwitchStatement).LastOrDefault();
+				if (switchToken != null)
 				{
-					foreach (var opt in dt.GetCompletionOptions(_appSettings))
+					var dt = switchToken.ExpressionDataType;
+					if (dt != null && dt.HasCompletionOptions)
 					{
-						CreateCompletion(opt);
-					}
-				}
-			}
-		}
-
-		private void HandleAfterExtract(SnapshotSpan completionSpan, string permWord, string fileName)
-		{
-			if (string.IsNullOrEmpty(permWord))
-			{
-				CreateCompletion("permanent", ProbeCompletionType.Keyword, "permanent extract");
-			}
-
-			var store = CodeModel.FileStore.GetOrCreateForTextBuffer(_textView.TextBuffer);
-			if (store != null)
-			{
-				var model = store.GetMostRecentModel(_appSettings, fileName, _textView.TextBuffer.CurrentSnapshot, "Auto-completion after 'extract'");
-
-				foreach (var exDef in model.DefinitionProvider.GetGlobalFromFile<ExtractTableDefinition>())
-				{
-					CreateCompletion(exDef);
-				}
-			}
-		}
-
-		private void HandleAfterReturn(SnapshotSpan completionSpan, string fileName)
-		{
-			var fileStore = CodeModel.FileStore.GetOrCreateForTextBuffer(_textView.TextBuffer);
-			if (fileStore != null)
-			{
-				var model = fileStore.GetMostRecentModel(_appSettings, fileName, _textView.TextBuffer.CurrentSnapshot, "Auto-completion after return");
-				var modelPos = completionSpan.Start.TranslateTo(model.Snapshot, PointTrackingMode.Positive);
-
-				var funcDef = model.PreprocessorModel.LocalFunctions.FirstOrDefault(f => f.Definition.EntireSpan.Contains(modelPos));
-				if (funcDef != null && funcDef.Definition != null)
-				{
-					var dataType = funcDef.Definition.DataType;
-					if (dataType != null && dataType.HasCompletionOptions)
-					{
-						foreach (var opt in dataType.GetCompletionOptions(_appSettings))
+						foreach (var opt in dt.GetCompletionOptions(_appSettings))
 						{
 							CreateCompletion(opt);
 						}
@@ -550,39 +519,85 @@ namespace DkTools.StatementCompletion
 			}
 		}
 
+		private void HandleAfterExtract(SnapshotSpan completionSpan, string permWord, string fileName, CancellationToken cancel)
+		{
+			if (string.IsNullOrEmpty(permWord))
+			{
+				CreateCompletion("permanent", ProbeCompletionType.Keyword, "permanent extract");
+			}
+
+			var store = FileStoreHelper.GetOrCreateForTextBuffer(_textView.TextBuffer);
+			if (store != null)
+			{
+				var model = store.GetMostRecentModel(_appSettings, fileName, _textView.TextBuffer.CurrentSnapshot, "Auto-completion after 'extract'", cancel);
+
+				foreach (var exDef in model.DefinitionProvider.GetGlobalFromFile<ExtractTableDefinition>())
+				{
+					CreateCompletion(exDef);
+				}
+			}
+		}
+
+		private void HandleAfterReturn(SnapshotSpan completionSpan, string fileName, CancellationToken cancel)
+		{
+			var fileStore = FileStoreHelper.GetOrCreateForTextBuffer(_textView.TextBuffer);
+			if (fileStore != null)
+			{
+				var model = fileStore.GetMostRecentModel(_appSettings, fileName, _textView.TextBuffer.CurrentSnapshot, "Auto-completion after return", cancel);
+				var modelSnapshot = model.Snapshot as ITextSnapshot;
+				if (modelSnapshot != null)
+				{
+					var modelPos = completionSpan.Start.TranslateTo(modelSnapshot, PointTrackingMode.Positive);
+
+					var funcDef = model.PreprocessorModel.LocalFunctions.FirstOrDefault(f => f.Definition.EntireSpan.Contains(modelPos));
+					if (funcDef != null && funcDef.Definition != null)
+					{
+						var dataType = funcDef.Definition.DataType;
+						if (dataType != null && dataType.HasCompletionOptions)
+						{
+							foreach (var opt in dataType.GetCompletionOptions(_appSettings))
+							{
+								CreateCompletion(opt);
+							}
+						}
+					}
+				}
+			}
+		}
+
 		private void HandleAfterTag()
 		{
-			foreach (var name in Constants.TagNames)
+			foreach (var name in DK.Constants.TagNames)
 			{
 				CreateCompletion(name, ProbeCompletionType.Keyword, name);
 			}
 		}
 
-		private void HandleAfterWord(string word, int curPos, ITextSnapshot snapshot, string fileName)
+		private void HandleAfterWord(string word, int curPos, ITextSnapshot snapshot, string fileName, CancellationToken cancel)
 		{
 			var tracker = TextBufferStateTracker.GetTrackerForTextBuffer(_textView.TextBuffer);
-			var stmt = State.ToStatement(tracker.GetStateForPosition(curPos, snapshot, fileName, _appSettings));
+			var stmt = State.ToStatement(tracker.GetStateForPosition(curPos, snapshot, fileName, _appSettings, cancel));
 			StatementLayout.GetCompletionsAfterToken(stmt, this);
 		}
 
-		private void HandleAfterSymbol(SnapshotPoint triggerPt, string fileName)
+		private void HandleAfterSymbol(SnapshotPoint triggerPt, string fileName, CancellationToken cancel)
 		{
 			var tracker = TextBufferStateTracker.GetTrackerForTextBuffer(_textView.TextBuffer);
-			var stmt = State.ToStatement(tracker.GetStateForPosition(triggerPt, fileName, _appSettings));
+			var stmt = State.ToStatement(tracker.GetStateForPosition(triggerPt, fileName, _appSettings, cancel));
 			StatementLayout.GetCompletionsAfterToken(stmt, this);
 		}
 
-		private void HandleAfterNumber(SnapshotPoint triggerPt, string fileName)
+		private void HandleAfterNumber(SnapshotPoint triggerPt, string fileName, CancellationToken cancel)
 		{
 			var tracker = TextBufferStateTracker.GetTrackerForTextBuffer(_textView.TextBuffer);
-			var stmt = State.ToStatement(tracker.GetStateForPosition(triggerPt, fileName, _appSettings));
+			var stmt = State.ToStatement(tracker.GetStateForPosition(triggerPt, fileName, _appSettings, cancel));
 			StatementLayout.GetCompletionsAfterToken(stmt, this);
 		}
 
-		private void HandleAfterStringLiteral(SnapshotPoint triggerPt, string fileName)
+		private void HandleAfterStringLiteral(SnapshotPoint triggerPt, string fileName, CancellationToken cancel)
 		{
 			var tracker = TextBufferStateTracker.GetTrackerForTextBuffer(_textView.TextBuffer);
-			var stmt = State.ToStatement(tracker.GetStateForPosition(triggerPt, fileName, _appSettings));
+			var stmt = State.ToStatement(tracker.GetStateForPosition(triggerPt, fileName, _appSettings, cancel));
 			StatementLayout.GetCompletionsAfterToken(stmt, this);
 		}
 
@@ -594,12 +609,12 @@ namespace DkTools.StatementCompletion
 			}
 		}
 
-		private void GetOptionsForFunctionArg(string fileName, string className, string funcName, int argIndex, SnapshotPoint snapPt)
+		private void GetOptionsForFunctionArg(string fileName, string className, string funcName, int argIndex, SnapshotPoint snapPt, CancellationToken cancel)
 		{
-			var fileStore = CodeModel.FileStore.GetOrCreateForTextBuffer(_textView.TextBuffer);
+			var fileStore = FileStoreHelper.GetOrCreateForTextBuffer(_textView.TextBuffer);
 			if (fileStore == null) return;
 
-			var model = fileStore.GetMostRecentModel(_appSettings, fileName, _textView.TextBuffer.CurrentSnapshot, "Signature help get options for arg");
+			var model = fileStore.GetMostRecentModel(_appSettings, fileName, _textView.TextBuffer.CurrentSnapshot, "Signature help get options for arg", cancel);
 			var modelPos = model.AdjustPosition(snapPt);
 
 			var sigInfos = SignatureHelp.ProbeSignatureHelpSource.GetAllSignaturesForFunction(model, modelPos, className, funcName).ToArray();
@@ -618,7 +633,7 @@ namespace DkTools.StatementCompletion
 			}
 		}
 
-		private void HandleDotSeparatedWords(SnapshotSpan completionSpan, string word1, string word2, string fileName)
+		private void HandleDotSeparatedWords(SnapshotSpan completionSpan, string word1, string word2, string fileName, CancellationToken cancel)
 		{
 			// Typing a table.field.
 
@@ -643,10 +658,10 @@ namespace DkTools.StatementCompletion
 			}
 
 			// Extract and field
-			var store = CodeModel.FileStore.GetOrCreateForTextBuffer(_textView.TextBuffer);
+			var store = FileStoreHelper.GetOrCreateForTextBuffer(_textView.TextBuffer);
 			if (store != null)
 			{
-				var model = store.GetMostRecentModel(_appSettings, fileName, completionSpan.Snapshot, "Extract table.field completion.");
+				var model = store.GetMostRecentModel(_appSettings, fileName, completionSpan.Snapshot, "Extract table.field completion.", cancel);
 				var exDef = model.DefinitionProvider.GetGlobalFromFile<ExtractTableDefinition>(word1).FirstOrDefault();
 				if (exDef != null)
 				{
@@ -679,22 +694,26 @@ namespace DkTools.StatementCompletion
 			}
 
 			// Interface and method/property
-			var fileStore = CodeModel.FileStore.GetOrCreateForTextBuffer(_textView.TextBuffer);
+			var fileStore = FileStoreHelper.GetOrCreateForTextBuffer(_textView.TextBuffer);
 			if (fileStore != null)
 			{
-				var model = fileStore.GetMostRecentModel(_appSettings, fileName, completionSpan.Snapshot, "Interface auto-completion");
-				var modelSpan = completionSpan.TranslateTo(model.Snapshot, SpanTrackingMode.EdgeInclusive);
-
-				foreach (var def in model.DefinitionProvider.GetAny(modelSpan.Start.Position, word1))
+				var model = fileStore.GetMostRecentModel(_appSettings, fileName, completionSpan.Snapshot, "Interface auto-completion", cancel);
+				var modelSnapshot = model.Snapshot as ITextSnapshot;
+				if (modelSnapshot != null)
 				{
-					if (def is VariableDefinition)
+					var modelSpan = completionSpan.TranslateTo(modelSnapshot, SpanTrackingMode.EdgeInclusive);
+
+					foreach (var def in model.DefinitionProvider.GetAny(modelSpan.Start.Position, word1))
 					{
-						var varDef = def as VariableDefinition;
-						if (varDef.AllowsChild)
+						if (def is VariableDefinition)
 						{
-							foreach (var childDef in varDef.GetChildDefinitions(appSettings))
+							var varDef = def as VariableDefinition;
+							if (varDef.AllowsChild)
 							{
-								CreateCompletion(childDef);
+								foreach (var childDef in varDef.GetChildDefinitions(appSettings))
+								{
+									CreateCompletion(childDef);
+								}
 							}
 						}
 					}
@@ -702,12 +721,12 @@ namespace DkTools.StatementCompletion
 			}
 		}
 
-		private void GetWordCompletions(SnapshotPoint triggerPt, SnapshotPoint wordStartPt, string fileName)
+		private void GetWordCompletions(SnapshotPoint triggerPt, SnapshotPoint wordStartPt, string fileName, CancellationToken cancel)
 		{
-			var fileStore = CodeModel.FileStore.GetOrCreateForTextBuffer(_textView.TextBuffer);
+			var fileStore = FileStoreHelper.GetOrCreateForTextBuffer(_textView.TextBuffer);
 			if (fileStore == null) return;
 
-			var model = fileStore.GetMostRecentModel(_appSettings, fileName, triggerPt.Snapshot, "Auto-completion get word completions");
+			var model = fileStore.GetMostRecentModel(_appSettings, fileName, triggerPt.Snapshot, "Auto-completion get word completions", cancel);
 			var modelPos = model.AdjustPosition(triggerPt);
 
 			var tokens = model.FindTokens(modelPos).ToArray();
@@ -724,7 +743,7 @@ namespace DkTools.StatementCompletion
 
 			// Dictionary definitions are already provided by the DefinitionProvider.
 
-			foreach (var d in Constants.DataTypeKeywords)
+			foreach (var d in DK.Constants.DataTypeKeywords)
 			{
 				CreateCompletion(d, ProbeCompletionType.DataType, null);
 			}
@@ -732,34 +751,34 @@ namespace DkTools.StatementCompletion
 			var bottomToken = tokens.LastOrDefault();
 			if (bottomToken != null)
 			{
-				if (bottomToken.Scope.BreakOwner != null) CreateCompletion("break", ProbeCompletionType.Keyword, null);
-				if (bottomToken.Scope.ContinueOwner != null) CreateCompletion("continue", ProbeCompletionType.Keyword, null);
+				if (bottomToken.HasBreakParent) CreateCompletion("break", ProbeCompletionType.Keyword, null);
+				if (bottomToken.HasContinueParent) CreateCompletion("continue", ProbeCompletionType.Keyword, null);
 			}
 
 			// Global keywords
-			foreach (var k in Constants.GlobalKeywords)
+			foreach (var k in DK.Constants.GlobalKeywords)
 			{
 				CreateCompletion(k, ProbeCompletionType.Keyword, null);
 			}
 
 			var tracker = Classifier.TextBufferStateTracker.GetTrackerForTextBuffer(_textView.TextBuffer);
-			var state = Classifier.State.ToStatement(tracker.GetStateForPosition(wordStartPt, fileName, _appSettings));
+			var state = Classifier.State.ToStatement(tracker.GetStateForPosition(wordStartPt, fileName, _appSettings, cancel));
 			foreach (var keyword in StatementLayout.GetNextPossibleKeywords(state))
 			{
 				CreateCompletion(keyword, ProbeCompletionType.Keyword, null);
 			}
 		}
 
-		private void HandleAfterMethodArgsStart(SnapshotPoint triggerPt, string word1, string word2, string fileName)
+		private void HandleAfterMethodArgsStart(SnapshotPoint triggerPt, string word1, string word2, string fileName, CancellationToken cancel)
 		{
 			// Starting a new function that belongs to a class or interface.
 
-			GetOptionsForFunctionArg(fileName, word1, word2, 0, triggerPt);
+			GetOptionsForFunctionArg(fileName, word1, word2, 0, triggerPt, cancel);
 		}
 
-		private void HandleAfterFunctionArgsStart(SnapshotPoint triggerPt, string funcName, string fileName)
+		private void HandleAfterFunctionArgsStart(SnapshotPoint triggerPt, string funcName, string fileName, CancellationToken cancel)
 		{
-			GetOptionsForFunctionArg(fileName, null, funcName, 0, triggerPt);
+			GetOptionsForFunctionArg(fileName, null, funcName, 0, triggerPt, cancel);
 		}
 
 		private void HandleAfterInclude(string startCh, string curFileName)
@@ -787,7 +806,7 @@ namespace DkTools.StatementCompletion
 				// Only include files with the right extension.
 				var ext = System.IO.Path.GetExtension(fileName).ToLower();
 				if (ext.StartsWith(".")) ext = ext.Substring(1);
-				if (!Constants.IncludeExtensions.Contains(ext)) continue;
+				if (!DK.Constants.IncludeExtensions.Contains(ext)) continue;
 
 				var titleExt = System.IO.Path.GetFileName(fileName);
 				if (!retDict.ContainsKey(titleExt))
@@ -804,7 +823,7 @@ namespace DkTools.StatementCompletion
 
 		private void HandlePreprocessor()
 		{
-			foreach (var directive in Constants.PreprocessorDirectives)
+			foreach (var directive in DK.Constants.PreprocessorDirectives)
 			{
 				CreateCompletion(directive, ProbeCompletionType.Keyword, null);
 			}
@@ -841,7 +860,7 @@ namespace DkTools.StatementCompletion
 		internal void CreateCompletion(string text, ProbeCompletionType type, string description)
 		{
 			CreateCompletion(text, type, new ItemData { Description = description },
-				data => { return data.Description != null ? Definition.QuickInfoMainLine_VS(data.Description) : null; });
+				data => { return data.Description != null ? DefinitionHelper.QuickInfoMainLine_VS(data.Description) : null; });
 		}
 		#endregion
 

@@ -1,9 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
+﻿using DK.AppEnvironment;
+using Microsoft.VisualStudio.Shell;
+using System;
 using System.Runtime.InteropServices;
 using System.Text;
-using Microsoft.VisualStudio.Shell;
 
 namespace DkTools.Run
 {

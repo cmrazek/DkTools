@@ -1,13 +1,13 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using DK.AppEnvironment;
+using DK.Diagnostics;
+using DkTools.ErrorTagging;
+using Microsoft.VisualStudio.Shell;
+using System;
 using System.Diagnostics;
 using System.IO;
-using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
-using Microsoft.VisualStudio.Shell;
-using DkTools.ErrorTagging;
 
 namespace DkTools.Compiler
 {
@@ -18,7 +18,7 @@ namespace DkTools.Compiler
 
 		private Thread _compileThread = null;
 		private CompileMethod _method = CompileMethod.Compile;
-		private volatile bool _kill;
+		private CancellationTokenSource _cancelSource;
 		private Process _proc = null;
 		private int _numErrors = 0;
 		private int _numWarnings = 0;
@@ -106,11 +106,11 @@ namespace DkTools.Compiler
 
 			Commands.SaveProbeFiles();
 
-			_kill = false;
+			_cancelSource = new CancellationTokenSource();
 
-			_compileThread = new Thread(new ThreadStart(CompileThread));
+			_compileThread = new Thread(new ParameterizedThreadStart(CompileThread));
 			_compileThread.Name = "CompileThread";
-			_compileThread.Start();
+			_compileThread.Start(_cancelSource.Token);
 		}
 
 		public void KillCompile(int timeout)
@@ -122,7 +122,7 @@ namespace DkTools.Compiler
 				DateTime killStartTime = DateTime.Now;
 				while (_compileThread.IsAlive)
 				{
-					_kill = true;
+					_cancelSource?.Cancel();
 					if (DateTime.Now.Subtract(killStartTime).TotalMilliseconds >= timeout) break;
 					Thread.Sleep(k_compileKillSleep);
 				}
@@ -131,24 +131,26 @@ namespace DkTools.Compiler
 			_compileThread = null;
 		}
 
-		private void CompileThread()
+		private void CompileThread(object cancelToken)
 		{
-			var startTime = DateTime.Now;
-			var appSettings = DkEnvironment.CurrentAppSettings;
-			if (!appSettings.Initialized)
-			{
-				WriteLine("Aborting compile because no current WBDK app is loaded.");
-				return;
-			}
-
-			while (!_mutex.WaitOne(1000))
-			{
-				if (_kill) return;
-				WriteLine("Waiting for background compile to complete...");
-			}
+			var cancel = (CancellationToken)cancelToken;
 
 			try
 			{
+				var startTime = DateTime.Now;
+				var appSettings = DkEnvironment.CurrentAppSettings;
+				if (!appSettings.Initialized)
+				{
+					WriteLine("Aborting compile because no current WBDK app is loaded.");
+					return;
+				}
+
+				while (!_mutex.WaitOne(1000))
+				{
+					if (cancel.IsCancellationRequested) return;
+					WriteLine("Waiting for background compile to complete...");
+				}
+
 				_pane.Clear();
 				ErrorTaskProvider.Instance.Clear();
 
@@ -157,7 +159,7 @@ namespace DkTools.Compiler
 					case CompileMethod.Compile:
 						WriteLine("Starting compile for application '{0}' at {1}.", appSettings.AppName, startTime.ToString(k_timeStampFormat));
 
-						if (DoCompile(appSettings))
+						if (DoCompile(appSettings, cancel))
 						{
 							var endTime = DateTime.Now;
 							var elapsed = endTime - startTime;
@@ -169,7 +171,7 @@ namespace DkTools.Compiler
 						WriteLine("Starting dccmp for application '{0}' at {1}.", appSettings.AppName, startTime.ToString(k_timeStampFormat));
 						ProbeToolsPackage.Instance.SetStatusText("DK dccmp starting...");
 
-						if (DoDccmp(appSettings))
+						if (DoDccmp(appSettings, cancel))
 						{
 							var endTime = DateTime.Now;
 							var elapsed = endTime - startTime;
@@ -181,7 +183,7 @@ namespace DkTools.Compiler
 						WriteLine("Starting credelix for application '{0}' at {1}.", appSettings.AppName, startTime.ToString(k_timeStampFormat));
 						ProbeToolsPackage.Instance.SetStatusText("DK credelix starting...");
 
-						if (DoCredelix(appSettings))
+						if (DoCredelix(appSettings, cancel))
 						{
 							var endTime = DateTime.Now;
 							var elapsed = endTime - startTime;
@@ -193,17 +195,16 @@ namespace DkTools.Compiler
 						throw new InvalidOperationException("Invalid compile method.");
 				}
 			}
-			catch (Exception ex)
-			{
-				Log.WriteEx(ex);
-			}
+			catch (OperationCanceledException ex) { Log.Debug(ex); }
+			catch (ThreadAbortException ex) { Log.Debug(ex); }
+			catch (Exception ex) { Log.Error(ex); }
 			finally
 			{
 				_mutex.ReleaseMutex();
 			}
 		}
 
-		private bool DoCompile(DkAppSettings appSettings)
+		private bool DoCompile(DkAppSettings appSettings, CancellationToken cancel)
 		{
 			try
 			{
@@ -255,7 +256,7 @@ namespace DkTools.Compiler
 
 				while (stdOutThread.IsAlive || stdErrThread.IsAlive)
 				{
-					if (_kill)
+					if (cancel.IsCancellationRequested)
 					{
 						_proc.Kill();
 						stdOutThread.Join();
@@ -294,7 +295,7 @@ namespace DkTools.Compiler
 				{
 					WriteLine("Compile succeeded; running DCCMP...");
 					ProbeToolsPackage.Instance.SetStatusText("DK compile succeeded; running DCCMP...");
-					if (!DoDccmp(appSettings)) return false;
+					if (!DoDccmp(appSettings, cancel)) return false;
 				}
 
 				if (_numWarnings > 0) ProbeToolsPackage.Instance.SetStatusText("DK compile succeeded with warnings");
@@ -322,7 +323,7 @@ namespace DkTools.Compiler
 			}
 		}
 
-		private bool DoDccmp(DkAppSettings appSettings)
+		private bool DoDccmp(DkAppSettings appSettings, CancellationToken cancel)
 		{
 			try 
 			{
@@ -357,7 +358,7 @@ namespace DkTools.Compiler
 
 				while (stdOutThread.IsAlive || stdErrThread.IsAlive)
 				{
-					if (_kill)
+					if (cancel.IsCancellationRequested)
 					{
 						_proc.Kill();
 						stdOutThread.Join();
@@ -388,7 +389,7 @@ namespace DkTools.Compiler
 			}
 		}
 
-		private bool DoCredelix(DkAppSettings appSettings)
+		private bool DoCredelix(DkAppSettings appSettings, CancellationToken cancel)
 		{
 			try
 			{
@@ -423,7 +424,7 @@ namespace DkTools.Compiler
 
 				while (stdOutThread.IsAlive || stdErrThread.IsAlive)
 				{
-					if (_kill)
+					if (cancel.IsCancellationRequested)
 					{
 						_proc.Kill();
 						stdOutThread.Join();

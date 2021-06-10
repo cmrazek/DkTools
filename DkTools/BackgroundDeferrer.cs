@@ -1,8 +1,6 @@
-﻿using EnvDTE;
+﻿using DK.Diagnostics;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+using System.Threading;
 using System.Timers;
 
 namespace DkTools
@@ -10,9 +8,10 @@ namespace DkTools
 	internal class BackgroundDeferrer : IDisposable
 	{
 		private int _idleTime;
-		private Timer _timer;
+		private System.Timers.Timer _timer;
 		private object _value;
 		private int _priority;
+		private CancellationTokenSource _cancel;
 
 		public event EventHandler<IdleEventArgs> Idle;
 
@@ -20,18 +19,20 @@ namespace DkTools
 		{
 			public object Value { get; private set; }
 			public int Priority { get; private set; }
+			public CancellationToken CancellationToken { get; private set; }
 
-			public IdleEventArgs(object value, int priority)
+			public IdleEventArgs(object value, int priority, CancellationToken cancel)
 			{
 				Value = value;
 				Priority = priority;
+				CancellationToken = cancel;
 			}
 		}
 
 		public BackgroundDeferrer(int idleTime = 1000)
 		{
 			_idleTime = idleTime;
-			_timer = new Timer(idleTime);
+			_timer = new System.Timers.Timer(_idleTime);
 			_timer.AutoReset = false;
 			_timer.Elapsed += new ElapsedEventHandler(Timer_Elapsed);
 		}
@@ -54,6 +55,8 @@ namespace DkTools
 			if (priority > _priority) _priority = priority;
 			_timer.Stop();
 			_timer.Start();
+
+			_cancel?.Cancel();
 		}
 
 		public void Dispose()
@@ -78,9 +81,15 @@ namespace DkTools
 		{
 			try
 			{
+				_cancel = new CancellationTokenSource();
+
 				var priority = _priority;
 				_priority = 0;
-				Idle?.Invoke(this, new IdleEventArgs(_value, priority));
+				Idle?.Invoke(this, new IdleEventArgs(_value, priority, _cancel.Token));
+			}
+			catch (OperationCanceledException ex)
+			{
+				Log.Debug(ex);
 			}
 			catch (Exception ex)
 			{

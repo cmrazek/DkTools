@@ -18,6 +18,10 @@ Visual Studio Extension for WBDK
 
 ## Change Log
 
+**Version 1.5.17 Changes:**
+- The code modeler/analysis processes will now cancel themselves if you start typing again. This should improve responsiveness.
+- Class methods now only shown in statement completion after typing the class name.
+
 **Version 1.5.16 Changes:**
 - Class names are no longer forced to lowercase.
 - Background scanning database is 'shrunk' less often, improving performance when saving a file.
