@@ -171,8 +171,6 @@ namespace DK.CodeAnalysis
 			var errorType = errorCode.GetErrorType();
 			if (errorType == CAErrorType.ReportOutputTag)
 			{
-				if (_options.MaxReportOutput != 0 && _options.MaxReportOutput <= _tags.Count) return;
-
 				fileSpan = _prepModel.Source.GetPrimaryFileSpan(span);
 				if (span.IsEmpty) return;
 

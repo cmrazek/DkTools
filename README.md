@@ -18,6 +18,9 @@ Visual Studio Extension for WBDK
 
 ## Change Log
 
+**Version 1.5.18 Changes:**
+- Code analysis will now limit the number of warnings it reports, to cope with scenarios where there are thousands of warnings.
+
 **Version 1.5.17 Changes:**
 - The code modeler/analysis processes will now cancel themselves if you start typing again. This should improve responsiveness.
 - Class methods now only shown in statement completion after typing the class name.

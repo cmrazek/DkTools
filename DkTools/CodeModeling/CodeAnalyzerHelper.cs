@@ -14,8 +14,7 @@ namespace DkTools.CodeModeling
 			var results = ca.RunAndGetResults(new CAOptions
 			{
 				HighlightReportOutput = editorOptions.HighlightReportOutput,
-				MaxWarnings = editorOptions.MaxWarnings,
-				MaxReportOutput = editorOptions.MaxReportOutput
+				MaxWarnings = editorOptions.MaxWarnings
 			}, cancel);
 
 			ErrorTaskProvider.Instance.ReplaceForSourceAndInvokingFile(ErrorTaskSource.CodeAnalysis, ca.CodeModel.FilePath, results.Tasks.Select(x => x.ToErrorTask()));

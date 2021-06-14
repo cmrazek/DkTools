@@ -59,11 +59,6 @@ namespace DkTools
 		[Description("Maximum number of warnings to display per file. Set to zero to get ALL warnings.")]
 		public int MaxWarnings { get; set; }
 
-		[Category("Code Analysis")]
-		[DisplayName("Max Report Output")]
-		[Description("Maximum number of report output highlights to show per file. Set to zero to view ALL output.")]
-		public int MaxReportOutput { get; set; }
-
 		public EditorOptions()
 		{
 			DisableDeadCode = true;
@@ -76,7 +71,6 @@ namespace DkTools
 			RunCodeAnalysisOnSave = true;
 			RunCodeAnalysisOnUserInput = true;
 			MaxWarnings = 100;
-			MaxReportOutput = 100;
 		}
 
 		public override void SaveSettingsToStorage()
