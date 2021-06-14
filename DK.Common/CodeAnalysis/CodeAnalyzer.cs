@@ -28,10 +28,9 @@ namespace DK.CodeAnalysis
 		private List<Statement> _stmts;
 		private CAScope _scope;
 		private ReadParams _read;
-		private List<CAErrorTask> _tasks = new List<CAErrorTask>();
+		private List<CAErrorTask> _mainFileTasks = new List<CAErrorTask>();
+		private List<CAErrorTask> _includeFileTasks = new List<CAErrorTask>();
 		private List<CAErrorMarker> _tags = new List<CAErrorMarker>();
-		private int _numErrors;
-		private int _numWarnings;
 
 		public CodeAnalyzer(CodeModel model)
 		{
@@ -64,7 +63,8 @@ namespace DK.CodeAnalysis
 			}
 
 			Log.Debug("Completed code analysis (elapsed: {0} msec)", DateTime.Now.Subtract(startTime).TotalMilliseconds);
-			return new CodeAnalysisResults(_tasks, _tags);
+			var tasks = _mainFileTasks.Concat(_includeFileTasks).Take(_options.MaxWarnings != 0 ? _options.MaxWarnings : int.MaxValue).ToList();
+			return new CodeAnalysisResults(tasks, _tags);
 		}
 
 		private void AnalyzeFunction(PreprocessorModel.LocalFunction func)
@@ -167,40 +167,56 @@ namespace DK.CodeAnalysis
 
 			CodeSpan fileSpan;
 			string filePath;
+			var mainFile = false;
 			var errorType = errorCode.GetErrorType();
 			if (errorType == CAErrorType.ReportOutputTag)
 			{
+				if (_options.MaxReportOutput != 0 && _options.MaxReportOutput <= _tags.Count) return;
+
 				fileSpan = _prepModel.Source.GetPrimaryFileSpan(span);
 				if (span.IsEmpty) return;
 
 				filePath = _filePath;
+				mainFile = true;
 			}
 			else
 			{
+				if (_options.MaxWarnings != 0 && _options.MaxWarnings <= _mainFileTasks.Count) return;
+
 				fileSpan = _prepModel.Source.GetFileSpan(span, out filePath, out var _);
+
+				if (filePath != null && _filePath.EqualsI(filePath))
+				{
+					mainFile = true;
+				}
+				else
+				{
+					if (_options.MaxWarnings != 0 && _options.MaxWarnings <= _includeFileTasks.Count) return;
+				}
 			}
 
 			string fileContent = null;
 			foreach (var incl in _prepModel.IncludeDependencies)
 			{
-				if (string.Equals(incl.FileName, filePath, StringComparison.OrdinalIgnoreCase))
+				if (incl.FileName.EqualsI(filePath))
 				{
 					fileContent = incl.Content;
 					break;
 				}
 			}
 
-			ReportErrorLocal_Internal(filePath, fileSpan, fileContent, errorCode, args);
+			ReportErrorLocal_Internal(filePath, fileSpan, mainFile, fileContent, errorCode, args);
 		}
 
-		private void ReportErrorLocal_Internal(string filePath, CodeSpan fileSpan, string fileContent, CAError errorCode, params object[] args)
+		private void ReportErrorLocal_Internal(string filePath, CodeSpan fileSpan, bool mainFile, string fileContent, CAError errorCode, params object[] args)
 		{
-			if (_tasks.Any(x => x.ErrorCode == errorCode &&
-				x.Span == fileSpan &&
-				x.FilePath.EqualsI(filePath)))
+			if (mainFile)
 			{
-				// This is a duplicate error report.
-				return;
+				if (_mainFileTasks.Any(x => x.ErrorCode == errorCode && x.Span == fileSpan)) return;	// Duplicate error report
+			}
+			else
+			{
+				if (_includeFileTasks.Any(x => x.ErrorCode == errorCode && x.Span == fileSpan && x.FilePath.EqualsI(filePath))) return;	// Duplicate error report
 			}
 
 			int lineNum = 0, linePos = 0;
@@ -243,25 +259,20 @@ namespace DK.CodeAnalysis
 
 			var message = errorCode.GetText(args);
 
-			switch (type)
-			{
-				case CAErrorType.ReportOutputTag:
-					break;
-				case CAErrorType.Warning:
-					_numWarnings++;
-					break;
-				default:
-					_numErrors++;
-					break;
-			}
-
 			if (type == CAErrorType.ReportOutputTag)
 			{
 				_tags.Add(new CAErrorMarker(filePath, fileSpan));
 			}
 			else
 			{
-				_tasks.Add(new CAErrorTask(errorCode, message, filePath, fileSpan, lineNum, linePos, _codeModel.FilePath));
+				if (mainFile)
+				{
+					_mainFileTasks.Add(new CAErrorTask(errorCode, message, filePath, fileSpan, lineNum, linePos, _codeModel.FilePath));
+				}
+				else
+				{
+					_includeFileTasks.Add(new CAErrorTask(errorCode, message, filePath, fileSpan, lineNum, linePos, _codeModel.FilePath));
+				}
 			}
 		}
 

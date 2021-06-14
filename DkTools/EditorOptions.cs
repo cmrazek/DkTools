@@ -1,12 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Linq;
-using System.Runtime.InteropServices;
-using System.Text;
-using System.Threading.Tasks;
-using DK.AppEnvironment;
+﻿using DK.AppEnvironment;
 using Microsoft.VisualStudio.Shell;
+using System;
+using System.ComponentModel;
+using System.Runtime.InteropServices;
 
 namespace DkTools
 {
@@ -29,16 +25,6 @@ namespace DkTools
 		public bool RunBackgroundFecOnSave { get; set; }
 
 		[Category("Editor Options")]
-		[DisplayName("Show Code Analysis on Save")]
-		[Description("When a file is saved, run code analysis and show detected errors and warnings.")]
-		public bool RunCodeAnalysisOnSave { get; set; }
-
-		[Category("Editor Options")]
-		[DisplayName("Show Code Analysis on User Input")]
-		[Description("Run code analysis as code is being modified.")]
-		public bool RunCodeAnalysisOnUserInput { get; set; }
-
-		[Category("Editor Options")]
 		[DisplayName("Disable Background Scanning")]
 		[Description("Stop scanning files in the background (will cause classes, functions to not be detected properly).")]
 		public bool DisableBackgroundScan { get; set; }
@@ -58,16 +44,39 @@ namespace DkTools
 		[Description("Typing a dot '.' will accept the currently selected auto-completion item.")]
 		public bool AutoCompleteOnDot { get; set; }
 
+		[Category("Code Analysis")]
+		[DisplayName("Show Code Analysis on Save")]
+		[Description("When a file is saved, run code analysis and show detected errors and warnings.")]
+		public bool RunCodeAnalysisOnSave { get; set; }
+
+		[Category("Code Analysis")]
+		[DisplayName("Show Code Analysis on User Input")]
+		[Description("Run code analysis as code is being modified.")]
+		public bool RunCodeAnalysisOnUserInput { get; set; }
+
+		[Category("Code Analysis")]
+		[DisplayName("Max Warnings")]
+		[Description("Maximum number of warnings to display per file. Set to zero to get ALL warnings.")]
+		public int MaxWarnings { get; set; }
+
+		[Category("Code Analysis")]
+		[DisplayName("Max Report Output")]
+		[Description("Maximum number of report output highlights to show per file. Set to zero to view ALL output.")]
+		public int MaxReportOutput { get; set; }
+
 		public EditorOptions()
 		{
 			DisableDeadCode = true;
 			HighlightReportOutput = true;
 			RunBackgroundFecOnSave = true;
-			RunCodeAnalysisOnSave = true;
-			RunCodeAnalysisOnUserInput = true;
 			AutoCompleteOnSpace = false;
 			AutoCompleteOnTab = true;
 			AutoCompleteOnDot = true;
+
+			RunCodeAnalysisOnSave = true;
+			RunCodeAnalysisOnUserInput = true;
+			MaxWarnings = 100;
+			MaxReportOutput = 100;
 		}
 
 		public override void SaveSettingsToStorage()
