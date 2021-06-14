@@ -336,6 +336,17 @@ namespace DK.AppEnvironment
 		{
 			Log.Warning("File system watcher error: {0}", e.GetException());
 		}
-#endregion
+		#endregion
+
+		public void ReloadFilesList()
+		{
+			var sourceFiles = DkEnvironment.LoadSourceFiles(this);
+			var includeFiles = DkEnvironment.LoadIncludeFiles(this);
+			var sourceAndIncludeFiles = sourceFiles.Concat(includeFiles.Where(x => !sourceFiles.Contains(x))).ToArray();
+
+			SourceFiles = sourceFiles;
+			IncludeFiles = includeFiles;
+			SourceAndIncludeFiles = sourceAndIncludeFiles;
+		}
 	}
 }
