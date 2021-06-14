@@ -184,10 +184,8 @@ namespace DK.Modeling
 			get { return _className; }
 		}
 
-		public FileContext FileContext
-		{
-			get { return _fileContext; }
-		}
+		public FileContext FileContext => _fileContext;
+		public ServerContext ServerContext => _fileContext.ToServerContext();
 
 		internal IEnumerable<Preprocessor.Reference> PreprocessorReferences
 		{

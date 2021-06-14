@@ -9,52 +9,29 @@ namespace DK.Definitions
 {
 	public class ClassDefinition : Definition
 	{
+		private ServerContext _serverContext;
 		private List<FunctionDefinition> _funcs = new List<FunctionDefinition>();
 
-		public ClassDefinition(string name, string fileName)
+		public ClassDefinition(string name, string fileName, ServerContext serverContext)
 			: base(name, new FilePosition(fileName, 0, true), GetExternalRefId(name))
 		{
+			_serverContext = serverContext;
 		}
 
 		public IEnumerable<FunctionDefinition> Functions => _funcs;
 		public override string ToString() => $"Class: {Name}";
-
-		public override bool CompletionVisible
-		{
-			get { return true; }
-		}
-
-		public override ProbeCompletionType CompletionType
-		{
-			get { return ProbeCompletionType.Class; }
-		}
-
-		public override ProbeClassifierType ClassifierType
-		{
-			get { return ProbeClassifierType.TableName; }
-		}
-
-		public override string QuickInfoTextStr
-		{
-			get { return string.Concat("Class: ", Name); }
-		}
-
+		public override bool CompletionVisible => true;
+		public override ProbeCompletionType CompletionType => ProbeCompletionType.Class;
+		public override ProbeClassifierType ClassifierType => ProbeClassifierType.TableName;
+		public override string QuickInfoTextStr => string.Concat("Class: ", Name);
 		public override QuickInfoLayout QuickInfo => new QuickInfoAttribute("Class", new ProbeClassifiedString(ProbeClassifierType.TableName, Name));
-
-		public override string PickText
-		{
-			get { return QuickInfoTextStr; }
-		}
-
-		public override bool RequiresChild
-		{
-			get { return true; }
-		}
-
-		public override bool AllowsChild
-		{
-			get { return true; }
-		}
+		public override string PickText => QuickInfoTextStr;
+		public override bool RequiresChild => true;
+		public override bool AllowsChild => true;
+		public override bool ArgumentsRequired => false;
+		public override bool CaseSensitive => false;
+		public static string GetExternalRefId(string className) => string.Concat("class:", className);
+		public override ServerContext ServerContext => _serverContext;
 
 		public override IEnumerable<Definition> GetChildDefinitions(string name, DkAppSettings appSettings)
 		{
@@ -65,16 +42,6 @@ namespace DK.Definitions
 		}
 
 		public override IEnumerable<Definition> GetChildDefinitions(DkAppSettings appSettings) => _funcs.Cast<Definition>();
-
-		public override bool ArgumentsRequired
-		{
-			get { return false; }
-		}
-
-		public override bool CaseSensitive
-		{
-			get { return false; }
-		}
 
 		public void AddFunction(FunctionDefinition func)
 		{
@@ -89,11 +56,6 @@ namespace DK.Definitions
 		public void ClearFunctions()
 		{
 			_funcs.Clear();
-		}
-
-		public static string GetExternalRefId(string className)
-		{
-			return string.Concat("class:", className);
 		}
 	}
 }

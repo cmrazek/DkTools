@@ -24,42 +24,15 @@ namespace DK.Definitions
 			_dataType = dataType;
 		}
 
-		public override DataType DataType
-		{
-			get { return _dataType; }
-		}
-
-		public override bool CompletionVisible
-		{
-			get { return true; }
-		}
-
-		public override ProbeCompletionType CompletionType
-		{
-			get { return ProbeCompletionType.DataType; }
-		}
-
-		public override ProbeClassifierType ClassifierType
-		{
-			get { return ProbeClassifierType.DataType; }
-		}
-
-		public override string QuickInfoTextStr
-		{
-			get { return !string.IsNullOrEmpty(_dataType.InfoText) ? _dataType.InfoText : _dataType.Name; }
-		}
-
+		public override DataType DataType => _dataType;
+		public override bool CompletionVisible => true;
+		public override ProbeCompletionType CompletionType => ProbeCompletionType.DataType;
+		public override ProbeClassifierType ClassifierType => ProbeClassifierType.DataType;
+		public override string QuickInfoTextStr => !string.IsNullOrEmpty(_dataType.InfoText) ? _dataType.InfoText : _dataType.Name;
 		public override QuickInfoLayout QuickInfo => new QuickInfoClassifiedString(_dataType.GetClassifiedString(shortVersion: false));
-
-		public override string PickText
-		{
-			get { return QuickInfoTextStr; }
-		}
-
-		public override bool ArgumentsRequired
-		{
-			get { return false; }
-		}
+		public override string PickText => QuickInfoTextStr;
+		public override bool ArgumentsRequired => false;
+		public override ServerContext ServerContext => ServerContext.Neutral;
 
 		private static string CreateExternalRefId(string name, string fileName)
 		{

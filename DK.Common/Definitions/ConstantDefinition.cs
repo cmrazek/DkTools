@@ -13,42 +13,16 @@ namespace DK.Definitions
 			_text = text;
 		}
 
-		public string Text
-		{
-			get { return _text; }
-		}
-
-		public override bool CompletionVisible
-		{
-			get { return true; }
-		}
-
-		public override ProbeCompletionType CompletionType
-		{
-			get { return ProbeCompletionType.Constant; }
-		}
-
-		public override ProbeClassifierType ClassifierType
-		{
-			get { return ProbeClassifierType.Constant; }
-		}
-
-		public override string QuickInfoTextStr
-		{
-			get { return _text; }
-		}
-
+		public string Text => _text;
+		public override bool CompletionVisible => true;
+		public override ProbeCompletionType CompletionType => ProbeCompletionType.Constant;
+		public override ProbeClassifierType ClassifierType => ProbeClassifierType.Constant;
+		public override string QuickInfoTextStr => _text;
 		public override QuickInfoLayout QuickInfo => new QuickInfoText(ProbeClassifierType.Constant, _text);
-
-		public override string PickText
-		{
-			get { return QuickInfoTextStr; }
-		}
-
-		public override bool ArgumentsRequired
-		{
-			get { return false; }
-		}
+		public override string PickText => QuickInfoTextStr;
+		public override bool ArgumentsRequired => false;
+		public override bool CanRead => true;
+		public override ServerContext ServerContext => ServerContext.Neutral;
 
 		private static string CreateExternalRefId(string name, string fileName)
 		{
@@ -59,14 +33,6 @@ namespace DK.Definitions
 			else
 			{
 				return string.Concat("const:", name);
-			}
-		}
-
-		public override bool CanRead
-		{
-			get
-			{
-				return true;
 			}
 		}
 	}

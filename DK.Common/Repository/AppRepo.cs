@@ -1181,7 +1181,9 @@ namespace DK.Repository
 			{
 				if (File_GetClassNameId(file) != 0)
 				{
-					var classDef = new ClassDefinition(File_GetClassName(file), File_GetFileName(file));
+					var fileName = File_GetFileName(file);
+					var serverContext = ServerContextHelper.FromFileName(fileName);
+					var classDef = new ClassDefinition(File_GetClassName(file), fileName, serverContext);
 
 					File_IterateFuncs(file, func =>
 					{
