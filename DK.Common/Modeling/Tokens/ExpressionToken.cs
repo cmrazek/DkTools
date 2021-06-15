@@ -276,6 +276,8 @@ namespace DK.Modeling.Tokens
 							bestTokenScore = defScore;
 						}
 					}
+
+					if (bestToken != null) return bestToken;
 				}
 				else
 				{
