@@ -26,6 +26,8 @@ namespace DK.Definitions
 			_returnDataType = returnDataType;
 		}
 
+		public override ServerContext ServerContext => ServerContext.Neutral;
+
 		public override bool CompletionVisible
 		{
 			get { return true; }

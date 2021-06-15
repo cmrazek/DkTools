@@ -15,7 +15,7 @@ namespace DK.Modeling.Tokens
 		internal ClassToken(Scope scope, CodeSpan span, string text, RepoClass ffClass)
 			: base(scope, span, text)
 		{
-			SourceDefinition = new ClassDefinition(ffClass.Name, ffClass.FileName);
+			SourceDefinition = new ClassDefinition(ffClass.Name, ffClass.FileName, scope.Model.ServerContext);
 		}
 	}
 }

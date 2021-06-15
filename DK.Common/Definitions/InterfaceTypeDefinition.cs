@@ -25,6 +25,8 @@ namespace DK.Definitions
 		{
 		}
 
+		public override ServerContext ServerContext => ServerContext.Neutral;
+
 		public override bool CompletionVisible
 		{
 			get { return true; }

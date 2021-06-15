@@ -31,8 +31,8 @@ namespace DK.Definitions
 		}
 
 		public override string QuickInfoTextStr => Name;
-
 		public override QuickInfoLayout QuickInfo => new QuickInfoText(ProbeClassifierType.Constant, Name);
+		public override ServerContext ServerContext => ServerContext.Neutral;
 
 		public override string PickText
 		{
