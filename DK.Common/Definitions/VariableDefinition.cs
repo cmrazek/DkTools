@@ -55,6 +55,8 @@ namespace DK.Definitions
 			_declText = sb.ToString();
 		}
 
+		public override ServerContext ServerContext => ServerContext.Neutral;
+
 		public override DataType DataType
 		{
 			get { return _dataType; }

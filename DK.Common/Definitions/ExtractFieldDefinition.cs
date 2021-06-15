@@ -19,6 +19,8 @@ namespace DK.Definitions
 			_dataType = dataType;
 		}
 
+		public override ServerContext ServerContext => ServerContext.Server;
+
 		public override bool CompletionVisible
 		{
 			get { return true; }

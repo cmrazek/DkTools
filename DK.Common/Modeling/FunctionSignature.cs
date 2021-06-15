@@ -18,13 +18,22 @@ namespace DK.Modeling
 		private ArgumentDescriptor[] _args;
 		private ProbeClassifiedString _prettySignature;
 		private string _devDesc;
+		private ServerContext _serverContext;
 
 		public static readonly FunctionSignature[] EmptyArray = new FunctionSignature[0];
 
 		private FunctionSignature()
 		{ }
 
-		public FunctionSignature(bool isExtern, FunctionPrivacy privacy, DataType returnDataType, string className, string funcName, string devDesc, IEnumerable<ArgumentDescriptor> args)
+		public FunctionSignature(
+			bool isExtern,
+			FunctionPrivacy privacy,
+			DataType returnDataType,
+			string className,
+			string funcName,
+			string devDesc,
+			IEnumerable<ArgumentDescriptor> args,
+			ServerContext serverContext)
 		{
 			_extern = isExtern;
 			_privacy = privacy;
@@ -33,6 +42,7 @@ namespace DK.Modeling
 			_funcName = funcName;
 			_devDesc = devDesc;
 			_args = args.ToArray();
+			_serverContext = serverContext;
 		}
 
 		public FunctionSignature Clone()
@@ -46,7 +56,8 @@ namespace DK.Modeling
 				_funcName = _funcName,
 				_args = _args.ToArray(),
 				_devDesc = _devDesc,
-				_prettySignature = _prettySignature
+				_prettySignature = _prettySignature,
+				_serverContext = _serverContext
 			};
 		}
 
@@ -54,21 +65,14 @@ namespace DK.Modeling
 		public string FunctionName => _funcName;
 		public string FullName => !string.IsNullOrEmpty(_className) ? string.Concat(_className, ".", _funcName) : _funcName;
 		public override string ToString() => PrettySignature;
+		public ServerContext ServerContext => _serverContext;
+		public FunctionPrivacy Privacy => _privacy;
+		public DataType ReturnDataType => _returnDataType;
 
 		public string Description
 		{
 			get { return _devDesc; }
 			set { _devDesc = value; }
-		}
-
-		public FunctionPrivacy Privacy
-		{
-			get { return _privacy; }
-		}
-
-		public DataType ReturnDataType
-		{
-			get { return _returnDataType; }
 		}
 
 		public IEnumerable<ArgumentDescriptor> Arguments
@@ -211,6 +215,12 @@ namespace DK.Modeling
 				sb.Append(CodeParser.StringToStringLiteral(arg.ToDbString()));
 			}
 
+			if (_serverContext != ServerContext.Neutral)
+			{
+				if (sb.Length > 0) sb.Append(' ');
+				sb.Append(_serverContext == ServerContext.Server ? "sc" : "cc");
+			}
+
 			return sb.ToString();
 		}
 
@@ -225,6 +235,7 @@ namespace DK.Modeling
 			string funcName = string.Empty;
 			string devDesc = null;
 			var args = new List<ArgumentDescriptor>();
+			var serverContext = ServerContext.Neutral;
 
 			var stopParsing = false;
 			while (code.ReadWord() && !stopParsing)
@@ -276,6 +287,12 @@ namespace DK.Modeling
 							else args.Add(arg);
 						}
 						break;
+					case "sc":
+						serverContext = ServerContext.Server;
+						break;
+					case "cc":
+						serverContext = ServerContext.Client;
+						break;
 					default:
 						Log.Debug("Unexpected word '{0}' in function signature: {1}", code.Text, str);
 						stopParsing = true;
@@ -283,7 +300,7 @@ namespace DK.Modeling
 				}
 			}
 
-			return new FunctionSignature(isExtern, privacy, returnDataType, className, funcName, devDesc, args);
+			return new FunctionSignature(isExtern, privacy, returnDataType, className, funcName, devDesc, args, serverContext);
 		}
 
 		public bool Extern

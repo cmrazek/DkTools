@@ -19,5 +19,6 @@ namespace DK.Definitions
 		public override string QuickInfoTextStr => LocationText;
 		public override QuickInfoLayout QuickInfo => new QuickInfoMainLine(LocationText);
 		public override string PickText => LocationText;
+		public override ServerContext ServerContext => ServerContextHelper.FromFileName(FilePosition.FileName);
 	}
 }

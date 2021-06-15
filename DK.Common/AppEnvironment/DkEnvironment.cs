@@ -289,7 +289,7 @@ namespace DK.AppEnvironment
 			return Constants.ProbeExtensions.Contains(fileExt.ToLower());
 		}
 
-		private static string[] LoadSourceFiles(DkAppSettings appSettings)
+		public static string[] LoadSourceFiles(DkAppSettings appSettings)
 		{
 			var sourceFiles = new List<string>();
 			foreach (var dir in appSettings.SourceDirs)
@@ -317,7 +317,7 @@ namespace DK.AppEnvironment
 			}
 		}
 
-		private static string[] LoadIncludeFiles(DkAppSettings appSettings)
+		public static string[] LoadIncludeFiles(DkAppSettings appSettings)
 		{
 			var includeFiles = new List<string>();
 

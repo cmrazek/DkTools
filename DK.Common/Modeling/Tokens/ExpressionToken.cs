@@ -236,39 +236,48 @@ namespace DK.Modeling.Tokens
 					var argsPresent = (scope.Hint & ScopeHint.SuppressFunctionCall) == 0 && code.PeekExact('(');
 					var argsOpenBracketSpan = argsPresent ? code.MovePeekedSpan() : CodeSpan.Empty;
 
+					Token bestToken = null;
+					int bestTokenScore = int.MinValue;
+
 					foreach (var def in scope.DefinitionProvider.GetAny(wordSpan.Start, word))
 					{
-						if (def.AllowsChild)
+						if (!def.AllowsChild) continue;
+
+						var defScore = ServerContextHelper.GetScore(scope.Model.FileContext.ToServerContext(), def.ServerContext);
+						if (defScore <= bestTokenScore) continue;
+
+						// When arguments are present, take only the definitions that accept arguments
+						var childDefs = def.GetChildDefinitions(word2, scope.AppSettings).Where(x => argsPresent ? x.ArgumentsRequired : true).ToArray();
+						if (childDefs.Length > 0)
 						{
-							// When arguments are present, take only the definitions that accept arguments
-							var childDefs = def.GetChildDefinitions(word2, scope.AppSettings).Where(x => argsPresent ? x.ArgumentsRequired : true).ToArray();
-							if (childDefs.Any())
+							ArgsToken argsToken = null;
+							Definition childDef = null;
+
+							if (argsPresent)
 							{
-								ArgsToken argsToken = null;
-								Definition childDef = null;
-
-								if (argsPresent)
-								{
-									var openBracketToken = new OperatorToken(scope, argsOpenBracketSpan, "(");
-									argsToken = ArgsToken.ParseAndChooseArguments(scope, openBracketToken, childDefs, out childDef);
-								}
-								else
-								{
-									childDef = childDefs[0];
-								}
-
-								var word1Token = new IdentifierToken(scope, wordSpan, word, def);
-								var dotToken = new DotToken(scope, dotSpan);
-								var word2Token = new IdentifierToken(scope, word2Span, word2, childDef);
-								var compToken = new CompositeToken(scope, childDef.DataType);
-								compToken.AddToken(word1Token);
-								compToken.AddToken(dotToken);
-								compToken.AddToken(word2Token);
-								if (argsToken != null) compToken.AddToken(argsToken);
-								return compToken;
+								var openBracketToken = new OperatorToken(scope, argsOpenBracketSpan, "(");
+								argsToken = ArgsToken.ParseAndChooseArguments(scope, openBracketToken, childDefs, out childDef);
 							}
+							else
+							{
+								childDef = childDefs[0];
+							}
+
+							var word1Token = new IdentifierToken(scope, wordSpan, word, def);
+							var dotToken = new DotToken(scope, dotSpan);
+							var word2Token = new IdentifierToken(scope, word2Span, word2, childDef);
+							var compToken = new CompositeToken(scope, childDef.DataType);
+							compToken.AddToken(word1Token);
+							compToken.AddToken(dotToken);
+							compToken.AddToken(word2Token);
+							if (argsToken != null) compToken.AddToken(argsToken);
+
+							bestToken = compToken;
+							bestTokenScore = defScore;
 						}
 					}
+
+					if (bestToken != null) return bestToken;
 				}
 				else
 				{

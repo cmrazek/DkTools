@@ -9,9 +9,12 @@ namespace DkTools.CodeModeling
 	{
 		public static void Run(this CodeAnalyzer ca, CancellationToken cancel)
 		{
+			var editorOptions = ProbeToolsPackage.Instance.EditorOptions;
+
 			var results = ca.RunAndGetResults(new CAOptions
 			{
-				HighlightReportOutput = ProbeToolsPackage.Instance.EditorOptions.HighlightReportOutput
+				HighlightReportOutput = editorOptions.HighlightReportOutput,
+				MaxWarnings = editorOptions.MaxWarnings
 			}, cancel);
 
 			ErrorTaskProvider.Instance.ReplaceForSourceAndInvokingFile(ErrorTaskSource.CodeAnalysis, ca.CodeModel.FilePath, results.Tasks.Select(x => x.ToErrorTask()));

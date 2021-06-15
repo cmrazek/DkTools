@@ -261,20 +261,19 @@ namespace DkTools.ProbeExplorer
 		{
 			try
 			{
-				var menuItem = sender as MenuItem;
-				if (menuItem != null)
+				if (sender is MenuItem menuItem
+					&& menuItem.Tag is FileTreeNode tag && tag.dir)
 				{
-					var tag = menuItem.Tag as FileTreeNode;
-					if (tag != null && tag.dir)
+					var appSettings = DkEnvironment.CurrentAppSettings;
+					if (appSettings == null) return;
+
+					e.Handled = true;
+					var dlg = new CreateFileDialog();
+					dlg.Owner = System.Windows.Application.Current.MainWindow;
+					dlg.Directory = tag.path;
+					if (dlg.ShowDialog() == true)
 					{
-						e.Handled = true;
-						var dlg = new CreateFileDialog();
-						dlg.Owner = System.Windows.Application.Current.MainWindow;
-						dlg.Directory = tag.path;
-						if (dlg.ShowDialog() == true)
-						{
-							CreateNewFile(System.IO.Path.Combine(dlg.Directory, dlg.FileName));
-						}
+						CreateNewFile(System.IO.Path.Combine(dlg.Directory, dlg.FileName), appSettings);
 					}
 				}
 			}
@@ -840,7 +839,7 @@ namespace DkTools.ProbeExplorer
 		}
 		#endregion
 
-		private void CreateNewFile(string fileName)
+		private void CreateNewFile(string fileName, DkAppSettings appSettings)
 		{
 			if (System.IO.File.Exists(fileName))
 			{
@@ -854,7 +853,8 @@ namespace DkTools.ProbeExplorer
 
 			Shell.OpenDocument(fileName);
 
-			RefreshFileTree(DkEnvironment.CurrentAppSettings);
+			appSettings.ReloadFilesList();
+			RefreshFileTree(appSettings);
 			SelectFileInTree(fileName);
 		}
 
