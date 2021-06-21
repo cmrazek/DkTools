@@ -1,19 +1,9 @@
 ﻿using DK.AppEnvironment;
+using Microsoft.Win32;
 using System;
-using System.Collections.Generic;
 using System.ComponentModel;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
 
 namespace DkTools.Run
 {
@@ -117,6 +107,58 @@ namespace DkTools.Run
 		{
 			if (!(DataContext is RunItem runItem)) return;
 			this.VisualUpwardsSearch<RunControl>()?.OnRunItemChanged(runItem);
+		}
+
+		private void BrowseFilePath_Click(object sender, RoutedEventArgs e)
+		{
+			try
+			{
+				if (!(DataContext is RunItem runItem)) return;
+
+				var dlg = new OpenFileDialog();
+				if (!string.IsNullOrEmpty(runItem.FilePath) && System.IO.File.Exists(runItem.FilePath))
+				{
+					dlg.FileName = runItem.FilePath;
+					dlg.InitialDirectory = System.IO.Path.GetDirectoryName(runItem.FilePath);
+				}
+				dlg.Multiselect = false;
+
+				if (dlg.ShowDialog() == true)
+				{
+					runItem.FilePath = dlg.FileName;
+				}
+			}
+			catch (Exception ex)
+			{
+				this.ShowError(ex);
+			}
+		}
+
+		private void BrowseWorkingDir_Click(object sender, RoutedEventArgs e)
+		{
+			try
+			{
+				if (!(DataContext is RunItem runItem)) return;
+
+				var dlg = new System.Windows.Forms.FolderBrowserDialog();
+				if (!string.IsNullOrEmpty(runItem.WorkingDirectory) && System.IO.Directory.Exists(runItem.WorkingDirectory))
+				{
+					dlg.SelectedPath = runItem.WorkingDirectory;
+				}
+				if (dlg.ShowDialog() == System.Windows.Forms.DialogResult.OK)
+				{
+					runItem.WorkingDirectory = dlg.SelectedPath;
+				}
+			}
+			catch (Exception ex)
+			{
+				this.ShowError(ex);
+			}
+		}
+
+		private void Dlg_FileOk(object sender, CancelEventArgs e)
+		{
+			var TODO = 0;
 		}
 	}
 }

@@ -90,10 +90,14 @@
             <Label Content="File:" Grid.Row="2" Grid.Column="0" Visibility="{Binding CustomOptionsVisibility}" VerticalAlignment="Center"/>
             <TextBox Text="{Binding FilePath, Mode=TwoWay}" Grid.Row="2" Grid.Column="1" Visibility="{Binding CustomOptionsVisibility}"
                      VerticalAlignment="Center" Margin="0,1,0,1"/>
+            <Button Grid.Row="2" Grid.Column="2" Width="20" Height="20" Margin="3,1,1,1" Click="BrowseFilePath_Click"
+                    Visibility="{Binding CustomOptionsVisibility}">...</Button>
 
             <Label Content="Working Dir:" Grid.Row="3" Grid.Column="0" Visibility="{Binding CustomOptionsVisibility}" VerticalAlignment="Center"/>
             <TextBox Text="{Binding WorkingDirectory, Mode=TwoWay}" Grid.Row="3" Grid.Column="1" Visibility="{Binding CustomOptionsVisibility}"
                      VerticalAlignment="Center" Margin="0,1,0,1"/>
+            <Button Grid.Row="3" Grid.Column="2" Width="20" Height="20" Margin="3,1,1,1" Click="BrowseWorkingDir_Click"
+                    Visibility="{Binding CustomOptionsVisibility}">...</Button>
 
             <Label Content="Port" Grid.Row="4" Grid.Column="0" Visibility="{Binding SamOptionsVisibility}" VerticalAlignment="Center"/>
             <TextBox Text="{Binding SamPortText, Mode=TwoWay}" Grid.Row="4" Grid.Column="1" Visibility="{Binding SamOptionsVisibility}"
