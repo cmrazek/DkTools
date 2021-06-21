@@ -1,4 +1,5 @@
-﻿using System;
+﻿using DK.AppEnvironment;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
@@ -38,6 +39,18 @@ namespace DkTools.Run
 			try
 			{
 				(DataContext as RunItem)?.OnOptionsButtonClicked();
+			}
+			catch (Exception ex)
+			{
+				this.ShowError(ex);
+			}
+		}
+
+		private void RunButton_Click(object sender, RoutedEventArgs e)
+		{
+			try
+			{
+				if (DataContext is RunItem runItem) runItem.Run(DkEnvironment.CurrentAppSettings);
 			}
 			catch (Exception ex)
 			{

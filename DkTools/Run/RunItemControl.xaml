@@ -15,7 +15,7 @@
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
-        <Button Name="RunButton" Grid.Row="0" Grid.Column="0" Content="{Binding RunButtonDisplayText}" Margin="4,4,4,4"/>
+        <Button Name="RunButton" Grid.Row="0" Grid.Column="0" Content="{Binding RunButtonDisplayText}" Margin="4,4,4,4" Click="RunButton_Click"/>
         <Button Name="ExpandButton" Grid.Row="0" Grid.Column="1" Content="+" Margin="0,4,4,4" Click="ExpandButton_Click"/>
         <Grid Name="OptionsGrid" Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2" Visibility="{Binding OptionsPaneVisibility}">
             <Grid.ColumnDefinitions>
@@ -24,19 +24,77 @@
                 <ColumnDefinition Width="Auto"/>
             </Grid.ColumnDefinitions>
             <Grid.RowDefinitions>
+                <!-- 0 - Title -->
                 <RowDefinition Height="Auto"/>
+                <!-- 1 - FilePath -->
                 <RowDefinition Height="Auto"/>
+                <!-- 2 - WorkingDir -->
                 <RowDefinition Height="Auto"/>
+                <!-- 3 - SAM Port -->
+                <RowDefinition Height="Auto"/>
+                <!-- 4 - SAM Report Timeout -->
+                <RowDefinition Height="Auto"/>
+                <!-- 5 - SAM Abort Timeout -->
+                <RowDefinition Height="Auto"/>
+                <!-- 6 - SAM Min RMs -->
+                <RowDefinition Height="Auto"/>
+                <!-- 7 - SAM Max RMs -->
+                <RowDefinition Height="Auto"/>
+                <!-- 8 - SAM Lazy Load DLLs -->
+                <RowDefinition Height="Auto"/>
+                <!-- 9 - Diag Level -->
+                <RowDefinition Height="Auto"/>
+                <!-- 10 - CAM Dev Mode -->
+                <RowDefinition Height="Auto"/>
+                <!-- 11 - CAM Design Mode -->
+                <RowDefinition Height="Auto"/>
+                <!-- 12 - Arguments -->
                 <RowDefinition Height="Auto"/>
             </Grid.RowDefinitions>
+            
             <Label Content="Title:" Grid.Row="0" Grid.Column="0"/>
             <TextBox Text="{Binding Title, Mode=TwoWay}" Grid.Row="0" Grid.Column="1"/>
-            <Label Content="File:" Grid.Row="1" Grid.Column="0"/>
-            <TextBox Text="{Binding FilePath, Mode=TwoWay}" Grid.Row="1" Grid.Column="1"/>
-            <Label Content="Arguments:" Grid.Row="2" Grid.Column="0"/>
-            <TextBox Text="{Binding Arguments, Mode=TwoWay}" Grid.Row="2" Grid.Column="1"/>
-            <Label Content="Working Dir:" Grid.Row="3" Grid.Column="0"/>
-            <TextBox Text="{Binding WorkingDirectory, Mode=TwoWay}" Grid.Row="3" Grid.Column="1"/>
+
+            <Label Content="File:" Grid.Row="1" Grid.Column="0" Visibility="{Binding CustomOptionsVisibility}"/>
+            <TextBox Text="{Binding FilePath, Mode=TwoWay}" Grid.Row="1" Grid.Column="1" Visibility="{Binding CustomOptionsVisibility}"/>
+
+            <Label Content="Working Dir:" Grid.Row="2" Grid.Column="0" Visibility="{Binding CustomOptionsVisibility}"/>
+            <TextBox Text="{Binding WorkingDirectory, Mode=TwoWay}" Grid.Row="2" Grid.Column="1" Visibility="{Binding CustomOptionsVisibility}"/>
+            
+            <Label Content="Port" Grid.Row="3" Grid.Column="0" Visibility="{Binding SamOptionsVisibility}"/>
+            <TextBox Text="{Binding SamPortText, Mode=TwoWay}" Grid.Row="3" Grid.Column="1" Visibility="{Binding SamOptionsVisibility}"/>
+
+            <Label Content="Report Timeout" Grid.Row="4" Grid.Column="0" Visibility="{Binding SamOptionsVisibility}"/>
+            <TextBox Text="{Binding TransReportTimeoutText, Mode=TwoWay}" Grid.Row="4" Grid.Column="1" Visibility="{Binding SamOptionsVisibility}"/>
+
+            <Label Content="Abort Timeout" Grid.Row="5" Grid.Column="0" Visibility="{Binding SamOptionsVisibility}"/>
+            <TextBox Text="{Binding TransAbortTimeoutText, Mode=TwoWay}" Grid.Row="5" Grid.Column="1" Visibility="{Binding SamOptionsVisibility}"/>
+
+            <Label Content="Min RMs" Grid.Row="6" Grid.Column="0" Visibility="{Binding SamOptionsVisibility}"/>
+            <TextBox Text="{Binding MinResourceChannelsText, Mode=TwoWay}" Grid.Row="6" Grid.Column="1" Visibility="{Binding SamOptionsVisibility}"/>
+
+            <Label Content="Max RMs" Grid.Row="7" Grid.Column="0" Visibility="{Binding SamOptionsVisibility}"/>
+            <TextBox Text="{Binding MaxResourceChannelsText, Mode=TwoWay}" Grid.Row="7" Grid.Column="1" Visibility="{Binding SamOptionsVisibility}"/>
+
+            <Label Content="Lazy Load DLLs" Grid.Row="8" Grid.Column="0" Visibility="{Binding SamOptionsVisibility}"/>
+            <CheckBox Grid.Row="8" Grid.Column="1" IsChecked="{Binding LazyLoadDlls}" Visibility="{Binding SamOptionsVisibility}"/>
+
+            <Label Content="Diag Level" Grid.Row="9" Grid.Column="0" Visibility="{Binding SamOrCamOptionsVisibility}"/>
+            <ComboBox Grid.Row="9" Grid.Column="1" Visibility="{Binding SamOrCamOptionsVisibility}" SelectedIndex="{Binding DiagLevel, Mode=TwoWay}">
+                <ComboBoxItem>0 - Off</ComboBoxItem>
+                <ComboBoxItem>1 - Console</ComboBoxItem>
+                <ComboBoxItem>2 - Disk</ComboBoxItem>
+                <ComboBoxItem>3 - Disk &amp; Flush</ComboBoxItem>
+            </ComboBox>
+
+            <Label Content="Dev Mode" Grid.Row="10" Grid.Column="0" Visibility="{Binding CamOptionsVisibility}"/>
+            <CheckBox Grid.Row="10" Grid.Column="1" IsChecked="{Binding DevMode}" Visibility="{Binding CamOptionsVisibility}"/>
+
+            <Label Content="Design Mode" Grid.Row="11" Grid.Column="0" Visibility="{Binding CamOptionsVisibility}"/>
+            <CheckBox Grid.Row="11" Grid.Column="1" IsChecked="{Binding DesignMode}" Visibility="{Binding CamOptionsVisibility}"/>
+
+            <Label Content="Arguments:" Grid.Row="12" Grid.Column="0" Visibility="{Binding CustomOptionsVisibility}"/>
+            <TextBox Text="{Binding Arguments, Mode=TwoWay}" Grid.Row="12" Grid.Column="1" Visibility="{Binding CustomOptionsVisibility}"/>
         </Grid>
     </Grid>
 </UserControl>

@@ -77,62 +77,15 @@ namespace DkTools.Run
 
 		public static RunItem GetSystemDefinedRunItem(string title, DkAppSettings appSettings)
 		{
-			if (title == null) return null;
-
-			if (title == SystemRunItem_SAM || title == SystemRunItem_CAM)
+			switch (title)
 			{
-				var platformPath = appSettings.PlatformPath;
-				if (title == SystemRunItem_SAM)
-				{
-					string samFilePath;
-					string samWorkingDir;
-					if (!string.IsNullOrEmpty(platformPath))
-					{
-						samFilePath = Path.Combine(platformPath, "SAM.exe");
-						samWorkingDir = Path.GetDirectoryName(samFilePath);
-					}
-					else
-					{
-						samFilePath = "SAM.exe";
-						samWorkingDir = string.Empty;
-					}
-
-					return new RunItem
-					{
-						Title = SystemRunItem_SAM,
-						FilePath = samFilePath,
-						Arguments = "TODO",
-						WorkingDirectory = samWorkingDir,
-						IsSystemDefined = true
-					};
-				}
-				else if (title == SystemRunItem_CAM)
-				{
-					string camFilePath;
-					string camWorkingDir;
-					if (!string.IsNullOrEmpty(platformPath))
-					{
-						camFilePath = Path.GetFullPath(Path.Combine(platformPath, "..\\CAMNet\\CAMNet.exe"));
-						camWorkingDir = Path.GetDirectoryName(camFilePath);
-					}
-					else
-					{
-						camFilePath = "CAMNet.exe";
-						camWorkingDir = string.Empty;
-					}
-
-					return new RunItem
-					{
-						Title = SystemRunItem_CAM,
-						FilePath = camFilePath,
-						Arguments = "TODO",
-						WorkingDirectory = camWorkingDir,
-						IsSystemDefined = true
-					};
-				}
+				case SystemRunItem_SAM:
+					return RunItem.CreateSam();
+				case SystemRunItem_CAM:
+					return RunItem.CreateCam();
+				default:
+					return null;
 			}
-
-			return null;
 		}
 
 		public IEnumerable<RunItem> GetRunItemsForApp(DkAppSettings appSettings)
@@ -160,5 +113,10 @@ namespace DkTools.Run
 
 			_apps[appSettings.AppName] = new JArray(runItems.Select(r => r.ToJson()));
 		}
+
+		public static string GetSamFilePath(DkAppSettings appSettings) => Path.Combine(appSettings.PlatformPath, "SAM.exe");
+		public static string GetSamWorkingDir(DkAppSettings appSettings) => appSettings.ExeDirs.FirstOrDefault() ?? appSettings.PlatformPath;
+		public static string GetCamFilePath(DkAppSettings appSettings) => Path.GetFullPath(Path.Combine(appSettings.PlatformPath, "..\\CAMNet\\CAMNet.exe"));
+		public static string GetCamWorkingDir(DkAppSettings appSettings) => Path.GetDirectoryName(GetCamFilePath(appSettings));
 	}
 }
