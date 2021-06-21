@@ -16,10 +16,14 @@
     </UserControl.Resources>
     <Grid>
         <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
-        <ScrollViewer Grid.Row="0" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Hidden">
+        <StackPanel Grid.Row="0" Orientation="Horizontal">
+            <Button Content="Run Checked" Margin="2,2,2,2" Width="100" Click="RunChecked_Click" IsEnabled="{Binding RunCheckedEnabled}"/>
+        </StackPanel>
+        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Hidden">
             <ItemsControl ItemsSource="{Binding RunItems}">
                 <ItemsControl.ItemTemplate>
                     <DataTemplate DataType="{x:Type local:RunItem}">
@@ -28,7 +32,7 @@
                 </ItemsControl.ItemTemplate>
             </ItemsControl>
         </ScrollViewer>
-        <StackPanel Orientation="Horizontal" Grid.Row="1" Margin="4,4,4,4">
+        <StackPanel Orientation="Horizontal" Grid.Row="2" Margin="2,2,2,2">
             <Button Name="AddRunItemButton" Content="Add" Width="60" Click="AddRunItemButton_Click"/>
         </StackPanel>
     </Grid>

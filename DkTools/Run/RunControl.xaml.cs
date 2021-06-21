@@ -34,6 +34,7 @@ namespace DkTools.Run
 			try
 			{
 				InitializeRunItems();
+				RunCheckedEnabled = _runItems.Any(x => x.Selected);
 			}
 			catch (Exception ex)
 			{
@@ -78,6 +79,7 @@ namespace DkTools.Run
 		private RunItemCatalogue _catalogue;
 
 		private RunItem[] _runItems = new RunItem[0];
+		private bool _runCheckedEnabled = true;
 
 		public IEnumerable<RunItem> RunItems => _runItems;
 
@@ -228,7 +230,36 @@ namespace DkTools.Run
 
 		public void OnRunItemChanged(RunItem runItem)
 		{
+			RunCheckedEnabled = _runItems.Any(x => x.Selected);
 			Save();
+		}
+
+		public bool RunCheckedEnabled
+		{
+			get => _runCheckedEnabled;
+			set
+			{
+				if (_runCheckedEnabled != value)
+				{
+					_runCheckedEnabled = value;
+					FirePropertyChanged(nameof(RunCheckedEnabled));
+				}
+			}
+		}
+
+		private void RunChecked_Click(object sender, RoutedEventArgs e)
+		{
+			try
+			{
+				foreach (var runItem in _runItems)
+				{
+					if (runItem.Selected) runItem.Run(_appSettings);
+				}
+			}
+			catch (Exception ex)
+			{
+				this.ShowError(ex);
+			}
 		}
 		#endregion
 	}

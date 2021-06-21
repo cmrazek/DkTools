@@ -155,10 +155,5 @@ namespace DkTools.Run
 				this.ShowError(ex);
 			}
 		}
-
-		private void Dlg_FileOk(object sender, CancelEventArgs e)
-		{
-			var TODO = 0;
-		}
 	}
 }

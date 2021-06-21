@@ -32,6 +32,7 @@ namespace DkTools.Run
 		private bool _setDbDate = DefaultSetDbDate;
 		private bool _canMoveUp;
 		private bool _canMoveDown;
+		private bool _selected;
 
 		public const int DefaultPort = 5001;
 		public const int MinPort = 1;
@@ -105,7 +106,8 @@ namespace DkTools.Run
 						{ "minRMs", _minRMs },
 						{ "maxRMs", _maxRMs },
 						{ "diagLevel", _diagLevel },
-						{ "setDbDate", _setDbDate }
+						{ "setDbDate", _setDbDate },
+						{ "selected", _selected }
 					};
 
 				case RunItemType.Cam:
@@ -115,7 +117,8 @@ namespace DkTools.Run
 						{ "title", _title },
 						{ "diagLevel", _diagLevel },
 						{ "devMode", _devMode },
-						{ "designMode", _designMode }
+						{ "designMode", _designMode },
+						{ "selected", _selected }
 					};
 
 				case RunItemType.Custom:
@@ -125,7 +128,8 @@ namespace DkTools.Run
 						{ "title", _title },
 						{ "filePath", _filePath },
 						{ "args", _args },
-						{ "workingDir", _workingDir }
+						{ "workingDir", _workingDir },
+						{ "selected", _selected }
 					};
 
 				default:
@@ -153,6 +157,7 @@ namespace DkTools.Run
 						_maxRMs = json["maxRMs"].ToInt(MinNumResourceChannels, MaxNumResourceChannels, DefaultMaxResourceChannels),
 						_diagLevel = json["diagLevel"].ToInt(MinDiagLevel, MaxDiagLevel, DefaultDiagLevel),
 						_setDbDate = json["setDbDate"].ToBool(DefaultSetDbDate),
+						_selected = json["selected"].ToBool(false)
 					};
 
 				case RunItemType.Cam:
@@ -162,7 +167,8 @@ namespace DkTools.Run
 						_title = json["title"]?.ToString(),
 						_diagLevel = json["diagLevel"].ToInt(MinDiagLevel, MaxDiagLevel, DefaultDiagLevel),
 						_devMode = json["devMode"].ToBool(false),
-						_designMode = json["designMode"].ToBool(false)
+						_designMode = json["designMode"].ToBool(false),
+						_selected = json["selected"].ToBool(false)
 					};
 
 				case RunItemType.Custom:
@@ -173,6 +179,7 @@ namespace DkTools.Run
 						_filePath = json["filePath"]?.ToString(),
 						_args = json["args"]?.ToString(),
 						_workingDir = json["workingDir"]?.ToString(),
+						_selected = json["selected"].ToBool(false)
 					};
 
 				default:
@@ -548,6 +555,20 @@ namespace DkTools.Run
 				{
 					_canMoveDown = value;
 					FirePropertyChanged(nameof(CanMoveDown));
+				}
+			}
+		}
+
+		public bool Selected
+		{
+			get => _selected;
+			set
+			{
+				if (_selected != value)
+				{
+					_selected = value;
+					FirePropertyChanged(nameof(Selected));
+					Changed?.Invoke(this, EventArgs.Empty);
 				}
 			}
 		}

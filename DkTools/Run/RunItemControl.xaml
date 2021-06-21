@@ -10,6 +10,7 @@
              Unloaded="UserControl_Unloaded">
     <Grid>
         <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="Auto"/>
             <ColumnDefinition Width="*"/>
             <ColumnDefinition Width="Auto"/>
         </Grid.ColumnDefinitions>
@@ -17,14 +18,16 @@
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
-        <Button Name="RunButton" Grid.Row="0" Grid.Column="0" Content="{Binding RunButtonDisplayText}" Margin="4,4,4,4" Click="RunButton_Click"/>
-        <Button Name="ExpandButton" Grid.Row="0" Grid.Column="1" Margin="0,4,4,4" Click="ExpandButton_Click" Visibility="{Binding OptionsPaneVisibilityNot}">
+        <CheckBox Grid.Row="0" Grid.Column="0" VerticalAlignment="Center" IsChecked="{Binding Selected}"/>
+        <Button Name="RunButton" Grid.Row="0" Grid.Column="1" Content="{Binding RunButtonDisplayText}" Margin="4,4,4,4" Click="RunButton_Click"/>
+        <Button Name="ExpandButton" Grid.Row="0" Grid.Column="2" Margin="0,4,4,4" Click="ExpandButton_Click" Visibility="{Binding OptionsPaneVisibilityNot}">
             <Path Data="M1,4 L8,10 L15,4" Stroke="Black" StrokeThickness="2" Height="16" Width="16"/>
         </Button>
-        <Button Name="CollapseButton" Grid.Row="0" Grid.Column="1" Margin="0,4,4,4" Click="ExpandButton_Click" Visibility="{Binding OptionsPaneVisibility}">
+        <Button Name="CollapseButton" Grid.Row="0" Grid.Column="2" Margin="0,4,4,4" Click="ExpandButton_Click" Visibility="{Binding OptionsPaneVisibility}">
             <Path Data="M1,10 L8,4 L15,10" Stroke="Black" StrokeThickness="2" Height="16" Width="16"/>
         </Button>
-        <Grid Name="OptionsGrid" Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2" Visibility="{Binding OptionsPaneVisibility}">
+        <Grid Name="OptionsGrid" Grid.Row="1" Grid.Column="1" Grid.ColumnSpan="2"
+              Visibility="{Binding OptionsPaneVisibility}">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="Auto"/>
                 <ColumnDefinition Width="*"/>
@@ -84,8 +87,10 @@
             </StackPanel>
 
             <Label Content="Title:" Grid.Row="1" Grid.Column="0" VerticalAlignment="Center"/>
-            <TextBox Text="{Binding Title, Mode=TwoWay}" Grid.Row="1" Grid.Column="1"
-                     VerticalAlignment="Center" Margin="0,1,0,1"/>
+            <TextBox Grid.Row="1" Grid.Column="1" Grid.ColumnSpan="2"
+                     Text="{Binding Title, Mode=TwoWay}"
+                     VerticalAlignment="Center"
+                     Margin="0,1,0,1"/>
 
             <Label Content="File:" Grid.Row="2" Grid.Column="0" Visibility="{Binding CustomOptionsVisibility}" VerticalAlignment="Center"/>
             <TextBox Text="{Binding FilePath, Mode=TwoWay}" Grid.Row="2" Grid.Column="1" Visibility="{Binding CustomOptionsVisibility}"
@@ -100,31 +105,40 @@
                     Visibility="{Binding CustomOptionsVisibility}">...</Button>
 
             <Label Content="Port" Grid.Row="4" Grid.Column="0" Visibility="{Binding SamOptionsVisibility}" VerticalAlignment="Center"/>
-            <TextBox Text="{Binding SamPortText, Mode=TwoWay}" Grid.Row="4" Grid.Column="1" Visibility="{Binding SamOptionsVisibility}"
+            <TextBox Text="{Binding SamPortText, Mode=TwoWay}" Grid.Row="4" Grid.Column="1" Grid.ColumnSpan="2"
+                     Visibility="{Binding SamOptionsVisibility}"
                      VerticalAlignment="Center" Margin="0,1,0,1"/>
 
             <Label Content="Report Timeout" Grid.Row="5" Grid.Column="0" Visibility="{Binding SamOptionsVisibility}" VerticalAlignment="Center"/>
-            <TextBox Text="{Binding TransReportTimeoutText, Mode=TwoWay}" Grid.Row="5" Grid.Column="1" Visibility="{Binding SamOptionsVisibility}"
+            <TextBox Text="{Binding TransReportTimeoutText, Mode=TwoWay}" Grid.Row="5" Grid.Column="1" Grid.ColumnSpan="2"
+                     Visibility="{Binding SamOptionsVisibility}"
                      VerticalAlignment="Center" Margin="0,1,0,1"/>
 
             <Label Content="Abort Timeout" Grid.Row="6" Grid.Column="0" Visibility="{Binding SamOptionsVisibility}" VerticalAlignment="Center"/>
-            <TextBox Text="{Binding TransAbortTimeoutText, Mode=TwoWay}" Grid.Row="6" Grid.Column="1" Visibility="{Binding SamOptionsVisibility}"
+            <TextBox Text="{Binding TransAbortTimeoutText, Mode=TwoWay}" Grid.Row="6" Grid.Column="1" Grid.ColumnSpan="2"
+                     Visibility="{Binding SamOptionsVisibility}"
                      VerticalAlignment="Center" Margin="0,1,0,1"/>
 
             <Label Content="Min RMs" Grid.Row="7" Grid.Column="0" Visibility="{Binding SamOptionsVisibility}" VerticalAlignment="Center"/>
-            <TextBox Text="{Binding MinResourceChannelsText, Mode=TwoWay}" Grid.Row="7" Grid.Column="1" Visibility="{Binding SamOptionsVisibility}"
+            <TextBox Text="{Binding MinResourceChannelsText, Mode=TwoWay}" Grid.Row="7" Grid.Column="1" Grid.ColumnSpan="2"
+                     Visibility="{Binding SamOptionsVisibility}"
                      VerticalAlignment="Center" Margin="0,1,0,1"/>
 
             <Label Content="Max RMs" Grid.Row="8" Grid.Column="0" Visibility="{Binding SamOptionsVisibility}" VerticalAlignment="Center"/>
-            <TextBox Text="{Binding MaxResourceChannelsText, Mode=TwoWay}" Grid.Row="8" Grid.Column="1" Visibility="{Binding SamOptionsVisibility}"
+            <TextBox Text="{Binding MaxResourceChannelsText, Mode=TwoWay}" Grid.Row="8" Grid.Column="1" Grid.ColumnSpan="2"
+                     Visibility="{Binding SamOptionsVisibility}"
                      VerticalAlignment="Center" Margin="0,1,0,1"/>
 
             <Label Content="Lazy Load DLLs" Grid.Row="9" Grid.Column="0" Visibility="{Binding SamOptionsVisibility}" VerticalAlignment="Center"/>
-            <CheckBox Grid.Row="9" Grid.Column="1" IsChecked="{Binding LazyLoadDlls}" Visibility="{Binding SamOptionsVisibility}"
+            <CheckBox Grid.Row="9" Grid.Column="1" Grid.ColumnSpan="2"
+                      IsChecked="{Binding LazyLoadDlls}"
+                      Visibility="{Binding SamOptionsVisibility}"
                       VerticalAlignment="Center"/>
 
             <Label Content="Diag Level" Grid.Row="10" Grid.Column="0" Visibility="{Binding SamOrCamOptionsVisibility}" VerticalAlignment="Center"/>
-            <ComboBox Grid.Row="10" Grid.Column="1" Visibility="{Binding SamOrCamOptionsVisibility}" SelectedIndex="{Binding DiagLevel, Mode=TwoWay}"
+            <ComboBox Grid.Row="10" Grid.Column="1" Grid.ColumnSpan="2"
+                      Visibility="{Binding SamOrCamOptionsVisibility}"
+                      SelectedIndex="{Binding DiagLevel, Mode=TwoWay}"
                       VerticalAlignment="Center" Margin="0,1,0,1">
                 <ComboBoxItem>0 - Off</ComboBoxItem>
                 <ComboBoxItem>1 - Console</ComboBoxItem>
@@ -133,14 +147,23 @@
             </ComboBox>
 
             <Label Content="Dev Mode" Grid.Row="11" Grid.Column="0" Visibility="{Binding CamOptionsVisibility}" VerticalAlignment="Center"/>
-            <CheckBox Grid.Row="11" Grid.Column="1" IsChecked="{Binding DevMode}" Visibility="{Binding CamOptionsVisibility}" VerticalAlignment="Center"/>
+            <CheckBox Grid.Row="11" Grid.Column="1" Grid.ColumnSpan="2"
+                      IsChecked="{Binding DevMode}"
+                      Visibility="{Binding CamOptionsVisibility}"
+                      VerticalAlignment="Center"/>
 
             <Label Content="Design Mode" Grid.Row="12" Grid.Column="0" Visibility="{Binding CamOptionsVisibility}" VerticalAlignment="Center"/>
-            <CheckBox Grid.Row="12" Grid.Column="1" IsChecked="{Binding DesignMode}" Visibility="{Binding CamOptionsVisibility}" VerticalAlignment="Center"/>
+            <CheckBox Grid.Row="12" Grid.Column="1" Grid.ColumnSpan="2"
+                      IsChecked="{Binding DesignMode}"
+                      Visibility="{Binding CamOptionsVisibility}"
+                      VerticalAlignment="Center"/>
 
             <Label Content="Arguments:" Grid.Row="13" Grid.Column="0" Visibility="{Binding CustomOptionsVisibility}" VerticalAlignment="Center"/>
-            <TextBox Text="{Binding Arguments, Mode=TwoWay}" Grid.Row="13" Grid.Column="1" Visibility="{Binding CustomOptionsVisibility}"
-                     VerticalAlignment="Center" Margin="0,1,0,1"/>
+            <TextBox Grid.Row="13" Grid.Column="1" Grid.ColumnSpan="2"
+                     Text="{Binding Arguments, Mode=TwoWay}"
+                     Visibility="{Binding CustomOptionsVisibility}"
+                     VerticalAlignment="Center"
+                     Margin="0,1,0,1"/>
 
             <Label Content="Set DBDate" Grid.Row="14" Grid.Column="0" Visibility="{Binding SamOptionsVisibility}" VerticalAlignment="Center"/>
             <CheckBox Grid.Row="14" Grid.Column="1" IsChecked="{Binding SetDbDate}" Visibility="{Binding SamOptionsVisibility}" VerticalAlignment="Center"/>
