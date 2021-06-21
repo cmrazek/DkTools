@@ -50,6 +50,8 @@
                 <RowDefinition Height="Auto"/>
                 <!-- 12 - Arguments -->
                 <RowDefinition Height="Auto"/>
+                <!-- 13 - Set DBDate -->
+                <RowDefinition Height="Auto"/>
             </Grid.RowDefinitions>
             
             <Label Content="Title:" Grid.Row="0" Grid.Column="0"/>
@@ -95,6 +97,9 @@
 
             <Label Content="Arguments:" Grid.Row="12" Grid.Column="0" Visibility="{Binding CustomOptionsVisibility}"/>
             <TextBox Text="{Binding Arguments, Mode=TwoWay}" Grid.Row="12" Grid.Column="1" Visibility="{Binding CustomOptionsVisibility}"/>
+
+            <Label Content="Set DBDate" Grid.Row="13" Grid.Column="0" Visibility="{Binding SamOptionsVisibility}"/>
+            <CheckBox Grid.Row="13" Grid.Column="1" IsChecked="{Binding SetDbDate}" Visibility="{Binding SamOptionsVisibility}"/>
         </Grid>
     </Grid>
 </UserControl>

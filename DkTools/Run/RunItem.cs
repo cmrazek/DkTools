@@ -1,8 +1,11 @@
 ﻿using DK.AppEnvironment;
+using DK.Diagnostics;
 using Newtonsoft.Json.Linq;
 using System;
 using System.ComponentModel;
 using System.Diagnostics;
+using System.IO;
+using System.Linq;
 using System.Text;
 using System.Windows;
 
@@ -26,6 +29,7 @@ namespace DkTools.Run
 		private int _diagLevel = DefaultDiagLevel;
 		private bool _devMode = false;
 		private bool _designMode = false;
+		private bool _setDbDate = DefaultSetDbDate;
 
 		public const int DefaultPort = 5001;
 		public const int MinPort = 1;
@@ -42,6 +46,7 @@ namespace DkTools.Run
 		public const int DefaultDiagLevel = 0;
 		public const int MinDiagLevel = 0;
 		public const int MaxDiagLevel = 3;
+		public const bool DefaultSetDbDate = true;
 
 		public static RunItem CreateSam()
 		{
@@ -312,115 +317,143 @@ namespace DkTools.Run
 			}
 		}
 
+		public bool SetDbDate
+		{
+			get => _setDbDate;
+			set
+			{
+				if (_setDbDate != value)
+				{
+					_setDbDate = value;
+					FirePropertyChanged(nameof(SetDbDate));
+				}
+			}
+		}
+
 		public void Run(DkAppSettings appSettings)
 		{
 			if (_systemDefined)
 			{
 				if (_title == RunItemCatalogue.SystemRunItem_SAM)
 				{
-					using (var proc = new Process())
-					{
-						var filePath = RunItemCatalogue.GetSamFilePath(appSettings);
-						var args = GenerateSamCommandLineArgs(appSettings);
-
-						var psi = new ProcessStartInfo(filePath, args);
-						psi.UseShellExecute = false;
-						psi.RedirectStandardOutput = false;
-						psi.RedirectStandardError = false;
-						psi.CreateNoWindow = false;
-						psi.WorkingDirectory = RunItemCatalogue.GetSamWorkingDir(appSettings);
-
-						proc.StartInfo = psi;
-						if (!proc.Start()) throw new RunItemException("Unable to start the SAM.");
-					}
+					if (_setDbDate) RunSetDbDate(appSettings);
+					RunSam(appSettings);
 				}
 				else if (_title == RunItemCatalogue.SystemRunItem_CAM)
 				{
-
-					using (var proc = new Process())
-					{
-						var filePath = RunItemCatalogue.GetCamFilePath(appSettings);
-						var args = GenerateCamCommandLineArgs(appSettings);
-
-						var psi = new ProcessStartInfo(filePath, args);
-						psi.UseShellExecute = false;
-						psi.RedirectStandardOutput = false;
-						psi.RedirectStandardError = false;
-						psi.CreateNoWindow = false;
-						psi.WorkingDirectory = RunItemCatalogue.GetCamWorkingDir(appSettings);
-
-						proc.StartInfo = psi;
-						if (!proc.Start()) throw new RunItemException("Unable to start the CAM.");
-					}
+					RunCam(appSettings);
 				}
 				else throw new RunItemException($"Unknown system defined run item '{_title}'.");
 			}
 			else
 			{
-				if (string.IsNullOrWhiteSpace(_filePath)) throw new RunItemException("No file path configured.");
-
-				using (var proc = new Process())
-				{
-					var psi = new ProcessStartInfo(_filePath, _args ?? string.Empty);
-					psi.UseShellExecute = false;
-					psi.RedirectStandardOutput = false;
-					psi.RedirectStandardError = false;
-					psi.CreateNoWindow = false;
-					psi.WorkingDirectory = string.IsNullOrWhiteSpace(_workingDir) ? null : _workingDir;
-
-					proc.StartInfo = psi;
-					if (!proc.Start()) throw new RunItemException($"Unable to start {_title}.");
-				}
+				RunProcess(_title, _filePath, _args, _workingDir);
 			}
 		}
 
-		private string GenerateSamCommandLineArgs(DkAppSettings appSettings)
+		private void RunSetDbDate(DkAppSettings appSettings)
 		{
-			var sb = new StringBuilder();
-
-			var samName = CleanSamName(string.Concat(appSettings.AppName, "_", System.Environment.UserName));
-			sb.Append($"/N{samName}");
-			sb.Append($" /p{_samPort}");
-			sb.Append($" /o{(LazyLoadDlls ? 0 : 1)}");
-			sb.Append($" /y{_transReportTimeout:00}{_transAbortTimeout:00}");
-			sb.Append($" /z{_minRMs}");
-			sb.Append($" /Z{_maxRMs}");
-			sb.Append($" /P \"{appSettings.AppName}\"");
-			if (DiagLevel > 0) sb.Append($" /d{DiagLevel}");
-
-			if (!string.IsNullOrWhiteSpace(_args)) sb.Append($" {_args}");
-
-			return sb.ToString();
-		}
-
-		private string GenerateCamCommandLineArgs(DkAppSettings appSettings)
-		{
-			var sb = new StringBuilder();
-			sb.Append("appname=" + appSettings.AppName);
-			sb.Append(" networkname=" + CleanSamName(System.Environment.UserName + "_" + System.Environment.MachineName));
-
-			if (_diagLevel > 0) sb.AppendFormat(" devmode={0}", this.DiagLevel);
-			else if (_devMode) sb.Append(" devmode");
-
-			if (_designMode) sb.Append(" designmode=true");
-
-			if (!string.IsNullOrWhiteSpace(_args))
+			using (var proc = new Process())
 			{
-				sb.Append(" ");
-				sb.Append(_args);
-			}
+				var filePath = Path.Combine(appSettings.PlatformPath, "setdbdat.exe");
+				if (!File.Exists(filePath)) throw new RunItemException("setdbdat.exe not found.");
 
-			return sb.ToString();
+				RunProcess("setdbdat.exe", filePath, "today force", appSettings.PlatformPath, waitForExit: -1);
+			}
+		}
+
+		private void RunSam(DkAppSettings appSettings)
+		{
+			using (var proc = new Process())
+			{
+				var filePath = Path.Combine(appSettings.PlatformPath, "SAM.exe");
+				if (!File.Exists(filePath)) throw new RunItemException("SAM.exe not found.");
+
+				var args = new StringBuilder();
+
+				var samName = CleanSamName(string.Concat(appSettings.AppName, "_", System.Environment.UserName));
+				args.Append($"/N{samName}");
+				args.Append($" /p{_samPort}");
+				args.Append($" /o{(LazyLoadDlls ? 0 : 1)}");
+				args.Append($" /y{_transReportTimeout:00}{_transAbortTimeout:00}");
+				args.Append($" /z{_minRMs}");
+				args.Append($" /Z{_maxRMs}");
+				args.Append($" /P \"{appSettings.AppName}\"");
+				if (DiagLevel > 0) args.Append($" /d{DiagLevel}");
+
+				if (!string.IsNullOrWhiteSpace(_args)) args.Append($" {_args}");
+
+				RunProcess(_title, filePath, args.ToString(), appSettings.ExeDirs.FirstOrDefault() ?? appSettings.PlatformPath);
+			}
+		}
+
+		private void RunCam(DkAppSettings appSettings)
+		{
+			using (var proc = new Process())
+			{
+				var filePath = Path.GetFullPath(Path.Combine(appSettings.PlatformPath, "..\\CAMNet\\CAMNet.exe"));
+				if (!File.Exists(filePath)) throw new RunItemException("CAMNet.exe not found.");
+
+				var args = new StringBuilder();
+				args.Append("appname=" + appSettings.AppName);
+				args.Append(" networkname=" + CleanSamName(System.Environment.UserName + "_" + System.Environment.MachineName));
+
+				if (_diagLevel > 0) args.AppendFormat(" devmode={0}", this.DiagLevel);
+				else if (_devMode) args.Append(" devmode");
+
+				if (_designMode) args.Append(" designmode=true");
+
+				if (!string.IsNullOrWhiteSpace(_args))
+				{
+					args.Append(" ");
+					args.Append(_args);
+				}
+
+				RunProcess(_title, filePath, args.ToString(), Path.GetDirectoryName(filePath));
+			}
 		}
 
 		private string CleanSamName(string name)
 		{
-			StringBuilder sb = new StringBuilder(name.Length);
-			foreach (char ch in name)
+			var sb = new StringBuilder(name.Length);
+			foreach (var ch in name)
 			{
 				if (char.IsLetterOrDigit(ch) || ch == '_') sb.Append(ch);
 			}
 			return sb.ToString();
+		}
+
+		private void RunProcess(string title, string filePath, string args, string workingDir, int waitForExit = 0)
+		{
+			Log.Info("Running: {0}\r\nFile Path: {1}\r\nArguments: {2}\r\nWorking Dir: {3}", title, filePath, args, workingDir);
+
+			if (string.IsNullOrWhiteSpace(filePath)) throw new RunItemException($"No file path is configured.");
+
+			if (string.IsNullOrWhiteSpace(workingDir) && !string.IsNullOrWhiteSpace(filePath) && File.Exists(filePath))
+			{
+				workingDir = Path.GetDirectoryName(filePath);
+				Log.Info("Derived working dir: {0}", workingDir);
+			}
+
+			using (var proc = new Process())
+			{
+				var psi = new ProcessStartInfo(filePath, args ?? string.Empty);
+				psi.UseShellExecute = false;
+				psi.RedirectStandardOutput = false;
+				psi.RedirectStandardError = false;
+				psi.CreateNoWindow = false;
+				psi.WorkingDirectory = workingDir;
+
+				proc.StartInfo = psi;
+				if (!proc.Start()) throw new RunItemException($"Unable to start {title}.");
+
+				if (waitForExit != 0)
+				{
+					if (waitForExit < 0) proc.WaitForExit();
+					else proc.WaitForExit(waitForExit);
+					if (proc.ExitCode != 0) throw new RunItemException($"{title} returned exit code {proc.ExitCode}");
+				}
+			}
 		}
 	}
 

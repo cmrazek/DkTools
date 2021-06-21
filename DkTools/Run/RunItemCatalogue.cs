@@ -5,8 +5,6 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace DkTools.Run
 {
@@ -113,10 +111,5 @@ namespace DkTools.Run
 
 			_apps[appSettings.AppName] = new JArray(runItems.Select(r => r.ToJson()));
 		}
-
-		public static string GetSamFilePath(DkAppSettings appSettings) => Path.Combine(appSettings.PlatformPath, "SAM.exe");
-		public static string GetSamWorkingDir(DkAppSettings appSettings) => appSettings.ExeDirs.FirstOrDefault() ?? appSettings.PlatformPath;
-		public static string GetCamFilePath(DkAppSettings appSettings) => Path.GetFullPath(Path.Combine(appSettings.PlatformPath, "..\\CAMNet\\CAMNet.exe"));
-		public static string GetCamWorkingDir(DkAppSettings appSettings) => Path.GetDirectoryName(GetCamFilePath(appSettings));
 	}
 }
