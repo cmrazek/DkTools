@@ -30,6 +30,8 @@ namespace DkTools.Run
 		private bool _devMode = false;
 		private bool _designMode = false;
 		private bool _setDbDate = DefaultSetDbDate;
+		private bool _canMoveUp;
+		private bool _canMoveDown;
 
 		public const int DefaultPort = 5001;
 		public const int MinPort = 1;
@@ -47,6 +49,8 @@ namespace DkTools.Run
 		public const int MinDiagLevel = 0;
 		public const int MaxDiagLevel = 3;
 		public const bool DefaultSetDbDate = true;
+
+		public event EventHandler Changed;
 
 		public static RunItem CreateSam()
 		{
@@ -199,6 +203,7 @@ namespace DkTools.Run
 				{
 					_title = value;
 					FirePropertyChanged(nameof(Title));
+					Changed?.Invoke(this, EventArgs.Empty);
 				}
 			}
 		}
@@ -212,6 +217,7 @@ namespace DkTools.Run
 				{
 					_filePath = value;
 					FirePropertyChanged(nameof(FilePath));
+					Changed?.Invoke(this, EventArgs.Empty);
 				}
 			}
 		}
@@ -225,6 +231,7 @@ namespace DkTools.Run
 				{
 					_args = value;
 					FirePropertyChanged(nameof(Arguments));
+					Changed?.Invoke(this, EventArgs.Empty);
 				}
 			}
 		}
@@ -238,6 +245,7 @@ namespace DkTools.Run
 				{
 					_workingDir = value;
 					FirePropertyChanged(nameof(WorkingDirectory));
+					Changed?.Invoke(this, EventArgs.Empty);
 				}
 			}
 		}
@@ -251,6 +259,7 @@ namespace DkTools.Run
 				{
 					_port = port;
 					FirePropertyChanged(nameof(SamPortText));
+					Changed?.Invoke(this, EventArgs.Empty);
 				}
 			}
 		}
@@ -264,6 +273,7 @@ namespace DkTools.Run
 				{
 					_transReportTimeout = timeout;
 					FirePropertyChanged(nameof(TransReportTimeoutText));
+					Changed?.Invoke(this, EventArgs.Empty);
 				}
 			}
 		}
@@ -277,6 +287,7 @@ namespace DkTools.Run
 				{
 					_transAbortTimeout = timeout;
 					FirePropertyChanged(nameof(TransAbortTimeoutText));
+					Changed?.Invoke(this, EventArgs.Empty);
 				}
 			}
 		}
@@ -290,6 +301,7 @@ namespace DkTools.Run
 				{
 					_minRMs = numRMs;
 					FirePropertyChanged(nameof(MinResourceChannelsText));
+					Changed?.Invoke(this, EventArgs.Empty);
 				}
 			}
 		}
@@ -303,6 +315,7 @@ namespace DkTools.Run
 				{
 					_maxRMs = numRMs;
 					FirePropertyChanged(nameof(MaxResourceChannelsText));
+					Changed?.Invoke(this, EventArgs.Empty);
 				}
 			}
 		}
@@ -316,6 +329,7 @@ namespace DkTools.Run
 				{
 					_samLazyLoadDlls = value;
 					FirePropertyChanged(nameof(LazyLoadDlls));
+					Changed?.Invoke(this, EventArgs.Empty);
 				}
 			}
 		}
@@ -331,6 +345,7 @@ namespace DkTools.Run
 					{
 						_diagLevel = value;
 						FirePropertyChanged(nameof(DiagLevel));
+						Changed?.Invoke(this, EventArgs.Empty);
 
 						if (_type == RunItemType.Cam && _diagLevel > 0 && _devMode == false)
 						{
@@ -351,6 +366,7 @@ namespace DkTools.Run
 				{
 					_devMode = value;
 					FirePropertyChanged(nameof(DevMode));
+					Changed?.Invoke(this, EventArgs.Empty);
 				}
 			}
 		}
@@ -364,6 +380,7 @@ namespace DkTools.Run
 				{
 					_designMode = value;
 					FirePropertyChanged(nameof(DesignMode));
+					Changed?.Invoke(this, EventArgs.Empty);
 				}
 			}
 		}
@@ -377,6 +394,7 @@ namespace DkTools.Run
 				{
 					_setDbDate = value;
 					FirePropertyChanged(nameof(SetDbDate));
+					Changed?.Invoke(this, EventArgs.Empty);
 				}
 			}
 		}
@@ -504,6 +522,32 @@ namespace DkTools.Run
 					if (waitForExit < 0) proc.WaitForExit();
 					else proc.WaitForExit(waitForExit);
 					if (proc.ExitCode != 0) throw new RunItemException($"{title} returned exit code {proc.ExitCode}");
+				}
+			}
+		}
+
+		public bool CanMoveUp
+		{
+			get => _canMoveUp;
+			set
+			{
+				if (_canMoveUp != value)
+				{
+					_canMoveUp = value;
+					FirePropertyChanged(nameof(CanMoveUp));
+				}
+			}
+		}
+
+		public bool CanMoveDown
+		{
+			get => _canMoveDown;
+			set
+			{
+				if (_canMoveDown != value)
+				{
+					_canMoveDown = value;
+					FirePropertyChanged(nameof(CanMoveDown));
 				}
 			}
 		}

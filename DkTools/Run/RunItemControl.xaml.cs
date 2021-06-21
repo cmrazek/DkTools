@@ -27,6 +27,22 @@ namespace DkTools.Run
 			InitializeComponent();
 		}
 
+		private void UserControl_Loaded(object sender, RoutedEventArgs e)
+		{
+			if (DataContext is RunItem runItem)
+			{
+				runItem.Changed += RunItem_Changed;
+			}
+		}
+
+		private void UserControl_Unloaded(object sender, RoutedEventArgs e)
+		{
+			if (DataContext is RunItem runItem)
+			{
+				runItem.Changed -= RunItem_Changed;
+			}
+		}
+
 		public event PropertyChangedEventHandler PropertyChanged;
 
 		private void FirePropertyChanged(string propName)
@@ -56,6 +72,51 @@ namespace DkTools.Run
 			{
 				this.ShowError(ex);
 			}
+		}
+
+		private void MoveRunItemUp_Click(object sender, RoutedEventArgs e)
+		{
+			try
+			{
+				if (!(DataContext is RunItem runItem)) return;
+				this.VisualUpwardsSearch<RunControl>()?.OnMoveRunItemUp(runItem);
+			}
+			catch (Exception ex)
+			{
+				this.ShowError(ex);
+			}
+		}
+
+		private void MoveRunItemDown_Click(object sender, RoutedEventArgs e)
+		{
+			try
+			{
+				if (!(DataContext is RunItem runItem)) return;
+				this.VisualUpwardsSearch<RunControl>()?.OnMoveRunItemDown(runItem);
+			}
+			catch (Exception ex)
+			{
+				this.ShowError(ex);
+			}
+		}
+
+		private void DeleteRunItem_Click(object sender, RoutedEventArgs e)
+		{
+			try
+			{
+				if (!(DataContext is RunItem runItem)) return;
+				this.VisualUpwardsSearch<RunControl>()?.OnDeleteRunItem(runItem);
+			}
+			catch (Exception ex)
+			{
+				this.ShowError(ex);
+			}
+		}
+
+		private void RunItem_Changed(object sender, EventArgs e)
+		{
+			if (!(DataContext is RunItem runItem)) return;
+			this.VisualUpwardsSearch<RunControl>()?.OnRunItemChanged(runItem);
 		}
 	}
 }

@@ -64,6 +64,13 @@ namespace DkTools.Run
 		private void FirePropertyChanged(string propName)
 		{
 			PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propName));
+
+			switch (propName)
+			{
+				case nameof(RunItems):
+					EnableRunItemControls();
+					break;
+			}
 		}
 		#endregion
 
@@ -103,6 +110,15 @@ namespace DkTools.Run
 			{
 				_catalogue.SetRunItemsForApp(_appSettings, _runItems);
 				_catalogue.Save();
+			}
+		}
+
+		private void EnableRunItemControls()
+		{
+			for (int i = 0; i < _runItems.Length; i++)
+			{
+				_runItems[i].CanMoveUp = i != 0;
+				_runItems[i].CanMoveDown = i != _runItems.Length - 1;
 			}
 		}
 
@@ -164,6 +180,55 @@ namespace DkTools.Run
 			{
 				this.ShowError(ex);
 			}
+		}
+
+		public void OnMoveRunItemUp(RunItem runItem)
+		{
+			var index = Array.FindIndex(_runItems, x => x == runItem);
+			if (index <= 0) return;
+
+			var list = _runItems.ToList();
+			list.RemoveAt(index);
+			list.Insert(index - 1, runItem);
+
+			_runItems = list.ToArray();
+			FirePropertyChanged(nameof(RunItems));
+			Save();
+		}
+
+		public void OnMoveRunItemDown(RunItem runItem)
+		{
+			var index = Array.FindIndex(_runItems, x => x == runItem);
+			if (index < 0 || index + 1 >= _runItems.Length) return;
+
+			var list = _runItems.ToList();
+			list.RemoveAt(index);
+			list.Insert(index + 1, runItem);
+
+			_runItems = list.ToArray();
+			FirePropertyChanged(nameof(RunItems));
+			Save();
+		}
+
+		public void OnDeleteRunItem(RunItem runItem)
+		{
+			var index = Array.FindIndex(_runItems, x => x == runItem);
+			if (index < 0) return;
+
+			if (MessageBox.Show(Application.Current.MainWindow, $"Are you sure you want to delete the run item '{runItem.Title}'?", "Delete Run Item?",
+				MessageBoxButton.YesNo, MessageBoxImage.Question) != MessageBoxResult.Yes)
+			{
+				return;
+			}
+
+			_runItems = _runItems.Where(x => x != runItem).ToArray();
+			FirePropertyChanged(nameof(RunItems));
+			Save();
+		}
+
+		public void OnRunItemChanged(RunItem runItem)
+		{
+			Save();
 		}
 		#endregion
 	}
