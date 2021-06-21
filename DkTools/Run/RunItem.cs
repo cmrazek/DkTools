@@ -13,14 +13,14 @@ namespace DkTools.Run
 {
 	public class RunItem : INotifyPropertyChanged
 	{
+		private RunItemType _type;
 		private string _title;
 		private bool _optionsVisible;
-		private bool _systemDefined;
 
 		private string _filePath;
 		private string _args;
 		private string _workingDir;
-		private int _samPort = DefaultPort;
+		private int _port = DefaultPort;
 		private bool _samLazyLoadDlls = DefaultLazyLoadDlls;
 		private int _transReportTimeout = DefaultTransReportTimeout;
 		private int _transAbortTimeout = DefaultTransAbortTimeout;
@@ -52,8 +52,8 @@ namespace DkTools.Run
 		{
 			return new RunItem
 			{
+				_type = RunItemType.Sam,
 				_title = RunItemCatalogue.SystemRunItem_SAM,
-				_systemDefined = true
 			};
 		}
 
@@ -61,8 +61,18 @@ namespace DkTools.Run
 		{
 			return new RunItem
 			{
-				_title = RunItemCatalogue.SystemRunItem_CAM,
-				_systemDefined = true
+				_type = RunItemType.Cam,
+				_title = RunItemCatalogue.SystemRunItem_CAM
+			};
+		}
+
+		public static RunItem CreateOther(string title, bool optionsVisible)
+		{
+			return new RunItem
+			{
+				_type = RunItemType.Custom,
+				_title = title,
+				_optionsVisible = optionsVisible
 			};
 		}
 
@@ -77,52 +87,93 @@ namespace DkTools.Run
 
 		public JToken ToJson()
 		{
-			if (_systemDefined)
+			switch (_type)
 			{
-				return new JObject
-				{
-					{ "sys", _title }
-				};
-			}
-			else
-			{
-				return new JObject
-				{
-					{ "title", _title },
-					{ "file", _filePath },
-					{ "args", _args },
-					{ "workingDir", _workingDir }
-				};
+				case RunItemType.Sam:
+					return new JObject
+					{
+						{ "type", _type.ToString() },
+						{ "title", _title },
+						{ "port", _port },
+						{ "lazyLoadDlls", _samLazyLoadDlls },
+						{ "transReportTimeout", _transReportTimeout },
+						{ "transAbortTimeout", _transAbortTimeout },
+						{ "minRMs", _minRMs },
+						{ "maxRMs", _maxRMs },
+						{ "diagLevel", _diagLevel },
+						{ "setDbDate", _setDbDate }
+					};
+
+				case RunItemType.Cam:
+					return new JObject
+					{
+						{ "type", _type.ToString() },
+						{ "title", _title },
+						{ "diagLevel", _diagLevel },
+						{ "devMode", _devMode },
+						{ "designMode", _designMode }
+					};
+
+				case RunItemType.Custom:
+					return new JObject
+					{
+						{ "type", _type.ToString() },
+						{ "title", _title },
+						{ "filePath", _filePath },
+						{ "args", _args },
+						{ "workingDir", _workingDir }
+					};
+
+				default:
+					throw new InvalidRunItemTypeException();
 			}
 		}
 
 		public static RunItem FromJson(JToken json, DkAppSettings appSettings)
 		{
 			if (json.Type != JTokenType.Object) return null;
+			if (!Enum.TryParse<RunItemType>(json["type"]?.ToString(), out var type)) return null;
 
-			var sys = json["sys"]?.ToString();
-			if (!string.IsNullOrEmpty(sys))
+			switch (type)
 			{
-				return RunItemCatalogue.GetSystemDefinedRunItem(sys, appSettings);
+				case RunItemType.Sam:
+					return new RunItem
+					{
+						_type = RunItemType.Sam,
+						_title = json["title"]?.ToString(),
+						_port = json["port"].ToInt(MinPort, MaxPort, DefaultPort),
+						_samLazyLoadDlls = json["lazyLoadDlls"].ToBool(DefaultLazyLoadDlls),
+						_transReportTimeout = json["transReportTimeout"].ToInt(MinTimeout, MaxTimeout, DefaultTransReportTimeout),
+						_transAbortTimeout = json["transAbortTimeout"].ToInt(MinTimeout, MaxTimeout, DefaultTransAbortTimeout),
+						_minRMs = json["minRMs"].ToInt(MinNumResourceChannels, MaxNumResourceChannels, DefaultMinResourceChannels),
+						_maxRMs = json["maxRMs"].ToInt(MinNumResourceChannels, MaxNumResourceChannels, DefaultMaxResourceChannels),
+						_diagLevel = json["diagLevel"].ToInt(MinDiagLevel, MaxDiagLevel, DefaultDiagLevel),
+						_setDbDate = json["setDbDate"].ToBool(DefaultSetDbDate),
+					};
+
+				case RunItemType.Cam:
+					return new RunItem
+					{
+						_type = RunItemType.Cam,
+						_title = json["title"]?.ToString(),
+						_diagLevel = json["diagLevel"].ToInt(MinDiagLevel, MaxDiagLevel, DefaultDiagLevel),
+						_devMode = json["devMode"].ToBool(false),
+						_designMode = json["designMode"].ToBool(false)
+					};
+
+				case RunItemType.Custom:
+					return new RunItem
+					{
+						_type = RunItemType.Custom,
+						_title = json["title"]?.ToString(),
+						_filePath = json["filePath"]?.ToString(),
+						_args = json["args"]?.ToString(),
+						_workingDir = json["workingDir"]?.ToString(),
+					};
+
+				default:
+					return null;
 			}
-
-			var title = json["title"]?.ToString();
-			var filePath = json["file"]?.ToString();
-			var args = json["args"]?.ToString();
-			var workingDir = json["workingDir"]?.ToString();
-
-			if (!string.IsNullOrEmpty(title) && !string.IsNullOrEmpty(filePath))
-			{
-				return new RunItem
-				{
-					_title = title,
-					_filePath = filePath,
-					_args = args,
-					_workingDir = workingDir
-				};
-			}
-
-			return null;
 		}
 
 		public void OnOptionsButtonClicked()
@@ -132,17 +183,17 @@ namespace DkTools.Run
 		}
 
 		public Visibility OptionsPaneVisibility => _optionsVisible ? Visibility.Visible : Visibility.Collapsed;
-		public Visibility CustomOptionsVisibility => _systemDefined == false ? Visibility.Visible : Visibility.Collapsed;
-		public Visibility SamOptionsVisibility => _systemDefined && _title == RunItemCatalogue.SystemRunItem_SAM ? Visibility.Visible : Visibility.Collapsed;
-		public Visibility CamOptionsVisibility => _systemDefined && _title == RunItemCatalogue.SystemRunItem_CAM ? Visibility.Visible : Visibility.Collapsed;
-		public Visibility SamOrCamOptionsVisibility => _systemDefined && (_title == RunItemCatalogue.SystemRunItem_CAM || _title == RunItemCatalogue.SystemRunItem_CAM) ? Visibility.Visible : Visibility.Collapsed;
+		public Visibility OptionsPaneVisibilityNot => !_optionsVisible ? Visibility.Visible : Visibility.Collapsed;
+		public Visibility CustomOptionsVisibility => _type == RunItemType.Custom ? Visibility.Visible : Visibility.Collapsed;
+		public Visibility SamOptionsVisibility => _type == RunItemType.Sam ? Visibility.Visible : Visibility.Collapsed;
+		public Visibility CamOptionsVisibility => _type == RunItemType.Cam ? Visibility.Visible : Visibility.Collapsed;
+		public Visibility SamOrCamOptionsVisibility => (_type == RunItemType.Sam || _type == RunItemType.Cam) ? Visibility.Visible : Visibility.Collapsed;
 
 		public string Title
 		{
 			get => _title;
 			set
 			{
-				if (_systemDefined) return;
 				if (string.IsNullOrWhiteSpace(value)) return;
 				if (_title != value)
 				{
@@ -193,12 +244,12 @@ namespace DkTools.Run
 
 		public string SamPortText
 		{
-			get => _samPort.ToString();
+			get => _port.ToString();
 			set
 			{
 				if (int.TryParse(value, out var port) && port >= MinPort && port <= MaxPort)
 				{
-					_samPort = port;
+					_port = port;
 					FirePropertyChanged(nameof(SamPortText));
 				}
 			}
@@ -281,7 +332,7 @@ namespace DkTools.Run
 						_diagLevel = value;
 						FirePropertyChanged(nameof(DiagLevel));
 
-						if (_systemDefined && _title == RunItemCatalogue.SystemRunItem_CAM && _diagLevel > 0 && _devMode == false)
+						if (_type == RunItemType.Cam && _diagLevel > 0 && _devMode == false)
 						{
 							_devMode = true;
 							FirePropertyChanged(nameof(DevMode));
@@ -332,22 +383,23 @@ namespace DkTools.Run
 
 		public void Run(DkAppSettings appSettings)
 		{
-			if (_systemDefined)
+			switch (_type)
 			{
-				if (_title == RunItemCatalogue.SystemRunItem_SAM)
-				{
+				case RunItemType.Sam:
 					if (_setDbDate) RunSetDbDate(appSettings);
 					RunSam(appSettings);
-				}
-				else if (_title == RunItemCatalogue.SystemRunItem_CAM)
-				{
+					break;
+
+				case RunItemType.Cam:
 					RunCam(appSettings);
-				}
-				else throw new RunItemException($"Unknown system defined run item '{_title}'.");
-			}
-			else
-			{
-				RunProcess(_title, _filePath, _args, _workingDir);
+					break;
+
+				case RunItemType.Custom:
+					RunProcess(_title, _filePath, _args, _workingDir);
+					break;
+
+				default:
+					throw new InvalidRunItemTypeException();
 			}
 		}
 
@@ -373,7 +425,7 @@ namespace DkTools.Run
 
 				var samName = CleanSamName(string.Concat(appSettings.AppName, "_", System.Environment.UserName));
 				args.Append($"/N{samName}");
-				args.Append($" /p{_samPort}");
+				args.Append($" /p{_port}");
 				args.Append($" /o{(LazyLoadDlls ? 0 : 1)}");
 				args.Append($" /y{_transReportTimeout:00}{_transAbortTimeout:00}");
 				args.Append($" /z{_minRMs}");
@@ -457,8 +509,17 @@ namespace DkTools.Run
 		}
 	}
 
+	enum RunItemType
+	{
+		Custom,
+		Sam,
+		Cam
+	}
+
 	class RunItemException : Exception
 	{
 		public RunItemException(string message) : base(message) { }
 	}
+
+	class InvalidRunItemTypeException : Exception { }
 }

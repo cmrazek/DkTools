@@ -96,6 +96,75 @@ namespace DkTools.Run
 
 			FirePropertyChanged(nameof(RunItems));
 		}
+
+		private void Save()
+		{
+			if (_appSettings != null && _catalogue != null && _runItems != null)
+			{
+				_catalogue.SetRunItemsForApp(_appSettings, _runItems);
+				_catalogue.Save();
+			}
+		}
+
+		private void AddRunItem(RunItem runItem)
+		{
+			_runItems = _runItems.Concat(new RunItem[] { runItem }).ToArray();
+			FirePropertyChanged(nameof(RunItems));
+			Save();
+		}
+
+		private void AddRunItemButton_Click(object sender, RoutedEventArgs e)
+		{
+			try
+			{
+				if (Resources["AddRunItemPopup"] is ContextMenu popup)
+				{
+					popup.PlacementTarget = AddRunItemButton;
+					popup.Placement = System.Windows.Controls.Primitives.PlacementMode.Mouse;
+					popup.IsOpen = true;
+				}
+			}
+			catch (Exception ex)
+			{
+				this.ShowError(ex);
+			}
+		}
+
+		private void AddSam_Click(object sender, RoutedEventArgs e)
+		{
+			try
+			{
+				AddRunItem(RunItem.CreateSam());
+			}
+			catch (Exception ex)
+			{
+				this.ShowError(ex);
+			}
+		}
+
+		private void AddCam_Click(object sender, RoutedEventArgs e)
+		{
+			try
+			{
+				AddRunItem(RunItem.CreateCam());
+			}
+			catch (Exception ex)
+			{
+				this.ShowError(ex);
+			}
+		}
+
+		private void AddOther_Click(object sender, RoutedEventArgs e)
+		{
+			try
+			{
+				AddRunItem(RunItem.CreateOther($"Process {_runItems.Length + 1}", optionsVisible: true));
+			}
+			catch (Exception ex)
+			{
+				this.ShowError(ex);
+			}
+		}
 		#endregion
 	}
 }

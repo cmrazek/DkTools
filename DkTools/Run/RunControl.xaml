@@ -7,20 +7,29 @@
              mc:Ignorable="d" 
              d:DesignWidth="400" d:DesignHeight="500"
              Loaded="UserControl_Loaded">
+    <UserControl.Resources>
+        <ContextMenu x:Key="AddRunItemPopup">
+            <MenuItem Header="SAM" Click="AddSam_Click"/>
+            <MenuItem Header="CAM" Click="AddCam_Click"/>
+            <MenuItem Header="Other" Click="AddOther_Click"/>
+        </ContextMenu>
+    </UserControl.Resources>
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="*"/>
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
-        <ItemsControl ItemsSource="{Binding RunItems}" Grid.Row="0">
-            <ItemsControl.ItemTemplate>
-                <DataTemplate DataType="{x:Type local:RunItem}">
-                    <local:RunItemControl/>
-                </DataTemplate>
-            </ItemsControl.ItemTemplate>
-        </ItemsControl>
+        <ScrollViewer Grid.Row="0" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Hidden">
+            <ItemsControl ItemsSource="{Binding RunItems}">
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate DataType="{x:Type local:RunItem}">
+                        <local:RunItemControl/>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+        </ScrollViewer>
         <StackPanel Orientation="Horizontal" Grid.Row="1" Margin="4,4,4,4">
-            <Button Name="AddRunItemButton" Content="Add" Width="60"/>
+            <Button Name="AddRunItemButton" Content="Add" Width="60" Click="AddRunItemButton_Click"/>
         </StackPanel>
     </Grid>
 </UserControl>

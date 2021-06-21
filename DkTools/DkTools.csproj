@@ -289,6 +289,7 @@
     <Compile Include="GroupedList.cs" />
     <Compile Include="Guids.cs" />
     <Compile Include="IniFile.cs" />
+    <Compile Include="JsonHelpers.cs" />
     <Compile Include="LockedValue.cs" />
     <Compile Include="Output.cs" />
     <Compile Include="PeekDefinition\DkPeekableItem.cs" />
