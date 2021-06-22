@@ -302,11 +302,6 @@ namespace DkTools
 			}
 		}
 
-		internal Run.RunOptions RunOptions
-		{
-			get { return this.GetDialogPage(typeof(Run.RunOptions)) as Run.RunOptions; }
-		}
-
 		internal Tagging.TaggingOptions TaggingOptions
 		{
 			get { return this.GetDialogPage(typeof(Tagging.TaggingOptions)) as Tagging.TaggingOptions; }

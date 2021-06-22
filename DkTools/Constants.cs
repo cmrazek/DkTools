@@ -15,6 +15,7 @@ namespace DkTools
 		public const string DkContentType = "DK";
 		public const string TextContentType = "text";
         public const string ThemeRegKey = @"Software\Microsoft\VisualStudio\15.0";
+		public const string RunJsonFileName = "Run.json";
 
         /// <summary>
         /// Directory name where log files will be stored (under AppDataDir)

@@ -106,6 +106,7 @@ namespace DkTools.ProbeExplorer
 				RefreshAppCombo(appSettings);
 				RefreshFileTree(appSettings);
 				RefreshDictTree();
+				c_run.AppSettings = appSettings;
 
 				UpdateForFileFilter();
 			}
@@ -165,6 +166,7 @@ namespace DkTools.ProbeExplorer
 					RefreshAppCombo(appSettings);
 					RefreshFileTree(appSettings);
 					RefreshDictTree();
+					c_run.AppSettings = appSettings;
 					GlobalEvents.OnRefreshAllDocumentsRequired();
 				});
 			}
@@ -1161,6 +1163,14 @@ namespace DkTools.ProbeExplorer
 			{
 				this.ShowError(ex);
 			}
+		}
+		#endregion
+
+		#region Run Tab
+		public void FocusRunTab()
+		{
+			c_runTab.IsSelected = true;
+			this.UpdateLayout();
 		}
 		#endregion
 

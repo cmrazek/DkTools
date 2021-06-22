@@ -544,10 +544,8 @@ namespace DkTools
                 await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
                 try
                 {
-                    using (var form = new Run.RunForm())
-                    {
-                        form.ShowDialog();
-                    }
+                    var window = Shell.ShowProbeExplorerToolWindow();
+                    window.FocusRunTab();
                 }
                 catch (Exception ex)
                 {
