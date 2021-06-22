@@ -112,6 +112,7 @@
     <Compile Include="Code\CodeType.cs" />
     <Compile Include="Code\FilePosition.cs" />
     <Compile Include="Code\ProbeCompletionType.cs" />
+    <Compile Include="Code\ServerContext.cs" />
     <Compile Include="Constants.cs" />
     <Compile Include="Definitions\ClassDefinition.cs" />
     <Compile Include="Definitions\ColumnDefinition.cs" />

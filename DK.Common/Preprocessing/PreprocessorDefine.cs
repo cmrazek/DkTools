@@ -15,13 +15,15 @@ namespace DK.Preprocessing
 		private bool _disabled;
 		private DataType _dataType;
 		private Definition _def;
+		private ServerContext _serverContext;
 
-		public PreprocessorDefine(string name, string content, List<string> paramNames, FilePosition filePos, DkAppSettings appSettings)
+		public PreprocessorDefine(string name, string content, List<string> paramNames, FilePosition filePos, DkAppSettings appSettings, ServerContext serverContext)
 		{
 			_name = name;
 			_content = content;
 			_paramNames = paramNames;
 			_filePos = filePos;
+			_serverContext = serverContext;
 
 			if (_paramNames == null)
 			{
@@ -84,7 +86,7 @@ namespace DK.Preprocessing
 							args.Add(new ArgumentDescriptor(paramName, DataType.Unknown));
 						}
 
-						var sig = new FunctionSignature(false, FunctionPrivacy.Public, DataType.Unknown, null, _name, null, args);
+						var sig = new FunctionSignature(false, FunctionPrivacy.Public, DataType.Unknown, null, _name, null, args, _serverContext);
 
 						_def = new Definitions.MacroDefinition(_name, _filePos, sig, CodeParser.NormalizeText(_content));
 					}

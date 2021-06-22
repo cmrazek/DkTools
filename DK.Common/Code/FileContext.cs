@@ -134,5 +134,50 @@ namespace DK.Code
 					return false;
 			}
 		}
+
+		public static bool IsServerSide(this FileContext fc)
+		{
+			switch (fc)
+			{
+				case FileContext.ServerTrigger:
+				case FileContext.ServerClass:
+				case FileContext.ServerProgram:
+					return true;
+				default:
+					return false;
+			}
+		}
+
+		public static bool IsClientSide(this FileContext fc)
+		{
+			switch (fc)
+			{
+				case FileContext.ClientTrigger:
+				case FileContext.ClientClass:
+				case FileContext.GatewayProgram:
+					return true;
+				default:
+					return false;
+			}
+		}
+
+		public static ServerContext ToServerContext(this FileContext fc)
+		{
+			switch (fc)
+			{
+				case FileContext.ServerTrigger:
+				case FileContext.ServerClass:
+				case FileContext.ServerProgram:
+					return ServerContext.Server;
+
+				case FileContext.ClientTrigger:
+				case FileContext.ClientClass:
+				case FileContext.GatewayProgram:
+					return ServerContext.Client;
+
+				default:
+					return ServerContext.Neutral;
+			}
+		}
 	}
 }

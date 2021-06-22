@@ -16,6 +16,8 @@ namespace DK.Definitions
 			_permanent = permanent;
 		}
 
+		public override ServerContext ServerContext => ServerContext.Server;
+
 		public override bool CompletionVisible
 		{
 			get { return true; }

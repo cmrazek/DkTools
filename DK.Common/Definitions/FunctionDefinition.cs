@@ -57,6 +57,7 @@ namespace DK.Definitions
 		/// </summary>
 		public string FullName => _sig.FullName;
 		public override string ToString() => _sig.ToString();
+		public override ServerContext ServerContext => _sig.ServerContext;
 
 		public override DataType DataType
 		{

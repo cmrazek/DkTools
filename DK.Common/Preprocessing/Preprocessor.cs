@@ -67,7 +67,7 @@ namespace DK.Preprocessing
 			if (_defines == null)
 			{
 				_defines = new Dictionary<string, PreprocessorDefine>();
-				_defines["_WINDOWS"] = new PreprocessorDefine("_WINDOWS", string.Empty, null, FilePosition.Empty, _appSettings);
+				_defines["_WINDOWS"] = new PreprocessorDefine("_WINDOWS", string.Empty, null, FilePosition.Empty, _appSettings, ServerContext.Neutral);
 			}
 
 			if (p.stdlibDefines != null)
@@ -346,7 +346,7 @@ namespace DK.Preprocessing
 
 			if (!p.suppress)
 			{
-				var define = new PreprocessorDefine(name, sb.ToString().Trim(), paramNames, linkFilePos, _appSettings);
+				var define = new PreprocessorDefine(name, sb.ToString().Trim(), paramNames, linkFilePos, _appSettings, p.fileContext.ToServerContext());
 				_defines[name] = define;
 				if (nameFilePos.IsInFile) _refs.Add(new Reference(define.Definition, nameFilePos, rawPosition: linkRawPos));
 			}
@@ -502,7 +502,7 @@ namespace DK.Preprocessing
 				if (args == null) args = new List<PreprocessorDefine>();
 				for (int i = 0, ii = paramList.Count; i < ii; i++)
 				{
-					args.Add(new PreprocessorDefine(define.ParamNames[i], paramList[i], null, FilePosition.Empty, _appSettings));
+					args.Add(new PreprocessorDefine(define.ParamNames[i], paramList[i], null, FilePosition.Empty, _appSettings, p.fileContext.ToServerContext()));
 				}
 			}
 			if (p.args != null && p.args.Any())

@@ -86,5 +86,12 @@ namespace DkTools.ProbeExplorer
 
 			_exp.FocusDictFilter();
 		}
+
+		public void FocusRunTab()
+		{
+			ThreadHelper.ThrowIfNotOnUIThread();
+
+			_exp.FocusRunTab();
+		}
 	}
 }

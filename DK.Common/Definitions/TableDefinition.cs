@@ -31,6 +31,8 @@ namespace DK.Definitions
 			_table = table;
 		}
 
+		public override ServerContext ServerContext => ServerContext.Neutral;
+
 		public override ProbeCompletionType CompletionType
 		{
 			get { return ProbeCompletionType.Table; }

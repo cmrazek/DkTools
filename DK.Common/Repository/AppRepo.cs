@@ -78,7 +78,7 @@ namespace DK.Repository
 		private const string RepoBaseDir = ".dk";
 
 		private const int RepoSignature = 1869636978;		// 'repo'
-		private const int Version = 1;
+		private const int Version = 2;
 		private const int FileSignature = 1701603686;		// 'file'
 		private const int DepSignature = 544236900;			// 'dep '
 		private const int RefSignature = 543581554;			// 'ref'
@@ -968,7 +968,7 @@ namespace DK.Repository
 				if (sig != RepoSignature) throw new InvalidRepoException("Repo does not have the correct signature.");
 
 				var version = rdr.ReadInt32();
-				if (version < 0 || version > Version) throw new InvalidRepoException("Unsupported repo version.");
+				if (version != Version) throw new InvalidRepoException("Unsupported repo version.");
 
 				var fileDataLength = rdr.ReadInt32();
 				if (fileDataLength < 0) throw new InvalidRepoException("Invalid file data length.");
@@ -1181,7 +1181,9 @@ namespace DK.Repository
 			{
 				if (File_GetClassNameId(file) != 0)
 				{
-					var classDef = new ClassDefinition(File_GetClassName(file), File_GetFileName(file));
+					var fileName = File_GetFileName(file);
+					var serverContext = ServerContextHelper.FromFileName(fileName);
+					var classDef = new ClassDefinition(File_GetClassName(file), fileName, serverContext);
 
 					File_IterateFuncs(file, func =>
 					{
