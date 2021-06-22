@@ -26,27 +26,35 @@
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
-            <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
-        <StackPanel Grid.Row="0" Orientation="Horizontal">
+        <Grid HorizontalAlignment="Stretch" Grid.Row="0">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
             <Button Content="Run Checked"
+                    Grid.Column="0"
                     Margin="2,2,2,2" Width="100"
                     Click="RunChecked_Click"
                     IsEnabled="{Binding RunCheckedEnabled}"
                     Template="{DynamicResource DkToolsNormalButtonTemplate}"
-                    Foreground="{DynamicResource {x:Static vs_shell:EnvironmentColors.ComboBoxTextBrushKey}}"/>
-        </StackPanel>
-        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Hidden">
+                    Foreground="{DynamicResource {x:Static vs_shell:EnvironmentColors.ComboBoxTextBrushKey}}"
+                    HorizontalAlignment="Left"/>
+            <Button Name="AddRunItemButton" Content="Add"
+                    Grid.Column="1"
+                    Margin="2,2,2,2" Width="60"
+                    Click="AddRunItemButton_Click"
+                    Template="{DynamicResource DkToolsNormalButtonTemplate}"
+                    HorizontalAlignment="Right"/>
+        </Grid>
+        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
             <ItemsControl ItemsSource="{Binding RunItems}">
                 <ItemsControl.ItemTemplate>
                     <DataTemplate DataType="{x:Type local:RunItem}">
-                        <local:RunItemControl/>
+                        <local:RunItemControl HorizontalAlignment="Stretch"/>
                     </DataTemplate>
                 </ItemsControl.ItemTemplate>
             </ItemsControl>
         </ScrollViewer>
-        <StackPanel Orientation="Horizontal" Grid.Row="2" Margin="2,2,2,2">
-            <Button Name="AddRunItemButton" Content="Add" Width="60" Click="AddRunItemButton_Click"/>
-        </StackPanel>
     </Grid>
 </UserControl>

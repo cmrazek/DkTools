@@ -86,6 +86,26 @@ namespace DkTools.Run
 		private void FirePropertyChanged(string propName)
 		{
 			PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propName));
+
+			switch (propName)
+			{
+				case nameof(Title):
+				case nameof(FilePath):
+				case nameof(Arguments):
+				case nameof(WorkingDirectory):
+				case nameof(SamPortText):
+				case nameof(TransReportTimeoutText):
+				case nameof(TransAbortTimeoutText):
+				case nameof(MinResourceChannelsText):
+				case nameof(MaxResourceChannelsText):
+				case nameof(LazyLoadDlls):
+				case nameof(DiagLevel):
+				case nameof(DevMode):
+				case nameof(DesignMode):
+				case nameof(SetDbDate):
+					if (_type == RunItemType.Sam || _type == RunItemType.Cam) FirePropertyChanged(nameof(GeneratedArguments));
+					break;
+			}
 		}
 
 		public string RunButtonDisplayText => $"Run {_title}";
@@ -243,6 +263,8 @@ namespace DkTools.Run
 				}
 			}
 		}
+
+		public string ArgumentsLabelText => _type == RunItemType.Custom ? "Arguments:" : "Extra Args:";
 
 		public string WorkingDirectory
 		{
@@ -407,6 +429,22 @@ namespace DkTools.Run
 			}
 		}
 
+		public string GeneratedArguments
+		{
+			get
+			{
+				switch (_type)
+				{
+					case RunItemType.Sam:
+						return GenerateSamArguments(DkEnvironment.CurrentAppSettings);
+					case RunItemType.Cam:
+						return GenerateCamArguments(DkEnvironment.CurrentAppSettings);
+					default:
+						return _args;
+				}
+			}
+		}
+
 		public void Run(DkAppSettings appSettings)
 		{
 			switch (_type)
@@ -447,22 +485,29 @@ namespace DkTools.Run
 				var filePath = Path.Combine(appSettings.PlatformPath, "SAM.exe");
 				if (!File.Exists(filePath)) throw new RunItemException("SAM.exe not found.");
 
-				var args = new StringBuilder();
+				var args = GenerateSamArguments(appSettings);
 
-				var samName = CleanSamName(string.Concat(appSettings.AppName, "_", System.Environment.UserName));
-				args.Append($"/N{samName}");
-				args.Append($" /p{_port}");
-				args.Append($" /o{(LazyLoadDlls ? 0 : 1)}");
-				args.Append($" /y{_transReportTimeout:00}{_transAbortTimeout:00}");
-				args.Append($" /z{_minRMs}");
-				args.Append($" /Z{_maxRMs}");
-				args.Append($" /P \"{appSettings.AppName}\"");
-				if (DiagLevel > 0) args.Append($" /d{DiagLevel}");
-
-				if (!string.IsNullOrWhiteSpace(_args)) args.Append($" {_args}");
-
-				RunProcess(_title, filePath, args.ToString(), appSettings.ExeDirs.FirstOrDefault() ?? appSettings.PlatformPath);
+				RunProcess(_title, filePath, args, appSettings.ExeDirs.FirstOrDefault() ?? appSettings.PlatformPath);
 			}
+		}
+
+		private string GenerateSamArguments(DkAppSettings appSettings)
+		{
+			var args = new StringBuilder();
+
+			var samName = CleanSamName(string.Concat(appSettings.AppName, "_", System.Environment.UserName));
+			args.Append($"/N{samName}");
+			args.Append($" /p{_port}");
+			args.Append($" /o{(LazyLoadDlls ? 0 : 1)}");
+			args.Append($" /y{_transReportTimeout:00}{_transAbortTimeout:00}");
+			args.Append($" /z{_minRMs}");
+			args.Append($" /Z{_maxRMs}");
+			args.Append($" /P \"{appSettings.AppName}\"");
+			if (DiagLevel > 0) args.Append($" /d{DiagLevel}");
+
+			if (!string.IsNullOrWhiteSpace(_args)) args.Append($" {_args}");
+
+			return args.ToString();
 		}
 
 		private void RunCam(DkAppSettings appSettings)
@@ -472,23 +517,30 @@ namespace DkTools.Run
 				var filePath = Path.GetFullPath(Path.Combine(appSettings.PlatformPath, "..\\CAMNet\\CAMNet.exe"));
 				if (!File.Exists(filePath)) throw new RunItemException("CAMNet.exe not found.");
 
-				var args = new StringBuilder();
-				args.Append("appname=" + appSettings.AppName);
-				args.Append(" networkname=" + CleanSamName(System.Environment.UserName + "_" + System.Environment.MachineName));
+				var args = GenerateCamArguments(appSettings);
 
-				if (_diagLevel > 0) args.AppendFormat(" devmode={0}", this.DiagLevel);
-				else if (_devMode) args.Append(" devmode");
-
-				if (_designMode) args.Append(" designmode=true");
-
-				if (!string.IsNullOrWhiteSpace(_args))
-				{
-					args.Append(" ");
-					args.Append(_args);
-				}
-
-				RunProcess(_title, filePath, args.ToString(), Path.GetDirectoryName(filePath));
+				RunProcess(_title, filePath, args, Path.GetDirectoryName(filePath));
 			}
+		}
+
+		private string GenerateCamArguments(DkAppSettings appSettings)
+		{
+			var args = new StringBuilder();
+			args.Append("appname=" + appSettings.AppName);
+			args.Append(" networkname=" + CleanSamName(System.Environment.UserName + "_" + System.Environment.MachineName));
+
+			if (_diagLevel > 0) args.AppendFormat(" devmode={0}", this.DiagLevel);
+			else if (_devMode) args.Append(" devmode");
+
+			if (_designMode) args.Append(" designmode=true");
+
+			if (!string.IsNullOrWhiteSpace(_args))
+			{
+				args.Append(" ");
+				args.Append(_args);
+			}
+
+			return args.ToString();
 		}
 
 		private string CleanSamName(string name)
