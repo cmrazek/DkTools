@@ -1166,6 +1166,14 @@ namespace DkTools.ProbeExplorer
 		}
 		#endregion
 
+		#region Run Tab
+		public void FocusRunTab()
+		{
+			c_runTab.IsSelected = true;
+			this.UpdateLayout();
+		}
+		#endregion
+
 		#region Theming
 		void VSTheme_ThemeChanged(object sender, EventArgs e)
 		{
