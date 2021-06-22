@@ -348,19 +348,10 @@
     <Compile Include="Run\RunControl.xaml.cs">
       <DependentUpon>RunControl.xaml</DependentUpon>
     </Compile>
-    <Compile Include="Run\RunForm.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="Run\RunForm.Designer.cs">
-      <DependentUpon>RunForm.cs</DependentUpon>
-    </Compile>
     <Compile Include="Run\RunItem.cs" />
     <Compile Include="Run\RunItemCatalogue.cs" />
     <Compile Include="Run\RunItemControl.xaml.cs">
       <DependentUpon>RunItemControl.xaml</DependentUpon>
-    </Compile>
-    <Compile Include="Run\RunOptions.cs">
-      <SubType>Component</SubType>
     </Compile>
     <Compile Include="MefServices.cs" />
     <Compile Include="Shell.cs" />
@@ -411,9 +402,6 @@
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>Res.Designer.cs</LastGenOutput>
       <SubType>Designer</SubType>
-    </EmbeddedResource>
-    <EmbeddedResource Include="Run\RunForm.resx">
-      <DependentUpon>RunForm.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="VSPackage.resx">
       <MergeWithCTO>true</MergeWithCTO>
