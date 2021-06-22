@@ -90,6 +90,10 @@ namespace DkTools.Run
 			switch (propName)
 			{
 				case nameof(Title):
+					if (_type == RunItemType.Sam || _type == RunItemType.Cam) FirePropertyChanged(nameof(GeneratedArguments));
+					FirePropertyChanged(nameof(RunButtonDisplayText));
+					break;
+
 				case nameof(FilePath):
 				case nameof(Arguments):
 				case nameof(WorkingDirectory):
