@@ -1,15 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Windows;
+﻿using System.Windows;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Media.Media3D;
 
 namespace DkTools
 {
-	internal static class WpfUtil
+	public static class WpfUtil
 	{
 		public static T VisualUpwardsSearch<T>(this DependencyObject source) where T : DependencyObject
 		{

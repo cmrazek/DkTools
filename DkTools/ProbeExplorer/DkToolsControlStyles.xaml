@@ -837,6 +837,174 @@
 			</Trigger>
 		</ControlTemplate.Triggers>
 	</ControlTemplate>
-	<!-- Endregion -->
+     
+     
+     
+     
+     
+    <ControlTemplate x:Key="DkToolsNormalButtonTemplate" TargetType="{x:Type Button}">
+        <Border x:Name="border"
+         BorderBrush="{DynamicResource {x:Static vs_shell:EnvironmentColors.BrandedUIBorderBrushKey}}"
+         BorderThickness="{TemplateBinding BorderThickness}"
+         Background="{DynamicResource {x:Static vs_shell:EnvironmentColors.SystemButtonFaceBrushKey}}"
+         TextElement.Foreground="{DynamicResource {x:Static vs_shell:EnvironmentColors.SystemButtonTextBrushKey}}"
+         SnapsToDevicePixels="True">
+            <ContentPresenter x:Name="contentPresenter" ContentTemplate="{TemplateBinding ContentTemplate}" Content="{TemplateBinding Content}" ContentStringFormat="{TemplateBinding ContentStringFormat}"
+             Focusable="False" HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}" Margin="{TemplateBinding Padding}" RecognizesAccessKey="True"
+             SnapsToDevicePixels="{TemplateBinding SnapsToDevicePixels}" VerticalAlignment="{TemplateBinding VerticalContentAlignment}"/>
+        </Border>
+        <ControlTemplate.Triggers>
+            <Trigger Property="IsDefaulted" Value="True">
+                <Setter Property="BorderBrush" TargetName="border" Value="{DynamicResource {x:Static vs_shell:EnvironmentColors.SystemButtonHighlightBrushKey}}"/>
+                <Setter Property="Background" TargetName="border" Value="{DynamicResource {x:Static vs_shell:EnvironmentColors.SystemButtonFaceBrushKey}}"/>
+                <Setter Property="TextElement.Foreground" TargetName="contentPresenter" Value="{DynamicResource {x:Static vs_shell:EnvironmentColors.SystemButtonTextBrushKey}}"/>
+            </Trigger>
+            <Trigger Property="IsMouseOver" Value="True">
+                <Setter Property="Background" TargetName="border" Value="{DynamicResource {x:Static vs_shell:EnvironmentColors.SystemButtonHighlightBrushKey}}"/>
+                <Setter Property="BorderBrush" TargetName="border" Value="{DynamicResource {x:Static vs_shell:EnvironmentColors.SystemHighlightBrushKey}}"/>
+                <Setter Property="TextElement.Foreground" TargetName="contentPresenter" Value="{DynamicResource {x:Static vs_shell:EnvironmentColors.SystemButtonTextBrushKey}}"/>
+            </Trigger>
+            <Trigger Property="IsPressed" Value="True">
+                <Setter Property="Background" TargetName="border" Value="{DynamicResource {x:Static vs_shell:EnvironmentColors.SystemButtonHighlightBrushKey}}"/>
+                <Setter Property="BorderBrush" TargetName="border" Value="{DynamicResource {x:Static vs_shell:EnvironmentColors.BrandedUIBorderBrushKey}}"/>
+                <Setter Property="TextElement.Foreground" TargetName="contentPresenter" Value="{DynamicResource {x:Static vs_shell:EnvironmentColors.SystemButtonTextBrushKey}}"/>
+            </Trigger>
+            <Trigger Property="ToggleButton.IsChecked" Value="True">
+                <Setter Property="Background" TargetName="border" Value="{DynamicResource {x:Static vs_shell:EnvironmentColors.SystemButtonFaceBrushKey}}"/>
+                <Setter Property="BorderBrush" TargetName="border" Value="{DynamicResource {x:Static vs_shell:EnvironmentColors.BrandedUIBorderBrushKey}}"/>
+                <Setter Property="TextElement.Foreground" TargetName="contentPresenter" Value="{DynamicResource {x:Static vs_shell:EnvironmentColors.SystemButtonTextBrushKey}}"/>
+            </Trigger>
+            <Trigger Property="IsEnabled" Value="False">
+                <Setter Property="Background" TargetName="border" Value="{DynamicResource {x:Static vs_shell:EnvironmentColors.SystemButtonFaceBrushKey}}"/>
+                <Setter Property="BorderBrush" TargetName="border" Value="{DynamicResource {x:Static vs_shell:EnvironmentColors.BrandedUIBorderBrushKey}}"/>
+                <Setter Property="TextElement.Foreground" TargetName="contentPresenter" Value="{DynamicResource {x:Static vs_shell:EnvironmentColors.ComboBoxDisabledTextBrushKey}}"/>
+            </Trigger>
+        </ControlTemplate.Triggers>
+    </ControlTemplate>
+
+
+
+
+
+    <ControlTemplate x:Key="DkToolsIconButtonTemplate" TargetType="{x:Type Button}">
+        <Border x:Name="border"
+         BorderBrush="Transparent"
+         Background="Transparent"
+         TextElement.Foreground="{DynamicResource {x:Static vs_shell:EnvironmentColors.SystemButtonTextBrushKey}}"
+         SnapsToDevicePixels="True">
+            <ContentPresenter x:Name="contentPresenter" ContentTemplate="{TemplateBinding ContentTemplate}" Content="{TemplateBinding Content}" ContentStringFormat="{TemplateBinding ContentStringFormat}"
+             Focusable="False" HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}" Margin="{TemplateBinding Padding}" RecognizesAccessKey="True"
+             SnapsToDevicePixels="{TemplateBinding SnapsToDevicePixels}" VerticalAlignment="{TemplateBinding VerticalContentAlignment}"/>
+        </Border>
+        <ControlTemplate.Triggers>
+            <Trigger Property="IsMouseOver" Value="True">
+                <Setter Property="Background" TargetName="border" Value="{DynamicResource {x:Static vs_shell:EnvironmentColors.SystemButtonHighlightBrushKey}}"/>
+            </Trigger>
+            <Trigger Property="IsPressed" Value="True">
+                <Setter Property="Background" TargetName="border" Value="{DynamicResource {x:Static vs_shell:EnvironmentColors.SystemButtonHighlightBrushKey}}"/>
+            </Trigger>
+            <Trigger Property="IsEnabled" Value="False">
+                <Setter Property="Background" TargetName="border" Value="Transparent"/>
+                <Setter Property="Opacity" Value="0.5"/>
+            </Trigger>
+        </ControlTemplate.Triggers>
+    </ControlTemplate>
+
+
+
+
+    <Style x:Key="FocusVisual">
+        <Setter Property="Control.Template">
+            <Setter.Value>
+                <ControlTemplate>
+                    <Rectangle Margin="2" SnapsToDevicePixels="true" Stroke="{DynamicResource {x:Static vs_shell:EnvironmentColors.SystemButtonTextBrushKey}}" StrokeThickness="1" StrokeDashArray="1 2"/>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+    <Style x:Key="OptionMarkFocusVisual">
+        <Setter Property="Control.Template">
+            <Setter.Value>
+                <ControlTemplate>
+                    <Rectangle Margin="14,0,0,0" SnapsToDevicePixels="true" Stroke="{DynamicResource {x:Static vs_shell:EnvironmentColors.SystemButtonTextBrushKey}}" StrokeThickness="1" StrokeDashArray="1 2"/>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+    <Style x:Key="DkToolsCheckBox" TargetType="{x:Type CheckBox}">
+        <Setter Property="FocusVisualStyle" Value="{StaticResource FocusVisual}"/>
+        <Setter Property="Background" Value="{DynamicResource {x:Static vs_shell:EnvironmentColors.SystemButtonFaceBrushKey}}"/>
+        <Setter Property="BorderBrush" Value="{DynamicResource {x:Static vs_shell:EnvironmentColors.BrandedUIBorderBrushKey}}"/>
+        <Setter Property="Foreground" Value="{DynamicResource {x:Static vs_shell:EnvironmentColors.SystemButtonTextBrushKey}}"/>
+        <Setter Property="BorderThickness" Value="1"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="{x:Type CheckBox}">
+                    <Grid x:Name="templateRoot" Background="Transparent" SnapsToDevicePixels="True">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <Border x:Name="checkBoxBorder" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" Background="{TemplateBinding Background}" HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}" Margin="1" VerticalAlignment="{TemplateBinding VerticalContentAlignment}">
+                            <Grid x:Name="markGrid">
+                                <Path x:Name="optionMark" Data="F1 M 9.97498,1.22334L 4.6983,9.09834L 4.52164,9.09834L 0,5.19331L 1.27664,3.52165L 4.255,6.08833L 8.33331,1.52588e-005L 9.97498,1.22334 Z "
+                                      Fill="{DynamicResource {x:Static vs_shell:EnvironmentColors.SystemButtonTextBrushKey}}"
+                                      Margin="1" Opacity="0" Stretch="None"/>
+                                <Rectangle x:Name="indeterminateMark"
+                                           Fill="{DynamicResource {x:Static vs_shell:EnvironmentColors.SystemButtonTextBrushKey}}"
+                                           Margin="2" Opacity="0"/>
+                            </Grid>
+                        </Border>
+                        <ContentPresenter x:Name="contentPresenter" Grid.Column="1" Focusable="False" HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}" Margin="{TemplateBinding Padding}" RecognizesAccessKey="True" SnapsToDevicePixels="{TemplateBinding SnapsToDevicePixels}" VerticalAlignment="{TemplateBinding VerticalContentAlignment}"/>
+                    </Grid>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="HasContent" Value="true">
+                            <Setter Property="FocusVisualStyle" Value="{StaticResource OptionMarkFocusVisual}"/>
+                            <Setter Property="Padding" Value="4,-1,0,0"/>
+                        </Trigger>
+                        <Trigger Property="IsMouseOver" Value="true">
+                            <Setter Property="Background" TargetName="checkBoxBorder"
+                                    Value="{DynamicResource {x:Static vs_shell:EnvironmentColors.SystemButtonHighlightBrushKey}}"/>
+                            <Setter Property="BorderBrush" TargetName="checkBoxBorder"
+                                    Value="{DynamicResource {x:Static vs_shell:EnvironmentColors.SystemHighlightBrushKey}}"/>
+                            <Setter Property="Fill" TargetName="optionMark"
+                                    Value="{DynamicResource {x:Static vs_shell:EnvironmentColors.SystemButtonTextBrushKey}}"/>
+                            <Setter Property="Fill" TargetName="indeterminateMark"
+                                    Value="{DynamicResource {x:Static vs_shell:EnvironmentColors.SystemButtonTextBrushKey}}"/>
+                        </Trigger>
+                        <Trigger Property="IsEnabled" Value="false">
+                            <Setter Property="Background" TargetName="checkBoxBorder"
+                                    Value="{DynamicResource {x:Static vs_shell:EnvironmentColors.SystemButtonFaceBrushKey}}"/>
+                            <Setter Property="BorderBrush" TargetName="checkBoxBorder"
+                                    Value="{DynamicResource {x:Static vs_shell:EnvironmentColors.ComboBoxDisabledBorderBrushKey}}"/>
+                            <Setter Property="Fill" TargetName="optionMark"
+                                    Value="{DynamicResource {x:Static vs_shell:EnvironmentColors.ComboBoxDisabledTextBrushKey}}"/>
+                            <Setter Property="Fill" TargetName="indeterminateMark"
+                                    Value="{DynamicResource {x:Static vs_shell:EnvironmentColors.ComboBoxDisabledTextBrushKey}}"/>
+                        </Trigger>
+                        <Trigger Property="IsPressed" Value="true">
+                            <Setter Property="Background" TargetName="checkBoxBorder"
+                                    Value="{DynamicResource {x:Static vs_shell:EnvironmentColors.SystemButtonHighlightBrushKey}}"/>
+                            <Setter Property="BorderBrush" TargetName="checkBoxBorder"
+                                    Value="{DynamicResource {x:Static vs_shell:EnvironmentColors.SystemHighlightBrushKey}}"/>
+                            <Setter Property="Fill" TargetName="optionMark"
+                                    Value="{DynamicResource {x:Static vs_shell:EnvironmentColors.SystemButtonTextBrushKey}}"/>
+                            <Setter Property="Fill" TargetName="indeterminateMark"
+                                    Value="{DynamicResource {x:Static vs_shell:EnvironmentColors.SystemButtonTextBrushKey}}"/>
+                        </Trigger>
+                        <Trigger Property="IsChecked" Value="true">
+                            <Setter Property="Opacity" TargetName="optionMark" Value="1"/>
+                            <Setter Property="Opacity" TargetName="indeterminateMark" Value="0"/>
+                        </Trigger>
+                        <Trigger Property="IsChecked" Value="{x:Null}">
+                            <Setter Property="Opacity" TargetName="optionMark" Value="0"/>
+                            <Setter Property="Opacity" TargetName="indeterminateMark" Value="1"/>
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+    <!-- Endregion -->
 
 </ResourceDictionary>
