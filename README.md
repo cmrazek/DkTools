@@ -19,6 +19,7 @@ Visual Studio Extension for WBDK
 ## Change Log
 
 **Version 1.5.18 Changes:**
+- Replaced the old Run form with a new tab in DK Explorer.
 - Code analysis will now limit the number of warnings it reports, to cope with scenarios where there are thousands of warnings.
 - Fixed a bug where files created via DK Explorer could not be found via the file filter until the next refresh.
 - Using Go To Definition on a class method that exists in both cc and sc will now take you to the correct server context, when known.
