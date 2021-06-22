@@ -4,15 +4,23 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:local="clr-namespace:DkTools.Run"
+             xmlns:vs_shell="clr-namespace:Microsoft.VisualStudio.PlatformUI;assembly=Microsoft.VisualStudio.Shell.15.0"
              mc:Ignorable="d" 
              d:DesignWidth="400" d:DesignHeight="500"
              Loaded="UserControl_Loaded">
     <UserControl.Resources>
-        <ContextMenu x:Key="AddRunItemPopup">
-            <MenuItem Header="SAM" Click="AddSam_Click"/>
-            <MenuItem Header="CAM" Click="AddCam_Click"/>
-            <MenuItem Header="Other" Click="AddOther_Click"/>
-        </ContextMenu>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="/DkTools;component/ProbeExplorer/DkToolsControlStyles.xaml"/>
+                <ResourceDictionary>
+                    <ContextMenu x:Key="AddRunItemPopup">
+                        <MenuItem Header="SAM" Click="AddSam_Click"/>
+                        <MenuItem Header="CAM" Click="AddCam_Click"/>
+                        <MenuItem Header="Other" Click="AddOther_Click"/>
+                    </ContextMenu>
+                </ResourceDictionary>
+            </ResourceDictionary.MergedDictionaries>
+        </ResourceDictionary>
     </UserControl.Resources>
     <Grid>
         <Grid.RowDefinitions>
@@ -21,7 +29,12 @@
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
         <StackPanel Grid.Row="0" Orientation="Horizontal">
-            <Button Content="Run Checked" Margin="2,2,2,2" Width="100" Click="RunChecked_Click" IsEnabled="{Binding RunCheckedEnabled}"/>
+            <Button Content="Run Checked"
+                    Margin="2,2,2,2" Width="100"
+                    Click="RunChecked_Click"
+                    IsEnabled="{Binding RunCheckedEnabled}"
+                    Template="{DynamicResource DkToolsNormalButtonTemplate}"
+                    Foreground="{DynamicResource {x:Static vs_shell:EnvironmentColors.ComboBoxTextBrushKey}}"/>
         </StackPanel>
         <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Hidden">
             <ItemsControl ItemsSource="{Binding RunItems}">

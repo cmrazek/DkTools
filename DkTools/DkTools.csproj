@@ -306,6 +306,7 @@
     <Compile Include="LanguageSvc\ProbeScanner.cs" />
     <Compile Include="LanguageSvc\ProbeDropDownHelper.cs" />
     <Compile Include="OutputPane.cs" />
+    <Compile Include="ProbeExplorer\ColorTable.cs" />
     <Compile Include="ProbeExplorer\CreateFileDialog.xaml.cs">
       <DependentUpon>CreateFileDialog.xaml</DependentUpon>
     </Compile>

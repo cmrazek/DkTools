@@ -191,6 +191,7 @@ namespace DkTools.Run
 		{
 			_optionsVisible = !_optionsVisible;
 			FirePropertyChanged(nameof(OptionsPaneVisibility));
+			FirePropertyChanged(nameof(OptionsPaneVisibilityNot));
 		}
 
 		public Visibility OptionsPaneVisibility => _optionsVisible ? Visibility.Visible : Visibility.Collapsed;
