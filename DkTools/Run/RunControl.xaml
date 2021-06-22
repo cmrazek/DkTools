@@ -36,16 +36,22 @@
                     Grid.Column="0"
                     Margin="2,2,2,2" Width="100"
                     Click="RunChecked_Click"
+                    ToolTip="Run all items that are currently checked."
                     IsEnabled="{Binding RunCheckedEnabled}"
                     Template="{DynamicResource DkToolsNormalButtonTemplate}"
                     Foreground="{DynamicResource {x:Static vs_shell:EnvironmentColors.ComboBoxTextBrushKey}}"
                     HorizontalAlignment="Left"/>
-            <Button Name="AddRunItemButton" Content="Add"
+            <Button Name="AddRunItemButton"
                     Grid.Column="1"
-                    Margin="2,2,2,2" Width="60"
+                    Margin="2,2,2,2"
                     Click="AddRunItemButton_Click"
-                    Template="{DynamicResource DkToolsNormalButtonTemplate}"
-                    HorizontalAlignment="Right"/>
+                    Template="{DynamicResource DkToolsIconButtonTemplate}"
+                    HorizontalAlignment="Right"
+                    ToolTip="Add Process to Run">
+                <Path Stroke="{DynamicResource {x:Static vs_shell:EnvironmentColors.SystemButtonTextBrushKey}}" StrokeThickness="2"
+                      Width="16" Height="16"
+                      Data="M8,1 L8,15 M1,8 L15,8"/>
+            </Button>
         </Grid>
         <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
             <ItemsControl ItemsSource="{Binding RunItems}">

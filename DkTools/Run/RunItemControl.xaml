@@ -77,7 +77,8 @@
                 Margin="0,4,4,4"
                 Click="ExpandButton_Click"
                 Visibility="{Binding OptionsPaneVisibilityNot}"
-                Template="{DynamicResource DkToolsIconButtonTemplate}">
+                Template="{DynamicResource DkToolsIconButtonTemplate}"
+                ToolTip="Expand details">
             <Path Data="M1,4 L8,10 L15,4"
                   Stroke="{DynamicResource {x:Static vs_shell:EnvironmentColors.SystemButtonTextBrushKey}}"
                   StrokeThickness="2"
@@ -87,7 +88,8 @@
                 Margin="0,4,4,4"
                 Click="ExpandButton_Click"
                 Visibility="{Binding OptionsPaneVisibility}"
-                Template="{DynamicResource DkToolsIconButtonTemplate}">
+                Template="{DynamicResource DkToolsIconButtonTemplate}"
+                ToolTip="Collapse details">
             <Path Data="M1,10 L8,4 L15,10"
                   Stroke="{DynamicResource {x:Static vs_shell:EnvironmentColors.SystemButtonTextBrushKey}}"
                   StrokeThickness="2"
