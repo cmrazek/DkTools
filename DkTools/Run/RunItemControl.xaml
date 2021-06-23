@@ -16,7 +16,7 @@
             </ResourceDictionary.MergedDictionaries>
         </ResourceDictionary>
     </UserControl.Resources>
-    <Grid>
+    <Grid HorizontalAlignment="Stretch">
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="Auto"/>
             <ColumnDefinition Width="*"/>
@@ -96,7 +96,7 @@
                   Height="16" Width="16"/>
         </Button>
         <Grid Name="OptionsGrid" Grid.Row="1" Grid.Column="1" Grid.ColumnSpan="5" Visibility="{Binding OptionsPaneVisibility}"
-              Margin="2,2,2,2" HorizontalAlignment="Left">
+              Margin="2,2,2,2" HorizontalAlignment="Stretch">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="Auto"/>
                 <ColumnDefinition Width="*"/>
@@ -139,7 +139,7 @@
             <TextBox Grid.Row="0" Grid.Column="1" Grid.ColumnSpan="2"
                      Text="{Binding Title, Mode=TwoWay}"
                      VerticalAlignment="Center" HorizontalAlignment="Stretch"
-                     Margin="0,1,0,1" MaxWidth="400"
+                     Margin="0,1,0,1"
                      Template="{DynamicResource DkToolsTextBoxControlTemplate}"/>
 
             <Label Content="File:" Grid.Row="1" Grid.Column="0" Visibility="{Binding CustomOptionsVisibility}" VerticalAlignment="Center"/>
@@ -147,7 +147,7 @@
                      Grid.Row="1" Grid.Column="1"
                      Visibility="{Binding CustomOptionsVisibility}"
                      VerticalAlignment="Center" HorizontalAlignment="Stretch"
-                     Margin="0,1,0,1" MaxWidth="400"
+                     Margin="0,1,0,1"
                      Template="{DynamicResource DkToolsTextBoxControlTemplate}"/>
             <Button Grid.Row="1" Grid.Column="2"
                     Content="..."
@@ -161,7 +161,7 @@
                      Grid.Row="2" Grid.Column="1"
                      Visibility="{Binding CustomOptionsVisibility}"
                      VerticalAlignment="Center" HorizontalAlignment="Stretch"
-                     Margin="0,1,0,1" MaxWidth="400"
+                     Margin="0,1,0,1"
                      Template="{DynamicResource DkToolsTextBoxControlTemplate}"/>
             <Button Grid.Row="2" Grid.Column="2"
                     Content="..."
@@ -249,7 +249,7 @@
                      Text="{Binding Arguments, Mode=TwoWay}"
                      Visibility="Visible"
                      VerticalAlignment="Center" HorizontalAlignment="Stretch"
-                     Margin="0,1,0,1" MaxWidth="400"
+                     Margin="0,1,0,1"
                      Template="{DynamicResource DkToolsTextBoxControlTemplate}"/>
 
             <Label Content="Set DBDate:" Grid.Row="13" Grid.Column="0" Visibility="{Binding SamOptionsVisibility}" VerticalAlignment="Center"/>
@@ -265,7 +265,7 @@
                      IsReadOnly="True"
                      Visibility="{Binding SamOrCamOptionsVisibility}"
                      VerticalAlignment="Center" HorizontalAlignment="Stretch"
-                     Margin="0,1,0,1" MaxWidth="400"
+                     Margin="0,1,0,1"
                      Template="{DynamicResource DkToolsTextBoxControlTemplate}"/>
         </Grid>
     </Grid>
