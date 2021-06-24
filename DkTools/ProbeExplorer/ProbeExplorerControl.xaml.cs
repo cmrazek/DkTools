@@ -187,14 +187,15 @@ namespace DkTools.ProbeExplorer
 				{
 					try
 					{
-						DkEnvironment.CurrentAppSettings.TryUpdateDefaultCurrentApp();
+						DkAppSettings.TryUpdateDefaultCurrentApp(selectedApp);
 					}
 					catch (System.Security.SecurityException ex)
 					{
+						Log.Error(ex);
 						var options = ProbeToolsPackage.Instance.ErrorSuppressionOptions;
 						if (!options.DkAppChangeAdminFailure)
 						{
-							var msg = "The system-wide default DK application can't be changed because access was denied. To resolve this problem, run Visual Studio as an administrator.";
+							var msg = "The system-wide default DK application can't be changed because access was denied. To resolve this problem, run Visual Studio as an administrator or loosen the registry permissions for the following key:\r\n\r\nHKEY_LOCAL_MACHINE\\SOFTWARE\\WOW6432Node\\Fincentric\\WBDK";
 							var dlg = new ErrorDialog(msg, ex.ToString())
 							{
 								ShowUserSuppress = true,

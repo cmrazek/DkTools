@@ -183,15 +183,15 @@ namespace DK.AppEnvironment
 			}
 		}
 
-		public void TryUpdateDefaultCurrentApp()
+		public static void TryUpdateDefaultCurrentApp(string appName)
 		{
-			if (string.IsNullOrEmpty(AppName)) return;
+			if (string.IsNullOrEmpty(appName)) return;
 
 			// Read the current value from the registry in read-only mode, to see if it needs updating.
 			using (var key = Registry.LocalMachine.OpenSubKey(Constants.WbdkRegKey, false))
 			{
 				var value = Convert.ToString(key.GetValue("CurrentConfig", string.Empty));
-				if (value == AppName)
+				if (value == appName)
 				{
 					// No update required.
 					return;
@@ -201,7 +201,7 @@ namespace DK.AppEnvironment
 			// Try to update the registry.
 			using (var key = Registry.LocalMachine.OpenSubKey(Constants.WbdkRegKey, true))
 			{
-				key.SetValue("CurrentConfig", AppName);
+				key.SetValue("CurrentConfig", appName);
 			}
 		}
 
