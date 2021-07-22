@@ -354,6 +354,7 @@
       <DependentUpon>RunItemControl.xaml</DependentUpon>
     </Compile>
     <Compile Include="MefServices.cs" />
+    <Compile Include="Run\RunThread.cs" />
     <Compile Include="Shell.cs" />
     <Compile Include="SignatureHelp\ProbeParameter.cs" />
     <Compile Include="SignatureHelp\ProbeSignature.cs" />

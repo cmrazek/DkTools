@@ -131,7 +131,11 @@
                 <RowDefinition Height="Auto"/>
                 <!-- 13 - Set DBDate -->
                 <RowDefinition Height="Auto"/>
-                <!-- 14 - Extra Args -->
+                <!-- 14 - Wait For Exit -->
+                <RowDefinition Height="Auto"/>
+                <!-- 15 - Capture Output -->
+                <RowDefinition Height="Auto"/>
+                <!-- 16 - Extra Args -->
                 <RowDefinition Height="Auto"/>
             </Grid.RowDefinitions>
 
@@ -259,8 +263,22 @@
                       VerticalAlignment="Center" HorizontalAlignment="Left"
                       Style="{DynamicResource DkToolsCheckBox}"/>
 
-            <Label Content="Generated Args:" Grid.Row="14" Grid.Column="0" Visibility="{Binding SamOrCamOptionsVisibility}" VerticalAlignment="Center"/>
-            <TextBox Grid.Row="14" Grid.Column="1" Grid.ColumnSpan="2"
+            <Label Content="Wait For Exit:" Grid.Row="14" Grid.Column="0" Visibility="{Binding CustomOptionsVisibility}" VerticalAlignment="Center"/>
+            <CheckBox Grid.Row="14" Grid.Column="1" Grid.ColumnSpan="2"
+                      IsChecked="{Binding WaitForExit, Mode=TwoWay}"
+                      Visibility="{Binding CustomOptionsVisibility}"
+                      VerticalAlignment="Center" HorizontalAlignment="Left"
+                      Style="{DynamicResource DkToolsCheckBox}"/>
+
+            <Label Content="Capture Output:" Grid.Row="15" Grid.Column="0" Visibility="{Binding CustomOptionsWaitForExitVisibility}" VerticalAlignment="Center"/>
+            <CheckBox Grid.Row="15" Grid.Column="1" Grid.ColumnSpan="2"
+                      IsChecked="{Binding CaptureOutput, Mode=TwoWay}"
+                      Visibility="{Binding CustomOptionsWaitForExitVisibility}"
+                      VerticalAlignment="Center" HorizontalAlignment="Left"
+                      Style="{DynamicResource DkToolsCheckBox}"/>
+
+            <Label Content="Generated Args:" Grid.Row="16" Grid.Column="0" Visibility="{Binding SamOrCamOptionsVisibility}" VerticalAlignment="Center"/>
+            <TextBox Grid.Row="16" Grid.Column="1" Grid.ColumnSpan="2"
                      Text="{Binding GeneratedArguments, Mode=OneWay}"
                      IsReadOnly="True"
                      Visibility="{Binding SamOrCamOptionsVisibility}"

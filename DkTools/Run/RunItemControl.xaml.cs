@@ -1,4 +1,5 @@
 ﻿using DK.AppEnvironment;
+using Microsoft.VisualStudio.Shell;
 using Microsoft.Win32;
 using System;
 using System.ComponentModel;
@@ -56,7 +57,15 @@ namespace DkTools.Run
 		{
 			try
 			{
-				if (DataContext is RunItem runItem) runItem.Run(DkEnvironment.CurrentAppSettings);
+				ThreadHelper.JoinableTaskFactory.RunAsync(async () =>
+				{
+					await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
+
+					if (DataContext is RunItem runItem)
+					{
+						RunThread.Run(new RunItem[] { runItem }, DkEnvironment.CurrentAppSettings);
+					}
+				});
 			}
 			catch (Exception ex)
 			{

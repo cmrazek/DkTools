@@ -7,6 +7,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Windows;
 
 namespace DkTools.Run
@@ -33,6 +34,8 @@ namespace DkTools.Run
 		private bool _canMoveUp;
 		private bool _canMoveDown;
 		private bool _selected;
+		private bool _waitForExit = true;
+		private bool _captureOutput = true;
 
 		public const int DefaultPort = 5001;
 		public const int MinPort = 1;
@@ -109,6 +112,10 @@ namespace DkTools.Run
 				case nameof(SetDbDate):
 					if (_type == RunItemType.Sam || _type == RunItemType.Cam) FirePropertyChanged(nameof(GeneratedArguments));
 					break;
+
+				case nameof(WaitForExit):
+					FirePropertyChanged(nameof(CustomOptionsWaitForExitVisibility));
+					break;
 			}
 		}
 
@@ -153,7 +160,9 @@ namespace DkTools.Run
 						{ "filePath", _filePath },
 						{ "args", _args },
 						{ "workingDir", _workingDir },
-						{ "selected", _selected }
+						{ "selected", _selected },
+						{ "waitForExit", _waitForExit },
+						{ "captureOutput", _captureOutput }
 					};
 
 				default:
@@ -203,7 +212,9 @@ namespace DkTools.Run
 						_filePath = json["filePath"]?.ToString(),
 						_args = json["args"]?.ToString(),
 						_workingDir = json["workingDir"]?.ToString(),
-						_selected = json["selected"].ToBool(false)
+						_selected = json["selected"].ToBool(false),
+						_waitForExit = json["waitForExit"].ToBool(true),
+						_captureOutput = json["captureOutput"].ToBool(true)
 					};
 
 				default:
@@ -221,6 +232,7 @@ namespace DkTools.Run
 		public Visibility OptionsPaneVisibility => _optionsVisible ? Visibility.Visible : Visibility.Collapsed;
 		public Visibility OptionsPaneVisibilityNot => !_optionsVisible ? Visibility.Visible : Visibility.Collapsed;
 		public Visibility CustomOptionsVisibility => _type == RunItemType.Custom ? Visibility.Visible : Visibility.Collapsed;
+		public Visibility CustomOptionsWaitForExitVisibility => _type == RunItemType.Custom && _waitForExit == true ? Visibility.Visible : Visibility.Collapsed;
 		public Visibility SamOptionsVisibility => _type == RunItemType.Sam ? Visibility.Visible : Visibility.Collapsed;
 		public Visibility CamOptionsVisibility => _type == RunItemType.Cam ? Visibility.Visible : Visibility.Collapsed;
 		public Visibility SamOrCamOptionsVisibility => (_type == RunItemType.Sam || _type == RunItemType.Cam) ? Visibility.Visible : Visibility.Collapsed;
@@ -433,6 +445,34 @@ namespace DkTools.Run
 			}
 		}
 
+		public bool WaitForExit
+		{
+			get => _waitForExit;
+			set
+			{
+				if (_waitForExit != value)
+				{
+					_waitForExit = value;
+					FirePropertyChanged(nameof(WaitForExit));
+					Changed?.Invoke(this, EventArgs.Empty);
+				}
+			}
+		}
+
+		public bool CaptureOutput
+		{
+			get => _captureOutput;
+			set
+			{
+				if (_captureOutput != value)
+				{
+					_captureOutput = value;
+					FirePropertyChanged(nameof(_captureOutput));
+					Changed?.Invoke(this, EventArgs.Empty);
+				}
+			}
+		}
+
 		public string GeneratedArguments
 		{
 			get
@@ -449,21 +489,22 @@ namespace DkTools.Run
 			}
 		}
 
-		public void Run(DkAppSettings appSettings)
+		internal void Run(DkAppSettings appSettings, OutputPane pane, CancellationToken cancel)
 		{
 			switch (_type)
 			{
 				case RunItemType.Sam:
-					if (_setDbDate) RunSetDbDate(appSettings);
-					RunSam(appSettings);
+					if (_setDbDate) RunSetDbDate(appSettings, pane, cancel);
+					pane?.WriteLine(string.Empty);
+					RunSam(appSettings, pane, cancel);
 					break;
 
 				case RunItemType.Cam:
-					RunCam(appSettings);
+					RunCam(appSettings, pane, cancel);
 					break;
 
 				case RunItemType.Custom:
-					RunProcess(_title, _filePath, _args, _workingDir);
+					RunProcess(_title, _filePath, _args, _workingDir, pane, cancel, _waitForExit, _captureOutput);
 					break;
 
 				default:
@@ -471,19 +512,25 @@ namespace DkTools.Run
 			}
 		}
 
-		private void RunSetDbDate(DkAppSettings appSettings)
+		private void RunSetDbDate(DkAppSettings appSettings, OutputPane pane, CancellationToken cancel)
 		{
+			if (cancel.IsCancellationRequested) return;
+
 			using (var proc = new Process())
 			{
+				pane?.WriteLine("Setting database date (setdbdat today force)");
+
 				var filePath = Path.Combine(appSettings.PlatformPath, "setdbdat.exe");
 				if (!File.Exists(filePath)) throw new RunItemException("setdbdat.exe not found.");
 
-				RunProcess("setdbdat.exe", filePath, "today force", appSettings.PlatformPath, waitForExit: -1);
+				RunProcess("setdbdat.exe", filePath, "today force", appSettings.PlatformPath, pane, cancel, waitForExit: true, capture: true);
 			}
 		}
 
-		private void RunSam(DkAppSettings appSettings)
+		private void RunSam(DkAppSettings appSettings, OutputPane pane, CancellationToken cancel)
 		{
+			if (cancel.IsCancellationRequested) return;
+
 			using (var proc = new Process())
 			{
 				var filePath = Path.Combine(appSettings.PlatformPath, "SAM.exe");
@@ -491,7 +538,7 @@ namespace DkTools.Run
 
 				var args = GenerateSamArguments(appSettings);
 
-				RunProcess(_title, filePath, args, appSettings.ExeDirs.FirstOrDefault() ?? appSettings.PlatformPath);
+				RunProcess(_title, filePath, args, appSettings.ExeDirs.FirstOrDefault() ?? appSettings.PlatformPath, pane, cancel, waitForExit: false, capture: false);
 			}
 		}
 
@@ -514,8 +561,10 @@ namespace DkTools.Run
 			return args.ToString();
 		}
 
-		private void RunCam(DkAppSettings appSettings)
+		private void RunCam(DkAppSettings appSettings, OutputPane pane, CancellationToken cancel)
 		{
+			if (cancel.IsCancellationRequested) return;
+
 			using (var proc = new Process())
 			{
 				var filePath = Path.GetFullPath(Path.Combine(appSettings.PlatformPath, "..\\CAMNet\\CAMNet.exe"));
@@ -523,7 +572,7 @@ namespace DkTools.Run
 
 				var args = GenerateCamArguments(appSettings);
 
-				RunProcess(_title, filePath, args, Path.GetDirectoryName(filePath));
+				RunProcess(_title, filePath, args, Path.GetDirectoryName(filePath), pane, cancel, waitForExit: false, capture: false);
 			}
 		}
 
@@ -557,9 +606,13 @@ namespace DkTools.Run
 			return sb.ToString();
 		}
 
-		private void RunProcess(string title, string filePath, string args, string workingDir, int waitForExit = 0)
+		private void RunProcess(string title, string filePath, string args, string workingDir, OutputPane pane, CancellationToken cancel, bool waitForExit, bool capture)
 		{
+			if (cancel.IsCancellationRequested) return;
+
 			Log.Info("Running: {0}\r\nFile Path: {1}\r\nArguments: {2}\r\nWorking Dir: {3}", title, filePath, args, workingDir);
+			pane?.WriteLine($"Running: {title}");
+			pane?.WriteLine($"  {filePath} {args}");
 
 			if (string.IsNullOrWhiteSpace(filePath)) throw new RunItemException($"No file path is configured.");
 
@@ -569,23 +622,45 @@ namespace DkTools.Run
 				Log.Info("Derived working dir: {0}", workingDir);
 			}
 
-			using (var proc = new Process())
+			if (waitForExit && capture)
 			{
-				var psi = new ProcessStartInfo(filePath, args ?? string.Empty);
-				psi.UseShellExecute = false;
-				psi.RedirectStandardOutput = false;
-				psi.RedirectStandardError = false;
-				psi.CreateNoWindow = false;
-				psi.WorkingDirectory = workingDir;
+				var sw = new Stopwatch();
+				sw.Start();
 
-				proc.StartInfo = psi;
-				if (!proc.Start()) throw new RunItemException($"Unable to start {title}.");
-
-				if (waitForExit != 0)
+				var runner = new ProcessRunner
 				{
-					if (waitForExit < 0) proc.WaitForExit();
-					else proc.WaitForExit(waitForExit);
-					if (proc.ExitCode != 0) throw new RunItemException($"{title} returned exit code {proc.ExitCode}");
+					CaptureOutput = true,
+					CaptureError = true
+				};
+				var exitCode = runner.CaptureProcess(filePath, args, workingDir, pane, cancel);
+
+				sw.Stop();
+				pane?.WriteLine($"Exit Code: {exitCode} (elapsed: {sw.Elapsed})");
+			}
+			else
+			{
+				using (var proc = new Process())
+				{
+					var psi = new ProcessStartInfo(filePath, args ?? string.Empty);
+					psi.UseShellExecute = false;
+					psi.RedirectStandardOutput = false;
+					psi.RedirectStandardError = false;
+					psi.CreateNoWindow = false;
+					psi.WorkingDirectory = workingDir;
+
+					proc.StartInfo = psi;
+
+					var sw = new Stopwatch();
+					if (waitForExit) sw.Start();
+
+					if (!proc.Start()) throw new RunItemException($"Unable to start {title}.");
+
+					if (waitForExit)
+					{
+						proc.WaitForExit();
+						sw.Stop();
+						pane?.WriteLine($"Exit Code: {proc.ExitCode} (elapsed: {sw.Elapsed})");
+					}
 				}
 			}
 		}

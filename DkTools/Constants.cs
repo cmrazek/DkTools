@@ -11,6 +11,7 @@ namespace DkTools
 		public const string TempDir = "Temp";
 		public const string CompileOutputPaneTitle = "DK Compile";
 		public const string FindReferencesOutputPaneTitle = "DK References";
+		public const string RunOutputPaneTitle = "DK Run";
 		public const string ErrorCaption = "Error";
 		public const string DkContentType = "DK";
 		public const string TextContentType = "text";
