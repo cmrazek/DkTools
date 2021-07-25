@@ -355,6 +355,7 @@ namespace DK.Modeling
 			// If the file touched is the main model, then require it to be completely rebuilt.
 			else if (string.Equals(_model?.FilePath, filePath, StringComparison.OrdinalIgnoreCase))
 			{
+				GlobalEvents.OnRefreshDocumentRequired(_model.FilePath);
 				_model = null;
 			}
 		}

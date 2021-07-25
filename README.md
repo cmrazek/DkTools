@@ -18,6 +18,10 @@ Visual Studio Extension for WBDK
 
 ## Change Log
 
+**Version 1.5.19 Changes:**
+- Fixed bug where changing the ACM app in DK Explorer wouldn't update the registry.
+- Fixed FEC errors/warnings not always being refreshed when a file is saved.
+
 **Version 1.5.18 Changes:**
 - Replaced the old Run form with a new tab in DK Explorer.
 - Code analysis will now limit the number of warnings it reports, to cope with scenarios where there are thousands of warnings.
