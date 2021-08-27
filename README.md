@@ -18,6 +18,9 @@ Visual Studio Extension for WBDK
 
 ## Change Log
 
+**Version 1.5.20 Changes:**
+- Fixed a bug where extern functions referenced in a class would be associated with that class, causing a discrepancy in Find All References.
+
 **Version 1.5.19 Changes:**
 - Fixed bug where changing the ACM app in DK Explorer wouldn't update the registry.
 - Fixed FEC errors/warnings not always being refreshed when a file is saved.
