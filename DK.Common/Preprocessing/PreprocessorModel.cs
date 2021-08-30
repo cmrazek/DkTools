@@ -273,7 +273,7 @@ namespace DK.Preprocessing
 			{
 				var localPos = _source.GetFilePosition(nameSpan.Start);
 
-				var sig = new FunctionSignature(true, privacy, returnDataType, _className, funcName, description, args, _fileContext.ToServerContext());
+				var sig = new FunctionSignature(true, privacy, returnDataType, isExtern ? null : _className, funcName, description, args, _fileContext.ToServerContext());
 				sig.ApplyDocumentation(localPos.FileName);
 				var def = new FunctionDefinition(
 					signature: sig,

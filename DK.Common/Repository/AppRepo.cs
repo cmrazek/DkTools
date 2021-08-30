@@ -78,7 +78,7 @@ namespace DK.Repository
 		private const string RepoBaseDir = ".dk";
 
 		private const int RepoSignature = 1869636978;		// 'repo'
-		private const int Version = 2;
+		private const int Version = 3;
 		private const int FileSignature = 1701603686;		// 'file'
 		private const int DepSignature = 544236900;			// 'dep '
 		private const int RefSignature = 543581554;			// 'ref'
