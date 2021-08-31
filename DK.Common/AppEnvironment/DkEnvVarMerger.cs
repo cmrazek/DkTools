@@ -18,6 +18,12 @@ namespace DK.AppEnvironment
 		private const string k_windowsKits = "Software\\Microsoft\\Windows Kits\\Installed Roots";
 		private const string k_windowsDotNet = "Software\\Microsoft\\.NETFramework";
 
+		private const string DotNetInstallRootKey = "InstallRoot";
+
+		private const string DK10NetFrameworkVersion = "v4.0.30319";
+		private const string DK10KitsRootKey = "KitsRoot10";
+		private const string DK10WindowsSdkVersion = "10.0.19041.0";
+
 		private string _platformFolder;
 
 		public EnvVarList CreateMergedVarList(DkAppSettings app)
@@ -32,7 +38,7 @@ namespace DK.AppEnvironment
 
 			_platformFolder = DkEnvironment.WbdkPlatformFolder;
 
-			var platformVersion = DkEnvironment.WbdkPlatformVersion;
+			var platformVersion = DkEnvironment.WbdkPlatformVersionText;
 			if (platformVersion != null) mergedVars["WbdkFrameworkVersion"] = platformVersion;
 
 			// Add Exe paths
@@ -126,56 +132,98 @@ namespace DK.AppEnvironment
 
 		private void AddDevelopmentExePaths(List<string> path)
 		{
-			var environmentDirectory = "";
-			var vsCommonBinDir = "";
-			using (var key = Registry.LocalMachine.OpenSubKey(k_vsSetup, false))
+			if (DkEnvironment.WbdkPlatformVersion >= DkEnvironment.WBDK10Version)
 			{
-				if (key != null)
+				if (!string.IsNullOrEmpty(_platformFolder)) path.Add(_platformFolder);
+
+				// TODO: MSVC path: C:\Program Files (x86)\Microsoft Visual Studio\2019\Professional\VC\Tools\MSVC\14.29.30133\bin\Hostx64\x86
+				// TODO + "VC\Tools\MSVC" + TODO + "bin\Hostx64\x86"
+
+				using (var key = Registry.LocalMachine.OpenSubKey(k_windowsDotNet, false))
 				{
-					environmentDirectory = key.GetString("EnvironmentDirectory");
-					vsCommonBinDir = key.GetString("VS7CommonBinDir");
+					if (key != null)
+					{
+						var dir = key.GetString(DotNetInstallRootKey);
+						if (!string.IsNullOrEmpty(dir) && Directory.Exists(dir))
+                        {
+							dir = Path.Combine(dir, DK10NetFrameworkVersion);
+							if (Directory.Exists(dir))
+                            {
+								path.Add(dir);
+                            }
+                        }
+					}
+				}
+
+				using (var key = Registry.LocalMachine.OpenSubKey(k_windowsKits, false))
+				{
+					if (key != null)
+					{
+						var dir = key.GetString(DK10KitsRootKey);
+						if (!string.IsNullOrEmpty(dir) && Directory.Exists(dir))
+						{
+							dir = Path.Combine(dir, "bin", DK10WindowsSdkVersion, "x86");
+							if (Directory.Exists(dir))
+                            {
+								path.Add(dir);
+                            }
+						}
+					}
 				}
 			}
-
-			var vcProductDir = "";
-			using (var key = Registry.LocalMachine.OpenSubKey(k_vcSetup, false))
+			else
 			{
-				if (key != null)
+				var environmentDirectory = "";
+				var vsCommonBinDir = "";
+				using (var key = Registry.LocalMachine.OpenSubKey(k_vsSetup, false))
 				{
-					vcProductDir = key.GetString("ProductDir");
+					if (key != null)
+					{
+						environmentDirectory = key.GetString("EnvironmentDirectory");
+						vsCommonBinDir = key.GetString("VS7CommonBinDir");
+					}
 				}
-			}
 
-			var sdkInstallDir = "";
-			using (var key = Registry.LocalMachine.OpenSubKey(k_windowsKits, false))
-			{
-				if (key != null)
+				var vcProductDir = "";
+				using (var key = Registry.LocalMachine.OpenSubKey(k_vcSetup, false))
 				{
-					sdkInstallDir = key.GetString("KitsRoot");
+					if (key != null)
+					{
+						vcProductDir = key.GetString("ProductDir");
+					}
 				}
-			}
 
-			var netFramework = "";
-			using (var key = Registry.LocalMachine.OpenSubKey(k_windowsDotNet, false))
-			{
-				if (key != null)
+				var sdkInstallDir = "";
+				using (var key = Registry.LocalMachine.OpenSubKey(k_windowsKits, false))
 				{
-					netFramework = key.GetString("InstallRoot");
+					if (key != null)
+					{
+						sdkInstallDir = key.GetString("KitsRoot");
+					}
 				}
-			}
 
-			if (!string.IsNullOrEmpty(_platformFolder)) path.Add(_platformFolder);
-			if (!string.IsNullOrEmpty(environmentDirectory)) path.Add(environmentDirectory);
-			if (!string.IsNullOrEmpty(vcProductDir)) path.Add(Path.Combine(vcProductDir, "bin"));
-			if (!string.IsNullOrEmpty(vsCommonBinDir)) path.Add(vsCommonBinDir);
-			if (!string.IsNullOrEmpty(netFramework))
-			{
-				path.Add(Path.Combine(netFramework, "v4.0"));
-				path.Add(Path.Combine(netFramework, "v3.5"));
-				path.Add(Path.Combine(netFramework, "v2.0.50727"));
+				var netFramework = "";
+				using (var key = Registry.LocalMachine.OpenSubKey(k_windowsDotNet, false))
+				{
+					if (key != null)
+					{
+						netFramework = key.GetString(DotNetInstallRootKey);
+					}
+				}
+
+				if (!string.IsNullOrEmpty(_platformFolder)) path.Add(_platformFolder);
+				if (!string.IsNullOrEmpty(environmentDirectory)) path.Add(environmentDirectory);
+				if (!string.IsNullOrEmpty(vcProductDir)) path.Add(Path.Combine(vcProductDir, "bin"));
+				if (!string.IsNullOrEmpty(vsCommonBinDir)) path.Add(vsCommonBinDir);
+				if (!string.IsNullOrEmpty(netFramework))
+				{
+					path.Add(Path.Combine(netFramework, "v4.0"));
+					path.Add(Path.Combine(netFramework, "v3.5"));
+					path.Add(Path.Combine(netFramework, "v2.0.50727"));
+				}
+				if (!string.IsNullOrEmpty(vcProductDir)) path.Add(Path.Combine(vcProductDir, "VCPackages"));
+				if (!string.IsNullOrEmpty(sdkInstallDir)) path.Add(Path.Combine(sdkInstallDir, "bin\\x86"));
 			}
-			if (!string.IsNullOrEmpty(vcProductDir)) path.Add(Path.Combine(vcProductDir, "VCPackages"));
-			if (!string.IsNullOrEmpty(sdkInstallDir)) path.Add(Path.Combine(sdkInstallDir, "bin\\x86"));
 		}
 
 		private void AddDevelopmentIncludePaths(List<string> include)

@@ -177,8 +177,11 @@ namespace DK.AppEnvironment
 			return null;
 		}
 
-		private static string _wbdkPlatformVersion = null;
+		private static string _wbdkPlatformVersionText = null;
+		private static Version _wbdkPlatformVersion = new Version(1, 0);
 		private static string _wbdkPlatformFolder = null;
+
+		public static readonly Version WBDK10Version = new Version(10, 0);
 
 		private static void GetWbdkPlatformInfo()
 		{
@@ -192,10 +195,11 @@ namespace DK.AppEnvironment
 					if (File.Exists(fileName))
 					{
 						Log.Debug("Located FEC.exe: {0}", fileName);
-						_wbdkPlatformVersion = FileVersionInfo.GetVersionInfo(fileName)?.FileVersion ?? string.Empty;
+						_wbdkPlatformVersionText = FileVersionInfo.GetVersionInfo(fileName)?.FileVersion ?? string.Empty;
+						if (!Version.TryParse(_wbdkPlatformVersionText, out _wbdkPlatformVersion)) _wbdkPlatformVersion = new Version(1, 0);
 						_wbdkPlatformFolder = path;
 						Log.Debug("WBDK Platform Directory: {0}", _wbdkPlatformFolder);
-						Log.Debug("WBDK Platform Version: {0}", _wbdkPlatformVersion);
+						Log.Debug("WBDK Platform Version: {0}", _wbdkPlatformVersionText);
 						return;
 					}
 				}
@@ -206,18 +210,27 @@ namespace DK.AppEnvironment
 			{
 				Log.Warning("Failed to get WBDK platform info from FEC.exe: {0}", ex);
 				if (_wbdkPlatformFolder == null) _wbdkPlatformFolder = string.Empty;
-				if (_wbdkPlatformVersion == null) _wbdkPlatformVersion = string.Empty;
+				if (_wbdkPlatformVersionText == null) _wbdkPlatformVersionText = string.Empty;
 			}
 		}
 
-		public static string WbdkPlatformVersion
+		public static string WbdkPlatformVersionText
 		{
 			get
 			{
+				if (_wbdkPlatformVersionText == null) GetWbdkPlatformInfo();
+				return _wbdkPlatformVersionText;
+			}
+		}
+
+		public static Version WbdkPlatformVersion
+        {
+			get
+            {
 				if (_wbdkPlatformVersion == null) GetWbdkPlatformInfo();
 				return _wbdkPlatformVersion;
 			}
-		}
+        }
 
 		public static string WbdkPlatformFolder
 		{
