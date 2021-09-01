@@ -307,7 +307,7 @@ namespace DK.AppEnvironment
 			var sourceFiles = new List<string>();
 			foreach (var dir in appSettings.SourceDirs)
 			{
-				if (string.IsNullOrWhiteSpace(dir)) continue;
+				if (string.IsNullOrWhiteSpace(dir) || !Directory.Exists(dir)) continue;
 				sourceFiles.AddRange(GetAllSourceFiles_ProcessDir(dir));
 			}
 
