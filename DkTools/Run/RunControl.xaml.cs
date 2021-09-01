@@ -1,5 +1,6 @@
 ﻿using DK.AppEnvironment;
 using DK.Diagnostics;
+using Microsoft.VisualStudio.Shell;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -252,10 +253,12 @@ namespace DkTools.Run
 		{
 			try
 			{
-				foreach (var runItem in _runItems)
+				ThreadHelper.JoinableTaskFactory.RunAsync(async () =>
 				{
-					if (runItem.Selected) runItem.Run(_appSettings);
-				}
+					await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
+
+					RunThread.Run(_runItems.Where(x => x.Selected), _appSettings);
+				});
 			}
 			catch (Exception ex)
 			{
