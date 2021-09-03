@@ -181,7 +181,7 @@ namespace DK.AppEnvironment
 		private static Version _wbdkPlatformVersion = new Version(1, 0);
 		private static string _wbdkPlatformFolder = null;
 
-		public static readonly Version WBDK10Version = new Version(10, 0);
+		public static readonly Version DK10Version = new Version(10, 0);
 
 		private static void GetWbdkPlatformInfo()
 		{

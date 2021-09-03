@@ -136,7 +136,7 @@ namespace DK.AppEnvironment
 
 		private void AddDevelopmentExePaths(List<string> path)
 		{
-			if (DkEnvironment.WbdkPlatformVersion >= DkEnvironment.WBDK10Version)
+			if (DkEnvironment.WbdkPlatformVersion >= DkEnvironment.DK10Version)
 			{
 				Log.Debug("Merging development EXE paths in DK10 mode.");
 

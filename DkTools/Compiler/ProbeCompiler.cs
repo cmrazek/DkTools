@@ -119,6 +119,19 @@ namespace DkTools.Compiler
 
 			if (_compileThread.IsAlive)
 			{
+				if (DkEnvironment.WbdkPlatformVersion >= DkEnvironment.DK10Version)
+				{
+                    try
+                    {
+						var pr = new ProcessRunner();
+						pr.ExecuteProcess("pc.bat", "/kill", null, waitForExit: false);
+					}
+                    catch (Exception ex)
+                    {
+						Log.Warning("Expected when trying to kill existing compile: {0}", ex);
+                    }
+				}
+
 				DateTime killStartTime = DateTime.Now;
 				while (_compileThread.IsAlive)
 				{
@@ -269,6 +282,7 @@ namespace DkTools.Compiler
 				}
 
 				ProcessBuildReport(appSettings, buildStartTime);
+				_pane.WriteLine(string.Empty);
 
 				if (_numErrors > 0 || _numWarnings > 0 || _buildFailed)
 				{
@@ -534,9 +548,12 @@ namespace DkTools.Compiler
 		}
 
 		private Regex _rxLinkError = new Regex(@"\:\s+error\s+(LNK\d{4}\:)");
+		private Regex _rxFecMultipleError = new Regex(@"^Remaining Compile:\s+\d+\s+Link:\s+\d+\s+Result:\s+Failure:\s+.*\.\.\.\s+\w+\s+error\s*$");
 
 		private void CompileThreadOutput(string line, bool stdErr, bool fromBuildReport)
 		{
+			Match match;
+
 			if (_pane == null) return;
 
 			var index = line.IndexOf(": error :");
@@ -586,6 +603,17 @@ namespace DkTools.Compiler
 				_numWarnings++;
 				return;
 			}
+
+			if ((match = _rxFecMultipleError.Match(line)).Success)
+            {
+				// Example:
+				// Remaining Compile: 231 Link: 904 Result: Failure: x:\ccssrc1\prod\ibgate\bpyproc.f (compile) ... FEC error
+
+				// We know the build will fail, but we don't know the specific error yet. That will come later in the build report.
+				_buildFailed = true;
+				_pane.WriteLine(line);
+				return;
+            }
 
 			if (line.StartsWith("LINK : fatal error"))
 			{
@@ -657,7 +685,6 @@ namespace DkTools.Compiler
 				return;
 			}
 
-			Match match;
 			if ((match = _rxLinkError.Match(line)).Success)
 			{
 				_pane.WriteLineAndTask(line, line.Substring(match.Groups[1].Index), OutputPane.TaskType.Error, "", 0);
@@ -786,7 +813,7 @@ namespace DkTools.Compiler
 				var reportTime = new DateTime(int.Parse(match.Groups[2].Value), int.Parse(match.Groups[3].Value), int.Parse(match.Groups[4].Value),
 					int.Parse(match.Groups[5].Value), int.Parse(match.Groups[6].Value), int.Parse(match.Groups[7].Value));
 
-				if (reportTime.Subtract(buildStartTime).TotalMinutes > 5)
+				if (Math.Abs(reportTime.Subtract(buildStartTime).TotalMinutes) > 5)
                 {
 					Log.Debug("Build report folder is not within 5 minutes of this build: {0}", reportDir);
 					continue;
@@ -819,7 +846,7 @@ namespace DkTools.Compiler
 
 		private void ProcessBuildReport(DkAppSettings appSettings, DateTime buildStartTime)
 		{
-			if (DkEnvironment.WbdkPlatformVersion < DkEnvironment.WBDK10Version) return;
+			if (DkEnvironment.WbdkPlatformVersion < DkEnvironment.DK10Version) return;
 
             try
             {
@@ -829,6 +856,8 @@ namespace DkTools.Compiler
 					_buildFailed = true;
 					return;
                 }
+
+				_pane.WriteLine($"Build Report: {reportPathName}");
 
 				using (var reader = new StreamReader(reportPathName))
                 {
