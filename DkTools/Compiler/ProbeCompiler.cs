@@ -281,7 +281,6 @@ namespace DkTools.Compiler
 					Thread.Sleep(k_compileSleep);
 				}
 
-				ProcessBuildReport(appSettings, buildStartTime);
 				_pane.WriteLine(string.Empty);
 
 				if (_numErrors > 0 || _numWarnings > 0 || _buildFailed)
@@ -549,12 +548,25 @@ namespace DkTools.Compiler
 
 		private Regex _rxLinkError = new Regex(@"\:\s+error\s+(LNK\d{4}\:)");
 		private Regex _rxFecMultipleError = new Regex(@"^Remaining Compile:\s+\d+\s+Link:\s+\d+\s+Result:\s+Failure:\s+.*\.\.\.\s+\w+\s+error\s*$");
+		private string _lastStdoutLine;
+		private string _lastStderrLine;
 
 		private void CompileThreadOutput(string line, bool stdErr, bool fromBuildReport)
 		{
 			Match match;
 
 			if (_pane == null) return;
+
+			if (stdErr)
+			{
+				if (!string.IsNullOrWhiteSpace(line) && line == _lastStderrLine) return;
+				_lastStderrLine = line;
+			}
+			else
+			{
+				if (!string.IsNullOrWhiteSpace(line) && line == _lastStdoutLine) return;
+				_lastStdoutLine = line;
+			}
 
 			var index = line.IndexOf(": error :");
 			if (index >= 0)
@@ -724,7 +736,15 @@ namespace DkTools.Compiler
 
 		private string GenerateCompileSwitches()
 		{
-			return ProbeToolsPackage.Instance.ProbeExplorerOptions.CompileArguments;
+			var switches = ProbeToolsPackage.Instance.ProbeExplorerOptions.CompileArguments;
+
+			if (DkEnvironment.WbdkPlatformVersion >= DkEnvironment.DK10Version)
+            {
+				// Include all output.
+				switches += " /d all";
+            }
+
+			return switches;
 		}
 
 		private string GenerateDccmpSwitches(DkAppSettings appSettings)
@@ -842,40 +862,6 @@ namespace DkTools.Compiler
 
 			_pane.WriteLine("No build report found.");
 			return null;
-		}
-
-		private void ProcessBuildReport(DkAppSettings appSettings, DateTime buildStartTime)
-		{
-			if (DkEnvironment.WbdkPlatformVersion < DkEnvironment.DK10Version) return;
-
-            try
-            {
-				var reportPathName = FindBuildReport(appSettings, buildStartTime);
-				if (reportPathName == null)
-                {
-					_buildFailed = true;
-					return;
-                }
-
-				_pane.WriteLine($"Build Report: {reportPathName}");
-
-				using (var reader = new StreamReader(reportPathName))
-                {
-					while (!reader.EndOfStream)
-                    {
-						var line = reader.ReadLine();
-						if (line == null) break;
-
-						CompileThreadOutput(line, stdErr: false, fromBuildReport: true);
-                    }
-                }
-			}
-            catch (Exception ex)
-            {
-				_pane.WriteLine("Exception when processing build report: " + ex.ToString());
-				_buildFailed = true;
-				return;
-            }
 		}
 	}
 }
