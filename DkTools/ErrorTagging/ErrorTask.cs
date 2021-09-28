@@ -76,12 +76,17 @@ namespace DkTools.ErrorTagging
 		/// </summary>
 		public string InvokingFilePath => _invokingFilePath;
 		public ErrorTaskSource Source => _source;
-		public override string ToString() => string.Concat(Document, "(", Line, ", ", Column, ") ", Type, ": ", Text);
 		public ErrorType Type => _type;
 		public CodeSpan? ReportedSpan => _reportedSpan;
 		public CAError? ErrorCode => _errorCode;
 
-		private void ErrorTask_Navigate(object sender, EventArgs e)
+		public override string ToString()
+		{
+			if (Column > 0) return $"{Document}({Line}, {Column}) : {Type.ToString().ToLower()} : { Text}";
+			return $"{Document}({Line}) : {Type.ToString().ToLower()} : { Text}";
+		}
+
+        private void ErrorTask_Navigate(object sender, EventArgs e)
 		{
 			ThreadHelper.JoinableTaskFactory.RunAsync(async () =>
 			{

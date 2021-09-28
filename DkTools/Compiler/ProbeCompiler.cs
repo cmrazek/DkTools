@@ -119,6 +119,19 @@ namespace DkTools.Compiler
 
 			if (_compileThread.IsAlive)
 			{
+				if (DkEnvironment.WbdkPlatformVersion >= DkEnvironment.DK10Version)
+				{
+                    try
+                    {
+						var pr = new ProcessRunner();
+						pr.ExecuteProcess("pc.bat", "/kill", null, waitForExit: false);
+					}
+                    catch (Exception ex)
+                    {
+						Log.Warning("Expected when trying to kill existing compile: {0}", ex);
+                    }
+				}
+
 				DateTime killStartTime = DateTime.Now;
 				while (_compileThread.IsAlive)
 				{
@@ -159,7 +172,7 @@ namespace DkTools.Compiler
 					case CompileMethod.Compile:
 						WriteLine("Starting compile for application '{0}' at {1}.", appSettings.AppName, startTime.ToString(k_timeStampFormat));
 
-						if (DoCompile(appSettings, cancel))
+						if (DoCompile(appSettings, cancel, startTime))
 						{
 							var endTime = DateTime.Now;
 							var elapsed = endTime - startTime;
@@ -204,7 +217,7 @@ namespace DkTools.Compiler
 			}
 		}
 
-		private bool DoCompile(DkAppSettings appSettings, CancellationToken cancel)
+		private bool DoCompile(DkAppSettings appSettings, CancellationToken cancel, DateTime buildStartTime)
 		{
 			try
 			{
@@ -267,6 +280,8 @@ namespace DkTools.Compiler
 					}
 					Thread.Sleep(k_compileSleep);
 				}
+
+				_pane.WriteLine(string.Empty);
 
 				if (_numErrors > 0 || _numWarnings > 0 || _buildFailed)
 				{
@@ -470,7 +485,7 @@ namespace DkTools.Compiler
 					}
 					else
 					{
-						CompileThreadOutput(line, false);
+						CompileThreadOutput(line, stdErr: false, fromBuildReport: false);
 					}
 				}
 
@@ -483,7 +498,7 @@ namespace DkTools.Compiler
 					}
 					else
 					{
-						CompileThreadOutput(line, false);
+						CompileThreadOutput(line, stdErr: false, fromBuildReport: false);
 					}
 				}
 			}
@@ -508,7 +523,7 @@ namespace DkTools.Compiler
 					}
 					else
 					{
-						CompileThreadOutput(line, true);
+						CompileThreadOutput(line, stdErr: true, fromBuildReport: false);
 					}
 				}
 
@@ -521,7 +536,7 @@ namespace DkTools.Compiler
 					}
 					else
 					{
-						CompileThreadOutput(line, true);
+						CompileThreadOutput(line, stdErr: true, fromBuildReport: false);
 					}
 				}
 			}
@@ -532,18 +547,35 @@ namespace DkTools.Compiler
 		}
 
 		private Regex _rxLinkError = new Regex(@"\:\s+error\s+(LNK\d{4}\:)");
+		private Regex _rxFecMultipleError = new Regex(@"^Remaining Compile:\s+\d+\s+Link:\s+\d+\s+Result:\s+Failure:\s+.*\.\.\.\s+\w+\s+error\s*$");
+		private string _lastStdoutLine;
+		private string _lastStderrLine;
 
-		private void CompileThreadOutput(string line, bool stdErr)
+		private void CompileThreadOutput(string line, bool stdErr, bool fromBuildReport)
 		{
+			Match match;
+
 			if (_pane == null) return;
+
+			if (stdErr)
+			{
+				if (!string.IsNullOrWhiteSpace(line) && line == _lastStderrLine) return;
+				_lastStderrLine = line;
+			}
+			else
+			{
+				if (!string.IsNullOrWhiteSpace(line) && line == _lastStdoutLine) return;
+				_lastStdoutLine = line;
+			}
 
 			var index = line.IndexOf(": error :");
 			if (index >= 0)
 			{
+				var task = null as DkTools.ErrorTagging.ErrorTask;
 				if (ParseFilePathAndLine(line.Substring(0, index), out var filePath, out var lineNum))
 				{
 					var message = line.Substring(index + ": error :".Length).Trim();
-					var task = new DkTools.ErrorTagging.ErrorTask(
+					task = new DkTools.ErrorTagging.ErrorTask(
 						invokingFilePath: filePath,
 						filePath: filePath,
 						lineNum: lineNum - 1,
@@ -554,7 +586,8 @@ namespace DkTools.Compiler
 						reportedSpan: null);
 					ErrorTaskProvider.Instance.Add(task);
 				}
-				_pane.WriteLine(line);
+				if (task != null) _pane.WriteLine(task.ToString());
+				else _pane.WriteLine(line);
 				_numErrors++;
 				return;
 			}
@@ -562,10 +595,11 @@ namespace DkTools.Compiler
 			index = line.IndexOf(": warning :");
 			if (index >= 0)
 			{
+				var task = null as DkTools.ErrorTagging.ErrorTask;
 				if (ParseFilePathAndLine(line.Substring(0, index), out var filePath, out var lineNum))
 				{
 					var message = line.Substring(index + ": warning :".Length).Trim();
-					var task = new DkTools.ErrorTagging.ErrorTask(
+					task = new DkTools.ErrorTagging.ErrorTask(
 						invokingFilePath: filePath,
 						filePath: filePath,
 						lineNum: lineNum - 1,
@@ -576,10 +610,22 @@ namespace DkTools.Compiler
 						reportedSpan: null);
 					ErrorTaskProvider.Instance.Add(task);
 				}
-				_pane.WriteLine(line);
+				if (task != null) _pane.WriteLine(task.ToString());
+				else _pane.WriteLine(line);
 				_numWarnings++;
 				return;
 			}
+
+			if ((match = _rxFecMultipleError.Match(line)).Success)
+            {
+				// Example:
+				// Remaining Compile: 231 Link: 904 Result: Failure: x:\ccssrc1\prod\ibgate\bpyproc.f (compile) ... FEC error
+
+				// We know the build will fail, but we don't know the specific error yet. That will come later in the build report.
+				_buildFailed = true;
+				_pane.WriteLine(line);
+				return;
+            }
 
 			if (line.StartsWith("LINK : fatal error"))
 			{
@@ -593,6 +639,25 @@ namespace DkTools.Compiler
 					type: ErrorType.Error,
 					source: ErrorTaskSource.Compile,
 					reportedSpan: null);
+				ErrorTaskProvider.Instance.Add(task);
+				_pane.WriteLine(line);
+				_numErrors++;
+				return;
+			}
+
+			if (line.StartsWith("fecMultiple error:"))
+            {
+				var message = line.Trim();
+				var task = new DkTools.ErrorTagging.ErrorTask(
+					invokingFilePath: null,
+					filePath: string.Empty,
+					lineNum: 0,
+					lineCol: -1,
+					message: message,
+					type: ErrorType.Error,
+					source: ErrorTaskSource.Compile,
+					reportedSpan: null);
+				ErrorTaskProvider.Instance.Add(task);
 				_pane.WriteLine(line);
 				_numErrors++;
 				return;
@@ -632,7 +697,6 @@ namespace DkTools.Compiler
 				return;
 			}
 
-			Match match;
 			if ((match = _rxLinkError.Match(line)).Success)
 			{
 				_pane.WriteLineAndTask(line, line.Substring(match.Groups[1].Index), OutputPane.TaskType.Error, "", 0);
@@ -640,7 +704,7 @@ namespace DkTools.Compiler
 				return;
 			}
 
-			_pane.WriteLine(line);
+			if (!fromBuildReport) _pane.WriteLine(line);
 		}
 
 		public void WriteLine(string text)
@@ -653,7 +717,7 @@ namespace DkTools.Compiler
 			if (_pane != null) _pane.WriteLine(string.Format(format, args));
 		}
 
-		private static Regex _rxFileNameAndLine = new Regex(@"(.+)\s*\((\d{1,9})\)\s*$");
+		private static Regex _rxFileNameAndLine = new Regex(@"(.+)\s*\((\d{1,9})(?:\:\d{1,9})?\)\s*$");
 
 		public static bool ParseFilePathAndLine(string str, out string fileName, out int lineNum)
 		{
@@ -672,7 +736,15 @@ namespace DkTools.Compiler
 
 		private string GenerateCompileSwitches()
 		{
-			return ProbeToolsPackage.Instance.ProbeExplorerOptions.CompileArguments;
+			var switches = ProbeToolsPackage.Instance.ProbeExplorerOptions.CompileArguments;
+
+			if (DkEnvironment.WbdkPlatformVersion >= DkEnvironment.DK10Version)
+            {
+				// Include all output.
+				switches += " /d all";
+            }
+
+			return switches;
 		}
 
 		private string GenerateDccmpSwitches(DkAppSettings appSettings)
@@ -712,6 +784,84 @@ namespace DkTools.Compiler
 		public Mutex Mutex
 		{
 			get { return _mutex; }
+		}
+
+		private static readonly Regex _rxBuildReportDir = new Regex(@"\\Build_([^_]+)_(\d{4})-(\d{2})-(\d{2})_(\d{2})\.(\d{2})\.(\d{2})$");
+
+		private string FindBuildReport(DkAppSettings appSettings, DateTime buildStartTime)
+        {
+			_pane.WriteLine("Locating build report...");
+
+			var dataDir = appSettings.DataDir;
+			if (string.IsNullOrEmpty(dataDir) || !Directory.Exists(dataDir))
+			{
+				_pane.WriteLine("Data directory is not set in ACM.");
+				return null;
+			}
+
+			var buildReportsDir = Path.Combine(dataDir, "BuildReports");
+			if (!Directory.Exists(buildReportsDir))
+			{
+				_pane.WriteLine("BuildReports directory does not exist.");
+				return null;
+			}
+
+			var bestFutureTime = DateTime.MinValue;
+			var bestFuturePathName = null as string;
+			var bestPastTime = DateTime.MinValue;
+			var bestPastPathName = null as string;
+
+			foreach (var reportDir in Directory.GetDirectories(buildReportsDir))
+			{
+				var match = _rxBuildReportDir.Match(reportDir);
+				if (!match.Success) continue;
+
+				var appName = match.Groups[1].Value;
+				if (!string.Equals(appName, appSettings.AppName, StringComparison.OrdinalIgnoreCase)) continue;
+
+				var reportFileName = string.Format("DKCompile_Results_{0}_{1}-{2}-{3}_{4}.{5}.{6}_Combined.txt",
+					appName,
+					match.Groups[2].Value, match.Groups[3].Value, match.Groups[4].Value,
+					match.Groups[5].Value, match.Groups[6].Value, match.Groups[7].Value);
+				var reportPathName = Path.Combine(reportDir, reportFileName);
+				if (!File.Exists(reportPathName))
+                {
+					Log.Warning("Report file does not exist in build report folder: {0}", reportPathName);
+					continue;
+                }
+
+				var reportTime = new DateTime(int.Parse(match.Groups[2].Value), int.Parse(match.Groups[3].Value), int.Parse(match.Groups[4].Value),
+					int.Parse(match.Groups[5].Value), int.Parse(match.Groups[6].Value), int.Parse(match.Groups[7].Value));
+
+				if (Math.Abs(reportTime.Subtract(buildStartTime).TotalMinutes) > 5)
+                {
+					Log.Debug("Build report folder is not within 5 minutes of this build: {0}", reportDir);
+					continue;
+                }
+
+				if (reportTime >= buildStartTime.AddSeconds(-1))
+				{
+					if (bestFuturePathName == null || reportTime < bestFutureTime)
+					{
+						bestFutureTime = reportTime;
+						bestFuturePathName = reportPathName;
+					}
+				}
+				else
+				{
+					if (bestPastPathName == null || reportTime > bestPastTime)
+					{
+						bestPastTime = reportTime;
+						bestPastPathName = reportPathName;
+					}
+				}
+			}
+
+			if (bestFuturePathName != null) return bestFuturePathName;
+			if (bestPastPathName != null) return bestPastPathName;
+
+			_pane.WriteLine("No build report found.");
+			return null;
 		}
 	}
 }

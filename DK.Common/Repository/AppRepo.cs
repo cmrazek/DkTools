@@ -153,6 +153,8 @@ namespace DK.Repository
 		public AppRepo(DkAppSettings appSettings)
 		{
 			_appSettings = appSettings ?? throw new ArgumentNullException(nameof(appSettings));
+			_strings = new StringRepo();
+			_data = new List<int>();
 
 			try
 			{
@@ -171,11 +173,6 @@ namespace DK.Repository
 						Read();
 						GenerateGlobalDefinitions();
 						Log.Debug("DK repository loaded.");
-					}
-					else
-					{
-						_strings = new StringRepo();
-						_data = new List<int>();
 					}
 				}
 			}
