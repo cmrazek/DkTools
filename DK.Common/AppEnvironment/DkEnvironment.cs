@@ -45,6 +45,9 @@ namespace DK.AppEnvironment
 
 			var appSettings = new DkAppSettings();
 
+			appSettings.PlatformPath = WbdkPlatformFolder;
+			appSettings.AllAppNames = GetAllAppNames();
+
 			if (string.IsNullOrEmpty(appName)) appName = GetDefaultAppName();
 			if (string.IsNullOrEmpty(appName))
 			{
@@ -66,8 +69,6 @@ namespace DK.AppEnvironment
 
 			appSettings.AppName = appName;
 			appSettings.Initialized = true;
-			appSettings.PlatformPath = WbdkPlatformFolder;
-			appSettings.AllAppNames = GetAllAppNames();
 			appSettings.SourceDirs = appKey.LoadWbdkMultiPath("SourcePaths", rootPath);
 			foreach (var dir in appSettings.SourceDirs) Log.Info("Source Dir: {0}", dir);
 			appSettings.IncludeDirs = appKey.LoadWbdkMultiPath("IncludePaths", rootPath)
