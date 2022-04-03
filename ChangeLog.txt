@@ -3,6 +3,11 @@ DkTools ChangeLog
 For latest changes, see README.md
 
 ____________________________________________________________________________________________________
+Version 1.6.1:
+
+- No longer report code analysis errors when a valid enum value is used as a string.
+
+____________________________________________________________________________________________________
 Version 1.5.13:
 
 Note: Requires Visual Studio 16.8.5 or higher.
