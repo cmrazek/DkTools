@@ -28,7 +28,7 @@ namespace DkTools.CodeModeling
 			return cache;
 		}
 
-		public static CodeModel GetCurrentModel(this FileStore fileStore,
+		public static CodeModel GetCurrentModelSync(this FileStore fileStore,
 			DkAppSettings appSettings,
 			string fileName,
 			ITextSnapshot snapshot,
@@ -42,18 +42,18 @@ namespace DkTools.CodeModeling
 				var modelSnapshot = fileStore.Model.Snapshot as ITextSnapshot;
 				if (snapshot != null && (modelSnapshot == null || modelSnapshot.Version.VersionNumber < snapshot.Version.VersionNumber))
 				{
-					fileStore.Model = fileStore.CreatePreprocessedModel(appSettings, fileName, snapshot, reason, cancel);
+					fileStore.Model = fileStore.CreatePreprocessedModelSync(appSettings, fileName, snapshot, reason, cancel);
 				}
 			}
 			else
 			{
-				fileStore.Model = fileStore.CreatePreprocessedModel(appSettings, fileName, snapshot, reason, cancel);
+				fileStore.Model = fileStore.CreatePreprocessedModelSync(appSettings, fileName, snapshot, reason, cancel);
 			}
 
 			return fileStore.Model;
 		}
 
-		public static CodeModel GetMostRecentModel(this FileStore fileStore,
+		public static CodeModel GetMostRecentModelSync(this FileStore fileStore,
 			DkAppSettings appSettings,
 			string fileName,
 			ITextSnapshot snapshot,
@@ -64,13 +64,13 @@ namespace DkTools.CodeModeling
 
 			if (fileStore.Model == null)
 			{
-				fileStore.Model = fileStore.CreatePreprocessedModel(appSettings, fileName, snapshot, reason, cancel);
+				fileStore.Model = fileStore.CreatePreprocessedModelSync(appSettings, fileName, snapshot, reason, cancel);
 			}
 
 			return fileStore.Model;
 		}
 
-		public static CodeModel CreatePreprocessedModel(this FileStore fileStore,
+		public static CodeModel CreatePreprocessedModelSync(this FileStore fileStore,
 			DkAppSettings appSettings,
 			string fileName,
 			ITextSnapshot snapshot,
@@ -88,7 +88,7 @@ namespace DkTools.CodeModeling
 			return model;
 		}
 
-		public static CodeModel CreatePreprocessedModel(this FileStore fileStore,
+		public static CodeModel CreatePreprocessedModelSync(this FileStore fileStore,
 			DkAppSettings appSettings,
 			string fileName,
 			ITextSnapshot snapshot,
@@ -121,10 +121,10 @@ namespace DkTools.CodeModeling
 			return model;
 		}
 
-		public static IEnumerable<FunctionDropDownItem> GetFunctionDropDownList(this FileStore fileStore, DkAppSettings appSettings,
-			string fileName, ITextSnapshot snapshot)
+		public static IEnumerable<FunctionDropDownItem> GetFunctionDropDownList(this FileStore fileStore, CodeModel model)
 		{
-			var model = fileStore.GetMostRecentModel(appSettings, fileName, snapshot, "Function drop-down list.", new CancellationToken());
+			if (fileStore == null) throw new ArgumentNullException(nameof(fileStore));
+			if (model == null) throw new ArgumentNullException(nameof(model));
 
 			var prepModel = model.PreprocessorModel;
 			if (prepModel == null) yield break;

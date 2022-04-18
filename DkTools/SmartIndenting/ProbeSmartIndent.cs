@@ -36,12 +36,10 @@ namespace DkTools.SmartIndenting
             _tabSize = _view.GetTabSize();
 			_keepTabs = _view.GetKeepTabs();
 
-			var appSettings = DkEnvironment.CurrentAppSettings;
-
-			return GetDesiredIndentation(line.Snapshot.TextBuffer, line, _tabSize, _keepTabs, appSettings, CancellationToken.None);
+			return GetDesiredIndentation(line.Snapshot.TextBuffer, line, _tabSize, _keepTabs);
 		}
 
-		public static int? GetDesiredIndentation(ITextBuffer buffer, ITextSnapshotLine line, int tabSize, bool keepTabs, DkAppSettings appSettings, CancellationToken cancel)
+		public static int? GetDesiredIndentation(ITextBuffer buffer, ITextSnapshotLine line, int tabSize, bool keepTabs)
 		{
 			ThreadHelper.ThrowIfNotOnUIThread();
 
@@ -78,20 +76,22 @@ namespace DkTools.SmartIndenting
 				var fileStore = FileStoreHelper.GetOrCreateForTextBuffer(buffer);
 				if (fileStore != null)
 				{
-					var fileName = VsTextUtil.TryGetDocumentFileName(buffer);
-					var model = fileStore.GetCurrentModel(appSettings, fileName, buffer.CurrentSnapshot, "Smart indenting - case inside switch", cancel);
-					var modelSnapshot = model.Snapshot as ITextSnapshot;
-					if (modelSnapshot != null)
+					var model = fileStore.Model;
+					if (model != null)
 					{
-						var offset = line.Snapshot.TranslateOffsetToSnapshot(line.Start.Position, modelSnapshot);
-						var bracesToken = model.File.FindDownward(offset, t => t is BracesToken).LastOrDefault() as BracesToken;
-						if (bracesToken != null)
+						var modelSnapshot = model.Snapshot as ITextSnapshot;
+						if (modelSnapshot != null)
 						{
-							// Get the indent of the line where the opening brace resides.
-							var openOffset = bracesToken.OpenToken.Span.Start;
-							openOffset = modelSnapshot.TranslateOffsetToSnapshot(openOffset, line.Snapshot);
-							var openLine = line.Snapshot.GetLineFromPosition(openOffset);
-							return openLine.GetText().GetIndentCount(tabSize);
+							var offset = line.Snapshot.TranslateOffsetToSnapshot(line.Start.Position, modelSnapshot);
+							var bracesToken = model.File.FindDownward(offset, t => t is BracesToken).LastOrDefault() as BracesToken;
+							if (bracesToken != null)
+							{
+								// Get the indent of the line where the opening brace resides.
+								var openOffset = bracesToken.OpenToken.Span.Start;
+								openOffset = modelSnapshot.TranslateOffsetToSnapshot(openOffset, line.Snapshot);
+								var openLine = line.Snapshot.GetLineFromPosition(openOffset);
+								return openLine.GetText().GetIndentCount(tabSize);
+							}
 						}
 					}
 				}
@@ -200,7 +200,7 @@ namespace DkTools.SmartIndenting
             for (int lineNumber = startLineNumber; lineNumber <= endLineNumber; lineNumber++)
 			{
 				var line = buffer.CurrentSnapshot.GetLineFromLineNumber(lineNumber);
-				var indent = GetDesiredIndentation(buffer, line, tabSize, keepTabs, appSettings, cancel);
+				var indent = GetDesiredIndentation(buffer, line, tabSize, keepTabs);
 				if (!indent.HasValue) continue;
 				var desiredIndent = indent.Value;
 

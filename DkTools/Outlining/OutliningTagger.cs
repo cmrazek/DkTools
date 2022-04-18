@@ -76,30 +76,26 @@ namespace DkTools.Outlining
 
 		private void Reparse()
 		{
-			ThreadHelper.ThrowIfNotOnUIThread();
-
 			_modelRegions.Clear();
 			_snapshot = _buffer.CurrentSnapshot;
 			var fileStore = FileStoreHelper.GetOrCreateForTextBuffer(_buffer);
-			if (fileStore != null)
+			if (fileStore == null) return;
+
+			var model = fileStore.Model;
+			if (model == null) return;
+
+			var modelSnapshot = model.Snapshot as ITextSnapshot;
+			if (modelSnapshot == null) return;
+
+			foreach (var region in model.OutliningRegions.OrderBy(r => r.Span.Start))
 			{
-				var appSettings = DkEnvironment.CurrentAppSettings;
-				var fileName = VsTextUtil.TryGetDocumentFileName(_buffer);
-				var model = fileStore.GetCurrentModel(appSettings, fileName, _snapshot, "OutliningTagger.Reparse()", CancellationToken.None);
-				var modelSnapshot = model.Snapshot as ITextSnapshot;
-				if (modelSnapshot != null)
+				_modelRegions.Add(new ModelRegion
 				{
-					foreach (var region in model.OutliningRegions.OrderBy(r => r.Span.Start))
-					{
-						_modelRegions.Add(new ModelRegion
-						{
-							span = new SnapshotSpan(modelSnapshot, new Span(region.Span.Start, region.Span.End - region.Span.Start)),
-							isFunction = region.CollapseToDefinition,
-							text = region.Text,
-							tooltipText = region.TooltipText
-						});
-					}
-				}
+					span = new SnapshotSpan(modelSnapshot, new Span(region.Span.Start, region.Span.End - region.Span.Start)),
+					isFunction = region.CollapseToDefinition,
+					text = region.Text,
+					tooltipText = region.TooltipText
+				});
 			}
 		}
 	}

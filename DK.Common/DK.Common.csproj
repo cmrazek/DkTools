@@ -139,8 +139,12 @@
     <Compile Include="Definitions\StringDefDefinition.cs" />
     <Compile Include="Definitions\TableDefinition.cs" />
     <Compile Include="Definitions\VariableDefinition.cs" />
+    <Compile Include="Diagnostics\DkToolsLogger.cs" />
     <Compile Include="Diagnostics\DumpWriter.cs" />
+    <Compile Include="Diagnostics\ILogger.cs" />
+    <Compile Include="Diagnostics\ILoggerExtensions.cs" />
     <Compile Include="Diagnostics\Log.cs" />
+    <Compile Include="Diagnostics\LogLevel.cs" />
     <Compile Include="Diagnostics\Output.cs" />
     <Compile Include="Modeling\SignatureDocumentor.cs" />
     <Compile Include="Preprocessing\IncludeDependency.cs" />

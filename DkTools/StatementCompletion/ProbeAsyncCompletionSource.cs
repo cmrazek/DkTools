@@ -387,24 +387,19 @@ namespace DkTools.StatementCompletion
 		#region Completion Fulfillment Logic
 		private void HandleAfterAssignOrCompare(SnapshotSpan completionSpan, string operatorText, SnapshotPoint operatorPt, string fileName, CancellationToken cancel)
 		{
-			var store = FileStoreHelper.GetOrCreateForTextBuffer(_textView.TextBuffer);
-			if (store != null)
+			var model = FileStoreHelper.GetOrCreateForTextBuffer(_textView.TextBuffer)?.Model;
+			if (model?.Snapshot is ITextSnapshot modelSnapshot)
 			{
-				var model = store.GetCurrentModel(_appSettings, fileName, completionSpan.Snapshot, "Auto-completion after assign or compare", cancel);
-				var modelSnapshot = model.Snapshot as ITextSnapshot;
-				if (modelSnapshot != null)
+				var modelPos = operatorPt.TranslateTo(modelSnapshot, PointTrackingMode.Negative);
+				var opToken = model.File.FindDownward<CompletionOperator>(modelPos.Position).LastOrDefault();
+				if (opToken != null)
 				{
-					var modelPos = operatorPt.TranslateTo(modelSnapshot, PointTrackingMode.Negative);
-					var opToken = model.File.FindDownward<CompletionOperator>(modelPos.Position).LastOrDefault();
-					if (opToken != null)
+					var dataType = opToken.CompletionDataType;
+					if (dataType != null && dataType.HasCompletionOptions)
 					{
-						var dataType = opToken.CompletionDataType;
-						if (dataType != null && dataType.HasCompletionOptions)
+						foreach (var opt in dataType.GetCompletionOptions(_appSettings))
 						{
-							foreach (var opt in dataType.GetCompletionOptions(_appSettings))
-							{
-								CreateCompletion(opt);
-							}
+							CreateCompletion(opt);
 						}
 					}
 				}
@@ -413,11 +408,9 @@ namespace DkTools.StatementCompletion
 
 		private void HandleAfterIfDef(string fileName, CancellationToken cancel)
 		{
-			var fileStore = FileStoreHelper.GetOrCreateForTextBuffer(_textView.TextBuffer);
-			if (fileStore != null)
+			var model = FileStoreHelper.GetOrCreateForTextBuffer(_textView.TextBuffer)?.Model;
+			if (model != null)
 			{
-				var model = fileStore.GetCurrentModel(_appSettings, fileName, _textView.TextBuffer.CurrentSnapshot, "Auto-completion after #ifdef", cancel);
-
 				foreach (var def in model.DefinitionProvider.GetGlobalFromAnywhere<ConstantDefinition>())
 				{
 					CreateCompletion(def);
@@ -497,22 +490,23 @@ namespace DkTools.StatementCompletion
 
 		private void HandleAfterCase(SnapshotSpan completionSpan, string fileName, CancellationToken cancel)
 		{
-			var store = FileStoreHelper.GetOrCreateForTextBuffer(_textView.TextBuffer);
-			var model = store.GetMostRecentModel(_appSettings, fileName, _textView.TextBuffer.CurrentSnapshot, "Auto-completion after case", cancel);
-			var modelSnapshot = model.Snapshot as ITextSnapshot;
-			if (modelSnapshot != null)
+			var model = FileStoreHelper.GetOrCreateForTextBuffer(_textView.TextBuffer)?.Model;
+			if (model != null)
 			{
-				var modelPos = completionSpan.Start.TranslateTo(modelSnapshot, PointTrackingMode.Positive);
-
-				var switchToken = (from t in model.FindTokens(modelPos) where t is SwitchStatement select t as SwitchStatement).LastOrDefault();
-				if (switchToken != null)
+				if (model.Snapshot is ITextSnapshot modelSnapshot)
 				{
-					var dt = switchToken.ExpressionDataType;
-					if (dt != null && dt.HasCompletionOptions)
+					var modelPos = completionSpan.Start.TranslateTo(modelSnapshot, PointTrackingMode.Positive);
+
+					var switchToken = (from t in model.FindTokens(modelPos) where t is SwitchStatement select t as SwitchStatement).LastOrDefault();
+					if (switchToken != null)
 					{
-						foreach (var opt in dt.GetCompletionOptions(_appSettings))
+						var dt = switchToken.ExpressionDataType;
+						if (dt != null && dt.HasCompletionOptions)
 						{
-							CreateCompletion(opt);
+							foreach (var opt in dt.GetCompletionOptions(_appSettings))
+							{
+								CreateCompletion(opt);
+							}
 						}
 					}
 				}
@@ -526,39 +520,32 @@ namespace DkTools.StatementCompletion
 				CreateCompletion("permanent", ProbeCompletionType.Keyword, "permanent extract");
 			}
 
-			var store = FileStoreHelper.GetOrCreateForTextBuffer(_textView.TextBuffer);
-			if (store != null)
-			{
-				var model = store.GetMostRecentModel(_appSettings, fileName, _textView.TextBuffer.CurrentSnapshot, "Auto-completion after 'extract'", cancel);
-
+			var model = FileStoreHelper.GetOrCreateForTextBuffer(_textView.TextBuffer)?.Model;
+			if (model != null)
+            {
 				foreach (var exDef in model.DefinitionProvider.GetGlobalFromFile<ExtractTableDefinition>())
 				{
 					CreateCompletion(exDef);
 				}
-			}
+            }
 		}
 
 		private void HandleAfterReturn(SnapshotSpan completionSpan, string fileName, CancellationToken cancel)
 		{
-			var fileStore = FileStoreHelper.GetOrCreateForTextBuffer(_textView.TextBuffer);
-			if (fileStore != null)
+			var model = FileStoreHelper.GetOrCreateForTextBuffer(_textView.TextBuffer)?.Model;
+			if (model?.Snapshot is ITextSnapshot modelSnapshot)
 			{
-				var model = fileStore.GetMostRecentModel(_appSettings, fileName, _textView.TextBuffer.CurrentSnapshot, "Auto-completion after return", cancel);
-				var modelSnapshot = model.Snapshot as ITextSnapshot;
-				if (modelSnapshot != null)
-				{
-					var modelPos = completionSpan.Start.TranslateTo(modelSnapshot, PointTrackingMode.Positive);
+				var modelPos = completionSpan.Start.TranslateTo(modelSnapshot, PointTrackingMode.Positive);
 
-					var funcDef = model.PreprocessorModel.LocalFunctions.FirstOrDefault(f => f.Definition.EntireSpan.Contains(modelPos));
-					if (funcDef != null && funcDef.Definition != null)
+				var funcDef = model.PreprocessorModel.LocalFunctions.FirstOrDefault(f => f.Definition.EntireSpan.Contains(modelPos));
+				if (funcDef != null && funcDef.Definition != null)
+				{
+					var dataType = funcDef.Definition.DataType;
+					if (dataType != null && dataType.HasCompletionOptions)
 					{
-						var dataType = funcDef.Definition.DataType;
-						if (dataType != null && dataType.HasCompletionOptions)
+						foreach (var opt in dataType.GetCompletionOptions(_appSettings))
 						{
-							foreach (var opt in dataType.GetCompletionOptions(_appSettings))
-							{
-								CreateCompletion(opt);
-							}
+							CreateCompletion(opt);
 						}
 					}
 				}
@@ -611,10 +598,9 @@ namespace DkTools.StatementCompletion
 
 		private void GetOptionsForFunctionArg(string fileName, string className, string funcName, int argIndex, SnapshotPoint snapPt, CancellationToken cancel)
 		{
-			var fileStore = FileStoreHelper.GetOrCreateForTextBuffer(_textView.TextBuffer);
-			if (fileStore == null) return;
+			var model = FileStoreHelper.GetOrCreateForTextBuffer(_textView.TextBuffer)?.Model;
+			if (model == null) return;
 
-			var model = fileStore.GetMostRecentModel(_appSettings, fileName, _textView.TextBuffer.CurrentSnapshot, "Signature help get options for arg", cancel);
 			var modelPos = model.AdjustPosition(snapPt);
 
 			var sigInfos = SignatureHelp.ProbeSignatureHelpSource.GetAllSignaturesForFunction(model, modelPos, className, funcName).ToArray();
@@ -633,100 +619,95 @@ namespace DkTools.StatementCompletion
 			}
 		}
 
-		private void HandleDotSeparatedWords(SnapshotSpan completionSpan, string word1, string word2, string fileName, CancellationToken cancel)
-		{
-			// Typing a table.field.
+        private void HandleDotSeparatedWords(SnapshotSpan completionSpan, string word1, string word2, string fileName, CancellationToken cancel)
+        {
+            // Typing a table.field.
 
-			// Table and field
-			var table = _appSettings.Dict.GetTable(word1);
-			if (table != null)
-			{
-				foreach (var def in table.ColumnDefinitions)
-				{
-					CreateCompletion(def);
-				}
-			}
+            // Table and field
+            var table = _appSettings.Dict.GetTable(word1);
+            if (table != null)
+            {
+                foreach (var def in table.ColumnDefinitions)
+                {
+                    CreateCompletion(def);
+                }
+            }
 
-			// Relationship and field
-			var relInd = _appSettings.Dict.GetRelInd(word1);
-			if (relInd != null)
-			{
-				foreach (var def in relInd.ColumnDefinitions)
-				{
-					CreateCompletion(def);
-				}
-			}
+            // Relationship and field
+            var relInd = _appSettings.Dict.GetRelInd(word1);
+            if (relInd != null)
+            {
+                foreach (var def in relInd.ColumnDefinitions)
+                {
+                    CreateCompletion(def);
+                }
+            }
 
-			// Extract and field
-			var store = FileStoreHelper.GetOrCreateForTextBuffer(_textView.TextBuffer);
-			if (store != null)
-			{
-				var model = store.GetMostRecentModel(_appSettings, fileName, completionSpan.Snapshot, "Extract table.field completion.", cancel);
-				var exDef = model.DefinitionProvider.GetGlobalFromFile<ExtractTableDefinition>(word1).FirstOrDefault();
-				if (exDef != null)
-				{
-					foreach (var def in exDef.Fields)
-					{
-						CreateCompletion(def);
-					}
-				}
-			}
+            // Extract and field
+			var model = FileStoreHelper.GetOrCreateForTextBuffer(_textView.TextBuffer)?.Model;
+			if (model != null)
+            {
+                var exDef = model.DefinitionProvider.GetGlobalFromFile<ExtractTableDefinition>(word1).FirstOrDefault();
+                if (exDef != null)
+                {
+                    foreach (var def in exDef.Fields)
+                    {
+                        CreateCompletion(def);
+                    }
+                }
+            }
 
-			// Class and method
-			var appSettings = DkEnvironment.CurrentAppSettings;
-			if (appSettings != null)
-			{
-				foreach (var cls in appSettings.Repo.GetClassDefinitions(word1))
-				{
-					foreach (var def in cls.Functions)
-					{
-						CreateCompletion(def);
-					}
-				}
+            // Class and method
+            var appSettings = DkEnvironment.CurrentAppSettings;
+            if (appSettings != null)
+            {
+                foreach (var cls in appSettings.Repo.GetClassDefinitions(word1))
+                {
+                    foreach (var def in cls.Functions)
+                    {
+                        CreateCompletion(def);
+                    }
+                }
 
-				foreach (var permex in appSettings.Repo.GetPermanentExtractDefinitions(word1))
-				{
-					foreach (var field in permex.Fields)
-					{
-						CreateCompletion(field);
-					}
-				}
-			}
+                foreach (var permex in appSettings.Repo.GetPermanentExtractDefinitions(word1))
+                {
+                    foreach (var field in permex.Fields)
+                    {
+                        CreateCompletion(field);
+                    }
+                }
+            }
 
 			// Interface and method/property
-			var fileStore = FileStoreHelper.GetOrCreateForTextBuffer(_textView.TextBuffer);
-			if (fileStore != null)
-			{
-				var model = fileStore.GetMostRecentModel(_appSettings, fileName, completionSpan.Snapshot, "Interface auto-completion", cancel);
-				var modelSnapshot = model.Snapshot as ITextSnapshot;
-				if (modelSnapshot != null)
-				{
-					var modelSpan = completionSpan.TranslateTo(modelSnapshot, SpanTrackingMode.EdgeInclusive);
+            if (model != null)
+            {
+				if (model.Snapshot is ITextSnapshot modelSnapshot)
+                {
+                    var modelSpan = completionSpan.TranslateTo(modelSnapshot, SpanTrackingMode.EdgeInclusive);
 
-					foreach (var def in model.DefinitionProvider.GetAny(modelSpan.Start.Position, word1))
-					{
-						if (def is VariableDefinition)
-						{
-							var varDef = def as VariableDefinition;
-							if (varDef.AllowsChild)
-							{
-								foreach (var childDef in varDef.GetChildDefinitions(appSettings))
-								{
-									CreateCompletion(childDef);
-								}
-							}
-						}
-					}
-				}
-			}
-		}
+                    foreach (var def in model.DefinitionProvider.GetAny(modelSpan.Start.Position, word1))
+                    {
+                        if (def is VariableDefinition)
+                        {
+                            var varDef = def as VariableDefinition;
+                            if (varDef.AllowsChild)
+                            {
+                                foreach (var childDef in varDef.GetChildDefinitions(appSettings))
+                                {
+                                    CreateCompletion(childDef);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
 
 		private void GetWordCompletions(SnapshotPoint triggerPt, SnapshotPoint wordStartPt, string fileName, CancellationToken cancel)
 		{
-			var fileStore = FileStoreHelper.GetOrCreateForTextBuffer(_textView.TextBuffer);
-			if (fileStore == null) return;
+			var model = FileStoreHelper.GetOrCreateForTextBuffer(_textView.TextBuffer)?.Model;
+			if (model == null) return;
 
-			var model = fileStore.GetMostRecentModel(_appSettings, fileName, triggerPt.Snapshot, "Auto-completion get word completions", cancel);
 			var modelPos = model.AdjustPosition(triggerPt);
 
 			var tokens = model.FindTokens(modelPos).ToArray();

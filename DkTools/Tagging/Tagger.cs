@@ -129,20 +129,20 @@ namespace DkTools.Tagging
 						var fileStore = FileStoreHelper.GetOrCreateForTextBuffer(buf);
 						if (fileStore != null)
 						{
-							var appSettings = DkEnvironment.CurrentAppSettings;
-							var fileName = VsTextUtil.TryGetDocumentFileName(buf);
-							var funcs = fileStore.GetFunctionDropDownList(appSettings, fileName, buf.CurrentSnapshot);
-							var model = fileStore.GetMostRecentModel(appSettings, fileName, buf.CurrentSnapshot, "Insert diag", cancel);
-							var modelSnapshot = model.Snapshot as ITextSnapshot;
-							if (modelSnapshot != null)
+							var model = fileStore.Model;
+							if (model != null)
 							{
-								var modelPos = model.AdjustPosition(Shell.ActiveView.Caret.Position.BufferPosition.Position, modelSnapshot);
-								foreach (var func in funcs)
+								var funcs = fileStore.GetFunctionDropDownList(model);
+								if (model.Snapshot is ITextSnapshot modelSnapshot)
 								{
-									if (func.EntireFunctionSpan.Contains(modelPos))
+									var modelPos = model.AdjustPosition(Shell.ActiveView.Caret.Position.BufferPosition.Position, modelSnapshot);
+									foreach (var func in funcs)
 									{
-										funcName = func.Name;
-										break;
+										if (func.EntireFunctionSpan.Contains(modelPos))
+										{
+											funcName = func.Name;
+											break;
+										}
 									}
 								}
 							}

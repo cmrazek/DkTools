@@ -35,14 +35,14 @@ namespace DkTools.SignatureHelp
 
 			if (ProbeSignatureHelpCommandHandler.s_typedChar == '(')
 			{
-				foreach (var sig in HandleOpenBracket(snapshot, DkEnvironment.CurrentAppSettings))
+				foreach (var sig in HandleOpenBracket(snapshot))
 				{
 					signatures.Add(sig);
 				}
 			}
 			else if (ProbeSignatureHelpCommandHandler.s_typedChar == ',')
 			{
-				foreach (var sig in HandleComma(snapshot, DkEnvironment.CurrentAppSettings))
+				foreach (var sig in HandleComma(snapshot))
 				{
 					signatures.Add(sig);
 				}
@@ -51,7 +51,7 @@ namespace DkTools.SignatureHelp
 
 		private Regex _rxFuncBeforeBracket = new Regex(@"((\w+)\s*\.\s*)?(\w+)\s*$");
 
-		private IEnumerable<ISignature> HandleOpenBracket(ITextSnapshot snapshot, DkAppSettings appSettings)
+		private IEnumerable<ISignature> HandleOpenBracket(ITextSnapshot snapshot)
 		{
 			ThreadHelper.ThrowIfNotOnUIThread();
 
@@ -73,18 +73,20 @@ namespace DkTools.SignatureHelp
 					{
 						ITrackingSpan applicableToSpan = null;
 
-						var fileName = VsTextUtil.TryGetDocumentFileName(snapshot.TextBuffer);
-						var model = fileStore.GetMostRecentModel(appSettings, fileName, snapshot, "Signature help after '(' - dot separated words", CancellationToken.None);
-						var modelPos = model.AdjustPosition(word1Start, snapshot);
-
-						foreach (var word1Def in model.DefinitionProvider.GetAny(modelPos, word1))
+						var model = fileStore.Model;
+						if (model != null)
 						{
-							if (!word1Def.AllowsChild) continue;
-							foreach (var word2Def in word1Def.GetChildDefinitions(funcName, model.AppSettings))
+							var modelPos = model.AdjustPosition(word1Start, snapshot);
+
+							foreach (var word1Def in model.DefinitionProvider.GetAny(modelPos, word1))
 							{
-								if (!word2Def.ArgumentsRequired) continue;
-								if (applicableToSpan == null) applicableToSpan = snapshot.CreateTrackingSpan(new Span(_triggerPos, 0), SpanTrackingMode.EdgeInclusive);
-								yield return CreateSignature(_textBuffer, word2Def.ArgumentsSignature, applicableToSpan);
+								if (!word1Def.AllowsChild) continue;
+								foreach (var word2Def in word1Def.GetChildDefinitions(funcName, model.AppSettings))
+								{
+									if (!word2Def.ArgumentsRequired) continue;
+									if (applicableToSpan == null) applicableToSpan = snapshot.CreateTrackingSpan(new Span(_triggerPos, 0), SpanTrackingMode.EdgeInclusive);
+									yield return CreateSignature(_textBuffer, word2Def.ArgumentsSignature, applicableToSpan);
+								}
 							}
 						}
 					}
@@ -92,15 +94,17 @@ namespace DkTools.SignatureHelp
 					{
 						ITrackingSpan applicableToSpan = null;
 
-						var fileName = VsTextUtil.TryGetDocumentFileName(snapshot.TextBuffer);
-						var model = fileStore.GetMostRecentModel(appSettings, fileName, snapshot, "Signature help after '('", CancellationToken.None);
-						var modelPos = model.AdjustPosition(funcNameStart, snapshot);
-						foreach (var def in model.DefinitionProvider.GetAny(modelPos, funcName))
+						var model = fileStore.Model;
+						if (model != null)
 						{
-							if (!def.ArgumentsRequired) continue;
+							var modelPos = model.AdjustPosition(funcNameStart, snapshot);
+							foreach (var def in model.DefinitionProvider.GetAny(modelPos, funcName))
+							{
+								if (!def.ArgumentsRequired) continue;
 
-							if (applicableToSpan == null) applicableToSpan = snapshot.CreateTrackingSpan(new Span(_triggerPos, 0), SpanTrackingMode.EdgeInclusive);
-							yield return CreateSignature(_textBuffer, def.ArgumentsSignature, applicableToSpan);
+								if (applicableToSpan == null) applicableToSpan = snapshot.CreateTrackingSpan(new Span(_triggerPos, 0), SpanTrackingMode.EdgeInclusive);
+								yield return CreateSignature(_textBuffer, def.ArgumentsSignature, applicableToSpan);
+							}
 						}
 					}
 				}
@@ -108,28 +112,30 @@ namespace DkTools.SignatureHelp
 			}
 		}
 
-		private IEnumerable<ISignature> HandleComma(ITextSnapshot snapshot, DkAppSettings appSettings)
+		private IEnumerable<ISignature> HandleComma(ITextSnapshot snapshot)
 		{
 			ThreadHelper.ThrowIfNotOnUIThread();
 
 			var fileStore = FileStoreHelper.GetOrCreateForTextBuffer(_textBuffer);
 			if (fileStore != null)
 			{
-				var fileName = VsTextUtil.TryGetDocumentFileName(_textBuffer);
-				var model = fileStore.GetMostRecentModel(appSettings, fileName, snapshot, "Signature help after ','", CancellationToken.None);
-				var modelSnapshot = model.Snapshot as ITextSnapshot;
-				if (modelSnapshot != null)
+				var model = fileStore.Model;
+				if (model != null)
 				{
-					var modelPos = (new SnapshotPoint(snapshot, _triggerPos)).TranslateTo(modelSnapshot, PointTrackingMode.Negative).Position;
-
-					var finder = new FunctionCallFinder();
-					var findResult = finder.FindContainingFunctionCall(_textBuffer.CurrentSnapshot.GetText(), _triggerPos);
-					if (findResult != null)
+					var modelSnapshot = model.Snapshot as ITextSnapshot;
+					if (modelSnapshot != null)
 					{
-						var applicableToSpan = snapshot.CreateTrackingSpan(findResult.ArgumentsSpan.ToVsTextSpan(), SpanTrackingMode.EdgeInclusive);
-						foreach (var sig in GetAllSignaturesForFunction(model, modelPos, findResult.ClassName, findResult.FunctionName))
+						var modelPos = (new SnapshotPoint(snapshot, _triggerPos)).TranslateTo(modelSnapshot, PointTrackingMode.Negative).Position;
+
+						var finder = new FunctionCallFinder();
+						var findResult = finder.FindContainingFunctionCall(_textBuffer.CurrentSnapshot.GetText(), _triggerPos);
+						if (findResult != null)
 						{
-							yield return CreateSignature(_textBuffer, sig, applicableToSpan);
+							var applicableToSpan = snapshot.CreateTrackingSpan(findResult.ArgumentsSpan.ToVsTextSpan(), SpanTrackingMode.EdgeInclusive);
+							foreach (var sig in GetAllSignaturesForFunction(model, modelPos, findResult.ClassName, findResult.FunctionName))
+							{
+								yield return CreateSignature(_textBuffer, sig, applicableToSpan);
+							}
 						}
 					}
 				}

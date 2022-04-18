@@ -5,14 +5,6 @@ using System.Text;
 
 namespace DK.Diagnostics
 {
-	public enum LogLevel
-	{
-		Debug,
-		Info,
-		Warning,
-		Error
-	}
-
 	public static class Log
 	{
 		private static StreamWriter _writer;
