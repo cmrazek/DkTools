@@ -14,16 +14,21 @@ namespace DkTools.Classifier
 {
 	internal class ProbeClassifier : IClassifier
 	{
+		private ITextBuffer _textBuffer;
 		private ITextSnapshot _snapshot;
 		private ProbeClassifierScanner _scanner;
 		private static Dictionary<ProbeClassifierType, IClassificationType> _lightTokenTypes;
 		private static Dictionary<ProbeClassifierType, IClassificationType> _darkTokenTypes;
 		private static Dictionary<ProbeClassifierType, Brush> _brushes = new Dictionary<ProbeClassifierType, Brush>();
+		private BackgroundDeferrer _modelRebuildDeferrer;
+		private CancellationTokenSource _modelRebuildCancellationSource;
 
 		public event EventHandler<ClassificationChangedEventArgs> ClassificationChanged;
 
-		public ProbeClassifier(IClassificationTypeRegistryService registry)
+		public ProbeClassifier(IClassificationTypeRegistryService registry, ITextBuffer textBuffer)
 		{
+			_textBuffer = textBuffer ?? throw new ArgumentNullException(nameof(textBuffer));
+
 			InitializeClassifierTypes(registry);
 
 			_scanner = new ProbeClassifierScanner();
@@ -32,9 +37,15 @@ namespace DkTools.Classifier
 			GlobalEvents.RefreshDocumentRequired += OnRefreshDocumentRequired;
 
 			VSTheme.ThemeChanged += VSTheme_ThemeChanged;
+
+			_modelRebuildDeferrer = new BackgroundDeferrer(Constants.ModelRebuildDelay);
+            _modelRebuildDeferrer.Idle += ModelRebuildDeferrer_Idle;
+			_modelRebuildDeferrer.OnActivity();
+
+            _textBuffer.Changed += (s,e) => { _modelRebuildDeferrer.OnActivity(); };
 		}
 
-		~ProbeClassifier()
+        ~ProbeClassifier()
 		{
 			GlobalEvents.RefreshAllDocumentsRequired -= OnRefreshAllDocumentsRequired;
 			GlobalEvents.RefreshDocumentRequired -= OnRefreshDocumentRequired;
@@ -193,59 +204,53 @@ namespace DkTools.Classifier
 			var fileStore = FileStoreHelper.GetOrCreateForTextBuffer(span.Snapshot.TextBuffer);
 			if (fileStore == null) return new List<ClassificationSpan>();
 
-			var model = fileStore.GetMostRecentModel(appSettings, fileName, span.Snapshot, "GetClassificationSpans", CancellationToken.None);
-			_scanner.SetSource(span.GetText(), span.Start.Position, span.Snapshot, model);
-
-			var disableDeadCode = ProbeToolsPackage.Instance.EditorOptions.DisableDeadCode;
-
-			DisabledSectionTracker disabledSectionTracker = null;
-			if (disableDeadCode)
+			var model = fileStore.Model;
+			if (model != null)
 			{
-				disabledSectionTracker = new DisabledSectionTracker(model.DisabledSections);
-				if (disabledSectionTracker.SetOffset(_scanner.PositionOffset)) state |= State.Disabled;
-				else state &= ~State.Disabled;
-			}
-			else
-			{
-				state &= ~State.Disabled;
-			}
+				_scanner.SetSource(span.GetText(), span.Start.Position, span.Snapshot, model);
 
-			while (_scanner.ScanTokenAndProvideInfoAboutIt(tokenInfo, ref state))
-			{
-				var classificationType = GetClassificationType(tokenInfo.Type);
-				if (classificationType != null)
-				{
-					spans.Add(new ClassificationSpan(new SnapshotSpan(_snapshot, new Span(span.Start.Position + tokenInfo.StartIndex, tokenInfo.Length)), classificationType));
-				}
+				var disableDeadCode = ProbeToolsPackage.Instance.EditorOptions.DisableDeadCode;
 
+				DisabledSectionTracker disabledSectionTracker = null;
 				if (disableDeadCode)
 				{
-					if (disabledSectionTracker.Advance(_scanner.PositionOffset + _scanner.Position)) state |= State.Disabled;
+					disabledSectionTracker = new DisabledSectionTracker(model.DisabledSections);
+					if (disabledSectionTracker.SetOffset(_scanner.PositionOffset)) state |= State.Disabled;
 					else state &= ~State.Disabled;
 				}
 				else
 				{
 					state &= ~State.Disabled;
 				}
+
+				while (_scanner.ScanTokenAndProvideInfoAboutIt(tokenInfo, ref state))
+				{
+					var classificationType = GetClassificationType(tokenInfo.Type);
+					if (classificationType != null)
+					{
+						spans.Add(new ClassificationSpan(new SnapshotSpan(_snapshot, new Span(span.Start.Position + tokenInfo.StartIndex, tokenInfo.Length)), classificationType));
+					}
+
+					if (disableDeadCode)
+					{
+						if (disabledSectionTracker.Advance(_scanner.PositionOffset + _scanner.Position)) state |= State.Disabled;
+						else state &= ~State.Disabled;
+					}
+					else
+					{
+						state &= ~State.Disabled;
+					}
+				}
 			}
 
 			return spans;
-		}
-
-		private void UpdateClassification()
-		{
-			if (_snapshot != null)
-			{
-				var ev = ClassificationChanged;
-				if (ev != null) ev(this, new ClassificationChangedEventArgs(new SnapshotSpan(_snapshot, new Span(0, _snapshot.Length))));
-			}
 		}
 
 		private void OnRefreshAllDocumentsRequired(object sender, EventArgs e)
 		{
 			try
 			{
-				UpdateClassification();
+				_modelRebuildDeferrer.OnActivity();
 			}
 			catch (Exception ex)
 			{
@@ -266,7 +271,7 @@ namespace DkTools.Classifier
 					var filePath = VsTextUtil.TryGetDocumentFileName(_snapshot.TextBuffer);
 					if (string.Equals(filePath, e.FilePath, StringComparison.OrdinalIgnoreCase))
 					{
-						UpdateClassification();
+						_modelRebuildDeferrer.OnActivity();
 					}
 				}
 				catch (Exception ex)
@@ -280,7 +285,7 @@ namespace DkTools.Classifier
 		{
 			try
 			{
-				UpdateClassification();
+				_modelRebuildDeferrer.OnActivity();
 				_brushes.Clear();
 			}
 			catch (Exception ex)
@@ -308,5 +313,81 @@ namespace DkTools.Classifier
 
 			return null;
 		}
+
+		private void TextBuffer_Changed(object sender, TextContentChangedEventArgs e)
+        {
+            try
+            {
+				_modelRebuildDeferrer.OnActivity();
+            }
+            catch (Exception ex)
+            {
+				Log.Error(ex);
+            }
+        }
+
+		private void ModelRebuildDeferrer_Idle(object sender, BackgroundDeferrer.IdleEventArgs e)
+        {
+			ThreadHelper.JoinableTaskFactory.RunAsync(async () =>
+			{
+				await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
+
+                try
+                {
+					var fileStore = FileStoreHelper.GetOrCreateForTextBuffer(_textBuffer);
+					if (fileStore != null)
+                    {
+						var appSettings = DkEnvironment.CurrentAppSettings;
+						var fileName = VsTextUtil.TryGetDocumentFileName(_textBuffer);
+						var snapshot = _textBuffer.CurrentSnapshot;
+
+						_modelRebuildCancellationSource?.Cancel();
+						_modelRebuildCancellationSource = new CancellationTokenSource();
+						var cancel = _modelRebuildCancellationSource.Token;
+
+						ThreadPool.QueueUserWorkItem(state =>
+                        {
+                            try
+                            {
+								cancel.ThrowIfCancellationRequested();
+
+								var model = fileStore.GetCurrentModelSync(
+									appSettings: appSettings,
+									fileName: fileName,
+									snapshot: snapshot,
+									reason: "Model rebuild",
+									cancel: cancel);
+
+								cancel.ThrowIfCancellationRequested();
+
+								OnModelRebuildComplete(new SnapshotSpan(snapshot, new Span(0, snapshot.Length)));
+                            }
+							catch (OperationCanceledException ex)
+                            {
+								Log.Debug(ex);
+                            }
+                            catch (Exception ex)
+                            {
+								Log.Error(ex);
+                            }
+                        });
+                    }
+                }
+                catch (Exception ex)
+                {
+					Log.Error(ex);
+                }
+			});
+        }
+
+		private void OnModelRebuildComplete(SnapshotSpan span)
+        {
+			ThreadHelper.JoinableTaskFactory.RunAsync(async () =>
+			{
+				await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
+
+				ClassificationChanged?.Invoke(this, new ClassificationChangedEventArgs(span));
+			});
+        }
 	}
 }

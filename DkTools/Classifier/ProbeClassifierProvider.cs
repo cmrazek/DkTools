@@ -19,7 +19,7 @@ namespace DkTools.Classifier
 
 		IClassifier IClassifierProvider.GetClassifier(ITextBuffer textBuffer)
 		{
-			return new ProbeClassifier(ClassificationRegistry);
+			return new ProbeClassifier(ClassificationRegistry, textBuffer);
 		}
 	}
 }

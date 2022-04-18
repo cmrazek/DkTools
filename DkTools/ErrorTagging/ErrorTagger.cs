@@ -11,6 +11,7 @@ using Microsoft.VisualStudio.Text.Editor;
 using Microsoft.VisualStudio.Text.Tagging;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 
 namespace DkTools.ErrorTagging
@@ -44,7 +45,7 @@ namespace DkTools.ErrorTagging
 			ErrorTaskProvider.ErrorTagsChangedForFile += Instance_ErrorTagsChangedForFile;
 
 			_backgroundFecDeferrer = new BackgroundDeferrer(Constants.BackgroundFecDelay);
-			_backgroundFecDeferrer.Idle += _backgroundFecDeferrer_Idle;
+			_backgroundFecDeferrer.Idle += BackgroundFecDeferrer_Idle;
 			_backgroundFecDeferrer.OnActivity(priority: DeferPriority_DocumentRefresh);
 
 			_view.TextBuffer.Changed += (sender, e) =>
@@ -53,7 +54,7 @@ namespace DkTools.ErrorTagging
 			};
 		}
 
-		~ErrorTagger()
+        ~ErrorTagger()
 		{
 			GlobalEvents.RefreshAllDocumentsRequired -= OnRefreshAllDocumentsRequired;
 			GlobalEvents.RefreshDocumentRequired -= OnRefreshDocumentRequired;
@@ -61,17 +62,18 @@ namespace DkTools.ErrorTagging
 
 		public event EventHandler<SnapshotSpanEventArgs> TagsChanged;
 
-		public IEnumerable<ITagSpan<ErrorTag>> GetTags(NormalizedSnapshotSpanCollection spans)
-		{
-			ThreadHelper.ThrowIfNotOnUIThread();
+        public IEnumerable<ITagSpan<ErrorTag>> GetTags(NormalizedSnapshotSpanCollection spans)
+        {
+            ThreadHelper.ThrowIfNotOnUIThread();
 
-			var appSettings = DkEnvironment.CurrentAppSettings;
+            _model = _store.Model;
+            if (_model != null)
+            {
+                return ErrorTaskProvider.Instance.GetErrorTagsForFile(_model.FilePath, spans);
+            }
 
-			var fileName = VsTextUtil.TryGetDocumentFileName(_view.TextBuffer);
-			_model = _store.GetMostRecentModel(appSettings, fileName, _view.TextSnapshot, "ErrorTagger.GetTags()", CancellationToken.None);
-
-			return ErrorTaskProvider.Instance.GetErrorTagsForFile(_model.FilePath, spans);
-		}
+			return new TagSpan<ErrorTag>[0];
+        }
 
 		private void OnRefreshAllDocumentsRequired(object sender, EventArgs e)
 		{
@@ -122,7 +124,7 @@ namespace DkTools.ErrorTagging
 			}
 		}
 
-		private void _backgroundFecDeferrer_Idle(object sender, BackgroundDeferrer.IdleEventArgs e)
+		private void BackgroundFecDeferrer_Idle(object sender, BackgroundDeferrer.IdleEventArgs e)
 		{
 			ThreadHelper.JoinableTaskFactory.RunAsync(async () =>
 			{
@@ -145,14 +147,14 @@ namespace DkTools.ErrorTagging
 							{
 								try
 								{
-									if ((e.Priority == DeferPriority_DocumentRefresh && ProbeToolsPackage.Instance.EditorOptions.RunBackgroundFecOnSave))
-									{
-										Shell.Status($"FEC: {_model.FilePath} (running)");
-										Compiler.BackgroundFec.RunSync(_model.FilePath, e.CancellationToken);
-										Shell.Status($"FEC: {_model.FilePath} (complete)");
-									}
+                                    if ((e.Priority == DeferPriority_DocumentRefresh && ProbeToolsPackage.Instance.EditorOptions.RunBackgroundFecOnSave))
+                                    {
+                                        Shell.Status($"FEC: {_model.FilePath} (running)");
+                                        Compiler.BackgroundFec.RunSync(_model.FilePath, e.CancellationToken);
+                                        Shell.Status($"FEC: {_model.FilePath} (complete)");
+                                    }
 
-									if ((e.Priority == DeferPriority_DocumentRefresh && ProbeToolsPackage.Instance.EditorOptions.RunCodeAnalysisOnSave) ||
+                                    if ((e.Priority == DeferPriority_DocumentRefresh && ProbeToolsPackage.Instance.EditorOptions.RunCodeAnalysisOnSave) ||
 										(e.Priority == DeferPriority_UserInput && ProbeToolsPackage.Instance.EditorOptions.RunCodeAnalysisOnUserInput))
 									{
 										var modelSnapshot = _model.Snapshot as ITextSnapshot;
@@ -162,7 +164,7 @@ namespace DkTools.ErrorTagging
 											var fileStore = FileStoreHelper.GetOrCreateForTextBuffer(textBuffer);
 											if (fileStore != null)
 											{
-												var preprocessedModel = fileStore.CreatePreprocessedModel(
+												var preprocessedModel = fileStore.CreatePreprocessedModelSync(
 													appSettings: _model.AppSettings,
 													fileName: fileName,
 													snapshot: textBuffer.CurrentSnapshot,
@@ -171,7 +173,10 @@ namespace DkTools.ErrorTagging
 													reason: "Background Code Analysis");
 
 												var ca = new CodeAnalyzer(preprocessedModel);
-												ca.Run(e.CancellationToken);
+												var caResults = ca.Run(e.CancellationToken);
+
+												ErrorTaskProvider.Instance.ReplaceForSourceAndInvokingFile(ErrorTaskSource.CodeAnalysis, ca.CodeModel.FilePath, caResults.Tasks.Select(x => x.ToErrorTask()));
+												ErrorMarkerTaggerProvider.ReplaceForSourceAndFile(ErrorTaskSource.CodeAnalysis, ca.CodeModel.FilePath, caResults.Markers.Select(x => x.ToErrorMarkerTag()));
 											}
 										}
 									}

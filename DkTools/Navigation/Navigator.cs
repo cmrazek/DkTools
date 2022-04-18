@@ -59,8 +59,6 @@ namespace DkTools.Navigation
 
 		public void GoToNextOrPrevReference(bool next, CancellationToken cancel)
 		{
-			ThreadHelper.ThrowIfNotOnUIThread();
-
 			var fileStore = FileStoreHelper.GetOrCreateForTextBuffer(_view.TextBuffer);
 			if (fileStore == null)
 			{
@@ -68,9 +66,12 @@ namespace DkTools.Navigation
 				return;
 			}
 
-			var appSettings = DkEnvironment.CurrentAppSettings;
-			var fileName = VsTextUtil.TryGetDocumentFileName(_view.TextBuffer);
-			var model = fileStore.GetMostRecentModel(appSettings, fileName, _view.TextSnapshot, "ReferenceScroller.GoToNextReference()", cancel);
+			var model = fileStore.Model;
+			if (model == null)
+            {
+				Log.Debug("No model available.");
+				return;
+            }
 
 			// Get the caret position
 			var caretPtTest = _view.Caret.Position.Point.GetPoint(buf => (!buf.ContentType.IsOfType("projection")), Microsoft.VisualStudio.Text.PositionAffinity.Predecessor);

@@ -1,24 +1,24 @@
 ﻿using DK.CodeAnalysis;
 using DkTools.ErrorTagging;
-using System.Linq;
 using System.Threading;
 
 namespace DkTools.CodeModeling
 {
 	static class CodeAnalyzerHelper
 	{
-		public static void Run(this CodeAnalyzer ca, CancellationToken cancel)
+		public static CodeAnalysisResults Run(this CodeAnalyzer ca, CancellationToken cancel)
 		{
+			// Caller should do the following after:
+			//ErrorTaskProvider.Instance.ReplaceForSourceAndInvokingFile(ErrorTaskSource.CodeAnalysis, ca.CodeModel.FilePath, results.Tasks.Select(x => x.ToErrorTask()));
+			//ErrorMarkerTaggerProvider.ReplaceForSourceAndFile(ErrorTaskSource.CodeAnalysis, ca.CodeModel.FilePath, results.Markers.Select(x => x.ToErrorMarkerTag()));
+
 			var editorOptions = ProbeToolsPackage.Instance.EditorOptions;
 
-			var results = ca.RunAndGetResults(new CAOptions
+			return ca.RunAndGetResults(new CAOptions
 			{
 				HighlightReportOutput = editorOptions.HighlightReportOutput,
 				MaxWarnings = editorOptions.MaxWarnings
 			}, cancel);
-
-			ErrorTaskProvider.Instance.ReplaceForSourceAndInvokingFile(ErrorTaskSource.CodeAnalysis, ca.CodeModel.FilePath, results.Tasks.Select(x => x.ToErrorTask()));
-			ErrorMarkerTaggerProvider.ReplaceForSourceAndFile(ErrorTaskSource.CodeAnalysis, ca.CodeModel.FilePath, results.Markers.Select(x => x.ToErrorMarkerTag()));
 		}
 
 		public static ErrorTask ToErrorTask(this CAErrorTask task)

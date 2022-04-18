@@ -40,14 +40,16 @@ namespace DkTools.LanguageSvc
 
 			var appSettings = DkEnvironment.CurrentAppSettings;
 			var fileName = VsTextUtil.TryGetDocumentFileName(buf);
-			foreach (var func in (from f in fileStore.GetFunctionDropDownList(appSettings, fileName, buf.CurrentSnapshot)
-								  orderby f.Name.ToLower()
-								  select f))
+			var model = fileStore.Model;
+			if (model != null)
 			{
-				var span = func.EntireFunctionSpan;
-				dropDownMembers.Add(new DropDownMember(func.Name, span.ToVsTextInteropSpan(textView), k_methodImageIndex, DROPDOWNFONTATTR.FONTATTR_PLAIN));
-				if (span.Contains(caretPos)) selectedMember = index;
-				index++;
+				foreach (var func in fileStore.GetFunctionDropDownList(model).OrderBy(f => f.Name.ToLower()))
+				{
+					var span = func.EntireFunctionSpan;
+					dropDownMembers.Add(new DropDownMember(func.Name, span.ToVsTextInteropSpan(textView), k_methodImageIndex, DROPDOWNFONTATTR.FONTATTR_PLAIN));
+					if (span.Contains(caretPos)) selectedMember = index;
+					index++;
+				}
 			}
 
 			return true;
