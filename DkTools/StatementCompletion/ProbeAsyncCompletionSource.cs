@@ -32,6 +32,8 @@ namespace DkTools.StatementCompletion
 
 	public class ProbeAsyncCompletionSource : IAsyncCompletionSource
 	{
+		public const string CompletionTypeProperty_Include = "DkTools.CompletionType.Include";
+
 		private ITextView _textView;
 		private Dictionary<CompletionItem, ItemDataNode> _items = new Dictionary<CompletionItem, ItemDataNode>();
 		private HashSet<string> _itemNames = new HashSet<string>();
@@ -364,6 +366,7 @@ namespace DkTools.StatementCompletion
 					HandleAfterFunctionArgsStart(triggerPt, _params.str, _fileName, cancel);
 					break;
 				case CompletionMode.Include:
+					if (!session.Properties.ContainsProperty(CompletionTypeProperty_Include)) session.Properties.AddProperty(CompletionTypeProperty_Include, string.Empty);
 					HandleAfterInclude(_params.str, _fileName);
 					break;
 				case CompletionMode.Preprocessor:

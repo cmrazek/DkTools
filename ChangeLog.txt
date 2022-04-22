@@ -7,6 +7,7 @@ Version 1.6.1:
 
 - Reduce the number of operations that can cause a code model rebuild, improving typing performance.
 - No longer report code analysis errors when a valid enum value is used as a string.
+- Statement completion for #include will no longer commit when a '.' is typed.
 
 ____________________________________________________________________________________________________
 Version 1.5.13:

@@ -18,6 +18,9 @@ Visual Studio Extension for WBDK
 
 ## Change Log
 
+**Version 1.6.1 Changes:**
+- Statement completion for #include will no longer commit when a '.' is typed.
+
 **Version 1.5.20 Changes:**
 - Fixed a bug where extern functions referenced in a class would be associated with that class, causing a discrepancy in Find All References.
 
