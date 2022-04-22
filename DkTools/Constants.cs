@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-
-namespace DkTools
+﻿namespace DkTools
 {
 	class Constants
 	{
@@ -52,6 +47,16 @@ namespace DkTools
 
 		public const int MaxIncludeRecursion = 8;	// The maximum number of levels deep #include files can nest.
 
-		public const int BackgroundFecDelay = 750;
+		public const int ModelRebuildDelay = 1000;
+		public const int BackgroundFecDelay = 3000;
+		public const int FFScannerDelay = 5000;
+		public const int DictTreeDelay = 1000;
+
+		public static class TextBufferProperties
+        {
+			public const string Classifier = "DkTools.Classifier";
+			public const string TextBufferNotifier = "DkTools.TextBufferNotifier";
+			public const string FileName = "DkTools.FileName";
+        }
 	}
 }

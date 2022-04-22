@@ -29,7 +29,8 @@ namespace DkTools.Navigation
 
 			var appSettings = DkEnvironment.CurrentAppSettings;
 			var fileName = VsTextUtil.TryGetDocumentFileName(view.TextBuffer);
-			var model = store.GetMostRecentModel(appSettings, fileName, view.TextSnapshot, "GoToBraceHelper.Trigger()", cancel);
+			var model = store.Model;
+			if (model == null) return;
 
 			var modelPos = model.AdjustPosition(caretPt.Position, caretPt.Snapshot);
 			var selTokens = model.File.FindDownwardTouching(modelPos).ToArray();

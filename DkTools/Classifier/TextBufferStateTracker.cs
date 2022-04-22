@@ -85,7 +85,8 @@ namespace DkTools.Classifier
 				var fileStore = FileStoreHelper.GetOrCreateForTextBuffer(snapshot.TextBuffer);
 				if (fileStore == null) return 0;
 
-				var model = fileStore.GetMostRecentModel(appSettings, fileName, snapshot, "GetStateForPosition", cancel);
+				var model = fileStore.Model;
+				if (model == null) return 0;
 
 				if (lineStartPos <= pos)
 				{
@@ -120,7 +121,8 @@ namespace DkTools.Classifier
 					var fileStore = FileStoreHelper.GetOrCreateForTextBuffer(snapshot.TextBuffer);
 					if (fileStore == null) return 0;
 
-					var model = fileStore.GetMostRecentModel(appSettings, fileName, snapshot, "GetStateForLine()", cancel);
+					var model = fileStore.Model;
+					if (model == null) return 0;
 					_snapshot = snapshot;
 
 					var tokenInfo = new ProbeClassifierScanner.TokenInfo();

@@ -28,7 +28,7 @@ namespace DkTools.ProbeExplorer
 	public partial class ProbeExplorerControl : UserControl, INotifyPropertyChanged
 	{
 		#region Variables
-		private BackgroundDeferrer _dictTreeDeferrer = new BackgroundDeferrer();
+		private BackgroundDeferrer _dictTreeDeferrer = new BackgroundDeferrer(Constants.DictTreeDelay);
 		private TextFilter _dictFilter = new TextFilter();
 
 		private BitmapImage _folderImg;
@@ -870,29 +870,29 @@ namespace DkTools.ProbeExplorer
 
 			if (!c_functionTab.IsSelected || view == null) return;
 
-			string className = null;
-			var fileName = VsTextUtil.TryGetDocumentFileName(view.TextBuffer);
-			if (!string.IsNullOrEmpty(fileName)) className = FileContextHelper.GetClassNameFromFileName(fileName);
-
 			if (view != null)
 			{
 				var fileStore = FileStoreHelper.GetOrCreateForTextBuffer(view.TextBuffer);
 				if (fileStore != null)
 				{
-					var snapshot = view.TextSnapshot;
-					if (_activeView != view || _activeSnapshot != snapshot)
+					var model = fileStore.Model;
+					if (model != null)
 					{
-						_activeView = view;
-						_activeSnapshot = snapshot;
+						var snapshot = view.TextSnapshot;
+						if (_activeView != view || _activeSnapshot != snapshot)
+						{
+							_activeView = view;
+							_activeSnapshot = snapshot;
 
-						var appSettings = DkEnvironment.CurrentAppSettings;
-						_activeFunctions = (from f in fileStore.GetFunctionDropDownList(appSettings, fileName, snapshot)
-											orderby f.Name.ToLower()
-											select new FunctionListItem(f)).ToArray();
-						ApplyFunctionFilter();
-						c_functionList.ItemsSource = _activeFunctions;
+							var appSettings = DkEnvironment.CurrentAppSettings;
+							_activeFunctions = (from f in fileStore.GetFunctionDropDownList(model)
+												orderby f.Name.ToLower()
+												select new FunctionListItem(f)).ToArray();
+							ApplyFunctionFilter();
+							c_functionList.ItemsSource = _activeFunctions;
+						}
+						return;
 					}
-					return;
 				}
 			}
 

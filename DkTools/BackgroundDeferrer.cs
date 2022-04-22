@@ -29,7 +29,7 @@ namespace DkTools
 			}
 		}
 
-		public BackgroundDeferrer(int idleTime = 1000)
+		public BackgroundDeferrer(int idleTime)
 		{
 			_idleTime = idleTime;
 			_timer = new System.Timers.Timer(_idleTime);

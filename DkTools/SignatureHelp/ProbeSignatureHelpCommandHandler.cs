@@ -101,12 +101,9 @@ namespace DkTools.SignatureHelp
 							}
 							else if (typedChar == ',' && (_session == null || _session.IsDismissed))
 							{
-								var fileStore = FileStoreHelper.GetOrCreateForTextBuffer(_textView.TextBuffer);
-								if (fileStore != null)
+								var model = FileStoreHelper.GetOrCreateForTextBuffer(_textView.TextBuffer)?.Model;
+								if (model != null)
 								{
-									var appSettings = DkEnvironment.CurrentAppSettings;
-									var fileName = VsTextUtil.TryGetDocumentFileName(_textView.TextBuffer);
-									var model = fileStore.GetMostRecentModel(appSettings, fileName, _textView.TextSnapshot, "Signature help command handler - after ','", CancellationToken.None);
 									var modelSnapshot = model.Snapshot as ITextSnapshot;
 									if (modelSnapshot != null)
 									{

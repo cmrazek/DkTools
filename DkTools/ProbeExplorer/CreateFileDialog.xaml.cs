@@ -1,36 +1,28 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+using System.ComponentModel;
 using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Shapes;
-using DkTools;
 
 namespace DkTools.ProbeExplorer
 {
 	/// <summary>
 	/// Interaction logic for CreateFileDialog.xaml
 	/// </summary>
-	public partial class CreateFileDialog : Window
+	public partial class CreateFileDialog : Window, INotifyPropertyChanged
 	{
+		private string _directory;
+		private string _fileName;
+
 		public CreateFileDialog()
 		{
 			InitializeComponent();
+			DataContext = this;
 		}
 
 		private void Window_Loaded(object sender, RoutedEventArgs e)
 		{
 			try
 			{
-				EnableControls(this, EventArgs.Empty);
-
-				c_fileNameTextBox.Focus();
+				FileNameTextBox.Focus();
 			}
 			catch (Exception ex)
 			{
@@ -69,41 +61,57 @@ namespace DkTools.ProbeExplorer
 
 		public string Directory
 		{
-			get { return c_dirTextBox.Text; }
-			set { c_dirTextBox.Text = value; }
+			get => _directory;
+			set
+			{
+				if (_directory != value)
+                {
+					_directory = value;
+					FirePropertyChanged(nameof(Directory));
+                }
+			}
 		}
 
 		public string FileName
 		{
-			get { return c_fileNameTextBox.Text; }
-			set { c_fileNameTextBox.Text = value; }
+			get => _fileName;
+			set
+            {
+				if (_fileName != value)
+                {
+					_fileName = value;
+					FirePropertyChanged(nameof(FileName));
+                }
+            }
 		}
 
-		private void EnableControls(object sender, EventArgs e)
-		{
-			try
-			{
-				c_okButton.IsEnabled = ValidateForm();
-			}
-			catch (Exception ex)
-			{
-				this.ShowError(ex);
-			}
-		}
+		public string FileNameLengthText => $"({_fileName?.Length ?? 0} char{(_fileName?.Length == 1 ? "" : "s")})";
+
+		public bool OkButtonEnabled => ValidateForm();
 
 		private bool ValidateForm()
 		{
-			var fileName = c_fileNameTextBox.Text;
-
-			if (string.IsNullOrWhiteSpace(fileName)) return false;
-			if (fileName.IndexOfAny(System.IO.Path.GetInvalidFileNameChars()) >= 0) return false;
+			if (string.IsNullOrWhiteSpace(_fileName)) return false;
+			if (_fileName.IndexOfAny(System.IO.Path.GetInvalidFileNameChars()) >= 0) return false;
 
 			return true;
 		}
 
-		private void FileNameTextBox_TextChanged(object sender, TextChangedEventArgs e)
-		{
-			EnableControls(sender, e);
-		}
+		#region INotifyPropertyChanged
+		public event PropertyChangedEventHandler PropertyChanged;
+
+		private void FirePropertyChanged(string propName)
+        {
+			PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propName));
+
+			switch (propName)
+            {
+				case nameof(FileName):
+					FirePropertyChanged(nameof(FileNameLengthText));
+					FirePropertyChanged(nameof(OkButtonEnabled));
+					break;
+            }
+        }
+		#endregion
 	}
 }

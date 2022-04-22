@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.ComponentModel.Composition;
-using System.Linq;
-using System.Text;
+﻿using System.ComponentModel.Composition;
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Classification;
 using Microsoft.VisualStudio.Utilities;
@@ -11,7 +6,7 @@ using Microsoft.VisualStudio.Utilities;
 namespace DkTools.Classifier
 {
 	[Export(typeof(IClassifierProvider))]
-	[ContentType("DK")]
+	[ContentType(Constants.DkContentType)]
 	internal class ProbeClassifierProvider : IClassifierProvider
 	{
 		[Import]
@@ -19,7 +14,7 @@ namespace DkTools.Classifier
 
 		IClassifier IClassifierProvider.GetClassifier(ITextBuffer textBuffer)
 		{
-			return new ProbeClassifier(ClassificationRegistry);
+			return new ProbeClassifier(ClassificationRegistry, textBuffer);
 		}
 	}
 }

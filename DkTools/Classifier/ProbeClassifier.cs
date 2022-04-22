@@ -14,6 +14,7 @@ namespace DkTools.Classifier
 {
 	internal class ProbeClassifier : IClassifier
 	{
+		private ITextBuffer _textBuffer;
 		private ITextSnapshot _snapshot;
 		private ProbeClassifierScanner _scanner;
 		private static Dictionary<ProbeClassifierType, IClassificationType> _lightTokenTypes;
@@ -22,22 +23,24 @@ namespace DkTools.Classifier
 
 		public event EventHandler<ClassificationChangedEventArgs> ClassificationChanged;
 
-		public ProbeClassifier(IClassificationTypeRegistryService registry)
+		public ProbeClassifier(IClassificationTypeRegistryService registry, ITextBuffer textBuffer)
 		{
+			ThreadHelper.ThrowIfNotOnUIThread();
+
+			_textBuffer = textBuffer ?? throw new ArgumentNullException(nameof(textBuffer));
+
+			var notifier = DkTextBufferNotifier.GetOrCreate(_textBuffer);
+
 			InitializeClassifierTypes(registry);
 
 			_scanner = new ProbeClassifierScanner();
 
-			GlobalEvents.RefreshAllDocumentsRequired += OnRefreshAllDocumentsRequired;
-			GlobalEvents.RefreshDocumentRequired += OnRefreshDocumentRequired;
-
 			VSTheme.ThemeChanged += VSTheme_ThemeChanged;
-		}
 
-		~ProbeClassifier()
-		{
-			GlobalEvents.RefreshAllDocumentsRequired -= OnRefreshAllDocumentsRequired;
-			GlobalEvents.RefreshDocumentRequired -= OnRefreshDocumentRequired;
+			if (notifier != null)
+			{
+				notifier.NewModelAvailable += TextBufferNotifier_NewModelAvailable;
+			}
 		}
 
 		private static void InitializeClassifierTypes(IClassificationTypeRegistryService registry)
@@ -193,94 +196,52 @@ namespace DkTools.Classifier
 			var fileStore = FileStoreHelper.GetOrCreateForTextBuffer(span.Snapshot.TextBuffer);
 			if (fileStore == null) return new List<ClassificationSpan>();
 
-			var model = fileStore.GetMostRecentModel(appSettings, fileName, span.Snapshot, "GetClassificationSpans", CancellationToken.None);
-			_scanner.SetSource(span.GetText(), span.Start.Position, span.Snapshot, model);
-
-			var disableDeadCode = ProbeToolsPackage.Instance.EditorOptions.DisableDeadCode;
-
-			DisabledSectionTracker disabledSectionTracker = null;
-			if (disableDeadCode)
+			var model = fileStore.Model;
+			if (model != null)
 			{
-				disabledSectionTracker = new DisabledSectionTracker(model.DisabledSections);
-				if (disabledSectionTracker.SetOffset(_scanner.PositionOffset)) state |= State.Disabled;
-				else state &= ~State.Disabled;
-			}
-			else
-			{
-				state &= ~State.Disabled;
-			}
+				_scanner.SetSource(span.GetText(), span.Start.Position, span.Snapshot, model);
 
-			while (_scanner.ScanTokenAndProvideInfoAboutIt(tokenInfo, ref state))
-			{
-				var classificationType = GetClassificationType(tokenInfo.Type);
-				if (classificationType != null)
-				{
-					spans.Add(new ClassificationSpan(new SnapshotSpan(_snapshot, new Span(span.Start.Position + tokenInfo.StartIndex, tokenInfo.Length)), classificationType));
-				}
+				var disableDeadCode = ProbeToolsPackage.Instance.EditorOptions.DisableDeadCode;
 
+				DisabledSectionTracker disabledSectionTracker = null;
 				if (disableDeadCode)
 				{
-					if (disabledSectionTracker.Advance(_scanner.PositionOffset + _scanner.Position)) state |= State.Disabled;
+					disabledSectionTracker = new DisabledSectionTracker(model.DisabledSections);
+					if (disabledSectionTracker.SetOffset(_scanner.PositionOffset)) state |= State.Disabled;
 					else state &= ~State.Disabled;
 				}
 				else
 				{
 					state &= ~State.Disabled;
 				}
+
+				while (_scanner.ScanTokenAndProvideInfoAboutIt(tokenInfo, ref state))
+				{
+					var classificationType = GetClassificationType(tokenInfo.Type);
+					if (classificationType != null)
+					{
+						spans.Add(new ClassificationSpan(new SnapshotSpan(_snapshot, new Span(span.Start.Position + tokenInfo.StartIndex, tokenInfo.Length)), classificationType));
+					}
+
+					if (disableDeadCode)
+					{
+						if (disabledSectionTracker.Advance(_scanner.PositionOffset + _scanner.Position)) state |= State.Disabled;
+						else state &= ~State.Disabled;
+					}
+					else
+					{
+						state &= ~State.Disabled;
+					}
+				}
 			}
 
 			return spans;
-		}
-
-		private void UpdateClassification()
-		{
-			if (_snapshot != null)
-			{
-				var ev = ClassificationChanged;
-				if (ev != null) ev(this, new ClassificationChangedEventArgs(new SnapshotSpan(_snapshot, new Span(0, _snapshot.Length))));
-			}
-		}
-
-		private void OnRefreshAllDocumentsRequired(object sender, EventArgs e)
-		{
-			try
-			{
-				UpdateClassification();
-			}
-			catch (Exception ex)
-			{
-				Log.Error(ex);
-			}
-		}
-
-		private void OnRefreshDocumentRequired(object sender, RefreshDocumentEventArgs e)
-		{
-			if (_snapshot == null) return;
-
-			ThreadHelper.JoinableTaskFactory.RunAsync(async () =>
-			{
-				await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
-
-				try
-				{
-					var filePath = VsTextUtil.TryGetDocumentFileName(_snapshot.TextBuffer);
-					if (string.Equals(filePath, e.FilePath, StringComparison.OrdinalIgnoreCase))
-					{
-						UpdateClassification();
-					}
-				}
-				catch (Exception ex)
-				{
-					Log.Error(ex);
-				}
-			});
 		}
 
 		void VSTheme_ThemeChanged(object sender, EventArgs e)
 		{
 			try
 			{
-				UpdateClassification();
 				_brushes.Clear();
 			}
 			catch (Exception ex)
@@ -308,5 +269,26 @@ namespace DkTools.Classifier
 
 			return null;
 		}
+
+		private void TextBufferNotifier_NewModelAvailable(object sender, DkTextBufferNotifier.NewModelAvailableEventArgs e)
+        {
+            ThreadHelper.JoinableTaskFactory.RunAsync(async () =>
+			{
+				await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
+
+                try
+                {
+					if (e.CodeModel.Snapshot is ITextSnapshot snapshot)
+					{
+						var span = new SnapshotSpan(snapshot, 0, snapshot.Length);
+						ClassificationChanged?.Invoke(this, new ClassificationChangedEventArgs(span));
+					}
+                }
+                catch (Exception ex)
+                {
+					Log.Error(ex);
+                }
+			});
+        }
 	}
 }
