@@ -19,6 +19,9 @@ Visual Studio Extension for WBDK
 ## Change Log
 
 **Version 1.6.1 Changes:**
+- Reduced the number of operations that can cause a code model rebuild, improving typing performance.
+- No longer report code analysis errors when a valid enum value is used as a string.
+- Create File dialog now shows the length of your file name.
 - Statement completion for #include will no longer commit when a '.' is typed.
 
 **Version 1.5.20 Changes:**
