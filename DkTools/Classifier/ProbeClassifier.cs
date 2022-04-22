@@ -20,35 +20,27 @@ namespace DkTools.Classifier
 		private static Dictionary<ProbeClassifierType, IClassificationType> _lightTokenTypes;
 		private static Dictionary<ProbeClassifierType, IClassificationType> _darkTokenTypes;
 		private static Dictionary<ProbeClassifierType, Brush> _brushes = new Dictionary<ProbeClassifierType, Brush>();
-		private BackgroundDeferrer _modelRebuildDeferrer;
-		private CancellationTokenSource _modelRebuildCancellationSource;
 
 		public event EventHandler<ClassificationChangedEventArgs> ClassificationChanged;
 
 		public ProbeClassifier(IClassificationTypeRegistryService registry, ITextBuffer textBuffer)
 		{
+			ThreadHelper.ThrowIfNotOnUIThread();
+
 			_textBuffer = textBuffer ?? throw new ArgumentNullException(nameof(textBuffer));
+
+			var notifier = DkTextBufferNotifier.GetOrCreate(_textBuffer);
 
 			InitializeClassifierTypes(registry);
 
 			_scanner = new ProbeClassifierScanner();
 
-			GlobalEvents.RefreshAllDocumentsRequired += OnRefreshAllDocumentsRequired;
-			GlobalEvents.RefreshDocumentRequired += OnRefreshDocumentRequired;
-
 			VSTheme.ThemeChanged += VSTheme_ThemeChanged;
 
-			_modelRebuildDeferrer = new BackgroundDeferrer(Constants.ModelRebuildDelay);
-            _modelRebuildDeferrer.Idle += ModelRebuildDeferrer_Idle;
-			_modelRebuildDeferrer.OnActivity();
-
-            _textBuffer.Changed += (s,e) => { _modelRebuildDeferrer.OnActivity(); };
-		}
-
-        ~ProbeClassifier()
-		{
-			GlobalEvents.RefreshAllDocumentsRequired -= OnRefreshAllDocumentsRequired;
-			GlobalEvents.RefreshDocumentRequired -= OnRefreshDocumentRequired;
+			if (notifier != null)
+			{
+				notifier.NewModelAvailable += TextBufferNotifier_NewModelAvailable;
+			}
 		}
 
 		private static void InitializeClassifierTypes(IClassificationTypeRegistryService registry)
@@ -246,46 +238,10 @@ namespace DkTools.Classifier
 			return spans;
 		}
 
-		private void OnRefreshAllDocumentsRequired(object sender, EventArgs e)
-		{
-			try
-			{
-				_modelRebuildDeferrer.OnActivity();
-			}
-			catch (Exception ex)
-			{
-				Log.Error(ex);
-			}
-		}
-
-		private void OnRefreshDocumentRequired(object sender, RefreshDocumentEventArgs e)
-		{
-			if (_snapshot == null) return;
-
-			ThreadHelper.JoinableTaskFactory.RunAsync(async () =>
-			{
-				await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
-
-				try
-				{
-					var filePath = VsTextUtil.TryGetDocumentFileName(_snapshot.TextBuffer);
-					if (string.Equals(filePath, e.FilePath, StringComparison.OrdinalIgnoreCase))
-					{
-						_modelRebuildDeferrer.OnActivity();
-					}
-				}
-				catch (Exception ex)
-				{
-					Log.Error(ex);
-				}
-			});
-		}
-
 		void VSTheme_ThemeChanged(object sender, EventArgs e)
 		{
 			try
 			{
-				_modelRebuildDeferrer.OnActivity();
 				_brushes.Clear();
 			}
 			catch (Exception ex)
@@ -314,79 +270,24 @@ namespace DkTools.Classifier
 			return null;
 		}
 
-		private void TextBuffer_Changed(object sender, TextContentChangedEventArgs e)
+		private void TextBufferNotifier_NewModelAvailable(object sender, DkTextBufferNotifier.NewModelAvailableEventArgs e)
         {
-            try
-            {
-				_modelRebuildDeferrer.OnActivity();
-            }
-            catch (Exception ex)
-            {
-				Log.Error(ex);
-            }
-        }
-
-		private void ModelRebuildDeferrer_Idle(object sender, BackgroundDeferrer.IdleEventArgs e)
-        {
-			ThreadHelper.JoinableTaskFactory.RunAsync(async () =>
+            ThreadHelper.JoinableTaskFactory.RunAsync(async () =>
 			{
 				await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
 
                 try
                 {
-					var fileStore = FileStoreHelper.GetOrCreateForTextBuffer(_textBuffer);
-					if (fileStore != null)
-                    {
-						var appSettings = DkEnvironment.CurrentAppSettings;
-						var fileName = VsTextUtil.TryGetDocumentFileName(_textBuffer);
-						var snapshot = _textBuffer.CurrentSnapshot;
-
-						_modelRebuildCancellationSource?.Cancel();
-						_modelRebuildCancellationSource = new CancellationTokenSource();
-						var cancel = _modelRebuildCancellationSource.Token;
-
-						ThreadPool.QueueUserWorkItem(state =>
-                        {
-                            try
-                            {
-								cancel.ThrowIfCancellationRequested();
-
-								var model = fileStore.GetCurrentModelSync(
-									appSettings: appSettings,
-									fileName: fileName,
-									snapshot: snapshot,
-									reason: "Model rebuild",
-									cancel: cancel);
-
-								cancel.ThrowIfCancellationRequested();
-
-								OnModelRebuildComplete(new SnapshotSpan(snapshot, new Span(0, snapshot.Length)));
-                            }
-							catch (OperationCanceledException ex)
-                            {
-								Log.Debug(ex);
-                            }
-                            catch (Exception ex)
-                            {
-								Log.Error(ex);
-                            }
-                        });
-                    }
+					if (e.CodeModel.Snapshot is ITextSnapshot snapshot)
+					{
+						var span = new SnapshotSpan(snapshot, 0, snapshot.Length);
+						ClassificationChanged?.Invoke(this, new ClassificationChangedEventArgs(span));
+					}
                 }
                 catch (Exception ex)
                 {
 					Log.Error(ex);
                 }
-			});
-        }
-
-		private void OnModelRebuildComplete(SnapshotSpan span)
-        {
-			ThreadHelper.JoinableTaskFactory.RunAsync(async () =>
-			{
-				await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
-
-				ClassificationChanged?.Invoke(this, new ClassificationChangedEventArgs(span));
 			});
         }
 	}
