@@ -28,7 +28,7 @@ namespace DkTools.ProbeExplorer
 	public partial class ProbeExplorerControl : UserControl, INotifyPropertyChanged
 	{
 		#region Variables
-		private BackgroundDeferrer _dictTreeDeferrer = new BackgroundDeferrer();
+		private BackgroundDeferrer _dictTreeDeferrer = new BackgroundDeferrer(Constants.DictTreeDelay);
 		private TextFilter _dictFilter = new TextFilter();
 
 		private BitmapImage _folderImg;

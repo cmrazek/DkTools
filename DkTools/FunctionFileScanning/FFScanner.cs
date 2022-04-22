@@ -5,7 +5,6 @@ using DK.Diagnostics;
 using DK.Modeling;
 using DK.Preprocessing;
 using DK.Scanning;
-using DkTools.CodeModeling;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -22,7 +21,7 @@ namespace DkTools.FunctionFileScanning
 		private static List<ScanJob> _runningQueue = new List<ScanJob>();
 		private static object _queueLock = new object();
 		private static DateTime _scanStartTime;
-		private static BackgroundDeferrer _scanDelay = new BackgroundDeferrer();
+		private static BackgroundDeferrer _scanDelay = new BackgroundDeferrer(Constants.FFScannerDelay);
 
 		private class ScanJob : IComparable<ScanJob>
 		{
