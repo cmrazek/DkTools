@@ -1,9 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.ComponentModel;
-using System.Linq;
 using System.Runtime.InteropServices;
-using System.Text;
 using Microsoft.VisualStudio.Shell;
 
 namespace DkTools.Tagging
@@ -17,13 +14,13 @@ namespace DkTools.Tagging
 		public string Initials { get; set; }
 
 		[Category("Tagging")]
-		[DisplayName("Work Order")]
-		[Description("Assigned work order number (e.g. \"WO1234\")")]
+		[DisplayName("Work Item Number")]
+		[Description("Assigned work item number (e.g. \"123456\")")]
 		public string WorkOrder { get; set; }
 
 		[Category("Tagging")]
-		[DisplayName("Defect")]
-		[Description("Assigned defect number (e.g. \"D1234\")")]
+		[DisplayName("Bug / Defect Number")]
+		[Description("Assigned bug / defect number (e.g. \"Bug 123456\")")]
 		public string Defect { get; set; }
 
 		[Category("Dates")]
@@ -59,5 +56,15 @@ namespace DkTools.Tagging
 			this.FunctionNameInDiags = true;
 			this.TodoAfterDiags = false;
 		}
+	}
+
+    internal static class TaggingOptionsUtil
+    {
+		public static string GetDateFormatOrDefault(this TaggingOptions options)
+        {
+			var fmt = options.DateFormat;
+			if (string.IsNullOrWhiteSpace(fmt)) return Constants.DefaultDateFormat;
+			return fmt;
+        }
 	}
 }

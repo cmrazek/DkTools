@@ -24,26 +24,15 @@ namespace DkTools.Tagging
             if (activeDoc != null)
             {
                 var options = ProbeToolsPackage.Instance.TaggingOptions;
-                var dateFormat = options.DateFormat;
-                if (string.IsNullOrWhiteSpace(dateFormat)) dateFormat = Constants.DefaultDateFormat;
 
                 var sel = activeDoc.Selection as TextSelection;
-                sel.Insert(DateTime.Now.ToString(options.DateFormat));
+                sel.Insert(DateTime.Now.ToString(options.GetDateFormatOrDefault()));
             }
 		}
 
 		public static string GetFileHeaderText(string fileName)
 		{
 			var options = ProbeToolsPackage.Instance.TaggingOptions;
-
-			var workOrder = options.WorkOrder;
-			if (workOrder == null) workOrder = string.Empty;
-
-			var initials = options.Initials;
-			if (initials == null) initials = string.Empty;
-
-			var dateFormat = options.DateFormat;
-			if (string.IsNullOrWhiteSpace(dateFormat)) dateFormat = Constants.DefaultDateFormat;
 
 			var sb = new StringBuilder();
 			sb.AppendLine("//**************************************************************************************************");
@@ -55,10 +44,10 @@ namespace DkTools.Tagging
 			sb.AppendLine("//  Date        Who #       Description of Changes");
 			sb.AppendLine("//  ----------- --- ------- ------------------------------------------------------------------------");
 			sb.Append("//  ");
-			sb.Append(DateTime.Now.ToString(dateFormat));
+			sb.Append(DateTime.Now.ToString(options.GetDateFormatOrDefault()));
 			sb.Append("   ");
-			sb.Append(initials.PadRight(4));
-			sb.Append(workOrder.PadRight(8));
+			sb.Append((options.Initials ?? string.Empty).PadRight(4));
+			sb.Append((options.WorkOrder ?? string.Empty).PadRight(8));
 
 			var defect = options.Defect;
 			if (!string.IsNullOrWhiteSpace(defect))
@@ -209,7 +198,7 @@ namespace DkTools.Tagging
 
 					var sb = new StringBuilder();
 					sb.Append(match.Groups[1].Value);
-					sb.Append(DateTime.Now.ToString(Constants.DefaultDateFormat));
+					sb.Append(DateTime.Now.ToString(options.GetDateFormatOrDefault()));
 
 					while (sb.Length < match.Groups[2].Index) sb.Append(' ');
 					if (!string.IsNullOrWhiteSpace(options.Initials))
