@@ -22,6 +22,8 @@ Visual Studio Extension for WBDK
 - Reduced the number of operations that can cause a code model rebuild, improving typing performance.
 - No longer report code analysis errors when a valid enum value is used as a string.
 - Create File dialog now shows the length of your file name.
+- Statement completion for #include will no longer commit when a '.' is typed.
+- Insert Tag can now format a file header comment if it can detect it from the line below.
 
 **Version 1.5.20 Changes:**
 - Fixed a bug where extern functions referenced in a class would be associated with that class, causing a discrepancy in Find All References.
