@@ -9,6 +9,7 @@ using DkTools.CodeModeling;
 using EnvDTE;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Text;
+using Microsoft.VisualStudio.Text.Editor;
 
 namespace DkTools.Tagging
 {
@@ -178,67 +179,124 @@ namespace DkTools.Tagging
 			}
 		}
 
+		private static readonly Regex _rxEmptyHeaderLine = new Regex(@"^\s*(?:\/\/|\*)*\s*$");
+		private static readonly Regex _rxFollowingHeaderLine = new Regex(@"^(\s*(?:\/\/|\*)\s*)\w{6,10}\s+(\w{2,4})\s+([A-Za-z0-9-#_]{2,12})\s*(.*)$");
+
 		public static void InsertTag()
 		{
 			ThreadHelper.ThrowIfNotOnUIThread();
 
-			var dte = Shell.DTE;
-			var activeDoc = dte.ActiveDocument;
-			if (activeDoc == null) return;
-
 			var options = ProbeToolsPackage.Instance.TaggingOptions;
 
-			var sel = activeDoc.Selection as TextSelection;
+			var textView = Shell.ActiveView;
+			if (textView == null) return;
 
+			var snapshot = textView.TextSnapshot;
+			var sel = textView.Selection;
+			var startPt = sel.Start.TranslateTo(snapshot);
+			var endPt = sel.End.TranslateTo(snapshot);
+			if (startPt == endPt)
+            {
+				var line = snapshot.GetLineFromPosition(startPt.Position);
+				var tabSize = textView.Options.GetOptionValue<int>(DefaultOptions.TabSizeOptionId);
+
+				Match match;
+				if (line.LineNumber + 1 < snapshot.LineCount &&
+					_rxEmptyHeaderLine.IsMatch(line.GetText()) &&
+					(match = _rxFollowingHeaderLine.Match(snapshot.GetLineFromLineNumber(line.LineNumber + 1).GetText().TabsToSpaces(tabSize))).Success)
+                {
+					// This is a mod comment in the file header
+
+					var sb = new StringBuilder();
+					sb.Append(match.Groups[1].Value);
+					sb.Append(DateTime.Now.ToString(Constants.DefaultDateFormat));
+
+					while (sb.Length < match.Groups[2].Index) sb.Append(' ');
+					if (!string.IsNullOrWhiteSpace(options.Initials))
+					{
+						sb.Append(options.Initials);
+						sb.Append(' ');
+					}
+
+					while (sb.Length < match.Groups[3].Index) sb.Append(' ');
+					if (!string.IsNullOrWhiteSpace(options.WorkOrder))
+					{
+						sb.Append(options.WorkOrder);
+						sb.Append(' ');
+					}
+
+					while (sb.Length < match.Groups[4].Index) sb.Append(' ');
+					if (!string.IsNullOrWhiteSpace(options.Defect))
+					{
+						sb.Append(options.Defect);
+						sb.Append(' ');
+					}
+
+					using (var undo = textView.TextBuffer.CreateUndoTransaction("Tagging Header"))
+					{
+						textView.TextBuffer.Replace(line.GetSpan(), sb.ToString());
+						textView.Selection.Select(new SnapshotSpan(textView.TextSnapshot, new Span(line.End.Position, 0)), isReversed: false);
+
+						undo.Complete();
+					}
+                }
+				else
+				{
+					using (var undo = textView.TextBuffer.CreateUndoTransaction("Tagging Insert"))
+					{
+						var lineEnd = line.End;
+						var insertText = $"\t\t{GetTagText(options)}";
+						textView.TextBuffer.Insert(lineEnd, insertText);
+						textView.Selection.Select(new SnapshotSpan(textView.TextSnapshot, new Span(lineEnd + insertText.Length, 0)), isReversed: false);
+
+						undo.Complete();
+					}
+				}
+            }
+			else
+            {
+				var startLine = snapshot.GetLineFromPosition(startPt.Position);
+				var endLine = snapshot.GetLineFromPosition(endPt.Position);
+				var indent = startLine.GetText().GetIndentText();
+				var startLineStartPt = startLine.Start.Position;
+				var endLineStartPt = endLine.End.Position;
+				var newLine = textView.Options.GetOptionValue(DefaultOptions.NewLineCharacterOptionId).ToString();
+
+				using (var undo = textView.TextBuffer.CreateUndoTransaction("Tagging Multiline Insert"))
+                {
+					textView.TextBuffer.Insert(endLineStartPt, $"{newLine}{indent}{GetTagText(options)} End");
+					textView.TextBuffer.Insert(startLineStartPt, $"{indent}{GetTagText(options)} Start{newLine}");
+
+					undo.Complete();
+                }
+            }
+		}
+
+		private static string GetTagText(TaggingOptions options)
+        {
 			var sb = new StringBuilder();
 			sb.Append("//");
+
 			if (!string.IsNullOrWhiteSpace(options.Initials))
 			{
 				sb.Append(" ");
 				sb.Append(options.Initials);
 			}
+
 			if (!string.IsNullOrWhiteSpace(options.WorkOrder))
 			{
 				sb.Append(" ");
 				sb.Append(options.WorkOrder);
 			}
+
 			if (!string.IsNullOrWhiteSpace(options.Defect))
 			{
 				sb.Append(" ");
 				sb.Append(options.Defect);
 			}
 
-			if (sel.TopPoint.AbsoluteCharOffset == sel.BottomPoint.AbsoluteCharOffset)
-			{
-				sb.Insert(0, "\t\t");
-				sel.EndOfLine();
-				sel.Insert(sb.ToString());
-			}
-			else
-			{
-				var topLine = sel.TopPoint.Line;
-				var bottomLine = sel.BottomPoint.Line;
-
-				sel.MoveToLineAndOffset(bottomLine, 1);
-				sel.EndOfLine();
-				sel.NewLine();
-				sel.Insert(sb.ToString() + " End");
-				sel.StartOfLine(vsStartOfLineOptions.vsStartOfLineOptionsFirstColumn, false);
-				sel.StartOfLine(vsStartOfLineOptions.vsStartOfLineOptionsFirstText, true);
-				sel.Tabify();
-				sel.EndOfLine();
-
-				sel.MoveToLineAndOffset(topLine, 1);
-				sel.LineUp();
-				sel.EndOfLine();
-				sel.NewLine();
-				sel.Insert(sb.ToString() + " Start");
-				sel.StartOfLine(vsStartOfLineOptions.vsStartOfLineOptionsFirstColumn, false);
-				sel.StartOfLine(vsStartOfLineOptions.vsStartOfLineOptionsFirstText, true);
-				sel.Tabify();
-				sel.EndOfLine();
-			}
-		}
+			return sb.ToString();
+        }
 
 		public static void CommentBlock()
 		{

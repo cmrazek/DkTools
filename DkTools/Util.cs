@@ -110,8 +110,14 @@ namespace DkTools
 		public static int AddIndentTab(this int indent, int tabSize)
 		{
 			if (indent % tabSize == 0) return indent + tabSize;
-			else return indent + tabSize - (tabSize % tabSize);
+			else return indent + tabSize - (indent % tabSize);
 		}
+
+		public static int GetTabWidth(this int currentColumn, int tabSize)
+        {
+			if (currentColumn % tabSize == 0) return tabSize;
+			else return tabSize - (currentColumn % tabSize);
+        }
 
 		public static string GetIndentText(this string str)
 		{
@@ -139,12 +145,13 @@ namespace DkTools
 			return 0;
 		}
 
-		public static int GetIndentCount(this string lineText, int tabSize)
+		public static int GetIndentCount(this string lineText, int tabSize, int length = -1)
 		{
 			var pos = 0;
-			var length = lineText.Length;
 			char ch;
 			var indent = 0;
+
+			if (length < 0) length = lineText.Length;
 
 			while (pos < length)
 			{
@@ -183,6 +190,19 @@ namespace DkTools
 
 			return string.Concat(sb, str);
 		}
+
+		public static string TabsToSpaces(this string str, int tabSize)
+        {
+			var sb = new StringBuilder();
+
+			foreach (var ch in str)
+            {
+				if (ch == '\t') sb.Append(' ', sb.Length.GetTabWidth(tabSize));
+				else sb.Append(ch);
+            }
+
+			return sb.ToString();
+        }
 		#endregion
 	}
 }
