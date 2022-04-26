@@ -1,6 +1,5 @@
 ﻿using DK.AppEnvironment;
 using DK.Code;
-using DK.Modeling.Tokens;
 using DkTools.CodeModeling;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Text;
@@ -72,29 +71,16 @@ namespace DkTools.SmartIndenting
 			{
 				// User is typing a 'case' inside a switch.
 
-				// Try to find the braces that contain the 'case'.
-				var fileStore = FileStoreHelper.GetOrCreateForTextBuffer(buffer);
-				if (fileStore != null)
-				{
-					var model = fileStore.Model;
-					if (model != null)
-					{
-						var modelSnapshot = model.Snapshot as ITextSnapshot;
-						if (modelSnapshot != null)
-						{
-							var offset = line.Snapshot.TranslateOffsetToSnapshot(line.Start.Position, modelSnapshot);
-							var bracesToken = model.File.FindDownward(offset, t => t is BracesToken).LastOrDefault() as BracesToken;
-							if (bracesToken != null)
-							{
-								// Get the indent of the line where the opening brace resides.
-								var openOffset = bracesToken.OpenToken.Span.Start;
-								openOffset = modelSnapshot.TranslateOffsetToSnapshot(openOffset, line.Snapshot);
-								var openLine = line.Snapshot.GetLineFromPosition(openOffset);
-								return openLine.GetText().GetIndentCount(tabSize);
-							}
-						}
-					}
-				}
+				var liveCodeTracker = LiveCodeTracker.GetOrCreateForTextBuffer(buffer);
+				var revCode = liveCodeTracker.CreateReverseCodeParser(line.Start.Position);
+
+				var enclosingItem = revCode.GetPreviousItemsNestable().Where(x => x.Type == CodeType.Operator && x.Text == "{").FirstOrDefault();
+				if (!enclosingItem.IsEmpty)
+                {
+					var openOffset = enclosingItem.Span.Start;
+					var openLine = line.Snapshot.GetLineFromPosition(openOffset);
+					return openLine.GetText().GetIndentCount(tabSize);
+                }
 			}
 
 			// If we got to this point, then the default smart indenting is to be used.

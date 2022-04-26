@@ -253,6 +253,8 @@
     <Compile Include="CodeModeling\CodeModelHelper.cs" />
     <Compile Include="CodeModeling\DefinitionHelper.cs" />
     <Compile Include="CodeModeling\FileStoreHelper.cs" />
+    <Compile Include="CodeModeling\LiveCodeTracker.cs" />
+    <Compile Include="CodeModeling\ReverseCodeParser.cs" />
     <Compile Include="Compiler\BackgroundFec.cs" />
     <Compile Include="CsvWriter.cs" />
     <Compile Include="DictTextViewListener.cs" />

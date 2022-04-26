@@ -3,6 +3,11 @@ DkTools ChangeLog
 For latest changes, see README.md
 
 ____________________________________________________________________________________________________
+Version 1.6.2:
+
+- Quicker smart indenting for 'case' statements.
+
+____________________________________________________________________________________________________
 Version 1.6.1:
 
 - Reduce the number of operations that can cause a code model rebuild, improving typing performance.
