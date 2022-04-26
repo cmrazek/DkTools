@@ -489,6 +489,7 @@ namespace DK.Code
 							_tokenText.Clear();
 							_tokenText.Append('(');
 							_tokenType = CodeType.Operator;
+							_pos = _tokenStartPos + 1;
                         }
 						return true;
 					case "{":
@@ -505,6 +506,7 @@ namespace DK.Code
 							_tokenText.Clear();
 							_tokenText.Append('{');
 							_tokenType = CodeType.Operator;
+							_pos = _tokenStartPos + 1;
                         }
 						return true;
 					case "[":
@@ -521,6 +523,7 @@ namespace DK.Code
 							_tokenText.Clear();
 							_tokenText.Append('[');
 							_tokenType = CodeType.Operator;
+							_pos = _tokenStartPos + 1;
                         }
 						return true;
 				}

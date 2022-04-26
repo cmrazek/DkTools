@@ -440,62 +440,6 @@ namespace DkTools.StatementCompletion
                 }
 			}
 		}
-
-		private bool GetInsideFunction(ITextSnapshot snapshot, int pos, out string className, out string funcName, out int argIndex)
-		{
-			var lineNum = snapshot.GetLineNumberFromPosition(pos);
-			var sb = new StringBuilder(snapshot.GetLineTextUpToPosition(pos));
-
-			var rxFuncCall = new Regex(@"(?:;|{|}|(?:(\w+)\s*\.\s*)?(\w+)\s*(\())");    // groups: 1 = class name, 2 = function name, 3 = start bracket
-
-			while (true)
-			{
-				var parser = new CodeParser(sb.ToString());
-
-				foreach (var match in rxFuncCall.Matches(parser.Source).Cast<Match>().Reverse())
-				{
-					if (match.Groups[0].Length == 1)
-					{
-						// Found a character that proves we're not inside a function.
-						className = null;
-						funcName = null;
-						argIndex = 0;
-						return false;
-					}
-					else
-					{
-						parser.Position = match.Groups[3].Index;    // position of start bracket
-						var startPos = parser.Position;
-						if (parser.ReadNestable() && parser.Type != CodeType.Nested)
-						{
-							className = match.Groups[1].Value;
-							funcName = match.Groups[2].Value;
-
-							// Count the number of commas between that position and the end.
-							parser.Position = startPos;
-							var commaCount = 0;
-							while (parser.Read())
-							{
-								if (parser.Text == ",") commaCount++;
-							}
-
-							argIndex = commaCount;
-							return true;
-						}
-					}
-				}
-
-				lineNum--;
-				if (lineNum < 0) break;
-				var line = snapshot.GetLineFromLineNumber(lineNum);
-				sb.Insert(0, line.GetText() + "\r\n");
-			}
-
-			className = null;
-			funcName = null;
-			argIndex = 0;
-			return false;
-		}
 		#endregion
 
 		private void HandleAfterCase(SnapshotSpan completionSpan, string fileName, CancellationToken cancel)

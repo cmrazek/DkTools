@@ -420,7 +420,7 @@ namespace DkTools.CodeModeling
             if (openBracketSpan.HasValue)
             {
                 var funcItem1 = revCode.GetPreviousItem();
-                if (funcItem1 != null && funcItem1.Value.Type == CodeType.Word)
+                if (funcItem1 != null && funcItem1.Value.Type == CodeType.Word && !DK.Constants.GlobalKeywords.Contains(funcItem1.Value.Text))
                 {
                     var dotItem = revCode.GetPreviousItem();
                     if (dotItem != null && dotItem.Value.Type == CodeType.Operator && dotItem.Value.Text == ".")
