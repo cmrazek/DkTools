@@ -351,6 +351,22 @@ namespace DkTools.CodeModeling
         {
             return new ReverseCodeParser(this, startPosition);
         }
+
+        public SnapshotPoint? FindParentOpenBrace(SnapshotPoint pt)
+        {
+            if (pt.Snapshot.Version.VersionNumber != _snapshot.Version.VersionNumber) pt = pt.TranslateTo(_snapshot, PointTrackingMode.Positive);
+            var start = FindParentOpenBrace(pt.Position);
+            if (start < 0) return null;
+            return new SnapshotPoint(_snapshot, start);
+        }
+
+        public int FindParentOpenBrace(int pt)
+        {
+            var revCode = CreateReverseCodeParser(pt);
+            var openBraceItem = revCode.GetPreviousItemsNestable().Where(x => x.Type == CodeType.Operator && x.Text == "{").FirstOrDefault();
+            if (openBraceItem.IsEmpty) return -1;
+            return openBraceItem.Span.Start;
+        }
         #endregion
 
         #region Definitions

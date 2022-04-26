@@ -5,7 +5,8 @@ For latest changes, see README.md
 ____________________________________________________________________________________________________
 Version 1.6.2:
 
-- Quicker smart indenting for 'case' statements.
+- Optimizations for quicker smart indenting and signature help.
+- Typing a closing '}' will now fix up indenting on the statements inside the scope.
 
 ____________________________________________________________________________________________________
 Version 1.6.1:
