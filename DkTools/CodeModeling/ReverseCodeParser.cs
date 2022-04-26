@@ -35,10 +35,12 @@ namespace DkTools.CodeModeling
             return item;
         }
 
-        public CodeItem? GetPreviousItemNestable()
+        public CodeItem? GetPreviousItemNestable(params string[] stopItems)
         {
             var item = GetPreviousItem();
             if (item == null) return null;
+
+            if (stopItems?.Contains(item.Value.Text) == true) return null;
 
             if (item.Value.Type == CodeType.Operator)
             {
@@ -92,10 +94,10 @@ namespace DkTools.CodeModeling
             while ((item = GetPreviousItem()).HasValue) yield return item.Value;
         }
 
-        public IEnumerable<CodeItem> GetPreviousItemsNestable()
+        public IEnumerable<CodeItem> GetPreviousItemsNestable(params string[] stopItems)
         {
             CodeItem? item;
-            while ((item = GetPreviousItemNestable()).HasValue) yield return item.Value;
+            while ((item = GetPreviousItemNestable(stopItems)).HasValue) yield return item.Value;
         }
     }
 }

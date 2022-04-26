@@ -1,4 +1,6 @@
-﻿using DK.Code;
+﻿using DK.AppEnvironment;
+using DK.Code;
+using DK.Definitions;
 using DK.Diagnostics;
 using Microsoft.VisualStudio.Text;
 using System;
@@ -9,18 +11,19 @@ namespace DkTools.CodeModeling
 {
     internal class LiveCodeTracker
     {
-        private ITextBuffer _buffer;
+        private ITextBuffer _textBuffer;
         private List<int> _lineStates = new List<int>();    // States at the end of the line
         private ITextSnapshot _snapshot;
 
         public LiveCodeTracker(ITextBuffer textBuffer)
         {
-            _buffer = textBuffer ?? throw new ArgumentNullException(nameof(textBuffer));
-            _snapshot = _buffer.CurrentSnapshot;
-            _buffer.Changed += Buffer_Changed;
+            _textBuffer = textBuffer ?? throw new ArgumentNullException(nameof(textBuffer));
+            _snapshot = _textBuffer.CurrentSnapshot;
+            _textBuffer.Changed += Buffer_Changed;
         }
 
-        public ITextBuffer TextBuffer => _buffer;
+        public ITextBuffer TextBuffer => _textBuffer;
+        public ITextSnapshot Snapshot => _snapshot;
 
         #region Text Buffer Properties
         public static LiveCodeTracker GetOrCreateForTextBuffer(ITextBuffer textBuffer)
@@ -50,6 +53,7 @@ namespace DkTools.CodeModeling
 
         // Bits that should get cleared on a line end.
         private const int State_LineEndMask = (State_SingleLineComment | State_StringLiteral | State_CharLiteral | State_IncludeStringLiteral | State_IncludeAngleLiteral | State_AfterInclude);
+        private const int State_NotLiveCode = (State_SingleLineComment | State_StringLiteral | State_CharLiteral | State_IncludeStringLiteral | State_IncludeAngleLiteral | State_AfterInclude | State_MultiLineComment);
 
         private void Buffer_Changed(object sender, TextContentChangedEventArgs e)
         {
@@ -224,7 +228,7 @@ namespace DkTools.CodeModeling
         /// <returns></returns>
         public int GetStateForLineEnd(int lineNumber)
         {
-            if (lineNumber >= _buffer.CurrentSnapshot.LineCount) return 0;
+            if (lineNumber >= _snapshot.LineCount) return 0;
 
             // Get previous state
             var state = _lineStates.Count == 0 ? 0 : _lineStates[_lineStates.Count - 1];
@@ -232,7 +236,7 @@ namespace DkTools.CodeModeling
             while (_lineStates.Count <= lineNumber)
             {
                 state &= ~State_LineEndMask;
-                var snapshotLine = _buffer.CurrentSnapshot.GetLineFromLineNumber(_lineStates.Count);
+                var snapshotLine = _snapshot.GetLineFromLineNumber(_lineStates.Count);
                 ScanLineForState(snapshotLine.GetText(), ref state);
                 _lineStates.Add(state);
             }
@@ -242,16 +246,16 @@ namespace DkTools.CodeModeling
 
         public int GetStateForLineStart(int lineNumber)
         {
-            if (lineNumber == 0 || lineNumber > _buffer.CurrentSnapshot.LineCount) return 0;
+            if (lineNumber == 0 || lineNumber > _snapshot.LineCount) return 0;
 
             return GetStateForLineEnd(lineNumber - 1) & ~State_LineEndMask;
         }
 
         public int GetStateForPosition(int position)
         {
-            if (position >= _buffer.CurrentSnapshot.Length) return 0;
+            if (position >= _snapshot.Length) return 0;
 
-            var line = _buffer.CurrentSnapshot.GetLineFromPosition(position);
+            var line = _snapshot.GetLineFromPosition(position);
             var chOffset = position - line.Start.Position;
 
             var state = GetStateForLineStart(line.LineNumber);
@@ -261,18 +265,30 @@ namespace DkTools.CodeModeling
             return state;
         }
 
+        public int GetStateForPosition(SnapshotPoint pt)
+        {
+            if (pt.Snapshot.Version.VersionNumber != _snapshot.Version.VersionNumber)
+            {
+                pt = pt.TranslateTo(_snapshot, PointTrackingMode.Positive);
+            }
+
+            return GetStateForPosition(pt.Position);
+        }
+
         public int FindLineStartNotInComment(int position, int beforePosition = -1)
         {
             if (position == 0) return 0;
-            if (position > _buffer.CurrentSnapshot.Length) position = _buffer.CurrentSnapshot.Length;
+            if (position > _textBuffer.CurrentSnapshot.Length) position = _textBuffer.CurrentSnapshot.Length;
 
-            var lineNumber = _buffer.CurrentSnapshot.GetLineNumberFromPosition(beforePosition >= 0 ? beforePosition : position);
+            var lineNumber = _textBuffer.CurrentSnapshot.GetLineNumberFromPosition(beforePosition >= 0 ? beforePosition : position);
 
             var state = GetStateForLineStart(lineNumber);
             while ((state & State_MultiLineComment) != 0) state = GetStateForLineStart(--lineNumber);
 
             return lineNumber;
         }
+
+        public static bool IsStateInLiveCode(int state) => (state & State_NotLiveCode) == 0;
         #endregion
 
         #region Text Parsing
@@ -286,12 +302,12 @@ namespace DkTools.CodeModeling
         public CodeItemSearchResults GetCodeItemsLeadingUpToPosition(int position, int beforePosition = -1)
         {
             var lineNumber = FindLineStartNotInComment(position, beforePosition);
-            var startPos = _buffer.CurrentSnapshot.GetLineFromLineNumber(lineNumber).Start.Position;
+            var startPos = _textBuffer.CurrentSnapshot.GetLineFromLineNumber(lineNumber).Start.Position;
             var items = new List<CodeItem>();
 
             while (true)
             {
-                var code = new CodeParser(_buffer.CurrentSnapshot.GetText(startPos, position - startPos));
+                var code = new CodeParser(_textBuffer.CurrentSnapshot.GetText(startPos, position - startPos));
                 var endPos = position - startPos;
 
                 while (!code.EndOfFile && code.Position < endPos)
@@ -313,9 +329,9 @@ namespace DkTools.CodeModeling
                 if (items.Count > 0 || lineNumber == 0) break;
 
                 // If no items found, then back up some more
-                var lineStart = _buffer.CurrentSnapshot.GetLineFromLineNumber(lineNumber - 1).Start.Position;
+                var lineStart = _textBuffer.CurrentSnapshot.GetLineFromLineNumber(lineNumber - 1).Start.Position;
                 lineNumber = FindLineStartNotInComment(lineStart);
-                startPos = _buffer.CurrentSnapshot.GetLineFromLineNumber(lineNumber).Start.Position;
+                startPos = _textBuffer.CurrentSnapshot.GetLineFromLineNumber(lineNumber).Start.Position;
             }
 
             return new CodeItemSearchResults
@@ -334,6 +350,128 @@ namespace DkTools.CodeModeling
         public ReverseCodeParser CreateReverseCodeParser(int startPosition)
         {
             return new ReverseCodeParser(this, startPosition);
+        }
+        #endregion
+
+        #region Definitions
+        public IEnumerable<Tuple<Definition, Definition>> IdentifyWordDotPairFunctionCallDefinitions(string word1, string word2, DkAppSettings appSettings)
+        {
+            var defProv = FileStoreHelper.GetOrCreateForTextBuffer(_textBuffer)?.Model?.DefinitionProvider;
+            if (defProv == null) yield break;
+
+            foreach (var parentDef in defProv.GetGlobalFromAnywhere(word1))
+            {
+                if (!parentDef.AllowsChild) continue;
+
+                foreach (var childDef in parentDef.GetChildDefinitions(word2, appSettings))
+                {
+                    if (childDef.ArgumentsRequired) yield return new Tuple<Definition, Definition>(parentDef, childDef);
+                }
+            }
+        }
+        #endregion
+
+        #region Function Calls
+        public struct FindContainingFunctionCallResult
+        {
+            public bool Success { get; set; }
+            public Definition Definition { get; set; }
+            public ITextSnapshot Snapshot { get; set; }
+            public CodeSpan OpenBracketSpan { get; set; }
+            public CodeSpan NameSpan { get; set; }
+            public int ArgumentIndex { get; set; }
+        }
+
+        public FindContainingFunctionCallResult FindContainingFunctionCall(SnapshotPoint snapPt, DkAppSettings appSettings)
+        {
+            if (snapPt.Snapshot.Version.VersionNumber != _snapshot.Version.VersionNumber)
+            {
+                return FindContainingFunctionCall(snapPt.TranslateTo(_snapshot, PointTrackingMode.Positive).Position, appSettings);
+            }
+            else
+            {
+                return FindContainingFunctionCall(snapPt.Position, appSettings);
+            }
+        }
+
+        public FindContainingFunctionCallResult FindContainingFunctionCall(int position, DkAppSettings appSettings)
+        {
+            var revCode = CreateReverseCodeParser(position);
+
+            CodeItem? item;
+            CodeSpan? openBracketSpan = null;
+            var argIndex = 0;
+            while ((item = revCode.GetPreviousItemNestable("{", "[", ";")) != null)
+            {
+                if (item.Value.Type == CodeType.Operator)
+                {
+                    if (item.Value.Text == "(")
+                    {
+                        openBracketSpan = item.Value.Span;
+                        break;
+                    }
+                    else if (item.Value.Text == ",")
+                    {
+                        argIndex++;
+                    }
+                }
+            }
+
+            if (openBracketSpan.HasValue)
+            {
+                var funcItem1 = revCode.GetPreviousItem();
+                if (funcItem1 != null && funcItem1.Value.Type == CodeType.Word)
+                {
+                    var dotItem = revCode.GetPreviousItem();
+                    if (dotItem != null && dotItem.Value.Type == CodeType.Operator && dotItem.Value.Text == ".")
+                    {
+                        var funcItem2 = revCode.GetPreviousItem();
+                        if (funcItem2 != null && funcItem2.Value.Type == CodeType.Word)
+                        {
+                            var def = FileStoreHelper.GetDefinitionProviderOrNull(_textBuffer)?.GetGlobalFromAnywhere(funcItem2.Value.Text)
+                                .Where(x => x.AllowsChild)
+                                .SelectMany(x => x.GetChildDefinitions(funcItem1.Value.Text, DkEnvironment.CurrentAppSettings))
+                                .Where(x => x.ArgumentsRequired)
+                                .FirstOrDefault();
+                            if (def != null)
+                            {
+                                return new FindContainingFunctionCallResult
+                                {
+                                    Success = true,
+                                    Definition = def,
+                                    Snapshot = _snapshot,
+                                    OpenBracketSpan = openBracketSpan.Value,
+                                    NameSpan = funcItem2.Value.Span.Envelope(funcItem1.Value.Span),
+                                    ArgumentIndex = argIndex
+                                };
+                            }
+                        }
+                    }
+                    else
+                    {
+                        var def = FileStoreHelper.GetDefinitionProviderOrNull(_textBuffer)?.GetGlobalFromAnywhere(funcItem1.Value.Text)
+                            .Where(x => x.ArgumentsRequired)
+                            .FirstOrDefault();
+                        if (def != null)
+                        {
+                            return new FindContainingFunctionCallResult
+                            {
+                                Success = true,
+                                Definition = def,
+                                Snapshot = _snapshot,
+                                OpenBracketSpan = openBracketSpan.Value,
+                                NameSpan = funcItem1.Value.Span,
+                                ArgumentIndex = argIndex
+                            };
+                        }
+                    }
+                }
+            }
+
+            return new FindContainingFunctionCallResult
+            {
+                Success = false
+            };
         }
         #endregion
     }

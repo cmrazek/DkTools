@@ -21,6 +21,7 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
+using DK.Modeling;
 
 namespace DkTools.StatementCompletion
 {
@@ -324,7 +325,7 @@ namespace DkTools.StatementCompletion
 					HandleAfterIfDef(_fileName, cancel);
 					break;
 				case CompletionMode.AfterComma:
-					HandleAfterComma(applicableToSpan, _fileName, cancel);
+					HandleAfterComma(applicableToSpan, DkEnvironment.CurrentAppSettings);
 					break;
 				case CompletionMode.AfterCase:
 					HandleAfterCase(applicableToSpan, _fileName, cancel);
@@ -360,10 +361,10 @@ namespace DkTools.StatementCompletion
 					GetWordCompletions(triggerPt, _params.pt, _fileName, cancel);
 					break;
 				case CompletionMode.ClassFunction:
-					HandleAfterMethodArgsStart(triggerPt, _params.str, _params.str2, _fileName, cancel);
+					HandleAfterMethodArgsStart(_params.str, _params.str2, DkEnvironment.CurrentAppSettings);
 					break;
 				case CompletionMode.Function:
-					HandleAfterFunctionArgsStart(triggerPt, _params.str, _fileName, cancel);
+					HandleAfterFunctionArgsStart(_params.str, DkEnvironment.CurrentAppSettings);
 					break;
 				case CompletionMode.Include:
 					if (!session.Properties.ContainsProperty(CompletionTypeProperty_Include)) session.Properties.AddProperty(CompletionTypeProperty_Include, string.Empty);
@@ -422,15 +423,21 @@ namespace DkTools.StatementCompletion
 		}
 
 		#region After Comma
-		private void HandleAfterComma(SnapshotSpan completionSpan, string fileName, CancellationToken cancel)
+		private void HandleAfterComma(SnapshotSpan completionSpan, DkAppSettings appSettings)
 		{
-			var snapPt = completionSpan.Start;
-			string className;
-			string funcName;
-			int argIndex;
-			if (GetInsideFunction(completionSpan.Snapshot, completionSpan.Start.Position, out className, out funcName, out argIndex))
-			{
-				GetOptionsForFunctionArg(fileName, className, funcName, argIndex, snapPt, cancel);
+			var liveCodeTracker = LiveCodeTracker.GetOrCreateForTextBuffer(_textView.TextBuffer);
+			var funcResult = liveCodeTracker.FindContainingFunctionCall(completionSpan.Start, appSettings);
+
+            if (funcResult.Success)
+            {
+				var argDataType = funcResult.Definition.ArgumentsSignature.TryGetArgument(funcResult.ArgumentIndex)?.DataType;
+				if (argDataType != null && argDataType.HasCompletionOptions)
+                {
+                    foreach (var option in argDataType.GetCompletionOptions(appSettings))
+                    {
+						CreateCompletion(option);
+					}
+                }
 			}
 		}
 
@@ -577,13 +584,6 @@ namespace DkTools.StatementCompletion
 			StatementLayout.GetCompletionsAfterToken(stmt, this);
 		}
 
-		private void HandleAfterNumber(SnapshotPoint triggerPt, string fileName, CancellationToken cancel)
-		{
-			var tracker = TextBufferStateTracker.GetTrackerForTextBuffer(_textView.TextBuffer);
-			var stmt = State.ToStatement(tracker.GetStateForPosition(triggerPt, fileName, _appSettings, cancel));
-			StatementLayout.GetCompletionsAfterToken(stmt, this);
-		}
-
 		private void HandleAfterStringLiteral(SnapshotPoint triggerPt, string fileName, CancellationToken cancel)
 		{
 			var tracker = TextBufferStateTracker.GetTrackerForTextBuffer(_textView.TextBuffer);
@@ -599,27 +599,37 @@ namespace DkTools.StatementCompletion
 			}
 		}
 
-		private void GetOptionsForFunctionArg(string fileName, string className, string funcName, int argIndex, SnapshotPoint snapPt, CancellationToken cancel)
+		private void GetOptionsForFunctionArg(string className, string funcName, int argIndex, DkAppSettings appSettings)
 		{
-			var model = FileStoreHelper.GetOrCreateForTextBuffer(_textView.TextBuffer)?.Model;
-			if (model == null) return;
+			DataType argDataType;
+			if (className != null)
+            {
+				argDataType = FileStoreHelper.GetDefinitionProviderOrNull(_textView.TextBuffer)?.GetGlobalFromAnywhere(className)
+					.Where(x => x.AllowsChild)
+					.SelectMany(x => x.GetChildDefinitions(funcName, appSettings))
+					.Where(x => x.ArgumentsRequired)
+					.FirstOrDefault()
+					?.ArgumentsSignature
+					?.TryGetArgument(argIndex)
+					?.DataType;
+            }
+			else
+            {
+				argDataType = FileStoreHelper.GetDefinitionProviderOrNull(_textView.TextBuffer)?.GetGlobalFromAnywhere(funcName)
+					.Where(x => x.ArgumentsRequired)
+					.FirstOrDefault()
+					?.ArgumentsSignature
+					?.TryGetArgument(argIndex)
+					?.DataType;
+            }
 
-			var modelPos = model.AdjustPosition(snapPt);
-
-			var sigInfos = SignatureHelp.ProbeSignatureHelpSource.GetAllSignaturesForFunction(model, modelPos, className, funcName).ToArray();
-			if (sigInfos.Length == 0) return;
-			var sig = sigInfos[0];
-
-			var arg = sig.TryGetArgument(argIndex);
-			if (arg == null) return;
-
-			var dataType = arg.DataType;
-			if (dataType == null) return;
-
-			foreach (var option in dataType.GetCompletionOptions(_appSettings))
-			{
-				CreateCompletion(option);
-			}
+			if (argDataType == null) return;
+			if (!argDataType.HasCompletionOptions) return;
+					
+			foreach (var completionOption in argDataType.GetCompletionOptions(appSettings))
+            {
+				CreateCompletion(completionOption);
+            }
 		}
 
         private void HandleDotSeparatedWords(SnapshotSpan completionSpan, string word1, string word2, string fileName, CancellationToken cancel)
@@ -753,16 +763,16 @@ namespace DkTools.StatementCompletion
 			}
 		}
 
-		private void HandleAfterMethodArgsStart(SnapshotPoint triggerPt, string word1, string word2, string fileName, CancellationToken cancel)
+		private void HandleAfterMethodArgsStart(string word1, string word2, DkAppSettings appSettings)
 		{
 			// Starting a new function that belongs to a class or interface.
 
-			GetOptionsForFunctionArg(fileName, word1, word2, 0, triggerPt, cancel);
+			GetOptionsForFunctionArg(word1, word2, 0, appSettings);
 		}
 
-		private void HandleAfterFunctionArgsStart(SnapshotPoint triggerPt, string funcName, string fileName, CancellationToken cancel)
+		private void HandleAfterFunctionArgsStart(string funcName, DkAppSettings appSettings)
 		{
-			GetOptionsForFunctionArg(fileName, null, funcName, 0, triggerPt, cancel);
+			GetOptionsForFunctionArg(null, funcName, 0, appSettings);
 		}
 
 		private void HandleAfterInclude(string startCh, string curFileName)
