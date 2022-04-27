@@ -289,6 +289,8 @@ namespace DkTools.CodeModeling
         }
 
         public static bool IsStateInLiveCode(int state) => (state & State_NotLiveCode) == 0;
+
+        public static bool IsStateInMultiLineComment(int state) => (state & State_MultiLineComment) != 0;
         #endregion
 
         #region Text Parsing

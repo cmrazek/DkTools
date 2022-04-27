@@ -88,13 +88,12 @@ namespace DkTools.SmartIndenting
 				var prevLine = GetPreviousCodeLine(line);
 				if (prevLine != null)
 				{
-					var prevState = prevLine.Start.GetQuickState();
-					while (QuickState.IsInMultiLineComment(prevState))
-					{
+					var liveCodeTracker = LiveCodeTracker.GetOrCreateForTextBuffer(buffer);
+					while (LiveCodeTracker.IsStateInMultiLineComment(liveCodeTracker.GetStateForLineStart(prevLine.LineNumber)))
+                    {
 						if (prevLine.LineNumber == 0) break; // At start of file. In theory, this should never happen as the state for the start of the file is always zero.
 						prevLine = prevLine.Snapshot.GetLineFromLineNumber(prevLine.LineNumber - 1);
-						prevState = prevLine.Start.GetQuickState();
-					}
+                    }
 
 					var prevLineText = prevLine.Snapshot.GetText(prevLine.Start.Position, line.Start.Position - prevLine.Start.Position);
 					if (PrevLineTextWarrantsIndent(prevLineText))
