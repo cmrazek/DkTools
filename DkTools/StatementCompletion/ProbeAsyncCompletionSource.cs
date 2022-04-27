@@ -95,7 +95,6 @@ namespace DkTools.StatementCompletion
 		private static readonly Regex _rxClassFunctionStartBracket = new Regex(@"(\w+)\s*\.\s*(\w+)\s*\($");
 		private static readonly Regex _rxFunctionStartBracket = new Regex(@"(\w+)\s*\($");
 		private static readonly Regex _rxAfterIfDef = new Regex(@"\#ifn?def\s$");
-		private static readonly Regex _rxAfterInclude = new Regex(@"\#include\s+(\<|\"")$");
 		private static readonly Regex _rxOrderBy = new Regex(@"\border\s+by\s$");
 		private static readonly Regex _rxAfterSymbol = new Regex(@"(\*|,|\(|\))\s$");
 		private static readonly Regex _rxAfterNumber = new Regex(@"(\d+)\s$");
@@ -109,7 +108,7 @@ namespace DkTools.StatementCompletion
 
 			if (trigger.Reason == CompletionTriggerReason.Insertion)
 			{
-				if (TryGetApplicableToSpan(trigger.Character, triggerLocation, out SnapshotSpan applicableToSpan, token))
+				if (TryGetApplicableToSpan(trigger.Character, triggerLocation, out SnapshotSpan applicableToSpan))
 				{
 					return new CompletionStartData(CompletionParticipation.ProvidesItems, applicableToSpan);
 				}
@@ -118,7 +117,7 @@ namespace DkTools.StatementCompletion
 			return new CompletionStartData();
 		}
 
-		public bool TryGetApplicableToSpan(char typedChar, SnapshotPoint triggerPt, out SnapshotSpan applicableToSpan, CancellationToken token)
+		public bool TryGetApplicableToSpan(char typedChar, SnapshotPoint triggerPt, out SnapshotSpan applicableToSpan)
 		{
 			ThreadHelper.ThrowIfNotOnUIThread();
 
@@ -307,28 +306,28 @@ namespace DkTools.StatementCompletion
 			switch (_mode)
 			{
 				case CompletionMode.AfterAssignOrCompare:
-					HandleAfterAssignOrCompare(applicableToSpan, _params.str, _params.pt, _fileName, cancel);
+					HandleAfterAssignOrCompare(_params.pt);
 					break;
 				case CompletionMode.AfterIfDef:
-					HandleAfterIfDef(_fileName, cancel);
+					HandleAfterIfDef();
 					break;
 				case CompletionMode.AfterComma:
 					HandleAfterComma(applicableToSpan, DkEnvironment.CurrentAppSettings);
 					break;
 				case CompletionMode.AfterCase:
-					HandleAfterCase(applicableToSpan, _fileName, cancel);
+					HandleAfterCase(applicableToSpan);
 					break;
 				case CompletionMode.AfterExtract:
-					HandleAfterExtract(applicableToSpan, _params.str, _fileName, cancel);
+					HandleAfterExtract(_params.str);
 					break;
 				case CompletionMode.AfterReturn:
-					HandleAfterReturn(applicableToSpan, _fileName, cancel);
+					HandleAfterReturn(applicableToSpan);
 					break;
 				case CompletionMode.AfterTag:
 					HandleAfterTag();
 					break;
 				case CompletionMode.AfterWord:
-					HandleAfterWord(_params.str, triggerPt, _params.snapshot, _fileName, cancel);
+					HandleAfterWord(triggerPt, _params.snapshot, _fileName, cancel);
 					break;
 				case CompletionMode.AfterSymbol:
 					HandleAfterSymbol(triggerPt, _fileName, cancel);
@@ -343,7 +342,7 @@ namespace DkTools.StatementCompletion
 					HandleAfterOrderBy();
 					break;
 				case CompletionMode.DotSeparatedWords:
-					HandleDotSeparatedWords(applicableToSpan, _params.str, _params.str2, _fileName, cancel);
+					HandleDotSeparatedWords(applicableToSpan, _params.str);
 					break;
 				case CompletionMode.Word:
 					GetWordCompletions(triggerPt, _params.pt, _fileName, cancel);
@@ -377,7 +376,7 @@ namespace DkTools.StatementCompletion
 		}
 
 		#region Completion Fulfillment Logic
-		private void HandleAfterAssignOrCompare(SnapshotSpan completionSpan, string operatorText, SnapshotPoint operatorPt, string fileName, CancellationToken cancel)
+		private void HandleAfterAssignOrCompare(SnapshotPoint operatorPt)
 		{
 			var model = FileStoreHelper.GetOrCreateForTextBuffer(_textView.TextBuffer)?.Model;
 			if (model?.Snapshot is ITextSnapshot modelSnapshot)
@@ -398,7 +397,7 @@ namespace DkTools.StatementCompletion
 			}
 		}
 
-		private void HandleAfterIfDef(string fileName, CancellationToken cancel)
+		private void HandleAfterIfDef()
 		{
 			var model = FileStoreHelper.GetOrCreateForTextBuffer(_textView.TextBuffer)?.Model;
 			if (model != null)
@@ -430,7 +429,7 @@ namespace DkTools.StatementCompletion
 		}
 		#endregion
 
-		private void HandleAfterCase(SnapshotSpan completionSpan, string fileName, CancellationToken cancel)
+		private void HandleAfterCase(SnapshotSpan completionSpan)
 		{
 			var model = FileStoreHelper.GetOrCreateForTextBuffer(_textView.TextBuffer)?.Model;
 			if (model != null)
@@ -455,7 +454,7 @@ namespace DkTools.StatementCompletion
 			}
 		}
 
-		private void HandleAfterExtract(SnapshotSpan completionSpan, string permWord, string fileName, CancellationToken cancel)
+		private void HandleAfterExtract(string permWord)
 		{
 			if (string.IsNullOrEmpty(permWord))
 			{
@@ -472,7 +471,7 @@ namespace DkTools.StatementCompletion
             }
 		}
 
-		private void HandleAfterReturn(SnapshotSpan completionSpan, string fileName, CancellationToken cancel)
+		private void HandleAfterReturn(SnapshotSpan completionSpan)
 		{
 			var model = FileStoreHelper.GetOrCreateForTextBuffer(_textView.TextBuffer)?.Model;
 			if (model?.Snapshot is ITextSnapshot modelSnapshot)
@@ -502,10 +501,10 @@ namespace DkTools.StatementCompletion
 			}
 		}
 
-		private void HandleAfterWord(string word, int curPos, ITextSnapshot snapshot, string fileName, CancellationToken cancel)
+		private void HandleAfterWord(SnapshotPoint pt, ITextSnapshot snapshot, string fileName, CancellationToken cancel)
 		{
 			var tracker = TextBufferStateTracker.GetTrackerForTextBuffer(_textView.TextBuffer);
-			var stmt = State.ToStatement(tracker.GetStateForPosition(curPos, snapshot, fileName, _appSettings, cancel));
+			var stmt = State.ToStatement(tracker.GetStateForPosition(pt, snapshot, fileName, _appSettings, cancel));
 			StatementLayout.GetCompletionsAfterToken(stmt, this);
 		}
 
@@ -564,7 +563,7 @@ namespace DkTools.StatementCompletion
             }
 		}
 
-        private void HandleDotSeparatedWords(SnapshotSpan completionSpan, string word1, string word2, string fileName, CancellationToken cancel)
+        private void HandleDotSeparatedWords(SnapshotSpan completionSpan, string word1)
         {
             // Typing a table.field.
 
