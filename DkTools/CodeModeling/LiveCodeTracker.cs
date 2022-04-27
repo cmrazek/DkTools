@@ -41,19 +41,19 @@ namespace DkTools.CodeModeling
         #endregion
 
         #region Line States
-        private const int State_SingleLineComment = 0x01;
-        private const int State_StringLiteral = 0x02;
-        private const int State_CharLiteral = 0x04;
-        private const int State_IncludeStringLiteral = 0x08;
-        private const int State_IncludeAngleLiteral = 0x10;
-        private const int State_AfterInclude = 0x20;
+        public const int State_SingleLineComment = 0x01;
+        public const int State_StringLiteral = 0x02;
+        public const int State_CharLiteral = 0x04;
+        public const int State_IncludeStringLiteral = 0x08;
+        public const int State_IncludeAngleLiteral = 0x10;
+        public const int State_AfterInclude = 0x20;
 
-        private const int State_MultiLineComment = 0xff0000;
-        private const int State_MultiLineShift = 16;
+        public const int State_MultiLineComment = 0xff0000;
+        public const int State_MultiLineShift = 16;
 
         // Bits that should get cleared on a line end.
-        private const int State_LineEndMask = (State_SingleLineComment | State_StringLiteral | State_CharLiteral | State_IncludeStringLiteral | State_IncludeAngleLiteral | State_AfterInclude);
-        private const int State_NotLiveCode = (State_SingleLineComment | State_StringLiteral | State_CharLiteral | State_IncludeStringLiteral | State_IncludeAngleLiteral | State_AfterInclude | State_MultiLineComment);
+        public const int State_LineEndMask = (State_SingleLineComment | State_StringLiteral | State_CharLiteral | State_IncludeStringLiteral | State_IncludeAngleLiteral | State_AfterInclude);
+        public const int State_NotLiveCode = (State_SingleLineComment | State_StringLiteral | State_CharLiteral | State_IncludeStringLiteral | State_IncludeAngleLiteral | State_AfterInclude | State_MultiLineComment);
 
         private void Buffer_Changed(object sender, TextContentChangedEventArgs e)
         {
@@ -172,7 +172,7 @@ namespace DkTools.CodeModeling
                         pos++;
                         state |= State_IncludeStringLiteral;
                     }
-                    else if (ch == '\'')
+                    else if (ch == '<')
                     {
                         pos++;
                         state |= State_IncludeAngleLiteral;
@@ -291,6 +291,10 @@ namespace DkTools.CodeModeling
         public static bool IsStateInLiveCode(int state) => (state & State_NotLiveCode) == 0;
 
         public static bool IsStateInMultiLineComment(int state) => (state & State_MultiLineComment) != 0;
+
+        public static bool IsStateInStringLiteral(int state) => (state & State_StringLiteral) != 0;
+
+        public static bool IsStateAfterInclude(int state) => (state & State_AfterInclude) != 0;
         #endregion
 
         #region Text Parsing

@@ -17,7 +17,6 @@ using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
-using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
@@ -129,8 +128,9 @@ namespace DkTools.StatementCompletion
 				_fileName = VsTextUtil.TryGetDocumentFileName(_textView.TextBuffer);
 				_appSettings = DkEnvironment.CurrentAppSettings;
 
-				var state = triggerPt.GetQuickState();
-				if (QuickState.IsInLiveCode(state))
+				var liveCodeTracker = LiveCodeTracker.GetOrCreateForTextBuffer(_textView.TextBuffer);
+				var state = liveCodeTracker.GetStateForPosition(triggerPt);
+				if (LiveCodeTracker.IsStateInLiveCode(state))
 				{
 					Match match;
 					var line = triggerPt.Snapshot.GetLineFromPosition(triggerPt.Position);
@@ -235,9 +235,9 @@ namespace DkTools.StatementCompletion
 						applicableToSpan = new SnapshotSpan(triggerPt.Snapshot, triggerPt.Position - 1, 1);
 						return true;
 					}
-					#endregion
-					#region Table.Field
-					else if ((match = _rxTypingTable.Match(prefix)).Success)
+                    #endregion
+                    #region Table.Field
+                    else if ((match = _rxTypingTable.Match(prefix)).Success)
 					{
 						_mode = CompletionMode.DotSeparatedWords;
 						applicableToSpan = new SnapshotSpan(triggerPt.Snapshot, match.Groups[2].Index + line.Start.Position, match.Groups[2].Length);
@@ -275,38 +275,26 @@ namespace DkTools.StatementCompletion
 						return true;
 					}
 					#endregion
-					#region #include
-					else if ((match = _rxAfterInclude.Match(prefix)).Success)
-					{
-						_mode = CompletionMode.Include;
-						applicableToSpan = triggerPt.ToSnapshotSpan();
-						_params.str = match.Groups[1].Value;
-						return true;
-					}
-					#endregion
 				}
-				else
+				#region #include
+				else if (typedChar == '"' && (state & LiveCodeTracker.State_IncludeStringLiteral) != 0)
 				{
-					if ((state & QuickState.StringLiteral) != 0)
-					{
-						Match match;
-						var line = triggerPt.Snapshot.GetLineFromPosition(triggerPt.Position);
-						var prefix = line.GetTextUpToPosition(triggerPt);
-
-						#region #include (for string literal)
-						if ((match = _rxAfterInclude.Match(prefix)).Success)
-						{
-							_mode = CompletionMode.Include;
-							applicableToSpan = triggerPt.ToSnapshotSpan();
-							_params.str = match.Groups[1].Value;
-							return true;
-						}
-						#endregion
-					}
+					_mode = CompletionMode.Include;
+					applicableToSpan = triggerPt.ToSnapshotSpan();
+					_params.str = "\"";
+					return true;
 				}
-			}
+				else if (typedChar == '<' && (state & LiveCodeTracker.State_IncludeAngleLiteral) != 0)
+                {
+					_mode = CompletionMode.Include;
+					applicableToSpan = triggerPt.ToSnapshotSpan();
+					_params.str = "<";
+					return true;
+                }
+                #endregion
+            }
 
-			applicableToSpan = new SnapshotSpan(triggerPt.Snapshot, new Span(0, 0));
+            applicableToSpan = new SnapshotSpan(triggerPt.Snapshot, new Span(0, 0));
 			return false;
 		}
 
