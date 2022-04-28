@@ -114,6 +114,7 @@
     <Compile Include="CodeAnalysis\Values\Value.cs" />
     <Compile Include="CodeAnalysis\Values\VoidValue.cs" />
     <Compile Include="CodeAnalysis\Variable.cs" />
+    <Compile Include="Code\CodeItem.cs" />
     <Compile Include="Code\CodeParser.cs" />
     <Compile Include="Code\CodeType.cs" />
     <Compile Include="Code\FilePosition.cs" />

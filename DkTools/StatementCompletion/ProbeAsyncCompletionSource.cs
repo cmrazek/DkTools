@@ -17,10 +17,10 @@ using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
-using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
+using DK.Modeling;
 
 namespace DkTools.StatementCompletion
 {
@@ -95,7 +95,6 @@ namespace DkTools.StatementCompletion
 		private static readonly Regex _rxClassFunctionStartBracket = new Regex(@"(\w+)\s*\.\s*(\w+)\s*\($");
 		private static readonly Regex _rxFunctionStartBracket = new Regex(@"(\w+)\s*\($");
 		private static readonly Regex _rxAfterIfDef = new Regex(@"\#ifn?def\s$");
-		private static readonly Regex _rxAfterInclude = new Regex(@"\#include\s+(\<|\"")$");
 		private static readonly Regex _rxOrderBy = new Regex(@"\border\s+by\s$");
 		private static readonly Regex _rxAfterSymbol = new Regex(@"(\*|,|\(|\))\s$");
 		private static readonly Regex _rxAfterNumber = new Regex(@"(\d+)\s$");
@@ -109,7 +108,7 @@ namespace DkTools.StatementCompletion
 
 			if (trigger.Reason == CompletionTriggerReason.Insertion)
 			{
-				if (TryGetApplicableToSpan(trigger.Character, triggerLocation, out SnapshotSpan applicableToSpan, token))
+				if (TryGetApplicableToSpan(trigger.Character, triggerLocation, out SnapshotSpan applicableToSpan))
 				{
 					return new CompletionStartData(CompletionParticipation.ProvidesItems, applicableToSpan);
 				}
@@ -118,7 +117,7 @@ namespace DkTools.StatementCompletion
 			return new CompletionStartData();
 		}
 
-		public bool TryGetApplicableToSpan(char typedChar, SnapshotPoint triggerPt, out SnapshotSpan applicableToSpan, CancellationToken token)
+		public bool TryGetApplicableToSpan(char typedChar, SnapshotPoint triggerPt, out SnapshotSpan applicableToSpan)
 		{
 			ThreadHelper.ThrowIfNotOnUIThread();
 
@@ -128,8 +127,9 @@ namespace DkTools.StatementCompletion
 				_fileName = VsTextUtil.TryGetDocumentFileName(_textView.TextBuffer);
 				_appSettings = DkEnvironment.CurrentAppSettings;
 
-				var state = triggerPt.GetQuickState();
-				if (QuickState.IsInLiveCode(state))
+				var liveCodeTracker = LiveCodeTracker.GetOrCreateForTextBuffer(_textView.TextBuffer);
+				var state = liveCodeTracker.GetStateForPosition(triggerPt);
+				if (LiveCodeTracker.IsStateInLiveCode(state))
 				{
 					Match match;
 					var line = triggerPt.Snapshot.GetLineFromPosition(triggerPt.Position);
@@ -234,9 +234,9 @@ namespace DkTools.StatementCompletion
 						applicableToSpan = new SnapshotSpan(triggerPt.Snapshot, triggerPt.Position - 1, 1);
 						return true;
 					}
-					#endregion
-					#region Table.Field
-					else if ((match = _rxTypingTable.Match(prefix)).Success)
+                    #endregion
+                    #region Table.Field
+                    else if ((match = _rxTypingTable.Match(prefix)).Success)
 					{
 						_mode = CompletionMode.DotSeparatedWords;
 						applicableToSpan = new SnapshotSpan(triggerPt.Snapshot, match.Groups[2].Index + line.Start.Position, match.Groups[2].Length);
@@ -274,38 +274,26 @@ namespace DkTools.StatementCompletion
 						return true;
 					}
 					#endregion
-					#region #include
-					else if ((match = _rxAfterInclude.Match(prefix)).Success)
-					{
-						_mode = CompletionMode.Include;
-						applicableToSpan = triggerPt.ToSnapshotSpan();
-						_params.str = match.Groups[1].Value;
-						return true;
-					}
-					#endregion
 				}
-				else
+				#region #include
+				else if (typedChar == '"' && (state & LiveCodeTracker.State_IncludeStringLiteral) != 0)
 				{
-					if ((state & QuickState.StringLiteral) != 0)
-					{
-						Match match;
-						var line = triggerPt.Snapshot.GetLineFromPosition(triggerPt.Position);
-						var prefix = line.GetTextUpToPosition(triggerPt);
-
-						#region #include (for string literal)
-						if ((match = _rxAfterInclude.Match(prefix)).Success)
-						{
-							_mode = CompletionMode.Include;
-							applicableToSpan = triggerPt.ToSnapshotSpan();
-							_params.str = match.Groups[1].Value;
-							return true;
-						}
-						#endregion
-					}
+					_mode = CompletionMode.Include;
+					applicableToSpan = triggerPt.ToSnapshotSpan();
+					_params.str = "\"";
+					return true;
 				}
-			}
+				else if (typedChar == '<' && (state & LiveCodeTracker.State_IncludeAngleLiteral) != 0)
+                {
+					_mode = CompletionMode.Include;
+					applicableToSpan = triggerPt.ToSnapshotSpan();
+					_params.str = "<";
+					return true;
+                }
+                #endregion
+            }
 
-			applicableToSpan = new SnapshotSpan(triggerPt.Snapshot, new Span(0, 0));
+            applicableToSpan = new SnapshotSpan(triggerPt.Snapshot, new Span(0, 0));
 			return false;
 		}
 
@@ -318,28 +306,28 @@ namespace DkTools.StatementCompletion
 			switch (_mode)
 			{
 				case CompletionMode.AfterAssignOrCompare:
-					HandleAfterAssignOrCompare(applicableToSpan, _params.str, _params.pt, _fileName, cancel);
+					HandleAfterAssignOrCompare(_params.pt);
 					break;
 				case CompletionMode.AfterIfDef:
-					HandleAfterIfDef(_fileName, cancel);
+					HandleAfterIfDef();
 					break;
 				case CompletionMode.AfterComma:
-					HandleAfterComma(applicableToSpan, _fileName, cancel);
+					HandleAfterComma(applicableToSpan, DkEnvironment.CurrentAppSettings);
 					break;
 				case CompletionMode.AfterCase:
-					HandleAfterCase(applicableToSpan, _fileName, cancel);
+					HandleAfterCase(applicableToSpan);
 					break;
 				case CompletionMode.AfterExtract:
-					HandleAfterExtract(applicableToSpan, _params.str, _fileName, cancel);
+					HandleAfterExtract(_params.str);
 					break;
 				case CompletionMode.AfterReturn:
-					HandleAfterReturn(applicableToSpan, _fileName, cancel);
+					HandleAfterReturn(applicableToSpan);
 					break;
 				case CompletionMode.AfterTag:
 					HandleAfterTag();
 					break;
 				case CompletionMode.AfterWord:
-					HandleAfterWord(_params.str, triggerPt, _params.snapshot, _fileName, cancel);
+					HandleAfterWord(triggerPt, _params.snapshot, _fileName, cancel);
 					break;
 				case CompletionMode.AfterSymbol:
 					HandleAfterSymbol(triggerPt, _fileName, cancel);
@@ -354,16 +342,16 @@ namespace DkTools.StatementCompletion
 					HandleAfterOrderBy();
 					break;
 				case CompletionMode.DotSeparatedWords:
-					HandleDotSeparatedWords(applicableToSpan, _params.str, _params.str2, _fileName, cancel);
+					HandleDotSeparatedWords(applicableToSpan, _params.str);
 					break;
 				case CompletionMode.Word:
 					GetWordCompletions(triggerPt, _params.pt, _fileName, cancel);
 					break;
 				case CompletionMode.ClassFunction:
-					HandleAfterMethodArgsStart(triggerPt, _params.str, _params.str2, _fileName, cancel);
+					HandleAfterMethodArgsStart(_params.str, _params.str2, DkEnvironment.CurrentAppSettings);
 					break;
 				case CompletionMode.Function:
-					HandleAfterFunctionArgsStart(triggerPt, _params.str, _fileName, cancel);
+					HandleAfterFunctionArgsStart(_params.str, DkEnvironment.CurrentAppSettings);
 					break;
 				case CompletionMode.Include:
 					if (!session.Properties.ContainsProperty(CompletionTypeProperty_Include)) session.Properties.AddProperty(CompletionTypeProperty_Include, string.Empty);
@@ -388,7 +376,7 @@ namespace DkTools.StatementCompletion
 		}
 
 		#region Completion Fulfillment Logic
-		private void HandleAfterAssignOrCompare(SnapshotSpan completionSpan, string operatorText, SnapshotPoint operatorPt, string fileName, CancellationToken cancel)
+		private void HandleAfterAssignOrCompare(SnapshotPoint operatorPt)
 		{
 			var model = FileStoreHelper.GetOrCreateForTextBuffer(_textView.TextBuffer)?.Model;
 			if (model?.Snapshot is ITextSnapshot modelSnapshot)
@@ -409,7 +397,7 @@ namespace DkTools.StatementCompletion
 			}
 		}
 
-		private void HandleAfterIfDef(string fileName, CancellationToken cancel)
+		private void HandleAfterIfDef()
 		{
 			var model = FileStoreHelper.GetOrCreateForTextBuffer(_textView.TextBuffer)?.Model;
 			if (model != null)
@@ -422,76 +410,26 @@ namespace DkTools.StatementCompletion
 		}
 
 		#region After Comma
-		private void HandleAfterComma(SnapshotSpan completionSpan, string fileName, CancellationToken cancel)
+		private void HandleAfterComma(SnapshotSpan completionSpan, DkAppSettings appSettings)
 		{
-			var snapPt = completionSpan.Start;
-			string className;
-			string funcName;
-			int argIndex;
-			if (GetInsideFunction(completionSpan.Snapshot, completionSpan.Start.Position, out className, out funcName, out argIndex))
-			{
-				GetOptionsForFunctionArg(fileName, className, funcName, argIndex, snapPt, cancel);
-			}
-		}
+			var liveCodeTracker = LiveCodeTracker.GetOrCreateForTextBuffer(_textView.TextBuffer);
+			var funcResult = liveCodeTracker.FindContainingFunctionCall(completionSpan.Start, appSettings);
 
-		private bool GetInsideFunction(ITextSnapshot snapshot, int pos, out string className, out string funcName, out int argIndex)
-		{
-			var lineNum = snapshot.GetLineNumberFromPosition(pos);
-			var sb = new StringBuilder(snapshot.GetLineTextUpToPosition(pos));
-
-			var rxFuncCall = new Regex(@"(?:;|{|}|(?:(\w+)\s*\.\s*)?(\w+)\s*(\())");    // groups: 1 = class name, 2 = function name, 3 = start bracket
-
-			while (true)
-			{
-				var parser = new CodeParser(sb.ToString());
-
-				foreach (var match in rxFuncCall.Matches(parser.Source).Cast<Match>().Reverse())
-				{
-					if (match.Groups[0].Length == 1)
-					{
-						// Found a character that proves we're not inside a function.
-						className = null;
-						funcName = null;
-						argIndex = 0;
-						return false;
+            if (funcResult.Success)
+            {
+				var argDataType = funcResult.Definition.ArgumentsSignature.TryGetArgument(funcResult.ArgumentIndex)?.DataType;
+				if (argDataType != null && argDataType.HasCompletionOptions)
+                {
+                    foreach (var option in argDataType.GetCompletionOptions(appSettings))
+                    {
+						CreateCompletion(option);
 					}
-					else
-					{
-						parser.Position = match.Groups[3].Index;    // position of start bracket
-						var startPos = parser.Position;
-						if (parser.ReadNestable() && parser.Type != CodeType.Nested)
-						{
-							className = match.Groups[1].Value;
-							funcName = match.Groups[2].Value;
-
-							// Count the number of commas between that position and the end.
-							parser.Position = startPos;
-							var commaCount = 0;
-							while (parser.Read())
-							{
-								if (parser.Text == ",") commaCount++;
-							}
-
-							argIndex = commaCount;
-							return true;
-						}
-					}
-				}
-
-				lineNum--;
-				if (lineNum < 0) break;
-				var line = snapshot.GetLineFromLineNumber(lineNum);
-				sb.Insert(0, line.GetText() + "\r\n");
+                }
 			}
-
-			className = null;
-			funcName = null;
-			argIndex = 0;
-			return false;
 		}
 		#endregion
 
-		private void HandleAfterCase(SnapshotSpan completionSpan, string fileName, CancellationToken cancel)
+		private void HandleAfterCase(SnapshotSpan completionSpan)
 		{
 			var model = FileStoreHelper.GetOrCreateForTextBuffer(_textView.TextBuffer)?.Model;
 			if (model != null)
@@ -516,7 +454,7 @@ namespace DkTools.StatementCompletion
 			}
 		}
 
-		private void HandleAfterExtract(SnapshotSpan completionSpan, string permWord, string fileName, CancellationToken cancel)
+		private void HandleAfterExtract(string permWord)
 		{
 			if (string.IsNullOrEmpty(permWord))
 			{
@@ -533,7 +471,7 @@ namespace DkTools.StatementCompletion
             }
 		}
 
-		private void HandleAfterReturn(SnapshotSpan completionSpan, string fileName, CancellationToken cancel)
+		private void HandleAfterReturn(SnapshotSpan completionSpan)
 		{
 			var model = FileStoreHelper.GetOrCreateForTextBuffer(_textView.TextBuffer)?.Model;
 			if (model?.Snapshot is ITextSnapshot modelSnapshot)
@@ -563,21 +501,14 @@ namespace DkTools.StatementCompletion
 			}
 		}
 
-		private void HandleAfterWord(string word, int curPos, ITextSnapshot snapshot, string fileName, CancellationToken cancel)
+		private void HandleAfterWord(SnapshotPoint pt, ITextSnapshot snapshot, string fileName, CancellationToken cancel)
 		{
 			var tracker = TextBufferStateTracker.GetTrackerForTextBuffer(_textView.TextBuffer);
-			var stmt = State.ToStatement(tracker.GetStateForPosition(curPos, snapshot, fileName, _appSettings, cancel));
+			var stmt = State.ToStatement(tracker.GetStateForPosition(pt, snapshot, fileName, _appSettings, cancel));
 			StatementLayout.GetCompletionsAfterToken(stmt, this);
 		}
 
 		private void HandleAfterSymbol(SnapshotPoint triggerPt, string fileName, CancellationToken cancel)
-		{
-			var tracker = TextBufferStateTracker.GetTrackerForTextBuffer(_textView.TextBuffer);
-			var stmt = State.ToStatement(tracker.GetStateForPosition(triggerPt, fileName, _appSettings, cancel));
-			StatementLayout.GetCompletionsAfterToken(stmt, this);
-		}
-
-		private void HandleAfterNumber(SnapshotPoint triggerPt, string fileName, CancellationToken cancel)
 		{
 			var tracker = TextBufferStateTracker.GetTrackerForTextBuffer(_textView.TextBuffer);
 			var stmt = State.ToStatement(tracker.GetStateForPosition(triggerPt, fileName, _appSettings, cancel));
@@ -599,30 +530,40 @@ namespace DkTools.StatementCompletion
 			}
 		}
 
-		private void GetOptionsForFunctionArg(string fileName, string className, string funcName, int argIndex, SnapshotPoint snapPt, CancellationToken cancel)
+		private void GetOptionsForFunctionArg(string className, string funcName, int argIndex, DkAppSettings appSettings)
 		{
-			var model = FileStoreHelper.GetOrCreateForTextBuffer(_textView.TextBuffer)?.Model;
-			if (model == null) return;
+			DataType argDataType;
+			if (className != null)
+            {
+				argDataType = FileStoreHelper.GetDefinitionProviderOrNull(_textView.TextBuffer)?.GetGlobalFromAnywhere(className)
+					.Where(x => x.AllowsChild)
+					.SelectMany(x => x.GetChildDefinitions(funcName, appSettings))
+					.Where(x => x.ArgumentsRequired)
+					.FirstOrDefault()
+					?.ArgumentsSignature
+					?.TryGetArgument(argIndex)
+					?.DataType;
+            }
+			else
+            {
+				argDataType = FileStoreHelper.GetDefinitionProviderOrNull(_textView.TextBuffer)?.GetGlobalFromAnywhere(funcName)
+					.Where(x => x.ArgumentsRequired)
+					.FirstOrDefault()
+					?.ArgumentsSignature
+					?.TryGetArgument(argIndex)
+					?.DataType;
+            }
 
-			var modelPos = model.AdjustPosition(snapPt);
-
-			var sigInfos = SignatureHelp.ProbeSignatureHelpSource.GetAllSignaturesForFunction(model, modelPos, className, funcName).ToArray();
-			if (sigInfos.Length == 0) return;
-			var sig = sigInfos[0];
-
-			var arg = sig.TryGetArgument(argIndex);
-			if (arg == null) return;
-
-			var dataType = arg.DataType;
-			if (dataType == null) return;
-
-			foreach (var option in dataType.GetCompletionOptions(_appSettings))
-			{
-				CreateCompletion(option);
-			}
+			if (argDataType == null) return;
+			if (!argDataType.HasCompletionOptions) return;
+					
+			foreach (var completionOption in argDataType.GetCompletionOptions(appSettings))
+            {
+				CreateCompletion(completionOption);
+            }
 		}
 
-        private void HandleDotSeparatedWords(SnapshotSpan completionSpan, string word1, string word2, string fileName, CancellationToken cancel)
+        private void HandleDotSeparatedWords(SnapshotSpan completionSpan, string word1)
         {
             // Typing a table.field.
 
@@ -753,16 +694,16 @@ namespace DkTools.StatementCompletion
 			}
 		}
 
-		private void HandleAfterMethodArgsStart(SnapshotPoint triggerPt, string word1, string word2, string fileName, CancellationToken cancel)
+		private void HandleAfterMethodArgsStart(string word1, string word2, DkAppSettings appSettings)
 		{
 			// Starting a new function that belongs to a class or interface.
 
-			GetOptionsForFunctionArg(fileName, word1, word2, 0, triggerPt, cancel);
+			GetOptionsForFunctionArg(word1, word2, 0, appSettings);
 		}
 
-		private void HandleAfterFunctionArgsStart(SnapshotPoint triggerPt, string funcName, string fileName, CancellationToken cancel)
+		private void HandleAfterFunctionArgsStart(string funcName, DkAppSettings appSettings)
 		{
-			GetOptionsForFunctionArg(fileName, null, funcName, 0, triggerPt, cancel);
+			GetOptionsForFunctionArg(null, funcName, 0, appSettings);
 		}
 
 		private void HandleAfterInclude(string startCh, string curFileName)

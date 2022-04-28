@@ -57,6 +57,7 @@
 			public const string Classifier = "DkTools.Classifier";
 			public const string TextBufferNotifier = "DkTools.TextBufferNotifier";
 			public const string FileName = "DkTools.FileName";
+			public const string LiveCodeTracker = "DkTools.LiveCodeTracker";
         }
 	}
 }

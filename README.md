@@ -18,6 +18,10 @@ Visual Studio Extension for WBDK
 
 ## Change Log
 
+**Version 1.6.2 Changes:**
+- Optimizations for quicker smart indenting and signature help.
+- Typing a closing '}' will now fix up indenting on the statements inside the scope.
+
 **Version 1.6.1 Changes:**
 - Reduced the number of operations that can cause a code model rebuild, improving typing performance.
 - No longer report code analysis errors when a valid enum value is used as a string.

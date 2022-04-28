@@ -28,6 +28,10 @@ namespace DkTools.CodeModeling
 			return cache;
 		}
 
+		public static CodeModel GetCodeModelOrNull(ITextBuffer buffer) => GetOrCreateForTextBuffer(buffer)?.Model;
+
+		public static DefinitionProvider GetDefinitionProviderOrNull(ITextBuffer buffer) => GetOrCreateForTextBuffer(buffer)?.Model?.DefinitionProvider;
+
 		public static CodeModel GetCurrentModelSync(this FileStore fileStore,
 			DkAppSettings appSettings,
 			string fileName,

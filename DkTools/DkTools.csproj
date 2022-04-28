@@ -253,6 +253,8 @@
     <Compile Include="CodeModeling\CodeModelHelper.cs" />
     <Compile Include="CodeModeling\DefinitionHelper.cs" />
     <Compile Include="CodeModeling\FileStoreHelper.cs" />
+    <Compile Include="CodeModeling\LiveCodeTracker.cs" />
+    <Compile Include="CodeModeling\ReverseCodeParser.cs" />
     <Compile Include="Compiler\BackgroundFec.cs" />
     <Compile Include="CsvWriter.cs" />
     <Compile Include="DictTextViewListener.cs" />
@@ -337,7 +339,6 @@
     <Compile Include="QuickInfo\QuickInfoLayoutHelper.cs" />
     <Compile Include="QuickInfo\QuickInfoSource.cs" />
     <Compile Include="QuickInfo\QuickInfoSourceProvider.cs" />
-    <Compile Include="QuickState\QuickStateTracker.cs" />
     <Compile Include="Res.Designer.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>

@@ -3,6 +3,12 @@ DkTools ChangeLog
 For latest changes, see README.md
 
 ____________________________________________________________________________________________________
+Version 1.6.2:
+
+- Optimizations for quicker smart indenting and signature help.
+- Typing a closing '}' will now fix up indenting on the statements inside the scope.
+
+____________________________________________________________________________________________________
 Version 1.6.1:
 
 - Reduce the number of operations that can cause a code model rebuild, improving typing performance.
