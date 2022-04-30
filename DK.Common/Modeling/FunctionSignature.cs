@@ -68,12 +68,7 @@ namespace DK.Modeling
 		public ServerContext ServerContext => _serverContext;
 		public FunctionPrivacy Privacy => _privacy;
 		public DataType ReturnDataType => _returnDataType;
-
-		public string Description
-		{
-			get { return _devDesc; }
-			set { _devDesc = value; }
-		}
+		public string Description => _devDesc;
 
 		public IEnumerable<ArgumentDescriptor> Arguments
 		{

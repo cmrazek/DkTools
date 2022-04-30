@@ -248,9 +248,18 @@ namespace DK.CodeAnalysis
 		[ReportOutputTag]
 		CA0070,
 		#endregion
+
+		#region Function Calls (0120-0129)
+		/// <summary>
+		/// Deprecated function call.
+		/// {0} = description text.
+		/// </summary>
+		[ErrorMessage("{0}")]
+		CA0120,
+		#endregion
 	}
 
-	[AttributeUsage(AttributeTargets.Field, AllowMultiple = false)]
+    [AttributeUsage(AttributeTargets.Field, AllowMultiple = false)]
 	class ErrorMessageAttribute : Attribute
 	{
 		private string _message;
