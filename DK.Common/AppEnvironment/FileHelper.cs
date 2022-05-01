@@ -3,7 +3,7 @@ using System.IO;
 
 namespace DK.AppEnvironment
 {
-	static class FileHelper
+	public static class FileHelper
 	{
 		public static bool PathIsSameOrChildDir(string childDir, string parentDir)
 		{

@@ -49,11 +49,11 @@ namespace DkTools.FunctionFileScanning
 
 		public static void OnStartup()
 		{
-            ProbeToolsPackage.Instance.App.AppChanged += new EventHandler(ProbeEnvironment_AppChanged);
+            ProbeToolsPackage.Instance.App.AppChanged += ProbeEnvironment_AppChanged;
             ProbeToolsPackage.Instance.App.FileChanged += ProbeAppSettings_FileChanged;
 			_scanDelay.Idle += ScanTimerElapsed;
 
-			StartScanning();
+			StartScanning(ProbeToolsPackage.Instance.App.Settings);
 		}
 
 		public static void OnShutdown()
@@ -61,9 +61,9 @@ namespace DkTools.FunctionFileScanning
 			Kill();
 		}
 
-		private static void ProbeEnvironment_AppChanged(object sender, EventArgs e)
+		private static void ProbeEnvironment_AppChanged(object sender, AppSettingsEventArgs e)
 		{
-			StartScanning();
+			StartScanning(e.AppSettings);
 		}
 
 		private static void Kill()
@@ -116,22 +116,15 @@ namespace DkTools.FunctionFileScanning
 		private static void ScanTimerElapsed(object sender, BackgroundDeferrer.IdleEventArgs e)
 		{
 			Log.Debug("FFScanner delay elapsed.");
-			StartScanning();
+			StartScanning(ProbeToolsPackage.Instance.App.Settings);
 		}
 
-		private static void StartScanning()
+		private static void StartScanning(DkAppSettings appSettings)
 		{
 			var options = ProbeToolsPackage.Instance.EditorOptions;
 			if (options.DisableBackgroundScan)
 			{
 				Log.Debug("Scanning aborted because it's disabled in the options.");
-				return;
-			}
-
-			var app = ProbeToolsPackage.Instance.App.Settings;
-			if (app == null)
-			{
-				Log.Warning("Scanning aborted because there is no current app.");
 				return;
 			}
 
@@ -147,13 +140,13 @@ namespace DkTools.FunctionFileScanning
 				_pendingQueue.Clear();
 				_runningQueue.Clear();
 
-				foreach (var sourceDir in app.SourceDirs)
+				foreach (var sourceDir in appSettings.SourceDirs)
 				{
-					_pendingQueue.Add(new ScanJob(FFScanMode.FolderSearch, sourceDir, app));
+					_pendingQueue.Add(new ScanJob(FFScanMode.FolderSearch, sourceDir, appSettings));
 				}
 
-				_pendingQueue.Add(new ScanJob(FFScanMode.ExportsComplete, null, app));
-				_pendingQueue.Add(new ScanJob(FFScanMode.Completion, null, app));
+				_pendingQueue.Add(new ScanJob(FFScanMode.ExportsComplete, null, appSettings));
+				_pendingQueue.Add(new ScanJob(FFScanMode.Completion, null, appSettings));
 				_pendingQueue.Sort();
 
 				var numThreads = Environment.ProcessorCount - 1;

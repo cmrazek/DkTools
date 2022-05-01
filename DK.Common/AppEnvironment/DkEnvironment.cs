@@ -89,8 +89,6 @@ namespace DK.AppEnvironment
 
 			appSettings.Repo = new AppRepo(appSettings);
 
-			appSettings.CreateFileSystemWatcher();
-
 			var elapsed = DateTime.Now.Subtract(startTime);
 			app.Log.Write(LogLevel.Info, "Application settings reloaded (elapsed: {0})", elapsed);
 			return appSettings;

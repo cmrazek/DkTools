@@ -259,6 +259,7 @@
     <Compile Include="CsvWriter.cs" />
     <Compile Include="DictTextViewListener.cs" />
     <Compile Include="DkTextBufferNotifier.cs" />
+    <Compile Include="AppEnvironment\DkFileSystemWatcher.cs" />
     <Compile Include="ErrorDialog.xaml.cs">
       <DependentUpon>ErrorDialog.xaml</DependentUpon>
     </Compile>
@@ -544,9 +545,7 @@
       <Name>DK.Common</Name>
     </ProjectReference>
   </ItemGroup>
-  <ItemGroup>
-    <Folder Include="DkEnv\" />
-  </ItemGroup>
+  <ItemGroup />
   <PropertyGroup>
     <UseCodebase>true</UseCodebase>
   </PropertyGroup>

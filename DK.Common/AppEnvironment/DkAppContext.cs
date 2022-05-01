@@ -11,7 +11,7 @@ namespace DK.AppEnvironment
         private DkAppSettings _settings;
         private IncludeFileCache _includeFileCache;
 
-        public event EventHandler AppChanged;
+        public event EventHandler<AppSettingsEventArgs> AppChanged;
         public event EventHandler RefreshAllDocumentsRequired;
         public event EventHandler<RefreshDocumentEventArgs> RefreshDocumentRequired;
         public event EventHandler<FileEventArgs> FileChanged;
@@ -33,18 +33,18 @@ namespace DK.AppEnvironment
 
         public void LoadAppSettings(string appName)
         {
-            _settings = DkEnvironment.LoadAppSettings(this, appName);
-
-            OnAppChanged();
+            var settings = DkEnvironment.LoadAppSettings(this, appName);
+            _settings = settings;
+            OnAppChanged(settings);
             OnRefreshAllDocumentsRequired();
         }
 
-        public void OnAppChanged()
+        public void OnAppChanged(DkAppSettings newAppSettings)
         {
             try
             {
                 _includeFileCache.OnAppChanged();
-                AppChanged?.Invoke(null, EventArgs.Empty);
+                AppChanged?.Invoke(null, new AppSettingsEventArgs(newAppSettings));
             }
             catch (Exception ex)
             {
@@ -121,5 +121,15 @@ namespace DK.AppEnvironment
         }
 
         public string FilePath { get; private set; }
+    }
+
+    public class AppSettingsEventArgs : EventArgs
+    {
+        public DkAppSettings AppSettings { get; private set; }
+
+        public AppSettingsEventArgs(DkAppSettings appSettings)
+        {
+            AppSettings = appSettings ?? throw new ArgumentNullException(nameof(appSettings));
+        }
     }
 }

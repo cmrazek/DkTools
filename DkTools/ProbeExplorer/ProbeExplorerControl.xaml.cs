@@ -79,7 +79,7 @@ namespace DkTools.ProbeExplorer
 			_relationshipImg = Res.RelationshipImg.ToBitmapImage();
 			if (_functionImg == null) _functionImg = Res.FunctionImg.ToBitmapImage();
 
-            ProbeToolsPackage.Instance.App.AppChanged += new EventHandler(Probe_AppChanged);
+            ProbeToolsPackage.Instance.App.AppChanged += Probe_AppChanged;
 			_dictTreeDeferrer.Idle += DictTreeDeferrer_Idle;
 		}
 
@@ -152,7 +152,7 @@ namespace DkTools.ProbeExplorer
 			}
 		}
 
-		private void Probe_AppChanged(object sender, EventArgs e)
+		private void Probe_AppChanged(object sender, AppSettingsEventArgs e)
 		{
 			try
 			{
@@ -160,13 +160,12 @@ namespace DkTools.ProbeExplorer
 				{
 					await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
 
-					var appSettings = ProbeToolsPackage.Instance.App.Settings;
-					c_appCombo.SelectedItem = (from a in c_appCombo.Items.Cast<string>() where a == appSettings.AppName select a).FirstOrDefault();
+					c_appCombo.SelectedItem = (from a in c_appCombo.Items.Cast<string>() where a == e.AppSettings.AppName select a).FirstOrDefault();
 
-					RefreshAppCombo(appSettings);
-					RefreshFileTree(appSettings);
+					RefreshAppCombo(e.AppSettings);
+					RefreshFileTree(e.AppSettings);
 					RefreshDictTree();
-					c_run.AppSettings = appSettings;
+					c_run.AppSettings = e.AppSettings;
                     ProbeToolsPackage.Instance.App.OnRefreshAllDocumentsRequired();
 				});
 			}

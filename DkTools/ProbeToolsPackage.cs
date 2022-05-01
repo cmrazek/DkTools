@@ -1,5 +1,6 @@
 ﻿using DK.AppEnvironment;
 using DK.Diagnostics;
+using DkTools.AppEnvironment;
 using DkTools.BraceCompletion;
 using DkTools.Compiler;
 using DkTools.LanguageSvc;
@@ -93,6 +94,7 @@ namespace DkTools
         private BuiltInFileSystem _fs;
         private DkToolsLogger _log;
         private ProbeCompiler _compiler;
+        private DkFileSystemWatcher _fileSystemWatcher;
 
         /// <summary>
         /// Default constructor of the package.
@@ -127,6 +129,7 @@ namespace DkTools
             Snippets.SnippetDeploy.DeploySnippets();
 
             _compiler = new ProbeCompiler(_app);
+            _fileSystemWatcher = new DkFileSystemWatcher(_app);
 
             // Proffer the service.	http://msdn.microsoft.com/en-us/library/bb166498.aspx
             var langService = new ProbeLanguageService(this);
@@ -186,6 +189,7 @@ namespace DkTools
 
         public DkAppContext App => _app;
         internal ProbeCompiler Compiler => _compiler;
+        internal DkFileSystemWatcher FileSystemWatcher => _fileSystemWatcher;
 
         public static ProbeToolsPackage Instance => _instance;
         public static ILogger Log => _instance._log;
