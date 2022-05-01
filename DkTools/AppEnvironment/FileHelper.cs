@@ -1,7 +1,7 @@
 ﻿using System;
 using System.IO;
 
-namespace DK.AppEnvironment
+namespace DkTools.AppEnvironment
 {
 	public static class FileHelper
 	{

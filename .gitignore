@@ -5,6 +5,8 @@
 /.vs/
 /DK.Common/bin/
 /DK.Common/obj/
+/DK.Common.Tests/bin/
+/DK.Common.Tests/obj/
 /DkTools/bin/
 /DkTools/obj/
 /packages/

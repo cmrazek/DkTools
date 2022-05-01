@@ -4,7 +4,6 @@ using DK.Schema;
 using Microsoft.Win32;
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 
 namespace DK.AppEnvironment
@@ -81,7 +80,7 @@ namespace DK.AppEnvironment
 		{
 			if (string.IsNullOrEmpty(pathName)) return "";
 
-			string fullFileName = Path.GetFullPath(pathName);
+			string fullFileName = _app.FileSystem.GetFullPath(pathName);
 
 			foreach (string sourceDir in SourceDirs)
 			{
@@ -101,14 +100,14 @@ namespace DK.AppEnvironment
 		{
 			if (string.IsNullOrEmpty(pathName)) return "";
 
-			string relPathName = GetRelativePathName(Path.GetFullPath(pathName));
+			string relPathName = GetRelativePathName(_app.FileSystem.GetFullPath(pathName));
 			if (string.IsNullOrEmpty(relPathName)) return "";
 			if (relPathName.EndsWith("&")) relPathName = relPathName.Substring(0, relPathName.Length - 1);
 
 			foreach (string dir in SourceDirs)
 			{
-				string testPathName = Path.Combine(dir, relPathName);
-				if (File.Exists(testPathName)) return testPathName;
+				string testPathName = _app.FileSystem.CombinePath(dir, relPathName);
+				if (_app.FileSystem.FileExists(testPathName)) return testPathName;
 			}
 
 			return "";
@@ -120,17 +119,17 @@ namespace DK.AppEnvironment
 
 			if (string.IsNullOrEmpty(pathName)) return files;
 
-			string relPathName = GetRelativePathName(Path.GetFullPath(pathName));
+			string relPathName = GetRelativePathName(_app.FileSystem.GetFullPath(pathName));
 			if (string.IsNullOrEmpty(relPathName)) return files;
 			if (relPathName.EndsWith("&")) relPathName = relPathName.Substring(0, relPathName.Length - 1);
 
 			foreach (string dir in SourceDirs)
 			{
-				string testPathName = Path.Combine(dir, relPathName);
-				if (includeBaseFile && File.Exists(testPathName)) files.Add(testPathName);
+				string testPathName = _app.FileSystem.CombinePath(dir, relPathName);
+				if (includeBaseFile && _app.FileSystem.FileExists(testPathName)) files.Add(testPathName);
 
 				testPathName += "&";
-				if (File.Exists(testPathName)) files.Add(testPathName);
+				if (_app.FileSystem.FileExists(testPathName)) files.Add(testPathName);
 			}
 
 			return files;
@@ -138,17 +137,7 @@ namespace DK.AppEnvironment
 
 		public bool FileExistsInApp(string pathName)
 		{
-			return !string.IsNullOrEmpty(GetRelativePathName(Path.GetFullPath(pathName)));
-		}
-
-		public void MergeEnvironmentVariables(System.Collections.Specialized.StringDictionary vars)
-		{
-			if (!Initialized) return;
-
-			var merger = new DkEnvVarMerger(this);
-			var mergedVars = merger.CreateMergedVarList();
-
-			foreach (var v in mergedVars) vars[v.Name] = v.Value;
+			return !string.IsNullOrEmpty(GetRelativePathName(_app.FileSystem.GetFullPath(pathName)));
 		}
 
 		#region DK Registry

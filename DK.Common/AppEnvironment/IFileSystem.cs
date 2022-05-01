@@ -10,6 +10,8 @@ namespace DK.AppEnvironment
 
         string CombinePath(string parentPath, string childPath);
 
+        string CombinePath(params string[] pathComponents);
+
         string GetFullPath(string path);
 
         string GetParentDirectoryName(string path);
@@ -27,5 +29,7 @@ namespace DK.AppEnvironment
         char[] GetInvalidPathChars();
 
         char[] GetInvalidFileNameChars();
+
+        bool IsDirectoryHiddenOrSystem(string path);
     }
 }

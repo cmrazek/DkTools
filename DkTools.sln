@@ -14,6 +14,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DkTools", "DkTools\DkTools.
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DK.Common", "DK.Common\DK.Common.csproj", "{C8AD0B7E-6B3C-4B85-8EE7-9735256C5193}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DK.Common.Tests", "DK.Common.Tests\DK.Common.Tests.csproj", "{64F83B59-4C5C-48BA-BF59-9AAB938A2685}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -46,6 +48,18 @@ Global
 		{C8AD0B7E-6B3C-4B85-8EE7-9735256C5193}.Release|Mixed Platforms.Build.0 = Release|Any CPU
 		{C8AD0B7E-6B3C-4B85-8EE7-9735256C5193}.Release|x86.ActiveCfg = Release|Any CPU
 		{C8AD0B7E-6B3C-4B85-8EE7-9735256C5193}.Release|x86.Build.0 = Release|Any CPU
+		{64F83B59-4C5C-48BA-BF59-9AAB938A2685}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{64F83B59-4C5C-48BA-BF59-9AAB938A2685}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{64F83B59-4C5C-48BA-BF59-9AAB938A2685}.Debug|Mixed Platforms.ActiveCfg = Debug|Any CPU
+		{64F83B59-4C5C-48BA-BF59-9AAB938A2685}.Debug|Mixed Platforms.Build.0 = Debug|Any CPU
+		{64F83B59-4C5C-48BA-BF59-9AAB938A2685}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{64F83B59-4C5C-48BA-BF59-9AAB938A2685}.Debug|x86.Build.0 = Debug|Any CPU
+		{64F83B59-4C5C-48BA-BF59-9AAB938A2685}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{64F83B59-4C5C-48BA-BF59-9AAB938A2685}.Release|Any CPU.Build.0 = Release|Any CPU
+		{64F83B59-4C5C-48BA-BF59-9AAB938A2685}.Release|Mixed Platforms.ActiveCfg = Release|Any CPU
+		{64F83B59-4C5C-48BA-BF59-9AAB938A2685}.Release|Mixed Platforms.Build.0 = Release|Any CPU
+		{64F83B59-4C5C-48BA-BF59-9AAB938A2685}.Release|x86.ActiveCfg = Release|Any CPU
+		{64F83B59-4C5C-48BA-BF59-9AAB938A2685}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

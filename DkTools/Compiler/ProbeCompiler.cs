@@ -246,7 +246,7 @@ namespace DkTools.Compiler
 				info.RedirectStandardError = true;
 				info.CreateNoWindow = true;
 				info.WorkingDirectory = appSettings.ObjectDir;
-                appSettings.MergeEnvironmentVariables(info.EnvironmentVariables);
+                MergeEnvironmentVariables(appSettings, info.EnvironmentVariables);
 
 				WriteLine(string.Concat("pc ", switches));
 
@@ -324,6 +324,16 @@ namespace DkTools.Compiler
 				ProbeToolsPackage.Instance.SetStatusText("DK compile failed");
 				return false;
 			}
+		}
+
+		private void MergeEnvironmentVariables(DkAppSettings appSettings, System.Collections.Specialized.StringDictionary vars)
+		{
+			if (!appSettings.Initialized) return;
+
+			var merger = new DkEnvVarMerger(appSettings);
+			var mergedVars = merger.CreateMergedVarList();
+
+			foreach (var v in mergedVars) vars[v.Name] = v.Value;
 		}
 
 		private void ShowErrorListIfRequired()
