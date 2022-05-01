@@ -1,4 +1,5 @@
-﻿using DK.Diagnostics;
+﻿using DK.AppEnvironment;
+using DK.Diagnostics;
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.BraceCompletion;
 using Microsoft.VisualStudio.Text.Editor;
@@ -9,6 +10,7 @@ namespace DkTools.BraceCompletion
 {
 	public class DkBraceCompletionSession : IBraceCompletionSession
 	{
+		private DkAppContext _app;
 		private ITextView _textView;
 		private ITextBuffer _textBuffer;
 		private char _openingBrace;
@@ -20,9 +22,10 @@ namespace DkTools.BraceCompletion
 
 		private const string UndoDescription = "DK-Brace-Completion";
 
-		public DkBraceCompletionSession(ITextView textView, SnapshotPoint openingPoint, char openingBrace, char closingBrace,
+		public DkBraceCompletionSession(DkAppContext app, ITextView textView, SnapshotPoint openingPoint, char openingBrace, char closingBrace,
 			ITextUndoHistory undoHistory, IEditorOperations editorOperations)
 		{
+			_app = app ?? throw new ArgumentNullException(nameof(app));
 			_textView = textView ?? throw new ArgumentNullException(nameof(textView));
 			_textBuffer = openingPoint.Snapshot.TextBuffer;
 			_openingBrace = openingBrace;
@@ -67,7 +70,7 @@ namespace DkTools.BraceCompletion
 			var closingSnapshotPoint = _closingPoint.GetPoint(snapshot);
 			if (closingSnapshotPoint.Position < 1)
 			{
-				Log.Warning("Closing point not found.");
+				_app.Log.Warning("Closing point not found.");
 				EndSession();
 				return;
 			}
@@ -81,7 +84,7 @@ namespace DkTools.BraceCompletion
 			edit.Insert(closingSnapshotPoint.Position, _closingBrace.ToString());
 			if (edit.HasFailedChanges)
 			{
-				Log.Warning("Failed to insert closing brace.");
+				_app.Log.Warning("Failed to insert closing brace.");
 				edit.Cancel();
 				undo.Cancel();
 				return;
@@ -121,7 +124,7 @@ namespace DkTools.BraceCompletion
 				edit.Delete(span);
 				if (edit.HasFailedChanges)
 				{
-					Log.Warning("Failed to clear braces.");
+					_app.Log.Warning("Failed to clear braces.");
 					edit.Cancel();
 					undo.Cancel();
 					return;
@@ -164,7 +167,7 @@ namespace DkTools.BraceCompletion
 					edit.Delete(span.Span);
 					if (edit.HasFailedChanges)
 					{
-						Log.Warning("Failed to overtype brace.");
+						_app.Log.Warning("Failed to overtype brace.");
 						edit.Cancel();
 						undo.Cancel();
 						return;
@@ -243,7 +246,7 @@ namespace DkTools.BraceCompletion
 						edit.Insert(closingLine.Start, newLineText);
 						if (edit.HasFailedChanges)
 						{
-							Log.Warning("Failed to auto-indent between new brace lines.");
+							_app.Log.Warning("Failed to auto-indent between new brace lines.");
 							edit.Cancel();
 							undo.Cancel();
 							return;
@@ -318,7 +321,7 @@ namespace DkTools.BraceCompletion
 			var afterBrace = _textView.BufferGraph.MapUpToBuffer(closingSnapshotPoint, PointTrackingMode.Negative, PositionAffinity.Predecessor, _textView.TextBuffer);
 			if (!afterBrace.HasValue)
 			{
-				Log.Warning("Failed to move caret to closing brace position.");
+				_app.Log.Warning("Failed to move caret to closing brace position.");
 				return;
 			}
 

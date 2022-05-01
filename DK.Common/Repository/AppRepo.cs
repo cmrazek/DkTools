@@ -169,16 +169,16 @@ namespace DK.Repository
 					_repoFileName = Path.Combine(_repoDir, AppNameEncode(_appSettings.AppName));
 					if (File.Exists(_repoFileName))
 					{
-						Log.Debug("Loading DK repository.");
+						_appSettings.Log.Debug("Loading DK repository.");
 						Read();
 						GenerateGlobalDefinitions();
-						Log.Debug("DK repository loaded.");
+						_appSettings.Log.Debug("DK repository loaded.");
 					}
 				}
 			}
 			catch (Exception ex)
 			{
-				Log.Error(ex, "Exception when reading global data.");
+				_appSettings.Log.Error(ex, "Exception when reading global data.");
 
 				// Reset data to blank
 				_strings = new StringRepo();
@@ -439,7 +439,7 @@ namespace DK.Repository
 
 		private void ShrinkStrings()
 		{
-			Log.Debug("Shrinking DK repo strings");
+			_appSettings.Log.Debug("Shrinking DK repo strings");
 
 			var strings = new StringRepo(_strings.Count);
 
@@ -487,7 +487,7 @@ namespace DK.Repository
 			});
 
 			_strings = strings;
-			Log.Debug("Finished shrinking DK repository strings.");
+			_appSettings.Log.Debug("Finished shrinking DK repository strings.");
 		}
 
 		private List<IncludeDependency> GetDistinctIncludeDependencies(CodeModel model)
@@ -604,7 +604,7 @@ namespace DK.Repository
 
 				Write();
 
-				Log.Info("Scan Complete: File Data: {0} String Count: {1}", _data.Count * 4, _strings.Count);
+				_appSettings.Log.Info("Scan Complete: File Data: {0} String Count: {1}", _data.Count * 4, _strings.Count);
 
 //#if DEBUG
 //				_strings.DumpToFile(_repoFileName + "-strings.txt");
@@ -914,7 +914,7 @@ namespace DK.Repository
 		{
 			if (string.IsNullOrEmpty(_repoFileName)) return;
 
-			Log.Info("Saving repository to: {0}", _repoFileName);
+			_appSettings.Log.Info("Saving repository to: {0}", _repoFileName);
 
 			byte[] fileData;
 			using (var memStream = new MemoryStream())
@@ -951,7 +951,7 @@ namespace DK.Repository
 		{
 			if (string.IsNullOrEmpty(_repoFileName)) throw new InvalidRepoException("Repo file name is not set.");
 
-			Log.Info("Loading repository: {0}", _repoFileName);
+			_appSettings.Log.Info("Loading repository: {0}", _repoFileName);
 
 			_data = new List<int>();
 			_strings = new StringRepo();
@@ -993,7 +993,7 @@ namespace DK.Repository
 				_strings.Read(rdr);
 			}
 
-			Log.Info("Successfully loaded repository.");
+			_appSettings.Log.Info("Successfully loaded repository.");
 		}
 
 		private static bool CompareHashes(byte[] a, byte[] b)
@@ -1224,7 +1224,7 @@ namespace DK.Repository
 			_defs.Clear();
 			_defs.Add(results);
 
-			Log.Debug("Global definitions refreshed: Count [{0}]", _defs.Count);
+			_appSettings.Log.Debug("Global definitions refreshed: Count [{0}]", _defs.Count);
 		}
 		#endregion
 

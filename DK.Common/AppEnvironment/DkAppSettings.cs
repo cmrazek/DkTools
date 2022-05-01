@@ -11,6 +11,8 @@ namespace DK.AppEnvironment
 {
 	public class DkAppSettings
 	{
+		DkAppContext _app;
+
 		public string AppName { get; set; }
 		public bool Initialized { get; set; }
 		public string PlatformPath { get; set; }
@@ -30,8 +32,10 @@ namespace DK.AppEnvironment
 		public AppRepo Repo { get; set; }
 		public Dict Dict { get; set; }
 
-		public DkAppSettings()
+		public DkAppSettings(DkAppContext app)
 		{
+			_app = app ?? throw new ArgumentNullException(nameof(app));
+
 			AppName = string.Empty;
 			Initialized = false;
 			PlatformPath = string.Empty;
@@ -51,6 +55,10 @@ namespace DK.AppEnvironment
 			Dict = new Dict();
 			Repo = new AppRepo(this);
 		}
+
+		public DkAppContext Context => _app;
+		public IFileSystem FileSystem => _app.FileSystem;
+		public ILogger Log => _app.Log;
 
 		public void Deactivate()
 		{
@@ -142,8 +150,8 @@ namespace DK.AppEnvironment
 		{
 			if (!Initialized) return;
 
-			var merger = new DkEnvVarMerger();
-			var mergedVars = merger.CreateMergedVarList(this);
+			var merger = new DkEnvVarMerger(this);
+			var mergedVars = merger.CreateMergedVarList();
 
 			foreach (var v in mergedVars) vars[v.Name] = v.Value;
 		}
@@ -292,42 +300,42 @@ namespace DK.AppEnvironment
 
 		private void OnFileChanged(object sender, FileSystemEventArgs e)
 		{
-			if (DkEnvironment.IsProbeFile(e.FullPath))
+			if (DkEnvironment.IsProbeFile(e.FullPath, _app.FileSystem))
 			{
 				Log.Debug("File change detected: {0}", e.FullPath);
-				GlobalEvents.OnFileChanged(e.FullPath);
+				_app.OnFileChanged(e.FullPath);
 			}
 		}
 
 		private void OnFileDeleted(object sender, FileSystemEventArgs e)
 		{
-			if (DkEnvironment.IsProbeFile(e.FullPath))
+			if (DkEnvironment.IsProbeFile(e.FullPath, _app.FileSystem))
 			{
 				Log.Debug("File deletion detected: {0}", e.FullPath);
-				GlobalEvents.OnFileDeleted(e.FullPath);
+				_app.OnFileDeleted(e.FullPath);
 			}
 		}
 
 		private void OnFileRenamed(object sender, RenamedEventArgs e)
 		{
-			if (DkEnvironment.IsProbeFile(e.OldFullPath))
+			if (DkEnvironment.IsProbeFile(e.OldFullPath, _app.FileSystem))
 			{
 				Log.Debug("File rename detected: {0} -> {1}", e.OldFullPath, e.FullPath);
-				GlobalEvents.OnFileDeleted(e.OldFullPath);
+				_app.OnFileDeleted(e.OldFullPath);
 			}
-			else if (DkEnvironment.IsProbeFile(e.FullPath))
+			else if (DkEnvironment.IsProbeFile(e.FullPath, _app.FileSystem))
 			{
 				Log.Debug("File rename detected: {0} -> {1}", e.OldFullPath, e.FullPath);
-				GlobalEvents.OnFileChanged(e.FullPath);
+				_app.OnFileChanged(e.FullPath);
 			}
 		}
 
 		private void OnFileCreated(object sender, FileSystemEventArgs e)
 		{
-			if (DkEnvironment.IsProbeFile(e.FullPath))
+			if (DkEnvironment.IsProbeFile(e.FullPath, _app.FileSystem))
 			{
 				Log.Debug("File create detected: {0}", e.FullPath);
-				GlobalEvents.OnFileChanged(e.FullPath);
+				_app.OnFileChanged(e.FullPath);
 			}
 		}
 

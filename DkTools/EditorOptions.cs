@@ -1,5 +1,4 @@
-﻿using DK.AppEnvironment;
-using Microsoft.VisualStudio.Shell;
+﻿using Microsoft.VisualStudio.Shell;
 using System;
 using System.ComponentModel;
 using System.Runtime.InteropServices;
@@ -77,7 +76,7 @@ namespace DkTools
 		{
 			base.SaveSettingsToStorage();
 
-			GlobalEvents.OnRefreshAllDocumentsRequired();
+            ProbeToolsPackage.Instance.App.OnRefreshAllDocumentsRequired();
 		}
 	}
 }

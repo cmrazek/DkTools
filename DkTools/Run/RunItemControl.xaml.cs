@@ -1,5 +1,4 @@
-﻿using DK.AppEnvironment;
-using Microsoft.VisualStudio.Shell;
+﻿using Microsoft.VisualStudio.Shell;
 using Microsoft.Win32;
 using System;
 using System.ComponentModel;
@@ -63,7 +62,7 @@ namespace DkTools.Run
 
 					if (DataContext is RunItem runItem)
 					{
-						RunThread.Run(new RunItem[] { runItem }, DkEnvironment.CurrentAppSettings);
+						RunThread.Run(new RunItem[] { runItem }, ProbeToolsPackage.Instance.App.Settings);
 					}
 				});
 			}

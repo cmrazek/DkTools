@@ -15,8 +15,9 @@ namespace DK.Modeling
 	{
 		private Dictionary<string, IncludeFile> _sameDirIncludeFiles = new Dictionary<string, IncludeFile>();
 		private Dictionary<string, IncludeFile> _globalIncludeFiles = new Dictionary<string, IncludeFile>();
-		private Dictionary<string, Definitions.Definition[]> _includeParentDefs = new Dictionary<string, Definitions.Definition[]>();
+		private Dictionary<string, Definition[]> _includeParentDefs = new Dictionary<string, Definition[]>();
 
+		private DkAppContext _app;
 		private CodeModel _model;
 		private Guid _guid;
 
@@ -25,21 +26,22 @@ namespace DK.Modeling
 
 		private const int NumberOfIncludeParentFiles = 3;
 
-		public FileStore()
+		public FileStore(DkAppContext app)
 		{
+			_app = app ?? throw new ArgumentNullException(nameof(app));
 			_guid = Guid.NewGuid();
-			GlobalEvents.RefreshAllDocumentsRequired += OnRefreshAllDocumentsRequired;
-			GlobalEvents.RefreshDocumentRequired += OnRefreshDocumentRequired;
-			GlobalEvents.FileChanged += OnFileChanged;
-			GlobalEvents.FileDeleted += OnFileDeleted;
+            app.RefreshAllDocumentsRequired += OnRefreshAllDocumentsRequired;
+            app.RefreshDocumentRequired += OnRefreshDocumentRequired;
+            app.FileChanged += OnFileChanged;
+            app.FileDeleted += OnFileDeleted;
 		}
 
 		~FileStore()
 		{
-			GlobalEvents.RefreshAllDocumentsRequired -= OnRefreshAllDocumentsRequired;
-			GlobalEvents.RefreshDocumentRequired -= OnRefreshDocumentRequired;
-			GlobalEvents.FileChanged -= OnFileChanged;
-			GlobalEvents.FileDeleted -= OnFileDeleted;
+            _app.RefreshAllDocumentsRequired -= OnRefreshAllDocumentsRequired;
+            _app.RefreshDocumentRequired -= OnRefreshDocumentRequired;
+            _app.FileChanged -= OnFileChanged;
+            _app.FileDeleted -= OnFileDeleted;
 		}
 
 		internal IncludeFile GetIncludeFile(DkAppSettings appSettings, string sourceFileName, string fileName, bool searchSameDir, IEnumerable<string> parentFiles)
@@ -146,7 +148,7 @@ namespace DK.Modeling
 #endif
 			if (parentFiles.Any(x => x.Equals(fullPathName, StringComparison.OrdinalIgnoreCase)))
 			{
-				Log.Write(LogLevel.Warning, string.Format("Cyclical include found for file '{0}'", fullPathName));
+				_app.Log.Write(LogLevel.Warning, string.Format("Cyclical include found for file '{0}'", fullPathName));
 				return true;
 			}
 			return false;
@@ -163,7 +165,7 @@ namespace DK.Modeling
 		{
 			if (string.IsNullOrEmpty(fileName)) throw new ArgumentNullException(nameof(fileName));
 #if DEBUG
-			Log.Debug("Creating preprocessed model. Reason: {0}", reason);
+			_app.Log.Debug("Creating preprocessed model. Reason: {0}", reason);
 			var startTime = DateTime.Now;
 #endif
 
@@ -218,7 +220,7 @@ namespace DK.Modeling
 			var prepTime = midTime1.Subtract(startTime).TotalMilliseconds;
 			var modelTime = midTime2.Subtract(midTime1).TotalMilliseconds;
 			var visTime = endTime.Subtract(midTime2).TotalMilliseconds;
-			Log.Debug("Created model in {0} msecs ({1} preprocessor, {2} model, {3} visible)", elapsedTime, prepTime, modelTime, visTime);
+			_app.Log.Debug("Created model in {0} msecs ({1} preprocessor, {2} model, {3} visible)", elapsedTime, prepTime, modelTime, visTime);
 #endif
 
 			return modelToReturn;
@@ -230,13 +232,13 @@ namespace DK.Modeling
 			set { _model = value; }
 		}
 
-		private static void CreateStdLibModel(DkAppSettings appSettings)
+		private static void CreateStdLibModel(DkAppContext app)
 		{
-			var tempStore = new FileStore();
-			var includeFile = tempStore.GetIncludeFile(appSettings, sourceFileName: null, "stdlib.i", searchSameDir: false, StringHelper.EmptyStringArray);
+			var tempStore = new FileStore(app);
+			var includeFile = tempStore.GetIncludeFile(app.Settings, sourceFileName: null, "stdlib.i", searchSameDir: false, StringHelper.EmptyStringArray);
 			if (includeFile != null)
 			{
-				_stdLibModel = tempStore.CreatePreprocessedModel(appSettings, includeFile.GetSource(appSettings),
+				_stdLibModel = tempStore.CreatePreprocessedModel(app.Settings, includeFile.GetSource(app.Settings),
 					includeFile.FullPathName, false, "stdlib.i model", CancellationToken.None, includeDependencies: null);
 			}
 			else
@@ -244,16 +246,16 @@ namespace DK.Modeling
 				var blankSource = new CodeSource();
 				blankSource.Flush();
 
-				_stdLibModel = tempStore.CreatePreprocessedModel(appSettings, blankSource, "stdlib.i", false,
+				_stdLibModel = tempStore.CreatePreprocessedModel(app.Settings, blankSource, "stdlib.i", false,
 					"stdlib.i model (blank)", CancellationToken.None, includeDependencies: null);
 			}
 
 			_stdLibDefines = _stdLibModel.PreprocessorModel.Preprocessor.Defines.ToArray();
 		}
 
-		public static CodeModel GetStdLibModel(DkAppSettings appSettings)
+		public static CodeModel GetStdLibModel(DkAppContext app)
 		{
-			if (_stdLibModel == null) CreateStdLibModel(appSettings);
+			if (_stdLibModel == null) CreateStdLibModel(app);
 			return _stdLibModel;
 		}
 
@@ -278,7 +280,7 @@ namespace DK.Modeling
 			}
 			catch (Exception ex)
 			{
-				Log.Error(ex);
+				_app.Log.Error(ex);
 			}
 		}
 
@@ -290,7 +292,7 @@ namespace DK.Modeling
 			}
 			catch (Exception ex)
 			{
-				Log.Error(ex);
+				_app.Log.Error(ex);
 			}
 		}
 
@@ -346,8 +348,8 @@ namespace DK.Modeling
 				// The main model needs to be refreshed as well, since it depends on that include file.
 				if (_model != null && !string.IsNullOrEmpty(_model.FilePath))
 				{
-					Log.Debug("FileStore is triggering a refresh for document '{0}' because a refresh was detected for an include file.", _model.FilePath);
-					GlobalEvents.OnRefreshDocumentRequired(_model.FilePath);
+					_app.Log.Debug("FileStore is triggering a refresh for document '{0}' because a refresh was detected for an include file.", _model.FilePath);
+                    _app.OnRefreshDocumentRequired(_model.FilePath);
 				}
 
 				_model = null;
@@ -355,7 +357,7 @@ namespace DK.Modeling
 			// If the file touched is the main model, then require it to be completely rebuilt.
 			else if (string.Equals(_model?.FilePath, filePath, StringComparison.OrdinalIgnoreCase))
 			{
-				GlobalEvents.OnRefreshDocumentRequired(_model.FilePath);
+                _app.OnRefreshDocumentRequired(_model.FilePath);
 				_model = null;
 			}
 		}
@@ -365,24 +367,15 @@ namespace DK.Modeling
 			Definition[] cachedDefs;
 			if (_includeParentDefs.TryGetValue(includePathName.ToLower(), out cachedDefs)) return cachedDefs;
 
-			Log.Debug("Getting include file parent definitions: {0}", includePathName);
+			_app.Log.Debug("Getting include file parent definitions: {0}", includePathName);
 
-			IEnumerable<string> parentFileNames;
-			var app = DkEnvironment.CurrentAppSettings;
-			if (app != null)
-			{
-				parentFileNames = app.Repo.GetDependentFiles(includePathName, NumberOfIncludeParentFiles);
-			}
-			else
-			{
-				parentFileNames = new string[0];
-			}
+			var parentFileNames = appSettings.Repo.GetDependentFiles(includePathName, NumberOfIncludeParentFiles);
 
 			Definition[] commonDefines = null;
 
 			if (!parentFileNames.Any())
 			{
-				Log.Debug("This file is not included by any other file.");
+				_app.Log.Debug("This file is not included by any other file.");
 				commonDefines = new Definition[0];
 				_includeParentDefs[includePathName.ToLower()] = commonDefines;
 				return commonDefines;
@@ -390,10 +383,10 @@ namespace DK.Modeling
 
 			foreach (var parentPathName in parentFileNames)
 			{
-				Log.Debug("Preprocessing include parent: {0}", parentPathName);
+				_app.Log.Debug("Preprocessing include parent: {0}", parentPathName);
 
-				var merger = new FileMerger();
-				merger.MergeFile(appSettings, parentPathName, null, false, true);
+				var merger = new FileMerger(appSettings);
+				merger.MergeFile(parentPathName, null, false, true);
 				var source = merger.MergedContent;
 
 				var reader = new CodeSource.CodeSourcePreprocessorReader(source);
@@ -404,7 +397,7 @@ namespace DK.Modeling
 				var prepResult = prep.Preprocess(reader, prepSource, parentPathName, new string[0], fileContext, cancel, stopAtIncludeFile: includePathName);
 				if (!prepResult.IncludeFileReached)
 				{
-					Log.Warning("Include file not reached when preprocessing parent.\r\nInclude File: {0}\r\nParent File: {1}",
+					_app.Log.Warning("Include file not reached when preprocessing parent.\r\nInclude File: {0}\r\nParent File: {1}",
 						includePathName, parentPathName);
 					continue;
 				}
@@ -413,7 +406,7 @@ namespace DK.Modeling
 				if (!defs.Any())
 				{
 					// No defines will be common
-					Log.Debug("No definitions found in include parent file: {0}", parentPathName);
+					_app.Log.Debug("No definitions found in include parent file: {0}", parentPathName);
 					commonDefines = new Definition[0];
 					break;
 				}
@@ -421,19 +414,19 @@ namespace DK.Modeling
 				if (commonDefines == null)
 				{
 					commonDefines = defs.ToArray();
-					Log.Debug("{1} definition(s) found in include parent file: {0}", parentPathName, commonDefines.Length);
+					_app.Log.Debug("{1} definition(s) found in include parent file: {0}", parentPathName, commonDefines.Length);
 				}
 				else
 				{
 					// Create array of defines common to all
 					commonDefines = (from c in commonDefines where defs.Any(d => d.Name == c.Name) select c).ToArray();
-					Log.Debug("{1} definition(s) found in include parent file: {0}", parentPathName, commonDefines.Length);
+					_app.Log.Debug("{1} definition(s) found in include parent file: {0}", parentPathName, commonDefines.Length);
 					if (commonDefines.Length == 0) break;
 				}
 			}
 
 			if (commonDefines == null) commonDefines = new Definition[0];
-			Log.Debug("Using {0} definition(s) from include parent files.", commonDefines.Length);
+			_app.Log.Debug("Using {0} definition(s) from include parent files.", commonDefines.Length);
 			_includeParentDefs[includePathName.ToLower()] = commonDefines;
 			return commonDefines;
 		}

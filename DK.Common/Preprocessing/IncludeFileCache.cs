@@ -8,11 +8,12 @@ using System.Linq;
 
 namespace DK.Preprocessing
 {
-	internal static class IncludeFileCache
+	internal class IncludeFileCache
 	{
-		private static LinkedList<IncludeFileNode> _files = new LinkedList<IncludeFileNode>();
-		private static int _cacheSize;
-		private static int _numFiles;
+		private DkAppContext _app;
+		private LinkedList<IncludeFileNode> _files = new LinkedList<IncludeFileNode>();
+		private int _cacheSize;
+		private int _numFiles;
 
 		private const int MaxCacheSize = 4 * 1024 * 1024;
 		private const int MinFileCount = 5;
@@ -23,7 +24,12 @@ namespace DK.Preprocessing
 			public CodeSource Source { get; set; }
 		}
 
-		public static CodeSource GetIncludeFileSource(DkAppSettings appSettings, string fullPathName, bool doMerge)
+        public IncludeFileCache(DkAppContext app)
+        {
+			_app = app ?? throw new ArgumentNullException(nameof(app));
+		}
+
+		public CodeSource GetIncludeFileSource(DkAppSettings appSettings, string fullPathName, bool doMerge)
 		{
 			lock (_files)
 			{
@@ -45,8 +51,8 @@ namespace DK.Preprocessing
 					CodeSource source;
 					if (doMerge)
 					{
-						var merger = new FileMerger();
-						merger.MergeFile(appSettings, fullPathName, fileContent, showMergeComments: false, fileIsPrimary: false);
+						var merger = new FileMerger(appSettings);
+						merger.MergeFile(fullPathName, fileContent, showMergeComments: false, fileIsPrimary: false);
 						source = merger.MergedContent;
 					}
 					else
@@ -81,14 +87,14 @@ namespace DK.Preprocessing
 			}
 			catch (Exception ex)
 			{
-				Log.Error(ex, "Exception when loading include file: {0}", fullPathName);
+				_app.Log.Error(ex, "Exception when loading include file: {0}", fullPathName);
 				return null;
 			}
 
 			return null;
 		}
 
-		public static void OnFileChanged(string fullPathName)
+		public void OnFileChanged(string fullPathName)
 		{
 			lock (_files)
 			{
@@ -97,7 +103,7 @@ namespace DK.Preprocessing
 			}
 		}
 
-		public static void OnAppChanged()
+		public void OnAppChanged()
 		{
 			lock (_files)
 			{

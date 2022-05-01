@@ -27,8 +27,8 @@ namespace DkTools
             _textBuffer.Changed += TextBuffer_Changed;
             _modelRebuildDeferrer.Idle += ModelRebuildDeferrer_Idle;
 
-            GlobalEvents.RefreshDocumentRequired += GlobalEvents_RefreshDocumentRequired;
-            GlobalEvents.RefreshAllDocumentsRequired += GlobalEvents_RefreshAllDocumentsRequired;
+            ProbeToolsPackage.Instance.App.RefreshDocumentRequired += GlobalEvents_RefreshDocumentRequired;
+            ProbeToolsPackage.Instance.App.RefreshAllDocumentsRequired += GlobalEvents_RefreshAllDocumentsRequired;
             VSTheme.ThemeChanged += VSTheme_ThemeChanged;
 
             _modelRebuildDeferrer.OnActivity();
@@ -36,8 +36,8 @@ namespace DkTools
 
         ~DkTextBufferNotifier()
         {
-            GlobalEvents.RefreshDocumentRequired -= GlobalEvents_RefreshDocumentRequired;
-            GlobalEvents.RefreshAllDocumentsRequired -= GlobalEvents_RefreshAllDocumentsRequired;
+            ProbeToolsPackage.Instance.App.RefreshDocumentRequired -= GlobalEvents_RefreshDocumentRequired;
+            ProbeToolsPackage.Instance.App.RefreshAllDocumentsRequired -= GlobalEvents_RefreshAllDocumentsRequired;
         }
 
         /// <summary>
@@ -86,7 +86,7 @@ namespace DkTools
 					var fileStore = FileStoreHelper.GetOrCreateForTextBuffer(_textBuffer);
 					if (fileStore != null)
                     {
-						var appSettings = DkEnvironment.CurrentAppSettings;
+						var appSettings = ProbeToolsPackage.Instance.App.Settings;
 						var fileName = VsTextUtil.TryGetDocumentFileName(_textBuffer);
 						var snapshot = _textBuffer.CurrentSnapshot;
 
@@ -114,18 +114,18 @@ namespace DkTools
                             }
 							catch (OperationCanceledException ex)
                             {
-								Log.Debug(ex);
+								ProbeToolsPackage.Log.Debug(ex);
                             }
                             catch (Exception ex)
                             {
-								Log.Error(ex);
+								ProbeToolsPackage.Log.Error(ex);
                             }
                         });
                     }
                 }
                 catch (Exception ex)
                 {
-					Log.Error(ex);
+					ProbeToolsPackage.Log.Error(ex);
                 }
 			});
         }

@@ -1,5 +1,4 @@
-﻿using DK.AppEnvironment;
-using Microsoft.VisualStudio;
+﻿using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.OLE.Interop;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Text.Editor;
@@ -7,7 +6,6 @@ using Microsoft.VisualStudio.TextManager.Interop;
 using System;
 using System.Runtime.InteropServices;
 using System.Text.RegularExpressions;
-using System.Threading;
 
 namespace DkTools.Snippets
 {
@@ -126,11 +124,10 @@ namespace DkTools.Snippets
 			{
 				var tabSize = _view.GetTabSize();
 				var keepTabs = _view.GetKeepTabs();
-				var appSettings = DkEnvironment.CurrentAppSettings;
 
 				foreach (var span in ts)
 				{
-					SmartIndenting.ProbeSmartIndent.FixIndentingBetweenLines(buf, span.iStartLine, span.iEndLine, tabSize, keepTabs, appSettings, CancellationToken.None);
+					SmartIndenting.ProbeSmartIndent.FixIndentingBetweenLines(buf, span.iStartLine, span.iEndLine, tabSize, keepTabs);
 				}
 			}
 

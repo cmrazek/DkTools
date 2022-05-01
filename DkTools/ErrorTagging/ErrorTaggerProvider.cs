@@ -32,15 +32,14 @@ namespace DkTools.ErrorTagging
 
 				try
 				{
-					var textView = sender as ITextView;
-					if (textView != null)
+					if (sender is ITextView textView)
 					{
 						ErrorTaskProvider.Instance.OnDocumentClosed(textView);
 					}
 				}
 				catch (Exception ex)
 				{
-					Log.WriteEx(ex);
+					ProbeToolsPackage.Log.Error(ex);
 				}
 			});
 		}

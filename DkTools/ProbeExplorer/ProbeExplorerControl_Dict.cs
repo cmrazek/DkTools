@@ -29,10 +29,10 @@ namespace DkTools.ProbeExplorer
 
 		private void RefreshDictTree()
 		{
-			var app = DkEnvironment.CurrentAppSettings;
+			var app = ProbeToolsPackage.Instance.App.Settings;
 			if (app == null) return;
 
-			Log.Write(LogLevel.Info, "Refreshing DK Explorer dictionary view...");
+			ProbeToolsPackage.Instance.App.Log.Info("Refreshing DK Explorer dictionary view...");
 			var startTime = DateTime.Now;
 
 			c_dictTree.Items.Clear();
@@ -46,7 +46,7 @@ namespace DkTools.ProbeExplorer
 			}
 
 			var elapsed = DateTime.Now.Subtract(startTime);
-			Log.Write(LogLevel.Info, "Finished refreshing DK Explorer dictionary view. (elapsed: {0})", elapsed);
+			ProbeToolsPackage.Instance.App.Log.Info("Finished refreshing DK Explorer dictionary view. (elapsed: {0})", elapsed);
 		}
 
 		private TreeViewItem CreateStandardTvi(BitmapImage img, string title, string titleInfo, QuickInfoLayout quickInfo, bool expandable)

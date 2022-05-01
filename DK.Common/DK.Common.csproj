@@ -53,12 +53,14 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="AppEnvironment\BuiltInFileSystem.cs" />
     <Compile Include="AppEnvironment\DkAppSettings.cs" />
     <Compile Include="AppEnvironment\DkEnvironment.cs" />
     <Compile Include="AppEnvironment\DkEnvVarMerger.cs" />
     <Compile Include="AppEnvironment\EnvVarList.cs" />
     <Compile Include="AppEnvironment\FileHelper.cs" />
-    <Compile Include="AppEnvironment\GlobalEvents.cs" />
+    <Compile Include="AppEnvironment\DkAppContext.cs" />
+    <Compile Include="AppEnvironment\IFileSystem.cs" />
     <Compile Include="AppEnvironment\RegistryKeyHelper.cs" />
     <Compile Include="CodeAnalysis\CAErrorMarker.cs" />
     <Compile Include="CodeAnalysis\CAErrors.cs" />
@@ -140,11 +142,10 @@
     <Compile Include="Definitions\StringDefDefinition.cs" />
     <Compile Include="Definitions\TableDefinition.cs" />
     <Compile Include="Definitions\VariableDefinition.cs" />
-    <Compile Include="Diagnostics\DkToolsLogger.cs" />
     <Compile Include="Diagnostics\DumpWriter.cs" />
     <Compile Include="Diagnostics\ILogger.cs" />
     <Compile Include="Diagnostics\ILoggerExtensions.cs" />
-    <Compile Include="Diagnostics\Log.cs" />
+    <Compile Include="Diagnostics\DkToolsLogger.cs" />
     <Compile Include="Diagnostics\LogLevel.cs" />
     <Compile Include="Diagnostics\Output.cs" />
     <Compile Include="Modeling\SignatureDocumentor.cs" />

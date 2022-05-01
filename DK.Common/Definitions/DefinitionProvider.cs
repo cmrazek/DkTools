@@ -1,6 +1,5 @@
 ﻿using DK.AppEnvironment;
 using DK.Code;
-using DK.Diagnostics;
 using DK.Modeling;
 using System;
 using System.Collections.Generic;
@@ -148,16 +147,10 @@ namespace DK.Definitions
 			AddGlobalFromAnywhere(appSettings.Dict.AllDictDefinitions);
 			if (string.IsNullOrEmpty(fileName) || !System.IO.Path.GetFileName(fileName).Equals("stdlib.i", StringComparison.OrdinalIgnoreCase))
 			{
-				AddGlobalFromAnywhere(FileStore.GetStdLibModel(appSettings).PreprocessorModel.DefinitionProvider.GlobalsFromFile);
+				AddGlobalFromAnywhere(FileStore.GetStdLibModel(appSettings.Context).PreprocessorModel.DefinitionProvider.GlobalsFromFile);
 			}
 
-			var app = DkEnvironment.CurrentAppSettings;
-			if (app != null)
-			{
-				AddGlobalFromAnywhere(app.Repo.GetGlobalDefinitions());
-			}
-
-			Log.Debug("DefinitionProvider ctor: Built-in [{0}] Anywhere Global [{1}]", _builtInDefs.Length, _anywhereGlobalDefs.Count);
+			AddGlobalFromAnywhere(appSettings.Repo.GetGlobalDefinitions());
 		}
 
 		#region Global Definitions

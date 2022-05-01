@@ -1,66 +1,54 @@
 ﻿using DK.Diagnostics;
-using DK.Preprocessing;
 using DK.Repository;
 using DK.Schema;
 using Microsoft.Win32;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.IO;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
+using IO = System.IO;
 
 namespace DK.AppEnvironment
 {
 	public static class DkEnvironment
 	{
-		#region Construction
-		public static void Initialize()
-		{
-			Reload(null);
-		}
-		#endregion
-
 		#region PSelect
-		private static DkAppSettings _currentApp = new DkAppSettings();
-
-		public static DkAppSettings CurrentAppSettings
+		public static DkAppSettings LoadAppSettings(DkAppContext app, string appName)
 		{
-			get { return _currentApp; }
-			set
+			var appSettings = ReloadCurrentApp(app, appName);
+			if (appSettings.Initialized)
 			{
-				if (_currentApp != value)
-				{
-					if (_currentApp != null) _currentApp.Deactivate();
-					_currentApp = value;
-				}
+				ReloadTableList(appSettings, app.Log);
 			}
+
+			return appSettings;
 		}
 
-		private static DkAppSettings ReloadCurrentApp(string appName = "")
+		private static DkAppSettings ReloadCurrentApp(DkAppContext app, string appName)
 		{
-			Log.Write(LogLevel.Info, "Loading application settings...");
+			app.Log.Write(LogLevel.Info, "Loading application settings...");
 			var startTime = DateTime.Now;
 
-			var appSettings = new DkAppSettings();
+			var appSettings = new DkAppSettings(app);
 
-			appSettings.PlatformPath = WbdkPlatformFolder;
+			appSettings.PlatformPath = GetWbdkPlatformFolder(app.FileSystem, app.Log);
 			appSettings.AllAppNames = GetAllAppNames();
 
 			if (string.IsNullOrEmpty(appName)) appName = GetDefaultAppName();
 			if (string.IsNullOrEmpty(appName))
 			{
-				Log.Warning("No current app found.");
+				app.Log.Warning("No current app found.");
 				appSettings.Initialized = true;
 				return appSettings;
 			}
 
-			Log.Info("Current App: {0}", appName);
+			app.Log.Info("Current App: {0}", appName);
 			var appKey = GetReadOnlyAppKey(appName);
 			if (appKey == null)
 			{
-				Log.Warning("Registry key for current app not found.");
+				app.Log.Warning("Registry key for current app not found.");
 				appSettings.Initialized = true;
 				return appSettings;
 			}
@@ -70,28 +58,28 @@ namespace DK.AppEnvironment
 			appSettings.AppName = appName;
 			appSettings.Initialized = true;
 			appSettings.SourceDirs = appKey.LoadWbdkMultiPath("SourcePaths", rootPath);
-			foreach (var dir in appSettings.SourceDirs) Log.Info("Source Dir: {0}", dir);
+			foreach (var dir in appSettings.SourceDirs) app.Log.Info("Source Dir: {0}", dir);
 			appSettings.IncludeDirs = appKey.LoadWbdkMultiPath("IncludePaths", rootPath)
 				.Concat(new string[] { string.IsNullOrEmpty(appSettings.PlatformPath)
 					? string.Empty
-					: Path.Combine(appSettings.PlatformPath, "include") })
+					: app.FileSystem.CombinePath(appSettings.PlatformPath, "include") })
 				.Where(x => !string.IsNullOrWhiteSpace(x))
 				.ToArray();
-			foreach (var dir in appSettings.IncludeDirs) Log.Info("Include Dir: {0}", dir);
+			foreach (var dir in appSettings.IncludeDirs) app.Log.Info("Include Dir: {0}", dir);
 			appSettings.LibDirs = appKey.LoadWbdkMultiPath("LibPaths", rootPath);
-			foreach (var dir in appSettings.LibDirs) Log.Info("Lib Dir: {0}", dir);
+			foreach (var dir in appSettings.LibDirs) app.Log.Info("Lib Dir: {0}", dir);
 			appSettings.ExeDirs = appKey.LoadWbdkMultiPath("ExecutablePaths", rootPath);
-			foreach (var dir in appSettings.ExeDirs) Log.Info("Executable Dir: {0}", dir);
+			foreach (var dir in appSettings.ExeDirs) app.Log.Info("Executable Dir: {0}", dir);
 			appSettings.ObjectDir = appKey.LoadWbdkPath("ObjectPath", rootPath);
-			Log.Info("Object Dir: {0}", appSettings.ObjectDir);
+			app.Log.Info("Object Dir: {0}", appSettings.ObjectDir);
 			appSettings.TempDir = appKey.LoadWbdkPath("DiagPath", rootPath);
-			Log.Info("Temp Dir: {0}", appSettings.TempDir);
+			app.Log.Info("Temp Dir: {0}", appSettings.TempDir);
 			appSettings.ReportDir = appKey.LoadWbdkPath("ListingPath", rootPath);
-			Log.Info("Report Dir: {0}", appSettings.ReportDir);
+			app.Log.Info("Report Dir: {0}", appSettings.ReportDir);
 			appSettings.DataDir = appKey.LoadWbdkPath("DataPath", rootPath);
-			Log.Info("Data Dir: {0}", appSettings.DataDir);
+			app.Log.Info("Data Dir: {0}", appSettings.DataDir);
 			appSettings.LogDir = appKey.LoadWbdkPath("LogPath", rootPath);
-			Log.Info("Log Dir: {0}", appSettings.LogDir);
+			app.Log.Info("Log Dir: {0}", appSettings.LogDir);
 			appSettings.SourceFiles = LoadSourceFiles(appSettings);
 			appSettings.IncludeFiles = LoadIncludeFiles(appSettings);
 			appSettings.SourceAndIncludeFiles = appSettings.SourceFiles.Concat(appSettings.IncludeFiles.Where(i => !appSettings.SourceFiles.Contains(i))).ToArray();
@@ -104,23 +92,8 @@ namespace DK.AppEnvironment
 			appSettings.CreateFileSystemWatcher();
 
 			var elapsed = DateTime.Now.Subtract(startTime);
-			Log.Write(LogLevel.Info, "Application settings reloaded (elapsed: {0})", elapsed);
+			app.Log.Write(LogLevel.Info, "Application settings reloaded (elapsed: {0})", elapsed);
 			return appSettings;
-		}
-
-		public static void Reload(string appName)
-		{
-			var appSettings = ReloadCurrentApp(appName);
-			if (appSettings.Initialized)
-			{
-				ReloadTableList(appSettings);
-
-				CurrentAppSettings = appSettings;
-
-				IncludeFileCache.OnAppChanged();
-				GlobalEvents.OnAppChanged();
-				GlobalEvents.OnRefreshAllDocumentsRequired();
-			}
 		}
 
 		private const string BaseKey64 = @"SOFTWARE\WOW6432Node\Fincentric\WBDK";
@@ -184,7 +157,7 @@ namespace DK.AppEnvironment
 
 		public static readonly Version DK10Version = new Version(10, 0);
 
-		private static void GetWbdkPlatformInfo()
+		private static void GetWbdkPlatformInfo(IFileSystem fs, ILogger log)
 		{
 			// FEC.exe will be located in the platform folder, and the version number
 			// on that file is the same as the WBDK platform version.
@@ -192,88 +165,79 @@ namespace DK.AppEnvironment
 			{
 				foreach (var path in Environment.GetEnvironmentVariable("PATH").Split(';').Select(x => x.Trim()))
 				{
-					var fileName = Path.Combine(path, "fec.exe");
-					if (File.Exists(fileName))
+					var fileName = fs.CombinePath(path, "fec.exe");
+					if (fs.FileExists(fileName))
 					{
-						Log.Debug("Located FEC.exe: {0}", fileName);
+						log.Debug("Located FEC.exe: {0}", fileName);
 						_wbdkPlatformVersionText = FileVersionInfo.GetVersionInfo(fileName)?.FileVersion ?? string.Empty;
 						if (!Version.TryParse(_wbdkPlatformVersionText, out _wbdkPlatformVersion)) _wbdkPlatformVersion = new Version(1, 0);
 						_wbdkPlatformFolder = path;
-						Log.Debug("WBDK Platform Directory: {0}", _wbdkPlatformFolder);
-						Log.Debug("WBDK Platform Version: {0}", _wbdkPlatformVersionText);
+						log.Debug("WBDK Platform Directory: {0}", _wbdkPlatformFolder);
+						log.Debug("WBDK Platform Version: {0}", _wbdkPlatformVersionText);
 						return;
 					}
 				}
 
-				throw new FileNotFoundException("FEC.exe could not be found.");
+				throw new IO.FileNotFoundException("FEC.exe could not be found.");
 			}
 			catch (Exception ex)
 			{
-				Log.Warning("Failed to get WBDK platform info from FEC.exe: {0}", ex);
+				log.Warning("Failed to get WBDK platform info from FEC.exe: {0}", ex);
 				if (_wbdkPlatformFolder == null) _wbdkPlatformFolder = string.Empty;
 				if (_wbdkPlatformVersionText == null) _wbdkPlatformVersionText = string.Empty;
 			}
 		}
 
-		public static string WbdkPlatformVersionText
+		public static string GetWbdkPlatformVersionText(IFileSystem fs, ILogger log)
 		{
-			get
-			{
-				if (_wbdkPlatformVersionText == null) GetWbdkPlatformInfo();
-				return _wbdkPlatformVersionText;
-			}
+			if (_wbdkPlatformVersionText == null) GetWbdkPlatformInfo(fs, log);
+			return _wbdkPlatformVersionText;
 		}
 
-		public static Version WbdkPlatformVersion
+		public static Version GetWbdkPlatformVersion(IFileSystem fs, ILogger log)
         {
-			get
-            {
-				if (_wbdkPlatformVersion == null) GetWbdkPlatformInfo();
-				return _wbdkPlatformVersion;
-			}
+			if (_wbdkPlatformVersion == null) GetWbdkPlatformInfo(fs, log);
+			return _wbdkPlatformVersion;
         }
 
-		public static string WbdkPlatformFolder
+		public static string GetWbdkPlatformFolder(IFileSystem fs, ILogger log)
 		{
-			get
-			{
-				if (_wbdkPlatformFolder == null) GetWbdkPlatformInfo();
-				return _wbdkPlatformFolder;
-			}
+			if (_wbdkPlatformFolder == null) GetWbdkPlatformInfo(fs, log);
+			return _wbdkPlatformFolder;
 		}
 		#endregion
 
 		#region Table List
-		private static void ReloadTableList(DkAppSettings appSettings)
+		private static void ReloadTableList(DkAppSettings appSettings, ILogger log)
 		{
 			try
 			{
-				Log.Write(LogLevel.Info, "Loading dictionary...");
+				log.Write(LogLevel.Info, "Loading dictionary...");
 				var startTime = DateTime.Now;
 
 				appSettings.Dict.Load(appSettings);
 
 				var elapsed = DateTime.Now.Subtract(startTime);
-				Log.Write(LogLevel.Info, "Successfully loaded dictionary (elapsed: {0})", elapsed);
+				log.Write(LogLevel.Info, "Successfully loaded dictionary (elapsed: {0})", elapsed);
 			}
 			catch (Exception ex)
 			{
-				Log.Error(ex, "Exception when reloading DK table list.");
+				log.Error(ex, "Exception when reloading DK table list.");
 			}
 		}
 		#endregion
 
 		#region File Paths
-		public static string LocateFileInPath(string fileName)
+		public static string LocateFileInPath(string fileName, IFileSystem fs)
 		{
 			foreach (string path in Environment.GetEnvironmentVariable("path").Split(';'))
 			{
 				try
 				{
-					if (Directory.Exists(path.Trim()))
+					if (fs.DirectoryExists(path.Trim()))
 					{
-						string fullPath = Path.Combine(path.Trim(), fileName);
-						if (File.Exists(fullPath)) return Path.GetFullPath(fullPath);
+						string fullPath = fs.CombinePath(path.Trim(), fileName);
+						if (fs.FileExists(fullPath)) return fs.GetFullPath(fullPath);
 					}
 				}
 				catch (Exception)
@@ -288,10 +252,10 @@ namespace DK.AppEnvironment
 		/// <param name="pathName">The path name of the file to test.</param>
 		/// <returns>True if the file extension appears to be a type containing Probe code or table definition;
 		/// Otherwise false.</returns>
-		public static bool IsProbeFile(string pathName)
+		public static bool IsProbeFile(string pathName, IFileSystem fs)
 		{
 			// Special exception for dictionary files.
-			switch (Path.GetFileName(pathName).ToLower())
+			switch (fs.GetFileName(pathName).ToLower())
 			{
 				case "dict":
 				case "dict&":
@@ -299,7 +263,7 @@ namespace DK.AppEnvironment
 			}
 
 			// Search the file extension list.
-			var fileExt = Path.GetExtension(pathName).TrimStart('.');
+			var fileExt = fs.GetExtension(pathName).TrimStart('.');
 			return Constants.ProbeExtensions.Contains(fileExt.ToLower());
 		}
 
@@ -308,23 +272,23 @@ namespace DK.AppEnvironment
 			var sourceFiles = new List<string>();
 			foreach (var dir in appSettings.SourceDirs)
 			{
-				if (string.IsNullOrWhiteSpace(dir) || !Directory.Exists(dir)) continue;
-				sourceFiles.AddRange(GetAllSourceFiles_ProcessDir(dir));
+				if (string.IsNullOrWhiteSpace(dir) || !appSettings.FileSystem.DirectoryExists(dir)) continue;
+				sourceFiles.AddRange(GetAllSourceFiles_ProcessDir(dir, appSettings.FileSystem));
 			}
 
 			return sourceFiles.ToArray();
 		}
 
-		private static IEnumerable<string> GetAllSourceFiles_ProcessDir(string dir)
+		private static IEnumerable<string> GetAllSourceFiles_ProcessDir(string dir, IFileSystem fs)
 		{
-			foreach (var fileName in Directory.GetFiles(dir))
+			foreach (var fileName in fs.GetFilesInDirectory(dir))
 			{
 				yield return fileName;
 			}
 
-			foreach (var subDir in Directory.GetDirectories(dir))
+			foreach (var subDir in fs.GetDirectoriesInDirectory(dir))
 			{
-				foreach (var fileName in GetAllSourceFiles_ProcessDir(subDir))
+				foreach (var fileName in GetAllSourceFiles_ProcessDir(subDir, fs))
 				{
 					yield return fileName;
 				}
@@ -339,39 +303,39 @@ namespace DK.AppEnvironment
 			{
 				try
 				{
-					if (string.IsNullOrWhiteSpace(dir) || !Directory.Exists(dir)) continue;
-					includeFiles.AddRange(GetAllIncludeFiles_ProcessDir(dir));
+					if (string.IsNullOrWhiteSpace(dir) || !appSettings.FileSystem.DirectoryExists(dir)) continue;
+					includeFiles.AddRange(GetAllIncludeFiles_ProcessDir(dir, appSettings));
 				}
 				catch (Exception ex)
 				{
-					Log.Error(ex, "Exception when scanning for include files in directory [{0}]", dir);
+					appSettings.Log.Error(ex, "Exception when scanning for include files in directory [{0}]", dir);
 				}
 			}
 
 			return includeFiles.ToArray();
 		}
 
-		private static IEnumerable<string> GetAllIncludeFiles_ProcessDir(string dir)
+		private static IEnumerable<string> GetAllIncludeFiles_ProcessDir(string dir, DkAppSettings appSettings)
 		{
 			var files = new List<string>();
 
-			foreach (var fileName in Directory.GetFiles(dir))
+			foreach (var pathName in appSettings.FileSystem.GetFilesInDirectory(dir))
 			{
-				files.Add(fileName);
+				files.Add(pathName);
 			}
 
-			foreach (var subDir in Directory.GetDirectories(dir))
+			foreach (var subDir in appSettings.FileSystem.GetDirectoriesInDirectory(dir))
 			{
 				try
 				{
-					foreach (var fileName in GetAllIncludeFiles_ProcessDir(subDir))
+					foreach (var fileName in GetAllIncludeFiles_ProcessDir(subDir, appSettings))
 					{
 						files.Add(fileName);
 					}
 				}
 				catch (Exception ex)
 				{
-					Log.Error(ex, "Exception when scanning for include files in subdirectory [{0}]", subDir);
+					appSettings.Log.Error(ex, "Exception when scanning for include files in subdirectory [{0}]", subDir);
 				}
 			}
 
@@ -436,11 +400,11 @@ namespace DK.AppEnvironment
 			return true;
 		}
 
-		public static bool IsValidFileName(string str)
+		public static bool IsValidFileName(string str, IFileSystem fs)
 		{
 			if (string.IsNullOrEmpty(str)) return false;
 
-			var badPathChars = Path.GetInvalidPathChars();
+			var badPathChars = fs.GetInvalidPathChars();
 
 			foreach (var ch in str)
 			{

@@ -480,9 +480,9 @@ namespace DkTools.Run
 				switch (_type)
 				{
 					case RunItemType.Sam:
-						return GenerateSamArguments(DkEnvironment.CurrentAppSettings);
+						return GenerateSamArguments(ProbeToolsPackage.Instance.App.Settings);
 					case RunItemType.Cam:
-						return GenerateCamArguments(DkEnvironment.CurrentAppSettings);
+						return GenerateCamArguments(ProbeToolsPackage.Instance.App.Settings);
 					default:
 						return _args;
 				}
@@ -610,7 +610,7 @@ namespace DkTools.Run
 		{
 			if (cancel.IsCancellationRequested) return;
 
-			Log.Info("Running: {0}\r\nFile Path: {1}\r\nArguments: {2}\r\nWorking Dir: {3}", title, filePath, args, workingDir);
+			ProbeToolsPackage.Instance.App.Log.Info("Running: {0}\r\nFile Path: {1}\r\nArguments: {2}\r\nWorking Dir: {3}", title, filePath, args, workingDir);
 			pane?.WriteLine($"Running: {title}");
 			pane?.WriteLine($"  {filePath} {args}");
 
@@ -619,7 +619,7 @@ namespace DkTools.Run
 			if (string.IsNullOrWhiteSpace(workingDir) && !string.IsNullOrWhiteSpace(filePath) && File.Exists(filePath))
 			{
 				workingDir = Path.GetDirectoryName(filePath);
-				Log.Info("Derived working dir: {0}", workingDir);
+				ProbeToolsPackage.Instance.App.Log.Info("Derived working dir: {0}", workingDir);
 			}
 
 			if (waitForExit && capture)

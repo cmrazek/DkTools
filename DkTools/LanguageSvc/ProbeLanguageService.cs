@@ -44,7 +44,7 @@ namespace DkTools.LanguageSvc
 			}
 			catch (Exception ex)
 			{
-				Log.WriteEx(ex);
+				ProbeToolsPackage.Log.Error(ex);
 			}
 
 			base.OnIdle(periodic);

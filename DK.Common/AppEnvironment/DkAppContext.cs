@@ -1,0 +1,125 @@
+﻿using DK.Diagnostics;
+using DK.Preprocessing;
+using System;
+
+namespace DK.AppEnvironment
+{
+    public class DkAppContext
+    {
+        private IFileSystem _fs;
+        private ILogger _log;
+        private DkAppSettings _settings;
+        private IncludeFileCache _includeFileCache;
+
+        public event EventHandler AppChanged;
+        public event EventHandler RefreshAllDocumentsRequired;
+        public event EventHandler<RefreshDocumentEventArgs> RefreshDocumentRequired;
+        public event EventHandler<FileEventArgs> FileChanged;
+        public event EventHandler<FileEventArgs> FileDeleted;
+
+        public DkAppContext(IFileSystem fileSystem, ILogger log)
+        {
+            _fs = fileSystem ?? throw new ArgumentNullException(nameof(fileSystem));
+            _log = log ?? throw new ArgumentNullException(nameof(log));
+
+            _settings = new DkAppSettings(this);
+            _includeFileCache = new IncludeFileCache(this);
+        }
+
+        public IFileSystem FileSystem => _fs;
+        internal IncludeFileCache IncludeFileCache => _includeFileCache;
+        public ILogger Log => _log;
+        public DkAppSettings Settings => _settings;
+
+        public void LoadAppSettings(string appName)
+        {
+            _settings = DkEnvironment.LoadAppSettings(this, appName);
+
+            OnAppChanged();
+            OnRefreshAllDocumentsRequired();
+        }
+
+        public void OnAppChanged()
+        {
+            try
+            {
+                _includeFileCache.OnAppChanged();
+                AppChanged?.Invoke(null, EventArgs.Empty);
+            }
+            catch (Exception ex)
+            {
+                _log.Error(ex);
+            }
+        }
+
+        public void OnRefreshAllDocumentsRequired()
+        {
+            try
+            {
+                RefreshAllDocumentsRequired?.Invoke(null, EventArgs.Empty);
+            }
+            catch (Exception ex)
+            {
+                _log.Error(ex);
+            }
+        }
+
+        public void OnRefreshDocumentRequired(string filePath)
+        {
+            try
+            {
+                RefreshDocumentRequired?.Invoke(null, new RefreshDocumentEventArgs(filePath));
+            }
+            catch (Exception ex)
+            {
+                _log.Error(ex);
+            }
+        }
+
+        public void OnFileChanged(string filePath)
+        {
+            try
+            {
+                FileChanged?.Invoke(null, new FileEventArgs(filePath));
+                _includeFileCache.OnFileChanged(filePath);
+            }
+            catch (Exception ex)
+            {
+                _log.Error(ex);
+            }
+        }
+
+        public void OnFileDeleted(string filePath)
+        {
+            try
+            {
+                FileDeleted?.Invoke(null, new FileEventArgs(filePath));
+                _includeFileCache.OnFileChanged(filePath);
+            }
+            catch (Exception ex)
+            {
+                _log.Error(ex);
+            }
+        }
+    }
+
+    public class RefreshDocumentEventArgs : EventArgs
+    {
+        public string FilePath { get; private set; }
+
+        public RefreshDocumentEventArgs(string filePath)
+        {
+            FilePath = filePath;
+        }
+    }
+
+    public class FileEventArgs : EventArgs
+    {
+        public FileEventArgs(string filePath)
+        {
+            FilePath = filePath ?? throw new ArgumentNullException(nameof(filePath));
+        }
+
+        public string FilePath { get; private set; }
+    }
+}

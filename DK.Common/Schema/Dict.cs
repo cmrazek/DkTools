@@ -31,7 +31,7 @@ namespace DK.Schema
 			{
 				_appSettings = appSettings ?? throw new ArgumentNullException(nameof(appSettings));
 
-				Log.Info("Parsing DICT...");
+				appSettings.Log.Info("Parsing DICT...");
 				var startTime = DateTime.Now;
 
 				// Find the dict file
@@ -45,23 +45,23 @@ namespace DK.Schema
 
 				if (string.IsNullOrEmpty(dictPathName))
 				{
-					Log.Warning("No DICT file could be found.");
+					appSettings.Log.Warning("No DICT file could be found.");
 					return;
 				}
-				var merger = new FileMerger();
-				merger.MergeFile(appSettings, dictPathName, null, false, true);
+				var merger = new FileMerger(_appSettings);
+				merger.MergeFile(dictPathName, null, false, true);
 
 				var mergedSource = merger.MergedContent;
 				var mergedReader = new CodeSource.CodeSourcePreprocessorReader(mergedSource);
 
-				var fileStore = new FileStore();
+				var fileStore = new FileStore(appSettings.Context);
 				var preprocessor = new Preprocessor(appSettings, fileStore);
 				_source = new CodeSource();
 				preprocessor.Preprocess(mergedReader, _source, dictPathName, null, FileContext.Dictionary, CancellationToken.None);
 
 				var curTime = DateTime.Now;
 				var elapsed = curTime.Subtract(startTime);
-				Log.Info("DICT preprocessing completed. (elapsed: {0})", elapsed);
+				appSettings.Log.Info("DICT preprocessing completed. (elapsed: {0})", elapsed);
 
 				var dictContent = _source.Text;
 				//File.WriteAllText(Path.Combine(ProbeToolsPackage.AppDataDir, "dict.txt"), dictContent);
@@ -74,19 +74,19 @@ namespace DK.Schema
 				_source = null;	// So it can be GC'd
 
 				elapsed = DateTime.Now.Subtract(curTime);
-				Log.Info("DICT parsing complete. (elapsed: {0})", elapsed);
-				Log.Debug("DICT Tables [{0}] RelInds [{1}] Stringdefs [{2}] Typedefs [{3}] Interfaces [{4}]",
+				appSettings.Log.Info("DICT parsing complete. (elapsed: {0})", elapsed);
+				appSettings.Log.Debug("DICT Tables [{0}] RelInds [{1}] Stringdefs [{2}] Typedefs [{3}] Interfaces [{4}]",
 					_tables.Count, _relinds.Count, _stringdefs.Count, _typedefs.Count, _interfaces.Count);
 			}
 			catch (Exception ex)
 			{
-				Log.Error(ex, "Error when reading DICT file.");
+				appSettings.Log.Error(ex, "Error when reading DICT file.");
 			}
 		}
 
 		private void ReportError(int pos, string message)
 		{
-			Log.Write(LogLevel.Warning, "DICT offset {1}: {0}", message, pos);
+			_appSettings.Log.Write(LogLevel.Warning, "DICT offset {1}: {0}", message, pos);
 		}
 
 		private void ReportError(int pos, string format, params object[] args)

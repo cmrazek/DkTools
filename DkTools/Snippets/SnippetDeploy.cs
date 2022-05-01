@@ -45,7 +45,7 @@ namespace DkTools.Snippets
 			}
 			catch (Exception ex)
 			{
-				Log.WriteEx(ex);
+				ProbeToolsPackage.Instance.App.Log.Error(ex);
 			}
 		}
 
@@ -53,7 +53,7 @@ namespace DkTools.Snippets
 		{
 			try
 			{
-				Log.Write(LogLevel.Info, "Deploying snippet resource '{0}' to '{1}'...", resourceName, fileName);
+				ProbeToolsPackage.Instance.App.Log.Info("Deploying snippet resource '{0}' to '{1}'...", resourceName, fileName);
 
 				var dirPath = Path.GetDirectoryName(fileName);
 				if (!Directory.Exists(dirPath)) FileUtil.CreateDirectoryRecursive(dirPath);
@@ -63,7 +63,7 @@ namespace DkTools.Snippets
 					var fileInfo = new FileInfo(fileName);
 					if (fileInfo.LastWriteTime >= deployDate)
 					{
-						Log.Debug("Snippet file '{0}' is already up-to-date.", fileName);
+						ProbeToolsPackage.Instance.App.Log.Debug("Snippet file '{0}' is already up-to-date.", fileName);
 						return;
 					}
 				}
@@ -81,7 +81,7 @@ namespace DkTools.Snippets
 			}
 			catch (Exception ex)
 			{
-				Log.WriteEx(ex);
+				ProbeToolsPackage.Instance.App.Log.Error(ex);
 			}
 		}
 	}

@@ -22,7 +22,7 @@ namespace DkTools.CodeModeling
 			FileStore cache;
 			if (buf.Properties.TryGetProperty(typeof(FileStore), out cache)) return cache;
 
-			cache = new FileStore();
+			cache = new FileStore(ProbeToolsPackage.Instance.App);
 			buf.Properties[typeof(FileStore)] = cache;
 
 			return cache;
@@ -112,8 +112,8 @@ namespace DkTools.CodeModeling
 			}
 			else
 			{
-				var merger = new FileMerger();
-				merger.MergeFile(appSettings, fileName, snapshot.GetText(), false, true);
+				var merger = new FileMerger(appSettings);
+				merger.MergeFile(fileName, snapshot.GetText(), false, true);
 				source = merger.MergedContent;
 
 				includeDependencies = (from f in merger.FileNames

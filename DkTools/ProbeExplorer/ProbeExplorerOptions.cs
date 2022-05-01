@@ -74,7 +74,7 @@ namespace DkTools.ProbeExplorer
 		{
 			base.SaveSettingsToStorage();
 
-			Log.Level = LogLevel;
+			ProbeToolsPackage.Instance.App.Log.Level = LogLevel;
 		}
 	}
 }

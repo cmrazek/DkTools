@@ -57,7 +57,7 @@ namespace DkTools.BraceCompletion
             var undoHistory = UndoProvider.GetTextBufferUndoManager(textView.TextBuffer).TextBufferUndoHistory;
             var editorOperations = EditorOperations.GetEditorOperations(textView);
 
-            session = new DkBraceCompletionSession(textView, openingPoint, openingBrace, closingBrace, undoHistory, editorOperations);
+            session = new DkBraceCompletionSession(ProbeToolsPackage.Instance.App, textView, openingPoint, openingBrace, closingBrace, undoHistory, editorOperations);
             return true;
         }
     }

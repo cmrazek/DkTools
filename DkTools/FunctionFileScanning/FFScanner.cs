@@ -23,6 +23,8 @@ namespace DkTools.FunctionFileScanning
 		private static DateTime _scanStartTime;
 		private static BackgroundDeferrer _scanDelay = new BackgroundDeferrer(Constants.FFScannerDelay);
 
+		private static ILogger Log => ProbeToolsPackage.Instance.App.Log;
+
 		private class ScanJob : IComparable<ScanJob>
 		{
 			public FFScanMode Mode { get; private set; }
@@ -47,8 +49,8 @@ namespace DkTools.FunctionFileScanning
 
 		public static void OnStartup()
 		{
-			GlobalEvents.AppChanged += new EventHandler(ProbeEnvironment_AppChanged);
-			GlobalEvents.FileChanged += ProbeAppSettings_FileChanged;
+            ProbeToolsPackage.Instance.App.AppChanged += new EventHandler(ProbeEnvironment_AppChanged);
+            ProbeToolsPackage.Instance.App.FileChanged += ProbeAppSettings_FileChanged;
 			_scanDelay.Idle += ScanTimerElapsed;
 
 			StartScanning();
@@ -91,7 +93,7 @@ namespace DkTools.FunctionFileScanning
 				return;
 			}
 
-			var app = DkEnvironment.CurrentAppSettings;
+			var app = ProbeToolsPackage.Instance.App.Settings;
 			if (app == null)
 			{
 				Log.Warning("Scanning aborted because there is no current app.");
@@ -126,7 +128,7 @@ namespace DkTools.FunctionFileScanning
 				return;
 			}
 
-			var app = DkEnvironment.CurrentAppSettings;
+			var app = ProbeToolsPackage.Instance.App.Settings;
 			if (app == null)
 			{
 				Log.Warning("Scanning aborted because there is no current app.");
@@ -382,7 +384,7 @@ namespace DkTools.FunctionFileScanning
 			return false;
 		}
 
-		private static void ProcessFile(DkAppSettings app, ScanJob scan, CancellationToken cancel)
+		private static void ProcessFile(DkAppSettings appSettings, ScanJob scan, CancellationToken cancel)
 		{
 			try
 			{
@@ -393,7 +395,7 @@ namespace DkTools.FunctionFileScanning
 				if (fileContext == FileContext.Include) return;
 
 				DateTime modified;
-				if (!app.Repo.TryGetFileDate(scan.Path, out modified)) modified = DateTime.MinValue;
+				if (!appSettings.Repo.TryGetFileDate(scan.Path, out modified)) modified = DateTime.MinValue;
 
 				var fileModified = File.GetLastWriteTime(scan.Path);
 				if (modified != DateTime.MinValue && fileModified.Subtract(modified).TotalSeconds < 1.0) return;
@@ -404,18 +406,18 @@ namespace DkTools.FunctionFileScanning
 
 				var fileTitle = Path.GetFileNameWithoutExtension(scan.Path);
 
-				var defProvider = new DefinitionProvider(app, scan.Path);
+				var defProvider = new DefinitionProvider(appSettings, scan.Path);
 
 				var fileContent = File.ReadAllText(scan.Path);
-				var fileStore = new FileStore();
+				var fileStore = new FileStore(appSettings.Context);
 
-				var merger = new FileMerger();
-				merger.MergeFile(app, scan.Path, null, false, true);
+				var merger = new FileMerger(appSettings);
+				merger.MergeFile(scan.Path, null, false, true);
 				var includeDependencies = (from f in merger.FileNames
 										   select new IncludeDependency(f, false, true, merger.GetFileContent(f))).ToArray();
 
 				var model = fileStore.CreatePreprocessedModel(
-					appSettings: app,
+					appSettings: appSettings,
 					source: merger.MergedContent,
 					fileName: scan.Path,
 					visible: false,
@@ -425,7 +427,7 @@ namespace DkTools.FunctionFileScanning
 
 				var className = fileContext.IsClass() ? Path.GetFileNameWithoutExtension(scan.Path) : null;
 
-				app.Repo.UpdateFile(model, scan.Mode);
+				appSettings.Repo.UpdateFile(model, scan.Mode);
 			}
 			catch (Exception ex)
 			{
@@ -437,14 +439,14 @@ namespace DkTools.FunctionFileScanning
 		{
 			try
 			{
-				var app = DkEnvironment.CurrentAppSettings;
+				var app = ProbeToolsPackage.Instance.App.Settings;
 				if (app == null) return;
 
 				var options = ProbeToolsPackage.Instance.EditorOptions;
 				if (!options.DisableBackgroundScan)
 				{
 					var fileContext = FileContextHelper.GetFileContextFromFileName(e.FilePath);
-					if (DkEnvironment.CurrentAppSettings.FileExistsInApp(e.FilePath))
+					if (app.FileExistsInApp(e.FilePath))
 					{
 						if (fileContext != FileContext.Include && !FileContextHelper.IsLocalizedFile(e.FilePath))
 						{
@@ -465,7 +467,7 @@ namespace DkTools.FunctionFileScanning
 			}
 			catch (Exception ex)
 			{
-				Log.WriteEx(ex);
+				Log.Error(ex);
 			}
 		}
 

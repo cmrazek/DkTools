@@ -89,11 +89,11 @@ namespace DkTools
 			}
 			catch (OperationCanceledException ex)
 			{
-				Log.Debug(ex);
+				ProbeToolsPackage.Instance.App.Log.Debug(ex);
 			}
 			catch (Exception ex)
 			{
-				Log.Error(ex);
+				ProbeToolsPackage.Instance.App.Log.Error(ex);
 			}
 		}
 	}

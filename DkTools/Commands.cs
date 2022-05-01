@@ -1,5 +1,4 @@
-﻿using DK.AppEnvironment;
-using DK.Diagnostics;
+﻿using DK.Diagnostics;
 using DK.CodeAnalysis;
 using DkTools.CodeModeling;
 using DkTools.Compiler;
@@ -93,6 +92,8 @@ namespace DkTools
             AddCommand(mcs, CommandId.ShowDict, ShowDict);
             AddCommand(mcs, CommandId.PeekDefinition, PeekDefinition, visibleCallback: OnlyInDkEditor);
         }
+
+        private static ILogger Log => ProbeToolsPackage.Log;
 
         private class CommandInstance
         {
@@ -224,7 +225,7 @@ namespace DkTools
                 await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
 
                 List<string> srcDirs = null;
-                var appSettings = DkEnvironment.CurrentAppSettings;
+                var appSettings = ProbeToolsPackage.Instance.App.Settings;
 
                 foreach (EnvDTE.Document doc in Shell.DTE.Documents)
                 {
@@ -271,7 +272,7 @@ namespace DkTools
             ThreadHelper.JoinableTaskFactory.RunAsync(async () =>
             {
                 await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
-                ProbeCompiler.Instance.Compile(ProbeCompiler.CompileMethod.Compile);
+                ProbeToolsPackage.Instance.Compiler.Compile(ProbeCompiler.CompileMethod.Compile);
             });
         }
 
@@ -280,7 +281,7 @@ namespace DkTools
             ThreadHelper.JoinableTaskFactory.RunAsync(async () =>
             {
                 await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
-                ProbeCompiler.Instance.Compile(ProbeCompiler.CompileMethod.Dccmp);
+                ProbeToolsPackage.Instance.Compiler.Compile(ProbeCompiler.CompileMethod.Dccmp);
             });
         }
 
@@ -289,7 +290,7 @@ namespace DkTools
             ThreadHelper.JoinableTaskFactory.RunAsync(async () =>
             {
                 await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
-                ProbeCompiler.Instance.Compile(ProbeCompiler.CompileMethod.Credelix);
+                ProbeToolsPackage.Instance.Compiler.Compile(ProbeCompiler.CompileMethod.Credelix);
             });
         }
 
@@ -298,7 +299,7 @@ namespace DkTools
             ThreadHelper.JoinableTaskFactory.RunAsync(async () =>
             {
                 await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
-                ProbeCompiler.Instance.Kill();
+                ProbeToolsPackage.Instance.Compiler.Kill();
             });
         }
 
@@ -307,7 +308,7 @@ namespace DkTools
             ThreadHelper.JoinableTaskFactory.RunAsync(async () =>
             {
                 await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
-                ErrorTagging.ErrorTaskProvider.Instance.Clear();
+                ErrorTaskProvider.Instance.Clear();
             });
         }
 
@@ -432,7 +433,7 @@ namespace DkTools
 
                     var cp = new CodeProcessing.CodeProcessor();
                     cp.ShowMergeComments = true;
-                    cp.ProcessFile(DkEnvironment.CurrentAppSettings, fileName);
+                    cp.ProcessFile(ProbeToolsPackage.Instance.App.Settings, fileName);
 
                     string tempFileName = string.Empty;
                     using (var tempFileOutput = new TempFileOutput(string.Concat(Path.GetFileNameWithoutExtension(fileName), "_merge"),
@@ -479,7 +480,7 @@ namespace DkTools
 
                     using (var pr = new ProcessRunner())
                     {
-                        exitCode = pr.CaptureProcess("ptd.exe", "", DkEnvironment.CurrentAppSettings.TempDir, output, CancellationToken.None);
+                        exitCode = pr.CaptureProcess("ptd.exe", "", ProbeToolsPackage.Instance.App.Settings.TempDir, output, CancellationToken.None);
                     }
                     if (exitCode != 0)
                     {
@@ -508,7 +509,7 @@ namespace DkTools
                 {
                     var dirs = new StringBuilder();
                     var dirList = new List<string>();
-                    var appSettings = DkEnvironment.CurrentAppSettings;
+                    var appSettings = ProbeToolsPackage.Instance.App.Settings;
 
                     foreach (var sourceDir in appSettings.SourceDirs) dirList.Add(sourceDir);
                     foreach (var includeDir in appSettings.IncludeDirs) dirList.Add(includeDir);
@@ -642,7 +643,7 @@ namespace DkTools
                 await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
                 try
                 {
-                    var appSettings = DkEnvironment.CurrentAppSettings;
+                    var appSettings = ProbeToolsPackage.Instance.App.Settings;
 
                     if (!string.IsNullOrEmpty(appSettings.PlatformPath))
                     {
@@ -671,7 +672,7 @@ namespace DkTools
                 await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
                 try
                 {
-                    var appSettings = DkEnvironment.CurrentAppSettings;
+                    var appSettings = ProbeToolsPackage.Instance.App.Settings;
 
                     if (!string.IsNullOrEmpty(appSettings.PlatformPath))
                     {
@@ -700,7 +701,7 @@ namespace DkTools
                 await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
                 try
                 {
-                    var appSettings = DkEnvironment.CurrentAppSettings;
+                    var appSettings = ProbeToolsPackage.Instance.App.Settings;
 
                     if (!string.IsNullOrEmpty(appSettings.PlatformPath))
                     {
@@ -729,7 +730,7 @@ namespace DkTools
                 await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
                 try
                 {
-                    var appSettings = DkEnvironment.CurrentAppSettings;
+                    var appSettings = ProbeToolsPackage.Instance.App.Settings;
 
                     if (!string.IsNullOrEmpty(appSettings.PlatformPath))
                     {
@@ -898,7 +899,7 @@ namespace DkTools
                     var view = Shell.ActiveView;
                     if (view == null) return;
 
-                    var appSettings = DkEnvironment.CurrentAppSettings;
+                    var appSettings = ProbeToolsPackage.Instance.App.Settings;
 
                     var fileName = VsTextUtil.TryGetDocumentFileName(view.TextBuffer);
 
@@ -910,7 +911,7 @@ namespace DkTools
                     pane.Clear();
                     pane.Show();
 
-                    var ca = new CodeAnalyzer(model);
+                    var ca = new CodeAnalyzer(appSettings.Context, model);
                     ca.Run(CancellationToken.None);
                 }
                 catch (OperationCanceledException ex)

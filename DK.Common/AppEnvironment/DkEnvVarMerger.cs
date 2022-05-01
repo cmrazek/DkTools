@@ -28,28 +28,32 @@ namespace DK.AppEnvironment
 		private const int DK10MSVCVersion = 14;
 		private const string DK10MSVCBinDir = @"bin\Hostx64\x86";
 
+		private DkAppSettings _app;
 		private string _platformFolder;
 
-		public EnvVarList CreateMergedVarList(DkAppSettings app)
-		{
-			if (app == null) throw new ArgumentNullException("app");
+		public DkEnvVarMerger(DkAppSettings app)
+        {
+			_app = app ?? throw new ArgumentNullException(nameof(app));
+        }
 
+		public EnvVarList CreateMergedVarList()
+		{
 			// Create the base list of environment vars
 			var mergedVars = new EnvVarList();
 			mergedVars.LoadFromEnvironment();
 
-			mergedVars["pcurrentapp"] = app.AppName;
+			mergedVars["pcurrentapp"] = _app.AppName;
 
-			_platformFolder = DkEnvironment.WbdkPlatformFolder;
+			_platformFolder = DkEnvironment.GetWbdkPlatformFolder(_app.FileSystem, _app.Log);
 
-			var platformVersion = DkEnvironment.WbdkPlatformVersionText;
+			var platformVersion = DkEnvironment.GetWbdkPlatformVersionText(_app.FileSystem, _app.Log);
 			if (platformVersion != null) mergedVars["WbdkFrameworkVersion"] = platformVersion;
 
 			// Add Exe paths
 			var path = new List<string>();
 			var excludeExeSubDirs = new string[] { "ccdll", "ctdef", "ctdll", "ncdll", "rtdll", "scdll", "st", "stdef", "stdll", "stn" };
 
-			foreach (var exePath in app.ExeDirs)
+			foreach (var exePath in _app.ExeDirs)
 			{
 				if (!Directory.Exists(exePath)) continue;
 
@@ -73,7 +77,7 @@ namespace DK.AppEnvironment
 			// Include paths
 			var includes = new List<string>();
 
-			foreach (var includePath in app.IncludeDirs)
+			foreach (var includePath in _app.IncludeDirs)
 			{
 				if (!Directory.Exists(includePath)) continue;
 
@@ -89,7 +93,7 @@ namespace DK.AppEnvironment
 			// Lib paths
 			var libs = new List<string>();
 
-			foreach (var libPath in app.LibDirs)
+			foreach (var libPath in _app.LibDirs)
 			{
 				if (!Directory.Exists(libPath)) continue;
 
@@ -136,28 +140,28 @@ namespace DK.AppEnvironment
 
 		private void AddDevelopmentExePaths(List<string> path)
 		{
-			if (DkEnvironment.WbdkPlatformVersion >= DkEnvironment.DK10Version)
+			if (DkEnvironment.GetWbdkPlatformVersion(_app.FileSystem, _app.Log) >= DkEnvironment.DK10Version)
 			{
-				Log.Debug("Merging development EXE paths in DK10 mode.");
+				_app.Log.Debug("Merging development EXE paths in DK10 mode.");
 
-				if (string.IsNullOrEmpty(_platformFolder)) Log.Warning("The WBDK platform folder is not set.");
+				if (string.IsNullOrEmpty(_platformFolder)) _app.Log.Warning("The WBDK platform folder is not set.");
 				else path.Add(_platformFolder);
 
 				var msvcPath = GetDK10MSVCPath();
-				if (string.IsNullOrEmpty(msvcPath)) Log.Warning("MSVC path was not found.");
+				if (string.IsNullOrEmpty(msvcPath)) _app.Log.Warning("MSVC path was not found.");
 				else path.Add(msvcPath);
 
 				var dotnetPath = GetDK10DotNetFrameworkPath();
-				if (string.IsNullOrEmpty(dotnetPath)) Log.Warning(".NET Framework path was not found.");
+				if (string.IsNullOrEmpty(dotnetPath)) _app.Log.Warning(".NET Framework path was not found.");
 				else path.Add(dotnetPath);
 
 				var windowsSdkPath = GetDK10WindowsSdkPath();
-				if (string.IsNullOrEmpty(windowsSdkPath)) Log.Warning("Windows SDK path was not found.");
+				if (string.IsNullOrEmpty(windowsSdkPath)) _app.Log.Warning("Windows SDK path was not found.");
 				else path.Add(windowsSdkPath);
 			}
 			else
 			{
-				Log.Debug("Merging development EXE paths in DK7 mode.");
+				_app.Log.Debug("Merging development EXE paths in DK7 mode.");
 
 				var environmentDirectory = "";
 				var vsCommonBinDir = "";
@@ -226,14 +230,14 @@ namespace DK.AppEnvironment
 			var scc = new SetupConfigurationClass() as ISetupConfiguration;
 			if (scc == null)
 			{
-				Log.Warning("Failed to get VS ISetupConfiguration object.");
+				_app.Log.Warning("Failed to get VS ISetupConfiguration object.");
 				return null;
 			}
 
 			var setupEnum = scc.EnumInstances();
 			if (setupEnum == null)
 			{
-				Log.Warning("Couldn't get VS setup enumeration object.");
+				_app.Log.Warning("Couldn't get VS setup enumeration object.");
 				return null;
 			}
 
@@ -247,7 +251,7 @@ namespace DK.AppEnvironment
 					var versionString = setupInstanceFetch[0].GetInstallationVersion();
 					if (!Version.TryParse(versionString, out var version))
                     {
-						Log.Warning("Failed to parse Version out of '{0}'.", versionString);
+						_app.Log.Warning("Failed to parse Version out of '{0}'.", versionString);
 						continue;
                     }
 
@@ -262,7 +266,7 @@ namespace DK.AppEnvironment
 
 			if (!vsInstances.Any())
 			{
-				Log.Warning("No VS instances found.");
+				_app.Log.Warning("No VS instances found.");
 				return null;
 			}
 
@@ -278,7 +282,7 @@ namespace DK.AppEnvironment
 			var vcPaths = new List<string>();
 			foreach (var vsInstallPath in vsInstallPaths)
             {
-				Log.Debug("Searching VS install path for MSVC: {0}", vsInstallPath);
+				_app.Log.Debug("Searching VS install path for MSVC: {0}", vsInstallPath);
 
 				var path = Path.Combine(vsInstallPath, DK10MSVCSubDir);
 				if (!Directory.Exists(path)) continue;
@@ -296,7 +300,7 @@ namespace DK.AppEnvironment
 
 			if (!vcPaths.Any())
             {
-				Log.Warning("Unable to find any MSVC path.");
+				_app.Log.Warning("Unable to find any MSVC path.");
 				return null;
             }
 
