@@ -31,5 +31,15 @@ namespace DK.AppEnvironment
         char[] GetInvalidFileNameChars();
 
         bool IsDirectoryHiddenOrSystem(string path);
+
+        string GetFileText(string pathName);
+
+        byte[] GetFileBytes(string pathName);
+
+        void WriteFileText(string pathName, string text);
+
+        void WriteFileBytes(string pathName, byte[] data);
+
+        void CreateDirectory(string path);
     }
 }

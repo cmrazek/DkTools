@@ -31,7 +31,7 @@ namespace DK.Code
                 return FileContext.Dictionary;
             }
 
-            var ext = System.IO.Path.GetExtension(fileName);
+            var ext = PathUtil.GetExtension(fileName);
             switch (ext.ToLower())
             {
                 case ".sc":
@@ -80,16 +80,16 @@ namespace DK.Code
         {
             var context = GetFileContextFromFileName(fileName);
             if (!context.IsClass()) return null;
-            return System.IO.Path.GetFileNameWithoutExtension(fileName).ToLower();
+            return PathUtil.GetFileNameWithoutExtension(fileName).ToLower();
         }
 
         public static bool IsLocalizedFile(string fileName)
         {
-            var ext = System.IO.Path.GetExtension(fileName);
+            var ext = PathUtil.GetExtension(fileName);
             return ext.EndsWith("+") || ext.EndsWith("&");
         }
 
-        public static bool IncludeFileShouldBeMerged(string fileName) => System.IO.Path.GetExtension(fileName).EqualsI(".t");
+        public static bool IncludeFileShouldBeMerged(string fileName) => PathUtil.GetExtension(fileName).EqualsI(".t");
 
         public static bool FileNameIsClass(string fileName, out string className)
         {
@@ -99,7 +99,7 @@ namespace DK.Code
                 return false;
             }
 
-            var ext = System.IO.Path.GetExtension(fileName).ToLower();
+            var ext = PathUtil.GetExtension(fileName).ToLower();
             switch (ext)
             {
                 case ".cc":
@@ -111,7 +111,7 @@ namespace DK.Code
                 case ".sc":
                 case ".sc&":
                 case ".sc+":
-                    className = System.IO.Path.GetFileNameWithoutExtension(fileName);
+                    className = PathUtil.GetFileNameWithoutExtension(fileName);
                     return true;
                 default:
                     className = null;
@@ -123,7 +123,7 @@ namespace DK.Code
         {
             if (string.IsNullOrEmpty(fileName)) return false;
 
-            var ext = System.IO.Path.GetExtension(fileName).ToLower();
+            var ext = PathUtil.GetExtension(fileName).ToLower();
             switch (ext)
             {
                 case ".f":

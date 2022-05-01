@@ -7,7 +7,6 @@ using DK.Preprocessing;
 using DK.Syntax;
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading;
@@ -38,8 +37,8 @@ namespace DK.Schema
 				var dictPathName = string.Empty;
 				foreach (var srcDir in appSettings.SourceDirs)
 				{
-					dictPathName = Path.Combine(srcDir, "DICT");
-					if (File.Exists(dictPathName)) break;
+					dictPathName = PathUtil.CombinePath(srcDir, "DICT");
+					if (_appSettings.FileSystem.FileExists(dictPathName)) break;
 					dictPathName = string.Empty;
 				}
 

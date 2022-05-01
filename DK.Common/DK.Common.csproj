@@ -136,7 +136,6 @@
     <Compile Include="Definitions\StringDefDefinition.cs" />
     <Compile Include="Definitions\TableDefinition.cs" />
     <Compile Include="Definitions\VariableDefinition.cs" />
-    <Compile Include="Diagnostics\DumpWriter.cs" />
     <Compile Include="Diagnostics\ILogger.cs" />
     <Compile Include="Diagnostics\ILoggerExtensions.cs" />
     <Compile Include="Diagnostics\DkToolsLogger.cs" />

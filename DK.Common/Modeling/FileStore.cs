@@ -5,7 +5,6 @@ using DK.Diagnostics;
 using DK.Preprocessing;
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using System.Threading;
 
@@ -71,8 +70,8 @@ namespace DK.Modeling
 			// Search the disk in same directory.
 			if (searchSameDir && !string.IsNullOrEmpty(sourceFileName))
 			{
-				var pathName = Path.Combine(Path.GetDirectoryName(sourceFileName), fileName);
-				if (File.Exists(pathName))
+				var pathName = PathUtil.CombinePath(PathUtil.GetDirectoryName(sourceFileName), fileName);
+				if (appSettings.FileSystem.FileExists(pathName))
 				{
 					if (CheckForCyclicalInclude(pathName, parentFiles)) return null;
 					file = new IncludeFile(pathName);
@@ -86,8 +85,8 @@ namespace DK.Modeling
 			{
 				foreach (var includeDir in appSettings.IncludeDirs)
 				{
-					var pathName = Path.Combine(includeDir, fileName);
-					if (File.Exists(pathName))
+					var pathName = PathUtil.CombinePath(includeDir, fileName);
+					if (appSettings.FileSystem.FileExists(pathName))
 					{
 						if (CheckForCyclicalInclude(pathName, parentFiles)) return null;
 						file = new IncludeFile(pathName);
@@ -118,10 +117,10 @@ namespace DK.Modeling
 			// Search the disk in same directory.
 			if (searchSameDir && !string.IsNullOrEmpty(sourceFileName))
 			{
-				var pathName = Path.Combine(Path.GetDirectoryName(sourceFileName), fileName);
-				if (File.Exists(pathName))
+				var pathName = PathUtil.CombinePath(PathUtil.GetDirectoryName(sourceFileName), fileName);
+				if (appSettings.FileSystem.FileExists(pathName))
 				{
-					return Path.GetFullPath(pathName);
+					return appSettings.FileSystem.GetFullPath(pathName);
 				}
 			}
 
@@ -130,10 +129,10 @@ namespace DK.Modeling
 			{
 				foreach (var includeDir in appSettings.IncludeDirs)
 				{
-					var pathName = Path.Combine(includeDir, fileName);
-					if (System.IO.File.Exists(pathName))
+					var pathName = PathUtil.CombinePath(includeDir, fileName);
+					if (appSettings.FileSystem.FileExists(pathName))
 					{
-						return Path.GetFullPath(pathName);
+						return appSettings.FileSystem.GetFullPath(pathName);
 					}
 				}
 			}

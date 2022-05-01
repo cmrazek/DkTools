@@ -3,7 +3,6 @@ using DK.Code;
 using DK.Diagnostics;
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -65,7 +64,7 @@ namespace DK.Preprocessing
 			_showMergeComments = showMergeComments;
 
 			var relativeFileName = fullPathName;
-			if (Path.IsPathRooted(fullPathName)) fullPathName = UnrootFileName(fullPathName);
+			if (PathUtil.IsPathRooted(fullPathName)) fullPathName = UnrootFileName(fullPathName);
 			FindFiles(fullPathName);
 
 			if (string.IsNullOrEmpty(_origFileName))
@@ -77,7 +76,7 @@ namespace DK.Preprocessing
 				return;
 			}
 
-			if (content == null) _origContent = File.ReadAllText(_origFileName);
+			if (content == null) _origContent = _appSettings.FileSystem.GetFileText(_origFileName);
 			else _origContent = content;
 
 			// Perform localization
@@ -114,7 +113,7 @@ namespace DK.Preprocessing
 
 		private string UnrootFileName(string fileName)
 		{
-			fileName = Path.GetFullPath(fileName);
+			fileName = _appSettings.FileSystem.GetFullPath(fileName);
 
 			foreach (var dir in _appSettings.SourceDirs)
 			{
@@ -140,7 +139,7 @@ namespace DK.Preprocessing
 
 			// If this file is not in any source/include directory, then just use the file name without any path.
 			// This can happen during code QA, where the code is kept in another folder.
-			return Path.GetFileName(fileName);
+			return PathUtil.GetFileName(fileName);
 		}
 
 		private void FindFiles(string fileName)
@@ -155,7 +154,7 @@ namespace DK.Preprocessing
 			{
 				try
 				{
-					if (!Directory.Exists(probeDir)) continue;
+					if (!_appSettings.FileSystem.DirectoryExists(probeDir)) continue;
 					FindFiles_SearchDir(probeDir, fileName);
 				}
 				catch (Exception ex)
@@ -171,7 +170,7 @@ namespace DK.Preprocessing
 				{
 					try
 					{
-						if (!Directory.Exists(includeDir)) continue;
+						if (!_appSettings.FileSystem.DirectoryExists(includeDir)) continue;
 						FindFiles_SearchDir(includeDir, fileName);
 					}
 					catch (Exception ex)
@@ -184,26 +183,26 @@ namespace DK.Preprocessing
 
 		private void FindFiles_SearchDir(string dir, string fileName)
 		{
-			string pathName = Path.Combine(dir, fileName);
-			if (File.Exists(pathName))
+			string pathName = PathUtil.CombinePath(dir, fileName);
+			if (_appSettings.FileSystem.FileExists(pathName))
 			{
 				// this is the original file
 				_origFileName = pathName;
 			}
-			else if (File.Exists(pathName + "&"))
+			else if (_appSettings.FileSystem.FileExists(pathName + "&"))
 			{
 				// this is a local file
 				var ampFileName = pathName + "&";
 				if (!_localFileNames.Any(x => string.Equals(x, ampFileName, StringComparison.OrdinalIgnoreCase))) _localFileNames.Add(ampFileName);
 			}
-			else if (File.Exists(pathName + "+"))
+			else if (_appSettings.FileSystem.FileExists(pathName + "+"))
 			{
 				// this is a local file
 				var ampFileName = pathName + "+";
 				if (!_localFileNames.Any(x => string.Equals(x, ampFileName, StringComparison.OrdinalIgnoreCase))) _localFileNames.Add(ampFileName);
 			}
 
-			foreach (string subDir in Directory.GetDirectories(dir))
+			foreach (string subDir in _appSettings.FileSystem.GetDirectoriesInDirectory(dir))
 			{
 				try
 				{
@@ -247,7 +246,7 @@ namespace DK.Preprocessing
 			_currentLocalFileName = localFileName;
 			_currentLocalLine = 1;
 
-			var fileText = File.ReadAllText(localFileName);
+			var fileText = _appSettings.FileSystem.GetFileText(localFileName);
 			_localFileContent[localFileName.ToLower()] = fileText;
 
 			var pos = 0;
