@@ -5,7 +5,6 @@ namespace DK
 {
     public static class Constants
     {
-        public const string WbdkRegKey = "Software\\Fincentric\\WBDK";
         public static readonly DateTime ZeroDate = new DateTime(1900, 1, 1);
 
         public static readonly HashSet<string> ProbeExtensions = StringHelper.ParseWordList("cc cc& cc+ ct ct& ct+ f f& f+ i i& i+ gp gp& gp+ nc nc& nc+ sc sc& sc+ sp sp& sp+ st st& st+ t t& t+");

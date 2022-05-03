@@ -1,9 +1,10 @@
-﻿using System.Collections.Generic;
+﻿using DK.AppEnvironment;
+using System.Collections.Generic;
 using System.IO;
 
-namespace DK.AppEnvironment
+namespace DK.Implementation.Windows
 {
-    public class BuiltInFileSystem : IFileSystem
+    public class WindowsFileSystem : IFileSystem
     {
         public bool DirectoryExists(string path) => Directory.Exists(path);
 

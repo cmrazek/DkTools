@@ -184,18 +184,13 @@ namespace DkTools.ProbeExplorer
 				var selectedApp = c_appCombo.SelectedItem as string;
 				if (!string.IsNullOrEmpty(selectedApp) && ProbeToolsPackage.Instance.App.Settings.Initialized)
 				{
-					try
+					if (!ProbeToolsPackage.Instance.App.Settings.TryUpdateDefaultCurrentApp(selectedApp))
 					{
-						DkAppSettings.TryUpdateDefaultCurrentApp(selectedApp);
-					}
-					catch (System.Security.SecurityException ex)
-					{
-						ProbeToolsPackage.Instance.App.Log.Error(ex);
 						var options = ProbeToolsPackage.Instance.ErrorSuppressionOptions;
 						if (!options.DkAppChangeAdminFailure)
 						{
 							var msg = "The system-wide default DK application can't be changed because access was denied. To resolve this problem, run Visual Studio as an administrator or loosen the registry permissions for the following key:\r\n\r\nHKEY_LOCAL_MACHINE\\SOFTWARE\\WOW6432Node\\Fincentric\\WBDK";
-							var dlg = new ErrorDialog(msg, ex.ToString())
+							var dlg = new ErrorDialog(msg)
 							{
 								ShowUserSuppress = true,
 								Owner = System.Windows.Application.Current.MainWindow

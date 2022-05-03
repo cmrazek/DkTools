@@ -1,7 +1,6 @@
 ﻿using DK.Diagnostics;
 using DK.Repository;
 using DK.Schema;
-using Microsoft.Win32;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -55,6 +54,7 @@ namespace DK.AppEnvironment
 			Repo = new AppRepo(this);
 		}
 
+		public IAppConfigSource Config => _app.Config;
 		public DkAppContext Context => _app;
 		public IFileSystem FileSystem => _app.FileSystem;
 		public ILogger Log => _app.Log;
@@ -141,60 +141,23 @@ namespace DK.AppEnvironment
 		}
 
 		#region DK Registry
-		private const string k_configPath = @"SOFTWARE\Fincentric\WBDK\Configurations\";
-		//private const string k_configPathWow64 = @"SOFTWARE\Wow6432Node\Fincentric\WBDK\Configurations";
-
-		public string GetRegString(string name, string defaultValue)
-		{
-			if (!Initialized) return defaultValue;
-
-			using (var key = Microsoft.Win32.Registry.LocalMachine.OpenSubKey(k_configPath + AppName, false))
-			{
-				if (key == null) return defaultValue;
-
-				var obj = key.GetValue(name, defaultValue);
-				if (obj == null) return defaultValue;
-				return obj.ToString();
-			}
-		}
+		
 		#endregion
-
-		private const int k_defaultPort = 5001;
 
 		public int SamPort
 		{
 			get
 			{
-				var portString = GetRegString("DB1SocketNumber", "");
-				if (string.IsNullOrEmpty(portString)) return k_defaultPort;
+				var portString = _app.Config.GetAppConfig(AppName, WbdkAppConfig.DB1SocketNumber);
+				if (string.IsNullOrEmpty(portString)) return _app.Config.DefaultSamPort;
 
 				int port;
-				if (!int.TryParse(portString, out port)) return k_defaultPort;
+				if (!int.TryParse(portString, out port)) return _app.Config.DefaultSamPort;
 				return port;
 			}
 		}
 
-		public static void TryUpdateDefaultCurrentApp(string appName)
-		{
-			if (string.IsNullOrEmpty(appName)) return;
-
-			// Read the current value from the registry in read-only mode, to see if it needs updating.
-			using (var key = Registry.LocalMachine.OpenSubKey(Constants.WbdkRegKey, false))
-			{
-				var value = Convert.ToString(key.GetValue("CurrentConfig", string.Empty));
-				if (value == appName)
-				{
-					// No update required.
-					return;
-				}
-			}
-
-			// Try to update the registry.
-			using (var key = Registry.LocalMachine.OpenSubKey(Constants.WbdkRegKey, true))
-			{
-				key.SetValue("CurrentConfig", appName);
-			}
-		}
+		public bool TryUpdateDefaultCurrentApp(string appName) => _app.Config.TryUpdateDefaultApp(appName);
 
 		public void ReloadFilesList()
 		{

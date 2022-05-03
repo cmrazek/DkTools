@@ -236,6 +236,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AppEnvironment\FileHelper.cs" />
+    <Compile Include="AppEnvironment\RegistryKeyUtil.cs" />
     <Compile Include="BackgroundDeferrer.cs" />
     <Compile Include="BraceCompletion\DkBraceCompletionSession.cs" />
     <Compile Include="BraceCompletion\DkBraceCompletionSessionProvider.cs" />
@@ -550,6 +551,10 @@
     <ProjectReference Include="..\DK.Common\DK.Common.csproj">
       <Project>{c8ad0b7e-6b3c-4b85-8ee7-9735256c5193}</Project>
       <Name>DK.Common</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\DK.Implementation.Windows\DK.Implementation.Windows.csproj">
+      <Project>{c9c02668-70b5-4b98-96b0-6afb58098dae}</Project>
+      <Name>DK.Implementation.Windows</Name>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup />

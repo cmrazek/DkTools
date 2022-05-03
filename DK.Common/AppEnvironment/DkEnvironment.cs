@@ -1,10 +1,8 @@
 ﻿using DK.Diagnostics;
 using DK.Repository;
 using DK.Schema;
-using Microsoft.Win32;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -31,11 +29,12 @@ namespace DK.AppEnvironment
             var startTime = DateTime.Now;
 
             var appSettings = new DkAppSettings(app);
+            var platformInfo = app.Config.GetWbdkPlatformInfo();
 
-            appSettings.PlatformPath = GetWbdkPlatformFolder(app.FileSystem, app.Log);
-            appSettings.AllAppNames = GetAllAppNames();
+            appSettings.PlatformPath = platformInfo.PlatformPath;
+            appSettings.AllAppNames = app.Config.GetAllAppNames().ToArray();
 
-            if (string.IsNullOrEmpty(appName)) appName = GetDefaultAppName();
+            if (string.IsNullOrEmpty(appName)) appName = app.Config.GetDefaultAppName();
             if (string.IsNullOrEmpty(appName))
             {
                 app.Log.Warning("No current app found.");
@@ -44,40 +43,31 @@ namespace DK.AppEnvironment
             }
 
             app.Log.Info("Current App: {0}", appName);
-            var appKey = GetReadOnlyAppKey(appName);
-            if (appKey == null)
-            {
-                app.Log.Warning("Registry key for current app not found.");
-                appSettings.Initialized = true;
-                return appSettings;
-            }
-
-            var rootPath = appKey.GetString("RootPath");
 
             appSettings.AppName = appName;
             appSettings.Initialized = true;
-            appSettings.SourceDirs = appKey.LoadWbdkMultiPath("SourcePaths", rootPath);
+            appSettings.SourceDirs = app.Config.GetAppPathMulti(appName, WbdkAppPath.SourcePaths).ToArray();
             foreach (var dir in appSettings.SourceDirs) app.Log.Info("Source Dir: {0}", dir);
-            appSettings.IncludeDirs = appKey.LoadWbdkMultiPath("IncludePaths", rootPath)
+            appSettings.IncludeDirs = app.Config.GetAppPathMulti(appName, WbdkAppPath.IncludePaths)
                 .Concat(new string[] { string.IsNullOrEmpty(appSettings.PlatformPath)
                     ? string.Empty
                     : app.FileSystem.CombinePath(appSettings.PlatformPath, "include") })
                 .Where(x => !string.IsNullOrWhiteSpace(x))
                 .ToArray();
             foreach (var dir in appSettings.IncludeDirs) app.Log.Info("Include Dir: {0}", dir);
-            appSettings.LibDirs = appKey.LoadWbdkMultiPath("LibPaths", rootPath);
+            appSettings.LibDirs = app.Config.GetAppPathMulti(appName, WbdkAppPath.LibPaths).ToArray();
             foreach (var dir in appSettings.LibDirs) app.Log.Info("Lib Dir: {0}", dir);
-            appSettings.ExeDirs = appKey.LoadWbdkMultiPath("ExecutablePaths", rootPath);
+            appSettings.ExeDirs = app.Config.GetAppPathMulti(appName, WbdkAppPath.ExecutablePaths).ToArray();
             foreach (var dir in appSettings.ExeDirs) app.Log.Info("Executable Dir: {0}", dir);
-            appSettings.ObjectDir = appKey.LoadWbdkPath("ObjectPath", rootPath);
+            appSettings.ObjectDir = app.Config.GetAppPath(appName, WbdkAppPath.ObjectPath);
             app.Log.Info("Object Dir: {0}", appSettings.ObjectDir);
-            appSettings.TempDir = appKey.LoadWbdkPath("DiagPath", rootPath);
+            appSettings.TempDir = app.Config.GetAppPath(appName, WbdkAppPath.DiagPath);
             app.Log.Info("Temp Dir: {0}", appSettings.TempDir);
-            appSettings.ReportDir = appKey.LoadWbdkPath("ListingPath", rootPath);
+            appSettings.ReportDir = app.Config.GetAppPath(appName, WbdkAppPath.ListingPath);
             app.Log.Info("Report Dir: {0}", appSettings.ReportDir);
-            appSettings.DataDir = appKey.LoadWbdkPath("DataPath", rootPath);
+            appSettings.DataDir = app.Config.GetAppPath(appName, WbdkAppPath.DataPath);
             app.Log.Info("Data Dir: {0}", appSettings.DataDir);
-            appSettings.LogDir = appKey.LoadWbdkPath("LogPath", rootPath);
+            appSettings.LogDir = app.Config.GetAppPath(appName, WbdkAppPath.LogPath);
             app.Log.Info("Log Dir: {0}", appSettings.LogDir);
             appSettings.SourceFiles = LoadSourceFiles(appSettings);
             appSettings.IncludeFiles = LoadIncludeFiles(appSettings);
@@ -93,115 +83,7 @@ namespace DK.AppEnvironment
             return appSettings;
         }
 
-        private const string BaseKey64 = @"SOFTWARE\WOW6432Node\Fincentric\WBDK";
-        private const string BaseKey32 = @"SOFTWARE\Fincentric\WBDK";
-        private const string CurrentConfigName = "CurrentConfig";
-
-        private const string ConfigurationsKey64 = @"SOFTWARE\WOW6432Node\Fincentric\WBDK\Configurations";
-        private const string ConfigurationsKey32 = @"SOFTWARE\Fincentric\WBDK\Configurations";
-
-        private const string AppKey64 = @"SOFTWARE\WOW6432Node\Fincentric\WBDK\Configurations\{0}";
-        private const string AppKey32 = @"SOFTWARE\Fincentric\WBDK\Configurations\{0}";
-
-        private static string GetDefaultAppName()
-        {
-            using (var key = Registry.LocalMachine.OpenSubKey(BaseKey64, writable: false))
-            {
-                var value = key?.GetValue(CurrentConfigName);
-                if (value != null) return value.ToString();
-            }
-
-            using (var key = Registry.LocalMachine.OpenSubKey(BaseKey32, writable: false))
-            {
-                var value = key?.GetValue(CurrentConfigName);
-                if (value != null) return value.ToString();
-            }
-
-            return null;
-        }
-
-        private static string[] GetAllAppNames()
-        {
-            using (var key = Registry.LocalMachine.OpenSubKey(ConfigurationsKey64, writable: false))
-            {
-                if (key != null) return key.GetSubKeyNames();
-            }
-
-            using (var key = Registry.LocalMachine.OpenSubKey(ConfigurationsKey32, writable: false))
-            {
-                if (key != null) return key.GetSubKeyNames();
-            }
-
-            return StringHelper.EmptyStringArray;
-        }
-
-        private static RegistryKey GetReadOnlyAppKey(string appName)
-        {
-            if (string.IsNullOrEmpty(appName)) return null;
-
-            var key = Registry.LocalMachine.OpenSubKey(string.Format(AppKey64, appName), writable: false);
-            if (key != null) return key;
-
-            key = Registry.LocalMachine.OpenSubKey(string.Format(AppKey32, appName), writable: false);
-            if (key != null) return key;
-
-            return null;
-        }
-
-        private static string _wbdkPlatformVersionText = null;
-        private static Version _wbdkPlatformVersion = new Version(1, 0);
-        private static string _wbdkPlatformFolder = null;
-
         public static readonly Version DK10Version = new Version(10, 0);
-
-        private static void GetWbdkPlatformInfo(IFileSystem fs, ILogger log)
-        {
-            // FEC.exe will be located in the platform folder, and the version number
-            // on that file is the same as the WBDK platform version.
-            try
-            {
-                foreach (var path in Environment.GetEnvironmentVariable("PATH").Split(';').Select(x => x.Trim()))
-                {
-                    var fileName = fs.CombinePath(path, "fec.exe");
-                    if (fs.FileExists(fileName))
-                    {
-                        log.Debug("Located FEC.exe: {0}", fileName);
-                        _wbdkPlatformVersionText = FileVersionInfo.GetVersionInfo(fileName)?.FileVersion ?? string.Empty;
-                        if (!Version.TryParse(_wbdkPlatformVersionText, out _wbdkPlatformVersion)) _wbdkPlatformVersion = new Version(1, 0);
-                        _wbdkPlatformFolder = path;
-                        log.Debug("WBDK Platform Directory: {0}", _wbdkPlatformFolder);
-                        log.Debug("WBDK Platform Version: {0}", _wbdkPlatformVersionText);
-                        return;
-                    }
-                }
-
-                throw new DkFileNotFoundException("FEC.exe");
-            }
-            catch (Exception ex)
-            {
-                log.Warning("Failed to get WBDK platform info from FEC.exe: {0}", ex);
-                if (_wbdkPlatformFolder == null) _wbdkPlatformFolder = string.Empty;
-                if (_wbdkPlatformVersionText == null) _wbdkPlatformVersionText = string.Empty;
-            }
-        }
-
-        public static string GetWbdkPlatformVersionText(IFileSystem fs, ILogger log)
-        {
-            if (_wbdkPlatformVersionText == null) GetWbdkPlatformInfo(fs, log);
-            return _wbdkPlatformVersionText;
-        }
-
-        public static Version GetWbdkPlatformVersion(IFileSystem fs, ILogger log)
-        {
-            if (_wbdkPlatformVersion == null) GetWbdkPlatformInfo(fs, log);
-            return _wbdkPlatformVersion;
-        }
-
-        public static string GetWbdkPlatformFolder(IFileSystem fs, ILogger log)
-        {
-            if (_wbdkPlatformFolder == null) GetWbdkPlatformInfo(fs, log);
-            return _wbdkPlatformFolder;
-        }
         #endregion
 
         #region Table List
@@ -462,10 +344,5 @@ namespace DK.AppEnvironment
             }
         }
         #endregion
-    }
-
-    class DkFileNotFoundException : Exception
-    {
-        public DkFileNotFoundException(string pathName) : base($"The file '{pathName}' could not be found.") { }
     }
 }

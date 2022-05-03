@@ -49,13 +49,12 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="AppEnvironment\BuiltInFileSystem.cs" />
     <Compile Include="AppEnvironment\DkAppSettings.cs" />
     <Compile Include="AppEnvironment\DkEnvironment.cs" />
     <Compile Include="AppEnvironment\DkAppContext.cs" />
+    <Compile Include="AppEnvironment\IAppConfigSource.cs" />
     <Compile Include="AppEnvironment\IFileSystem.cs" />
     <Compile Include="AppEnvironment\PathUtil.cs" />
-    <Compile Include="AppEnvironment\RegistryKeyHelper.cs" />
     <Compile Include="CodeAnalysis\CAErrorMarker.cs" />
     <Compile Include="CodeAnalysis\CAErrors.cs" />
     <Compile Include="CodeAnalysis\CAErrorTask.cs" />
@@ -138,7 +137,6 @@
     <Compile Include="Definitions\VariableDefinition.cs" />
     <Compile Include="Diagnostics\ILogger.cs" />
     <Compile Include="Diagnostics\ILoggerExtensions.cs" />
-    <Compile Include="Diagnostics\DkToolsLogger.cs" />
     <Compile Include="Diagnostics\LogLevel.cs" />
     <Compile Include="Diagnostics\Output.cs" />
     <Compile Include="Modeling\SignatureDocumentor.cs" />

@@ -7,6 +7,8 @@
 /DK.Common/obj/
 /DK.Common.Tests/bin/
 /DK.Common.Tests/obj/
+/DK.Implementation.Windows/bin/
+/DK.Implementation.Windows/obj/
 /DkTools/bin/
 /DkTools/obj/
 /packages/

@@ -118,7 +118,7 @@ namespace DkTools.Compiler
 
 			if (_compileThread.IsAlive)
 			{
-				if (DkEnvironment.GetWbdkPlatformVersion(_app.FileSystem, _app.Log) >= DkEnvironment.DK10Version)
+				if (_app.Config.PlatformVersion >= DkEnvironment.DK10Version)
 				{
                     try
                     {
@@ -747,7 +747,7 @@ namespace DkTools.Compiler
 		{
 			var switches = ProbeToolsPackage.Instance.ProbeExplorerOptions.CompileArguments;
 
-			if (DkEnvironment.GetWbdkPlatformVersion(_app.FileSystem, _app.Log) >= DkEnvironment.DK10Version)
+			if (_app.Config.PlatformVersion >= DkEnvironment.DK10Version)
             {
 				// Include all output.
 				switches += " /d all";

@@ -1,5 +1,6 @@
 ﻿using DK.AppEnvironment;
 using DK.Diagnostics;
+using DK.Implementation.Windows;
 using DkTools.AppEnvironment;
 using DkTools.BraceCompletion;
 using DkTools.Compiler;
@@ -91,8 +92,9 @@ namespace DkTools
         private static ProbeToolsPackage _instance;
         private ErrorTagging.ErrorTaskProvider _errorTaskProvider;
         private DkAppContext _app;
-        private BuiltInFileSystem _fs;
-        private DkToolsLogger _log;
+        private WindowsFileSystem _fs;
+        private WindowsLogger _log;
+        private WindowsAppConfigSource _config;
         private ProbeCompiler _compiler;
         private DkFileSystemWatcher _fileSystemWatcher;
 
@@ -116,11 +118,13 @@ namespace DkTools
         {
             base.Initialize();
 
-            _fs = new BuiltInFileSystem();
-            _log = new DkToolsLogger(LogDir, Constants.LogFileNameFormat);
+            _fs = new WindowsFileSystem();
+            _log = new WindowsLogger(LogDir, Constants.LogFileNameFormat);
             _log.Info("DkTools {0}", System.Reflection.Assembly.GetExecutingAssembly().GetName().Version);
 
-            _app = new DkAppContext(_fs, _log);
+            _config = new WindowsAppConfigSource(_log);
+
+            _app = new DkAppContext(_fs, _log, _config);
 
             await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync(cancellationToken);
 

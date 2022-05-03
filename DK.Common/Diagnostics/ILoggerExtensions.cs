@@ -67,6 +67,20 @@ namespace DK.Diagnostics
 			log.Write(LogLevel.Warning, ex.ToString());
 		}
 
+		public static void Warning(this ILogger log, Exception ex, string message)
+		{
+			if (log.Level > LogLevel.Warning) return;
+
+			log.Write(LogLevel.Warning, string.Concat(message, "\r\n", ex));
+		}
+
+		public static void Warning(this ILogger log, Exception ex, string format, params object[] args)
+		{
+			if (log.Level > LogLevel.Warning) return;
+
+			log.Warning(ex, string.Format(format, args));
+		}
+
 		public static void Error(this ILogger log, string message)
 		{
 			log.Write(LogLevel.Error, message);

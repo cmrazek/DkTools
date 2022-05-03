@@ -1,11 +1,12 @@
-﻿using System;
+﻿using DK.Diagnostics;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
 
-namespace DK.Diagnostics
+namespace DK.Implementation.Windows
 {
-    public class DkToolsLogger : ILogger
+    public class WindowsLogger : ILogger
     {
         private static StreamWriter _writer;
         private static StringBuilder _sb = new StringBuilder();
@@ -21,7 +22,7 @@ namespace DK.Diagnostics
 
         private const int PurgeDays = 7;
 
-        public DkToolsLogger(string logDir, string logFileNameFormat)
+        public WindowsLogger(string logDir, string logFileNameFormat)
         {
             try
             {

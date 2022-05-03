@@ -1,5 +1,6 @@
 ﻿using DK.AppEnvironment;
 using DK.Diagnostics;
+using DkTools.AppEnvironment;
 using Microsoft.VisualStudio.Setup.Configuration;
 using Microsoft.Win32;
 using System;
@@ -44,9 +45,11 @@ namespace DkTools.Compiler
 
             mergedVars["pcurrentapp"] = _app.AppName;
 
-            _platformFolder = DkEnvironment.GetWbdkPlatformFolder(_app.FileSystem, _app.Log);
+            var platformInfo = _app.Config.GetWbdkPlatformInfo();
 
-            var platformVersion = DkEnvironment.GetWbdkPlatformVersionText(_app.FileSystem, _app.Log);
+            _platformFolder = platformInfo?.PlatformPath;
+
+            var platformVersion = platformInfo?.VersionText;
             if (platformVersion != null) mergedVars["WbdkFrameworkVersion"] = platformVersion;
 
             // Add Exe paths
@@ -139,7 +142,8 @@ namespace DkTools.Compiler
 
         private void AddDevelopmentExePaths(List<string> path)
         {
-            if (DkEnvironment.GetWbdkPlatformVersion(_app.FileSystem, _app.Log) >= DkEnvironment.DK10Version)
+            var platformInfo = _app.Config.GetWbdkPlatformInfo();
+            if (platformInfo != null && platformInfo.Version >= DkEnvironment.DK10Version)
             {
                 _app.Log.Debug("Merging development EXE paths in DK10 mode.");
 
