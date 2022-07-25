@@ -21,6 +21,7 @@ Visual Studio Extension for WBDK
 **Version 1.6.3 Changes:**
 - Function calls to deprecated functions now trigger a code analysis error (CA0120 - suppress with #warndel 990120)<br>
   A function is marked deprecated if the description text contains the word "deprecated".
+- Fixed bug where table/function names would sometimes be confused for enum values.
 
 **Version 1.6.2 Changes:**
 - Optimizations for quicker smart indenting and signature help.

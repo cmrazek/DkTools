@@ -74,7 +74,8 @@ namespace DK.Modeling.Tokens
 							{
 								exp.AddToken(token);
 							}
-							else if (parseDataType != null && parseDataType.HasCompletionOptions && parseDataType.IsValidEnumOption(word))
+							else if (parseDataType != null && !code.PeekExact('.') && !code.PeekExact('(') &&
+								parseDataType.HasCompletionOptions && parseDataType.IsValidEnumOption(word))
 							{
 								exp.AddToken(new EnumOptionToken(scope, wordSpan, word, parseDataType));
 							}
