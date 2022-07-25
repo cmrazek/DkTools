@@ -1,4 +1,6 @@
-﻿namespace DK.Code
+﻿using System.Collections.Generic;
+
+namespace DK.Code
 {
 	public struct CodeSpan
 	{
@@ -129,6 +131,27 @@
 				_start < span._start ? _start : span._start,
 				_end > span._end ? _end : span._end);
 		}
+
+        public static CodeSpan Envelope(IEnumerable<CodeSpan> spans)
+        {
+            var first = true;
+            var fullSpan = CodeSpan.Empty;
+
+            foreach (var span in spans)
+            {
+                if (first)
+                {
+                    first = false;
+                    fullSpan = span;
+                }
+                else
+                {
+                    fullSpan = fullSpan.Envelope(span);
+                }
+            }
+
+            return fullSpan;
+        }
 
 		public CodeSpan Intersection(CodeSpan span)
 		{

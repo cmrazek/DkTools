@@ -8,7 +8,7 @@ namespace DK.CodeAnalysis.Statements
 {
 	class ExtractStatement : Statement
 	{
-		private List<ExpressionNode> _colExps = new List<ExpressionNode>();
+		private List<Node> _colExps = new List<Node>();
 
 		public ExtractStatement(ReadParams p, CodeSpan keywordSpan)
 			: base(p.CodeAnalyzer, keywordSpan)
@@ -39,6 +39,7 @@ namespace DK.CodeAnalysis.Statements
 					ReportError(new CodeSpan(code.Position, code.Position + 1), CAError.CA0046);	// Expected extract column name.
 					return;
 				}
+				var colSpan = code.Span;
 				var colDef = def.GetChildDefinitions(code.Text, p.AppSettings).FirstOrDefault();
 				if (colDef == null)
 				{
@@ -51,6 +52,7 @@ namespace DK.CodeAnalysis.Statements
 					ReportError(new CodeSpan(code.Position, code.Position + 1), CAError.CA0047);	// Expected '=' to follow extract column name.
 					return;
 				}
+				var assignSpan = code.Span;
 
 				var exp = ExpressionNode.Read(p, null, true);
 				if (exp == null)
@@ -59,7 +61,10 @@ namespace DK.CodeAnalysis.Statements
 					return;
 				}
 
-				_colExps.Add(exp);
+				var colNode = new IdentifierNode(p.Statement, colSpan, colDef.Name, colDef, reportable: false);
+				var assignNode = new OperatorNode(p.Statement, assignSpan, "=", special: null);
+
+				_colExps.Add(new AggregateNode(p.Statement, colDef.DataType, colNode, assignNode, exp));
 
 				if (code.ReadExact(';')) return;
 			}

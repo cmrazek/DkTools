@@ -64,6 +64,7 @@
     <Compile Include="CodeAnalysis\CodeAnalysisResults.cs" />
     <Compile Include="CodeAnalysis\CodeAnalyzer.cs" />
     <Compile Include="CodeAnalysis\Nodes\AggregateFunctionCallNode.cs" />
+    <Compile Include="CodeAnalysis\Nodes\AggregateNode.cs" />
     <Compile Include="CodeAnalysis\Nodes\BracketsNode.cs" />
     <Compile Include="CodeAnalysis\Nodes\CastNode.cs" />
     <Compile Include="CodeAnalysis\Nodes\CharLiteralNode.cs" />

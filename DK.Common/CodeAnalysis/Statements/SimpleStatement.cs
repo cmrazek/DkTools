@@ -9,7 +9,7 @@ namespace DK.CodeAnalysis.Statements
 		public SimpleStatement(CodeAnalyzer ca)
 			: base(ca)
 		{
-			_root = new GroupNode(this, null);
+			_root = new AggregateNode(this, null);
 		}
 
 		public bool IsEmpty => _root.NumChildren == 0;
