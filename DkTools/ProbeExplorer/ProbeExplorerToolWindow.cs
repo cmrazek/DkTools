@@ -26,7 +26,7 @@ namespace DkTools.ProbeExplorer
 			}
 			catch (Exception ex)
 			{
-				Log.WriteEx(ex);
+				ProbeToolsPackage.Instance.App.Log.Error(ex);
 			}
 		}
 

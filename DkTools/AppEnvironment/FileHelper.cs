@@ -1,9 +1,9 @@
 ﻿using System;
 using System.IO;
 
-namespace DK.AppEnvironment
+namespace DkTools.AppEnvironment
 {
-	static class FileHelper
+	public static class FileHelper
 	{
 		public static bool PathIsSameOrChildDir(string childDir, string parentDir)
 		{

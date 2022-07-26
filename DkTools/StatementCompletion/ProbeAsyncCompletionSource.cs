@@ -125,7 +125,7 @@ namespace DkTools.StatementCompletion
 			{
 				_mode = CompletionMode.None;
 				_fileName = VsTextUtil.TryGetDocumentFileName(_textView.TextBuffer);
-				_appSettings = DkEnvironment.CurrentAppSettings;
+				_appSettings = ProbeToolsPackage.Instance.App.Settings;
 
 				var liveCodeTracker = LiveCodeTracker.GetOrCreateForTextBuffer(_textView.TextBuffer);
 				var state = liveCodeTracker.GetStateForPosition(triggerPt);
@@ -312,7 +312,7 @@ namespace DkTools.StatementCompletion
 					HandleAfterIfDef();
 					break;
 				case CompletionMode.AfterComma:
-					HandleAfterComma(applicableToSpan, DkEnvironment.CurrentAppSettings);
+					HandleAfterComma(applicableToSpan, ProbeToolsPackage.Instance.App.Settings);
 					break;
 				case CompletionMode.AfterCase:
 					HandleAfterCase(applicableToSpan);
@@ -348,10 +348,10 @@ namespace DkTools.StatementCompletion
 					GetWordCompletions(triggerPt, _params.pt, _fileName, cancel);
 					break;
 				case CompletionMode.ClassFunction:
-					HandleAfterMethodArgsStart(_params.str, _params.str2, DkEnvironment.CurrentAppSettings);
+					HandleAfterMethodArgsStart(_params.str, _params.str2, ProbeToolsPackage.Instance.App.Settings);
 					break;
 				case CompletionMode.Function:
-					HandleAfterFunctionArgsStart(_params.str, DkEnvironment.CurrentAppSettings);
+					HandleAfterFunctionArgsStart(_params.str, ProbeToolsPackage.Instance.App.Settings);
 					break;
 				case CompletionMode.Include:
 					if (!session.Properties.ContainsProperty(CompletionTypeProperty_Include)) session.Properties.AddProperty(CompletionTypeProperty_Include, string.Empty);
@@ -602,7 +602,7 @@ namespace DkTools.StatementCompletion
             }
 
             // Class and method
-            var appSettings = DkEnvironment.CurrentAppSettings;
+            var appSettings = ProbeToolsPackage.Instance.App.Settings;
             if (appSettings != null)
             {
                 foreach (var cls in appSettings.Repo.GetClassDefinitions(word1))

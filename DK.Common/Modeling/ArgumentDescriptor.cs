@@ -88,7 +88,7 @@ namespace DK.Modeling
 			{
 				if (!code.ReadWord())
 				{
-					Log.Debug("Unable to parse argument name from: {0}", str);
+					appSettings.Log.Debug("Unable to parse argument name from: {0}", str);
 					return null;
 				}
 				name = code.Text;
@@ -108,7 +108,7 @@ namespace DK.Modeling
 				dataType = DataType.TryParse(new DataType.ParseArgs(code, appSettings));
 				if (dataType == null)
 				{
-					Log.Debug("Unable to parse data type from: {0}", str);
+					appSettings.Log.Debug("Unable to parse data type from: {0}", str);
 				}
 			}
 

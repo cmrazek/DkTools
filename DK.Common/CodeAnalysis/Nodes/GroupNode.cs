@@ -8,7 +8,7 @@ using System.Linq;
 
 namespace DK.CodeAnalysis.Nodes
 {
-	class GroupNode : Node
+	abstract class GroupNode : Node
 	{
 		private List<Node> _nodes = new List<Node>();
 
@@ -79,12 +79,12 @@ namespace DK.CodeAnalysis.Nodes
 			}
 		}
 
-		public void ReplaceWithResult(Value value, bool resultIsReportable, params Node[] nodes)
+		public ResultNode ReplaceWithResult(Value value, bool resultIsReportable, params Node[] nodes)
 		{
-			ReplaceWithResult(value, resultIsReportable, ResultSource.Normal, nodes);
+			return ReplaceWithResult(value, resultIsReportable, ResultSource.Normal, nodes);
 		}
 
-		public void ReplaceWithResult(Value value, bool resultIsReportable, ResultSource source, params Node[] nodes)
+		public ResultNode ReplaceWithResult(Value value, bool resultIsReportable, ResultSource source, params Node[] nodes)
 		{
 			CAErrorType? errRep = null;
 			CodeSpan span = CodeSpan.Empty;
@@ -102,7 +102,9 @@ namespace DK.CodeAnalysis.Nodes
 				}
 			}
 
-			ReplaceNodes(new ResultNode(Statement, span, value, source, errRep, resultIsReportable), nodes);
+			var resultNode = new ResultNode(Statement, span, value, source, errRep, resultIsReportable);
+			ReplaceNodes(resultNode, nodes);
+			return resultNode;
 		}
 
 		private void SimplifyGroup(CAScope scope)

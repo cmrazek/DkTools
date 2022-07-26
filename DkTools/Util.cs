@@ -64,31 +64,31 @@ namespace DkTools
 
 		public static void ShowError(this System.Windows.Controls.UserControl ctrl, Exception ex)
 		{
-			Log.WriteEx(ex);
+			ProbeToolsPackage.Instance.App.Log.Error(ex);
 			ShowErrorDialog(ex.Message, ex.ToString());
 		}
 
 		public static void ShowError(this System.Windows.Controls.UserControl ctrl, string message)
 		{
-			Log.Write(LogLevel.Error, message);
+			ProbeToolsPackage.Instance.App.Log.Error(message);
 			ShowErrorDialog(message, null);
 		}
 
 		public static void ShowError(this System.Windows.Window window, Exception ex)
 		{
-			Log.WriteEx(ex);
+			ProbeToolsPackage.Instance.App.Log.Error(ex);
 			ShowErrorDialog(ex.Message, ex.ToString());
 		}
 
 		public static void ShowError(this System.Windows.Forms.IWin32Window window, Exception ex)
 		{
-			Log.WriteEx(ex);
+			ProbeToolsPackage.Instance.App.Log.Error(ex);
 			ShowErrorDialog(ex.Message, ex.ToString());
 		}
 
 		public static void ShowError(this System.Windows.Forms.IWin32Window window, string message)
 		{
-			Log.Write(LogLevel.Error, message);
+			ProbeToolsPackage.Instance.App.Log.Error(message);
 			ShowErrorDialog(message, null);
 		}
 

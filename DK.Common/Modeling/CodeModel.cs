@@ -5,7 +5,6 @@ using DK.Modeling.Tokens;
 using DK.Preprocessing;
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using System.Threading;
 
@@ -71,7 +70,7 @@ namespace DK.Modeling
 			this.RefreshTime = DateTime.Now;
 
 			_fileName = fileName;
-			if (!string.IsNullOrEmpty(_fileName)) _fileTitle = Path.GetFileNameWithoutExtension(_fileName);
+			if (!string.IsNullOrEmpty(_fileName)) _fileTitle = PathUtil.GetFileNameWithoutExtension(_fileName);
 
 			_fileContext = FileContextHelper.GetFileContextFromFileName(_fileName);
 

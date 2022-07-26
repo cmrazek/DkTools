@@ -1,6 +1,4 @@
-﻿using DK.Diagnostics;
-
-namespace DK.Preprocessing.Tokens
+﻿namespace DK.Preprocessing.Tokens
 {
 	internal class NumberToken : Token
 	{
@@ -10,11 +8,7 @@ namespace DK.Preprocessing.Tokens
 			: base(parent)
 		{
 			long value;
-			if (!long.TryParse(text, out value))
-			{
-				Log.Debug("'{0}' is not a valid number.", text);
-				_value = null;
-			}
+			if (!long.TryParse(text, out value)) _value = null;
 			else _value = value;
 		}
 

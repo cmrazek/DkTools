@@ -59,7 +59,7 @@ namespace DkTools.Outlining
                 }
                 catch (Exception ex)
                 {
-					Log.Error(ex);
+					ProbeToolsPackage.Instance.App.Log.Error(ex);
                 }
 			});
         }
@@ -70,21 +70,21 @@ namespace DkTools.Outlining
 			var fileStore = FileStoreHelper.GetOrCreateForTextBuffer(_buffer);
 			if (fileStore == null)
 			{
-				Log.Debug("Outlinging could not be reparsed because the file store is null.");
+				ProbeToolsPackage.Instance.App.Log.Debug("Outlinging could not be reparsed because the file store is null.");
 				return;
 			}
 
 			var model = fileStore.Model;
 			if (model == null)
 			{
-				Log.Debug("Outlining could not be reparsed because the model is null.");
+				ProbeToolsPackage.Instance.App.Log.Debug("Outlining could not be reparsed because the model is null.");
 				return;
 			}
 
 			var modelSnapshot = model.Snapshot as ITextSnapshot;
 			if (modelSnapshot == null)
 			{
-				Log.Debug("Outlinging could not be reparsed because the model has no snapshot.");
+				ProbeToolsPackage.Instance.App.Log.Debug("Outlinging could not be reparsed because the model has no snapshot.");
 				return;
 			}
 

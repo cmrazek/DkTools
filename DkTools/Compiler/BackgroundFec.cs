@@ -12,20 +12,20 @@ namespace DkTools.Compiler
 		{
 			if (string.IsNullOrWhiteSpace(sourceFilePath)) return;
 
-			Log.Debug("Running background FEC for file '{0}'.", sourceFilePath);
+			ProbeToolsPackage.Log.Debug("Running background FEC for file '{0}'.", sourceFilePath);
 
 			var counter = 10;
 			while (counter > 0)
 			{
 				cancel.ThrowIfCancellationRequested();
 
-				if (!ProbeCompiler.Instance.Mutex.WaitOne(1000))
+				if (!ProbeToolsPackage.Instance.Compiler.Mutex.WaitOne(1000))
 				{
-					Log.Debug("Waiting for other compile/FEC operation to complete...");
+					ProbeToolsPackage.Log.Debug("Waiting for other compile/FEC operation to complete...");
 					counter--;
 					if (counter == 0)
 					{
-						Log.Debug("Ran out of retries when waiting for compile/FEC operation to complete.");
+						ProbeToolsPackage.Log.Debug("Ran out of retries when waiting for compile/FEC operation to complete.");
 						return;
 					}
 				}
@@ -41,7 +41,7 @@ namespace DkTools.Compiler
 					var index = line.IndexOf(": error :");
 					if (index >= 0)
 					{
-						Log.Debug("Background FEC error: {0}", line);
+						ProbeToolsPackage.Log.Debug("Background FEC error: {0}", line);
 
 						string fileName;
 						int lineNum;
@@ -64,7 +64,7 @@ namespace DkTools.Compiler
 					index = line.IndexOf(": warning :");
 					if (index >= 0)
 					{
-						Log.Debug("Background FEC warning: {0}", line);
+						ProbeToolsPackage.Log.Debug("Background FEC warning: {0}", line);
 
 						string fileName;
 						int lineNum;
@@ -94,21 +94,21 @@ namespace DkTools.Compiler
 				var exitCode = runner.CaptureProcess("fec.exe", string.Concat("\"", sourceFilePath, "\""), workingDir, output, cancel);
 				if (exitCode == 0)
 				{
-					Log.Debug("Background FEC completed successfully.");
+					ProbeToolsPackage.Log.Debug("Background FEC completed successfully.");
 				}
 				else
 				{
-					Log.Write(LogLevel.Warning, "FEC.exe returned exit code {0} when running background FEC for file '{1}'.", exitCode, sourceFilePath);
+					ProbeToolsPackage.Log.Write(LogLevel.Warning, "FEC.exe returned exit code {0} when running background FEC for file '{1}'.", exitCode, sourceFilePath);
 				}
 				ErrorTaskProvider.Instance.ReplaceForSourceAndInvokingFile(ErrorTaskSource.BackgroundFec, sourceFilePath, tasks);
 			}
 			catch (Exception ex)
 			{
-				Log.WriteEx(ex);
+				ProbeToolsPackage.Log.Error(ex);
 			}
 			finally
 			{
-				ProbeCompiler.Instance.Mutex.ReleaseMutex();
+				ProbeToolsPackage.Instance.Compiler.Mutex.ReleaseMutex();
 			}
 		}
 	}

@@ -14,6 +14,9 @@ namespace DK.Definitions
 		private int _argsStartPos;
 		private int _argsEndPos;
 		private CodeSpan _entireSpan;
+		private bool _deprecated;
+
+		private static readonly Regex _rxDeprecated = new Regex(@"\bdeprecated\b", RegexOptions.IgnoreCase);
 
 		public FunctionDefinition(
 			FunctionSignature signature,
@@ -29,6 +32,7 @@ namespace DK.Definitions
 			_argsEndPos = argsEndPos;
 			_bodyStartPos = bodyStartPos;
 			_entireSpan = entireSpan;
+			_deprecated = _sig.Description != null ? _rxDeprecated.IsMatch(_sig.Description) : false;
 		}
 
 		public FunctionDefinition(FunctionSignature signature, FilePosition filePos)
@@ -37,6 +41,7 @@ namespace DK.Definitions
 			_sig = signature ?? throw new ArgumentNullException(nameof(signature));
 			_argsStartPos = _argsEndPos = _bodyStartPos = 0;
 			_entireSpan = CodeSpan.Empty;
+			_deprecated = _sig.Description != null ? _rxDeprecated.IsMatch(_sig.Description) : false;
 		}
 
 		public FunctionDefinition(FunctionSignature signature)
@@ -45,6 +50,7 @@ namespace DK.Definitions
 			_sig = signature ?? throw new ArgumentNullException(nameof(signature));
 			_argsStartPos = _argsEndPos = _bodyStartPos = 0;
 			_entireSpan = CodeSpan.Empty;
+			_deprecated = _sig.Description != null ? _rxDeprecated.IsMatch(_sig.Description) : false;
 		}
 
 		public FunctionDefinition CloneAsExtern()
@@ -58,36 +64,13 @@ namespace DK.Definitions
 		public string FullName => _sig.FullName;
 		public override string ToString() => _sig.ToString();
 		public override ServerContext ServerContext => _sig.ServerContext;
-
-		public override DataType DataType
-		{
-			get { return _sig.ReturnDataType; }
-		}
-
-		public override IEnumerable<ArgumentDescriptor> Arguments
-		{
-			get { return _sig.Arguments; }
-		}
-
-		public override FunctionSignature Signature
-		{
-			get { return _sig; }
-		}
-
-		public override bool CompletionVisible
-		{
-			get { return true; }
-		}
-
-		public override ProbeCompletionType CompletionType
-		{
-			get { return ProbeCompletionType.Function; }
-		}
-
-		public override ProbeClassifierType ClassifierType
-		{
-			get { return ProbeClassifierType.Function; }
-		}
+		public bool Deprecated => _deprecated;
+		public override DataType DataType => _sig.ReturnDataType;
+		public override IEnumerable<ArgumentDescriptor> Arguments => _sig.Arguments;
+		public override FunctionSignature Signature => _sig;
+		public override bool CompletionVisible => true;
+		public override ProbeCompletionType CompletionType => ProbeCompletionType.Function;
+		public override ProbeClassifierType ClassifierType => ProbeClassifierType.Function;
 
 		public override string QuickInfoTextStr
 		{
@@ -103,30 +86,12 @@ namespace DK.Definitions
 			string.IsNullOrWhiteSpace(_sig.Description) ? null : new QuickInfoDescription(_sig.Description)
 		);
 
-		public int BodyStartPosition
-		{
-			get { return _bodyStartPos; }
-		}
-
-		public int ArgsStartPosition
-		{
-			get { return _argsStartPos; }
-		}
-
-		public int ArgsEndPosition
-		{
-			get { return _argsEndPos; }
-		}
-
-		public FunctionPrivacy Privacy
-		{
-			get { return _sig.Privacy; }
-		}
-
-		public bool Extern
-		{
-			get { return _sig.Extern; }
-		}
+		public int BodyStartPosition => _bodyStartPos;
+		public int ArgsStartPosition => _argsStartPos;
+		public int ArgsEndPosition => _argsEndPos;
+		public FunctionPrivacy Privacy => _sig.Privacy;
+		public bool Extern => _sig.Extern;
+		public string ClassName => _sig.ClassName;
 
 		public override void DumpTreeAttribs(System.Xml.XmlWriter xml)
 		{
@@ -136,52 +101,15 @@ namespace DK.Definitions
 			xml.WriteAttributeString("bodyStartPos", _bodyStartPos.ToString());
 		}
 
-		public string ClassName
-		{
-			get { return _sig.ClassName; }
-		}
-
 		/// <summary>
 		/// Span of the function, from start of the return data type to the end of the closing brace, in primary file coordinates.
 		/// </summary>
-		public CodeSpan EntireSpan
-		{
-			get { return _entireSpan; }
-		}
-
-		public override string PickText
-		{
-			get { return _sig.PrettySignature; }
-		}
-
-		public override bool ArgumentsRequired
-		{
-			get { return true; }
-		}
-
-		public override FunctionSignature ArgumentsSignature
-		{
-			get
-			{
-				return _sig;
-			}
-		}
-
-		public override bool AllowsFunctionBody
-		{
-			get
-			{
-				return true;
-			}
-		}
-
-		public override bool CanRead
-		{
-			get
-			{
-				return _sig.ReturnDataType != null && !_sig.ReturnDataType.IsVoid;
-			}
-		}
+		public CodeSpan EntireSpan => _entireSpan;
+		public override string PickText => _sig.PrettySignature;
+		public override bool ArgumentsRequired => true;
+		public override FunctionSignature ArgumentsSignature => _sig;
+		public override bool AllowsFunctionBody => true;
+		public override bool CanRead => _sig.ReturnDataType != null && !_sig.ReturnDataType.IsVoid;
 
 		public override bool RequiresParent(string curClassName)
 		{

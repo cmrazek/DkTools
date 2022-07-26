@@ -1,5 +1,4 @@
-﻿using DK;
-using DK.AppEnvironment;
+﻿using DK.AppEnvironment;
 using DK.Code;
 using DK.CodeAnalysis.Statements;
 using DK.CodeAnalysis.Values;
@@ -17,6 +16,7 @@ namespace DK.CodeAnalysis
 {
 	public class CodeAnalyzer
 	{
+		private DkAppContext _app;
 		private CodeModel _codeModel;
 		private PreprocessorModel _prepModel;
 		private string _fullSource;
@@ -32,11 +32,10 @@ namespace DK.CodeAnalysis
 		private List<CAErrorTask> _includeFileTasks = new List<CAErrorTask>();
 		private List<CAErrorMarker> _tags = new List<CAErrorMarker>();
 
-		public CodeAnalyzer(CodeModel model)
+		public CodeAnalyzer(DkAppContext app, CodeModel model)
 		{
-			if (model == null) throw new ArgumentNullException("model");
-
-			_codeModel = model;
+			_app = app ?? throw new ArgumentNullException(nameof(app));
+			_codeModel = model ?? throw new ArgumentNullException(nameof(model));
 			_filePath = model.FilePath;
 		}
 
@@ -48,7 +47,7 @@ namespace DK.CodeAnalysis
 			_options = options ?? throw new ArgumentNullException(nameof(options));
 			_cancel = cancel;
 
-			Log.Debug("Starting code analysis on file: {0}", _codeModel.FilePath);
+			_app.Log.Debug("Starting code analysis on file: {0}", _codeModel.FilePath);
 			var startTime = DateTime.Now;
 
 			_prepModel = _codeModel.PreprocessorModel;
@@ -62,7 +61,7 @@ namespace DK.CodeAnalysis
 				AnalyzeFunction(func);
 			}
 
-			Log.Debug("Completed code analysis (elapsed: {0} msec)", DateTime.Now.Subtract(startTime).TotalMilliseconds);
+			_app.Log.Debug("Completed code analysis (elapsed: {0} msec)", DateTime.Now.Subtract(startTime).TotalMilliseconds);
 			var tasks = _mainFileTasks.Concat(_includeFileTasks).Take(_options.MaxWarnings != 0 ? _options.MaxWarnings : int.MaxValue).ToList();
 			return new CodeAnalysisResults(tasks, _tags);
 		}

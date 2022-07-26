@@ -1,7 +1,5 @@
-﻿using DK.AppEnvironment;
-using DK.Diagnostics;
+﻿using DK.Diagnostics;
 using DkTools.CodeModeling;
-using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Editor;
 using Microsoft.VisualStudio.Text.Outlining;
@@ -62,14 +60,14 @@ namespace DkTools.Navigation
 			var fileStore = FileStoreHelper.GetOrCreateForTextBuffer(_view.TextBuffer);
 			if (fileStore == null)
 			{
-				Log.Debug("No file store available.");
+				ProbeToolsPackage.Instance.App.Log.Debug("No file store available.");
 				return;
 			}
 
 			var model = fileStore.Model;
 			if (model == null)
             {
-				Log.Debug("No model available.");
+				ProbeToolsPackage.Instance.App.Log.Debug("No model available.");
 				return;
             }
 
@@ -77,14 +75,14 @@ namespace DkTools.Navigation
 			var caretPtTest = _view.Caret.Position.Point.GetPoint(buf => (!buf.ContentType.IsOfType("projection")), Microsoft.VisualStudio.Text.PositionAffinity.Predecessor);
 			if (!caretPtTest.HasValue)
 			{
-				Log.Debug("Couldn't get caret point.");
+				ProbeToolsPackage.Instance.App.Log.Debug("Couldn't get caret point.");
 				return;
 			}
 			var caretPt = caretPtTest.Value;
 			var modelSnapshot = model.Snapshot as ITextSnapshot;
 			if (modelSnapshot == null)
 			{
-				Log.Debug("Model has no snapshot.");
+				ProbeToolsPackage.Instance.App.Log.Debug("Model has no snapshot.");
 				return;
 			}
 			var modelPos = caretPt.Snapshot.TranslateOffsetToSnapshot(caretPt.Position, modelSnapshot);
@@ -102,7 +100,7 @@ namespace DkTools.Navigation
 			var refs = model.File.FindDownward(t => t.SourceDefinition == def).ToArray();
 			if (refs.Length == 0)
 			{
-				Log.Debug("List of references is empty.");
+				ProbeToolsPackage.Instance.App.Log.Debug("List of references is empty.");
 				return;
 			}
 
@@ -118,7 +116,7 @@ namespace DkTools.Navigation
 			}
 			if (refIndex == -1)
 			{
-				Log.Debug("The current token couldn't be found in the reference list.");
+				ProbeToolsPackage.Instance.App.Log.Debug("The current token couldn't be found in the reference list.");
 				return;
 			}
 

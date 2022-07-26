@@ -35,7 +35,7 @@ namespace DkTools.SignatureHelp
             }
             else if (ProbeSignatureHelpCommandHandler.s_typedChar == ',')
             {
-                foreach (var sig in HandleComma(session, DkEnvironment.CurrentAppSettings))
+                foreach (var sig in HandleComma(session, ProbeToolsPackage.Instance.App.Settings))
                 {
                     signatures.Add(sig);
                 }
@@ -61,7 +61,7 @@ namespace DkTools.SignatureHelp
                     {
                         var def = FileStoreHelper.GetDefinitionProviderOrNull(_textBuffer)?.GetGlobalFromAnywhere(item2.Value.Text)
                             .Where(x => x.AllowsChild)
-                            .SelectMany(x => x.GetChildDefinitions(item1.Value.Text, DkEnvironment.CurrentAppSettings))
+                            .SelectMany(x => x.GetChildDefinitions(item1.Value.Text, ProbeToolsPackage.Instance.App.Settings))
                             .Where(x => x.ArgumentsRequired)
                             .FirstOrDefault();
                         if (def != null)

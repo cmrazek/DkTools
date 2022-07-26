@@ -1,7 +1,6 @@
 ﻿using DK.AppEnvironment;
 using DK.Code;
 using DK.Definitions;
-using DK.Diagnostics;
 using DK.Modeling;
 using DK.Preprocessing.Tokens;
 using System;
@@ -1116,10 +1115,6 @@ namespace DK.Preprocessing
 			}
 			else
 			{
-#if DEBUG
-				Log.Debug("Condition returned indeterminate: {0}\r\n  File Name: {1}\r\n  Position: {2}\r\n  Resolved: {3}",
-					conditionStr, fileName, pos, writer.Text);
-#endif
 				ret = ConditionResult.Indeterminate;
 			}
 			return ret;

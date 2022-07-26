@@ -1,6 +1,4 @@
-﻿using DK.AppEnvironment;
-using DK.Diagnostics;
-using DK.Modeling.Tokens;
+﻿using DK.Modeling.Tokens;
 using DkTools.CodeModeling;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Text;
@@ -17,28 +15,19 @@ namespace DkTools.Navigation
 			ThreadHelper.ThrowIfNotOnUIThread();
 
 			var caretPtTest = view.Caret.Position.Point.GetPoint(buf => (!buf.ContentType.IsOfType("projection")), Microsoft.VisualStudio.Text.PositionAffinity.Predecessor);
-			if (!caretPtTest.HasValue)
-			{
-				Log.Debug("Couldn't get caret point.");
-				return;
-			}
+			if (!caretPtTest.HasValue) return;
 			var caretPt = caretPtTest.Value;
 
 			var store = FileStoreHelper.GetOrCreateForTextBuffer(view.TextBuffer);
 			if (store == null) return;
 
-			var appSettings = DkEnvironment.CurrentAppSettings;
 			var fileName = VsTextUtil.TryGetDocumentFileName(view.TextBuffer);
 			var model = store.Model;
 			if (model == null) return;
 
 			var modelPos = model.AdjustPosition(caretPt.Position, caretPt.Snapshot);
 			var selTokens = model.File.FindDownwardTouching(modelPos).ToArray();
-			if (selTokens.Length == 0)
-			{
-				Log.Debug("Touching no tokens.");
-				return;
-			}
+			if (selTokens.Length == 0) return;
 
 			if (!extend)
 			{

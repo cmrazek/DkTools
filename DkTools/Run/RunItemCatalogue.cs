@@ -45,7 +45,7 @@ namespace DkTools.Run
 			}
 			catch (Exception ex)
 			{
-				Log.Error(ex);
+				ProbeToolsPackage.Instance.App.Log.Error(ex);
 			}
 		}
 
@@ -69,7 +69,7 @@ namespace DkTools.Run
 			}
 			catch (Exception ex)
 			{
-				Log.Error(ex);
+				ProbeToolsPackage.Instance.App.Log.Error(ex);
 			}
 		}
 

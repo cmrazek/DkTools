@@ -68,12 +68,7 @@ namespace DK.Modeling
 		public ServerContext ServerContext => _serverContext;
 		public FunctionPrivacy Privacy => _privacy;
 		public DataType ReturnDataType => _returnDataType;
-
-		public string Description
-		{
-			get { return _devDesc; }
-			set { _devDesc = value; }
-		}
+		public string Description => _devDesc;
 
 		public IEnumerable<ArgumentDescriptor> Arguments
 		{
@@ -252,38 +247,38 @@ namespace DK.Modeling
 						privacy = FunctionPrivacy.Protected;
 						break;
 					case "rdt":
-						if (!code.ReadStringLiteral()) Log.Debug("Unable to read return data type from: {0}", str);
+						if (!code.ReadStringLiteral()) appSettings.Log.Debug("Unable to read return data type from: {0}", str);
 						else
 						{
 							var dtString = CodeParser.StringLiteralToString(code.Text);
 							returnDataType = DataType.TryParse(new DataType.ParseArgs(new CodeParser(dtString), appSettings));
 							if (returnDataType == null)
 							{
-								Log.Debug("Unable to parse return data type from: {0}", dtString);
+								appSettings.Log.Debug("Unable to parse return data type from: {0}", dtString);
 								returnDataType = new DataType(ValType.Unknown, null,
 									new ProbeClassifiedString(ProbeClassifierType.DataType, dtString));
 							}
 						}
 						break;
 					case "cls":
-						if (!code.ReadWord()) Log.Debug("Unable to read class name from: {0}", str);
+						if (!code.ReadWord()) appSettings.Log.Debug("Unable to read class name from: {0}", str);
 						else className = code.Text;
 						break;
 					case "fn":
-						if (!code.ReadWord()) Log.Debug("Unable to read function name from: {0}", str);
+						if (!code.ReadWord()) appSettings.Log.Debug("Unable to read function name from: {0}", str);
 						else funcName = code.Text;
 						break;
 					case "desc":
-						if (!code.ReadStringLiteral()) Log.Debug("Unable to read description from: {0}", str);
+						if (!code.ReadStringLiteral()) appSettings.Log.Debug("Unable to read description from: {0}", str);
 						else devDesc = CodeParser.StringLiteralToString(code.Text);
 						break;
 					case "arg":
-						if (!code.ReadStringLiteral()) Log.Debug("Unable to read return data type from: {0}", str);
+						if (!code.ReadStringLiteral()) appSettings.Log.Debug("Unable to read return data type from: {0}", str);
 						else
 						{
 							var argString = CodeParser.StringLiteralToString(code.Text);
 							var arg = ArgumentDescriptor.ParseFromDb(argString, appSettings);
-							if (arg == null) Log.Debug("Unable to parse argument from: {0}", argString);
+							if (arg == null) appSettings.Log.Debug("Unable to parse argument from: {0}", argString);
 							else args.Add(arg);
 						}
 						break;
@@ -294,7 +289,7 @@ namespace DK.Modeling
 						serverContext = ServerContext.Client;
 						break;
 					default:
-						Log.Debug("Unexpected word '{0}' in function signature: {1}", code.Text, str);
+						appSettings.Log.Debug("Unexpected word '{0}' in function signature: {1}", code.Text, str);
 						stopParsing = true;
 						break;
 				}

@@ -151,6 +151,10 @@ namespace DK.CodeAnalysis
 
 		[ErrorMessage("Expected value to follow conditional ':'.")]
 		CA0043,
+
+		[ErrorMessage("Conditional statements should be wrapped in brackets to avoid compiler bugs.")]
+		[Warning]
+		CA0071,
 		#endregion
 
 		#region Extract Statements
@@ -248,9 +252,20 @@ namespace DK.CodeAnalysis
 		[ReportOutputTag]
 		CA0070,
 		#endregion
+
+		// Last CA0071
+
+		#region Function Calls (0120-0129)
+		/// <summary>
+		/// Deprecated function call.
+		/// {0} = description text.
+		/// </summary>
+		[ErrorMessage("{0}")]
+		CA0120,
+		#endregion
 	}
 
-	[AttributeUsage(AttributeTargets.Field, AllowMultiple = false)]
+    [AttributeUsage(AttributeTargets.Field, AllowMultiple = false)]
 	class ErrorMessageAttribute : Attribute
 	{
 		private string _message;

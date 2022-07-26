@@ -53,7 +53,7 @@ namespace DK.CodeAnalysis.Nodes
 			if (code.ReadExact('?'))
 			{
 				// Stacked conditional
-				var group = new GroupNode(p.Statement, null);
+				var group = new AggregateNode(p.Statement, null);
 				group.AddChild(falseExp);
 				group.AddChild(ConditionalNode.Read(p, refDataType, code.Span, stopStrings));
 				ret._falseExp = group;
@@ -116,8 +116,42 @@ namespace DK.CodeAnalysis.Nodes
 					if (result == null) result = Value.Void;
 				}
 
-				Parent.ReplaceWithResult(result, !result.IsVoid, leftNode, this);
+				var resultNode = Parent.ReplaceWithResult(result, !result.IsVoid, leftNode, this);
+
+				if (ErrorReported != CAErrorType.Error && ErrorReported != CAErrorType.Warning)
+				{
+					if (!IsWrappedInBrackets(scope, resultNode))
+					{
+						var fullSpan = leftNode.Span.Envelope(Span);
+						if (_trueExp != null) fullSpan = fullSpan.Envelope(_trueExp.Span);
+						if (_falseExp != null) fullSpan = fullSpan.Envelope(_falseExp.Span);
+
+						ReportError(fullSpan, CAError.CA0071);
+					}
+				}
 			}
 		}
+
+        private bool IsWrappedInBrackets(CAScope scope, Node resultNode)
+        {
+            var parent = Parent;
+            while (parent != null)
+            {
+                if (parent is BracketsNode) return true;
+
+                if (parent is AggregateNode || parent is ExpressionNode)
+                {
+                    if (parent.GetLeftSibling(scope, resultNode) != null) return false;
+                    if (parent.GetRightSibling(scope, resultNode) != null) return false;
+                    resultNode = parent;
+                    parent = parent.Parent;
+                    continue;
+                }
+
+                return false;
+            }
+
+            return true;
+        }
 	}
 }

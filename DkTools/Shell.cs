@@ -18,13 +18,13 @@ namespace DkTools
 
 		internal static void ShowError(Exception ex)
 		{
-			Log.WriteEx(ex);
+			ProbeToolsPackage.Instance.App.Log.Error(ex);
 			Util.ShowErrorDialog(ex.Message, ex.ToString());
 		}
 
 		internal static void ShowError(string text)
 		{
-			Log.Write(LogLevel.Error, text);
+			ProbeToolsPackage.Instance.App.Log.Error(text);
 			Util.ShowErrorDialog(text, null);
 		}
 

@@ -1,4 +1,5 @@
-﻿using DK.Preprocessing;
+﻿using DK.AppEnvironment;
+using DK.Preprocessing;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -406,7 +407,7 @@ namespace DK.Code
 			{
 				var seg = _segments[segIndex];
 				sb.AppendFormat("SEGMENT {0} FileName [{1}] StartOffset [{4}] Length [{5}] Start [{2}] End [{3}] Primary [{6}] Content [",
-					segIndex, System.IO.Path.GetFileName(seg.fileName), seg.startPos, seg.endPos, seg.fileStartPos, seg.length, seg.primaryFile);
+					segIndex, PathUtil.GetFileName(seg.fileName), seg.startPos, seg.endPos, seg.fileStartPos, seg.length, seg.primaryFile);
 				sb.Append(seg.text);
 				sb.AppendLine("]");
 			}

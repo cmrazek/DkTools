@@ -1,5 +1,4 @@
-﻿using DK.AppEnvironment;
-using DkTools.CodeModeling;
+﻿using DkTools.CodeModeling;
 using Microsoft.VisualStudio.Package;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.TextManager.Interop;
@@ -36,13 +35,10 @@ namespace DkTools.LanguageSvc
 			var fileStore = FileStoreHelper.GetOrCreateForTextBuffer(buf);
 			if (fileStore == null) return false;
 
-			var index = 0;
-
-			var appSettings = DkEnvironment.CurrentAppSettings;
-			var fileName = VsTextUtil.TryGetDocumentFileName(buf);
 			var model = fileStore.Model;
 			if (model != null)
 			{
+				var index = 0;
 				foreach (var func in fileStore.GetFunctionDropDownList(model).OrderBy(f => f.Name.ToLower()))
 				{
 					var span = func.EntireFunctionSpan;

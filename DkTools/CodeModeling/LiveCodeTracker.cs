@@ -72,7 +72,7 @@ namespace DkTools.CodeModeling
             }
             catch (Exception ex)
             {
-                Log.Error(ex);
+                ProbeToolsPackage.Log.Error(ex);
             }
         }
 
@@ -452,7 +452,7 @@ namespace DkTools.CodeModeling
                         {
                             var def = FileStoreHelper.GetDefinitionProviderOrNull(_textBuffer)?.GetGlobalFromAnywhere(funcItem2.Value.Text)
                                 .Where(x => x.AllowsChild)
-                                .SelectMany(x => x.GetChildDefinitions(funcItem1.Value.Text, DkEnvironment.CurrentAppSettings))
+                                .SelectMany(x => x.GetChildDefinitions(funcItem1.Value.Text, appSettings))
                                 .Where(x => x.ArgumentsRequired)
                                 .FirstOrDefault();
                             if (def != null)

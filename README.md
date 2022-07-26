@@ -18,6 +18,12 @@ Visual Studio Extension for WBDK
 
 ## Change Log
 
+**Version 1.6.3 Changes:**
+- Function calls to deprecated functions now trigger a code analysis error (CA0120 - suppress with #warndel 990120)<br>
+  A function is marked deprecated if the description text contains the word "deprecated".
+- Conditional (aka ternary) statements now trigger a code analysis error if they aren't wrapped in brackets.
+- Fixed bug where table/function names would sometimes be confused for enum values.
+
 **Version 1.6.2 Changes:**
 - Optimizations for quicker smart indenting and signature help.
 - Typing a closing '}' will now fix up indenting on the statements inside the scope.

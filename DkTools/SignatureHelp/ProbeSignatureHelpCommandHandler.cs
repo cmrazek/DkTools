@@ -22,7 +22,6 @@ namespace DkTools.SignatureHelp
 		private ITextView _textView;
 		private ISignatureHelpBroker _broker;
 		private ISignatureHelpSession _session;
-		private ITextStructureNavigator _navigator;
 		private ProbeSignatureHelpCommandProvider _provider;
 
 		public static char s_typedChar = char.MinValue;
@@ -30,13 +29,11 @@ namespace DkTools.SignatureHelp
 		internal ProbeSignatureHelpCommandHandler(
 			IVsTextView textViewAdapter,
 			ITextView textView,
-			ITextStructureNavigator textStructureNavigator,
 			ISignatureHelpBroker signatureHelpBroker,
 			ProbeSignatureHelpCommandProvider signatureHelpCommandProvider)
 		{
 			_textView = textView ?? throw new ArgumentNullException(nameof(textView));
 			_broker = signatureHelpBroker ?? throw new ArgumentNullException(nameof(signatureHelpBroker));
-			_navigator = textStructureNavigator ?? throw new ArgumentNullException(nameof(textStructureNavigator));
 			_provider = signatureHelpCommandProvider ?? throw new ArgumentNullException(nameof(signatureHelpCommandProvider));
 
 			//add this to the filter chain
@@ -150,7 +147,7 @@ namespace DkTools.SignatureHelp
 			}
 			catch (Exception ex)
 			{
-				Log.WriteEx(ex);
+				ProbeToolsPackage.Log.Error(ex);
 				return VSConstants.E_FAIL;
 			}
 		}

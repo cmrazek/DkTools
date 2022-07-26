@@ -1,12 +1,10 @@
-﻿using DK.AppEnvironment;
-using DK.Code;
+﻿using DK.Code;
 using DkTools.CodeModeling;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Editor;
 using System.Linq;
 using System.Text.RegularExpressions;
-using System.Threading;
 
 namespace DkTools.SmartIndenting
 {
@@ -178,7 +176,7 @@ namespace DkTools.SmartIndenting
 			}
 		}
 
-		public static void FixIndentingBetweenLines(ITextBuffer buffer, int startLineNumber, int endLineNumber, int tabSize, bool keepTabs, DkAppSettings appSettings, CancellationToken cancel)
+		public static void FixIndentingBetweenLines(ITextBuffer buffer, int startLineNumber, int endLineNumber, int tabSize, bool keepTabs)
 		{
             ThreadHelper.ThrowIfNotOnUIThread();
 
