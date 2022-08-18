@@ -18,6 +18,9 @@ Visual Studio Extension for WBDK
 
 ## Change Log
 
+**Version 1.6.4 Changes:**
+- Fixed a bug in modeling of 'create time relationship' statements which would cause them to consume more of the source than necessary.
+
 **Version 1.6.3 Changes:**
 - Function calls to deprecated functions now trigger a code analysis error (CA0120 - suppress with #warndel 990120)<br>
   A function is marked deprecated if the description text contains the word "deprecated".
