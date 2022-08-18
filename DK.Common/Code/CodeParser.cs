@@ -464,6 +464,8 @@ namespace DK.Code
 			get { return _pos >= _length; }
 		}
 
+		public string RemainingText => _pos < _length ? _source.Substring(_pos) : string.Empty;
+
 		public bool ReadNestable()
 		{
 			if (!Read()) return false;

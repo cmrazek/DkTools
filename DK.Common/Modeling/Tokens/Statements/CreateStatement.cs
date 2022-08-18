@@ -774,7 +774,7 @@ namespace DK.Modeling.Tokens.Statements
 			}
 		}
 
-		private static readonly string[] _createTimeRelationshipEndTokens = new string[] { "prompt", "comment", "description", "order", "tag", "to" };
+		private static readonly string[] _createTimeRelationshipEndTokens = new string[] { "prompt", "comment", "description", "order", "tag", "to", "(", ")" };
 
 		private void ParseCreateTimeRelationship()
 		{
