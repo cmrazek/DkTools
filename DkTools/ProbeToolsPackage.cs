@@ -457,7 +457,7 @@ namespace DkTools
         private Microsoft.VisualStudio.Shell.Interop.IVsStatusbar _statusBarService;
         internal void SetStatusText(string text)
         {
-            ThreadHelper.JoinableTaskFactory.RunAsync(async () =>
+            ThreadHelper.JoinableTaskFactory.Run(async () =>
             {
                 await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
 
@@ -476,7 +476,7 @@ namespace DkTools
         private Microsoft.VisualStudio.Shell.Interop.IVsErrorList _errorListService;
         internal void ShowErrorList()
         {
-            ThreadHelper.JoinableTaskFactory.RunAsync(async () =>
+            ThreadHelper.JoinableTaskFactory.Run(async () =>
             {
                 await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
 

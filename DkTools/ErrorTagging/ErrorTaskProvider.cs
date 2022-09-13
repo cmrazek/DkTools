@@ -68,7 +68,7 @@ namespace DkTools.ErrorTagging
 
         public void FireTagsChanged()
         {
-            ThreadHelper.JoinableTaskFactory.RunAsync(OnTasksChangedAsync);
+            ThreadHelper.JoinableTaskFactory.Run(OnTasksChangedAsync);
         }
 
         private async System.Threading.Tasks.Task OnClearTasksAsync()
@@ -101,12 +101,12 @@ namespace DkTools.ErrorTagging
 
         public void Clear()
         {
-            ThreadHelper.JoinableTaskFactory.RunAsync(OnClearTasksAsync);
+            ThreadHelper.JoinableTaskFactory.Run(OnClearTasksAsync);
         }
 
         public void RemoveAllForSource(ErrorTaskSource source)
         {
-            ThreadHelper.JoinableTaskFactory.RunAsync(async () =>
+            ThreadHelper.JoinableTaskFactory.Run(async () =>
             {
                 await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
 
@@ -130,7 +130,7 @@ namespace DkTools.ErrorTagging
 
         public void RemoveAllForSourceAndInvokingFile(ErrorTaskSource source, string invokingFilePath)
         {
-            ThreadHelper.JoinableTaskFactory.RunAsync(async () =>
+            ThreadHelper.JoinableTaskFactory.Run(async () =>
             {
                 await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
 
@@ -158,7 +158,7 @@ namespace DkTools.ErrorTagging
             string invokingFilePath,
             IEnumerable<ErrorTask> tasks)
         {
-            ThreadHelper.JoinableTaskFactory.RunAsync(async () =>
+            ThreadHelper.JoinableTaskFactory.Run(async () =>
             {
                 await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
 
@@ -189,7 +189,7 @@ namespace DkTools.ErrorTagging
 
         public void OnDocumentClosed(ITextView textView)
         {
-            ThreadHelper.JoinableTaskFactory.RunAsync(async () =>
+            ThreadHelper.JoinableTaskFactory.Run(async () =>
             {
                 await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
 

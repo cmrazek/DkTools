@@ -209,7 +209,7 @@ namespace DkTools
 
         private static void ShowProbeExplorer(object sender, EventArgs e)
         {
-            ThreadHelper.JoinableTaskFactory.RunAsync(async () =>
+            ThreadHelper.JoinableTaskFactory.Run(async () =>
             {
                 await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
 
@@ -269,7 +269,7 @@ namespace DkTools
 
         private static void Compile(object sender, EventArgs e)
         {
-            ThreadHelper.JoinableTaskFactory.RunAsync(async () =>
+            ThreadHelper.JoinableTaskFactory.Run(async () =>
             {
                 await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
                 ProbeToolsPackage.Instance.Compiler.Compile(ProbeCompiler.CompileMethod.Compile);
@@ -278,7 +278,7 @@ namespace DkTools
 
         private static void Compile_Dccmp(object sender, EventArgs e)
         {
-            ThreadHelper.JoinableTaskFactory.RunAsync(async () =>
+            ThreadHelper.JoinableTaskFactory.Run(async () =>
             {
                 await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
                 ProbeToolsPackage.Instance.Compiler.Compile(ProbeCompiler.CompileMethod.Dccmp);
@@ -287,7 +287,7 @@ namespace DkTools
 
         private static void Compile_Credelix(object sender, EventArgs e)
         {
-            ThreadHelper.JoinableTaskFactory.RunAsync(async () =>
+            ThreadHelper.JoinableTaskFactory.Run(async () =>
             {
                 await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
                 ProbeToolsPackage.Instance.Compiler.Compile(ProbeCompiler.CompileMethod.Credelix);
@@ -296,7 +296,7 @@ namespace DkTools
 
         private static void KillCompile(object sender, EventArgs e)
         {
-            ThreadHelper.JoinableTaskFactory.RunAsync(async () =>
+            ThreadHelper.JoinableTaskFactory.Run(async () =>
             {
                 await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
                 ProbeToolsPackage.Instance.Compiler.Kill();
@@ -305,7 +305,7 @@ namespace DkTools
 
         private static void ClearErrors(object sender, EventArgs e)
         {
-            ThreadHelper.JoinableTaskFactory.RunAsync(async () =>
+            ThreadHelper.JoinableTaskFactory.Run(async () =>
             {
                 await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
                 ErrorTaskProvider.Instance.Clear();
@@ -314,7 +314,7 @@ namespace DkTools
 
         private static void FecFile(object sender, EventArgs e)
         {
-            ThreadHelper.JoinableTaskFactory.RunAsync(async () =>
+            ThreadHelper.JoinableTaskFactory.Run(async () =>
             {
                 await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
 
@@ -365,7 +365,7 @@ namespace DkTools
 
         private static void FecFileToVisualC(object sender, EventArgs e)
         {
-            ThreadHelper.JoinableTaskFactory.RunAsync(async () =>
+            ThreadHelper.JoinableTaskFactory.Run(async () =>
             {
                 await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
                 try
@@ -418,7 +418,7 @@ namespace DkTools
 
         private static void MergeFile(object sender, EventArgs e)
         {
-            ThreadHelper.JoinableTaskFactory.RunAsync(async () =>
+            ThreadHelper.JoinableTaskFactory.Run(async () =>
             {
                 await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
                 try
@@ -470,7 +470,7 @@ namespace DkTools
 
         private static void TableListing(object sender, EventArgs e)
         {
-            ThreadHelper.JoinableTaskFactory.RunAsync(async () =>
+            ThreadHelper.JoinableTaskFactory.Run(async () =>
             {
                 await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
                 try
@@ -502,7 +502,7 @@ namespace DkTools
 
         private static void FindInProbeFiles(object sender, EventArgs e)
         {
-            ThreadHelper.JoinableTaskFactory.RunAsync(async () =>
+            ThreadHelper.JoinableTaskFactory.Run(async () =>
             {
                 await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
                 try
@@ -525,7 +525,7 @@ namespace DkTools
 
         private static void ProbeSettings(object sender, EventArgs e)
         {
-            ThreadHelper.JoinableTaskFactory.RunAsync(async () =>
+            ThreadHelper.JoinableTaskFactory.Run(async () =>
             {
                 await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
                 try
@@ -541,7 +541,7 @@ namespace DkTools
 
         private static void RunSamCam(object sender, EventArgs e)
         {
-            ThreadHelper.JoinableTaskFactory.RunAsync(async () =>
+            ThreadHelper.JoinableTaskFactory.Run(async () =>
             {
                 await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
                 try
@@ -558,7 +558,7 @@ namespace DkTools
 
         private static void InsertFileHeader(object sender, EventArgs e)
         {
-            ThreadHelper.JoinableTaskFactory.RunAsync(async () =>
+            ThreadHelper.JoinableTaskFactory.Run(async () =>
             {
                 await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
                 try
@@ -574,7 +574,7 @@ namespace DkTools
 
         private static void InsertTag(object sender, EventArgs e)
         {
-            ThreadHelper.JoinableTaskFactory.RunAsync(async () =>
+            ThreadHelper.JoinableTaskFactory.Run(async () =>
             {
                 await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
                 try
@@ -590,7 +590,7 @@ namespace DkTools
 
         private static void InsertDiag(object sender, EventArgs e)
         {
-            ThreadHelper.JoinableTaskFactory.RunAsync(async () =>
+            ThreadHelper.JoinableTaskFactory.Run(async () =>
             {
                 await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
                 try
@@ -606,7 +606,7 @@ namespace DkTools
 
         private static void InsertDate(object sender, EventArgs e)
         {
-            ThreadHelper.JoinableTaskFactory.RunAsync(async () =>
+            ThreadHelper.JoinableTaskFactory.Run(async () =>
             {
                 await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
                 try
@@ -622,7 +622,7 @@ namespace DkTools
 
         private static void ShowTaggingOptions(object sender, EventArgs e)
         {
-            ThreadHelper.JoinableTaskFactory.RunAsync(async () =>
+            ThreadHelper.JoinableTaskFactory.Run(async () =>
             {
                 await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
                 try
@@ -638,7 +638,7 @@ namespace DkTools
 
         private static void LaunchPSelect(object sender, EventArgs e)
         {
-            ThreadHelper.JoinableTaskFactory.RunAsync(async () =>
+            ThreadHelper.JoinableTaskFactory.Run(async () =>
             {
                 await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
                 try
@@ -667,7 +667,7 @@ namespace DkTools
 
         private static void ShowHelp(object sender, EventArgs e)
         {
-            ThreadHelper.JoinableTaskFactory.RunAsync(async () =>
+            ThreadHelper.JoinableTaskFactory.Run(async () =>
             {
                 await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
                 try
@@ -696,7 +696,7 @@ namespace DkTools
 
         private static void ShowDrv(object sender, EventArgs e)
         {
-            ThreadHelper.JoinableTaskFactory.RunAsync(async () =>
+            ThreadHelper.JoinableTaskFactory.Run(async () =>
             {
                 await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
                 try
@@ -725,7 +725,7 @@ namespace DkTools
 
         private static void ShowProbeNV(object sender, EventArgs e)
         {
-            ThreadHelper.JoinableTaskFactory.RunAsync(async () =>
+            ThreadHelper.JoinableTaskFactory.Run(async () =>
             {
                 await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
                 try
@@ -754,7 +754,7 @@ namespace DkTools
 
         private static void DisableDeadCode(object sender, EventArgs e)
         {
-            ThreadHelper.JoinableTaskFactory.RunAsync(async () =>
+            ThreadHelper.JoinableTaskFactory.Run(async () =>
             {
                 await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
                 try
@@ -777,7 +777,7 @@ namespace DkTools
 
         private static void ShowFunctions(object sender, EventArgs e)
         {
-            ThreadHelper.JoinableTaskFactory.RunAsync(async () =>
+            ThreadHelper.JoinableTaskFactory.Run(async () =>
             {
                 await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
                 try
@@ -794,7 +794,7 @@ namespace DkTools
 
         private static void ShowDict(object sender, EventArgs e)
         {
-            ThreadHelper.JoinableTaskFactory.RunAsync(async () =>
+            ThreadHelper.JoinableTaskFactory.Run(async () =>
             {
                 await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
                 try
@@ -811,7 +811,7 @@ namespace DkTools
 
         private static void ShowErrors(object sender, EventArgs e)
         {
-            ThreadHelper.JoinableTaskFactory.RunAsync(async () =>
+            ThreadHelper.JoinableTaskFactory.Run(async () =>
             {
                 await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
                 try
@@ -834,7 +834,7 @@ namespace DkTools
 
         private static void ShowCodeAnalysis(object sender, EventArgs e)
         {
-            ThreadHelper.JoinableTaskFactory.RunAsync(async () =>
+            ThreadHelper.JoinableTaskFactory.Run(async () =>
             {
                 await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
                 try
@@ -857,7 +857,7 @@ namespace DkTools
 
         private static void GoToNextReference(object sender, EventArgs e)
         {
-            ThreadHelper.JoinableTaskFactory.RunAsync(async () =>
+            ThreadHelper.JoinableTaskFactory.Run(async () =>
             {
                 await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
                 try
@@ -874,7 +874,7 @@ namespace DkTools
 
         private static void GoToPrevReference(object sender, EventArgs e)
         {
-            ThreadHelper.JoinableTaskFactory.RunAsync(async () =>
+            ThreadHelper.JoinableTaskFactory.Run(async () =>
             {
                 await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
                 try
@@ -891,7 +891,7 @@ namespace DkTools
 
         private static void RunCodeAnalysis(object sender, EventArgs e)
         {
-            ThreadHelper.JoinableTaskFactory.RunAsync(async () =>
+            ThreadHelper.JoinableTaskFactory.Run(async () =>
             {
                 await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
                 try
@@ -927,7 +927,7 @@ namespace DkTools
 
         private static void PeekDefinition(object sender, EventArgs e)
         {
-            ThreadHelper.JoinableTaskFactory.RunAsync(async () =>
+            ThreadHelper.JoinableTaskFactory.Run(async () =>
             {
                 await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
 

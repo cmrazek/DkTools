@@ -272,7 +272,7 @@ namespace DkTools.Classifier
 
         private void TextBufferNotifier_NewModelAvailable(object sender, DkTextBufferNotifier.NewModelAvailableEventArgs e)
         {
-            ThreadHelper.JoinableTaskFactory.RunAsync(async () =>
+            ThreadHelper.JoinableTaskFactory.Run(async () =>
             {
                 await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
 

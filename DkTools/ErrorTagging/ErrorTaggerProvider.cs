@@ -26,7 +26,7 @@ namespace DkTools.ErrorTagging
 
 		void textView_Closed(object sender, EventArgs e)
 		{
-			ThreadHelper.JoinableTaskFactory.RunAsync(async () =>
+			ThreadHelper.JoinableTaskFactory.Run(async () =>
 			{
 				await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
 

@@ -37,7 +37,7 @@ namespace DkTools.ProbeExplorer
 
 		public override void OnToolWindowCreated()
 		{
-			ThreadHelper.JoinableTaskFactory.RunAsync(async () =>
+			ThreadHelper.JoinableTaskFactory.Run(async () =>
 			{
 				await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
 

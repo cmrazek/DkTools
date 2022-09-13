@@ -77,7 +77,7 @@ namespace DkTools
 
         private void ModelRebuildDeferrer_Idle(object sender, BackgroundDeferrer.IdleEventArgs e)
         {
-            ThreadHelper.JoinableTaskFactory.RunAsync(async () =>
+            ThreadHelper.JoinableTaskFactory.Run(async () =>
 			{
 				await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
 

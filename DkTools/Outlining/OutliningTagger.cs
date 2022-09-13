@@ -49,7 +49,7 @@ namespace DkTools.Outlining
 
 		private void Notifier_NewModelAvailable(object sender, DkTextBufferNotifier.NewModelAvailableEventArgs e)
         {
-            ThreadHelper.JoinableTaskFactory.RunAsync(async () =>
+            ThreadHelper.JoinableTaskFactory.Run(async () =>
 			{
 				await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
 

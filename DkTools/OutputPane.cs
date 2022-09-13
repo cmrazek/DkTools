@@ -16,7 +16,7 @@ namespace DkTools
 
 			if (activate)
 			{
-				ThreadHelper.JoinableTaskFactory.RunAsync(async () =>
+				ThreadHelper.JoinableTaskFactory.Run(async () =>
 				{
 					await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
 
@@ -27,7 +27,7 @@ namespace DkTools
 
 		public override void WriteLine(string text)
 		{
-			ThreadHelper.JoinableTaskFactory.RunAsync(async () =>
+			ThreadHelper.JoinableTaskFactory.Run(async () =>
 			{
 				await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
 
@@ -40,7 +40,7 @@ namespace DkTools
 
 		public void WriteLineAndTask(string lineText, string taskText, TaskType type, string fileName, uint lineNum)
 		{
-			ThreadHelper.JoinableTaskFactory.RunAsync(async () =>
+			ThreadHelper.JoinableTaskFactory.Run(async () =>
 			{
 				await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
 
@@ -67,7 +67,7 @@ namespace DkTools
 
 		public void Clear()
 		{
-			ThreadHelper.JoinableTaskFactory.RunAsync(async () =>
+			ThreadHelper.JoinableTaskFactory.Run(async () =>
 			{
 				await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
 
@@ -77,7 +77,7 @@ namespace DkTools
 
 		public void Show()
 		{
-			ThreadHelper.JoinableTaskFactory.RunAsync(async () =>
+			ThreadHelper.JoinableTaskFactory.Run(async () =>
 			{
 				await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
 

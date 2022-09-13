@@ -5,11 +5,10 @@ using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Adornments;
 using System;
 using System.Collections.Generic;
-using VsShell = Microsoft.VisualStudio.Shell;
 
 namespace DkTools.ErrorTagging
 {
-	class ErrorTask : VsShell.Task
+	class ErrorTask : TaskListItem
 	{
 		private ErrorTaskSource _source;
 		private string _invokingFilePath;
@@ -88,7 +87,7 @@ namespace DkTools.ErrorTagging
 
         private void ErrorTask_Navigate(object sender, EventArgs e)
 		{
-			ThreadHelper.JoinableTaskFactory.RunAsync(async () =>
+			ThreadHelper.JoinableTaskFactory.Run(async () =>
 			{
 				await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
 

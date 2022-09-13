@@ -183,7 +183,7 @@ namespace DkTools.ProbeExplorer
 
 		private void TableFindAllReferences_Click(object sender, RoutedEventArgs e)
 		{
-			ThreadHelper.JoinableTaskFactory.RunAsync(async () =>
+			ThreadHelper.JoinableTaskFactory.Run(async () =>
 			{
 				await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
 
@@ -209,7 +209,7 @@ namespace DkTools.ProbeExplorer
 
 		void TableGoToDefinition_Click(object sender, RoutedEventArgs e)
 		{
-			ThreadHelper.JoinableTaskFactory.RunAsync(async () =>
+			ThreadHelper.JoinableTaskFactory.Run(async () =>
 			{
 				await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
 
@@ -310,7 +310,7 @@ namespace DkTools.ProbeExplorer
 
 		private void FieldFindAllReferences_Click(object sender, RoutedEventArgs e)
 		{
-			ThreadHelper.JoinableTaskFactory.RunAsync(async () =>
+			ThreadHelper.JoinableTaskFactory.Run(async () =>
 			{
 				await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
 
@@ -336,7 +336,7 @@ namespace DkTools.ProbeExplorer
 
 		private void FieldGoToDefinition_Click(object sender, RoutedEventArgs e)
 		{
-			ThreadHelper.JoinableTaskFactory.RunAsync(async () =>
+			ThreadHelper.JoinableTaskFactory.Run(async () =>
 			{
 				await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
 
@@ -422,7 +422,7 @@ namespace DkTools.ProbeExplorer
 
 		private void RelIndFindAllReferences_Click(object sender, RoutedEventArgs e)
 		{
-			ThreadHelper.JoinableTaskFactory.RunAsync(async () =>
+			ThreadHelper.JoinableTaskFactory.Run(async () =>
 			{
 				await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
 
@@ -465,7 +465,7 @@ namespace DkTools.ProbeExplorer
 
 		private void RelIndGoToDefinition_Click(object sender, RoutedEventArgs e)
 		{
-			ThreadHelper.JoinableTaskFactory.RunAsync(async () =>
+			ThreadHelper.JoinableTaskFactory.Run(async () =>
 			{
 				await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
 
@@ -634,7 +634,7 @@ namespace DkTools.ProbeExplorer
 		#region Filter
 		private void ApplyDictTreeFilter()
 		{
-			ThreadHelper.JoinableTaskFactory.RunAsync(async () =>
+			ThreadHelper.JoinableTaskFactory.Run(async () =>
 			{
 				await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
 

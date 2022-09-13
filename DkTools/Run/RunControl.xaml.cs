@@ -253,7 +253,7 @@ namespace DkTools.Run
 		{
 			try
 			{
-				ThreadHelper.JoinableTaskFactory.RunAsync(async () =>
+				ThreadHelper.JoinableTaskFactory.Run(async () =>
 				{
 					await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
 

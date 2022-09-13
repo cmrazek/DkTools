@@ -14,8 +14,10 @@ namespace DkTools.Compiler
         // This code is based on DK's method of generating environment variables.
         // It is required because DK's built-in code requires administrator privileges in order to access some registry keys.
 
-        private const string k_vsSetup = "Software\\Microsoft\\VisualStudio\\11.0\\Setup\\VS";
-        private const string k_vcSetup = "Software\\Microsoft\\VisualStudio\\11.0\\Setup\\VC";
+        private const string k_vsSetup32 = "Software\\Microsoft\\VisualStudio\\11.0\\Setup\\VS";
+        private const string k_vsSetup64 = "Software\\WOW6432Node\\Microsoft\\VisualStudio\\11.0\\Setup\\VS";
+        private const string k_vcSetup32 = "Software\\Microsoft\\VisualStudio\\11.0\\Setup\\VC";
+        private const string k_vcSetup64 = "Software\\WOW6432Node\\Microsoft\\VisualStudio\\11.0\\Setup\\VC";
         private const string k_windowsKits = "Software\\Microsoft\\Windows Kits\\Installed Roots";
         private const string k_windowsDotNet = "Software\\Microsoft\\.NETFramework";
 
@@ -166,9 +168,9 @@ namespace DkTools.Compiler
             {
                 _app.Log.Debug("Merging development EXE paths in DK7 mode.");
 
-                var environmentDirectory = "";
-                var vsCommonBinDir = "";
-                using (var key = Registry.LocalMachine.OpenSubKey(k_vsSetup, false))
+                var environmentDirectory = null as string;
+                var vsCommonBinDir = null as string;
+                using (var key = Registry.LocalMachine.OpenSubKey(k_vsSetup32, false))
                 {
                     if (key != null)
                     {
@@ -176,17 +178,38 @@ namespace DkTools.Compiler
                         vsCommonBinDir = key.GetString("VS7CommonBinDir");
                     }
                 }
+                if (environmentDirectory == null || vsCommonBinDir == null)
+                {
+                    using (var key = Registry.LocalMachine.OpenSubKey(k_vsSetup64, false))
+                    {
+                        if (key != null)
+                        {
+                            environmentDirectory = key.GetString("EnvironmentDirectory");
+                            vsCommonBinDir = key.GetString("VS7CommonBinDir");
+                        }
+                    }
+                }
 
-                var vcProductDir = "";
-                using (var key = Registry.LocalMachine.OpenSubKey(k_vcSetup, false))
+                var vcProductDir = null as string;
+                using (var key = Registry.LocalMachine.OpenSubKey(k_vcSetup32, false))
                 {
                     if (key != null)
                     {
                         vcProductDir = key.GetString("ProductDir");
                     }
                 }
+                if (vcProductDir == null)
+                {
+                    using (var key = Registry.LocalMachine.OpenSubKey(k_vcSetup64, false))
+                    {
+                        if (key != null)
+                        {
+                            vcProductDir = key.GetString("ProductDir");
+                        }
+                    }
+                }
 
-                var sdkInstallDir = "";
+                var sdkInstallDir = null as string;
                 using (var key = Registry.LocalMachine.OpenSubKey(k_windowsKits, false))
                 {
                     if (key != null)
@@ -195,7 +218,7 @@ namespace DkTools.Compiler
                     }
                 }
 
-                var netFramework = "";
+                var netFramework = null as string;
                 using (var key = Registry.LocalMachine.OpenSubKey(k_windowsDotNet, false))
                 {
                     if (key != null)
@@ -230,7 +253,7 @@ namespace DkTools.Compiler
             // MSVC path: C:\Program Files (x86)\Microsoft Visual Studio\2019\Professional\VC\Tools\MSVC\14.29.30133\bin\Hostx64\x86
             // VSInstallPath + "\VC\Tools\MSVC\" + MSVCVersion + "\bin\Hostx64\x86\"
 
-            var scc = new SetupConfigurationClass() as ISetupConfiguration;
+            var scc = new SetupConfiguration() as ISetupConfiguration2;
             if (scc == null)
             {
                 _app.Log.Warning("Failed to get VS ISetupConfiguration object.");
@@ -354,16 +377,26 @@ namespace DkTools.Compiler
 
         private void AddDevelopmentIncludePaths(List<string> include)
         {
-            var vcProductDir = "";
-            using (var key = Registry.LocalMachine.OpenSubKey(k_vcSetup, false))
+            var vcProductDir = null as string;
+            using (var key = Registry.LocalMachine.OpenSubKey(k_vcSetup32, false))
             {
                 if (key != null)
                 {
                     vcProductDir = key.GetString("ProductDir");
                 }
             }
+            if (vcProductDir == null)
+            {
+                using (var key = Registry.LocalMachine.OpenSubKey(k_vcSetup64, false))
+                {
+                    if (key != null)
+                    {
+                        vcProductDir = key.GetString("ProductDir");
+                    }
+                }
+            }
 
-            var sdkInstallDir = "";
+            var sdkInstallDir = null as string;
             using (var key = Registry.LocalMachine.OpenSubKey(k_windowsKits, false))
             {
                 if (key != null)
@@ -387,16 +420,26 @@ namespace DkTools.Compiler
 
         private void AddDevelopmentLibPaths(List<string> lib)
         {
-            var vcProductDir = "";
-            using (var key = Registry.LocalMachine.OpenSubKey(k_vcSetup, false))
+            var vcProductDir = null as string;
+            using (var key = Registry.LocalMachine.OpenSubKey(k_vcSetup32, false))
             {
                 if (key != null)
                 {
                     vcProductDir = key.GetString("ProductDir");
                 }
             }
+            if (vcProductDir == null)
+            {
+                using (var key = Registry.LocalMachine.OpenSubKey(k_vcSetup64, false))
+                {
+                    if (key != null)
+                    {
+                        vcProductDir = key.GetString("ProductDir");
+                    }
+                }
+            }
 
-            var sdkInstallDir = "";
+            var sdkInstallDir = null as string;
             using (var key = Registry.LocalMachine.OpenSubKey(k_windowsKits, false))
             {
                 if (key != null)

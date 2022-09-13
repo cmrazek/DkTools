@@ -30,7 +30,7 @@ namespace DkTools
 
 		internal static void OpenDocument(string fileName)
 		{
-			ThreadHelper.JoinableTaskFactory.RunAsync(async () =>
+			ThreadHelper.JoinableTaskFactory.Run(async () =>
 			{
 				await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
 
@@ -40,7 +40,7 @@ namespace DkTools
 
 		internal static void OpenDocument(string fileName, CodeSpan selectSpan)
 		{
-			ThreadHelper.JoinableTaskFactory.RunAsync(async () =>
+			ThreadHelper.JoinableTaskFactory.Run(async () =>
 			{
 				await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
 
@@ -82,7 +82,7 @@ namespace DkTools
 
 		internal static void OpenDocumentAndLine(string fileName, int lineNum)
 		{
-			ThreadHelper.JoinableTaskFactory.RunAsync(async () =>
+			ThreadHelper.JoinableTaskFactory.Run(async () =>
 			{
 				await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
 
@@ -105,7 +105,7 @@ namespace DkTools
 
 		internal static void OpenDocument(string fileName, int pos)
 		{
-			ThreadHelper.JoinableTaskFactory.RunAsync(async () =>
+			ThreadHelper.JoinableTaskFactory.Run(async () =>
 			{
 				await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
 
@@ -118,7 +118,7 @@ namespace DkTools
 		{
 			if (filePos.IsEmpty) throw new ArgumentException("File position is empty.");
 
-			ThreadHelper.JoinableTaskFactory.RunAsync(async () =>
+			ThreadHelper.JoinableTaskFactory.Run(async () =>
 			{
 				await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
 
@@ -276,9 +276,9 @@ namespace DkTools
 			window.OnDocumentActivated(view);
 		}
 
-		public static void ShowNotificationAsync(string message, string caption)
+		public static void ShowNotification(string message, string caption)
 		{
-			ThreadHelper.JoinableTaskFactory.RunAsync(async () =>
+			ThreadHelper.JoinableTaskFactory.Run(async () =>
 			{
 				await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
 

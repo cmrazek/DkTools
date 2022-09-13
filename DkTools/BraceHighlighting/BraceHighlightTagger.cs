@@ -125,7 +125,7 @@ namespace DkTools.BraceHighlighting
 
 		private void WordSelectDeferrer_Idle(object sender, BackgroundDeferrer.IdleEventArgs e)
 		{
-			ThreadHelper.JoinableTaskFactory.RunAsync(async () =>
+			ThreadHelper.JoinableTaskFactory.Run(async () =>
 			{
 				await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
 
