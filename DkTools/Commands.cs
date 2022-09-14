@@ -819,6 +819,9 @@ namespace DkTools
                     var options = ProbeToolsPackage.Instance.EditorOptions;
                     options.RunBackgroundFecOnSave = !options.RunBackgroundFecOnSave;
                     options.SaveSettingsToStorage();
+
+                    ErrorTaskProvider.Instance?.RemoveAllForSource(ErrorTaskSource.BackgroundFec);
+                    ProbeToolsPackage.Instance.App?.OnRefreshAllDocumentsRequired();
                 }
                 catch (Exception ex)
                 {
@@ -842,6 +845,9 @@ namespace DkTools
                     var options = ProbeToolsPackage.Instance.EditorOptions;
                     options.RunCodeAnalysisOnSave = !options.RunCodeAnalysisOnSave;
                     options.SaveSettingsToStorage();
+
+                    ErrorTaskProvider.Instance?.RemoveAllForSource(ErrorTaskSource.CodeAnalysis);
+                    ProbeToolsPackage.Instance.App?.OnRefreshAllDocumentsRequired();
                 }
                 catch (Exception ex)
                 {
