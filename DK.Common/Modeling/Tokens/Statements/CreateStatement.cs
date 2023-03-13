@@ -515,6 +515,11 @@ namespace DK.Modeling.Tokens.Statements
 							{
 								if (code.PeekExact('(') || code.PeekExact('{')) break;
 
+								if (code.ReadExact(','))
+								{
+									AddToken(new DelimiterToken(Scope, code.Span));
+								}
+
 								if (table != null && !string.IsNullOrEmpty(word = code.PeekWordR()))
 								{
 									var field = table.GetColumn(word);
