@@ -724,6 +724,7 @@ namespace DK.Schema
 					var word = _code.Text;
 					if (word.Equals("accel", StringComparison.OrdinalIgnoreCase)) col.Accel = ReadAccelSequence();
 					else if (word.Equals("noaudit", StringComparison.OrdinalIgnoreCase)) col.NoAudit = true;
+					else if (word.Equals("noinput", StringComparison.OrdinalIgnoreCase)) col.NoInput = true;
 					else if (word.Equals("audit", StringComparison.OrdinalIgnoreCase)) col.NoAudit = false;
 					else if (word.Equals("form", StringComparison.OrdinalIgnoreCase)) col.Persist = Column.PersistMode.Form;
 					else if (word.Equals("formonly", StringComparison.OrdinalIgnoreCase)) col.Persist = Column.PersistMode.FormOnly;
