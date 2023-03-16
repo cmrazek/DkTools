@@ -12,7 +12,8 @@ namespace DK.Modeling.Tokens
 			AddToken(selectToken);
 		}
 
-		private static readonly string[] _whereEndTokens = new string[] { "order" };
+		private static readonly string[] _whereEndTokens = new string[] { "order", "filterby" };
+		private static readonly string[] _filterByEndTokens = new string[] { "order", "where" };
 
 		internal static SelectStatement Parse(Scope parentScope, KeywordToken selectToken)
 		{
@@ -40,9 +41,9 @@ namespace DK.Modeling.Tokens
 				else ret.AddToken(new UnknownToken(scope, code.Span, code.Text));
 			}
 
-			if (code.ReadExactWholeWord("of"))
+			if (code.ReadExactWholeWordI("of"))
 			{
-				ret.AddToken(new KeywordToken(scope, code.Span, "of"));
+				ret.AddToken(new KeywordToken(scope, code.Span, code.Text));
 
 				if (code.ReadWord())
 				{
@@ -81,11 +82,12 @@ namespace DK.Modeling.Tokens
 			// WHERE and ORDER BY
 			var gotWhere = false;
 			var gotOrderBy = false;
+			var gotFilterBy = false;
 
 			while (!code.EndOfFile)
 			{
 				if (code.PeekExact('{')) break;
-				if (!gotWhere && code.ReadExactWholeWord("where"))
+				if (!gotWhere && code.ReadExactWholeWordI("where"))
 				{
 					ret.AddToken(new KeywordToken(scope, code.Span, code.Text));
 					gotWhere = true;
@@ -94,12 +96,12 @@ namespace DK.Modeling.Tokens
 					if (exp != null) ret.AddToken(exp);
 					else break;
 				}
-				else if (!gotOrderBy && code.ReadExactWholeWord("order"))
+				else if (!gotOrderBy && code.ReadExactWholeWordI("order"))
 				{
 					ret.AddToken(new KeywordToken(scope, code.Span, code.Text));
 					gotOrderBy = true;
 
-					if (!code.ReadExactWholeWord("by")) break;
+					if (!code.ReadExactWholeWordI("by")) break;
 					ret.AddToken(new KeywordToken(scope, code.Span, code.Text));
 
 					while (!code.EndOfFile)
@@ -112,7 +114,7 @@ namespace DK.Modeling.Tokens
 							continue;
 						}
 
-						if (code.ReadExactWholeWord("asc") || code.ReadExactWholeWord("desc"))
+						if (code.ReadExactWholeWordI("asc") || code.ReadExactWholeWordI("desc"))
 						{
 							ret.AddToken(new KeywordToken(scope, code.Span, code.Text));
 							continue;
@@ -126,6 +128,15 @@ namespace DK.Modeling.Tokens
 						break;
 					}
 				}
+				else if (!gotFilterBy && code.ReadExactWholeWordI("filterby"))
+                {
+					ret.AddToken(new KeywordToken(scope, code.Span, code.Text));
+					gotWhere = true;
+
+					var exp = ExpressionToken.TryParse(scope, _filterByEndTokens);
+					if (exp != null) ret.AddToken(exp);
+					else break;
+                }
 				else break;
 			}
 

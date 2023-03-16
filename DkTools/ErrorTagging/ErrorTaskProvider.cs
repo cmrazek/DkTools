@@ -224,8 +224,8 @@ namespace DkTools.ErrorTagging
 
                 foreach (var docSpan in docSpans)
                 {
-                    var mappedTaskSpan = taskSpan.Value.TranslateTo(docSpan.Snapshot, SpanTrackingMode.EdgeExclusive);
-                    if (docSpan.Contains(mappedTaskSpan))
+                    var mappedTaskSpan = taskSpan.Value.TranslateTo(docSpan.Snapshot, SpanTrackingMode.EdgeInclusive);
+                    if (docSpan.IntersectsWith(mappedTaskSpan))
                     {
                         tags.Add(new TagSpan<ErrorTag>(taskSpan.Value, new ErrorTag(task.Type.GetErrorTypeString(), task.Text)));
                         break;
