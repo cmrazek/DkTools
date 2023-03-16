@@ -6,7 +6,7 @@ using System.Threading;
 
 namespace DkTools.Compiler
 {
-	class BackgroundFec
+	static class BackgroundFec
 	{
 		public static void RunSync(string sourceFilePath, CancellationToken cancel)
 		{
@@ -91,7 +91,8 @@ namespace DkTools.Compiler
 				runner.CaptureOutput = true;
 				runner.CaptureError = true;
 
-				var exitCode = runner.CaptureProcess("fec.exe", string.Concat("\"", sourceFilePath, "\""), workingDir, output, cancel);
+				var exitCode = runner.CaptureProcess("fec.exe", string.Concat(ProbeToolsPackage.Instance.ProbeExplorerOptions.FecArguments,
+					" \"", sourceFilePath, "\""), workingDir, output, cancel);
 				if (exitCode == 0)
 				{
 					ProbeToolsPackage.Log.Debug("Background FEC completed successfully.");

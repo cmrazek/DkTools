@@ -262,6 +262,7 @@
     <Compile Include="CodeModeling\LiveCodeTracker.cs" />
     <Compile Include="CodeModeling\ReverseCodeParser.cs" />
     <Compile Include="Compiler\BackgroundFec.cs" />
+    <Compile Include="Compiler\CompileCoordinator.cs" />
     <Compile Include="Compiler\DkEnvVarMerger.cs" />
     <Compile Include="Compiler\EnvVarList.cs" />
     <Compile Include="CsvWriter.cs" />

@@ -49,6 +49,11 @@ namespace DkTools.ProbeExplorer
 		[Description("Arguments passed to 'credelix'\r\n(/P automatically appended to specify current app)")]
 		public string CredelixArguments { get; set; }
 
+		[Category("Compile")]
+		[DisplayName("FEC Arguments")]
+		[Description("Arguments passed to 'fec' when getting errors/warnings.")]
+		public string FecArguments { get; set; }
+
 		[Category("Extension")]
 		[DisplayName("Logging Level")]
 		[Description("Log detail level.")]
@@ -62,6 +67,7 @@ namespace DkTools.ProbeExplorer
 			CompileArguments = "/w";
 			DccmpArguments = "/z /D";
 			CredelixArguments = "/p";
+			FecArguments = "";
 			AutoScrollToFunctions = true;
 #if DEBUG
 			LogLevel = LogLevel.Debug;

@@ -468,6 +468,7 @@ namespace DkTools
                 }
 
                 _statusBarService.SetText(text);
+                _log.Info(text);
             });
         }
         #endregion

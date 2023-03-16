@@ -3,7 +3,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using DkTools.CodeModeling;
+using DK.Diagnostics;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Editor;
@@ -189,17 +189,6 @@ namespace DkTools.ErrorTagging
 
         public void OnDocumentClosed(ITextView textView)
         {
-            ThreadHelper.JoinableTaskFactory.RunAsync(async () =>
-            {
-                await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
-
-                var fileStore = FileStoreHelper.GetOrCreateForTextBuffer(textView.TextBuffer);
-                if (fileStore != null)
-                {
-                    var fileName = VsTextUtil.TryGetDocumentFileName(textView.TextBuffer);
-                    RemoveAllForSourceAndInvokingFile(ErrorTaskSource.BackgroundFec, fileName);
-                }
-            });
         }
 
         public IEnumerable<ITagSpan<ErrorTag>> GetErrorTagsForFile(string fileName, NormalizedSnapshotSpanCollection docSpans)
