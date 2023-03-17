@@ -323,14 +323,14 @@ namespace DkTools
                     var activeDoc = Shell.DTE.ActiveDocument;
                     if (activeDoc == null)
                     {
-                        Shell.Status("No file is open.");
+                        await ProbeToolsPackage.Instance.SetStatusTextAsync("No file is open.");
                         return;
                     }
 
                     var baseFileName = activeDoc.FullName;
                     if (string.IsNullOrEmpty(baseFileName))
                     {
-                        Shell.Status("Document has no file name.");
+                        await ProbeToolsPackage.Instance.SetStatusTextAsync("Document has no file name.");
                         return;
                     }
 
@@ -341,12 +341,12 @@ namespace DkTools
                     {
                         using (ProcessRunner pr = new ProcessRunner())
                         {
-                            int exitCode = pr.CaptureProcess("fec.exe", "/p \"" + baseFileName + "\"",
+                            int exitCode = await pr.CaptureProcessAsync("fec.exe", "/p \"" + baseFileName + "\"",
                                 Path.GetDirectoryName(baseFileName), output, CancellationToken.None);
 
                             if (exitCode != 0)
                             {
-                                Shell.Status(string.Format("FEC returned exit code {0}.", exitCode));
+                                await ProbeToolsPackage.Instance.SetStatusTextAsync(string.Format("FEC returned exit code {0}.", exitCode));
                                 return;
                             }
                         }
@@ -373,14 +373,14 @@ namespace DkTools
                     var activeDoc = Shell.DTE.ActiveDocument;
                     if (activeDoc == null)
                     {
-                        Shell.Status("No file is open.");
+                        await ProbeToolsPackage.Instance.SetStatusTextAsync("No file is open.");
                         return;
                     }
 
                     var baseFileName = activeDoc.FullName;
                     if (string.IsNullOrEmpty(baseFileName))
                     {
-                        Shell.Status("Document has no file name.");
+                        await ProbeToolsPackage.Instance.SetStatusTextAsync("Document has no file name.");
                         return;
                     }
 
@@ -390,11 +390,11 @@ namespace DkTools
 
                         var output = new StringOutput();
 
-                        var exitCode = pr.CaptureProcess("fec.exe", args, Path.GetDirectoryName(baseFileName), output, CancellationToken.None);
+                        var exitCode = await pr.CaptureProcessAsync("fec.exe", args, Path.GetDirectoryName(baseFileName), output, CancellationToken.None);
 
                         if (exitCode != 0)
                         {
-                            Shell.Status(string.Format("FEC returned exit code {0}\r\n\r\n{1}", exitCode, output.Text));
+                            await ProbeToolsPackage.Instance.SetStatusTextAsync(string.Format("FEC returned exit code {0}\r\n\r\n{1}", exitCode, output.Text));
                             return;
                         }
                     }
@@ -403,7 +403,7 @@ namespace DkTools
                         string.Concat(Path.GetFileNameWithoutExtension(baseFileName), ".c"));
                     if (!File.Exists(cFileName))
                     {
-                        Shell.Status("Unable to find .c file produced by FEC.");
+                        await ProbeToolsPackage.Instance.SetStatusTextAsync("Unable to find .c file produced by FEC.");
                         return;
                     }
 
@@ -480,7 +480,7 @@ namespace DkTools
 
                     using (var pr = new ProcessRunner())
                     {
-                        exitCode = pr.CaptureProcess("ptd.exe", "", ProbeToolsPackage.Instance.App.Settings.TempDir, output, CancellationToken.None);
+                        exitCode = await pr.CaptureProcessAsync("ptd.exe", "", ProbeToolsPackage.Instance.App.Settings.TempDir, output, CancellationToken.None);
                     }
                     if (exitCode != 0)
                     {

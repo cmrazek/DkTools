@@ -160,31 +160,39 @@ namespace DkTools.ErrorTagging
         {
             ThreadHelper.JoinableTaskFactory.RunAsync(async () =>
             {
-                await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
-
-                var filesToNotify = new List<string>();
-
-                var tasksToRemove = (from t in Tasks.Cast<ErrorTask>()
-                                     where t.Source == source &&
-                                        string.Equals(t.InvokingFilePath, invokingFilePath, StringComparison.OrdinalIgnoreCase)
-                                     select t).ToArray();
-                foreach (var task in tasksToRemove)
-                {
-                    Tasks.Remove(task);
-                    if (!filesToNotify.Contains(task.Document)) filesToNotify.Add(task.Document);
-                }
-
-                foreach (var task in tasks)
-                {
-                    Tasks.Add(task);
-                    if (!filesToNotify.Contains(task.Document)) filesToNotify.Add(task.Document);
-                }
-
-                foreach (var file in filesToNotify)
-                {
-                    ErrorTagsChangedForFile?.Invoke(this, new ErrorTaskEventArgs { FileName = file });
-                }
+                await ReplaceForSourceAndInvokingFileAsync(source, invokingFilePath, tasks);
             });
+        }
+
+        public async System.Threading.Tasks.Task ReplaceForSourceAndInvokingFileAsync(
+            ErrorTaskSource source,
+            string invokingFilePath,
+            IEnumerable<ErrorTask> tasks)
+        {
+            await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
+
+            var filesToNotify = new List<string>();
+
+            var tasksToRemove = (from t in Tasks.Cast<ErrorTask>()
+                                    where t.Source == source &&
+                                    string.Equals(t.InvokingFilePath, invokingFilePath, StringComparison.OrdinalIgnoreCase)
+                                    select t).ToArray();
+            foreach (var task in tasksToRemove)
+            {
+                Tasks.Remove(task);
+                if (!filesToNotify.Contains(task.Document)) filesToNotify.Add(task.Document);
+            }
+
+            foreach (var task in tasks)
+            {
+                Tasks.Add(task);
+                if (!filesToNotify.Contains(task.Document)) filesToNotify.Add(task.Document);
+            }
+
+            foreach (var file in filesToNotify)
+            {
+                ErrorTagsChangedForFile?.Invoke(this, new ErrorTaskEventArgs { FileName = file });
+            }
         }
 
         public void OnDocumentClosed(ITextView textView)

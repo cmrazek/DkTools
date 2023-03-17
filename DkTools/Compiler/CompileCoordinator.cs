@@ -17,7 +17,7 @@ namespace DkTools.Compiler
         private bool _fecScanned;
         private bool _codeAnalysisScanned;
         private BackgroundDeferrer _scannerDefer;
-        private static Mutex _mutex;
+        private static SemaphoreSlim _semaphore;
         private CancellationTokenSource _cancel;
 
         public static CompileCoordinator GetOrCreateForTextBuffer(ITextBuffer textBuffer)
@@ -36,7 +36,8 @@ namespace DkTools.Compiler
         {
             _textBuffer = textBuffer ?? throw new ArgumentNullException(nameof(textBuffer));
             _fileName = _textBuffer.TryGetDocumentFileName();
-            _mutex = new Mutex();
+
+            _semaphore = new SemaphoreSlim(1);
 
             if (!ProbeToolsPackage.Instance.EditorOptions.RunBackgroundFecOnSave)
                 _fecScanned = true;
@@ -150,16 +151,14 @@ namespace DkTools.Compiler
             if (_fileName == null) return;
             if (_fecScanned && _codeAnalysisScanned) return;
 
+            if (_cancel == null) _cancel = new CancellationTokenSource();
+
             ThreadHelper.JoinableTaskFactory.RunAsync(async () =>
             {
-                await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
-
-                if (_cancel == null) _cancel = new CancellationTokenSource();
-
                 var attempts = 10;
                 while (attempts > 0)
                 {
-                    if (!_mutex.WaitOne(1000))
+                    if (!await _semaphore.WaitAsync(10))
                     {
                         ProbeToolsPackage.Log.Info("Waiting for exclusive access to compiler.");
                         attempts--;
@@ -173,7 +172,7 @@ namespace DkTools.Compiler
                     {
                         try
                         {
-                            RunBackgroundFec();
+                            await RunBackgroundFecAsync();
                         }
                         catch (OperationCanceledException ex)
                         {
@@ -193,7 +192,7 @@ namespace DkTools.Compiler
                     {
                         try
                         {
-                            RunCodeAnalysis();
+                            await RunCodeAnalysisAsync();
                         }
                         catch (OperationCanceledException ex)
                         {
@@ -211,21 +210,21 @@ namespace DkTools.Compiler
                 }
                 finally
                 {
-                    _mutex.ReleaseMutex();
+                    _semaphore.Release();
                 }
             });
         }
 
-        private void RunBackgroundFec()
+        private async System.Threading.Tasks.Task RunBackgroundFecAsync()
         {
-            Shell.Status($"FEC: {_fileName} (running)");
+            await ProbeToolsPackage.Instance.SetStatusTextAsync($"FEC: {_fileName} (running)");
 
-            BackgroundFec.RunSync(_fileName, _cancel.Token);
+            await BackgroundFec.RunAsync(_fileName, _cancel.Token);
 
-            Shell.Status($"FEC: {_fileName} (complete)");
+            await ProbeToolsPackage.Instance.SetStatusTextAsync($"FEC: {_fileName} (complete)");
         }
 
-        private void RunCodeAnalysis()
+        private async System.Threading.Tasks.Task RunCodeAnalysisAsync()
         {
             var fileStore = FileStoreHelper.GetOrCreateForTextBuffer(_textBuffer);
             if (fileStore == null)
@@ -234,7 +233,7 @@ namespace DkTools.Compiler
                 return;
             }
 
-            Shell.Status($"Code Analysis: {_fileName} (running)");
+            await ProbeToolsPackage.Instance.SetStatusTextAsync($"Code Analysis: {_fileName} (running)");
 
             var appSettings = ProbeToolsPackage.Instance.App.Settings;
             var model = fileStore.GetMostRecentModelSync(appSettings, _fileName, _textBuffer.CurrentSnapshot, "Code Analysis", _cancel.Token);
@@ -256,13 +255,13 @@ namespace DkTools.Compiler
 
             if (_cancel.IsCancellationRequested) return;
 
-            ErrorTaskProvider.Instance.ReplaceForSourceAndInvokingFile(ErrorTaskSource.CodeAnalysis,
+            await ErrorTaskProvider.Instance.ReplaceForSourceAndInvokingFileAsync(ErrorTaskSource.CodeAnalysis,
                 ca.CodeModel.FilePath, caResults.Tasks.Select(x => x.ToErrorTask()));
 
-            ErrorMarkerTaggerProvider.ReplaceForSourceAndFile(ErrorTaskSource.CodeAnalysis,
+            await ErrorMarkerTaggerProvider.ReplaceForSourceAndFileAsync(ErrorTaskSource.CodeAnalysis,
                 ca.CodeModel.FilePath, caResults.Markers.Select(x => x.ToErrorMarkerTag()));
 
-            Shell.Status($"Code Analysis: {_fileName} (complete)");
+            await ProbeToolsPackage.Instance.SetStatusTextAsync($"Code Analysis: {_fileName} (complete)");
         }
 
         public string FileName => _fileName;
