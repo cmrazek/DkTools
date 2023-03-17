@@ -36,6 +36,7 @@ namespace DkTools
 
         ~DkTextBufferNotifier()
         {
+            _textBuffer.Changed -= TextBuffer_Changed;
             ProbeToolsPackage.Instance.App.RefreshDocumentRequired -= GlobalEvents_RefreshDocumentRequired;
             ProbeToolsPackage.Instance.App.RefreshAllDocumentsRequired -= GlobalEvents_RefreshAllDocumentsRequired;
         }

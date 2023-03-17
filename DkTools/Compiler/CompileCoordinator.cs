@@ -49,11 +49,37 @@ namespace DkTools.Compiler
             _scannerDefer.Idle += ScannerDefer_Idle;
 
             _textBuffer.Changed += TextBuffer_Changed;
+            _textBuffer.ContentTypeChanged += TextBuffer_ContentTypeChanged;
             ProbeToolsPackage.Instance.App.FileChanged += App_FileChanged;
             ProbeToolsPackage.Instance.App.RefreshAllDocumentsRequired += App_RefreshAllDocumentsRequired;
             ProbeToolsPackage.Instance.App.RefreshDocumentRequired += App_RefreshDocumentRequired;
 
             if (_fileName != null) _scannerDefer.OnActivity();
+        }
+
+        ~CompileCoordinator()
+        {
+            Unsubscribe();
+        }
+
+        private void Unsubscribe()
+        {
+            if (_textBuffer != null)
+            {
+                _textBuffer.Changed -= TextBuffer_Changed;
+                _textBuffer.ContentTypeChanged -= TextBuffer_ContentTypeChanged;
+                _textBuffer.Properties[typeof(CompileCoordinator)] = null;
+                _textBuffer = null;
+                _scannerDefer = null;
+            }
+
+            var app = ProbeToolsPackage.Instance.App;
+            if (app != null)
+            {
+                app.FileChanged -= App_FileChanged;
+                app.RefreshAllDocumentsRequired -= App_RefreshAllDocumentsRequired;
+                app.RefreshDocumentRequired -= App_RefreshDocumentRequired;
+            }
         }
 
         private void TextBuffer_Changed(object sender, TextContentChangedEventArgs e)
@@ -65,6 +91,14 @@ namespace DkTools.Compiler
 
                 _codeAnalysisScanned = false;
                 _scannerDefer.OnActivity();
+            }
+        }
+
+        private void TextBuffer_ContentTypeChanged(object sender, ContentTypeChangedEventArgs e)
+        {
+            if (e.AfterContentType.TypeName == "inert")
+            {
+                Unsubscribe();
             }
         }
 
@@ -150,6 +184,7 @@ namespace DkTools.Compiler
         {
             if (_fileName == null) return;
             if (_fecScanned && _codeAnalysisScanned) return;
+            if (_textBuffer == null) return;
 
             if (_cancel == null) _cancel = new CancellationTokenSource();
 
@@ -226,6 +261,8 @@ namespace DkTools.Compiler
 
         private async System.Threading.Tasks.Task RunCodeAnalysisAsync()
         {
+            if (_textBuffer == null) return;
+
             var fileStore = FileStoreHelper.GetOrCreateForTextBuffer(_textBuffer);
             if (fileStore == null)
             {
