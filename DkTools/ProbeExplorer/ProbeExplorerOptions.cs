@@ -67,7 +67,7 @@ namespace DkTools.ProbeExplorer
 			CompileArguments = "/w";
 			DccmpArguments = "/z /D";
 			CredelixArguments = "/p";
-			FecArguments = "";
+			FecArguments = "/h";
 			AutoScrollToFunctions = true;
 #if DEBUG
 			LogLevel = LogLevel.Debug;
