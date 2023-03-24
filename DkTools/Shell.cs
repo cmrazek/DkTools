@@ -286,6 +286,7 @@ namespace DkTools
 			});
 		}
 
+		[Obsolete("Use ProbeToolsPackage.Instance.SetStatusText() instead")]
 		public static void Status(string text)
 		{
 			ProbeToolsPackage.Instance.SetStatusText(text);

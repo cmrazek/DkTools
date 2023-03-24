@@ -9,6 +9,7 @@ namespace DK.Schema
 	{
 		public string Accel { get; set; }
 		public bool NoAudit { get; set; }
+		public bool NoInput { get; set; }
 		public PersistMode Persist { get; set; }
 		public string Image { get; set; }
 		public bool Tool { get; set; }

@@ -22,6 +22,11 @@ namespace DkTools.CodeModeling
             _textBuffer.Changed += Buffer_Changed;
         }
 
+        ~LiveCodeTracker()
+        {
+            _textBuffer.Changed -= Buffer_Changed;
+        }
+
         public ITextBuffer TextBuffer => _textBuffer;
         public ITextSnapshot Snapshot => _snapshot;
 

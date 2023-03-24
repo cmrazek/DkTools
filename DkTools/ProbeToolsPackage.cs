@@ -459,16 +459,22 @@ namespace DkTools
         {
             ThreadHelper.JoinableTaskFactory.Run(async () =>
             {
-                await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
-
-                if (_statusBarService == null)
-                {
-                    _statusBarService = await this.GetServiceAsync(typeof(SVsStatusbar)) as IVsStatusbar;
-                    if (_statusBarService == null) throw new InvalidOperationException("Unable to get service 'Microsoft.VisualStudio.Shell.Interop.IVsStatusbar'.");
-                }
-
-                _statusBarService.SetText(text);
+                await SetStatusTextAsync(text);
             });
+        }
+
+        internal async System.Threading.Tasks.Task SetStatusTextAsync(string text)
+        {
+            await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
+
+            if (_statusBarService == null)
+            {
+                _statusBarService = await this.GetServiceAsync(typeof(SVsStatusbar)) as IVsStatusbar;
+                if (_statusBarService == null) throw new InvalidOperationException("Unable to get service 'Microsoft.VisualStudio.Shell.Interop.IVsStatusbar'.");
+            }
+
+            _statusBarService.SetText(text);
+            _log.Info(text);
         }
         #endregion
 

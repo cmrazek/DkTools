@@ -3,7 +3,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using DkTools.CodeModeling;
+using DK.Diagnostics;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Editor;
@@ -160,46 +160,43 @@ namespace DkTools.ErrorTagging
         {
             ThreadHelper.JoinableTaskFactory.Run(async () =>
             {
-                await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
-
-                var filesToNotify = new List<string>();
-
-                var tasksToRemove = (from t in Tasks.Cast<ErrorTask>()
-                                     where t.Source == source &&
-                                        string.Equals(t.InvokingFilePath, invokingFilePath, StringComparison.OrdinalIgnoreCase)
-                                     select t).ToArray();
-                foreach (var task in tasksToRemove)
-                {
-                    Tasks.Remove(task);
-                    if (!filesToNotify.Contains(task.Document)) filesToNotify.Add(task.Document);
-                }
-
-                foreach (var task in tasks)
-                {
-                    Tasks.Add(task);
-                    if (!filesToNotify.Contains(task.Document)) filesToNotify.Add(task.Document);
-                }
-
-                foreach (var file in filesToNotify)
-                {
-                    ErrorTagsChangedForFile?.Invoke(this, new ErrorTaskEventArgs { FileName = file });
-                }
+                await ReplaceForSourceAndInvokingFileAsync(source, invokingFilePath, tasks);
             });
+        }
+
+        public async System.Threading.Tasks.Task ReplaceForSourceAndInvokingFileAsync(
+            ErrorTaskSource source,
+            string invokingFilePath,
+            IEnumerable<ErrorTask> tasks)
+        {
+            await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
+
+            var filesToNotify = new List<string>();
+
+            var tasksToRemove = (from t in Tasks.Cast<ErrorTask>()
+                                    where t.Source == source &&
+                                    string.Equals(t.InvokingFilePath, invokingFilePath, StringComparison.OrdinalIgnoreCase)
+                                    select t).ToArray();
+            foreach (var task in tasksToRemove)
+            {
+                Tasks.Remove(task);
+                if (!filesToNotify.Contains(task.Document)) filesToNotify.Add(task.Document);
+            }
+
+            foreach (var task in tasks)
+            {
+                Tasks.Add(task);
+                if (!filesToNotify.Contains(task.Document)) filesToNotify.Add(task.Document);
+            }
+
+            foreach (var file in filesToNotify)
+            {
+                ErrorTagsChangedForFile?.Invoke(this, new ErrorTaskEventArgs { FileName = file });
+            }
         }
 
         public void OnDocumentClosed(ITextView textView)
         {
-            ThreadHelper.JoinableTaskFactory.Run(async () =>
-            {
-                await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
-
-                var fileStore = FileStoreHelper.GetOrCreateForTextBuffer(textView.TextBuffer);
-                if (fileStore != null)
-                {
-                    var fileName = VsTextUtil.TryGetDocumentFileName(textView.TextBuffer);
-                    RemoveAllForSourceAndInvokingFile(ErrorTaskSource.BackgroundFec, fileName);
-                }
-            });
         }
 
         public IEnumerable<ITagSpan<ErrorTag>> GetErrorTagsForFile(string fileName, NormalizedSnapshotSpanCollection docSpans)
@@ -224,8 +221,8 @@ namespace DkTools.ErrorTagging
 
                 foreach (var docSpan in docSpans)
                 {
-                    var mappedTaskSpan = taskSpan.Value.TranslateTo(docSpan.Snapshot, SpanTrackingMode.EdgeExclusive);
-                    if (docSpan.Contains(mappedTaskSpan))
+                    var mappedTaskSpan = taskSpan.Value.TranslateTo(docSpan.Snapshot, SpanTrackingMode.EdgeInclusive);
+                    if (docSpan.IntersectsWith(mappedTaskSpan))
                     {
                         tags.Add(new TagSpan<ErrorTag>(taskSpan.Value, new ErrorTag(task.Type.GetErrorTypeString(), task.Text)));
                         break;

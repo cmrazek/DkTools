@@ -10,6 +10,7 @@ namespace DK.CodeAnalysis.Statements
 	{
 		private List<Definition> _tables = new List<Definition>();
 		private ExpressionNode _whereExp;
+		private ExpressionNode _filterByExp;
 		private List<GroupBody> _groups = new List<GroupBody>();
 
 		public override string ToString() => new string[] { "select * from ", _tables.Select(t => t.Name).Combine(", "), "..." }.Combine();
@@ -50,7 +51,7 @@ namespace DK.CodeAnalysis.Statements
 
 						if (code.ReadWord())
 						{
-							if (code.Text == "where" || code.Text == "order")
+							if (code.Text == "where" || code.Text == "order" || code.Text == "filterby")
 							{
 								code.Position = code.TokenStartPostion;
 								break;
@@ -90,7 +91,19 @@ namespace DK.CodeAnalysis.Statements
 				#region where
 				else if (code.ReadExact("where"))
 				{
-					_whereExp = ExpressionNode.Read(p, null, "from", "where", "order");
+					_whereExp = ExpressionNode.Read(p, null, "from", "where", "order", "filterby");
+
+					if (code.ReadExact(';'))
+					{
+						bodyStarted = true;
+						break;
+					}
+				}
+				#endregion
+				#region filterby
+				else if (code.ReadExact("filterby"))
+                {
+					_filterByExp = ExpressionNode.Read(p, null, "from", "where", "order", "filterby");
 
 					if (code.ReadExact(';'))
 					{
@@ -290,6 +303,11 @@ namespace DK.CodeAnalysis.Statements
 			{
 				_whereExp.ReadValue(scope);
 			}
+
+			if (_filterByExp != null)
+            {
+				_filterByExp.ReadValue(scope);
+            }
 
 			var foundScope = scope.Clone(canBreak: true, canContinue: true);
 			foreach (var group in _groups)

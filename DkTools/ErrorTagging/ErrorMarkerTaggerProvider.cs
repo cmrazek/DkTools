@@ -26,13 +26,18 @@ namespace DkTools.ErrorTagging
 		{
 			ThreadHelper.JoinableTaskFactory.Run(async () =>
 			{
-				await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
-
-				_tags.RemoveAll(x => x.Source == source && x.FilePath.EqualsI(filePath));
-				_tags.AddRange(tags);
-
-				ErrorMarkerTagsChanged?.Invoke(null, new ErrorMarkerTagsChangedEventArgs { FilePath = filePath });
+				await ReplaceForSourceAndFileAsync(source, filePath, tags);
 			});
+		}
+
+		public static async System.Threading.Tasks.Task ReplaceForSourceAndFileAsync(ErrorTaskSource source, string filePath, IEnumerable<ErrorMarkerTag> tags)
+		{
+			await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
+
+			_tags.RemoveAll(x => x.Source == source && x.FilePath.EqualsI(filePath));
+			_tags.AddRange(tags);
+
+			ErrorMarkerTagsChanged?.Invoke(null, new ErrorMarkerTagsChangedEventArgs { FilePath = filePath });
 		}
 
 		public static event EventHandler<ErrorMarkerTagsChangedEventArgs> ErrorMarkerTagsChanged;

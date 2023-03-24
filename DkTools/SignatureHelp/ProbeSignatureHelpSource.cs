@@ -126,7 +126,6 @@ namespace DkTools.SignatureHelp
         private ProbeSignature CreateSignature(ITextBuffer textBuffer, FunctionSignature signature, ITrackingSpan span, SnapshotPoint triggerPt)
         {
             var sig = new ProbeSignature(textBuffer, signature, null);
-            textBuffer.Changed += sig.SubjectBufferChanged;
 
             sig.Parameters = new ReadOnlyCollection<IParameter>((from a in signature.Arguments
                                                                  select new ProbeParameter(string.Empty, a.SignatureSpan.ToVsTextSpan(),

@@ -5,6 +5,7 @@ using DK.CodeAnalysis;
 using DK.Diagnostics;
 using DK.Modeling;
 using DkTools.CodeModeling;
+using DkTools.Compiler;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Editor;
@@ -19,9 +20,7 @@ namespace DkTools.ErrorTagging
     internal class ErrorTagger : ITagger<ErrorTag>
     {
         private ITextView _view;
-        private FileStore _store;
-        private CodeModel _model;
-        private BackgroundDeferrer _backgroundFecDeferrer;
+        private CompileCoordinator _compileCoordinator;
 
         public const string CodeErrorLight = "DkCodeError.Light";
         public const string CodeErrorDark = "DkCodeError.Dark";
@@ -32,32 +31,12 @@ namespace DkTools.ErrorTagging
         public const string ReportOutputTagLight = "DkReportOutputTag.Light";
         public const string ReportOutputTagDark = "DkReportOutputTag.Dark";
 
-        private const int DeferPriority_UserInput = 1;
-        private const int DeferPriority_DocumentRefresh = 2;
-
         public ErrorTagger(ITextView view)
         {
             _view = view;
-            _store = FileStoreHelper.GetOrCreateForTextBuffer(_view.TextBuffer);
+            _compileCoordinator = CompileCoordinator.GetOrCreateForTextBuffer(_view.TextBuffer);
 
-            ProbeToolsPackage.Instance.App.RefreshAllDocumentsRequired += OnRefreshAllDocumentsRequired;
-            ProbeToolsPackage.Instance.App.RefreshDocumentRequired += OnRefreshDocumentRequired;
             ErrorTaskProvider.ErrorTagsChangedForFile += Instance_ErrorTagsChangedForFile;
-
-            _backgroundFecDeferrer = new BackgroundDeferrer(Constants.BackgroundFecDelay);
-            _backgroundFecDeferrer.Idle += BackgroundFecDeferrer_Idle;
-            _backgroundFecDeferrer.OnActivity(priority: DeferPriority_DocumentRefresh);
-
-            _view.TextBuffer.Changed += (sender, e) =>
-            {
-                _backgroundFecDeferrer.OnActivity(priority: DeferPriority_UserInput);
-            };
-        }
-
-        ~ErrorTagger()
-        {
-            ProbeToolsPackage.Instance.App.RefreshAllDocumentsRequired -= OnRefreshAllDocumentsRequired;
-            ProbeToolsPackage.Instance.App.RefreshDocumentRequired -= OnRefreshDocumentRequired;
         }
 
         public event EventHandler<SnapshotSpanEventArgs> TagsChanged;
@@ -66,150 +45,28 @@ namespace DkTools.ErrorTagging
         {
             ThreadHelper.ThrowIfNotOnUIThread();
 
-            _model = _store.Model;
-            if (_model != null)
+            var fileName = _compileCoordinator.FileName;
+            if (fileName != null)
             {
-                return ErrorTaskProvider.Instance.GetErrorTagsForFile(_model.FilePath, spans);
+                return ErrorTaskProvider.Instance.GetErrorTagsForFile(fileName, spans);
             }
 
             return new TagSpan<ErrorTag>[0];
-        }
-
-        private void OnRefreshAllDocumentsRequired(object sender, EventArgs e)
-        {
-            try
-            {
-                if (_model != null && _model.FileContext != FileContext.Include)
-                {
-                    _backgroundFecDeferrer.OnActivity(priority: DeferPriority_DocumentRefresh);
-                }
-            }
-            catch (Exception ex)
-            {
-                ProbeToolsPackage.Instance.App.Log.Error(ex);
-            }
-        }
-
-        private void OnRefreshDocumentRequired(object sender, RefreshDocumentEventArgs e)
-        {
-            try
-            {
-                if (_model != null && _model.FileContext != FileContext.Include &&
-                    e.FilePath.EqualsI(_model.FilePath))
-                {
-                    _backgroundFecDeferrer.OnActivity(priority: DeferPriority_DocumentRefresh);
-                }
-            }
-            catch (Exception ex)
-            {
-                ProbeToolsPackage.Instance.App.Log.Error(ex);
-            }
         }
 
         void Instance_ErrorTagsChangedForFile(object sender, ErrorTaskProvider.ErrorTaskEventArgs e)
         {
             try
             {
-                if (_model == null) return;
-
-                if (string.Equals(e.FileName, _model.FilePath, StringComparison.OrdinalIgnoreCase))
+                if (string.Equals(e.FileName, _compileCoordinator.FileName, StringComparison.OrdinalIgnoreCase))
                 {
-                    var ev = TagsChanged;
-                    if (ev != null) ev(this, new SnapshotSpanEventArgs(new SnapshotSpan(_view.TextSnapshot, 0, _view.TextSnapshot.Length)));
+                    TagsChanged?.Invoke(this, new SnapshotSpanEventArgs(new SnapshotSpan(_view.TextSnapshot, 0, _view.TextSnapshot.Length)));
                 }
             }
             catch (Exception ex)
             {
                 ProbeToolsPackage.Instance.App.Log.Error(ex);
             }
-        }
-
-        private void BackgroundFecDeferrer_Idle(object sender, BackgroundDeferrer.IdleEventArgs e)
-        {
-            ThreadHelper.JoinableTaskFactory.Run(async () =>
-            {
-                await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
-
-                try
-                {
-                    if ((e.Priority == DeferPriority_DocumentRefresh && ProbeToolsPackage.Instance.EditorOptions.RunBackgroundFecOnSave) ||
-                        (e.Priority == DeferPriority_DocumentRefresh && ProbeToolsPackage.Instance.EditorOptions.RunCodeAnalysisOnSave) ||
-                        (e.Priority == DeferPriority_UserInput && ProbeToolsPackage.Instance.EditorOptions.RunCodeAnalysisOnUserInput))
-                    {
-                        var fileName = VsTextUtil.TryGetDocumentFileName(_view.TextBuffer);
-                        if (string.IsNullOrEmpty(fileName)) return;
-
-                        var appSettings = ProbeToolsPackage.Instance.App.Settings;
-
-                        if (_model != null &&
-                            _model.FileContext != FileContext.Include &&
-                            appSettings.FileExistsInApp(_model.FilePath))
-                        {
-                            ThreadPool.QueueUserWorkItem(state =>
-                            {
-                                try
-                                {
-                                    if ((e.Priority == DeferPriority_DocumentRefresh && ProbeToolsPackage.Instance.EditorOptions.RunBackgroundFecOnSave))
-                                    {
-                                        Shell.Status($"FEC: {_model.FilePath} (running)");
-                                        Compiler.BackgroundFec.RunSync(_model.FilePath, e.CancellationToken);
-                                        Shell.Status($"FEC: {_model.FilePath} (complete)");
-                                    }
-
-                                    if ((e.Priority == DeferPriority_DocumentRefresh && ProbeToolsPackage.Instance.EditorOptions.RunCodeAnalysisOnSave) ||
-                                        (e.Priority == DeferPriority_UserInput && ProbeToolsPackage.Instance.EditorOptions.RunCodeAnalysisOnUserInput))
-                                    {
-                                        var modelSnapshot = _model.Snapshot as ITextSnapshot;
-                                        if (modelSnapshot != null)
-                                        {
-                                            var textBuffer = modelSnapshot.TextBuffer;
-                                            var fileStore = FileStoreHelper.GetOrCreateForTextBuffer(textBuffer);
-                                            if (fileStore != null)
-                                            {
-                                                var preprocessedModel = fileStore.CreatePreprocessedModelSync(
-                                                    appSettings: _model.AppSettings,
-                                                    fileName: fileName,
-                                                    snapshot: textBuffer.CurrentSnapshot,
-                                                    visible: false,
-                                                    cancel: e.CancellationToken,
-                                                    reason: "Background Code Analysis");
-
-                                                var ca = new CodeAnalyzer(appSettings.Context, preprocessedModel);
-                                                var caResults = ca.Run(e.CancellationToken);
-
-                                                ErrorTaskProvider.Instance.ReplaceForSourceAndInvokingFile(ErrorTaskSource.CodeAnalysis, ca.CodeModel.FilePath, caResults.Tasks.Select(x => x.ToErrorTask()));
-                                                ErrorMarkerTaggerProvider.ReplaceForSourceAndFile(ErrorTaskSource.CodeAnalysis, ca.CodeModel.FilePath, caResults.Markers.Select(x => x.ToErrorMarkerTag()));
-                                            }
-                                        }
-                                    }
-                                }
-                                catch (OperationCanceledException ex)
-                                {
-                                    ProbeToolsPackage.Log.Debug(ex);
-                                }
-                                catch (Exception ex)
-                                {
-                                    ProbeToolsPackage.Log.Error(ex);
-                                }
-                            });
-                        }
-
-                        if (!ProbeToolsPackage.Instance.EditorOptions.RunBackgroundFecOnSave)
-                        {
-                            ErrorTaskProvider.Instance.RemoveAllForSource(ErrorTaskSource.BackgroundFec);
-                        }
-                        if (!ProbeToolsPackage.Instance.EditorOptions.RunCodeAnalysisOnSave &&
-                            !ProbeToolsPackage.Instance.EditorOptions.RunCodeAnalysisOnUserInput)
-                        {
-                            ErrorTaskProvider.Instance.RemoveAllForSource(ErrorTaskSource.CodeAnalysis);
-                        }
-                    }
-                }
-                catch (Exception ex)
-                {
-                    ProbeToolsPackage.Log.Error(ex);
-                }
-            });
         }
     }
 }
