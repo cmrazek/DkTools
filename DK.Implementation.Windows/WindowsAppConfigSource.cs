@@ -18,7 +18,8 @@ namespace DK.Implementation.Windows
             _log = log ?? throw new ArgumentNullException(nameof(log));
         }
 
-        public const string WbdkRegKey = "Software\\Fincentric\\WBDK";
+        public const string WbdkRegKey64 = "Software\\WOW6432Node\\Fincentric\\WBDK";
+        public const string WbdkRegKey32 = "Software\\Fincentric\\WBDK";
 
         private const string BaseKey64 = @"SOFTWARE\WOW6432Node\Fincentric\WBDK";
         private const string BaseKey32 = @"SOFTWARE\Fincentric\WBDK";
@@ -146,23 +147,50 @@ namespace DK.Implementation.Windows
             try
             {
                 // Read the current value from the registry in read-only mode, to see if it needs updating.
-                using (var key = Registry.LocalMachine.OpenSubKey(WbdkRegKey, false))
+                string keyPath = null;
+                using (var key = Registry.LocalMachine.OpenSubKey(WbdkRegKey64, false))
                 {
-                    var value = Convert.ToString(key.GetValue(CurrentConfigName, string.Empty));
-                    if (value == appName)
+                    if (key != null)
                     {
-                        // No update required.
-                        return true;
+                        keyPath = WbdkRegKey64;
+                        var value = Convert.ToString(key.GetValue(CurrentConfigName, string.Empty));
+                        if (value == appName)
+                        {
+                            // No update required.
+                            return true;
+                        }
+                    }
+                }
+
+                using (var key = Registry.LocalMachine.OpenSubKey(WbdkRegKey32, false))
+                {
+                    if (key != null)
+                    {
+                        keyPath = WbdkRegKey32;
+                        var value = Convert.ToString(key.GetValue(CurrentConfigName, string.Empty));
+                        if (value == appName)
+                        {
+                            // No update required.
+                            return true;
+                        }
                     }
                 }
 
                 // Try to update the registry.
-                using (var key = Registry.LocalMachine.OpenSubKey(WbdkRegKey, true))
+                if (keyPath != null)
                 {
-                    key.SetValue(CurrentConfigName, appName);
+                    using (var key = Registry.LocalMachine.OpenSubKey(keyPath, true))
+                    {
+                        if (key != null)
+                        {
+                            key.SetValue(CurrentConfigName, appName);
+                        }
+                    }
+
+                    return true;
                 }
 
-                return true;
+                return false;
             }
             catch (System.Security.SecurityException ex)
             {
