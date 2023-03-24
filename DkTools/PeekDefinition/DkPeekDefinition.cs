@@ -14,8 +14,7 @@ namespace DkTools.PeekDefinition
         public static void TriggerPeekDefinition(ITextView textView)
         {
             var caretPt = textView.TextSnapshot.CreateTrackingPoint(textView.Caret.Position.BufferPosition.Position, PointTrackingMode.Negative);
-            var peekBroker = textView.Properties.GetProperty<IPeekBroker>(typeof(IPeekBroker));
-            if (peekBroker != null)
+            if (textView.Properties.TryGetProperty<IPeekBroker>(typeof(IPeekBroker), out var peekBroker))
             {
                 peekBroker.TriggerPeekSession(new PeekSessionCreationOptions(
                     textView: textView,
