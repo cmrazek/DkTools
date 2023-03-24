@@ -18,6 +18,12 @@ Visual Studio Extension for WBDK
 
 ## Change Log
 
+**Version 1.6.5 Changes:**
+- Added filterby keyword for select statements.
+- Refactored the code that gathers errors/warnings from FEC and code analysis. This should work better with WBDK 10.
+- Fixed a bug where commas between columns in a create relationship statement would not parse correctly.
+- Using NOINPUT in dictionary will no longer break the table parsing.
+
 **Version 1.6.4 Changes:**
 - Fixed a bug in modeling of 'create time relationship' statements which would cause them to consume more of the source than necessary.
 

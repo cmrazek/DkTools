@@ -27,12 +27,12 @@ namespace DkTools.QuickInfo
 			_subjectBuffer = subjectBuffer;
 		}
 
-		async Task<QuickInfoItem> IAsyncQuickInfoSource.GetQuickInfoItemAsync(IAsyncQuickInfoSession session, CancellationToken cancellationToken)
+		Task<QuickInfoItem> IAsyncQuickInfoSource.GetQuickInfoItemAsync(IAsyncQuickInfoSession session, CancellationToken cancellationToken)
 		{
 			// https://github.com/microsoft/VSSDK-Extensibility-Samples/blob/master/AsyncQuickInfo/src/LineAsyncQuickInfoSource.cs
 
 			var subjectTriggerPoint = session.GetTriggerPoint(_subjectBuffer.CurrentSnapshot);
-			if (!subjectTriggerPoint.HasValue) return null;
+			if (!subjectTriggerPoint.HasValue) return Task.FromResult<QuickInfoItem>(null);
 			var snapshotPoint = subjectTriggerPoint.Value;
 
 			var fileStore = FileStoreHelper.GetOrCreateForTextBuffer(_subjectBuffer);
@@ -58,36 +58,15 @@ namespace DkTools.QuickInfo
 						applicableToSpan = modelSnapshot.CreateTrackingSpan(info.Value.token.Span.ToVsTextSpan(), SpanTrackingMode.EdgeInclusive);
 					}
 
-					var tasks = await ErrorTagging.ErrorTaskProvider.Instance.GetErrorMessagesAtPointAsync(model.FilePath, snapshotPoint);
-					foreach (var task in tasks)
-					{
-						if (elements != null)
-						{
-							elements = new ContainerElement(ContainerElementStyle.Stacked, elements, task.QuickInfoContent);
-						}
-						else
-						{
-							elements = task.QuickInfoContent;
-						}
-
-						if (applicableToSpan == null)
-						{
-							var snapshotSpan = task.TryGetSnapshotSpan(snapshotPoint.Snapshot);
-							if (snapshotSpan.HasValue)
-							{
-								applicableToSpan = modelSnapshot.CreateTrackingSpan(snapshotSpan.Value, SpanTrackingMode.EdgeInclusive);
-							}
-						}
-					}
 
 					if (elements != null && applicableToSpan != null)
 					{
-						return new QuickInfoItem(applicableToSpan, elements);
+						return Task.FromResult(new QuickInfoItem(applicableToSpan, elements));
 					}
 				}
 			}
 
-			return null;
+			return Task.FromResult<QuickInfoItem>(null);
 		}
 
 		private bool _disposed;

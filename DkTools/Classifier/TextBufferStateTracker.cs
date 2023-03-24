@@ -18,12 +18,17 @@ namespace DkTools.Classifier
 		public TextBufferStateTracker(ITextBuffer buffer)
 		{
 			_buffer = buffer;
-			_buffer.Changed += new EventHandler<TextContentChangedEventArgs>(Buffer_Changed);
+			_buffer.Changed += Buffer_Changed;
 
 			_scanner = new ProbeClassifierScanner();
 
 			// First line always has a zero state.
 			_states.Add(0);
+		}
+
+		~TextBufferStateTracker()
+        {
+			_buffer.Changed -= Buffer_Changed;
 		}
 
 		public static TextBufferStateTracker GetTrackerForTextBuffer(ITextBuffer buffer)

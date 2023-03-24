@@ -3,12 +3,13 @@ using DkTools.ErrorTagging;
 using System;
 using System.Collections.Generic;
 using System.Threading;
+using System.Threading.Tasks;
 
 namespace DkTools.Compiler
 {
-	class BackgroundFec
+	static class BackgroundFec
 	{
-		public static void RunSync(string sourceFilePath, CancellationToken cancel)
+		public static async Task RunAsync(string sourceFilePath, CancellationToken cancel)
 		{
 			if (string.IsNullOrWhiteSpace(sourceFilePath)) return;
 
@@ -19,7 +20,7 @@ namespace DkTools.Compiler
 			{
 				cancel.ThrowIfCancellationRequested();
 
-				if (!ProbeToolsPackage.Instance.Compiler.Mutex.WaitOne(1000))
+				if (!await ProbeToolsPackage.Instance.Compiler.Semaphore.WaitAsync(1000))
 				{
 					ProbeToolsPackage.Log.Debug("Waiting for other compile/FEC operation to complete...");
 					counter--;
@@ -91,7 +92,8 @@ namespace DkTools.Compiler
 				runner.CaptureOutput = true;
 				runner.CaptureError = true;
 
-				var exitCode = runner.CaptureProcess("fec.exe", string.Concat("\"", sourceFilePath, "\""), workingDir, output, cancel);
+				var exitCode = await runner.CaptureProcessAsync("fec.exe", string.Concat(ProbeToolsPackage.Instance.ProbeExplorerOptions.FecArguments,
+					" \"", sourceFilePath, "\""), workingDir, output, cancel);
 				if (exitCode == 0)
 				{
 					ProbeToolsPackage.Log.Debug("Background FEC completed successfully.");
@@ -100,7 +102,7 @@ namespace DkTools.Compiler
 				{
 					ProbeToolsPackage.Log.Write(LogLevel.Warning, "FEC.exe returned exit code {0} when running background FEC for file '{1}'.", exitCode, sourceFilePath);
 				}
-				ErrorTaskProvider.Instance.ReplaceForSourceAndInvokingFile(ErrorTaskSource.BackgroundFec, sourceFilePath, tasks);
+				await ErrorTaskProvider.Instance.ReplaceForSourceAndInvokingFileAsync(ErrorTaskSource.BackgroundFec, sourceFilePath, tasks);
 			}
 			catch (Exception ex)
 			{
@@ -108,7 +110,7 @@ namespace DkTools.Compiler
 			}
 			finally
 			{
-				ProbeToolsPackage.Instance.Compiler.Mutex.ReleaseMutex();
+				ProbeToolsPackage.Instance.Compiler.Semaphore.Release();
 			}
 		}
 	}

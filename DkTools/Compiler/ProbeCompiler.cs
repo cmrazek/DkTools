@@ -24,7 +24,7 @@ namespace DkTools.Compiler
 		private int _numErrors = 0;
 		private int _numWarnings = 0;
 		private bool _buildFailed = false;
-		private Mutex _mutex = new Mutex();
+		private SemaphoreSlim _semaphore = new SemaphoreSlim(1);
 
 		private const int k_compileKillSleep = 10;
 		private const int k_compileSleep = 100;
@@ -157,7 +157,7 @@ namespace DkTools.Compiler
 					return;
 				}
 
-				while (!_mutex.WaitOne(1000))
+				while (!_semaphore.Wait(1000))
 				{
 					if (cancel.IsCancellationRequested) return;
 					WriteLine("Waiting for background compile to complete...");
@@ -212,7 +212,7 @@ namespace DkTools.Compiler
 			catch (Exception ex) { _app.Log.Error(ex); }
 			finally
 			{
-				_mutex.ReleaseMutex();
+				_semaphore.Release();
 			}
 		}
 
@@ -790,9 +790,9 @@ namespace DkTools.Compiler
 			return sb.ToString();
 		}
 
-		public Mutex Mutex
+		public SemaphoreSlim Semaphore
 		{
-			get { return _mutex; }
+			get { return _semaphore; }
 		}
 
 		private static readonly Regex _rxBuildReportDir = new Regex(@"\\Build_([^_]+)_(\d{4})-(\d{2})-(\d{2})_(\d{2})\.(\d{2})\.(\d{2})$");
