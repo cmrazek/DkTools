@@ -37,7 +37,7 @@ namespace DK
             "probeformgroup:nextform probeformgroup:stayloaded probeformgroup:tooln probegroupmenu:alltables rows scrollbars wordwrap");
 
         public static readonly HashSet<string> PreprocessorDirectives = StringHelper.ParseWordList(
-            "#define #elif #else #endif #if #ifdef #ifndef #include #insert #label #replace #undef #warnadd #warndel");
+            "#define #elif #else #endif #if #ifdef #ifndef #include #insert #label #replace #SQLWhereClauseCompatibleAttribute #SQLResultsFilteringAttribute #undef #warnadd #warndel");
 
         public static readonly HashSet<string> ReportOutputKeywords = StringHelper.ParseWordList(
             "center col colff page row");
