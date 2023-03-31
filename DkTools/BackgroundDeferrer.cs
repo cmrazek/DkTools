@@ -29,7 +29,7 @@ namespace DkTools
 			}
 		}
 
-		public BackgroundDeferrer(int idleTime = 1000)
+		public BackgroundDeferrer(int idleTime)
 		{
 			_idleTime = idleTime;
 			_timer = new System.Timers.Timer(_idleTime);
@@ -89,11 +89,11 @@ namespace DkTools
 			}
 			catch (OperationCanceledException ex)
 			{
-				Log.Debug(ex);
+				ProbeToolsPackage.Instance.App.Log.Debug(ex);
 			}
 			catch (Exception ex)
 			{
-				Log.Error(ex);
+				ProbeToolsPackage.Instance.App.Log.Error(ex);
 			}
 		}
 	}

@@ -7,7 +7,6 @@ using DK.Preprocessing;
 using DK.Syntax;
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading;
@@ -31,37 +30,37 @@ namespace DK.Schema
 			{
 				_appSettings = appSettings ?? throw new ArgumentNullException(nameof(appSettings));
 
-				Log.Info("Parsing DICT...");
+				appSettings.Log.Info("Parsing DICT...");
 				var startTime = DateTime.Now;
 
 				// Find the dict file
 				var dictPathName = string.Empty;
 				foreach (var srcDir in appSettings.SourceDirs)
 				{
-					dictPathName = Path.Combine(srcDir, "DICT");
-					if (File.Exists(dictPathName)) break;
+					dictPathName = PathUtil.CombinePath(srcDir, "DICT");
+					if (_appSettings.FileSystem.FileExists(dictPathName)) break;
 					dictPathName = string.Empty;
 				}
 
 				if (string.IsNullOrEmpty(dictPathName))
 				{
-					Log.Warning("No DICT file could be found.");
+					appSettings.Log.Warning("No DICT file could be found.");
 					return;
 				}
-				var merger = new FileMerger();
-				merger.MergeFile(appSettings, dictPathName, null, false, true);
+				var merger = new FileMerger(_appSettings);
+				merger.MergeFile(dictPathName, null, false, true);
 
 				var mergedSource = merger.MergedContent;
 				var mergedReader = new CodeSource.CodeSourcePreprocessorReader(mergedSource);
 
-				var fileStore = new FileStore();
+				var fileStore = new FileStore(appSettings.Context);
 				var preprocessor = new Preprocessor(appSettings, fileStore);
 				_source = new CodeSource();
 				preprocessor.Preprocess(mergedReader, _source, dictPathName, null, FileContext.Dictionary, CancellationToken.None);
 
 				var curTime = DateTime.Now;
 				var elapsed = curTime.Subtract(startTime);
-				Log.Info("DICT preprocessing completed. (elapsed: {0})", elapsed);
+				appSettings.Log.Info("DICT preprocessing completed. (elapsed: {0})", elapsed);
 
 				var dictContent = _source.Text;
 				//File.WriteAllText(Path.Combine(ProbeToolsPackage.AppDataDir, "dict.txt"), dictContent);
@@ -74,19 +73,19 @@ namespace DK.Schema
 				_source = null;	// So it can be GC'd
 
 				elapsed = DateTime.Now.Subtract(curTime);
-				Log.Info("DICT parsing complete. (elapsed: {0})", elapsed);
-				Log.Debug("DICT Tables [{0}] RelInds [{1}] Stringdefs [{2}] Typedefs [{3}] Interfaces [{4}]",
+				appSettings.Log.Info("DICT parsing complete. (elapsed: {0})", elapsed);
+				appSettings.Log.Debug("DICT Tables [{0}] RelInds [{1}] Stringdefs [{2}] Typedefs [{3}] Interfaces [{4}]",
 					_tables.Count, _relinds.Count, _stringdefs.Count, _typedefs.Count, _interfaces.Count);
 			}
 			catch (Exception ex)
 			{
-				Log.Error(ex, "Error when reading DICT file.");
+				appSettings.Log.Error(ex, "Error when reading DICT file.");
 			}
 		}
 
 		private void ReportError(int pos, string message)
 		{
-			Log.Write(LogLevel.Warning, "DICT offset {1}: {0}", message, pos);
+			_appSettings.Log.Write(LogLevel.Warning, "DICT offset {1}: {0}", message, pos);
 		}
 
 		private void ReportError(int pos, string format, params object[] args)
@@ -725,6 +724,7 @@ namespace DK.Schema
 					var word = _code.Text;
 					if (word.Equals("accel", StringComparison.OrdinalIgnoreCase)) col.Accel = ReadAccelSequence();
 					else if (word.Equals("noaudit", StringComparison.OrdinalIgnoreCase)) col.NoAudit = true;
+					else if (word.Equals("noinput", StringComparison.OrdinalIgnoreCase)) col.NoInput = true;
 					else if (word.Equals("audit", StringComparison.OrdinalIgnoreCase)) col.NoAudit = false;
 					else if (word.Equals("form", StringComparison.OrdinalIgnoreCase)) col.Persist = Column.PersistMode.Form;
 					else if (word.Equals("formonly", StringComparison.OrdinalIgnoreCase)) col.Persist = Column.PersistMode.FormOnly;

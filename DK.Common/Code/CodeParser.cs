@@ -467,12 +467,13 @@ namespace DK.Code
 			get { return _pos >= _length; }
 		}
 
+		public string RemainingText => _pos < _length ? _source.Substring(_pos) : string.Empty;
+
 		public bool ReadNestable()
 		{
-			var startPos = Position;
-
 			if (!Read()) return false;
 
+			var startPos = _tokenStartPos;
 			var firstTokenType = _tokenType;
 
 			if (_tokenType == CodeType.Operator)
@@ -486,9 +487,16 @@ namespace DK.Code
 							_tokenText.Clear();
 							_tokenText.Append(_source.Substring(_tokenStartPos, _pos - _tokenStartPos));
 							_tokenType = CodeType.Nested;
-							return true;
 						}
-						break;
+						else
+                        {
+							_tokenStartPos = startPos;
+							_tokenText.Clear();
+							_tokenText.Append('(');
+							_tokenType = CodeType.Operator;
+							_pos = _tokenStartPos + 1;
+                        }
+						return true;
 					case "{":
 						if (ReadNestable_Inner("}"))
 						{
@@ -496,9 +504,16 @@ namespace DK.Code
 							_tokenText.Clear();
 							_tokenText.Append(_source.Substring(_tokenStartPos, _pos - _tokenStartPos));
 							_tokenType = CodeType.Nested;
-							return true;
 						}
-						break;
+						else
+                        {
+							_tokenStartPos = startPos;
+							_tokenText.Clear();
+							_tokenText.Append('{');
+							_tokenType = CodeType.Operator;
+							_pos = _tokenStartPos + 1;
+                        }
+						return true;
 					case "[":
 						if (ReadNestable_Inner("]"))
 						{
@@ -506,9 +521,16 @@ namespace DK.Code
 							_tokenText.Clear();
 							_tokenText.Append(_source.Substring(_tokenStartPos, _pos - _tokenStartPos));
 							_tokenType = CodeType.Nested;
-							return true;
 						}
-						break;
+						else
+                        {
+							_tokenStartPos = startPos;
+							_tokenText.Clear();
+							_tokenText.Append('[');
+							_tokenType = CodeType.Operator;
+							_pos = _tokenStartPos + 1;
+                        }
+						return true;
 				}
 			}
 
@@ -1386,5 +1408,27 @@ namespace DK.Code
 
 			return false;
 		}
+
+        #region Code Items
+        public CodeItem? ReadItem()
+        {
+			if (Read())
+            {
+				return new CodeItem(_tokenType, new CodeSpan(_tokenStartPos, _tokenStartPos + _tokenText.Length), _tokenText.ToString());
+            }
+
+			return null;
+		}
+
+		public CodeItem? ReadItemNestable()
+        {
+			if (ReadNestable())
+            {
+				return new CodeItem(_tokenType, new CodeSpan(_tokenStartPos, _tokenStartPos + _tokenText.Length), _tokenText.ToString());
+            }
+
+			return null;
+        }
+		#endregion
 	}
 }

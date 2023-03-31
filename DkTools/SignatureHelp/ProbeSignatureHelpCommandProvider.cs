@@ -1,21 +1,15 @@
 ﻿using Microsoft.VisualStudio.Editor;
 using Microsoft.VisualStudio.Language.Intellisense;
 using Microsoft.VisualStudio.Shell;
-using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Editor;
-using Microsoft.VisualStudio.Text.Operations;
 using Microsoft.VisualStudio.TextManager.Interop;
 using Microsoft.VisualStudio.Utilities;
-using System;
-using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using System.ComponentModel.Composition;
-using System.Linq;
 
 namespace DkTools.SignatureHelp
 {
 	[Export(typeof(IVsTextViewCreationListener))]
-	[Name("Probe Signature Help Controller")]
+	[Name("DkTools Signature Help Controller")]
 	[TextViewRole(PredefinedTextViewRoles.Editable)]
 	[ContentType(Constants.DkContentType)]
 	[ContentType(Constants.TextContentType)]
@@ -24,9 +18,6 @@ namespace DkTools.SignatureHelp
 	{
 		[Import]
 		internal IVsEditorAdaptersFactoryService AdapterService { get; set; }
-
-		[Import]
-		internal ITextStructureNavigatorSelectorService NavigatorService { get; set; }
 
 		[Import]
 		internal ISignatureHelpBroker SignatureHelpBroker { get; set; }
@@ -47,7 +38,6 @@ namespace DkTools.SignatureHelp
 				() => new ProbeSignatureHelpCommandHandler(
 					textViewAdapter: textViewAdapter,
 					textView: textView,
-					textStructureNavigator: NavigatorService.GetTextStructureNavigator(textView.TextBuffer),
 					signatureHelpBroker: SignatureHelpBroker,
 					signatureHelpCommandProvider: this));
 

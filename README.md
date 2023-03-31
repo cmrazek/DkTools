@@ -18,6 +18,32 @@ Visual Studio Extension for WBDK
 
 ## Change Log
 
+**Version 1.6.5 Changes:**
+- Added filterby keyword for select statements.
+- Refactored the code that gathers errors/warnings from FEC and code analysis. This should work better with WBDK 10.
+- Fixed a bug where commas between columns in a create relationship statement would not parse correctly.
+- Using NOINPUT in dictionary will no longer break the table parsing.
+
+**Version 1.6.4 Changes:**
+- Fixed a bug in modeling of 'create time relationship' statements which would cause them to consume more of the source than necessary.
+
+**Version 1.6.3 Changes:**
+- Function calls to deprecated functions now trigger a code analysis error (CA0120 - suppress with #warndel 990120)<br>
+  A function is marked deprecated if the description text contains the word "deprecated".
+- Conditional (aka ternary) statements now trigger a code analysis error if they aren't wrapped in brackets.
+- Fixed bug where table/function names would sometimes be confused for enum values.
+
+**Version 1.6.2 Changes:**
+- Optimizations for quicker smart indenting and signature help.
+- Typing a closing '}' will now fix up indenting on the statements inside the scope.
+
+**Version 1.6.1 Changes:**
+- Reduced the number of operations that can cause a code model rebuild, improving typing performance.
+- No longer report code analysis errors when a valid enum value is used as a string.
+- Create File dialog now shows the length of your file name.
+- Statement completion for #include will no longer commit when a '.' is typed.
+- Insert Tag can now format a file header comment if it can detect it from the line below.
+
 **Version 1.5.20 Changes:**
 - Fixed a bug where extern functions referenced in a class would be associated with that class, causing a discrepancy in Find All References.
 

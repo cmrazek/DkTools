@@ -1,9 +1,11 @@
 ﻿using DK.Diagnostics;
+using DkTools.CodeModeling;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.OLE.Interop;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Editor;
+using Microsoft.VisualStudio.Text.Operations;
 using Microsoft.VisualStudio.TextManager.Interop;
 using System;
 using System.Runtime.InteropServices;
@@ -44,9 +46,10 @@ namespace DkTools.SmartIndenting
 
 				if (typedChar == '}' || typedChar == '#' || typedChar == ':')
 				{
-					if (QuickState.IsInLiveCode(_textView.Caret.Position.BufferPosition.GetQuickState()))
+					var liveCodeTracker = LiveCodeTracker.GetOrCreateForTextBuffer(_textView.TextBuffer);
+					if (LiveCodeTracker.IsStateInLiveCode(liveCodeTracker.GetStateForPosition(_textView.Caret.Position.BufferPosition)))
 					{
-						TriggerIndentReformat();
+						TriggerIndentReformat(typedChar);
 						retVal = VSConstants.S_OK;
 					}
 				}
@@ -55,7 +58,7 @@ namespace DkTools.SmartIndenting
 			}
 			catch (Exception ex)
 			{
-				Log.WriteEx(ex);
+				ProbeToolsPackage.Instance.App.Log.Error(ex);
 				return VSConstants.E_FAIL;
 			}
 		}
@@ -76,27 +79,62 @@ namespace DkTools.SmartIndenting
 			return caretPt.GetContainingLine();
 		}
 
-		private void TriggerIndentReformat()
+		private void TriggerIndentReformat(char typedChar)
 		{
-			ProbeSmartIndent si;
-			_textView.Properties.TryGetProperty(typeof(ProbeSmartIndent), out si);
-			if (si != null)
+			_textView.Properties.TryGetProperty<ProbeSmartIndent>(typeof(ProbeSmartIndent), out var si);
+			if (si == null) return;
+
+			ITextUndoTransaction undo = null;
+
+			if (typedChar == '}')
+            {
+				var liveCodeTracker = LiveCodeTracker.GetOrCreateForTextBuffer(_textView.TextBuffer);
+				var closingPt = _textView.Caret.Position.BufferPosition;
+				var openingPt = liveCodeTracker.FindParentOpenBrace(closingPt - 1);
+				if (openingPt.HasValue)
+				{
+					var openingLine = liveCodeTracker.Snapshot.GetLineFromPosition(openingPt.Value);
+					var closingLine = liveCodeTracker.Snapshot.GetLineFromPosition(closingPt);
+
+					for (int lineNumber = openingLine.LineNumber + 1; lineNumber <= closingLine.LineNumber; lineNumber++)
+                    {
+						var line = liveCodeTracker.Snapshot.GetLineFromLineNumber(lineNumber);
+
+						var desiredIndent = (si as ISmartIndent).GetDesiredIndentation(line);
+                        if (desiredIndent != null)
+                        {
+							var lineText = line.GetText();
+							if (lineText.GetIndentCount(si.TabSize) != desiredIndent)
+							{
+								lineText = string.IsNullOrWhiteSpace(lineText) ? lineText : lineText.AdjustIndent(desiredIndent.Value, si.TabSize, si.KeepTabs);
+								if (undo == null) undo = _textView.TextBuffer.CreateUndoTransaction("DK Indent Reformat");
+								_textView.TextBuffer.Replace(new Span(line.Start, line.Length), lineText);
+							}
+						}
+                    }
+				}
+            }
+			else
 			{
 				var line = GetCaretLine();
-				if (line != null)
+				if (line == null) return;
+
+				var desiredIndent = (si as ISmartIndent).GetDesiredIndentation(line);
+				if (desiredIndent == null) return;
+
+				var lineText = line.GetText();
+				if (lineText.GetIndentCount(si.TabSize) != desiredIndent)
 				{
-					var desiredIndent = (si as ISmartIndent).GetDesiredIndentation(line);
-					if (desiredIndent.HasValue)
-					{
-						var lineText = line.GetText();
-						if (lineText.GetIndentCount(si.TabSize) != desiredIndent)
-						{
-							lineText = lineText.AdjustIndent(desiredIndent.Value, si.TabSize, si.KeepTabs);
-							_textView.TextBuffer.Replace(new Span(line.Start, line.Length), lineText);
-						}
-					}
+					lineText = string.IsNullOrWhiteSpace(lineText) ? lineText : lineText.AdjustIndent(desiredIndent.Value, si.TabSize, si.KeepTabs);
+					if (undo == null) undo = _textView.TextBuffer.CreateUndoTransaction("DK Indent Reformat");
+					_textView.TextBuffer.Replace(new Span(line.Start, line.Length), lineText);
 				}
 			}
+
+			if (undo != null)
+            {
+				undo.Complete();
+            }
 		}
 	}
 }

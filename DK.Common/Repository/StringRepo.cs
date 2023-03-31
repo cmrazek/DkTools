@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
+using IO = System.IO;
 
 namespace DK.Repository
 {
@@ -28,13 +28,13 @@ namespace DK.Repository
 			_index.Add(0);
 		}
 
-		public void Write(BinaryWriter writer)
+		public void Write(IO.BinaryWriter writer)
 		{
 			writer.Write(_strings.Count - 1);
 			foreach (var str in _strings.Skip(1)) writer.Write(str);
 		}
 
-		public void Read(BinaryReader rdr)
+		public void Read(IO.BinaryReader rdr)
 		{
 			var count = rdr.ReadInt32();
 			if (count < 0) throw new InvalidRepoException("Invalid number of strings.");
@@ -162,15 +162,6 @@ namespace DK.Repository
 					_index.Insert(mid, id);
 					return;
 				}
-			}
-		}
-
-		public void DumpToFile(string fileName)
-		{
-			using (var fileStream = new FileStream(fileName, FileMode.Create, FileAccess.Write))
-			using (var writer = new StreamWriter(fileStream))
-			{
-				foreach (var i in _index) writer.WriteLine(_strings[i]);
 			}
 		}
 	}

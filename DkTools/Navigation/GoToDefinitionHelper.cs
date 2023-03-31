@@ -46,11 +46,12 @@ namespace DkTools.Navigation
 			var fileStore = FileStoreHelper.GetOrCreateForTextBuffer(point.Snapshot.TextBuffer);
 			if (fileStore == null) return null;
 
-			var appSettings = DkEnvironment.CurrentAppSettings;
+			var appSettings = ProbeToolsPackage.Instance.App.Settings;
 			if (appSettings == null) return null;
 
-			var fileName = VsTextUtil.TryGetDocumentFileName(point.Snapshot.TextBuffer);
-			var model = fileStore.GetCurrentModel(appSettings, fileName, point.Snapshot, "Go to definition", cancel);
+			var model = fileStore.Model;
+			if (model == null) return null;
+
 			var modelPos = model.AdjustPosition(point.Position, point.Snapshot);
 			var selTokens = model.File.FindDownwardTouching(modelPos).ToArray();
 			if (selTokens.Length == 0) return null;
@@ -152,15 +153,21 @@ namespace DkTools.Navigation
 				var fileStore = FileStoreHelper.GetOrCreateForTextBuffer(snapPt.Snapshot.TextBuffer);
 				if (fileStore == null) return;
 
-				var appSettings = DkEnvironment.CurrentAppSettings;
+				var appSettings = ProbeToolsPackage.Instance.App.Settings;
 				var fileName = VsTextUtil.TryGetDocumentFileName(textView.TextBuffer);
-				var fullModel = fileStore.CreatePreprocessedModel(appSettings, fileName, snapPt.Snapshot, visible: false, "Find Local References", cancel);
+				var fullModel = fileStore.CreatePreprocessedModelSync(appSettings, fileName, snapPt.Snapshot, visible: false, "Find Local References", cancel);
 				var fullModelPos = fullModel.PreprocessorModel.Source.PrimaryFilePositionToSource(fullModel.AdjustPosition(snapPt));
 
 				var fullToken = fullModel.File.FindDownward(fullModelPos, t => t.SourceDefinition != null).FirstOrDefault();
 				if (fullToken == null)
 				{
-					var model = fileStore.GetMostRecentModel(appSettings, fileName, snapPt.Snapshot, "Find Local References (fallback)", cancel);
+					var model = fileStore.Model;
+					if (model == null)
+                    {
+						ProbeToolsPackage.Instance.SetStatusText("No code model available.");
+						return;
+                    }
+
 					var modelPos = model.AdjustPosition(snapPt);
 					var token = model.File.FindDownward(modelPos, t => t.SourceDefinition != null).FirstOrDefault();
 					if (token == null)
@@ -168,10 +175,8 @@ namespace DkTools.Navigation
 						ProbeToolsPackage.Instance.SetStatusText("No reference found at cursor.");
 						return;
 					}
-					else
-					{
-						fullToken = token;
-					}
+
+					fullToken = token;
 				}
 
 				var def = fullToken.SourceDefinition;
@@ -252,7 +257,7 @@ namespace DkTools.Navigation
 		{
 			if (string.IsNullOrEmpty(extRefId)) throw new ArgumentException("Definition has no external ref ID.");
 
-			var app = DkEnvironment.CurrentAppSettings;
+			var app = ProbeToolsPackage.Instance.App.Settings;
 			if (app == null) yield break;
 
 			foreach (var rf in app.Repo.FindAllReferences(extRefId))

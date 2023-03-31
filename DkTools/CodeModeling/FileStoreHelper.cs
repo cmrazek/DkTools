@@ -22,13 +22,17 @@ namespace DkTools.CodeModeling
 			FileStore cache;
 			if (buf.Properties.TryGetProperty(typeof(FileStore), out cache)) return cache;
 
-			cache = new FileStore();
+			cache = new FileStore(ProbeToolsPackage.Instance.App);
 			buf.Properties[typeof(FileStore)] = cache;
 
 			return cache;
 		}
 
-		public static CodeModel GetCurrentModel(this FileStore fileStore,
+		public static CodeModel GetCodeModelOrNull(ITextBuffer buffer) => GetOrCreateForTextBuffer(buffer)?.Model;
+
+		public static DefinitionProvider GetDefinitionProviderOrNull(ITextBuffer buffer) => GetOrCreateForTextBuffer(buffer)?.Model?.DefinitionProvider;
+
+		public static CodeModel GetCurrentModelSync(this FileStore fileStore,
 			DkAppSettings appSettings,
 			string fileName,
 			ITextSnapshot snapshot,
@@ -42,18 +46,18 @@ namespace DkTools.CodeModeling
 				var modelSnapshot = fileStore.Model.Snapshot as ITextSnapshot;
 				if (snapshot != null && (modelSnapshot == null || modelSnapshot.Version.VersionNumber < snapshot.Version.VersionNumber))
 				{
-					fileStore.Model = fileStore.CreatePreprocessedModel(appSettings, fileName, snapshot, reason, cancel);
+					fileStore.Model = fileStore.CreatePreprocessedModelSync(appSettings, fileName, snapshot, reason, cancel);
 				}
 			}
 			else
 			{
-				fileStore.Model = fileStore.CreatePreprocessedModel(appSettings, fileName, snapshot, reason, cancel);
+				fileStore.Model = fileStore.CreatePreprocessedModelSync(appSettings, fileName, snapshot, reason, cancel);
 			}
 
 			return fileStore.Model;
 		}
 
-		public static CodeModel GetMostRecentModel(this FileStore fileStore,
+		public static CodeModel GetMostRecentModelSync(this FileStore fileStore,
 			DkAppSettings appSettings,
 			string fileName,
 			ITextSnapshot snapshot,
@@ -64,13 +68,13 @@ namespace DkTools.CodeModeling
 
 			if (fileStore.Model == null)
 			{
-				fileStore.Model = fileStore.CreatePreprocessedModel(appSettings, fileName, snapshot, reason, cancel);
+				fileStore.Model = fileStore.CreatePreprocessedModelSync(appSettings, fileName, snapshot, reason, cancel);
 			}
 
 			return fileStore.Model;
 		}
 
-		public static CodeModel CreatePreprocessedModel(this FileStore fileStore,
+		public static CodeModel CreatePreprocessedModelSync(this FileStore fileStore,
 			DkAppSettings appSettings,
 			string fileName,
 			ITextSnapshot snapshot,
@@ -88,7 +92,7 @@ namespace DkTools.CodeModeling
 			return model;
 		}
 
-		public static CodeModel CreatePreprocessedModel(this FileStore fileStore,
+		public static CodeModel CreatePreprocessedModelSync(this FileStore fileStore,
 			DkAppSettings appSettings,
 			string fileName,
 			ITextSnapshot snapshot,
@@ -108,8 +112,8 @@ namespace DkTools.CodeModeling
 			}
 			else
 			{
-				var merger = new FileMerger();
-				merger.MergeFile(appSettings, fileName, snapshot.GetText(), false, true);
+				var merger = new FileMerger(appSettings);
+				merger.MergeFile(fileName, snapshot.GetText(), false, true);
 				source = merger.MergedContent;
 
 				includeDependencies = (from f in merger.FileNames
@@ -121,10 +125,10 @@ namespace DkTools.CodeModeling
 			return model;
 		}
 
-		public static IEnumerable<FunctionDropDownItem> GetFunctionDropDownList(this FileStore fileStore, DkAppSettings appSettings,
-			string fileName, ITextSnapshot snapshot)
+		public static IEnumerable<FunctionDropDownItem> GetFunctionDropDownList(this FileStore fileStore, CodeModel model)
 		{
-			var model = fileStore.GetMostRecentModel(appSettings, fileName, snapshot, "Function drop-down list.", new CancellationToken());
+			if (fileStore == null) throw new ArgumentNullException(nameof(fileStore));
+			if (model == null) throw new ArgumentNullException(nameof(model));
 
 			var prepModel = model.PreprocessorModel;
 			if (prepModel == null) yield break;

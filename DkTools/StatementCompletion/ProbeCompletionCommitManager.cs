@@ -1,12 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Threading;
-using System.Threading.Tasks;
 using Microsoft.VisualStudio.Language.Intellisense.AsyncCompletion;
 using Microsoft.VisualStudio.Language.Intellisense.AsyncCompletion.Data;
-using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Editor;
 
@@ -51,6 +47,15 @@ namespace DkTools.StatementCompletion
 			}
 
 			if (char.IsDigit(typedChar)) return false;
+
+			// For #include, if we're typing a char but the file has '.' between name and extension, then don't commit the completion.
+			if (typedChar == '.')
+			{
+				if (session.Properties.ContainsProperty(ProbeAsyncCompletionSource.CompletionTypeProperty_Include))
+                {
+					return false;
+                }
+			}
 
 			return true;
 		}

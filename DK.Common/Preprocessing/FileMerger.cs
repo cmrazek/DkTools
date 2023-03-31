@@ -3,7 +3,6 @@ using DK.Code;
 using DK.Diagnostics;
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -12,6 +11,7 @@ namespace DK.Preprocessing
 {
 	public class FileMerger
 	{
+		private DkAppSettings _appSettings;
 		private List<Line> _lines;
 		private string _origFileName = "";
 		private List<string> _localFileNames = new List<string>();
@@ -27,7 +27,6 @@ namespace DK.Preprocessing
 		private string _primaryFileName;
 		private string _origContent;
 		private Dictionary<string, string> _localFileContent = new Dictionary<string, string>();
-		private DkAppSettings _appSettings;
 
 		private enum MergeMode
 		{
@@ -51,15 +50,13 @@ namespace DK.Preprocessing
 			}
 		}
 
-		public FileMerger()
-		{ }
-
-		public void MergeFile(DkAppSettings appSettings, string fullPathName, string content, bool showMergeComments, bool fileIsPrimary)
+		public FileMerger(DkAppSettings appSettings)
 		{
-			if (appSettings == null) throw new ArgumentNullException(nameof(appSettings));
+			_appSettings = appSettings ?? throw new ArgumentNullException(nameof(appSettings));
+		}
 
-			_appSettings = appSettings;
-
+		public void MergeFile(string fullPathName, string content, bool showMergeComments, bool fileIsPrimary)
+		{
 			// Locate all needed copies of files
 			_primaryFileName = fullPathName;
 			_origFileName = "";
@@ -67,7 +64,7 @@ namespace DK.Preprocessing
 			_showMergeComments = showMergeComments;
 
 			var relativeFileName = fullPathName;
-			if (Path.IsPathRooted(fullPathName)) fullPathName = UnrootFileName(fullPathName);
+			if (PathUtil.IsPathRooted(fullPathName)) fullPathName = UnrootFileName(fullPathName);
 			FindFiles(fullPathName);
 
 			if (string.IsNullOrEmpty(_origFileName))
@@ -79,7 +76,7 @@ namespace DK.Preprocessing
 				return;
 			}
 
-			if (content == null) _origContent = File.ReadAllText(_origFileName);
+			if (content == null) _origContent = _appSettings.FileSystem.GetFileText(_origFileName);
 			else _origContent = content;
 
 			// Perform localization
@@ -92,7 +89,7 @@ namespace DK.Preprocessing
 				}
 				catch (Exception ex)
 				{
-					Log.Error(ex, "Error when merging local file '{0}' into '{1}'.", localFileName, fullPathName);
+					_appSettings.Log.Error(ex, "Error when merging local file '{0}' into '{1}'.", localFileName, fullPathName);
 				}
 			}
 
@@ -116,7 +113,7 @@ namespace DK.Preprocessing
 
 		private string UnrootFileName(string fileName)
 		{
-			fileName = Path.GetFullPath(fileName);
+			fileName = _appSettings.FileSystem.GetFullPath(fileName);
 
 			foreach (var dir in _appSettings.SourceDirs)
 			{
@@ -142,7 +139,7 @@ namespace DK.Preprocessing
 
 			// If this file is not in any source/include directory, then just use the file name without any path.
 			// This can happen during code QA, where the code is kept in another folder.
-			return Path.GetFileName(fileName);
+			return PathUtil.GetFileName(fileName);
 		}
 
 		private void FindFiles(string fileName)
@@ -157,12 +154,12 @@ namespace DK.Preprocessing
 			{
 				try
 				{
-					if (!Directory.Exists(probeDir)) continue;
+					if (!_appSettings.FileSystem.DirectoryExists(probeDir)) continue;
 					FindFiles_SearchDir(probeDir, fileName);
 				}
 				catch (Exception ex)
 				{
-					Log.Error(ex, "Exception when scanning source directory [{0}]", probeDir);
+					_appSettings.Log.Error(ex, "Exception when scanning source directory [{0}]", probeDir);
 				}
 			}
 
@@ -173,12 +170,12 @@ namespace DK.Preprocessing
 				{
 					try
 					{
-						if (!Directory.Exists(includeDir)) continue;
+						if (!_appSettings.FileSystem.DirectoryExists(includeDir)) continue;
 						FindFiles_SearchDir(includeDir, fileName);
 					}
 					catch (Exception ex)
 					{
-						Log.Error(ex, "Exception when scanning include directory [{0}]", includeDir);
+						_appSettings.Log.Error(ex, "Exception when scanning include directory [{0}]", includeDir);
 					}
 				}
 			}
@@ -186,26 +183,26 @@ namespace DK.Preprocessing
 
 		private void FindFiles_SearchDir(string dir, string fileName)
 		{
-			string pathName = Path.Combine(dir, fileName);
-			if (File.Exists(pathName))
+			string pathName = PathUtil.CombinePath(dir, fileName);
+			if (_appSettings.FileSystem.FileExists(pathName))
 			{
 				// this is the original file
 				_origFileName = pathName;
 			}
-			else if (File.Exists(pathName + "&"))
+			else if (_appSettings.FileSystem.FileExists(pathName + "&"))
 			{
 				// this is a local file
 				var ampFileName = pathName + "&";
 				if (!_localFileNames.Any(x => string.Equals(x, ampFileName, StringComparison.OrdinalIgnoreCase))) _localFileNames.Add(ampFileName);
 			}
-			else if (File.Exists(pathName + "+"))
+			else if (_appSettings.FileSystem.FileExists(pathName + "+"))
 			{
 				// this is a local file
 				var ampFileName = pathName + "+";
 				if (!_localFileNames.Any(x => string.Equals(x, ampFileName, StringComparison.OrdinalIgnoreCase))) _localFileNames.Add(ampFileName);
 			}
 
-			foreach (string subDir in Directory.GetDirectories(dir))
+			foreach (string subDir in _appSettings.FileSystem.GetDirectoriesInDirectory(dir))
 			{
 				try
 				{
@@ -213,7 +210,7 @@ namespace DK.Preprocessing
 				}
 				catch (Exception ex)
 				{
-					Log.Error(ex, "Exception when scanning directory [{0}]", subDir);
+					_appSettings.Log.Error(ex, "Exception when scanning directory [{0}]", subDir);
 				}
 			}
 		}
@@ -249,7 +246,7 @@ namespace DK.Preprocessing
 			_currentLocalFileName = localFileName;
 			_currentLocalLine = 1;
 
-			var fileText = File.ReadAllText(localFileName);
+			var fileText = _appSettings.FileSystem.GetFileText(localFileName);
 			_localFileContent[localFileName.ToLower()] = fileText;
 
 			var pos = 0;
@@ -320,7 +317,7 @@ namespace DK.Preprocessing
 						_insertLine = GetLabelInsert(labelName);
 						if (_insertLine < 0)
 						{
-							Log.Warning("{0}: #label '{1}' not found.", _currentLocalFileName, labelName);
+							_appSettings.Log.Warning("{0}: #label '{1}' not found.", _currentLocalFileName, labelName);
 							_insertLine = _lines.Count;
 						}
 
@@ -344,14 +341,14 @@ namespace DK.Preprocessing
 					{
 						if (_replace.Count == 0)
 						{
-							Log.Warning("{0}: empty #replace statement.", _currentLocalFileName);
+							_appSettings.Log.Warning("{0}: empty #replace statement.", _currentLocalFileName);
 						}
 						else
 						{
 							_replaceLine = FindReplace();
 							if (_replaceLine < 0)
 							{
-								Log.Warning("{0}: #replace at line {1} not found.", _currentLocalFileName, _currentLocalLine);
+								_appSettings.Log.Warning("{0}: #replace at line {1} not found.", _currentLocalFileName, _currentLocalLine);
 							}
 							else
 							{
@@ -534,7 +531,7 @@ namespace DK.Preprocessing
 
 			if (_localFileContent.TryGetValue(localFileName.ToLower(), out var content)) return content;
 
-			Log.Warning("File does not exist: {0}", localFileName);
+			_appSettings.Log.Warning("File does not exist: {0}", localFileName);
 			return string.Empty;
 		}
 	}

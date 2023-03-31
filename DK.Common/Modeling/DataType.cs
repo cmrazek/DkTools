@@ -1,7 +1,6 @@
 ﻿using DK.AppEnvironment;
 using DK.Code;
 using DK.Definitions;
-using DK.Diagnostics;
 using DK.Modeling.Tokens;
 using DK.Schema;
 using DK.Syntax;
@@ -667,25 +666,25 @@ namespace DK.Modeling
 				else return new DataType(ValType.Numeric, a.TypeName, pcs.ToClassifiedString());
 			}
 
-			if (code.ReadExact("int"))	// TODO: All these should be ReadExactWholeWord; to avoid picking up a partial identifier like "integral" (moneylib.f)
+			if (code.ReadExactWholeWord("int"))
 			{
 				pcs.AddSpace();
 				pcs.AddDataType("int");
 				a.OnDataTypeKeyword(code.Span, code.Text, null);
 			}
-			else if (code.ReadExact("short"))
+			else if (code.ReadExactWholeWord("short"))
 			{
 				pcs.AddSpace();
 				pcs.AddDataType("short");
 				a.OnDataTypeKeyword(code.Span, code.Text, null);
 			}
-			else if (code.ReadExact("long"))
+			else if (code.ReadExactWholeWord("long"))
 			{
 				pcs.AddSpace();
 				pcs.AddDataType("long");
 				a.OnDataTypeKeyword(code.Span, code.Text, null);
 			}
-			else if (code.ReadExact("char"))
+			else if (code.ReadExactWholeWord("char"))
 			{
 				pcs.AddSpace();
 				pcs.AddDataType("char");

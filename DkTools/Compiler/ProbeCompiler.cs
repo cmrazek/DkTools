@@ -13,6 +13,7 @@ namespace DkTools.Compiler
 {
 	internal class ProbeCompiler : IDisposable
 	{
+		private DkAppContext _app;
 		private OutputPane _pane;
 		private static readonly Guid _paneGuid = new Guid("{BD87845A-95F6-4BEB-B9A8-CABE3B01E247}");
 
@@ -23,15 +24,13 @@ namespace DkTools.Compiler
 		private int _numErrors = 0;
 		private int _numWarnings = 0;
 		private bool _buildFailed = false;
-		private Mutex _mutex = new Mutex();
+		private SemaphoreSlim _semaphore = new SemaphoreSlim(1);
 
 		private const int k_compileKillSleep = 10;
 		private const int k_compileSleep = 100;
 		private const string k_timeStampFormat = "yyyy-MM-dd HH:mm:ss";
 		private const int k_compileWaitToHidePanel = 1000;
 		private const int k_killCompileTimeout = 1000;
-
-		private static ProbeCompiler _instance = new ProbeCompiler();
 
 		public enum CompileMethod
 		{
@@ -40,10 +39,10 @@ namespace DkTools.Compiler
 			Credelix
 		}
 
-		public static ProbeCompiler Instance
-		{
-			get { return _instance; }
-		}
+		public ProbeCompiler(DkAppContext app)
+        {
+			_app = app ?? throw new ArgumentNullException(nameof(app));
+        }
 
 		public void Dispose()
 		{
@@ -81,7 +80,7 @@ namespace DkTools.Compiler
 			catch (Exception ex)
 			{
 				WriteLine(string.Concat("Exception when starting compile:\r\n", ex));
-				Log.WriteEx(ex);
+				_app.Log.Error(ex);
 			}
 		}
 
@@ -94,7 +93,7 @@ namespace DkTools.Compiler
 			catch (Exception ex)
 			{
 				WriteLine(string.Concat("Exception when killing compile:\r\n", ex));
-				Log.WriteEx(ex);
+				_app.Log.Error(ex);
 			}
 		}
 
@@ -119,7 +118,7 @@ namespace DkTools.Compiler
 
 			if (_compileThread.IsAlive)
 			{
-				if (DkEnvironment.WbdkPlatformVersion >= DkEnvironment.DK10Version)
+				if (_app.Config.PlatformVersion >= DkEnvironment.DK10Version)
 				{
                     try
                     {
@@ -128,7 +127,7 @@ namespace DkTools.Compiler
 					}
                     catch (Exception ex)
                     {
-						Log.Warning("Expected when trying to kill existing compile: {0}", ex);
+						_app.Log.Warning("Expected when trying to kill existing compile: {0}", ex);
                     }
 				}
 
@@ -151,14 +150,14 @@ namespace DkTools.Compiler
 			try
 			{
 				var startTime = DateTime.Now;
-				var appSettings = DkEnvironment.CurrentAppSettings;
+				var appSettings = _app.Settings;
 				if (!appSettings.Initialized)
 				{
 					WriteLine("Aborting compile because no current WBDK app is loaded.");
 					return;
 				}
 
-				while (!_mutex.WaitOne(1000))
+				while (!_semaphore.Wait(1000))
 				{
 					if (cancel.IsCancellationRequested) return;
 					WriteLine("Waiting for background compile to complete...");
@@ -208,12 +207,12 @@ namespace DkTools.Compiler
 						throw new InvalidOperationException("Invalid compile method.");
 				}
 			}
-			catch (OperationCanceledException ex) { Log.Debug(ex); }
-			catch (ThreadAbortException ex) { Log.Debug(ex); }
-			catch (Exception ex) { Log.Error(ex); }
+			catch (OperationCanceledException ex) { _app.Log.Debug(ex); }
+			catch (ThreadAbortException ex) { _app.Log.Debug(ex); }
+			catch (Exception ex) { _app.Log.Error(ex); }
 			finally
 			{
-				_mutex.ReleaseMutex();
+				_semaphore.Release();
 			}
 		}
 
@@ -247,7 +246,7 @@ namespace DkTools.Compiler
 				info.RedirectStandardError = true;
 				info.CreateNoWindow = true;
 				info.WorkingDirectory = appSettings.ObjectDir;
-                appSettings.MergeEnvironmentVariables(info.EnvironmentVariables);
+                MergeEnvironmentVariables(appSettings, info.EnvironmentVariables);
 
 				WriteLine(string.Concat("pc ", switches));
 
@@ -325,6 +324,16 @@ namespace DkTools.Compiler
 				ProbeToolsPackage.Instance.SetStatusText("DK compile failed");
 				return false;
 			}
+		}
+
+		private void MergeEnvironmentVariables(DkAppSettings appSettings, System.Collections.Specialized.StringDictionary vars)
+		{
+			if (!appSettings.Initialized) return;
+
+			var merger = new DkEnvVarMerger(appSettings);
+			var mergedVars = merger.CreateMergedVarList();
+
+			foreach (var v in mergedVars) vars[v.Name] = v.Value;
 		}
 
 		private void ShowErrorListIfRequired()
@@ -738,7 +747,7 @@ namespace DkTools.Compiler
 		{
 			var switches = ProbeToolsPackage.Instance.ProbeExplorerOptions.CompileArguments;
 
-			if (DkEnvironment.WbdkPlatformVersion >= DkEnvironment.DK10Version)
+			if (_app.Config.PlatformVersion >= DkEnvironment.DK10Version)
             {
 				// Include all output.
 				switches += " /d all";
@@ -781,9 +790,9 @@ namespace DkTools.Compiler
 			return sb.ToString();
 		}
 
-		public Mutex Mutex
+		public SemaphoreSlim Semaphore
 		{
-			get { return _mutex; }
+			get { return _semaphore; }
 		}
 
 		private static readonly Regex _rxBuildReportDir = new Regex(@"\\Build_([^_]+)_(\d{4})-(\d{2})-(\d{2})_(\d{2})\.(\d{2})\.(\d{2})$");
@@ -826,7 +835,7 @@ namespace DkTools.Compiler
 				var reportPathName = Path.Combine(reportDir, reportFileName);
 				if (!File.Exists(reportPathName))
                 {
-					Log.Warning("Report file does not exist in build report folder: {0}", reportPathName);
+					_app.Log.Warning("Report file does not exist in build report folder: {0}", reportPathName);
 					continue;
                 }
 
@@ -835,7 +844,7 @@ namespace DkTools.Compiler
 
 				if (Math.Abs(reportTime.Subtract(buildStartTime).TotalMinutes) > 5)
                 {
-					Log.Debug("Build report folder is not within 5 minutes of this build: {0}", reportDir);
+					_app.Log.Debug("Build report folder is not within 5 minutes of this build: {0}", reportDir);
 					continue;
                 }
 

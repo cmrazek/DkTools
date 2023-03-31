@@ -26,7 +26,12 @@ namespace DkTools.SignatureHelp
             _subjectBuffer = subjectBuffer;
 			_sig = sig;
             _params = parameters;
-            _subjectBuffer.Changed += new EventHandler<TextContentChangedEventArgs>(SubjectBufferChanged);
+            _subjectBuffer.Changed += SubjectBufferChanged;
+        }
+
+        ~ProbeSignature()
+        {
+            _subjectBuffer.Changed -= SubjectBufferChanged;
         }
 
         public IParameter CurrentParameter

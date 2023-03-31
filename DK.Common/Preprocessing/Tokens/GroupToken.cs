@@ -1,5 +1,4 @@
 ﻿using DK.Code;
-using DK.Diagnostics;
 using System;
 using System.Collections.Generic;
 
@@ -150,13 +149,7 @@ namespace DK.Preprocessing.Tokens
 			}
 
 			// If syntax is correct, there should only be a single token remaining at the end.
-			if (_tokens.Count != 1)
-			{
-#if DEBUG
-				Log.Debug("Syntax error. (there was not a single token remaining in preprocessor token group)");
-#endif
-				return null;
-			}
+			if (_tokens.Count != 1) return null;
 			return _tokens[0].Value;
 		}
 	}

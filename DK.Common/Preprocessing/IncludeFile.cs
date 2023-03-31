@@ -20,7 +20,7 @@ namespace DK.Preprocessing
 		{
 			if (_source == null)
 			{
-				_source = IncludeFileCache.GetIncludeFileSource(appSettings, _fullPathName, FileContextHelper.IncludeFileShouldBeMerged(_fullPathName));
+				_source = appSettings.Context.IncludeFileCache.GetIncludeFileSource(appSettings, _fullPathName, FileContextHelper.IncludeFileShouldBeMerged(_fullPathName));
 				if (_source == null)
 				{
 					_source = new CodeSource();

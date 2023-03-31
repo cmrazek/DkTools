@@ -189,10 +189,10 @@ namespace DK.CodeAnalysis.Values
 						scope.CodeAnalyzer.ReportError(span, CAError.CA0059, CodeParser.StringToStringLiteral(_value));   // Enum option {0} does not exist.
 					}
 				}
-				else if (_value.IsWord())
-				{
-					scope.CodeAnalyzer.ReportError(span, CAError.CA0058);   // Use non-string enum values when possible.
-				}
+				//else if (_value.IsWord())
+				//{
+				//	scope.CodeAnalyzer.ReportError(span, CAError.CA0058);   // Use non-string enum values when possible.
+				//}
 			}
 		}
 	}

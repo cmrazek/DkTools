@@ -31,6 +31,12 @@ namespace DkTools
 			return string.Empty;
 		}
 
+		public static ITextSnapshotLine GetLineFromPosition(this ITextSnapshot snapshot, SnapshotPoint pt)
+        {
+			if (pt.Snapshot.Version.VersionNumber != snapshot.Version.VersionNumber) pt = pt.TranslateTo(snapshot, PointTrackingMode.Positive);
+			return snapshot.GetLineFromPosition(pt.Position);
+        }
+
 		public static int TranslateOffsetToSnapshot(this ITextSnapshot fromSnap, int offset, ITextSnapshot toSnap)
 		{
 			if (fromSnap != toSnap)

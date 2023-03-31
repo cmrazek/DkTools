@@ -430,12 +430,14 @@ namespace DkTools.StatementCompletion
 				case StatementSection.SelectFromTable:
 					yield return "of";
 					yield return "where";
+					yield return "filterby";
 					break;
 
 				case StatementSection.SelectFromTableOf:
 				case StatementSection.SelectFromTableList:
 				case StatementSection.SelectFromTableOfTable:
 					yield return "where";
+					yield return "filterby";
 					break;
 
 				case StatementSection.Order:

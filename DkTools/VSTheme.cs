@@ -29,7 +29,7 @@ namespace DkTools
 					}
 					catch (Exception ex)
 					{
-						Log.Error(ex, "Exception when attempting to get current VS theme. Defaulting to 'light'.");
+						ProbeToolsPackage.Instance.App.Log.Error(ex, "Exception when attempting to get current VS theme. Defaulting to 'light'.");
 						_mode = VSThemeMode.Light;
 					}
 				}
@@ -41,7 +41,7 @@ namespace DkTools
 		public static void OnThemeChanged()
 		{
 			_mode = null;
-			Log.Debug("Detected theme change. New theme: {0}", CurrentTheme);
+			ProbeToolsPackage.Instance.App.Log.Debug("Detected theme change. New theme: {0}", CurrentTheme);
 
 			var ev = ThemeChanged;
 			if (ev != null) ev(null, EventArgs.Empty);

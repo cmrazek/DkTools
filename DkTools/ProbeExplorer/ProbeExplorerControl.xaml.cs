@@ -28,7 +28,7 @@ namespace DkTools.ProbeExplorer
 	public partial class ProbeExplorerControl : UserControl, INotifyPropertyChanged
 	{
 		#region Variables
-		private BackgroundDeferrer _dictTreeDeferrer = new BackgroundDeferrer();
+		private BackgroundDeferrer _dictTreeDeferrer = new BackgroundDeferrer(Constants.DictTreeDelay);
 		private TextFilter _dictFilter = new TextFilter();
 
 		private BitmapImage _folderImg;
@@ -79,7 +79,7 @@ namespace DkTools.ProbeExplorer
 			_relationshipImg = Res.RelationshipImg.ToBitmapImage();
 			if (_functionImg == null) _functionImg = Res.FunctionImg.ToBitmapImage();
 
-			GlobalEvents.AppChanged += new EventHandler(Probe_AppChanged);
+            ProbeToolsPackage.Instance.App.AppChanged += Probe_AppChanged;
 			_dictTreeDeferrer.Idle += DictTreeDeferrer_Idle;
 		}
 
@@ -102,7 +102,7 @@ namespace DkTools.ProbeExplorer
 		{
 			try
 			{
-				var appSettings = DkEnvironment.CurrentAppSettings;
+				var appSettings = ProbeToolsPackage.Instance.App.Settings;
 				RefreshAppCombo(appSettings);
 				RefreshFileTree(appSettings);
 				RefreshDictTree();
@@ -152,7 +152,7 @@ namespace DkTools.ProbeExplorer
 			}
 		}
 
-		private void Probe_AppChanged(object sender, EventArgs e)
+		private void Probe_AppChanged(object sender, AppSettingsEventArgs e)
 		{
 			try
 			{
@@ -160,14 +160,13 @@ namespace DkTools.ProbeExplorer
 				{
 					await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
 
-					var appSettings = DkEnvironment.CurrentAppSettings;
-					c_appCombo.SelectedItem = (from a in c_appCombo.Items.Cast<string>() where a == appSettings.AppName select a).FirstOrDefault();
+					c_appCombo.SelectedItem = (from a in c_appCombo.Items.Cast<string>() where a == e.AppSettings.AppName select a).FirstOrDefault();
 
-					RefreshAppCombo(appSettings);
-					RefreshFileTree(appSettings);
+					RefreshAppCombo(e.AppSettings);
+					RefreshFileTree(e.AppSettings);
 					RefreshDictTree();
-					c_run.AppSettings = appSettings;
-					GlobalEvents.OnRefreshAllDocumentsRequired();
+					c_run.AppSettings = e.AppSettings;
+                    ProbeToolsPackage.Instance.App.OnRefreshAllDocumentsRequired();
 				});
 			}
 			catch (Exception ex)
@@ -183,20 +182,15 @@ namespace DkTools.ProbeExplorer
 				if (_suppressAppChange) return;
 
 				var selectedApp = c_appCombo.SelectedItem as string;
-				if (!string.IsNullOrEmpty(selectedApp) && DkEnvironment.CurrentAppSettings.Initialized)
+				if (!string.IsNullOrEmpty(selectedApp) && ProbeToolsPackage.Instance.App.Settings.Initialized)
 				{
-					try
+					if (!ProbeToolsPackage.Instance.App.Settings.TryUpdateDefaultCurrentApp(selectedApp))
 					{
-						DkAppSettings.TryUpdateDefaultCurrentApp(selectedApp);
-					}
-					catch (System.Security.SecurityException ex)
-					{
-						Log.Error(ex);
 						var options = ProbeToolsPackage.Instance.ErrorSuppressionOptions;
 						if (!options.DkAppChangeAdminFailure)
 						{
 							var msg = "The system-wide default DK application can't be changed because access was denied. To resolve this problem, run Visual Studio as an administrator or loosen the registry permissions for the following key:\r\n\r\nHKEY_LOCAL_MACHINE\\SOFTWARE\\WOW6432Node\\Fincentric\\WBDK";
-							var dlg = new ErrorDialog(msg, ex.ToString())
+							var dlg = new ErrorDialog(msg)
 							{
 								ShowUserSuppress = true,
 								Owner = System.Windows.Application.Current.MainWindow
@@ -211,7 +205,7 @@ namespace DkTools.ProbeExplorer
 						}
 					}
 
-					DkEnvironment.Reload(selectedApp);
+					ProbeToolsPackage.Instance.App.LoadAppSettings(selectedApp);
 				}
 			}
 			catch (Exception ex)
@@ -224,7 +218,7 @@ namespace DkTools.ProbeExplorer
 		{
 			try
 			{
-				DkEnvironment.Reload(null);
+				ProbeToolsPackage.Instance.App.LoadAppSettings(null);
 			}
 			catch (Exception ex)
 			{
@@ -265,7 +259,7 @@ namespace DkTools.ProbeExplorer
 				if (sender is MenuItem menuItem
 					&& menuItem.Tag is FileTreeNode tag && tag.dir)
 				{
-					var appSettings = DkEnvironment.CurrentAppSettings;
+					var appSettings = ProbeToolsPackage.Instance.App.Settings;
 					if (appSettings == null) return;
 
 					e.Handled = true;
@@ -289,7 +283,7 @@ namespace DkTools.ProbeExplorer
 			var tag = new FileTreeNode { path = dirPath, dir = true };
 
 			var displayText = root ? dirPath : IO.Path.GetFileName(dirPath);
-			if (string.IsNullOrEmpty(displayText)) Log.Write(LogLevel.Warning, "File tree display text is blank for path '{0}' (root: {1})", dirPath, root);
+			if (string.IsNullOrEmpty(displayText)) ProbeToolsPackage.Instance.App.Log.Warning("File tree display text is blank for path '{0}' (root: {1})", dirPath, root);
 
 			var node = new TreeViewItem();
 			node.Header = CreateFileTreeViewHeader(displayText, _folderImg);
@@ -396,7 +390,7 @@ namespace DkTools.ProbeExplorer
 			}
 			catch (Exception ex)
 			{
-				Log.Error(ex, "Exception when expanding directory node.");
+				ProbeToolsPackage.Instance.App.Log.Error(ex, "Exception when expanding directory node.");
 			}
 		}
 
@@ -418,7 +412,7 @@ namespace DkTools.ProbeExplorer
 			}
 			catch (Exception ex)
 			{
-				Log.WriteEx(ex);
+				ProbeToolsPackage.Instance.App.Log.Error(ex);
 			}
 		}
 
@@ -442,7 +436,7 @@ namespace DkTools.ProbeExplorer
 			}
 			catch (Exception ex)
 			{
-				Log.WriteEx(ex);
+				ProbeToolsPackage.Instance.App.Log.Error(ex);
 			}
 		}
 
@@ -461,7 +455,7 @@ namespace DkTools.ProbeExplorer
 		{
 			try
 			{
-				DkEnvironment.Reload(null);
+				ProbeToolsPackage.Instance.App.LoadAppSettings(null);
 			}
 			catch (Exception ex)
 			{
@@ -574,7 +568,7 @@ namespace DkTools.ProbeExplorer
 				var numItems = 0;
 
 				var hiddenExt = GetHiddenExtensions();
-				var appSettings = DkEnvironment.CurrentAppSettings;
+				var appSettings = ProbeToolsPackage.Instance.App.Settings;
 
 				var filter = new TextFilter(filterText);
 				foreach (var file in appSettings.SourceAndIncludeFiles)
@@ -693,7 +687,7 @@ namespace DkTools.ProbeExplorer
 			}
 			catch (Exception ex)
 			{
-				Log.WriteEx(ex);
+				ProbeToolsPackage.Instance.App.Log.Error(ex);
 			}
 		}
 
@@ -713,7 +707,7 @@ namespace DkTools.ProbeExplorer
 			}
 			catch (Exception ex)
 			{
-				Log.WriteEx(ex);
+				ProbeToolsPackage.Instance.App.Log.Error(ex);
 			}
 		}
 
@@ -870,29 +864,29 @@ namespace DkTools.ProbeExplorer
 
 			if (!c_functionTab.IsSelected || view == null) return;
 
-			string className = null;
-			var fileName = VsTextUtil.TryGetDocumentFileName(view.TextBuffer);
-			if (!string.IsNullOrEmpty(fileName)) className = FileContextHelper.GetClassNameFromFileName(fileName);
-
 			if (view != null)
 			{
 				var fileStore = FileStoreHelper.GetOrCreateForTextBuffer(view.TextBuffer);
 				if (fileStore != null)
 				{
-					var snapshot = view.TextSnapshot;
-					if (_activeView != view || _activeSnapshot != snapshot)
+					var model = fileStore.Model;
+					if (model != null)
 					{
-						_activeView = view;
-						_activeSnapshot = snapshot;
+						var snapshot = view.TextSnapshot;
+						if (_activeView != view || _activeSnapshot != snapshot)
+						{
+							_activeView = view;
+							_activeSnapshot = snapshot;
 
-						var appSettings = DkEnvironment.CurrentAppSettings;
-						_activeFunctions = (from f in fileStore.GetFunctionDropDownList(appSettings, fileName, snapshot)
-											orderby f.Name.ToLower()
-											select new FunctionListItem(f)).ToArray();
-						ApplyFunctionFilter();
-						c_functionList.ItemsSource = _activeFunctions;
+							var appSettings = ProbeToolsPackage.Instance.App.Settings;
+							_activeFunctions = (from f in fileStore.GetFunctionDropDownList(model)
+												orderby f.Name.ToLower()
+												select new FunctionListItem(f)).ToArray();
+							ApplyFunctionFilter();
+							c_functionList.ItemsSource = _activeFunctions;
+						}
+						return;
 					}
-					return;
 				}
 			}
 
@@ -1191,7 +1185,7 @@ namespace DkTools.ProbeExplorer
 			}
 			catch (Exception ex)
 			{
-				Log.Error(ex);
+				ProbeToolsPackage.Instance.App.Log.Error(ex);
 			}
 		}
 

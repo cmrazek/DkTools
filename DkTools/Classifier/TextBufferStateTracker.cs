@@ -18,12 +18,17 @@ namespace DkTools.Classifier
 		public TextBufferStateTracker(ITextBuffer buffer)
 		{
 			_buffer = buffer;
-			_buffer.Changed += new EventHandler<TextContentChangedEventArgs>(Buffer_Changed);
+			_buffer.Changed += Buffer_Changed;
 
 			_scanner = new ProbeClassifierScanner();
 
 			// First line always has a zero state.
 			_states.Add(0);
+		}
+
+		~TextBufferStateTracker()
+        {
+			_buffer.Changed -= Buffer_Changed;
 		}
 
 		public static TextBufferStateTracker GetTrackerForTextBuffer(ITextBuffer buffer)
@@ -85,7 +90,8 @@ namespace DkTools.Classifier
 				var fileStore = FileStoreHelper.GetOrCreateForTextBuffer(snapshot.TextBuffer);
 				if (fileStore == null) return 0;
 
-				var model = fileStore.GetMostRecentModel(appSettings, fileName, snapshot, "GetStateForPosition", cancel);
+				var model = fileStore.Model;
+				if (model == null) return 0;
 
 				if (lineStartPos <= pos)
 				{
@@ -120,7 +126,8 @@ namespace DkTools.Classifier
 					var fileStore = FileStoreHelper.GetOrCreateForTextBuffer(snapshot.TextBuffer);
 					if (fileStore == null) return 0;
 
-					var model = fileStore.GetMostRecentModel(appSettings, fileName, snapshot, "GetStateForLine()", cancel);
+					var model = fileStore.Model;
+					if (model == null) return 0;
 					_snapshot = snapshot;
 
 					var tokenInfo = new ProbeClassifierScanner.TokenInfo();

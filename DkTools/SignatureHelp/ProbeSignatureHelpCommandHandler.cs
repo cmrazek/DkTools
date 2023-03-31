@@ -1,7 +1,6 @@
 ﻿using DK;
-using DK.AppEnvironment;
+using DK.Code;
 using DK.Diagnostics;
-using DK.Modeling.Tokens;
 using DkTools.CodeModeling;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Language.Intellisense;
@@ -12,7 +11,6 @@ using Microsoft.VisualStudio.Text.Editor;
 using Microsoft.VisualStudio.Text.Operations;
 using Microsoft.VisualStudio.TextManager.Interop;
 using System;
-using System.Linq;
 using System.Runtime.InteropServices;
 using System.Threading;
 
@@ -24,7 +22,6 @@ namespace DkTools.SignatureHelp
 		private ITextView _textView;
 		private ISignatureHelpBroker _broker;
 		private ISignatureHelpSession _session;
-		private ITextStructureNavigator _navigator;
 		private ProbeSignatureHelpCommandProvider _provider;
 
 		public static char s_typedChar = char.MinValue;
@@ -32,13 +29,11 @@ namespace DkTools.SignatureHelp
 		internal ProbeSignatureHelpCommandHandler(
 			IVsTextView textViewAdapter,
 			ITextView textView,
-			ITextStructureNavigator textStructureNavigator,
 			ISignatureHelpBroker signatureHelpBroker,
 			ProbeSignatureHelpCommandProvider signatureHelpCommandProvider)
 		{
 			_textView = textView ?? throw new ArgumentNullException(nameof(textView));
 			_broker = signatureHelpBroker ?? throw new ArgumentNullException(nameof(signatureHelpBroker));
-			_navigator = textStructureNavigator ?? throw new ArgumentNullException(nameof(textStructureNavigator));
 			_provider = signatureHelpCommandProvider ?? throw new ArgumentNullException(nameof(signatureHelpCommandProvider));
 
 			//add this to the filter chain
@@ -78,7 +73,8 @@ namespace DkTools.SignatureHelp
 				{
 					if (nCmdID == (uint)VSConstants.VSStd2KCmdID.TYPECHAR)
 					{
-						if (_textView.Caret.Position.BufferPosition.IsInLiveCode())
+						var liveCodeTracker = LiveCodeTracker.GetOrCreateForTextBuffer(_textView.TextBuffer);
+						if (LiveCodeTracker.IsStateInLiveCode(liveCodeTracker.GetStateForPosition(_textView.Caret.Position.BufferPosition)))
 						{
 							typedChar = (char)(ushort)Marshal.GetObjectForNativeVariant(pvaIn);
 							if (typedChar == '(')
@@ -101,25 +97,27 @@ namespace DkTools.SignatureHelp
 							}
 							else if (typedChar == ',' && (_session == null || _session.IsDismissed))
 							{
-								var fileStore = FileStoreHelper.GetOrCreateForTextBuffer(_textView.TextBuffer);
-								if (fileStore != null)
-								{
-									var appSettings = DkEnvironment.CurrentAppSettings;
-									var fileName = VsTextUtil.TryGetDocumentFileName(_textView.TextBuffer);
-									var model = fileStore.GetMostRecentModel(appSettings, fileName, _textView.TextSnapshot, "Signature help command handler - after ','", CancellationToken.None);
-									var modelSnapshot = model.Snapshot as ITextSnapshot;
-									if (modelSnapshot != null)
-									{
-										var modelPos = _textView.Caret.Position.BufferPosition.TranslateTo(modelSnapshot, PointTrackingMode.Negative).Position;
+								var revCode = liveCodeTracker.CreateReverseCodeParser(_textView.Caret.Position.BufferPosition);
+								CodeItem? item;
+								var foundOpenBracket = false;
+								while ((item = revCode.GetPreviousItemNestable("{", "[", ";")) != null)
+                                {
+									if (item.Value.Type == CodeType.Operator && item.Value.Text == "(")
+                                    {
+										foundOpenBracket = true;
+										break;
+                                    }
+                                }
 
-										var argsToken = model.File.FindDownward<ArgsToken>(modelPos).Where(t => t.Span.Start < modelPos && (t.Span.End > modelPos || !t.IsTerminated)).LastOrDefault();
-										if (argsToken != null)
-										{
-											s_typedChar = typedChar;
-											_session = _broker.TriggerSignatureHelp(_textView);
-										}
-									}
-								}
+								if (foundOpenBracket)
+                                {
+									var prevItem = revCode.GetPreviousItem();
+									if (prevItem?.Type == CodeType.Word)
+                                    {
+										s_typedChar = typedChar;
+										_session = _broker.TriggerSignatureHelp(_textView);
+                                    }
+                                }
 							}
 						}
 					}
@@ -149,7 +147,7 @@ namespace DkTools.SignatureHelp
 			}
 			catch (Exception ex)
 			{
-				Log.WriteEx(ex);
+				ProbeToolsPackage.Log.Error(ex);
 				return VSConstants.E_FAIL;
 			}
 		}
