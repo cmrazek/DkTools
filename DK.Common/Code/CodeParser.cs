@@ -95,15 +95,18 @@ namespace DK.Code
 						_tokenText.Append(_source[_pos++]);
 					}
 
-					if ((_tokenText.Length == 3 && _tokenText.ToString() == "and") ||
-						(_tokenText.Length == 2 && _tokenText.ToString() == "or"))
+					switch (_tokenText.ToString())
 					{
-						_tokenType = CodeType.Operator;
+						case "and":
+						case "or":
+						case "in":
+							_tokenType = CodeType.Operator;
+							break;
+						default:
+							_tokenType = CodeType.Word;
+							break;
 					}
-					else
-					{
-						_tokenType = CodeType.Word;
-					}
+
 					return true;
 				}
 

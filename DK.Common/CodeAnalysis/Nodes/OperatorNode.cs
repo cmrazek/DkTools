@@ -7,11 +7,12 @@ using System;
 /*
  * Precedence:
  * 100	[]
- * 26   - (unary)
- * 24	* / %
- * 22	+ -
- * 20	< > <= >=
- * 18	== !=
+ * 28   - (unary)
+ * 26	* / %
+ * 24	+ -
+ * 22	< > <= >=
+ * 20	== !=
+ * 18	in
  * 16	and
  * 14	or
  * 12	? :
@@ -39,10 +40,10 @@ namespace DK.CodeAnalysis.Nodes
 				case "*":
 				case "/":
 				case "%":
-					_prec = 24;
+					_prec = 26;
 					break;
 				case "+":
-					_prec = 22;
+					_prec = 24;
 					break;
 				case "-":
 					_prec = _special == SpecialOperator.UnaryMinus ? 26 : 22;
@@ -51,10 +52,13 @@ namespace DK.CodeAnalysis.Nodes
 				case ">":
 				case "<=":
 				case ">=":
-					_prec = 20;
+					_prec = 22;
 					break;
 				case "==":
 				case "!=":
+					_prec = 20;
+					break;
+				case "in":
 					_prec = 18;
 					break;
 				case "and":
@@ -65,10 +69,6 @@ namespace DK.CodeAnalysis.Nodes
 				case "||":
 					_prec = 14;
 					break;
-				//case "?":
-				//case ":":
-				//	_prec = 12;
-				//	break;
 				case "=":
 				case "*=":
 				case "/=":
@@ -124,6 +124,10 @@ namespace DK.CodeAnalysis.Nodes
 				case "or":
 				case "||":
 					ExecuteComparison(scope);
+					break;
+
+				case "in":
+					ExecuteIn(scope);
 					break;
 
 				case "=":
@@ -274,6 +278,46 @@ namespace DK.CodeAnalysis.Nodes
 				Value resultValue = Value.Void;
 				if (leftNode != null && rightNode == null) resultValue = leftNode.ReadValue(scope);
 				else if (leftNode == null && rightNode != null) resultValue = rightNode.ReadValue(scope);
+				Parent.ReplaceWithResult(resultValue, false, leftNode, this, rightNode);
+			}
+		}
+
+		private void ExecuteIn(CAScope scope)
+        {
+			var leftNode = Parent.GetLeftSibling(scope, this);
+			var rightNode = Parent.GetRightSibling(scope, this);
+			if (leftNode == null) ReportError(Span, CAError.CA0007, Text);  // Operator '{0}' expects value on left.
+			else if (rightNode == null) ReportError(Span, CAError.CA0008, Text);    // Operator '{0}' expects value on right.
+
+			var rightBrackets = rightNode as BracketsNode;
+			if (rightBrackets == null && rightNode != null) ReportError(rightNode.Span, CAError.CA0120); // Expected '('.
+
+			if (leftNode != null && rightBrackets != null)
+			{
+				var leftValue = leftNode.ReadValue(scope);
+				var rightScope = scope.Clone();
+				if (leftValue.IsVoid) leftNode.ReportError(leftNode.Span, CAError.CA0007, Text);        // Operator '{0}' expects value on left.
+
+				var leftDataType = leftNode.DataType;
+
+				Value result = null;
+				
+				foreach (var itemNode in rightBrackets.Children)
+				{
+					var itemValue = itemNode.ReadValue(rightScope);
+					if (leftDataType != null) itemValue.CheckTypeConversion(scope, rightNode.Span, leftDataType);
+					result = leftValue.CompareEqual(scope, Span, itemValue);
+				}
+
+				if (result == null) result = new NumberValue(DataType.Int, null);
+
+				scope.Merge(rightScope);
+				Parent.ReplaceWithResult(result, !result.IsVoid, leftNode, this, rightNode);
+			}
+			else
+			{
+				Value resultValue = Value.Void;
+				if (leftNode != null && rightNode == null) resultValue = leftNode.ReadValue(scope);
 				Parent.ReplaceWithResult(resultValue, false, leftNode, this, rightNode);
 			}
 		}

@@ -143,6 +143,7 @@
     <Compile Include="Diagnostics\Log.cs" />
     <Compile Include="Diagnostics\Output.cs" />
     <Compile Include="Modeling\SignatureDocumentor.cs" />
+    <Compile Include="Modeling\Tokens\Operators\InOperator.cs" />
     <Compile Include="Preprocessing\IncludeDependency.cs" />
     <Compile Include="Schema\Column.cs" />
     <Compile Include="Schema\Dict.cs" />

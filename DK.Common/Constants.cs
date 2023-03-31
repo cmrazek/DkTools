@@ -23,7 +23,7 @@ namespace DK
 		public static readonly HashSet<string> GlobalKeywords = StringHelper.ParseWordList(
 			"after all alter and BEGINHLP before break button case center comment col colff cols continue create display default description",
 			"each else endgroup ENDHLP extern extract",
-			"footer for form formonly format group header if in index interface",
+			"filterby footer for form formonly format group header if in index interface",
 			"many nomenu nopick nopersist of on one onerror or order outfile permanent physical private prompt protected public",
 			"relationship return row rows select snapshot static switch",
 			"table tag to tool typedef unique updates where while widthof zoom");
