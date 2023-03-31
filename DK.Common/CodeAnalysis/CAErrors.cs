@@ -219,9 +219,6 @@ namespace DK.CodeAnalysis
 		#endregion
 
 		#region Aggregate Functions
-		//[ErrorMessage("Expected '*' in count().")]
-		//CA0060,
-
 		[ErrorMessage("Expected aggregate expression.")]
 		CA0061,
 
@@ -263,9 +260,23 @@ namespace DK.CodeAnalysis
 		[ErrorMessage("{0}")]
 		CA0120,
 		#endregion
+
+		#region In Operator (0130-0139)
+		[ErrorMessage("Expected '('.")]
+		CA0130,
+
+		[ErrorMessage("Expected ','.")]
+		CA0131,
+
+		[ErrorMessage("Expected expression.")]
+		CA0132,
+
+		[ErrorMessage("'in' operator requires at least 1 expression.")]
+		CA0133,
+		#endregion
 	}
 
-    [AttributeUsage(AttributeTargets.Field, AllowMultiple = false)]
+	[AttributeUsage(AttributeTargets.Field, AllowMultiple = false)]
 	class ErrorMessageAttribute : Attribute
 	{
 		private string _message;

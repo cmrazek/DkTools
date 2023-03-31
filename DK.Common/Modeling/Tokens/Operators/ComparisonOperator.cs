@@ -12,7 +12,7 @@ namespace DK.Modeling.Tokens
 		{
 		}
 
-		private static readonly string[] _endTokens = new string[] { "and", "or", "?", ":", "=", "+=", "-=", "*=", "/=", "%=" };
+		private static readonly string[] _endTokens = new string[] { "and", "or", "in", "?", ":", "=", "+=", "-=", "*=", "/=", "%=" };
 
 		internal static ComparisonOperator Parse(Scope scope, Token lastToken, OperatorToken opToken, IEnumerable<string> endTokens)
 		{

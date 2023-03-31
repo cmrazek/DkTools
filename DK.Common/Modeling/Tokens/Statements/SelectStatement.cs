@@ -12,8 +12,8 @@ namespace DK.Modeling.Tokens
 			AddToken(selectToken);
 		}
 
-		private static readonly string[] _whereEndTokens = new string[] { "order", "filterby" };
-		private static readonly string[] _filterByEndTokens = new string[] { "order", "where" };
+		private static readonly string[] _whereEndTokens = new string[] { "order", "filterby", "{" };
+		private static readonly string[] _filterByEndTokens = new string[] { "order", "where", "{" };
 
 		internal static SelectStatement Parse(Scope parentScope, KeywordToken selectToken)
 		{
@@ -21,6 +21,7 @@ namespace DK.Modeling.Tokens
 			var scope = parentScope.Clone();
 			scope.BreakOwner = ret;
 			scope.ContinueOwner = ret;
+			scope.Hint |= ScopeHint.SuppressFunctionDefinition;
 
 			var code = scope.Code;
 

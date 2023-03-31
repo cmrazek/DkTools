@@ -196,6 +196,9 @@ namespace DK.Modeling.Tokens
 								exp.AddToken(ConditionalOperator.Parse(scope, exp.LastChild, new OperatorToken(scope, code.Span, code.Text),
 									endTokens, parseDataType));
 								break;
+							case "in":
+								exp.AddToken(InOperator.Parse(scope, exp.LastChild, new OperatorToken(scope, code.Span, code.Text), endTokens, exp.LastChild?.ValueDataType));
+								break;
 							default:
 								exp.AddToken(new OperatorToken(scope, code.Span, code.Text));
 								break;
@@ -303,13 +306,13 @@ namespace DK.Modeling.Tokens
 						compToken.AddToken(wordToken);
 						compToken.AddToken(argsToken);
 
-						if (def.AllowsFunctionBody && (scope.Hint & ScopeHint.SuppressFunctionDefinition) == 0)
-						{
-							ParseFunctionAttributes(exp, scope, compToken);
-							if (code.PeekExact('{')) compToken.AddToken(BracesToken.Parse(scope, def, argsToken.Span.End + 1));
-						}
+                        if (def.AllowsFunctionBody && (scope.Hint & ScopeHint.SuppressFunctionDefinition) == 0)
+                        {
+                            ParseFunctionAttributes(exp, scope, compToken);
+                            if (code.PeekExact('{')) compToken.AddToken(BracesToken.Parse(scope, def, argsToken.Span.End + 1));
+                        }
 
-						return compToken;
+                        return compToken;
 					}
 				}
 			}

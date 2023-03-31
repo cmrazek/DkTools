@@ -18,6 +18,11 @@ Visual Studio Extension for WBDK
 
 ## Change Log
 
+**Version 1.6.6 Changes:**
+- Added support for the new 'in' operator.
+- Added #SQLWhereClauseCompatibleAttribute and #SQLResultsFilteringAttribute for statement completion.
+- Fixed a bug in select statement where calling a function could break parsing of the rest of the statement.
+
 **Version 1.6.5 Changes:**
 - Added filterby keyword for select statements.
 - Refactored the code that gathers errors/warnings from FEC and code analysis. This should work better with WBDK 10.
