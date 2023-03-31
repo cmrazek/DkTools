@@ -41,6 +41,7 @@
 			var bodyScope = scope.Clone();
 			bodyScope.BreakOwner = ret;
 			bodyScope.ContinueOwner = ret;
+			bodyScope.Hint |= ScopeHint.SuppressFunctionDefinition;
 
 			if (!code.PeekExact('{')) return ret;
 			var body = BracesToken.Parse(bodyScope, null);

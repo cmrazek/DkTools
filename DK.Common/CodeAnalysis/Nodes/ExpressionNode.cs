@@ -201,7 +201,7 @@ namespace DK.CodeAnalysis.Nodes
                                             {
                                                 if (!expectComma && gotItem)
                                                 {
-                                                    if (exp.ErrorReported == null) exp.ReportError(errorSpan, CAError.CA0122);   // Expected expression.
+                                                    if (exp.ErrorReported == null) exp.ReportError(errorSpan, CAError.CA0132);   // Expected expression.
                                                 }
                                                 break;
                                             }
@@ -215,7 +215,7 @@ namespace DK.CodeAnalysis.Nodes
                                                 }
                                                 else
                                                 {
-                                                    if (exp.ErrorReported == null) exp.ReportError(errorSpan, CAError.CA0121);  // Expected ','.
+                                                    if (exp.ErrorReported == null) exp.ReportError(errorSpan, CAError.CA0131);  // Expected ','.
                                                 }
                                             }
                                             else
@@ -233,14 +233,14 @@ namespace DK.CodeAnalysis.Nodes
                                                 }
                                                 else
                                                 {
-                                                    if (exp.ErrorReported == null) exp.ReportError(errorSpan, CAError.CA0122);   // Expected expression.
+                                                    if (exp.ErrorReported == null) exp.ReportError(errorSpan, CAError.CA0132);   // Expected expression.
                                                 }
                                             }
                                         }
 
                                         if (!gotItem)
                                         {
-                                            if (exp.ErrorReported == null) exp.ReportError(errorSpan, CAError.CA0123);    // 'in' operator requires at least 1 expression.
+                                            if (exp.ErrorReported == null) exp.ReportError(errorSpan, CAError.CA0133);    // 'in' operator requires at least 1 expression.
                                         }
                                     }
                                 }

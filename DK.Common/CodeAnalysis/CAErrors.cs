@@ -56,20 +56,6 @@ namespace DK.CodeAnalysis
 		CA0112,
 		#endregion
 
-		#region Operators (0120-0129)
-		[ErrorMessage("Expected '('.")]	// For 'in' operator
-		CA0120,
-
-		[ErrorMessage("Expected ','.")]	// For 'in' operator
-		CA0121,
-
-		[ErrorMessage("Expected expression.")]	// For 'in' operator
-		CA0122,
-
-		[ErrorMessage("'in' operator requires at least 1 expression.")]	// For 'in' operator
-		CA0123,
-		#endregion
-
 		[ErrorMessage("Expected value after 'return'.")]
 		CA0014,
 
@@ -274,9 +260,23 @@ namespace DK.CodeAnalysis
 		[ErrorMessage("{0}")]
 		CA0120,
 		#endregion
+
+		#region In Operator (0130-0139)
+		[ErrorMessage("Expected '('.")]
+		CA0130,
+
+		[ErrorMessage("Expected ','.")]
+		CA0131,
+
+		[ErrorMessage("Expected expression.")]
+		CA0132,
+
+		[ErrorMessage("'in' operator requires at least 1 expression.")]
+		CA0133,
+		#endregion
 	}
 
-    [AttributeUsage(AttributeTargets.Field, AllowMultiple = false)]
+	[AttributeUsage(AttributeTargets.Field, AllowMultiple = false)]
 	class ErrorMessageAttribute : Attribute
 	{
 		private string _message;

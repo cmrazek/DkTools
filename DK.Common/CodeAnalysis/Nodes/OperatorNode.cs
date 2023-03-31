@@ -290,7 +290,7 @@ namespace DK.CodeAnalysis.Nodes
 			else if (rightNode == null) ReportError(Span, CAError.CA0008, Text);    // Operator '{0}' expects value on right.
 
 			var rightBrackets = rightNode as BracketsNode;
-			if (rightBrackets == null && rightNode != null) ReportError(rightNode.Span, CAError.CA0120); // Expected '('.
+			if (rightBrackets == null && rightNode != null) ReportError(rightNode.Span, CAError.CA0130); // Expected '('.
 
 			if (leftNode != null && rightBrackets != null)
 			{

@@ -307,13 +307,13 @@ namespace DK.Modeling.Tokens
 						compToken.AddToken(wordToken);
 						compToken.AddToken(argsToken);
 
-						if (def.AllowsFunctionBody && (scope.Hint & ScopeHint.SuppressFunctionDefinition) == 0)
-						{
-							ParseFunctionAttributes(exp, scope, compToken);
-							if (code.PeekExact('{')) compToken.AddToken(BracesToken.Parse(scope, def, argsToken.Span.End + 1));
-						}
+                        if (def.AllowsFunctionBody && (scope.Hint & ScopeHint.SuppressFunctionDefinition) == 0)
+                        {
+                            ParseFunctionAttributes(exp, scope, compToken);
+                            if (code.PeekExact('{')) compToken.AddToken(BracesToken.Parse(scope, def, argsToken.Span.End + 1));
+                        }
 
-						return compToken;
+                        return compToken;
 					}
 				}
 			}
