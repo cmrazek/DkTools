@@ -18,6 +18,9 @@ Visual Studio Extension for WBDK
 
 ## Change Log
 
+**Version 1.6.7 Changes:**
+- Fixed problem with code analysis warnings when calling widthof() with an uninitialized variable.
+
 **Version 1.6.6 Changes:**
 - Added support for the new 'in' operator.
 - Added #SQLWhereClauseCompatibleAttribute and #SQLResultsFilteringAttribute for statement completion.

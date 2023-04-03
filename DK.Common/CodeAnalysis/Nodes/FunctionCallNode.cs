@@ -174,6 +174,8 @@ namespace DK.CodeAnalysis.Nodes
                     return Read_oldvalue(scope);
                 case "sum":
                     return Read_sum(scope);
+                case "widthof":
+                    return Read_widthof(scope);
             }
 
             if (_def is FunctionDefinition funcDef)
@@ -289,6 +291,16 @@ namespace DK.CodeAnalysis.Nodes
             }
 
             return Value.CreateUnknownFromDataType(_args[0].ReadValue(scope).DataType);
+        }
+
+        private Value Read_widthof(CAScope scope)
+        {
+            if (_args.Count != 1)
+            {
+                ReportError(_funcNameSpan, CAError.CA0057, 1);	// Function expects {0} argument(s).
+            }
+
+            return new NumberValue(DataType.Int, null);
         }
     }
 }
