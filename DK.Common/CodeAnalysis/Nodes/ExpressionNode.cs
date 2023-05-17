@@ -17,7 +17,7 @@ namespace DK.CodeAnalysis.Nodes
 
         public override int Precedence => 0;
 
-        private static readonly string[] InOperatorDelimStrings = new string[] { "," };
+        private static readonly string[] InOperatorDelimStrings = new string[] { ",", ")" };
 
         public static ExpressionNode Read(ReadParams p, DataType refDataType, params string[] stopStrings)
         {
@@ -216,6 +216,7 @@ namespace DK.CodeAnalysis.Nodes
                                                 else
                                                 {
                                                     if (exp.ErrorReported == null) exp.ReportError(errorSpan, CAError.CA0131);  // Expected ','.
+                                                    break;
                                                 }
                                             }
                                             else
@@ -234,6 +235,7 @@ namespace DK.CodeAnalysis.Nodes
                                                 else
                                                 {
                                                     if (exp.ErrorReported == null) exp.ReportError(errorSpan, CAError.CA0132);   // Expected expression.
+                                                    break;
                                                 }
                                             }
                                         }
