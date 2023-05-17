@@ -1,6 +1,7 @@
 using DK.Diagnostics;
 using System;
 using System.IO;
+using System.Threading.Tasks;
 
 namespace DkTools
 {
@@ -36,10 +37,18 @@ namespace DkTools
 
 		public override void WriteLine(string text)
 		{
-			if (_writer != null) _writer.WriteLine(text);
+			_writer?.WriteLine(text);
 		}
 
-		public void Close()
+        public override async Task WriteLineAsync(string text)
+        {
+			if (_writer != null)
+			{
+				await _writer.WriteLineAsync(text);
+			}
+        }
+
+        public void Close()
 		{
 			Dispose();
 		}

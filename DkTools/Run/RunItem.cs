@@ -1,5 +1,6 @@
 ﻿using DK.AppEnvironment;
 using DK.Diagnostics;
+using Microsoft.VisualStudio.Threading;
 using Newtonsoft.Json.Linq;
 using System;
 using System.ComponentModel;
@@ -8,6 +9,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading;
+using System.Threading.Tasks;
 using System.Windows;
 
 namespace DkTools.Run
@@ -489,45 +491,45 @@ namespace DkTools.Run
 			}
 		}
 
-		internal void Run(DkAppSettings appSettings, OutputPane pane, CancellationToken cancel)
+		internal async Task RunAsync(DkAppSettings appSettings, OutputPane pane, CancellationToken cancel)
 		{
-			switch (_type)
-			{
-				case RunItemType.Sam:
-					if (_setDbDate) RunSetDbDate(appSettings, pane, cancel);
-					pane?.WriteLine(string.Empty);
-					RunSam(appSettings, pane, cancel);
-					break;
+            switch (_type)
+            {
+                case RunItemType.Sam:
+                    if (_setDbDate) await RunSetDbDateAsync(appSettings, pane, cancel);
+                    if (pane != null) await pane.WriteLineAsync(string.Empty);
+                    await RunSamAsync(appSettings, pane, cancel);
+                    break;
 
-				case RunItemType.Cam:
-					RunCam(appSettings, pane, cancel);
-					break;
+                case RunItemType.Cam:
+                    await RunCamAsync(appSettings, pane, cancel);
+                    break;
 
-				case RunItemType.Custom:
-					RunProcess(_title, _filePath, _args, _workingDir, pane, cancel, _waitForExit, _captureOutput);
-					break;
+                case RunItemType.Custom:
+                    await RunProcessAsync(_title, _filePath, _args, _workingDir, pane, cancel, _waitForExit, _captureOutput);
+                    break;
 
-				default:
-					throw new InvalidRunItemTypeException();
-			}
-		}
+                default:
+                    throw new InvalidRunItemTypeException();
+            }
+        }
 
-		private void RunSetDbDate(DkAppSettings appSettings, OutputPane pane, CancellationToken cancel)
+		private async Task RunSetDbDateAsync(DkAppSettings appSettings, OutputPane pane, CancellationToken cancel)
 		{
 			if (cancel.IsCancellationRequested) return;
 
 			using (var proc = new Process())
 			{
-				pane?.WriteLine("Setting database date (setdbdat today force)");
+				await pane?.WriteLineAsync("Setting database date (setdbdat today force)");
 
 				var filePath = Path.Combine(appSettings.PlatformPath, "setdbdat.exe");
 				if (!File.Exists(filePath)) throw new RunItemException("setdbdat.exe not found.");
 
-				RunProcess("setdbdat.exe", filePath, "today force", appSettings.PlatformPath, pane, cancel, waitForExit: true, capture: true);
+				await RunProcessAsync("setdbdat.exe", filePath, "today force", appSettings.PlatformPath, pane, cancel, waitForExit: true, capture: true);
 			}
 		}
 
-		private void RunSam(DkAppSettings appSettings, OutputPane pane, CancellationToken cancel)
+		private async Task RunSamAsync(DkAppSettings appSettings, OutputPane pane, CancellationToken cancel)
 		{
 			if (cancel.IsCancellationRequested) return;
 
@@ -538,7 +540,7 @@ namespace DkTools.Run
 
 				var args = GenerateSamArguments(appSettings);
 
-				RunProcess(_title, filePath, args, appSettings.ExeDirs.FirstOrDefault() ?? appSettings.PlatformPath, pane, cancel, waitForExit: false, capture: false);
+				await RunProcessAsync(_title, filePath, args, appSettings.ExeDirs.FirstOrDefault() ?? appSettings.PlatformPath, pane, cancel, waitForExit: false, capture: false);
 			}
 		}
 
@@ -561,7 +563,7 @@ namespace DkTools.Run
 			return args.ToString();
 		}
 
-		private void RunCam(DkAppSettings appSettings, OutputPane pane, CancellationToken cancel)
+		private async Task RunCamAsync(DkAppSettings appSettings, OutputPane pane, CancellationToken cancel)
 		{
 			if (cancel.IsCancellationRequested) return;
 
@@ -572,7 +574,7 @@ namespace DkTools.Run
 
 				var args = GenerateCamArguments(appSettings);
 
-				RunProcess(_title, filePath, args, Path.GetDirectoryName(filePath), pane, cancel, waitForExit: false, capture: false);
+				await RunProcessAsync(_title, filePath, args, Path.GetDirectoryName(filePath), pane, cancel, waitForExit: false, capture: false);
 			}
 		}
 
@@ -606,66 +608,69 @@ namespace DkTools.Run
 			return sb.ToString();
 		}
 
-		private void RunProcess(string title, string filePath, string args, string workingDir, OutputPane pane, CancellationToken cancel, bool waitForExit, bool capture)
-		{
-			if (cancel.IsCancellationRequested) return;
+        private async Task RunProcessAsync(string title, string filePath, string args, string workingDir, OutputPane pane, CancellationToken cancel, bool waitForExit, bool capture)
+        {
+            if (cancel.IsCancellationRequested) return;
 
-			ProbeToolsPackage.Instance.App.Log.Info("Running: {0}\r\nFile Path: {1}\r\nArguments: {2}\r\nWorking Dir: {3}", title, filePath, args, workingDir);
-			pane?.WriteLine($"Running: {title}");
-			pane?.WriteLine($"  {filePath} {args}");
-
-			if (string.IsNullOrWhiteSpace(filePath)) throw new RunItemException($"No file path is configured.");
-
-			if (string.IsNullOrWhiteSpace(workingDir) && !string.IsNullOrWhiteSpace(filePath) && File.Exists(filePath))
+            ProbeToolsPackage.Instance.App.Log.Info("Running: {0}\r\nFile Path: {1}\r\nArguments: {2}\r\nWorking Dir: {3}", title, filePath, args, workingDir);
+			if (pane != null)
 			{
-				workingDir = Path.GetDirectoryName(filePath);
-				ProbeToolsPackage.Instance.App.Log.Info("Derived working dir: {0}", workingDir);
+				await pane.WriteLineAsync($"Running: {title}");
+				await pane.WriteLineAsync($"  {filePath} {args}");
 			}
 
-			if (waitForExit && capture)
-			{
-				var sw = new Stopwatch();
-				sw.Start();
+            if (string.IsNullOrWhiteSpace(filePath)) throw new RunItemException($"No file path is configured.");
 
-				var runner = new ProcessRunner
-				{
-					CaptureOutput = true,
-					CaptureError = true
-				};
-				var exitCode = runner.CaptureProcess(filePath, args, workingDir, pane, cancel);
+            if (string.IsNullOrWhiteSpace(workingDir) && !string.IsNullOrWhiteSpace(filePath) && File.Exists(filePath))
+            {
+                workingDir = Path.GetDirectoryName(filePath);
+                ProbeToolsPackage.Instance.App.Log.Info("Derived working dir: {0}", workingDir);
+            }
 
-				sw.Stop();
-				pane?.WriteLine($"Exit Code: {exitCode} (elapsed: {sw.Elapsed})");
-			}
-			else
-			{
-				using (var proc = new Process())
-				{
-					var psi = new ProcessStartInfo(filePath, args ?? string.Empty);
-					psi.UseShellExecute = false;
-					psi.RedirectStandardOutput = false;
-					psi.RedirectStandardError = false;
-					psi.CreateNoWindow = false;
-					psi.WorkingDirectory = workingDir;
+            if (waitForExit && capture)
+            {
+                var sw = new Stopwatch();
+                sw.Start();
 
-					proc.StartInfo = psi;
+                var runner = new ProcessRunner
+                {
+                    CaptureOutput = true,
+                    CaptureError = true
+                };
+                var exitCode = await runner.CaptureProcessAsync(filePath, args, workingDir, pane, cancel);
 
-					var sw = new Stopwatch();
-					if (waitForExit) sw.Start();
+                sw.Stop();
+                if (pane != null) await pane.WriteLineAsync($"Exit Code: {exitCode} (elapsed: {sw.Elapsed})");
+            }
+            else
+            {
+                using (var proc = new Process())
+                {
+                    var psi = new ProcessStartInfo(filePath, args ?? string.Empty);
+                    psi.UseShellExecute = false;
+                    psi.RedirectStandardOutput = false;
+                    psi.RedirectStandardError = false;
+                    psi.CreateNoWindow = false;
+                    psi.WorkingDirectory = workingDir;
 
-					if (!proc.Start()) throw new RunItemException($"Unable to start {title}.");
+                    proc.StartInfo = psi;
 
-					if (waitForExit)
-					{
-						proc.WaitForExit();
-						sw.Stop();
-						pane?.WriteLine($"Exit Code: {proc.ExitCode} (elapsed: {sw.Elapsed})");
-					}
-				}
-			}
-		}
+                    var sw = new Stopwatch();
+                    if (waitForExit) sw.Start();
 
-		public bool CanMoveUp
+                    if (!proc.Start()) throw new RunItemException($"Unable to start {title}.");
+
+                    if (waitForExit)
+                    {
+						await proc.WaitForExitAsync();
+                        sw.Stop();
+                        if (pane != null) await pane.WriteLineAsync($"Exit Code: {proc.ExitCode} (elapsed: {sw.Elapsed})");
+                    }
+                }
+            }
+        }
+
+        public bool CanMoveUp
 		{
 			get => _canMoveUp;
 			set

@@ -22,6 +22,7 @@ Visual Studio Extension for WBDK
 - Fixed problem with code analysis warnings when calling widthof() with an uninitialized variable.
 - Added support for using constants with #warndel and #warnadd.
 - Fixed infinite loop in code analysis 'in' operator parsing.
+- Fixed deadlock when running a task that interrupts another task in progress.
 
 **Version 1.6.6 Changes:**
 - Added support for the new 'in' operator.

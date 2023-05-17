@@ -442,18 +442,18 @@ namespace DkTools
                         var errors = cp.Errors;
                         if (errors.Any())
                         {
-                            tempFileOutput.WriteLine("// Errors encountered during processing:");
+                            await tempFileOutput.WriteLineAsync("// Errors encountered during processing:");
                             foreach (var error in errors)
                             {
-                                if (error.Line != null && error.Line.File != null) tempFileOutput.WriteLine(string.Format("// {0}({1}): {2}", error.Line.FileName, error.Line.LineNum, error.Message));
-                                else tempFileOutput.WriteLine(error.Message);
+                                if (error.Line != null && error.Line.File != null) await tempFileOutput.WriteLineAsync(string.Format("// {0}({1}): {2}", error.Line.FileName, error.Line.LineNum, error.Message));
+                                else await tempFileOutput.WriteLineAsync(error.Message);
                             }
-                            tempFileOutput.WriteLine(string.Empty);
+                            await tempFileOutput.WriteLineAsync(string.Empty);
                         }
 
                         foreach (var line in cp.Lines)
                         {
-                            tempFileOutput.WriteLine(line.Text);
+                            await tempFileOutput.WriteLineAsync(line.Text);
                         }
 
                         tempFileName = tempFileOutput.FileName;
