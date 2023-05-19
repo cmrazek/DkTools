@@ -23,6 +23,7 @@ Visual Studio Extension for WBDK
 - Added support for using constants with #warndel and #warnadd.
 - Fixed infinite loop in code analysis 'in' operator parsing.
 - Fixed deadlock when running a task that interrupts another task in progress.
+- Code analysis warnings that have an empty span will now show the squiggle on the entire line.
 
 **Version 1.6.6 Changes:**
 - Added support for the new 'in' operator.
