@@ -25,6 +25,7 @@ Visual Studio Extension for WBDK
 - Fixed deadlock when running a task that interrupts another task in progress.
 - Code analysis warnings that have an empty span will now show the squiggle on the entire line.
 - Fixed code analysis not detecting a variable as 'used' when it's on the left of a ternary statement.
+- Fixed Find All References reporting duplicates for items accessibly globally and in the current file.
 
 **Version 1.6.6 Changes:**
 - Added support for the new 'in' operator.
