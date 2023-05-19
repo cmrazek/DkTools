@@ -17,7 +17,7 @@ namespace DK.CodeAnalysis.Nodes
 
         public override int Precedence => 0;
 
-        private static readonly string[] InOperatorDelimStrings = new string[] { "," };
+        private static readonly string[] InOperatorDelimStrings = new string[] { ",", ")" };
 
         public static ExpressionNode Read(ReadParams p, DataType refDataType, params string[] stopStrings)
         {
@@ -185,6 +185,7 @@ namespace DK.CodeAnalysis.Nodes
                                 break;
                             case "in":
                                 {
+                                    var leftDataType = exp.LastChild?.DataType;
                                     exp.AddChild(new OperatorNode(p.Statement, code.Span, "in", null));
 
                                     if (code.ReadExact('('))
@@ -194,6 +195,7 @@ namespace DK.CodeAnalysis.Nodes
                                         var errorSpan = code.Span;
                                         var expectComma = false;
                                         var gotItem = false;
+                                        var delimStopStrings = stopStrings != null ? stopStrings.Concat(InOperatorDelimStrings).ToArray() : InOperatorDelimStrings;
 
                                         while (!code.EndOfFile)
                                         {
@@ -216,14 +218,13 @@ namespace DK.CodeAnalysis.Nodes
                                                 else
                                                 {
                                                     if (exp.ErrorReported == null) exp.ReportError(errorSpan, CAError.CA0131);  // Expected ','.
+                                                    break;
                                                 }
                                             }
                                             else
                                             {
                                                 if (CheckForStopStrings(p, stopStrings)) return exp;
-                                                var rDataType = exp.NumChildren > 0 ? exp.LastChild.DataType : null;
-                                                var delimStopStrings = stopStrings != null ? stopStrings.Concat(InOperatorDelimStrings).ToArray() : InOperatorDelimStrings;
-                                                var itemExp = ExpressionNode.Read(p, refDataType, delimStopStrings);
+                                                var itemExp = ExpressionNode.Read(p, leftDataType, delimStopStrings);
                                                 if (itemExp != null)
                                                 {
                                                     brackets.AddChild(itemExp);
@@ -234,6 +235,7 @@ namespace DK.CodeAnalysis.Nodes
                                                 else
                                                 {
                                                     if (exp.ErrorReported == null) exp.ReportError(errorSpan, CAError.CA0132);   // Expected expression.
+                                                    break;
                                                 }
                                             }
                                         }

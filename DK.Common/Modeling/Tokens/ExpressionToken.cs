@@ -197,8 +197,7 @@ namespace DK.Modeling.Tokens
 									endTokens, parseDataType));
 								break;
 							case "in":
-								parseDataType = expectedDataType;
-								exp.AddToken(InOperator.Parse(scope, exp.LastChild, new OperatorToken(scope, code.Span, code.Text), endTokens, parseDataType));
+								exp.AddToken(InOperator.Parse(scope, exp.LastChild, new OperatorToken(scope, code.Span, code.Text), endTokens, exp.LastChild?.ValueDataType));
 								break;
 							default:
 								exp.AddToken(new OperatorToken(scope, code.Span, code.Text));

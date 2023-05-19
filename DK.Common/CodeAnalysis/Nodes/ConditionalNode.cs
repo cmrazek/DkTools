@@ -80,7 +80,6 @@ namespace DK.CodeAnalysis.Nodes
 
 			var leftScope = scope.Clone();
 			var leftNode = Parent.GetLeftSibling(leftScope, this);
-			scope.Merge(leftScope);
 			if (leftNode == null)
 			{
 				ReportError(_opSpan, CAError.CA0007, "?");	// Operator '{0}' expects value on left.
@@ -130,7 +129,8 @@ namespace DK.CodeAnalysis.Nodes
 					}
 				}
 			}
-		}
+            scope.Merge(leftScope);
+        }
 
         private bool IsWrappedInBrackets(CAScope scope, Node resultNode)
         {
