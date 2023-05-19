@@ -18,6 +18,9 @@ Visual Studio Extension for WBDK
 
 ## Change Log
 
+**Version 1.6.8 Changes:**
+- Code analysis on switch statements with enums no longer consider the code branch 'covered' if all enum options are present (but no default). There could be an invalid value in the variable.
+
 **Version 1.6.7 Changes:**
 - Fixed problem with code analysis warnings when calling widthof() with an uninitialized variable.
 - Added support for using constants with #warndel and #warnadd.

@@ -126,16 +126,7 @@ namespace DK.CodeAnalysis.Statements
 		{
 			base.Execute(scope);
 
-			DataType dataType = null;
-			List<Definition> enumOptions = null;
-			if (_condExp != null)
-			{
-				dataType = _condExp.ReadValue(scope).DataType;
-				if (dataType != null && dataType.HasCompletionOptions)
-				{
-					enumOptions = dataType.GetCompletionOptions(scope.AppSettings).ToList();
-				}
-			}
+			_condExp?.ReadValue(scope);
 
 			var bodyScopes = new List<CAScope>();
 			var currentBodyScope = (CAScope)null;
@@ -147,26 +138,7 @@ namespace DK.CodeAnalysis.Statements
 				if (cas.exp != null)
 				{
 					var valueScope = scope.Clone();
-					var itemValue = cas.exp.ReadValue(valueScope);
-
-					if (enumOptions != null)
-					{
-						// Remove this option from the list
-						var itemStr = itemValue.ToStringValue(valueScope, cas.exp.Span);
-						if (!string.IsNullOrEmpty(itemStr))
-						{
-							itemStr = DataType.NormalizeEnumOption(itemStr);
-							foreach (var enumItem in enumOptions)
-							{
-								if (enumItem.Name == itemStr)
-								{
-									enumOptions.Remove(enumItem);
-									break;
-								}
-							}
-						}
-					}
-
+					cas.exp.ReadValue(valueScope);
 					scope.Merge(valueScope, true, true);
 				}
 
@@ -202,12 +174,6 @@ namespace DK.CodeAnalysis.Statements
 				if (currentBodyScope == null) currentBodyScope = scope.Clone(canBreak: true);
 				foreach (var stmt in _default) stmt.Execute(currentBodyScope);
 				bodyScopes.Add(currentBodyScope);
-			}
-			else if (enumOptions != null && enumOptions.Count == 0)
-			{
-				// There is no default, but all the enum options have been covered off.
-				// This is ok.
-				if (currentBodyScope != null) bodyScopes.Add(currentBodyScope);
 			}
 			else
 			{
