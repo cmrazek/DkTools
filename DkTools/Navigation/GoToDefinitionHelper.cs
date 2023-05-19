@@ -1,4 +1,4 @@
-﻿using DK.AppEnvironment;
+﻿using DK;
 using DK.Code;
 using DK.Definitions;
 using DK.Modeling.Tokens;
@@ -194,7 +194,11 @@ namespace DkTools.Navigation
 
 				if (!string.IsNullOrEmpty(def.ExternalRefId))
 				{
-					refList.AddRange(FindGlobalReferences(def.ExternalRefId));
+					foreach (var globalRef in FindGlobalReferences(def.ExternalRefId))
+					{
+						if (refList.Any(x => x.FileName.EqualsI(globalRef.FileName) && x.Position == globalRef.Position)) continue;
+						refList.Add(globalRef);
+					}
 				}
 
 				EndFindReferences(pane, refList);
