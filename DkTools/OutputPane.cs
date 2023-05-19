@@ -2,6 +2,7 @@
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
 using System;
+using System.Threading.Tasks;
 
 namespace DkTools
 {
@@ -29,43 +30,53 @@ namespace DkTools
 		{
 			ThreadHelper.JoinableTaskFactory.Run(async () =>
 			{
-				await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
-
-				_pane.OutputStringThreadSafe(string.Concat(text, "\r\n"));
-#if DEBUG
-				System.Diagnostics.Debug.WriteLine(text);
-#endif
+				await WriteLineAsync(text);
 			});
 		}
 
-		public void WriteLineAndTask(string lineText, string taskText, TaskType type, string fileName, uint lineNum)
+        public override async Task WriteLineAsync(string text)
+        {
+            await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
+
+            _pane.OutputStringThreadSafe(string.Concat(text, "\r\n"));
+#if DEBUG
+            System.Diagnostics.Debug.WriteLine(text);
+#endif
+        }
+
+        public void WriteLineAndTask(string lineText, string taskText, TaskType type, string fileName, uint lineNum)
 		{
 			ThreadHelper.JoinableTaskFactory.Run(async () =>
 			{
-				await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
-
-				VSTASKPRIORITY priority = VSTASKPRIORITY.TP_NORMAL;
-				var subCategory = "";
-				switch (type)
-				{
-					case TaskType.Error:
-						priority = VSTASKPRIORITY.TP_HIGH;
-						subCategory = "Error";
-						break;
-					case TaskType.Warning:
-						priority = VSTASKPRIORITY.TP_NORMAL;
-						subCategory = "Warning";
-						break;
-				}
-
-				if (lineNum > 0) lineNum--;
-
-				_pane.OutputTaskItemString(lineText + "\r\n", priority, VSTASKCATEGORY.CAT_BUILDCOMPILE, subCategory, (int)_vstaskbitmap.BMP_COMPILE, fileName, lineNum, taskText);
-				_pane.FlushToTaskList();
+				await WriteLineAndTaskAsync(lineText, taskText, type, fileName, lineNum);
 			});
 		}
 
-		public void Clear()
+        public async Task WriteLineAndTaskAsync(string lineText, string taskText, TaskType type, string fileName, uint lineNum)
+        {
+            await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
+
+            VSTASKPRIORITY priority = VSTASKPRIORITY.TP_NORMAL;
+            var subCategory = "";
+            switch (type)
+            {
+                case TaskType.Error:
+                    priority = VSTASKPRIORITY.TP_HIGH;
+                    subCategory = "Error";
+                    break;
+                case TaskType.Warning:
+                    priority = VSTASKPRIORITY.TP_NORMAL;
+                    subCategory = "Warning";
+                    break;
+            }
+
+            if (lineNum > 0) lineNum--;
+
+            _pane.OutputTaskItemString(lineText + "\r\n", priority, VSTASKCATEGORY.CAT_BUILDCOMPILE, subCategory, (int)_vstaskbitmap.BMP_COMPILE, fileName, lineNum, taskText);
+            _pane.FlushToTaskList();
+        }
+
+        public void Clear()
 		{
 			ThreadHelper.JoinableTaskFactory.Run(async () =>
 			{

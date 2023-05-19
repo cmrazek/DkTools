@@ -207,15 +207,6 @@ namespace DK.CodeAnalysis
 
 		private void ReportErrorLocal_Internal(string filePath, CodeSpan fileSpan, bool mainFile, string fileContent, CAError errorCode, params object[] args)
 		{
-			if (mainFile)
-			{
-				if (_mainFileTasks.Any(x => x.ErrorCode == errorCode && x.Span == fileSpan)) return;	// Duplicate error report
-			}
-			else
-			{
-				if (_includeFileTasks.Any(x => x.ErrorCode == errorCode && x.Span == fileSpan && x.FilePath.EqualsI(filePath))) return;	// Duplicate error report
-			}
-
 			int lineNum = 0, linePos = 0;
 
 			var type = errorCode.GetErrorType();
@@ -234,7 +225,12 @@ namespace DK.CodeAnalysis
 
 			if (fileContent != null)
 			{
-				StringHelper.CalcLineAndPosFromOffset(fileContent, fileSpan.Start, out lineNum, out linePos);
+                StringHelper.CalcLineAndPosFromOffset(fileContent, fileSpan.Start, out lineNum, out linePos);
+
+                if (fileSpan.IsEmpty && (type == CAErrorType.Error || type == CAErrorType.Warning))
+                {
+					fileSpan = StringHelper.GetSpanForLine(fileContent, fileSpan.Start, excludeWhiteSpace: true);
+                }
 
 				// Check for any exclusions on this line
 				var lineText = GetLineText(fileContent, fileSpan.Start);
@@ -254,7 +250,16 @@ namespace DK.CodeAnalysis
 				}
 			}
 
-			var message = errorCode.GetText(args);
+            if (mainFile)
+            {
+                if (_mainFileTasks.Any(x => x.ErrorCode == errorCode && x.Span == fileSpan)) return;    // Duplicate error report
+            }
+            else
+            {
+                if (_includeFileTasks.Any(x => x.ErrorCode == errorCode && x.Span == fileSpan && x.FilePath.EqualsI(filePath))) return; // Duplicate error report
+            }
+
+            var message = errorCode.GetText(args);
 
 			if (type == CAErrorType.ReportOutputTag)
 			{

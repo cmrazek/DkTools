@@ -1,11 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace DK.Modeling.Tokens
 {
     class InOperator : CompletionOperator
     {
         private DataType _expectedDataType;
+        private static readonly string[] _endTokens = new string[] { ")" };
 
         private InOperator(Scope scope)
             : base(scope)
@@ -16,6 +18,8 @@ namespace DK.Modeling.Tokens
             var ret = new InOperator(scope);
             if (lastToken != null) ret.AddToken(lastToken);
             ret.AddToken(opToken ?? throw new ArgumentNullException(nameof(opToken)));
+
+            string[] mergedEndTokens = null;
 
             var code = scope.Code;
             if (code.ReadExact('('))
@@ -38,7 +42,13 @@ namespace DK.Modeling.Tokens
                         continue;
                     }
 
-                    var exp = ExpressionToken.TryParse(scope, endTokens, expectedDataType: expectedDataType);
+                    if (mergedEndTokens == null)
+                    {
+                        if (endTokens != null && endTokens.Any()) mergedEndTokens = endTokens.Concat(_endTokens).ToArray();
+                        else mergedEndTokens = _endTokens;
+                    }
+
+                    var exp = ExpressionToken.TryParse(scope, mergedEndTokens, expectedDataType: expectedDataType);
                     if (exp != null) bracketsToken.AddToken(exp);
                     else break;
                 }

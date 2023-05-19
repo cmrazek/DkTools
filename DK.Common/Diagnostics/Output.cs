@@ -1,27 +1,36 @@
 using System.Text;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace DK.Diagnostics
 {
-	public class Output
+	public abstract class Output
 	{
-		public virtual void WriteLine(string text)
-		{
-		}
+		public abstract void WriteLine(string text);
+
+		public abstract Task WriteLineAsync(string text);
 	}
 
 	public class StringOutput : Output
 	{
 		StringBuilder _sb = new StringBuilder();
+		SemaphoreSlim _sem = new SemaphoreSlim(1);
 
 		public override void WriteLine(string text)
 		{
-			lock (this)
-			{
-				_sb.AppendLine(text);
-			}
+			_sem.Wait();
+			_sb.AppendLine(text);
+			_sem.Release();
 		}
 
-		public string Text
+        public override async Task WriteLineAsync(string text)
+        {
+			await _sem.WaitAsync();
+			_sb.AppendLine(text);
+			_sem.Release();
+        }
+
+        public string Text
 		{
 			get { lock (this) { return _sb.ToString(); } }
 		}
@@ -61,5 +70,11 @@ namespace DK.Diagnostics
 		{
 			if (_callback != null) _callback(text);
 		}
-	}
+
+        public override Task WriteLineAsync(string text)
+        {
+			if (_callback != null) _callback(text);
+			return Task.CompletedTask;
+        }
+    }
 }
