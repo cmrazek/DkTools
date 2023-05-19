@@ -234,7 +234,12 @@ namespace DK.CodeAnalysis
 
 			if (fileContent != null)
 			{
-				StringHelper.CalcLineAndPosFromOffset(fileContent, fileSpan.Start, out lineNum, out linePos);
+                StringHelper.CalcLineAndPosFromOffset(fileContent, fileSpan.Start, out lineNum, out linePos);
+
+                if (fileSpan.IsEmpty && (type == CAErrorType.Error || type == CAErrorType.Warning))
+                {
+					fileSpan = StringHelper.GetSpanForLine(fileContent, fileSpan.Start, excludeWhiteSpace: true);
+                }
 
 				// Check for any exclusions on this line
 				var lineText = GetLineText(fileContent, fileSpan.Start);

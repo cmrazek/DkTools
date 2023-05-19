@@ -1,4 +1,5 @@
-﻿using System;
+﻿using DK.Code;
+using System;
 using System.Collections.Generic;
 using System.Text;
 
@@ -128,7 +129,7 @@ namespace DK
 		public static void CalcLineAndPosFromOffset(string source, int offset, out int lineNumOut, out int linePosOut)
 		{
 			var length = source.Length;
-			if (offset < 0 || offset > length) throw new ArgumentOutOfRangeException("offset");
+			if (offset < 0 || offset > length) throw new ArgumentOutOfRangeException(nameof(offset));
 
 			int pos = 0;
 			int lineNum = 0;
@@ -151,6 +152,34 @@ namespace DK
 			lineNumOut = lineNum;
 			linePosOut = linePos;
 		}
+
+		public static CodeSpan GetSpanForLine(string source, int position, bool excludeWhiteSpace)
+		{
+			var length = source.Length;
+			if (position < 0 || position > length) throw new ArgumentOutOfRangeException(nameof(position));
+
+			var start = position;
+			while (start > 0 && !source[start - 1].IsEndOfLineChar()) start--;
+
+			var end = position;
+			while (end < length && !source[end].IsEndOfLineChar()) end++;
+
+			if (excludeWhiteSpace && start < end)
+			{
+				// Remove leading whitespace
+				var i = start;
+				while (i < end && source[i].IsWhiteChar()) i++;
+				if (i < end)
+				{
+					start = i;
+
+					// Remove trailing whitespace
+					while (end > start && source[end - 1].IsWhiteChar()) end--;
+				}
+			}
+
+			return new CodeSpan(start, end);
+		}
 	}
 
 	public static class CharUtil
@@ -167,6 +196,8 @@ namespace DK
 		}
 
 		public static bool IsEndOfLineChar(this char ch) => ch == '\r' || ch == '\n';
+
+		public static bool IsWhiteChar(this char ch) => ch == ' ' || ch == '\t';
 	}
 
 	public static class StringBuilderUtil
