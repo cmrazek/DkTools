@@ -36,6 +36,7 @@ namespace DK.CodeAnalysis.Nodes
 				return ret;
 			}
 			ret._trueExp = trueExp;
+			if (!trueExp.Span.IsEmpty) ret.Span = ret._opSpan = ret._opSpan.Include(trueExp.Span);
 
 			if (!code.ReadExact(':'))
 			{
@@ -57,11 +58,13 @@ namespace DK.CodeAnalysis.Nodes
 				group.AddChild(falseExp);
 				group.AddChild(ConditionalNode.Read(p, refDataType, code.Span, stopStrings));
 				ret._falseExp = group;
-			}
+                if (!group.Span.IsEmpty) ret.Span = ret._opSpan = ret._opSpan.Include(group.Span);
+            }
 			else
 			{
 				ret._falseExp = falseExp;
-			}
+                if (!falseExp.Span.IsEmpty) ret.Span = ret._opSpan = ret._opSpan.Include(falseExp.Span);
+            }
 
 			return ret;
 		}
