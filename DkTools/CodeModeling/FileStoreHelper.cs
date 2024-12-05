@@ -3,11 +3,14 @@ using DK.Code;
 using DK.Definitions;
 using DK.Modeling;
 using DK.Preprocessing;
+using DkTools.Classifier;
 using Microsoft.VisualStudio.Text;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
 using System.Threading;
+using System.Windows;
 
 namespace DkTools.CodeModeling
 {
@@ -144,7 +147,7 @@ namespace DkTools.CodeModeling
 		}
 	}
 
-	public class FunctionDropDownItem
+	public class FunctionDropDownItem : INotifyPropertyChanged
 	{
 		public FunctionDropDownItem(FunctionDefinition definition, string name, CodeSpan span, CodeSpan entireFunctionSpan)
 		{
@@ -158,5 +161,26 @@ namespace DkTools.CodeModeling
 		public string Name { get; private set; }
 		public CodeSpan Span { get; private set; }
 		public CodeSpan EntireFunctionSpan { get; private set; }
-	}
+
+		public FrameworkElement ClassifiedSignatureElement
+		{
+			get => Definition.Signature.ClassifiedString.ToWpfTextBlock();
+		}
+
+		public event PropertyChangedEventHandler PropertyChanged;
+
+		private Visibility _visibility = Visibility.Visible;
+		public Visibility Visibility
+		{
+			get => _visibility;
+			set
+			{
+				if (_visibility != value)
+				{
+					_visibility = value;
+					PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(Visibility)));
+				}
+			}
+		}
+    }
 }

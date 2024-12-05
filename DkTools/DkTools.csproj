@@ -163,8 +163,14 @@
     <Compile Include="FunctionFileScanning\FFScanner.cs" />
     <Compile Include="GroupedList.cs" />
     <Compile Include="Guids.cs" />
+    <Compile Include="Helpers\CollectionHelpers.cs" />
     <Compile Include="IniFile.cs" />
     <Compile Include="JsonHelpers.cs" />
+    <Compile Include="LanguageSvc\FunctionDropDown.xaml.cs">
+      <DependentUpon>FunctionDropDown.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="LanguageSvc\ProbeTextViewMargin.cs" />
+    <Compile Include="LanguageSvc\ProbeTextViewMarginProvider.cs" />
     <Compile Include="LockedValue.cs" />
     <Compile Include="Output.cs" />
     <Compile Include="PeekDefinition\DkPeekableItem.cs" />
@@ -179,7 +185,6 @@
     <Compile Include="LanguageSvc\ProbeAuthoringScope.cs" />
     <Compile Include="LanguageSvc\ProbeLanguageService.cs" />
     <Compile Include="LanguageSvc\ProbeScanner.cs" />
-    <Compile Include="LanguageSvc\ProbeDropDownHelper.cs" />
     <Compile Include="OutputPane.cs" />
     <Compile Include="ProbeExplorer\ColorTable.cs" />
     <Compile Include="ProbeExplorer\CreateFileDialog.xaml.cs">
@@ -365,6 +370,10 @@
       <SubType>Designer</SubType>
     </Page>
     <Page Include="ErrorDialog.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="LanguageSvc\FunctionDropDown.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

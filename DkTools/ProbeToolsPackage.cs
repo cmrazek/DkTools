@@ -116,7 +116,7 @@ namespace DkTools
         /// </summary>
         protected override async System.Threading.Tasks.Task InitializeAsync(CancellationToken cancellationToken, IProgress<ServiceProgressData> progress)
         {
-            base.Initialize();
+            await base.InitializeAsync(cancellationToken, progress);
 
             _fs = new WindowsFileSystem();
             _log = new WindowsLogger(LogDir, Constants.LogFileNameFormat);
@@ -180,13 +180,13 @@ namespace DkTools
                     if (mgr != null) mgr.FRevokeComponent(_componentId);
                     _componentId = 0;
                 }
+
+                _log?.Close();
             }
             catch (Exception ex)
             {
                 System.Diagnostics.Debug.WriteLine(ex);
             }
-
-            _log.Close();
 
             base.Dispose(disposing);
         }

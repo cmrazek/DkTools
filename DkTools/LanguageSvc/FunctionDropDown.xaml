@@ -1,0 +1,39 @@
+﻿<UserControl x:Class="DkTools.LanguageSvc.FunctionDropDown"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:local="clr-namespace:DkTools.LanguageSvc"
+             xmlns:codeModeling="clr-namespace:DkTools.CodeModeling"
+             mc:Ignorable="d" 
+             d:DesignHeight="20" d:DesignWidth="600">
+	<UserControl.Resources>
+		<ResourceDictionary>
+			<ResourceDictionary.MergedDictionaries>
+				<ResourceDictionary Source="/DkTools;component/ProbeExplorer/DkToolsControlStyles.xaml"/>
+			</ResourceDictionary.MergedDictionaries>
+		</ResourceDictionary>
+	</UserControl.Resources>
+	<Grid>
+		<Grid.ColumnDefinitions>
+			<ColumnDefinition Width="100"/>
+			<ColumnDefinition Width="*"/>
+		</Grid.ColumnDefinitions>
+		<TextBox Name="FilterTextBox"
+				 Grid.Column="0"
+				 TextChanged="FilterTextBox_TextChanged"
+				 PreviewKeyDown="FilterTextBox_PreviewKeyDown"
+				 Template="{DynamicResource DkToolsTextBoxControlTemplate}"
+				 FontFamily="Consolas" FontWeight="Bold"
+				 />
+		<ComboBox Name="FunctionCombo"
+				  Grid.Column="1"
+				  SelectionChanged="FunctionCombo_SelectionChanged"
+				  Template="{DynamicResource DkToolsComboBoxControlTemplate}"
+				  FontFamily="Consolas" FontWeight="Bold"
+				  IsTextSearchEnabled="True"
+				  IsTextSearchCaseSensitive="False"
+				  TextSearch.TextPath="{Binding Name}"
+				  />
+	</Grid>
+</UserControl>

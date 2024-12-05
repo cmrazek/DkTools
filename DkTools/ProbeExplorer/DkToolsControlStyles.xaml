@@ -450,6 +450,14 @@
 						</MultiTrigger>
 						<MultiTrigger>
 							<MultiTrigger.Conditions>
+								<Condition Property="IsSelected" Value="False"/>
+								<Condition Property="IsFocused" Value="True"/>
+							</MultiTrigger.Conditions>
+							<Setter Property="Background" TargetName="Border" Value="{DynamicResource {x:Static vs_shell:EnvironmentColors.ComboBoxMouseOverBackgroundBeginBrushKey}}"/>
+							<Setter Property="TextElement.Foreground" TargetName="Border" Value="{DynamicResource {x:Static vs_shell:EnvironmentColors.ComboBoxMouseOverTextBrushKey}}"/>
+						</MultiTrigger>
+						<MultiTrigger>
+							<MultiTrigger.Conditions>
 								<Condition Property="IsSelected" Value="True"/>
 							</MultiTrigger.Conditions>
 							<Setter Property="Background" TargetName="Border" Value="{DynamicResource {x:Static vs_shell:EnvironmentColors.ComboBoxSelectionBrushKey}}"/>

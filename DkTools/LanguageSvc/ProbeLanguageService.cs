@@ -26,13 +26,11 @@ namespace DkTools.LanguageSvc
 				_prefs.HighlightMatchingBraceFlags = _HighlightMatchingBraceFlags.HMB_SUPPRESS_STATUS_BAR_UPDATE;
 				_prefs.EnableCommenting = true;
 				_prefs.EnableFormatSelection = true;
-				//_prefs.AutoOutlining = true;
-				//_prefs.ShowNavigationBar = true;
 			}
 			return _prefs;
 		}
 
-		public override void OnIdle(bool periodic)
+        public override void OnIdle(bool periodic)
 		{
 			try
 			{
@@ -68,11 +66,6 @@ namespace DkTools.LanguageSvc
 		public override AuthoringScope ParseSource(ParseRequest req)
 		{
 			return new ProbeAuthoringScope(req);
-		}
-
-		public override TypeAndMemberDropdownBars CreateDropDownHelper(IVsTextView forView)
-		{
-			return new ProbeDropDownHelper(this);
 		}
 	}
 }
