@@ -24,6 +24,7 @@ Visual Studio Extension for WBDK
 - Implemented new navigation bar above code editor. The standard bar disappears in recent versions of VS.
 - Added support for 'distinct' and 'top' keywords in select statements.
 - Code analysis now detects when a funtion is being called with the wrong number of arguments.
+- Fixed various dict parsing issues with newly introduced definitions.
 
 **Version 1.6.7 Changes:**
 - Fixed problem with code analysis warnings when calling widthof() with an uninitialized variable.

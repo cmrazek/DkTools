@@ -1,5 +1,6 @@
 ﻿using DK.AppEnvironment;
 using DK.Code;
+using DK.Definitions;
 using DK.Diagnostics;
 using DK.Syntax;
 using System.Text;
@@ -105,7 +106,15 @@ namespace DK.Modeling
 
 			if (code.ReadExactWholeWord("dt"))
 			{
-				dataType = DataType.TryParse(new DataType.ParseArgs(code, appSettings));
+				dataType = DataType.TryParse(new DataType.ParseArgs(code, appSettings)
+				{
+					DataTypeCallback = (dtName) =>
+					{
+						var intf = appSettings.Dict.GetInterface(dtName);
+						if (intf != null) return new DataTypeDefinition(intf.Name, intf.DataType);
+						return null;
+					}
+				});
 				if (dataType == null)
 				{
 					appSettings.Log.Debug("Unable to parse data type from: {0}", str);

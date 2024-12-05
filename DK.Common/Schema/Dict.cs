@@ -964,6 +964,11 @@ namespace DK.Schema
 				return;
 			}
 
+			if (_code.ReadExactWholeWord("description"))
+			{
+				while (_code.ReadStringLiteral()) ;	// Ignore developer description for now.
+			}
+
 			_typedefs[name] = new Typedef(name, dataType);
 		}
 
@@ -1024,6 +1029,13 @@ namespace DK.Schema
 
 		private void ReadCreatePrimary()
 		{
+			bool nopick = false;
+
+			if (_code.ReadExactWholeWord("nopick"))
+			{
+				nopick = true;
+			}
+
 			if (!_code.PeekWordR().Equals("index", StringComparison.OrdinalIgnoreCase))
 			{
 				ReportError(_code.Position, "Expected 'index' to follow 'create primary'.");
@@ -1031,7 +1043,7 @@ namespace DK.Schema
 			}
 			_code.MovePeeked();
 
-			ReadCreateIndex(false, true, false);
+			ReadCreateIndex(unique: false, primary: true, nopick);
 		}
 
 		private void ReadCreateNoPick()
@@ -1330,6 +1342,7 @@ namespace DK.Schema
 						break;
 					}
 				}
+				else if (_code.PeekExact(';')) break;
 				else
 				{
 					ReportError(_code.Position, "Syntax error in 'create relationship' statement.");
@@ -1808,6 +1821,8 @@ namespace DK.Schema
 			while (!_code.EndOfFile)
 			{
 				if (_code.ReadExact(';')) break;
+
+				if (_code.ReadExactWholeWord("where")) continue;
 
 				var word = _code.ReadWordR();
 				if (!string.IsNullOrEmpty(word))
