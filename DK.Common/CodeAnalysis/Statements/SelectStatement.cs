@@ -12,8 +12,18 @@ namespace DK.CodeAnalysis.Statements
 		private ExpressionNode _whereExp;
 		private ExpressionNode _filterByExp;
 		private List<GroupBody> _groups = new List<GroupBody>();
+		private bool _distinct = false;
+		private string _topNumber = null;
 
-		public override string ToString() => new string[] { "select * from ", _tables.Select(t => t.Name).Combine(", "), "..." }.Combine();
+		public override string ToString() => new string[] {
+			  "select"
+			, (_distinct ? " distinct" : "")
+			, (_topNumber != null ? $" top " : "")
+			, (_topNumber != null ? _topNumber : "")
+			, " * from "
+			, _tables.Select(t => t.Name).Combine(", ")
+			, "..."
+		}.Combine();
 
 		public SelectStatement(ReadParams p, CodeSpan keywordSpan)
 			: base(p.CodeAnalyzer, keywordSpan)
@@ -22,6 +32,15 @@ namespace DK.CodeAnalysis.Statements
 			var code = p.Code;
 
 			code.ReadStringLiteral();
+
+			if (code.ReadExactWholeWordI("distinct")) _distinct = true;
+
+			if (code.ReadExactWholeWordI("top"))
+			{
+				var topSpan = code.Span;
+				if (code.ReadNumber()) _topNumber = code.Text;
+				else ReportError(topSpan, CAError.CA0072);  // Expected number after 'top'.
+            }
 
 			if (!code.ReadExact('*'))
 			{

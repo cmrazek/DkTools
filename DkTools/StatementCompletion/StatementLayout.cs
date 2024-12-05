@@ -61,6 +61,11 @@ namespace DkTools.StatementCompletion
 				#endregion
 
 				#region selects
+				case StatementSection.Select:
+					if (word == "distinct") return state;
+					if (word == "top") return new StatementState(StatementSection.SelectTop);
+					break;
+
 				case StatementSection.SelectStar:
 					if (word == "from") return new StatementState(StatementSection.SelectFrom);
 					break;
@@ -245,6 +250,11 @@ namespace DkTools.StatementCompletion
 				case StatementSection.None:
 					return StatementState.None;
 
+				#region select
+				case StatementSection.SelectTop:
+					return new StatementState(StatementSection.Select);
+				#endregion
+
 				#region format
 				case StatementSection.FormatRowsEquals:
 					return new StatementState(StatementSection.FormatRowsNumber);
@@ -423,6 +433,11 @@ namespace DkTools.StatementCompletion
 				#endregion
 
 				#region selects
+				case StatementSection.Select:
+					yield return "distinct";
+					yield return "top";
+					break;
+
 				case StatementSection.SelectStar:
 					yield return "from";
 					break;
@@ -580,6 +595,8 @@ namespace DkTools.StatementCompletion
 				#region selects
 				case StatementSection.Select:
 					completionSource.CreateCompletion("*", ProbeCompletionType.Keyword, null);
+					completionSource.CreateCompletion("distinct", ProbeCompletionType.Keyword, null);
+					completionSource.CreateCompletion("top", ProbeCompletionType.Keyword, null);
 					break;
 
 				case StatementSection.SelectFrom:

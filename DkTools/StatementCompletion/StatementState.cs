@@ -92,10 +92,11 @@ namespace DkTools.StatementCompletion
 		Before = 0x020F,
 		After = 0x0210,
 		BeforeAfterGroup = 0x0211,
-		#endregion
+        SelectTop = 0x0212,
+        #endregion
 
-		#region format
-		Format = 0x0300,
+        #region format
+        Format = 0x0300,
 		FormatRows = 0x0301,
 		FormatCols = 0x0302,
 		FormatGenpages = 0x0303,

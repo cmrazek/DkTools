@@ -26,6 +26,15 @@ namespace DK.Modeling.Tokens
 			var code = scope.Code;
 
 			if (code.ReadStringLiteral()) ret.AddToken(new StringLiteralToken(scope, code.Span, code.Text));
+
+			if (code.ReadExactWholeWordI("distinct")) ret.AddToken(new KeywordToken(scope, code.Span, code.Text));
+
+			if (code.ReadExactWholeWordI("top"))
+			{
+				ret.AddToken(new KeywordToken(scope, code.Span, code.Text));
+				if (code.ReadNumber()) ret.AddToken(new NumberToken(scope, code.Span, code.Text));
+			}
+
 			if (code.ReadExact('*')) ret.AddToken(new OperatorToken(scope, code.Span, "*"));
 
 			if (!code.ReadExactWholeWord("from")) return ret;
