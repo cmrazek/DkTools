@@ -145,6 +145,8 @@ namespace DK.Definitions
 			get { return null; }
 		}
 
+		public virtual bool HasVariableArgumentCount => false;
+
 		public virtual DataType DataType
 		{
 			get { return null; }

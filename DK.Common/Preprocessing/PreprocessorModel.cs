@@ -281,7 +281,8 @@ namespace DK.Preprocessing
 					argsStartPos: 0,
 					argsEndPos: 0,
 					bodyStartPos: 0,
-					entireSpan: CodeSpan.Empty);
+					entireSpan: CodeSpan.Empty,
+					hasVariableArgumentCount: false);
 				_externFuncs[funcName] = def;
 				AddGlobalDefinition(def);
 				return;
@@ -317,7 +318,8 @@ namespace DK.Preprocessing
 				argsStartPos: argStartPrimaryPos,
 				argsEndPos: argEndPrimaryPos,
 				bodyStartPos: bodyStartLocalPos,
-				entireSpan: entireSpan);
+				entireSpan: entireSpan,
+				hasVariableArgumentCount: false);
 
 			_localFuncs.Add(new LocalFunction(funcDef, nameSpan, statementsStartPos, bodyEndPos, argDefList, varList));
 			AddGlobalDefinition(funcDef);

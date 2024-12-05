@@ -262,6 +262,9 @@ namespace DK.CodeAnalysis
 		/// </summary>
 		[ErrorMessage("{0}")]
 		CA0120,
+
+		[ErrorMessage("Function requires {0} arguments. ({1} passed)")]
+		CA0121,
 		#endregion
 
 		#region In Operator (0130-0139)

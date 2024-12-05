@@ -15,6 +15,7 @@ namespace DK.Definitions
 		private int _argsEndPos;
 		private CodeSpan _entireSpan;
 		private bool _deprecated;
+		private bool _hasVariableArgumentCount;
 
 		private static readonly Regex _rxDeprecated = new Regex(@"\bdeprecated\b", RegexOptions.IgnoreCase);
 
@@ -24,7 +25,8 @@ namespace DK.Definitions
 			int argsStartPos,
 			int argsEndPos,
 			int bodyStartPos,
-			CodeSpan entireSpan)
+			CodeSpan entireSpan,
+            bool hasVariableArgumentCount)
 			: base(signature.FunctionName, filePos, MakeExtRefId(signature.ClassName, signature.FunctionName))
 		{
 			_sig = signature ?? throw new ArgumentNullException(nameof(signature));
@@ -33,29 +35,33 @@ namespace DK.Definitions
 			_bodyStartPos = bodyStartPos;
 			_entireSpan = entireSpan;
 			_deprecated = _sig.Description != null ? _rxDeprecated.IsMatch(_sig.Description) : false;
+			_hasVariableArgumentCount = hasVariableArgumentCount;
 		}
 
-		public FunctionDefinition(FunctionSignature signature, FilePosition filePos)
+		public FunctionDefinition(FunctionSignature signature, FilePosition filePos, bool hasVariableArgumentCount)
 			: base(signature.FunctionName, filePos, MakeExtRefId(signature.ClassName, signature.FunctionName))
 		{
 			_sig = signature ?? throw new ArgumentNullException(nameof(signature));
 			_argsStartPos = _argsEndPos = _bodyStartPos = 0;
 			_entireSpan = CodeSpan.Empty;
 			_deprecated = _sig.Description != null ? _rxDeprecated.IsMatch(_sig.Description) : false;
-		}
+            _hasVariableArgumentCount = hasVariableArgumentCount;
+        }
 
-		public FunctionDefinition(FunctionSignature signature)
+		public FunctionDefinition(FunctionSignature signature, bool hasVariableArgumentCount)
 			: base(signature.FunctionName, FilePosition.Empty, string.Concat("func:", signature.FunctionName))
 		{
 			_sig = signature ?? throw new ArgumentNullException(nameof(signature));
 			_argsStartPos = _argsEndPos = _bodyStartPos = 0;
 			_entireSpan = CodeSpan.Empty;
 			_deprecated = _sig.Description != null ? _rxDeprecated.IsMatch(_sig.Description) : false;
-		}
+            _hasVariableArgumentCount = hasVariableArgumentCount;
+        }
 
 		public FunctionDefinition CloneAsExtern()
 		{
-			return new FunctionDefinition(_sig.Clone(), FilePosition, _argsStartPos, _argsEndPos, _bodyStartPos, _entireSpan);
+			return new FunctionDefinition(_sig.Clone(), FilePosition, _argsStartPos, _argsEndPos, _bodyStartPos,
+				_entireSpan, _hasVariableArgumentCount);
 		}
 
 		/// <summary>
@@ -67,12 +73,13 @@ namespace DK.Definitions
 		public bool Deprecated => _deprecated;
 		public override DataType DataType => _sig.ReturnDataType;
 		public override IEnumerable<ArgumentDescriptor> Arguments => _sig.Arguments;
-		public override FunctionSignature Signature => _sig;
+        public override bool HasVariableArgumentCount => _hasVariableArgumentCount;
+        public override FunctionSignature Signature => _sig;
 		public override bool CompletionVisible => true;
 		public override ProbeCompletionType CompletionType => ProbeCompletionType.Function;
 		public override ProbeClassifierType ClassifierType => ProbeClassifierType.Function;
 
-		public override string QuickInfoTextStr
+        public override string QuickInfoTextStr
 		{
 			get
 			{

@@ -1162,7 +1162,8 @@ namespace DK.Repository
                         {
                             results.Add(new FunctionDefinition(
                                 signature: FunctionSignature.ParseFromDb(Func_GetSignature(func), _appSettings),
-                                filePos: Func_GetFilePosition(func)
+                                filePos: Func_GetFilePosition(func),
+                                hasVariableArgumentCount: false
                             ));
                         }
                         return true;
@@ -1192,7 +1193,10 @@ namespace DK.Repository
                     File_IterateFuncs(file, func =>
                     {
                         var sig = FunctionSignature.ParseFromDb(Func_GetSignature(func), _appSettings);
-                        var funcDef = new FunctionDefinition(sig, Func_GetFilePosition(func));
+                        var funcDef = new FunctionDefinition(
+                            signature: sig,
+                            filePos: Func_GetFilePosition(func),
+                            hasVariableArgumentCount: false);
                         classDef.AddFunction(funcDef);
                         return true;
                     });
@@ -1204,7 +1208,10 @@ namespace DK.Repository
                     File_IterateFuncs(file, func =>
                     {
                         var sig = FunctionSignature.ParseFromDb(Func_GetSignature(func), _appSettings);
-                        var funcDef = new FunctionDefinition(sig, Func_GetFilePosition(func));
+                        var funcDef = new FunctionDefinition(
+                            signature: sig,
+                            filePos: Func_GetFilePosition(func),
+                            hasVariableArgumentCount: false);
                         results.Add(funcDef);
                         return true;
                     });

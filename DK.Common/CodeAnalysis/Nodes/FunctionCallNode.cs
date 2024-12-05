@@ -25,7 +25,7 @@ namespace DK.CodeAnalysis.Nodes
 
         public override string ToString() => new string[] { _name, "(", _args.Select(a => a.ToString()).Combine(", "), ")" }.Combine();
 
-        private static FunctionCallNode ParseArguments(ReadParams p, CodeSpan funcNameSpan, string funcName, Definition funcDef)
+        private static FunctionCallNode ParseArguments(ReadParams p, CodeSpan funcNameSpan, string funcName, Definition funcDef, int argsStartPos)
         {
             var funcCallNode = new FunctionCallNode(p.Statement, funcNameSpan, funcName, funcDef);
             var code = p.Code;
@@ -79,21 +79,21 @@ namespace DK.CodeAnalysis.Nodes
                 return null;
             }
 
-            //if (argDefs.Length != funcCallNode.NumArguments)
-            //{
-            //	code.Position = resetPos;
-            //	return null;
-            //}
+            if (funcDef.HasVariableArgumentCount == false && argDefs.Length != funcCallNode.NumArguments)
+            {
+                funcCallNode.ReportError(new CodeSpan(argsStartPos, closePos), CAError.CA0121,
+                    argDefs.Length, funcCallNode.NumArguments);  // Function requires {0} arguments. ({1} passed)
+            }
 
             funcCallNode.Span = new CodeSpan(funcNameSpan.Start, closePos);
             return funcCallNode;
         }
 
-        public static FunctionCallNode Read(ReadParams p, CodeSpan funcNameSpan, string funcName, Definition funcDef = null)
+        public static FunctionCallNode Read(ReadParams p, CodeSpan funcNameSpan, string funcName, Definition funcDef, int argsStartPos)
         {
             if (funcDef != null)
             {
-                var node = ParseArguments(p, funcNameSpan, funcName, funcDef);
+                var node = ParseArguments(p, funcNameSpan, funcName, funcDef, argsStartPos);
                 if (node != null) return node;
             }
 
@@ -105,7 +105,7 @@ namespace DK.CodeAnalysis.Nodes
                 var fd = def as FunctionDefinition;
                 if (fd == null) continue;
 
-                var node = ParseArguments(p, funcNameSpan, funcName, fd);
+                var node = ParseArguments(p, funcNameSpan, funcName, fd, argsStartPos);
                 if (node != null) return node;
             }
 

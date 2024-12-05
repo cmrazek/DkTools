@@ -271,6 +271,7 @@ namespace DK.CodeAnalysis.Nodes
             if (code.ReadExact('('))
             {
                 // This is a function call
+                int argsStartPos = code.Span.Start;
 
                 switch (word)
                 {
@@ -282,7 +283,7 @@ namespace DK.CodeAnalysis.Nodes
                         return AggregateFunctionCallNode.Read(p, wordSpan, word);
                 }
 
-                return FunctionCallNode.Read(p, wordSpan, word);
+                return FunctionCallNode.Read(p, wordSpan, word, funcDef: null, argsStartPos);
             }
 
             if (code.ReadExact('.'))
@@ -297,6 +298,8 @@ namespace DK.CodeAnalysis.Nodes
 
                     if (code.ReadExact('('))
                     {
+                        var argsStartPos = code.Span.Start;
+
                         foreach (var parentDef in (from d in p.CodeAnalyzer.PreprocessorModel.DefinitionProvider.GetAny(code.Position + p.FuncOffset, word)
                                                    where d.AllowsChild
                                                    select d))
@@ -304,7 +307,7 @@ namespace DK.CodeAnalysis.Nodes
                             var childDef = parentDef.GetChildDefinitions(p.AppSettings).FirstOrDefault(c => c.Name == childWord && c.ArgumentsRequired);
                             if (childDef != null)
                             {
-                                return FunctionCallNode.Read(p, combinedSpan, combinedWord, childDef);
+                                return FunctionCallNode.Read(p, combinedSpan, combinedWord, childDef, argsStartPos);
                             }
                         }
 
