@@ -138,6 +138,12 @@ namespace DK.CodeAnalysis.Values
 			return this;
 		}
 
+		public virtual Value CompareLike(CAScope scope, CodeSpan span, Value rightValue)
+		{
+			scope.CodeAnalyzer.ReportError(span, CAError.CA0050, "Like comparison");    // {0} cannot be used with this value.
+			return this;
+        }
+
 		public virtual bool IsTrue
 		{
 			get { return false; }

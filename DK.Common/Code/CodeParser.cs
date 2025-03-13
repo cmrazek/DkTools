@@ -100,6 +100,7 @@ namespace DK.Code
 						case "and":
 						case "or":
 						case "in":
+						case "like":
 							_tokenType = CodeType.Operator;
 							break;
 						default:

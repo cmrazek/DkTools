@@ -174,6 +174,7 @@ namespace DK.CodeAnalysis.Nodes
                             case "<=":
                             case ">":
                             case ">=":
+                            case "like":
                                 {
                                     if (exp.NumChildren > 0)
                                     {

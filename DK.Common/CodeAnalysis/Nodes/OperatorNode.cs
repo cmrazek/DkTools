@@ -59,6 +59,7 @@ namespace DK.CodeAnalysis.Nodes
 					_prec = 20;
 					break;
 				case "in":
+				case "like":
 					_prec = 18;
 					break;
 				case "and":
@@ -123,6 +124,7 @@ namespace DK.CodeAnalysis.Nodes
 				case "&&":
 				case "or":
 				case "||":
+				case "like":
 					ExecuteComparison(scope);
 					break;
 
@@ -266,6 +268,10 @@ namespace DK.CodeAnalysis.Nodes
 							if (left.HasValue && right.HasValue) result = new NumberValue(DataType.Int, left.Value != 0 || right.Value != 0 ? 1 : 0);
 							else result = new NumberValue(DataType.Int, null);
 						}
+						break;
+					case "like":
+						if (leftDataType != null) rightValue.CheckTypeConversion(scope, rightNode.Span, leftDataType);
+						result = rightValue.CompareLike(scope, Span, rightValue);
 						break;
 					default:
 						throw new InvalidOperationException();

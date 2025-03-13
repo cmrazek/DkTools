@@ -280,9 +280,14 @@ namespace DK.CodeAnalysis
 		[ErrorMessage("'in' operator requires at least 1 expression.")]
 		CA0133,
 		#endregion
+
+		#region Like Operator (0140-0149)
+		[ErrorMessage("'like' operator may only be used with a string.")]
+		CA0140,
+		#endregion
 	}
 
-	[AttributeUsage(AttributeTargets.Field, AllowMultiple = false)]
+    [AttributeUsage(AttributeTargets.Field, AllowMultiple = false)]
 	class ErrorMessageAttribute : Attribute
 	{
 		private string _message;

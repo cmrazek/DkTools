@@ -102,7 +102,17 @@ namespace DK.CodeAnalysis.Values
 			return new NumberValue(DataType.Int, null);
 		}
 
-		public override string ToStringValue(CAScope scope, CodeSpan span)
+        public override Value CompareLike(CAScope scope, CodeSpan span, Value rightValue)
+        {
+            if (rightValue.DataType.ValueType != ValType.String)
+			{
+				scope.CodeAnalyzer.ReportError(span, CAError.CA0140);   // 'like' operator may only be used with a string.
+            }
+
+			return new NumberValue(DataType.Int, null);
+        }
+
+        public override string ToStringValue(CAScope scope, CodeSpan span)
 		{
 			return _value;
 		}
