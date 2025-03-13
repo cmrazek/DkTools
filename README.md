@@ -20,6 +20,7 @@ Visual Studio Extension for WBDK
 
 **Version 1.6.9 Changes:**
 - Added code analysis support for the new 'like' operator.
+- Removed length restriction on create file dialog.
 
 **Version 1.6.8 Changes:**
 - Code analysis on switch statements with enums no longer consider the code branch 'covered' if all enum options are present (but no default). There could be an invalid value in the variable.

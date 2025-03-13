@@ -27,8 +27,7 @@
 		<TextBox Name="FileNameTextBox"
 				 Grid.Row="1" Grid.Column="1"
 				 Text="{Binding FileName, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-				 Margin="2,2,2,2"
-				 MaxLength="16" />
+				 Margin="2,2,2,2"/>
 		<TextBlock Text="{Binding FileNameLengthText}"
 				   Grid.Row="1" Grid.Column="2"
 				   Margin="2,2,2,2"
