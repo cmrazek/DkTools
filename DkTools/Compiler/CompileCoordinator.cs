@@ -252,7 +252,7 @@ namespace DkTools.Compiler
             });
         }
 
-        private async System.Threading.Tasks.Task RunBackgroundFecAsync()
+        public async System.Threading.Tasks.Task RunBackgroundFecAsync()
         {
             await ProbeToolsPackage.Instance.SetStatusTextAsync($"FEC: {_fileName} (running)");
 

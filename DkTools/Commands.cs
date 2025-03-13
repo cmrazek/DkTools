@@ -51,7 +51,8 @@ namespace DkTools
         ShowCodeAnalysis = 0x0129,
         ClearErrors = 0x012a,
         ShowDict = 0x012b,
-        PeekDefinition = 0x012c
+        PeekDefinition = 0x012c,
+        RunFecErrors = 0x012d
     }
 
     internal static class Commands
@@ -83,6 +84,7 @@ namespace DkTools
             AddCommand(mcs, CommandId.DisableDeadCode, DisableDeadCode, checkedCallback: DisableDeadCode_Checked);
             AddCommand(mcs, CommandId.ShowProbeNV, ShowProbeNV);
             AddCommand(mcs, CommandId.ShowErrors, ShowErrors, checkedCallback: ShowErrors_Checked);
+            AddCommand(mcs, CommandId.RunFecErrors, RunFecErrors);
             AddCommand(mcs, CommandId.GoToNextReference, GoToNextReference);
             AddCommand(mcs, CommandId.GoToPrevReference, GoToPrevReference);
             AddCommand(mcs, CommandId.ShowFunctions, ShowFunctions);
@@ -833,6 +835,24 @@ namespace DkTools
         private static bool ShowErrors_Checked(CommandId id)
         {
             return ProbeToolsPackage.Instance.EditorOptions.RunBackgroundFecOnSave;
+        }
+
+        private static void RunFecErrors(object sender, EventArgs e)
+        {
+            ThreadHelper.JoinableTaskFactory.Run(async () =>
+            {
+                await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
+
+                var view = Shell.ActiveView;
+                if (view == null)
+                {
+                    await ProbeToolsPackage.Instance.SetStatusTextAsync("No file is open.");
+                    return;
+                }
+
+                var cc = CompileCoordinator.GetOrCreateForTextBuffer(view.TextBuffer);
+                await cc.RunBackgroundFecAsync();
+            });
         }
 
         private static void ShowCodeAnalysis(object sender, EventArgs e)
