@@ -41,7 +41,7 @@ namespace DkTools.SmartIndenting
 					typedChar = (char)(ushort)Marshal.GetObjectForNativeVariant(pvaIn);
 				}
 
-				var retVal = _nextCommandHandler.Exec(ref pguidCmdGroup, nCmdID, nCmdexecopt, pvaIn, pvaOut);
+                var retVal = _nextCommandHandler.Exec(ref pguidCmdGroup, nCmdID, nCmdexecopt, pvaIn, pvaOut);
 				if (ErrorHandler.Failed(retVal)) return retVal;
 
 				if (typedChar == '}' || typedChar == '#' || typedChar == ':')
@@ -66,6 +66,21 @@ namespace DkTools.SmartIndenting
 		int IOleCommandTarget.QueryStatus(ref Guid pguidCmdGroup, uint cCmds, OLECMD[] prgCmds, IntPtr pCmdText)
 		{
 			ThreadHelper.ThrowIfNotOnUIThread();
+
+			if (pguidCmdGroup == VSConstants.VSStd2K)
+			{
+				for (uint i = 0; i < cCmds; i++)
+				{
+					if (prgCmds[i].cmdID == (uint)VSConstants.VSStd2KCmdID.COMMENTBLOCK ||
+						prgCmds[i].cmdID == (uint)VSConstants.VSStd2KCmdID.UNCOMMENTBLOCK ||
+                        prgCmds[i].cmdID == (uint)VSConstants.VSStd2KCmdID.COMMENT_BLOCK ||
+                        prgCmds[i].cmdID == (uint)VSConstants.VSStd2KCmdID.UNCOMMENT_BLOCK)
+					{
+						prgCmds[i].cmdf = (uint)Microsoft.VisualStudio.OLE.Interop.Constants.MSOCMDF_ENABLED | (uint)Microsoft.VisualStudio.OLE.Interop.Constants.MSOCMDF_SUPPORTED;
+						return VSConstants.S_OK;
+                    }
+				}
+			}
 
 			return _nextCommandHandler.QueryStatus(ref pguidCmdGroup, cCmds, prgCmds, pCmdText);
 		}
