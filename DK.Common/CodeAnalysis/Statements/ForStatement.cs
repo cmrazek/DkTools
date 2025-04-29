@@ -101,7 +101,10 @@ namespace DK.CodeAnalysis.Statements
 			{
 				stmt.Execute(bodyScope);
 			}
-			scope.Merge(bodyScope, false, false);
+
+            var notEnteredScope = scope.Clone();    // In the event the loop is never entered
+
+            scope.Merge(new CAScope[] { bodyScope, notEnteredScope }, promoteBreak: false, promoteContinue: false);
 		}
 	}
 }

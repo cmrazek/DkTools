@@ -18,6 +18,9 @@ Visual Studio Extension for WBDK
 
 ## Change Log
 
+**Version 1.6.10 Changes:**
+- Fixed bug in code analysis reporting CA0016 (unreachable code) after a for/while loop with a return statement in it.
+
 **Version 1.6.9 Changes:**
 - Added code analysis support for the new 'like' operator.
 - Removed length restriction on create file dialog.
