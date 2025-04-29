@@ -405,7 +405,7 @@ namespace DkTools.FunctionFileScanning
 				var fileStore = new FileStore(appSettings.Context);
 
 				var merger = new FileMerger(appSettings);
-				merger.MergeFile(scan.Path, null, false, true);
+				merger.MergeFile(scan.Path, fileContent, false, true);
 				var includeDependencies = (from f in merger.FileNames
 										   select new IncludeDependency(f, false, true, merger.GetFileContent(f))).ToArray();
 

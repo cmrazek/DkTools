@@ -80,15 +80,15 @@ namespace DK.Common.Tests
         [TestCase(@"X:\ccssrc1\prod\", @"cust.ct", @"X:\ccssrc1\prod\cust.ct")]
         [TestCase(@"X:\ccssrc1\prod\", @"\cust.ct", @"\cust.ct")]
         [TestCase(@"X:\ccssrc1\prod\\", @"\cust.ct", @"\cust.ct")]
-        [TestCase(@"X:\ccssrc1\prod\\", @"\cust.ct\", @"\cust.ct\")]
-        [TestCase(@"X:\ccssrc1\prod\\", @"", @"X:\ccssrc1\prod\\")]
+        [TestCase(@"X:\ccssrc1\prod\\", @"\cust.ct\", @"\cust.ct")]
+        [TestCase(@"X:\ccssrc1\prod\\", @"", @"X:\ccssrc1\prod")]
         [TestCase(@"", @"cust.ct", @"cust.ct")]
         [TestCase(@"temp", @"log.txt", @"temp\log.txt")]
         [TestCase(@"temp", @"\log.txt", @"\log.txt")]
         [TestCase(@"X:\temp\file1.txt", @"X:\temp\file2.txt", @"X:\temp\file2.txt")]
+        [TestCase(@"X:\ccssrc1\prod\test", @"..\wsgate\wsgate.i", @"X:\ccssrc1\prod\wsgate\wsgate.i")]
         public void CombinePath(string path1, string path2, string output)
         {
-            Assert.AreEqual(output, Path.Combine(path1, path2), "Test case does not match System.IO.Path");
             Assert.AreEqual(output, PathUtil.CombinePath(path1, path2));
         }
 

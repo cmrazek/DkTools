@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 
 namespace DK.AppEnvironment
 {
@@ -57,46 +58,37 @@ namespace DK.AppEnvironment
 
         public static string CombinePath(string path1, string path2)
         {
-            if (IsPathRooted(path2)) return path2;
+            var src = new List<string>();
+            var path = new List<string>();
+            var rootSlash = false;
 
-            path2 = path2.TrimStart(DirectorySeparatorChar);
-
-            if (!string.IsNullOrEmpty(path1))
+            if (IsPathRooted(path2))
             {
-                if (!string.IsNullOrEmpty(path2))
-                {
-                    if (path1.EndsWith(DirectorySeparatorString))
-                    {
-                        if (path2.StartsWith(DirectorySeparatorString))
-                        {
-                            return string.Concat(path1, path2.Substring(1));
-                        }
-                        else
-                        {
-                            return string.Concat(path1, path2);
-                        }
-                    }
-                    else
-                    {
-                        if (path2.StartsWith(DirectorySeparatorString))
-                        {
-                            return string.Concat(path1, path2);
-                        }
-                        else
-                        {
-                            return string.Concat(path1, DirectorySeparatorString, path2);
-                        }
-                    }
-                }
-                else
-                {
-                    return path1;
-                }
+                if (path2.StartsWith(DirectorySeparatorString)) rootSlash = true;
+                src.AddRange(path2.Split(DirectorySeparatorChar));
             }
             else
             {
-                return path2;
+                if (path1.StartsWith(DirectorySeparatorString)) rootSlash = true;
+                src.AddRange(path1.Split(DirectorySeparatorChar));
+                src.AddRange(path2.Split(DirectorySeparatorChar));
             }
+
+            foreach (var part in src)
+            {
+                if (string.IsNullOrWhiteSpace(part) || part == ".") continue;
+
+                if (part == "..")
+                {
+                    if (path.Count > 0) path.RemoveAt(path.Count - 1);
+                    continue;
+                }
+
+                path.Add(part);
+            }
+
+            if (rootSlash) return DirectorySeparatorString + path.Combine(DirectorySeparatorString);
+            return path.Combine(DirectorySeparatorString);
         }
 
         public static bool IsPathRooted(string path)
