@@ -289,6 +289,65 @@ namespace DK.Modeling.Tokens
 					return new UnknownToken(scope, wordSpan, word);
 				}
 			}
+			else if (code.PeekExact('$'))
+			{
+                var dollarSpan = code.MovePeekedSpan();
+                var word2 = code.PeekWordR();
+                if (!string.IsNullOrEmpty(word2))
+                {
+                    var word2Span = code.MovePeekedSpan();
+                    var argsPresent = (scope.Hint & ScopeHint.SuppressFunctionCall) == 0 && code.PeekExact('(');
+                    var argsOpenBracketSpan = argsPresent ? code.MovePeekedSpan() : CodeSpan.Empty;
+
+                    Token bestToken = null;
+                    int bestTokenScore = int.MinValue;
+
+                    foreach (var def in scope.DefinitionProvider.GetAny(wordSpan.Start, word))
+                    {
+                        if (!def.AllowsDollarChild) continue;
+
+                        var defScore = ServerContextHelper.GetScore(scope.Model.FileContext.ToServerContext(), def.ServerContext);
+                        if (defScore <= bestTokenScore) continue;
+
+                        // When arguments are present, take only the definitions that accept arguments
+                        var childDefs = def.GetDollarChildDefinitions(word2, scope.AppSettings).Where(x => argsPresent ? x.ArgumentsRequired : true).ToArray();
+                        if (childDefs.Length > 0)
+                        {
+                            ArgsToken argsToken = null;
+                            Definition childDef = null;
+
+                            if (argsPresent)
+                            {
+                                var openBracketToken = new OperatorToken(scope, argsOpenBracketSpan, "(");
+                                argsToken = ArgsToken.ParseAndChooseArguments(scope, openBracketToken, childDefs, out childDef);
+                            }
+                            else
+                            {
+                                childDef = childDefs[0];
+                            }
+
+                            var word1Token = new IdentifierToken(scope, wordSpan, word, def);
+                            var dollarToken = new DollarToken(scope, dollarSpan);
+                            var word2Token = new IdentifierToken(scope, word2Span, word2, childDef);
+                            var compToken = new CompositeToken(scope, childDef.DataType);
+                            compToken.AddToken(word1Token);
+                            compToken.AddToken(dollarToken);
+                            compToken.AddToken(word2Token);
+                            if (argsToken != null) compToken.AddToken(argsToken);
+
+                            bestToken = compToken;
+                            bestTokenScore = defScore;
+                        }
+                    }
+
+                    if (bestToken != null) return bestToken;
+                }
+                else
+                {
+                    code.Position = dollarSpan.Start;
+                    return new UnknownToken(scope, wordSpan, word);
+                }
+            }
 
 			if ((scope.Hint & ScopeHint.SuppressFunctionCall) == 0 && code.PeekExact('('))
 			{
@@ -306,13 +365,13 @@ namespace DK.Modeling.Tokens
 						compToken.AddToken(wordToken);
 						compToken.AddToken(argsToken);
 
-                        if (def.AllowsFunctionBody && (scope.Hint & ScopeHint.SuppressFunctionDefinition) == 0)
-                        {
-                            ParseFunctionAttributes(exp, scope, compToken);
-                            if (code.PeekExact('{')) compToken.AddToken(BracesToken.Parse(scope, def, argsToken.Span.End + 1));
-                        }
+						if (def.AllowsFunctionBody && (scope.Hint & ScopeHint.SuppressFunctionDefinition) == 0)
+						{
+							ParseFunctionAttributes(exp, scope, compToken);
+							if (code.PeekExact('{')) compToken.AddToken(BracesToken.Parse(scope, def, argsToken.Span.End + 1));
+						}
 
-                        return compToken;
+						return compToken;
 					}
 				}
 			}

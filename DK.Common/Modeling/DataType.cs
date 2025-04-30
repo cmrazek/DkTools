@@ -87,7 +87,7 @@ namespace DK.Modeling
 				new ProbeClassifiedRun(ProbeClassifierType.Normal, " "),
 				new ProbeClassifiedRun(ProbeClassifierType.DataType, "unsigned")
 			));
-		public static readonly DataType Variant = new DataType(ValType.Interface, null,
+		public static readonly DataType Variant = new DataType(ValType.Variant, null,
 			new ProbeClassifiedString(new ProbeClassifiedRun(ProbeClassifierType.DataType, "variant")));
 		public static readonly DataType Void = new DataType(ValType.Void, null,
 			new ProbeClassifiedString(new ProbeClassifiedRun(ProbeClassifierType.DataType, "void")));
@@ -1653,6 +1653,12 @@ namespace DK.Modeling
 						case ValType.Unknown:	return .5f;
 						case ValType.Void:		return .5f;
 						case ValType.Graphic:	return 1.0f;
+						default:				return .2f;
+					}
+				case ValType.Variant:
+					switch (passType.ValueType)
+					{
+						case ValType.Variant:	return 1.0f;
 						default:				return .2f;
 					}
 				default:

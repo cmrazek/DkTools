@@ -129,6 +129,13 @@ namespace DkTools.LanguageSvc
 				tokenInfo.Trigger |= TokenTriggers.MemberSelect;
 				_pos++;
 			}
+			else if (ch == '$')
+			{
+				tokenInfo.Type = TokenType.Delimiter;
+				tokenInfo.Color = TokenColor.Text;
+				tokenInfo.Trigger |= TokenTriggers.MemberSelect;
+				_pos++;
+			}
 			else if (ch == ',')
 			{
 				tokenInfo.Type = TokenType.Delimiter;

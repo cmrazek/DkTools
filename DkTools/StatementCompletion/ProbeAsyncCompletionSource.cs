@@ -81,6 +81,7 @@ namespace DkTools.StatementCompletion
 			AfterStringLiteral,
 			AfterOrderBy,
 			DotSeparatedWords,
+			DollarSeparatedWords,
 			Word,
 			ClassFunction,
 			Function,
@@ -89,6 +90,7 @@ namespace DkTools.StatementCompletion
 		}
 
 		private static readonly Regex _rxTypingTable = new Regex(@"(\w+)\.(\w*)$");
+		private static readonly Regex _rxTypingTableDollar = new Regex(@"(\w+)\$(\w*)$");
 		private static readonly Regex _rxTypingWord = new Regex(@"\w+$");
 		private static readonly Regex _rxAfterAssignOrCompare = new Regex(@"(==|=|!=|<|<=|>|>=)\s$");
 		private static readonly Regex _rxAfterWord = new Regex(@"\b(\w+)\s$");
@@ -245,6 +247,16 @@ namespace DkTools.StatementCompletion
 						return true;
 					}
 					#endregion
+					#region Table$Child
+					else if ((match = _rxTypingTableDollar.Match(prefix)).Success)
+					{
+						_mode = CompletionMode.DollarSeparatedWords;
+                        applicableToSpan = new SnapshotSpan(triggerPt.Snapshot, match.Groups[2].Index + line.Start.Position, match.Groups[2].Length);
+                        _params.str = match.Groups[1].Value;
+                        _params.str2 = match.Groups[2].Value;
+                        return true;
+                    }
+					#endregion
 					#region Word
 					else if ((match = _rxTypingWord.Match(prefix)).Success)
 					{
@@ -344,7 +356,10 @@ namespace DkTools.StatementCompletion
 				case CompletionMode.DotSeparatedWords:
 					HandleDotSeparatedWords(applicableToSpan, _params.str);
 					break;
-				case CompletionMode.Word:
+                case CompletionMode.DollarSeparatedWords:
+                    HandleDollarSeparatedWords(applicableToSpan, _params.str);
+                    break;
+                case CompletionMode.Word:
 					GetWordCompletions(triggerPt, _params.pt, _fileName, cancel);
 					break;
 				case CompletionMode.ClassFunction:
@@ -647,7 +662,32 @@ namespace DkTools.StatementCompletion
             }
         }
 
-		private void GetWordCompletions(SnapshotPoint triggerPt, SnapshotPoint wordStartPt, string fileName, CancellationToken cancel)
+        private void HandleDollarSeparatedWords(SnapshotSpan completionSpan, string word1)
+        {
+            // Typing a table$field.
+
+            // Table and field
+            var table = _appSettings.Dict.GetTable(word1);
+            if (table != null)
+            {
+                foreach (var def in table.ColumnDefinitions)
+                {
+                    CreateCompletion(def);
+                }
+            }
+
+            // Relationship and field
+            var relInd = _appSettings.Dict.GetRelInd(word1);
+            if (relInd != null)
+            {
+                foreach (var def in relInd.ColumnDefinitions)
+                {
+                    CreateCompletion(def);
+                }
+            }
+        }
+
+        private void GetWordCompletions(SnapshotPoint triggerPt, SnapshotPoint wordStartPt, string fileName, CancellationToken cancel)
 		{
 			var model = FileStoreHelper.GetOrCreateForTextBuffer(_textView.TextBuffer)?.Model;
 			if (model == null) return;

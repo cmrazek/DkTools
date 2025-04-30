@@ -116,9 +116,22 @@ namespace DK.Definitions
 			if (col != null) yield return col.Definition;
 		}
 
-		public override IEnumerable<Definition> GetChildDefinitions(DkAppSettings appSettings) => _table.ColumnDefinitions;
+		public override bool AllowsDollarChild => true;
 
-		public override bool ArgumentsRequired
+        public override IEnumerable<Definition> GetChildDefinitions(DkAppSettings appSettings) => _table.ColumnDefinitions;
+
+        public override IEnumerable<Definition> GetDollarChildDefinitions(string name, DkAppSettings appSettings)
+        {
+			var col = _table.GetColumn(name);
+			if (col != null) yield return col.Definition;
+        }
+
+        public override IEnumerable<Definition> GetDollarChildDefinitions(DkAppSettings appSettings)
+        {
+			return _table.ColumnDefinitions;
+        }
+
+        public override bool ArgumentsRequired
 		{
 			get { return false; }
 		}

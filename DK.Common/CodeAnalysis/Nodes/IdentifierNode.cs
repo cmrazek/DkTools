@@ -76,7 +76,12 @@ namespace DK.CodeAnalysis.Nodes
 				if (v != null)
 				{
 					v.IsUsed = true;
-					if (v.IsInitialized != TriState.True && !scope.SuppressInitializedCheck) ReportError(Span, CAError.CA0110, v.Name);	// Use of uninitialized variable '{0}'.
+					if (v.IsInitialized != TriState.True
+						&& !scope.SuppressInitializedCheck
+						&& v.DataType.ValueType != ValType.Interface)
+					{
+						ReportError(Span, CAError.CA0110, v.Name);  // Use of uninitialized variable '{0}'.
+					}
 					return v.Value;
 				}
 

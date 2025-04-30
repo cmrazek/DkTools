@@ -338,6 +338,57 @@ namespace DK.CodeAnalysis.Nodes
                     return new UnknownNode(p.Statement, wordSpan.Envelope(dotSpan), string.Concat(word, "."));
                 }
             }
+            else if (code.ReadExact('$'))
+            {
+                var dollarSpan = code.Span;
+
+                if (code.ReadWord())
+                {
+                    var childWord = code.Text;
+                    var combinedWord = string.Concat(word, "$", childWord);
+                    var combinedSpan = wordSpan.Envelope(code.Span);
+
+                    if (code.ReadExact('('))
+                    {
+                        var argsStartPos = code.Span.Start;
+
+                        foreach (var parentDef in (from d in p.CodeAnalyzer.PreprocessorModel.DefinitionProvider.GetAny(code.Position + p.FuncOffset, word)
+                                                   where d.AllowsDollarChild
+                                                   select d))
+                        {
+                            var childDef = parentDef.GetDollarChildDefinitions(p.AppSettings).FirstOrDefault(c => c.Name == childWord && c.ArgumentsRequired);
+                            if (childDef != null)
+                            {
+                                return FunctionCallNode.Read(p, combinedSpan, combinedWord, childDef, argsStartPos);
+                            }
+                        }
+
+                        ReportError(combinedSpan, CAError.CA0003, combinedWord);	// Function '{0}' not found.
+                        return new UnknownNode(p.Statement, combinedSpan, combinedWord);
+                    }
+                    else // No opening bracket
+                    {
+                        foreach (var parentDef in (from d in p.CodeAnalyzer.PreprocessorModel.DefinitionProvider.GetAny(code.Position + p.FuncOffset, word)
+                                                   where d.AllowsDollarChild
+                                                   select d))
+                        {
+                            var childDef = parentDef.GetDollarChildDefinitions(p.AppSettings).FirstOrDefault(c => c.Name == childWord && !c.ArgumentsRequired);
+                            if (childDef != null)
+                            {
+                                return TryReadSubscript(p, combinedSpan, combinedWord, childDef);
+                            }
+                        }
+
+                        ReportError(combinedSpan, CAError.CA0001, combinedWord);	// Unknown '{0}'.
+                        return new UnknownNode(p.Statement, combinedSpan, combinedWord);
+                    }
+                }
+                else // No word after dollar
+                {
+                    ReportError(dollarSpan, CAError.CA0005);	// Expected identifier to follow '$'.
+                    return new UnknownNode(p.Statement, wordSpan.Envelope(dollarSpan), string.Concat(word, "."));
+                }
+            }
 
             // Try to read array accessor
             if (code.PeekExact('['))

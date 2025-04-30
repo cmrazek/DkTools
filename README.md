@@ -22,6 +22,9 @@ Visual Studio Extension for WBDK
 - Fixed bug in code analysis reporting CA0016 (unreachable code) after a for/while loop with a return statement in it.
 - Re-enabled the Comment Selection command in the text editor.
 - Fixed definitions from include files not refreshing if the include path contains '..'
+- Stopped code analysis errors when assigning a value to/from a variant.
+- Stopped code analysis errors for uninitialized interface types.
+- Added support for table$column
 
 **Version 1.6.9 Changes:**
 - Added code analysis support for the new 'like' operator.

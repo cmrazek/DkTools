@@ -247,7 +247,7 @@ namespace DkTools.Classifier
 				tokenInfo.Type = ProbeClassifierType.Inactive;
 				_pos++;
 			}
-			else if (ch == '.' || ch == ',')
+			else if (ch == '.' || ch == ',' || ch == '$')
 			{
 				tokenInfo.Type = ProbeClassifierType.Delimiter;
 				_pos++;

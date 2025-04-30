@@ -17,6 +17,7 @@
 		Command,	// null
 		Section,	// null
 		Scroll,		// null
-		Graphic		// null
+		Graphic,	// null
+		Variant
 	}
 }

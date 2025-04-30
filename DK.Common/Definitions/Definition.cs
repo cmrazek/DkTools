@@ -162,6 +162,11 @@ namespace DK.Definitions
 			get { return false; }
 		}
 
+		public virtual bool AllowsDollarChild
+		{
+			get { return false; }
+		}
+
 		public virtual bool RequiresParent(string curClassName)
 		{
 			return false;
@@ -177,10 +182,20 @@ namespace DK.Definitions
 			return Definition.EmptyArray;
 		}
 
-		/// <summary>
-		/// If true, this definition may only be detected as a single word when the reference data type calls for this type of object.
-		/// </summary>
-		public virtual bool RequiresRefDataType
+		public virtual IEnumerable<Definition> GetDollarChildDefinitions(string name, DkAppSettings appSettings)
+		{
+			return Definition.EmptyArray;
+		}
+
+        public virtual IEnumerable<Definition> GetDollarChildDefinitions(DkAppSettings appSettings)
+        {
+            return Definition.EmptyArray;
+        }
+
+        /// <summary>
+        /// If true, this definition may only be detected as a single word when the reference data type calls for this type of object.
+        /// </summary>
+        public virtual bool RequiresRefDataType
 		{
 			get { return false; }
 		}

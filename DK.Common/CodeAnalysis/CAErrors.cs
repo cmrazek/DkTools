@@ -17,6 +17,9 @@ namespace DK.CodeAnalysis
 
 		[ErrorMessage("Expected identifier to follow '.'")]
 		CA0004,
+
+		[ErrorMessage("Expected identifier to follow '$'.")]
+		CA0005,
 		#endregion
 
 		[ErrorMessage("Unknown operator '{0}'.")]

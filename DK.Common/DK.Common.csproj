@@ -109,6 +109,7 @@
     <Compile Include="CodeAnalysis\Values\TableValue.cs" />
     <Compile Include="CodeAnalysis\Values\TimeValue.cs" />
     <Compile Include="CodeAnalysis\Values\Value.cs" />
+    <Compile Include="CodeAnalysis\Values\VariantValue.cs" />
     <Compile Include="CodeAnalysis\Values\VoidValue.cs" />
     <Compile Include="CodeAnalysis\Variable.cs" />
     <Compile Include="Code\CodeItem.cs" />
@@ -142,6 +143,7 @@
     <Compile Include="Diagnostics\LogLevel.cs" />
     <Compile Include="Diagnostics\Output.cs" />
     <Compile Include="Modeling\SignatureDocumentor.cs" />
+    <Compile Include="Modeling\Tokens\DollarToken.cs" />
     <Compile Include="Modeling\Tokens\Operators\InOperator.cs" />
     <Compile Include="Preprocessing\IncludeDependency.cs" />
     <Compile Include="Schema\Column.cs" />
