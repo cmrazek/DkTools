@@ -131,7 +131,7 @@ namespace DK.Modeling.Tokens
 								break;
 							case "[":
 								code.Position = code.Span.Start;
-								exp.AddToken(ArrayBracesToken.Parse(scope));
+								exp.AddToken(ArrayBracesToken.Parse(scope, identifierToken: null));
 								break;
 							case ",":
 								exp.AddToken(new DelimiterToken(scope, code.Span));
@@ -281,7 +281,10 @@ namespace DK.Modeling.Tokens
 						}
 					}
 
-					if (bestToken != null) return bestToken;
+					if (bestToken != null)
+					{
+						return ArrayBracesToken.TryParse(scope, bestToken) ?? bestToken;
+					}
 				}
 				else
 				{
@@ -340,7 +343,10 @@ namespace DK.Modeling.Tokens
                         }
                     }
 
-                    if (bestToken != null) return bestToken;
+					if (bestToken != null)
+					{
+						return ArrayBracesToken.TryParse(scope, bestToken) ?? bestToken;
+					}
                 }
                 else
                 {
@@ -380,7 +386,8 @@ namespace DK.Modeling.Tokens
 			{
 				if (def.ArgumentsRequired || def.RequiresChild) continue;
 
-				return new IdentifierToken(scope, wordSpan, word, def);
+				var identifierToken = new IdentifierToken(scope, wordSpan, word, def);
+				return (Token)ArrayBracesToken.TryParse(scope, identifierToken) ?? identifierToken;
 			}
 
 			if (StatementToken.IsStatementBreakingWord(scope, word))

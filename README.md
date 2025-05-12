@@ -25,6 +25,7 @@ Visual Studio Extension for WBDK
 - Stopped code analysis errors when assigning a value to/from a variant.
 - Stopped code analysis errors for uninitialized interface types.
 - Added support for table$column
+- Fixed enum value not getting detected properly when used with an array.
 
 **Version 1.6.9 Changes:**
 - Added code analysis support for the new 'like' operator.

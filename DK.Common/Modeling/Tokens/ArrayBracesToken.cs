@@ -9,21 +9,27 @@ namespace DK.Modeling.Tokens
 		private ArrayBraceToken _openToken;
 		private ArrayBraceToken _closeToken;
 		private List<Token> _innerTokens = new List<Token>();
+		private Token _identifierToken;	// Can be null
 
-		internal ArrayBracesToken(Scope scope)
+		internal ArrayBracesToken(Scope scope, Token identifierToken)
 			: base(scope)
 		{
+			if (identifierToken != null)
+			{
+				AddToken(identifierToken);
+                _identifierToken = identifierToken;
+            }
 		}
 
-		internal static ArrayBracesToken TryParse(Scope scope)
+		internal static ArrayBracesToken TryParse(Scope scope, Token identifierToken)
 		{
 			if (!scope.Code.PeekExact('[')) return null;
-			return Parse(scope);
+			return Parse(scope, identifierToken);
 		}
 
 		private static readonly string[] _endTokens = new string[] { "]", "," };
 
-		internal static ArrayBracesToken Parse(Scope scope)
+		internal static ArrayBracesToken Parse(Scope scope, Token identifierToken)
 		{
 			var code = scope.Code;
 			if (!code.ReadExact('[')) throw new InvalidOperationException("ArrayBracesToken.Parse expected next char to be '['.");
@@ -32,7 +38,7 @@ namespace DK.Modeling.Tokens
 			var indentScope = scope.CloneIndentNonRoot();
 			indentScope.Hint |= ScopeHint.SuppressFunctionDefinition | ScopeHint.SuppressStatementStarts;
 
-			var ret = new ArrayBracesToken(scope);
+			var ret = new ArrayBracesToken(scope, identifierToken);
 			ret.AddToken(ret._openToken = new ArrayBraceToken(scope, openBracketSpan, ret, true));
 
 			while (!code.EndOfFile)
@@ -81,5 +87,7 @@ namespace DK.Modeling.Tokens
 		{
 			AddToken(_openToken = new ArrayBraceToken(Scope, span, this, false));
 		}
-	}
+
+		public override DataType ValueDataType => _identifierToken?.ValueDataType;
+    }
 }
