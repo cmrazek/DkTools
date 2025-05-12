@@ -121,15 +121,46 @@ namespace DK.Definitions
         public override IEnumerable<Definition> GetChildDefinitions(DkAppSettings appSettings) => _table.ColumnDefinitions;
 
         public override IEnumerable<Definition> GetDollarChildDefinitions(string name, DkAppSettings appSettings)
-        {
-			var col = _table.GetColumn(name);
-			if (col != null) yield return col.Definition;
+		{
+			switch (name)
+			{
+				case "FocusName":
+                    yield return FocusNameDefinition;
+					break;
+				case "FocusNo":
+                    yield return FocusNoDefinition;
+					break;
+				case "FocusValue":
+                    yield return FocusValueDefinition;
+					break;
+				default:
+					{
+                        var col = _table.GetColumn(name);
+                        if (col != null) yield return col.Definition;
+                    }
+					break;
+            }
         }
 
         public override IEnumerable<Definition> GetDollarChildDefinitions(DkAppSettings appSettings)
         {
-			return _table.ColumnDefinitions;
+			foreach (var cd in _table.ColumnDefinitions) yield return cd;
+			yield return FocusNameDefinition;
+			yield return FocusNoDefinition;
+			yield return FocusValueDefinition;
         }
+
+        Definition _focusNameDef;
+		Definition FocusNameDefinition => _focusNameDef ?? (_focusNameDef = new AfsPropertyDefinition(Name, "FocusName", DataType.Char255,
+                "Retrieves the name of the field with focus, or sets focus to the specified field name.", readOnly: false));
+
+        Definition _focusNoDef;
+        Definition FocusNoDefinition => _focusNoDef ?? (_focusNoDef = new AfsPropertyDefinition(Name, "FocusNo", DataType.Int,
+                "Retrieves the field number of the field with focus, or sets focus to the specified field number.", readOnly: false));
+
+        Definition _focusValueDef;
+        Definition FocusValueDefinition => _focusValueDef ?? (_focusValueDef = new AfsPropertyDefinition(Name, "FocusValue", DataType.Variant,
+                "Retrieves or sets the value of the field that presently has focus.", readOnly: false));
 
         public override bool ArgumentsRequired
 		{
