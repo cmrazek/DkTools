@@ -288,6 +288,11 @@ namespace DK.CodeAnalysis
 		[ErrorMessage("'like' operator may only be used with a string.")]
 		CA0140,
 		#endregion
+
+		#region Goto Operator (0150-0159)
+		[ErrorMessage("Expected goto label.")]
+		CA0150,
+		#endregion
 	}
 
     [AttributeUsage(AttributeTargets.Field, AllowMultiple = false)]

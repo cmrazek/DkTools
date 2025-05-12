@@ -1,13 +1,14 @@
 ﻿using DK.Code;
 using DK.CodeAnalysis.Nodes;
+using System.Collections.Generic;
 
 namespace DK.CodeAnalysis.Statements
 {
 	abstract class Statement
 	{
 		private CodeAnalyzer _ca;
-		
 		private CodeSpan _span;
+		private List<Statement> _onErrorBody;
 
 		public Statement(CodeAnalyzer ca)
 		{
@@ -73,6 +74,12 @@ namespace DK.CodeAnalysis.Statements
 			{
 				if (p.Code.ReadExact(';')) return stmt;
 
+				if (p.Code.ReadExactWholeWord("onerror"))
+				{
+					stmt.ProcessOnError(p, p.Code.Span);
+					return stmt;
+				}
+
 				var node = ExpressionNode.Read(p, null);
 				if (node == null) break;
 				stmt.AddNode(node);
@@ -96,6 +103,13 @@ namespace DK.CodeAnalysis.Statements
 					scope.UnreachableCodeReported = TriState.True;
 				}
 			}
+
+			if (_onErrorBody != null)
+			{
+				var scopes = new CAScope[] { scope.Clone(), scope.Clone() };
+				foreach (var stmt in _onErrorBody) stmt.Execute(scopes[1]);
+				scope.Merge(scopes);
+			}
 		}
 
 		public CodeAnalyzer CodeAnalyzer
@@ -113,5 +127,46 @@ namespace DK.CodeAnalysis.Statements
 			get { return _span; }
 			set { _span = value; }
 		}
+
+		private void ProcessOnError(ReadParams p, CodeSpan keywordSpan)
+		{
+            var code = p.Code;
+
+            if (code.ReadExactWholeWord("resume"))
+            {
+                var resumeSpan = code.Span;
+                if (!code.ReadExact(';'))
+                {
+                    ReportError(resumeSpan, CAError.CA0015);  // Expected ';'.
+                }
+            }
+            else if (code.ReadExactWholeWord("goto"))
+            {
+                var gotoSpan = code.Span;
+                if (!code.ReadWord())
+                {
+                    ReportError(gotoSpan, CAError.CA0150); // Expected goto label.
+                }
+                else if (!code.ReadExact(';'))
+                {
+                    var labelSpan = code.Span;
+                    ReportError(labelSpan, CAError.CA0015);  // Expected ';'.
+                }
+            }
+            else if (code.ReadExact('{'))
+            {
+                _onErrorBody = new List<Statement>();
+                while (!code.EndOfFile && !code.ReadExact("}"))
+                {
+                    var stmt = Statement.Read(p);
+                    if (stmt == null) break;
+                    _onErrorBody.Add(stmt);
+                }
+            }
+            else
+            {
+                ReportError(keywordSpan, CAError.CA0019);   // Expected '{'.
+            }
+        }
 	}
 }

@@ -133,7 +133,10 @@ namespace DK.Definitions
 				case "FocusValue":
                     yield return FocusValueDefinition;
 					break;
-				default:
+				case "FieldItype":
+					yield return FieldItypeDefinition;
+					break;
+                default:
 					{
                         var col = _table.GetColumn(name);
                         if (col != null) yield return col.Definition;
@@ -148,6 +151,7 @@ namespace DK.Definitions
 			yield return FocusNameDefinition;
 			yield return FocusNoDefinition;
 			yield return FocusValueDefinition;
+			yield return FieldItypeDefinition;
         }
 
         Definition _focusNameDef;
@@ -161,6 +165,23 @@ namespace DK.Definitions
         Definition _focusValueDef;
         Definition FocusValueDefinition => _focusValueDef ?? (_focusValueDef = new AfsPropertyDefinition(Name, "FocusValue", DataType.Variant,
                 "Retrieves or sets the value of the field that presently has focus.", readOnly: false));
+
+		Definition _fieldITypeDef;
+		Definition FieldItypeDefinition => _fieldITypeDef ?? (_fieldITypeDef = new AfsMethodDefinition(Name, "FieldItype",
+			new FunctionSignature(
+				isExtern: false,
+				privacy: FunctionPrivacy.Public,
+				returnDataType: DataType.Int,
+				className: Name,
+				funcName: "FieldItype",
+				devDesc: "Returns the data attribute number of the field.",
+				args: new ArgumentDescriptor[]
+				{
+					new ArgumentDescriptor("FieldNumber", DataType.Int)
+				},
+				serverContext: ServerContext.Neutral)
+			)
+		);
 
         public override bool ArgumentsRequired
 		{

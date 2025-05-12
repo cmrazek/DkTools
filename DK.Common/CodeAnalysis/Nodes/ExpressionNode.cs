@@ -61,6 +61,8 @@ namespace DK.CodeAnalysis.Nodes
                         return exp;
                 }
 
+                if (code.PeekExactWholeWord("onerror")) return exp;
+
                 if (CheckForStopStrings(p, stopStrings)) return exp;
 
                 if (!code.Read()) break;

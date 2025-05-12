@@ -28,7 +28,7 @@ namespace DK
             "table tag to tool typedef unique updates where while widthof zoom");
 
         // Keywords that are not supported by the code model, but should be highlighted anyway.
-        public static readonly HashSet<string> HighlightKeywords = StringHelper.ParseWordList("all group in where");
+        public static readonly HashSet<string> HighlightKeywords = StringHelper.ParseWordList("all group in onerror where");
 
         public static readonly HashSet<string> TagNames = StringHelper.ParseWordList(
             "accesstype checkbox cols controlstyle defaultenumcontrolstyle disabledborder easyview formatstring formposition hideModalMenus",

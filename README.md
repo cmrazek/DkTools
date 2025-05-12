@@ -26,6 +26,7 @@ Visual Studio Extension for WBDK
 - Added support for table$column
 - Fixed enum value not getting detected properly when used with an array.
 - Removed code snippets. (haven't worked for a long time and nobody complained)
+- Add support for onerror.
 
 **Version 1.6.9 Changes:**
 - Added code analysis support for the new 'like' operator.
