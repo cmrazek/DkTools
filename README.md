@@ -8,7 +8,6 @@ Visual Studio Extension for WBDK
 - Find all references
 - Statement completion
 - Function signature help
-- Code snippets
 - Automatic brace completion
 - Code folding
 - Brace matching
@@ -26,6 +25,7 @@ Visual Studio Extension for WBDK
 - Stopped code analysis errors for uninitialized interface types.
 - Added support for table$column
 - Fixed enum value not getting detected properly when used with an array.
+- Removed code snippets. (haven't worked for a long time and nobody complained)
 
 **Version 1.6.9 Changes:**
 - Added code analysis support for the new 'like' operator.

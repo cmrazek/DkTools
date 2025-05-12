@@ -82,9 +82,6 @@ namespace DkTools
     [ProvideOptionPage(typeof(Tagging.TaggingOptions), "DK", "Tagging", 101, 107, true)]
     [ProvideOptionPage(typeof(EditorOptions), "DK", "Editor", 101, 108, true)]
     [ProvideOptionPage(typeof(ErrorSuppressionOptions), "DK", "Error Suppressions", 101, 109, true)]
-    [ProvideLanguageCodeExpansion(typeof(ProbeLanguageService), Constants.DkContentType, 0, Constants.DkContentType,
-        "%LocalAppData%\\DkTools2012\\SnippetIndex.xml",
-        SearchPaths = "%LocalAppData%\\DkTools2012\\Snippets\\;%MyDocs%\\Code Snippets\\DK\\My Code Snippets\\")]
     [ProvideBraceCompletion(Constants.DkContentType)]
     public sealed partial class ProbeToolsPackage : AsyncPackage, IOleComponent
     {
@@ -130,7 +127,6 @@ namespace DkTools
 
             _app.LoadAppSettings(null);
             TempManager.Init(TempDir);
-            Snippets.SnippetDeploy.DeploySnippets();
 
             _compiler = new ProbeCompiler(_app);
             _fileSystemWatcher = new DkFileSystemWatcher(_app);
