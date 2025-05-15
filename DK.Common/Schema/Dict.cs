@@ -1374,6 +1374,11 @@ namespace DK.Schema
 			{
 				parentTable.AddRelInd(relind);
 
+				if (hasTable)
+				{
+					relind.AddColumn(new Column(name, "rowno", DataType.Unsigned9, nameFilePos, implicitCol: true));
+				}
+
 				if (parentMany)
 				{
 					// child must be many if parent is many
@@ -1381,16 +1386,24 @@ namespace DK.Schema
 					parentTable.AddColumn(new Column(parentTable.Name, string.Concat("has_", name, "_", childTable.Name),
 						DataType.Unsigned2, nameFilePos, true));
 
-					childTable.AddColumn(new Column(childTable.Name, string.Concat("rowno_", name, "_", parentTable.Name),
-						DataType.Unsigned9, nameFilePos, true));
+					childTable.AddColumn(new Column(childTable.Name, string.Concat("has_", name, "_", parentTable.Name),
+						DataType.Unsigned2, nameFilePos, true));
 
 					if (hasTable)
 					{
 						relind.AddColumn(new Column(name, string.Concat("rowno_", name, "_", parentTable.Name),
 							DataType.Unsigned9, nameFilePos, true));
 
-						relind.AddColumn(new Column(name, string.Concat("rowno_", name, "_", childTable.Name, "2"),
-							DataType.Unsigned9, nameFilePos, true));
+						if (parentTable.Name == childTable.Name)
+						{
+                            relind.AddColumn(new Column(name, string.Concat("rowno_", name, "_", childTable.Name, "2"),
+								DataType.Unsigned9, nameFilePos, implicitCol: true));
+                        }
+						else
+						{
+                            relind.AddColumn(new Column(name, string.Concat("rowno_", name, "_", childTable.Name),
+								DataType.Unsigned9, nameFilePos, implicitCol: true));
+                        }
 					}
 				}
 				else // one parent
