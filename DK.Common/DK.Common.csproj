@@ -104,6 +104,7 @@
     <Compile Include="CodeAnalysis\Values\DateValue.cs" />
     <Compile Include="CodeAnalysis\Values\EnumValue.cs" />
     <Compile Include="CodeAnalysis\Values\IndRelValue.cs" />
+    <Compile Include="CodeAnalysis\Values\InterfaceValue.cs" />
     <Compile Include="CodeAnalysis\Values\NumberValue.cs" />
     <Compile Include="CodeAnalysis\Values\StringValue.cs" />
     <Compile Include="CodeAnalysis\Values\TableValue.cs" />

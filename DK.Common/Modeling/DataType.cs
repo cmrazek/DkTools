@@ -52,7 +52,9 @@ namespace DK.Modeling
 			{ _completionOptionsType = CompletionOptionsType.RelInds };
 		public static readonly DataType Int = new DataType(ValType.Numeric, null,
 			new ProbeClassifiedString(new ProbeClassifiedRun(ProbeClassifierType.DataType, "int")));
-		public static readonly DataType Numeric = new DataType(ValType.Numeric, null,
+        public static readonly DataType InterfaceType = new DataType(ValType.Interface, null,
+            new ProbeClassifiedString(new ProbeClassifiedRun(ProbeClassifierType.DataType, "interfacetype")));
+        public static readonly DataType Numeric = new DataType(ValType.Numeric, null,
 			new ProbeClassifiedString(new ProbeClassifiedRun(ProbeClassifierType.DataType, "numeric")));
 		public static readonly DataType OleObject = new DataType(ValType.Interface, null,
 			new ProbeClassifiedString(new ProbeClassifiedRun(ProbeClassifierType.DataType, "oleobject")));

@@ -28,6 +28,7 @@ Visual Studio Extension for WBDK
 - Removed code snippets. (haven't worked for a long time and nobody complained)
 - Add support for onerror.
 - Fix incorrect implicit columns on many-to-many relationships.
+- Added many AFS table methods/properties.
 
 **Version 1.6.9 Changes:**
 - Added code analysis support for the new 'like' operator.
