@@ -29,6 +29,7 @@ Visual Studio Extension for WBDK
 - Add support for onerror.
 - Fix incorrect implicit columns on many-to-many relationships.
 - Added many AFS table methods/properties.
+- Add support for $ErrorCount and $ErrorItems()
 
 **Version 1.6.9 Changes:**
 - Added code analysis support for the new 'like' operator.
