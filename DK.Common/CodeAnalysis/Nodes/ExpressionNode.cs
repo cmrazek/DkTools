@@ -250,6 +250,20 @@ namespace DK.CodeAnalysis.Nodes
                                     }
                                 }
                                 break;
+                            case "$":
+                                {
+                                    var dollarSpan = code.Span;
+                                    if (code.ReadWord())
+                                    {
+                                        var wordSpan = code.Span.Envelope(dollarSpan);
+                                        exp.AddChild(exp.ReadWord(p, parseDataType, overrideWord: $"${code.Text}", overrideWordSpan: wordSpan));
+                                    }
+                                    else
+                                    {
+                                        exp.AddChild(new OperatorNode(p.Statement, code.Span, code.Text, null));
+                                    }
+                                }
+                                break;
                             default:
                                 exp.AddChild(new OperatorNode(p.Statement, code.Span, code.Text, null));
                                 break;
@@ -265,11 +279,11 @@ namespace DK.CodeAnalysis.Nodes
             return exp;
         }
 
-        private Node ReadWord(ReadParams p, DataType refDataType)
+        private Node ReadWord(ReadParams p, DataType refDataType, string overrideWord = null, CodeSpan? overrideWordSpan = null)
         {
             var code = p.Code;
-            var word = code.Text;
-            var wordSpan = code.Span;
+            var word = overrideWord ?? code.Text;
+            var wordSpan = overrideWordSpan ?? code.Span;
 
             if (code.ReadExact('('))
             {

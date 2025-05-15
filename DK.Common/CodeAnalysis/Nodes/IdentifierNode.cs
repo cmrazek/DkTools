@@ -84,6 +84,10 @@ namespace DK.CodeAnalysis.Nodes
 					}
 					return v.Value;
 				}
+				else if (_def.Name.StartsWith("$"))	// $ErrorCount
+				{
+					return Value.CreateUnknownFromDataType(_def.DataType);
+				}
 
 				return base.ReadValue(scope);
 			}

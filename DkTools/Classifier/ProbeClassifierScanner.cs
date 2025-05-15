@@ -60,7 +60,7 @@ namespace DkTools.Classifier
 			public ProbeClassifierType Type;
 		}
 
-		private static Regex _rxWord = new Regex(@"\G[a-zA-Z_]\w*");
+		private static Regex _rxWord = new Regex(@"\G\$?[a-zA-Z_]\w*");
 		private static Regex _rxNumber = new Regex(@"\G\d+(?:\.\d+)?");
 		private static Regex _rxCharLiteral = new Regex(@"\G'(?:\\'|[^'])*'");
 		private static Regex _rxPreprocessor = new Regex(@"\G\#\w+");

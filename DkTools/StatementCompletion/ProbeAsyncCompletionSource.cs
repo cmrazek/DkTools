@@ -91,7 +91,7 @@ namespace DkTools.StatementCompletion
 
         private static readonly Regex _rxTypingTable = new Regex(@"(\w+)\.(\w*)$");
         private static readonly Regex _rxTypingTableDollar = new Regex(@"(\w+)\$(\w*)$");
-        private static readonly Regex _rxTypingWord = new Regex(@"\w+$");
+        private static readonly Regex _rxTypingWord = new Regex(@"(?:\w+|\$\w*)$");
         private static readonly Regex _rxAfterAssignOrCompare = new Regex(@"(==|=|!=|<|<=|>|>=)\s$");
         private static readonly Regex _rxAfterWord = new Regex(@"\b(\w+)\s$");
         private static readonly Regex _rxClassFunctionStartBracket = new Regex(@"(\w+)\s*\.\s*(\w+)\s*\($");

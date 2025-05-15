@@ -296,7 +296,9 @@ namespace DK.Code
 					return true;
 				}
 
-				if (ch == '?' || ch == ':' || ch == ',' || ch == '.' || ch == '(' || ch == ')' || ch == '{' || ch == '}' || ch == '[' || ch == ']' || ch == '^' || ch == '!' || ch == ';')
+				if (ch == '?' || ch == ':' || ch == ',' || ch == '.' || ch == '(' || ch == ')' ||
+					ch == '{' || ch == '}' || ch == '[' || ch == ']' || ch == '^' || ch == '!' ||
+					ch == ';' || ch == '$')
 				{
 					_tokenText.Append(ch);
 					_pos++;

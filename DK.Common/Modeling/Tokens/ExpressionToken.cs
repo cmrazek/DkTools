@@ -199,6 +199,27 @@ namespace DK.Modeling.Tokens
 							case "in":
 								exp.AddToken(InOperator.Parse(scope, exp.LastChild, new OperatorToken(scope, code.Span, code.Text), endTokens, exp.LastChild?.ValueDataType));
 								break;
+							case "$":
+								{
+									var dollarSpan = code.Span;
+									if (code.ReadWord())
+									{
+										var wordSpan = code.Span.Envelope(dollarSpan);
+										var word = $"${code.Text}";
+										var wordToken = ProcessWord(exp, scope, word, wordSpan);
+										if (wordToken != null) exp.AddToken(wordToken);
+										else
+										{
+											code.Position = dollarSpan.Start;
+											abortParsing = true;
+										}
+									}
+									else
+									{
+										exp.AddToken(new OperatorToken(scope, code.Span, code.Text));
+									}
+								}
+								break;
 							default:
 								exp.AddToken(new OperatorToken(scope, code.Span, code.Text));
 								break;

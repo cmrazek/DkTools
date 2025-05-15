@@ -141,6 +141,11 @@ namespace DK.Definitions
                         new ArgumentDescriptor[] { new ArgumentDescriptor("name", null) },
                         ServerContext.Neutral), hasVariableArgumentCount: false),
 
+                    new FunctionDefinition(new FunctionSignature(true, FunctionPrivacy.Public, DataType.Char255, null, "$ErrorItems",
+                        "Returns the string of the error message, identified by the item.",
+                        new ArgumentDescriptor[] { new ArgumentDescriptor("item", DataType.Int) },
+                        ServerContext.Neutral), hasVariableArgumentCount: false),
+
                     // Data types
                     new DataTypeDefinition("int", DataType.Int),
 
@@ -151,7 +156,10 @@ namespace DK.Definitions
                     new ConstantDefinition("_WINDOWS", FilePosition.Empty, string.Empty),
 
                     // Indexes / Relationships
-                    RelIndDefinition.Physical
+                    RelIndDefinition.Physical,
+
+                    // Global properties
+                    new VariableDefinition("$ErrorCount", FilePosition.Empty, DataType.Int, arg: false, null, VariableType.Global)
                 };
             }
             AddGlobalFromAnywhere(_builtInDefs);
