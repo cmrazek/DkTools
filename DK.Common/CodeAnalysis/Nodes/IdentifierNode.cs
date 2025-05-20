@@ -154,7 +154,19 @@ namespace DK.CodeAnalysis.Nodes
 			}
 		}
 
-		public Definition GetDefinition(CAScope scope)
+        public override void OnUsed(CAScope scope)
+        {
+            if (_def is VariableDefinition)
+            {
+                var v = scope.GetVariable(Text);
+                if (v != null)
+                {
+                    v.IsUsed = true;
+                }
+            }
+        }
+
+        public Definition GetDefinition(CAScope scope)
 		{
 			return _def;
 		}

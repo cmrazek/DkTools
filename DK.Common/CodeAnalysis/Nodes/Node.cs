@@ -58,6 +58,10 @@ namespace DK.CodeAnalysis.Nodes
 			return false;
 		}
 
+		public virtual void OnUsed(CAScope scope)
+		{
+		}
+
 		public void ReportError(CAError errorCode, params object[] args)
 		{
 			ReportError(Span, errorCode, args);

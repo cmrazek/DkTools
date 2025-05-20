@@ -1,7 +1,9 @@
-﻿using DK.Code;
+﻿using DK.AppEnvironment;
+using DK.Code;
 using DK.Schema;
 using DK.Syntax;
 using System;
+using System.Collections.Generic;
 
 namespace DK.Definitions
 {
@@ -85,5 +87,24 @@ namespace DK.Definitions
 		{
 			get { return false; }
 		}
-	}
+
+        public override IEnumerable<Definition> GetChildDefinitions(DkAppSettings appSettings)
+        {
+			foreach (var m in _intType.Methods) yield return m;
+			foreach (var p in _intType.Properties) yield return p;
+        }
+
+        public override IEnumerable<Definition> GetChildDefinitions(string name, DkAppSettings appSettings)
+        {
+            foreach (var m in _intType.Methods)
+			{
+				if (m.Name == name) yield return m;
+			}
+
+			foreach (var p in _intType.Properties)
+			{
+				if (p.Name == name) yield return p;
+			}
+        }
+    }
 }

@@ -428,7 +428,7 @@ namespace DK.Code
 			int lineNum = 0;
 			int linePos = 0;
 
-			while (pos < _length)
+			while (pos < offset)
 			{
 				if (_source[pos] == '\n')
 				{

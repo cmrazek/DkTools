@@ -20,6 +20,8 @@ namespace DK.Modeling
 		private CompletionOptionsType _completionOptionsType;
 		private ValType _valueType;
 		private Interface _intf;
+		private bool _pointer;	// Only applicable to interfaces
+		private bool _array;	// Only applicable to interfaces
 
 		public enum CompletionOptionsType
 		{
@@ -98,6 +100,7 @@ namespace DK.Modeling
 		internal delegate VariableDefinition GetVariableDelegate(string name);
 		internal delegate Definition[] GetTableFieldDelegate(string tableName, string fieldName);
 		internal delegate void TokenCreateDelegate(Token token);
+		internal delegate Interface GetInterfaceDelegate(string nameOrPlatformName);
 
 		/// <summary>
 		/// Creates a new data type object.
@@ -150,7 +153,22 @@ namespace DK.Modeling
 			_completionOptionsType = CompletionOptionsType.EnumOptionsList;
 		}
 
-		public bool IsReportable => _valueType != ValType.Void && _valueType != ValType.Unknown;
+		/// <summary>
+		/// Clones a data type object.
+		/// </summary>
+		/// <param name="clone">The data type to be cloned.</param>
+		public DataType(DataType clone)
+		{
+			_name = clone._name;
+			_source = clone._source;
+			_completionOptions = clone._completionOptions;
+			_valueType = clone._valueType;
+			_intf = clone._intf;
+			_pointer = clone._pointer;
+			_array = clone._array;
+		}
+
+        public bool IsReportable => _valueType != ValType.Void && _valueType != ValType.Unknown;
 
 		public string Name
 		{
@@ -202,6 +220,13 @@ namespace DK.Modeling
 				case CompletionOptionsType.RelInds:
 					yield return RelIndDefinition.Physical;
 					foreach (var r in appSettings.Dict.RelInds) yield return r.Definition;
+					break;
+
+				default:
+					if (_intf != null)
+					{
+						foreach (var def in _intf.Definition.GetChildDefinitions(appSettings)) yield return def;
+					}
 					break;
 			}
 		}
@@ -262,6 +287,11 @@ namespace DK.Modeling
 			/// (optional) A callback which triggers creation of tokens for use in a code model.
 			/// </summary>
 			public TokenCreateDelegate TokenCreateCallback { get; set; }
+
+			/// <summary>
+			/// (optional) A callback which can be used to look up an interface using alternate methods than just the dict.
+			/// </summary>
+			public GetInterfaceDelegate InterfaceCallback { get; set; }
 
 			/// <summary>
 			/// (optional) The scope to use when creating tokens.
@@ -1248,15 +1278,53 @@ namespace DK.Modeling
 			if (code.ReadWord())
 			{
 				var intfName = code.Text;
+				var resetPos = code.Position;
 
-				var intf = a.AppSettings.Dict.GetInterface(code.Text);
+				while (a.InterfaceCallback != null && code.ReadExact('.') && code.ReadWord())
+				{
+					intfName = $"{intfName}.{code.Text}";
+					resetPos = code.Position;
+				}
+				code.Position = resetPos;
+
+				// Check for array brackets []
+				var array = false;
+				resetPos = code.Position;
+				var arraySpan1 = CodeSpan.Empty;
+				var arraySpan2 = CodeSpan.Empty;
+				if (code.ReadExact('['))
+				{
+					arraySpan1 = code.Span;
+					if (code.ReadExact(']'))
+					{
+						arraySpan2 = code.Span;
+						array = true;
+					}
+				}
+				if (!array) code.Position = resetPos;
+
+				// Check for pointer *
+				var pointer = code.ReadExact('*');
+				var pointerSpan = code.Span;
+
+				Interface intf = null;
+				if (a.InterfaceCallback != null) intf = a.InterfaceCallback(intfName);
+				if (intf == null) intf = a.AppSettings.Dict.GetInterface(code.Text);
 				if (intf != null)
 				{
 					if (a.TokenCreateCallback != null)
 					{
 						a.OnToken(new IdentifierToken(a.Scope, code.Span, code.Text, intf.Definition));
+						if (array)
+						{
+							a.OnOperator(arraySpan1, "[");
+							a.OnOperator(arraySpan2, "]");
+						}
+						if (pointer) a.OnOperator(pointerSpan, "*");
 					}
 
+					if (array) return intf.MakeArrayDataType();
+					if (pointer) return intf.MakePointerDataType();
 					return intf.DataType;
 				}
 			}
@@ -1689,5 +1757,8 @@ namespace DK.Modeling
 
 			return DataType.Unknown;
 		}
+
+		public bool InterfaceArray { get => _array; set => _array = value; }
+		public bool InterfacePointer { get => _pointer; set => _pointer = value; }
 	}
 }

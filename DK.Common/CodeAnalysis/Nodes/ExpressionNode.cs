@@ -324,7 +324,9 @@ namespace DK.CodeAnalysis.Nodes
                             var childDef = parentDef.GetChildDefinitions(p.AppSettings).FirstOrDefault(c => c.Name == childWord && c.ArgumentsRequired);
                             if (childDef != null)
                             {
-                                return FunctionCallNode.Read(p, combinedSpan, combinedWord, childDef, argsStartPos);
+                                var parentNode = new IdentifierNode(p.Statement, wordSpan, word, parentDef);
+                                var childNode = FunctionCallNode.Read(p, combinedSpan, combinedWord, childDef, argsStartPos);
+                                return new ParentChildNode(parentNode, childNode);
                             }
                         }
 
@@ -337,10 +339,12 @@ namespace DK.CodeAnalysis.Nodes
                                                    where d.AllowsChild
                                                    select d))
                         {
-                            var childDef = parentDef.GetChildDefinitions(p.AppSettings).FirstOrDefault(c => c.Name == childWord && !c.ArgumentsRequired);
+                            var childDef = parentDef.GetChildDefinitions(childWord, p.AppSettings).FirstOrDefault(c => !c.ArgumentsRequired);
                             if (childDef != null)
                             {
-                                return TryReadSubscript(p, combinedSpan, combinedWord, childDef);
+                                var parentNode = new IdentifierNode(p.Statement, wordSpan, word, parentDef);
+                                var childNode = TryReadSubscript(p, combinedSpan, combinedWord, childDef);
+                                return new ParentChildNode(parentNode, childNode);
                             }
                         }
 
@@ -375,7 +379,9 @@ namespace DK.CodeAnalysis.Nodes
                             var childDef = parentDef.GetDollarChildDefinitions(p.AppSettings).FirstOrDefault(c => c.Name == childWord && c.ArgumentsRequired);
                             if (childDef != null)
                             {
-                                return FunctionCallNode.Read(p, combinedSpan, combinedWord, childDef, argsStartPos);
+                                var parentNode = new IdentifierNode(p.Statement, wordSpan, word, parentDef);
+                                var childNode = FunctionCallNode.Read(p, combinedSpan, combinedWord, childDef, argsStartPos);
+                                return new ParentChildNode(parentNode, childNode);
                             }
                         }
 
@@ -388,10 +394,12 @@ namespace DK.CodeAnalysis.Nodes
                                                    where d.AllowsDollarChild
                                                    select d))
                         {
-                            var childDef = parentDef.GetDollarChildDefinitions(p.AppSettings).FirstOrDefault(c => c.Name == childWord && !c.ArgumentsRequired);
+                            var childDef = parentDef.GetDollarChildDefinitions(childWord, p.AppSettings).FirstOrDefault(c => !c.ArgumentsRequired);
                             if (childDef != null)
                             {
-                                return TryReadSubscript(p, combinedSpan, combinedWord, childDef);
+                                var parentNode = new IdentifierNode(p.Statement, wordSpan, word, parentDef);
+                                var childNode = TryReadSubscript(p, combinedSpan, combinedWord, childDef);
+                                return new ParentChildNode(parentNode, childNode);
                             }
                         }
 

@@ -2,6 +2,7 @@
 using DK.Definitions;
 using DK.Modeling;
 using DK.Syntax;
+using System;
 using System.Collections.Generic;
 
 namespace DK.Schema
@@ -15,7 +16,7 @@ namespace DK.Schema
 		public string TLibId { get; set; }
 		public string Iid { get; set; }
 		public string Description { get; set; }
-		public string InterfaceName { get; set; }
+		public string PlatformName { get; set; }
 		public bool Default { get; set; }
 		public bool DefaultEvent { get; set; }
 
@@ -24,6 +25,8 @@ namespace DK.Schema
 		private InterfaceTypeDefinition _def;
 		private FilePosition _filePos;
 		private DataType _dataType;
+		private List<InterfaceMethodDefinition> _methods;
+		private List<InterfacePropertyDefinition> _properties;
 
 		public Interface(string name, FilePosition filePos)
 		{
@@ -65,5 +68,24 @@ namespace DK.Schema
 		{
 			get { return _dataType; }
 		}
-	}
+
+		public DataType MakeArrayDataType() => new DataType(_dataType) { InterfaceArray = true };
+		public DataType MakePointerDataType() => new DataType(_dataType) { InterfacePointer = true };
+
+        public void AddMethod(InterfaceMethodDefinition method)
+		{
+			if (_methods == null) _methods = new List<InterfaceMethodDefinition>();
+			_methods.Add(method ?? throw new ArgumentNullException(nameof(method)));
+		}
+
+        public void AddProperty(InterfacePropertyDefinition property)
+        {
+            if (_properties == null) _properties = new List<InterfacePropertyDefinition>();
+            _properties.Add(property ?? throw new ArgumentNullException(nameof(property)));
+        }
+
+		public IEnumerable<InterfaceMethodDefinition> Methods => _methods;
+
+		public IEnumerable<InterfacePropertyDefinition> Properties => _properties;
+    }
 }

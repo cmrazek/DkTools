@@ -78,6 +78,7 @@
     <Compile Include="CodeAnalysis\Nodes\Node.cs" />
     <Compile Include="CodeAnalysis\Nodes\NumberNode.cs" />
     <Compile Include="CodeAnalysis\Nodes\OperatorNode.cs" />
+    <Compile Include="CodeAnalysis\Nodes\ParentChildNode.cs" />
     <Compile Include="CodeAnalysis\Nodes\ResultNode.cs" />
     <Compile Include="CodeAnalysis\Nodes\StringLiteralNode.cs" />
     <Compile Include="CodeAnalysis\Nodes\TextNode.cs" />
@@ -152,6 +153,7 @@
     <Compile Include="Schema\Column.cs" />
     <Compile Include="Schema\Dict.cs" />
     <Compile Include="Schema\Interface.cs" />
+    <Compile Include="Schema\InterfaceMapLoader.cs" />
     <Compile Include="Schema\RelInd.cs" />
     <Compile Include="Schema\Stringdef.cs" />
     <Compile Include="Schema\Table.cs" />

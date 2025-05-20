@@ -163,7 +163,18 @@ namespace DK.Definitions
 			}
 		}
 
-		public override bool ArgumentsRequired
+        public override IEnumerable<Definition> GetChildDefinitions(DkAppSettings appSettings)
+        {
+            if (_dataType != null)
+			{
+                foreach (var opt in _dataType.GetCompletionOptions(appSettings))
+                {
+                    yield return opt;
+                }
+            }
+        }
+
+        public override bool ArgumentsRequired
 		{
 			get { return false; }
 		}

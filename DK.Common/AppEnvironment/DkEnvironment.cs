@@ -98,6 +98,8 @@ namespace DK.AppEnvironment
 
                 var elapsed = DateTime.Now.Subtract(startTime);
                 log.Write(LogLevel.Info, "Successfully loaded dictionary (elapsed: {0})", elapsed);
+
+                DictionaryLoaded?.Invoke(null, new DkEnvironmentLoadEventArgs {  AppSettings = appSettings });
             }
             catch (Exception ex)
             {
@@ -344,5 +346,11 @@ namespace DK.AppEnvironment
             }
         }
         #endregion
+
+        public static event EventHandler<DkEnvironmentLoadEventArgs> DictionaryLoaded;
+        public class DkEnvironmentLoadEventArgs : EventArgs
+        {
+            public DkAppSettings AppSettings { get; set; }
+        }
     }
 }

@@ -1877,8 +1877,8 @@ namespace DK.Schema
 					}
 					else if (word.Equals("interface", StringComparison.OrdinalIgnoreCase))
 					{
-						if (_code.ReadStringLiteral()) intf.InterfaceName = CodeParser.StringLiteralToString(_code.Text);
-						else if (_code.ReadWord()) intf.InterfaceName = _code.Text;
+						if (_code.ReadStringLiteral()) intf.PlatformName = CodeParser.StringLiteralToString(_code.Text);
+						else if (_code.ReadWord()) intf.PlatformName = _code.Text;
 						else
 						{
 							ReportError(_code.Position, "Expected string literal or identifier to follow 'interface'.");
@@ -1913,7 +1913,17 @@ namespace DK.Schema
 			return null;
 		}
 
-		private void ReadDropInterfaceType()
+		public Interface GetInterfaceByPlatformName(string name)
+		{
+			foreach (var intf in _interfaces.Values)
+			{
+				if (intf.PlatformName == name) return intf;
+			}
+			return null;
+		}
+
+
+        private void ReadDropInterfaceType()
 		{
 			var name = _code.ReadWordR();
 			if (string.IsNullOrEmpty(name))
@@ -1930,10 +1940,16 @@ namespace DK.Schema
 
 			_interfaces.Remove(name);
 		}
-		#endregion
 
-		#region Workspaces
-		private void ReadCreateWorkspace()
+		public void LoadInterfacesMap(string source)
+		{
+			var loader = new InterfaceMapLoader(_appSettings, source);
+			loader.Load();
+		}
+        #endregion
+
+        #region Workspaces
+        private void ReadCreateWorkspace()
 		{
 			var name = _code.ReadWordR();
 			if (string.IsNullOrEmpty(name))

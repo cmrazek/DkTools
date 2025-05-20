@@ -10,7 +10,9 @@ using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
 using System;
 using System.ComponentModel.Design;
+using System.Diagnostics;
 using System.IO;
+using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Threading;
 
@@ -125,6 +127,7 @@ namespace DkTools
 
             await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync(cancellationToken);
 
+            DkEnvironment.DictionaryLoaded += DkEnvironment_DictionaryLoaded;
             _app.LoadAppSettings(null);
             TempManager.Init(TempDir);
 
@@ -492,5 +495,68 @@ namespace DkTools
             });
         }
         #endregion
+
+        private void DkEnvironment_DictionaryLoaded(object sender, DkEnvironment.DkEnvironmentLoadEventArgs e)
+        {
+            try
+            {
+                // Get the path of the PowerShell script.
+                var asm = Assembly.GetExecutingAssembly();
+                var scriptFileName = Path.Combine(Path.GetDirectoryName(asm.Location), "ItemTemplates", "MapInterfaces.ps1");
+                if (!File.Exists(scriptFileName))
+                {
+                    _app.Log.Warning("MapInterfaces script not found at '{0}'.", scriptFileName);
+                    return;
+                }
+
+                // Run the PowerShell script that maps the interfaces.
+                var pwshFileName = Environment.ExpandEnvironmentVariables("%SystemRoot%\\syswow64\\WindowsPowerShell\\v1.0\\powershell.exe");
+                if (!File.Exists(pwshFileName))
+                {
+                    _app.Log.Warning("32-bit PowerShell not found at '{0}'.", pwshFileName);
+                    return;
+                }
+
+                var repoDir = e.AppSettings.Repo.RepoDirectory;
+                if (!Directory.Exists(repoDir))
+                {
+                    _app.Log.Warning("Can't run MapInterfaces because the repo directory does not exist at '{0}'.", repoDir);
+                    return;
+                }
+
+                var mapFileName = Path.Combine(repoDir, e.AppSettings.Repo.AppNameEncode(e.AppSettings.AppName) + ".intf");
+
+                ProcessStartInfo startInfo = new ProcessStartInfo
+                {
+                    FileName = pwshFileName,
+                    Arguments = $"-ExecutionPolicy Bypass -File \"{scriptFileName}\" -outputFileName \"{mapFileName}\" -appName \"{e.AppSettings.AppName}\"",
+                    WorkingDirectory = repoDir,
+                    CreateNoWindow = true,
+                    UseShellExecute = false
+                };
+
+                _app.Log.Info("Running MapInterfaces script.");
+                var proc = Process.Start(startInfo);
+                proc.WaitForExit();
+                if (proc.ExitCode != 0)
+                {
+                    _app.Log.Warning("MapInterfaces script returned with exit code '{0}'.", proc.ExitCode);
+                    return;
+                }
+
+                if (!File.Exists(mapFileName))
+                {
+                    _app.Log.Warning("Interfaces map file was not created at '{0}'.", mapFileName);
+                    return;
+                }
+
+                var mapContent = File.ReadAllText(mapFileName);
+                e.AppSettings.Dict.LoadInterfacesMap(mapContent);
+            }
+            catch (Exception ex)
+            {
+                _app.Log.Error(ex, "Exception when running the MapInterfaces script.");
+            }
+        }
     }
 }

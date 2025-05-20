@@ -6,12 +6,13 @@ using System.Text;
 
 namespace DK.Definitions
 {
-	internal sealed class InterfacePropertyDefinition : Definition
+	public sealed class InterfacePropertyDefinition : Definition
 	{
 		private InterfaceTypeDefinition _intTypeDef;
 		private DataType _dataType;
+		private bool _readOnly;
 
-		public InterfacePropertyDefinition(InterfaceTypeDefinition intTypeDef, string name, DataType dataType)
+		public InterfacePropertyDefinition(InterfaceTypeDefinition intTypeDef, string name, DataType dataType, bool readOnly)
 			: base(name, FilePosition.Empty, GetExternalRefId(intTypeDef.Name, name))
 		{
 #if DEBUG
@@ -20,6 +21,7 @@ namespace DK.Definitions
 #endif
 			_intTypeDef = intTypeDef;
 			_dataType = dataType;
+			_readOnly = readOnly;
 		}
 
 		public override ServerContext ServerContext => ServerContext.Neutral;
@@ -96,7 +98,7 @@ namespace DK.Definitions
 		{
 			get
 			{
-				return _dataType != null;
+				return _dataType != null && !_readOnly;
 			}
 		}
 

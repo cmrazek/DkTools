@@ -186,7 +186,7 @@ namespace DK.Repository
             }
         }
 
-        private string AppNameEncode(string str)
+        public string AppNameEncode(string str)
         {
             var sb = new StringBuilder(str.Length);
             var invalidChars = _appSettings.FileSystem.GetInvalidPathChars();
@@ -200,6 +200,10 @@ namespace DK.Repository
 
             return sb.ToString();
         }
+
+        public string RepoFileName => _repoFileName;
+
+        public string RepoDirectory => _repoDir;
         #endregion
 
         #region File Node Management
