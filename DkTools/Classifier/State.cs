@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Microsoft.VisualStudio.Text;
+﻿using DkTools.StatementCompletion;
 
 namespace DkTools.Classifier
 {
@@ -20,7 +15,8 @@ namespace DkTools.Classifier
 		public const long DeadCodeMask = MultiLineCommentMask | SingleLineComment | StringLiteral_Mask | Disabled;
 
 		public const long StatementMask = 0x7fffffff00000000;   // Tracks the layout of a statement
-		public const int StatementShift = 32;
+        public const long StateMask = 0x00000000ffffffff;
+        public const int StatementShift = 32;
 
 		/// <summary>
 		/// Returns true if the state is not inside a comment, string literal or disabled code.
@@ -41,9 +37,14 @@ namespace DkTools.Classifier
 		/// <summary>
 		/// Returns the StatementState embedded inside a classifier state.
 		/// </summary>
-		public static StatementCompletion.StatementState ToStatement(long state)
+		public static StatementState ToStatement(long state)
 		{
-			return new StatementCompletion.StatementState((int)(state >> StatementShift));
+			return new StatementState((int)(state >> StatementShift));
+		}
+
+		public static long MergeStatement(long state, StatementState stmt)
+		{
+			return (state & StateMask) | (((long)stmt.IValue) << StatementShift);
 		}
 	}
 }

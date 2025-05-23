@@ -60,11 +60,12 @@ namespace DkTools.Classifier
 			public ProbeClassifierType Type;
 		}
 
-		private static Regex _rxWord = new Regex(@"\G\$?[a-zA-Z_]\w*");
+		private static Regex _rxWord = new Regex(@"\G[a-zA-Z_]\w*");
 		private static Regex _rxNumber = new Regex(@"\G\d+(?:\.\d+)?");
 		private static Regex _rxCharLiteral = new Regex(@"\G'(?:\\'|[^'])*'");
 		private static Regex _rxPreprocessor = new Regex(@"\G\#\w+");
 		private static Regex _rxIncludeString = new Regex(@"\G(?:<[^>]+>|""[^""]+"")");
+		private static Regex _rxErrorCountItems = new Regex(@"\G\$(?:ErrorCount|ErrorItems)\b");
 
 		private static readonly char[] k_commentEndKickOffChars = new char[] { '*', '/' };
 
@@ -211,9 +212,25 @@ namespace DkTools.Classifier
 					}
 
 					stmt = StatementCompletion.StatementLayout.ProcessWord(word, stmt, _model.AppSettings);
-					state = (((long)(stmt.IValue)) << State.StatementShift) | (state & ~State.StatementMask);
+					state = State.MergeStatement(state, stmt);
 				}
 			}
+			else if ((match = _rxErrorCountItems.Match(_source, _pos)).Success)
+			{
+				if ((state & State.Disabled) != 0) tokenInfo.Type = ProbeClassifierType.Inactive;
+				else
+				{
+					if (_tokenMap.TryGetValue(_pos + _posOffset, out token))
+					{
+						tokenInfo.Type = token.ClassifierType;
+					}
+					else
+					{
+						tokenInfo.Type = ProbeClassifierType.Normal;
+					}
+				}
+                _pos = match.Index + match.Length;
+            }
 			else if ((match = _rxNumber.Match(_source, _pos)).Success)
 			{
 				if ((state & State.Disabled) != 0) tokenInfo.Type = ProbeClassifierType.Inactive;
@@ -242,7 +259,7 @@ namespace DkTools.Classifier
 
 				if (match.Value == "#include") state |= State.AfterInclude;
 			}
-			else if ((state & State.Disabled) != 0)	// Everything after this point is assumed to be single character
+			else if ((state & State.Disabled) != 0) // Everything after this point is assumed to be single character
 			{
 				tokenInfo.Type = ProbeClassifierType.Inactive;
 				_pos++;

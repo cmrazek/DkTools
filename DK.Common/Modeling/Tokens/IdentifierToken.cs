@@ -13,6 +13,7 @@ namespace DK.Modeling.Tokens
 			if (def == null) throw new ArgumentNullException("def");
 #endif
 			SourceDefinition = def;
+			ClassifierType = def.ClassifierType;
 		}
 
 		public override DataType ValueDataType
