@@ -31,6 +31,7 @@ Visual Studio Extension for WBDK
 - Added many AFS table methods/properties.
 - Add support for $ErrorCount and $ErrorItems()
 - Add support for methods and properties on interface types.
+- Added many missing built-in variant functions.
 
 **Version 1.6.9 Changes:**
 - Added code analysis support for the new 'like' operator.

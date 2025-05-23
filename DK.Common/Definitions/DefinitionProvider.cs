@@ -30,6 +30,20 @@ namespace DK.Definitions
                         ServerContext.Server),
                         hasVariableArgumentCount: true),
 
+                    new FunctionDefinition(new FunctionSignature(true, FunctionPrivacy.Public, DataType.Void, null, "changevariant",
+                        "Changes a variant's value to another subtype.",
+                        new ArgumentDescriptor[]
+                        {
+                            new ArgumentDescriptor("vvalue", DataType.Variant),
+                            new ArgumentDescriptor("vtype", DataType.Int)
+                        },
+                        ServerContext.Neutral), hasVariableArgumentCount: false),
+
+                    new FunctionDefinition(new FunctionSignature(true, FunctionPrivacy.Public, DataType.Void, null, "clearvariant",
+                        "Releases the data held by the variant and sets the type to VT_EMPTY (0).",
+                        new ArgumentDescriptor[] { new ArgumentDescriptor("vvalue", DataType.Variant) },
+                        ServerContext.Neutral), hasVariableArgumentCount: false),
+
                     new FunctionDefinition(new FunctionSignature(true, FunctionPrivacy.Public, DataType.Void, null, "count",
                         "Keeps a running count of the number of rows selected in a select statement that satisfy a condition.",
                         new ArgumentDescriptor[] { new ArgumentDescriptor("* , where expression, group TableName.ColumnName | all, in SelectName", null) },
@@ -42,11 +56,29 @@ namespace DK.Definitions
                         ServerContext.Neutral),
                         hasVariableArgumentCount: false),
 
+                    new FunctionDefinition(new FunctionSignature(true, FunctionPrivacy.Public, DataType.Void, null, "decodevariant",
+                        "Converts a byte array to a string using 'codepage'. Variant 'v' can be either a VT_UI1 or VT_I1, and must be either a VT_ARRAY or VT_BYREF. The result is placed in variant 'v'. See variant for a list of the types.",
+                        new ArgumentDescriptor[]
+                        {
+                            new ArgumentDescriptor("vvalue", DataType.Variant),
+                            new ArgumentDescriptor("codepage", DataType.Unsigned)
+                        },
+                        ServerContext.Neutral), hasVariableArgumentCount: false),
+
                     new FunctionDefinition(new FunctionSignature(true, FunctionPrivacy.Public, DataType.Void, null, "diag",
                         "Outputs specified expressions to a diagnostic device.",
                         new ArgumentDescriptor[] { new ArgumentDescriptor("expressions ...", null) },
                         ServerContext.Neutral),
                         hasVariableArgumentCount: true),
+
+                    new FunctionDefinition(new FunctionSignature(true, FunctionPrivacy.Public, DataType.Void, null, "encodevariant",
+                        "Converts the variant 'v' to a string, encodes the string using 'codepage', and puts the result into the variant 'v'. The result is always a VT_UI1 | VT_ARRAY in the variant variable. See variant for a list of the types.",
+                        new ArgumentDescriptor[]
+                        {
+                            new ArgumentDescriptor("vvalue", DataType.Variant),
+                            new ArgumentDescriptor("codepage", DataType.Unsigned)
+                        },
+                        ServerContext.Neutral), hasVariableArgumentCount: false),
 
                     new FunctionDefinition(new FunctionSignature(true, FunctionPrivacy.Public, DataType.Char255, null, "FormatString",
                         "Generates a message from a format string containing placeholder substrings '%1', '%2', '%3' etc., in any order, along with other optional user-specified substrings.",
@@ -116,10 +148,35 @@ namespace DK.Definitions
                             new ArgumentDescriptor("expressions ...", null) },
                         ServerContext.Neutral), hasVariableArgumentCount: true),
 
+                    new FunctionDefinition(new FunctionSignature(true, FunctionPrivacy.Public, DataType.Void, null, "strcatvariant",
+                        "Concatenates two variant strings.",
+                        new ArgumentDescriptor[]
+                        {
+                            new ArgumentDescriptor("Dst", DataType.Variant),
+                            new ArgumentDescriptor("Src", DataType.Variant)
+                        },
+                        ServerContext.Neutral), hasVariableArgumentCount: false),
+
                     new FunctionDefinition(new FunctionSignature(true, FunctionPrivacy.Public, DataType.Char255, null, "STRINGIZE",
                         "Converts macro parameters to strings.",
                         new ArgumentDescriptor[] { new ArgumentDescriptor("expression", null) },
                         ServerContext.Neutral), hasVariableArgumentCount: true),
+
+                    new FunctionDefinition(new FunctionSignature(true, FunctionPrivacy.Public, DataType.Int, null, "strlenvariant",
+                        "Returns the number of characters in vStr.",
+                        new ArgumentDescriptor[] { new ArgumentDescriptor("vStr", DataType.Variant) },
+                        ServerContext.Neutral), hasVariableArgumentCount: false),
+
+                    new FunctionDefinition(new FunctionSignature(true, FunctionPrivacy.Public, DataType.Void, null, "substrvariant",
+                        "Extracts a variant string from another.",
+                        new ArgumentDescriptor[]
+                        {
+                            new ArgumentDescriptor("Dst", DataType.Variant),
+                            new ArgumentDescriptor("Src", DataType.Variant),
+                            new ArgumentDescriptor("Pos", DataType.Int),
+                            new ArgumentDescriptor("Cnt", DataType.Int)
+                        },
+                        ServerContext.Neutral), hasVariableArgumentCount: false),
 
                     new FunctionDefinition(new FunctionSignature(true, FunctionPrivacy.Public, DataType.Void, null, "sum",
                         "Calculates the running total of an expression for a set of rows in a select statement.",
@@ -129,6 +186,11 @@ namespace DK.Definitions
                     new FunctionDefinition(new FunctionSignature(true, FunctionPrivacy.Public, DataType.Void, null, "UNREFERENCED_PARAMETER",
                         "Prevents a compiler warning if a parameter passed to a function is not used.",
                         new ArgumentDescriptor[] { new ArgumentDescriptor("parameter", null) },
+                        ServerContext.Neutral), hasVariableArgumentCount: false),
+
+                    new FunctionDefinition(new FunctionSignature(true, FunctionPrivacy.Public, DataType.Int, null, "varianttype",
+                        "Returns the subtype of the variant.",
+                        new ArgumentDescriptor[] { new ArgumentDescriptor("vvalue", DataType.Variant) },
                         ServerContext.Neutral), hasVariableArgumentCount: false),
 
                     new FunctionDefinition(new FunctionSignature(true, FunctionPrivacy.Public, DataType.StringVarying, null, "vstring",
