@@ -32,6 +32,7 @@ Visual Studio Extension for WBDK
 - Add support for $ErrorCount and $ErrorItems()
 - Add support for methods and properties on interface types.
 - Added many missing built-in variant functions.
+- Fixed code analysis issues when a switch statement has case-bodies wrapper in braces { }.
 
 **Version 1.6.9 Changes:**
 - Added code analysis support for the new 'like' operator.

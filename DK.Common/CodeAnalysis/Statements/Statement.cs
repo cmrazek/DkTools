@@ -67,6 +67,11 @@ namespace DK.CodeAnalysis.Statements
 				}
 			}
 
+			if (p.Code.ReadExact('{'))
+			{
+				return new ScopeStatement(p, p.Code.Span);
+			}
+
 			var stmt = new SimpleStatement(p.CodeAnalyzer);
 			p = p.Clone(stmt);
 

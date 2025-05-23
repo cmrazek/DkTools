@@ -96,6 +96,7 @@
     <Compile Include="CodeAnalysis\Statements\PageStatement.cs" />
     <Compile Include="CodeAnalysis\Statements\ReturnStatement.cs" />
     <Compile Include="CodeAnalysis\Statements\RowStatement.cs" />
+    <Compile Include="CodeAnalysis\Statements\ScopeStatement.cs" />
     <Compile Include="CodeAnalysis\Statements\SelectStatement.cs" />
     <Compile Include="CodeAnalysis\Statements\SimpleStatement.cs" />
     <Compile Include="CodeAnalysis\Statements\Statement.cs" />
