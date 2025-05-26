@@ -282,6 +282,11 @@ namespace DK.Definitions
             _fileGlobalDefs.Add(defs);
         }
 
+        /// <summary>
+        /// Gets definitions that could be from the global scope, or global within the current file. Local definitions not included.
+        /// </summary>
+        /// <param name="name">Name of the definitions to find.</param>
+        /// <returns>Found definitions.</returns>
         public IEnumerable<Definition> GetGlobalFromAnywhere(string name)
         {
             foreach (var def in _fileGlobalDefs.Get(name))
@@ -295,6 +300,12 @@ namespace DK.Definitions
             }
         }
 
+        /// <summary>
+        /// Gets definitions that could be from the global scope, or global within the current file. Local definitions not included.
+        /// </summary>
+        /// <typeparam name="T">The type of definition to find.</typeparam>
+        /// <param name="name">Name of the definitions to find.</param>
+        /// <returns>Found definitions.</returns>
         public IEnumerable<T> GetGlobalFromAnywhere<T>(string name) where T : Definition
         {
             foreach (var def in _fileGlobalDefs.Get<T>(name))
@@ -308,6 +319,11 @@ namespace DK.Definitions
             }
         }
 
+        /// <summary>
+        /// Gets definitions that could be from the global scope, or global within the current file. Local definitions not included.
+        /// </summary>
+        /// <typeparam name="T">Type of definition to find.</typeparam>
+        /// <returns>Found definitions.</returns>
         public IEnumerable<T> GetGlobalFromAnywhere<T>() where T : Definition
         {
             foreach (var def in _fileGlobalDefs.Get<T>())

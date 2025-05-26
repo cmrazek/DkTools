@@ -399,29 +399,32 @@ namespace DkTools.CodeModeling
         #endregion
 
         #region Function Calls
-        public struct FindContainingFunctionCallResult
+        public struct FindContainingFunctionCallPositionResult
         {
             public bool Success { get; set; }
-            public Definition Definition { get; set; }
             public ITextSnapshot Snapshot { get; set; }
             public CodeSpan OpenBracketSpan { get; set; }
-            public CodeSpan NameSpan { get; set; }
             public int ArgumentIndex { get; set; }
+            public string FunctionName { get; set; }
+            public CodeSpan FunctionNameSpan { get; set; }
+            public string ParentName { get; set; }
+            public CodeSpan ParentNameSpan { get; set; }
+            public char Delimiter { get; set; }
         }
 
-        public FindContainingFunctionCallResult FindContainingFunctionCall(SnapshotPoint snapPt, DkAppSettings appSettings)
+        public FindContainingFunctionCallPositionResult FindContainingFunctionCallPosition(SnapshotPoint snapPt)
         {
             if (snapPt.Snapshot.Version.VersionNumber != _snapshot.Version.VersionNumber)
             {
-                return FindContainingFunctionCall(snapPt.TranslateTo(_snapshot, PointTrackingMode.Positive).Position, appSettings);
+                return FindContainingFunctionCallPosition(snapPt.TranslateTo(_snapshot, PointTrackingMode.Positive).Position);
             }
             else
             {
-                return FindContainingFunctionCall(snapPt.Position, appSettings);
+                return FindContainingFunctionCallPosition(snapPt.Position);
             }
         }
 
-        public FindContainingFunctionCallResult FindContainingFunctionCall(int position, DkAppSettings appSettings)
+        public FindContainingFunctionCallPositionResult FindContainingFunctionCallPosition(int position)
         {
             var revCode = CreateReverseCodeParser(position);
 
@@ -450,55 +453,154 @@ namespace DkTools.CodeModeling
                 if (funcItem1 != null && funcItem1.Value.Type == CodeType.Word && !DK.Constants.GlobalKeywords.Contains(funcItem1.Value.Text))
                 {
                     var dotItem = revCode.GetPreviousItem();
-                    if (dotItem != null && dotItem.Value.Type == CodeType.Operator && dotItem.Value.Text == ".")
+                    if (dotItem != null && dotItem.Value.Type == CodeType.Operator && (dotItem.Value.Text == "." || dotItem.Value.Text == "$"))
                     {
                         var funcItem2 = revCode.GetPreviousItem();
                         if (funcItem2 != null && funcItem2.Value.Type == CodeType.Word)
                         {
-                            var def = FileStoreHelper.GetDefinitionProviderOrNull(_textBuffer)?.GetGlobalFromAnywhere(funcItem2.Value.Text)
-                                .Where(x => x.AllowsChild)
-                                .SelectMany(x => x.GetChildDefinitions(funcItem1.Value.Text, appSettings))
-                                .Where(x => x.ArgumentsRequired)
-                                .FirstOrDefault();
-                            if (def != null)
+                            return new FindContainingFunctionCallPositionResult
                             {
-                                return new FindContainingFunctionCallResult
-                                {
-                                    Success = true,
-                                    Definition = def,
-                                    Snapshot = _snapshot,
-                                    OpenBracketSpan = openBracketSpan.Value,
-                                    NameSpan = funcItem2.Value.Span.Envelope(funcItem1.Value.Span),
-                                    ArgumentIndex = argIndex
-                                };
-                            }
+                                Success = true,
+                                Snapshot = _snapshot,
+                                OpenBracketSpan = openBracketSpan.Value,
+                                ArgumentIndex = argIndex,
+                                FunctionName = funcItem1.Value.Text,
+                                FunctionNameSpan = funcItem1.Value.Span,
+                                ParentName = funcItem2.Value.Text,
+                                ParentNameSpan = funcItem2.Value.Span,
+                                Delimiter = dotItem.Value.Text[0]
+                            };
                         }
                     }
                     else
                     {
-                        var def = FileStoreHelper.GetDefinitionProviderOrNull(_textBuffer)?.GetGlobalFromAnywhere(funcItem1.Value.Text)
-                            .Where(x => x.ArgumentsRequired)
-                            .FirstOrDefault();
-                        if (def != null)
+                        return new FindContainingFunctionCallPositionResult
                         {
-                            return new FindContainingFunctionCallResult
-                            {
-                                Success = true,
-                                Definition = def,
-                                Snapshot = _snapshot,
-                                OpenBracketSpan = openBracketSpan.Value,
-                                NameSpan = funcItem1.Value.Span,
-                                ArgumentIndex = argIndex
-                            };
-                        }
+                            Success = true,
+                            Snapshot = _snapshot,
+                            OpenBracketSpan = openBracketSpan.Value,
+                            FunctionNameSpan = funcItem1.Value.Span,
+                            ArgumentIndex = argIndex,
+                            FunctionName = funcItem1.Value.Text
+                        };
                     }
                 }
             }
 
-            return new FindContainingFunctionCallResult
+            return new FindContainingFunctionCallPositionResult
             {
                 Success = false
             };
+        }
+
+        public struct FindContainingFunctionCallResult
+        {
+            public bool Success { get; set; }
+            public Definition Definition { get; set; }
+            public ITextSnapshot Snapshot { get; set; }
+            public CodeSpan OpenBracketSpan { get; set; }
+            public CodeSpan NameSpan { get; set; }
+            public int ArgumentIndex { get; set; }
+        }
+
+        public FindContainingFunctionCallResult FindContainingFunctionCall(SnapshotPoint snapPt, DkAppSettings appSettings)
+        {
+            if (snapPt.Snapshot.Version.VersionNumber != _snapshot.Version.VersionNumber)
+            {
+                return FindContainingFunctionCall(snapPt.TranslateTo(_snapshot, PointTrackingMode.Positive).Position, appSettings);
+            }
+            else
+            {
+                return FindContainingFunctionCall(snapPt.Position, appSettings);
+            }
+        }
+
+        public FindContainingFunctionCallResult FindContainingFunctionCall(int position, DkAppSettings appSettings)
+        {
+            var pos = FindContainingFunctionCallPosition(position);
+            if (!pos.Success) return new FindContainingFunctionCallResult { Success = false };
+
+            var model = FileStoreHelper.GetCodeModelOrNull(_textBuffer);
+            if (model != null)
+            {
+                foreach (var token in model.FindTokens(pos.FunctionNameSpan.Start)
+                    .Where(x => x.SourceDefinition != null && x.SourceDefinition.ArgumentsRequired))
+                {
+                    return new FindContainingFunctionCallResult
+                    {
+                        Success = true,
+                        Definition = token.SourceDefinition,
+                        Snapshot = _snapshot,
+                        OpenBracketSpan = pos.OpenBracketSpan,
+                        NameSpan = pos.FunctionNameSpan,
+                        ArgumentIndex = pos.ArgumentIndex
+                    };
+                }
+            }
+
+            if (pos.ParentName != null)
+            {
+                if (pos.Delimiter == '.')
+                {
+                    var def = FileStoreHelper.GetDefinitionProviderOrNull(_textBuffer)?.GetGlobalFromAnywhere(pos.ParentName)
+                    .Where(x => x.AllowsChild)
+                    .SelectMany(x => x.GetChildDefinitions(pos.FunctionName, appSettings))
+                    .Where(x => x.ArgumentsRequired)
+                    .FirstOrDefault();
+                    if (def != null)
+                    {
+                        return new FindContainingFunctionCallResult
+                        {
+                            Success = true,
+                            Definition = def,
+                            Snapshot = _snapshot,
+                            OpenBracketSpan = pos.OpenBracketSpan,
+                            NameSpan = pos.FunctionNameSpan,
+                            ArgumentIndex = pos.ArgumentIndex
+                        };
+                    }
+                }
+                else if (pos.Delimiter == '$')
+                {
+                    var def = FileStoreHelper.GetDefinitionProviderOrNull(_textBuffer)?.GetGlobalFromAnywhere(pos.ParentName)
+                    .Where(x => x.AllowsDollarChild)
+                    .SelectMany(x => x.GetDollarChildDefinitions(pos.FunctionName, appSettings))
+                    .Where(x => x.ArgumentsRequired)
+                    .FirstOrDefault();
+                    if (def != null)
+                    {
+                        return new FindContainingFunctionCallResult
+                        {
+                            Success = true,
+                            Definition = def,
+                            Snapshot = _snapshot,
+                            OpenBracketSpan = pos.OpenBracketSpan,
+                            NameSpan = pos.FunctionNameSpan,
+                            ArgumentIndex = pos.ArgumentIndex
+                        };
+                    }
+                }
+            }
+            else
+            {
+                var def = FileStoreHelper.GetDefinitionProviderOrNull(_textBuffer)?.GetGlobalFromAnywhere(pos.FunctionName)
+                    .Where(x => x.ArgumentsRequired)
+                    .FirstOrDefault();
+                if (def != null)
+                {
+                    return new FindContainingFunctionCallResult
+                    {
+                        Success = true,
+                        Definition = def,
+                        Snapshot = _snapshot,
+                        OpenBracketSpan = pos.OpenBracketSpan,
+                        NameSpan = pos.FunctionNameSpan,
+                        ArgumentIndex = pos.ArgumentIndex
+                    };
+                }
+            }
+
+            return new FindContainingFunctionCallResult { Success = false };
         }
         #endregion
     }
