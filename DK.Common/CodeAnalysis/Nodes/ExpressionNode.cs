@@ -300,7 +300,7 @@ namespace DK.CodeAnalysis.Nodes
                         return AggregateFunctionCallNode.Read(p, wordSpan, word);
                 }
 
-                return FunctionCallNode.Read(p, wordSpan, word, funcDef: null, argsStartPos);
+                return FunctionCallNode.Read(p, wordSpan, word, funcDefs: null, argsStartPos);
             }
 
             if (code.ReadExact('.'))
@@ -321,11 +321,12 @@ namespace DK.CodeAnalysis.Nodes
                                                    where d.AllowsChild
                                                    select d))
                         {
-                            var childDef = parentDef.GetChildDefinitions(p.AppSettings).FirstOrDefault(c => c.Name == childWord && c.ArgumentsRequired);
-                            if (childDef != null)
+                            var childDefs = parentDef.GetChildDefinitions(p.AppSettings)
+                                .Where(c => c.Name == childWord && c.ArgumentsRequired).ToList();
+                            if (childDefs.Count > 0)
                             {
                                 var parentNode = new IdentifierNode(p.Statement, wordSpan, word, parentDef);
-                                var childNode = FunctionCallNode.Read(p, combinedSpan, combinedWord, childDef, argsStartPos);
+                                var childNode = FunctionCallNode.Read(p, combinedSpan, combinedWord, childDefs, argsStartPos);
                                 return new ParentChildNode(parentNode, childNode);
                             }
                         }
@@ -376,11 +377,12 @@ namespace DK.CodeAnalysis.Nodes
                                                    where d.AllowsDollarChild
                                                    select d))
                         {
-                            var childDef = parentDef.GetDollarChildDefinitions(p.AppSettings).FirstOrDefault(c => c.Name == childWord && c.ArgumentsRequired);
-                            if (childDef != null)
+                            var childDefs = parentDef.GetDollarChildDefinitions(p.AppSettings)
+                                .Where(c => c.Name == childWord && c.ArgumentsRequired).ToList();
+                            if (childDefs != null)
                             {
                                 var parentNode = new IdentifierNode(p.Statement, wordSpan, word, parentDef);
-                                var childNode = FunctionCallNode.Read(p, combinedSpan, combinedWord, childDef, argsStartPos);
+                                var childNode = FunctionCallNode.Read(p, combinedSpan, combinedWord, childDefs, argsStartPos);
                                 return new ParentChildNode(parentNode, childNode);
                             }
                         }

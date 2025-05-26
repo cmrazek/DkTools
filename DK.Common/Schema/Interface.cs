@@ -69,8 +69,23 @@ namespace DK.Schema
 			get { return _dataType; }
 		}
 
-		public DataType MakeArrayDataType() => new DataType(_dataType) { InterfaceArray = true };
-		public DataType MakePointerDataType() => new DataType(_dataType) { InterfacePointer = true };
+		public DataType MakeArrayDataType()
+		{
+			return new DataType(_dataType)
+			{
+				InterfaceArray = true,
+				Source = _dataType.Source.Append(new ProbeClassifiedRun(ProbeClassifierType.Operator, "[]"))
+			};
+		}
+
+		public DataType MakePointerDataType()
+		{
+			return new DataType(_dataType)
+			{
+				InterfacePointer = true,
+				Source = _dataType.Source.Append(new ProbeClassifiedRun(ProbeClassifierType.Operator, "*"))
+			};
+		}
 
         public void AddMethod(InterfaceMethodDefinition method)
 		{

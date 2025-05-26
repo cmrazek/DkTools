@@ -82,6 +82,13 @@ namespace DK.Syntax
 				return len;
 			}
 		}
+
+		/// <summary>
+		/// Adds runs to a classified string.
+		/// </summary>
+		/// <param name="runs">Extra runs to be added to the string.</param>
+		/// <returns>A NEW classified string with the additional runs.</returns>
+		public ProbeClassifiedString Append(params ProbeClassifiedRun[] runs) => new ProbeClassifiedString(_runs.Concat(runs));
 	}
 
 	public class ProbeClassifiedStringBuilder

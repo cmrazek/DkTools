@@ -1690,7 +1690,10 @@ namespace DK.Modeling
 					{
 						case ValType.Unknown:	return .5f;
 						case ValType.Void:		return .5f;
-						case ValType.Interface: return argType._source == passType._source ? 1.0f : .7f;
+						case ValType.Interface:
+							if (argType.InterfaceArray != passType.InterfaceArray) return .5f;
+							if (argType.InterfacePointer != passType.InterfacePointer) return .5f;
+							return argType._source == passType._source ? 1.0f : .7f;
 						default:				return .2f;
 					}
 				case ValType.Command:
@@ -1735,6 +1738,28 @@ namespace DK.Modeling
 					return .2f;
 			}
 		}
+
+		public static float CalcArgumentListCompatibility(IEnumerable<ArgumentDescriptor> sigArguments, IEnumerable<DataType> passedDataTypes)
+		{
+            if (sigArguments.Count() == 0 && passedDataTypes.Count() == 0) return 1.0f;
+
+            float score = 1.0f;
+            int scoreCount = 1;
+
+            for (int a = 0; a < passedDataTypes.Count() && a < sigArguments.Count(); a++)
+            {
+                var passedDataType = passedDataTypes.ElementAt(a);
+                var sigDataType = sigArguments.ElementAt(a).DataType;
+                score += DataType.CalcArgumentCompatibility(sigDataType, passedDataType);
+                scoreCount++;
+            }
+
+            if (scoreCount > 0) score /= (float)scoreCount;
+
+            if (sigArguments.Count() != passedDataTypes.Count()) score *= .25f; // Penalty if number of args don't match.
+
+            return score;
+        }
 
 		public bool IsVoid
 		{

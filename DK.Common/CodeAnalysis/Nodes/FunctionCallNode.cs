@@ -13,6 +13,7 @@ namespace DK.CodeAnalysis.Nodes
         private string _name;
         private CodeSpan _funcNameSpan;
         private List<GroupNode> _args = new List<GroupNode>();
+        private CodeSpan _argumentSpan;
         private Definition _def;
 
         public FunctionCallNode(Statement stmt, CodeSpan funcNameSpan, string funcName, Definition funcDef)
@@ -25,7 +26,46 @@ namespace DK.CodeAnalysis.Nodes
 
         public override string ToString() => new string[] { _name, "(", _args.Select(a => a.ToString()).Combine(", "), ")" }.Combine();
 
-        private static FunctionCallNode ParseArguments(ReadParams p, CodeSpan funcNameSpan, string funcName, Definition funcDef, int argsStartPos)
+        private static FunctionCallNode ParseArguments(ReadParams p, CodeSpan funcNameSpan, string funcName,
+            IEnumerable<Definition> funcDefs, int argsStartPos)
+        {
+            switch (funcDefs.Count())
+            {
+                case 0: return null;
+                case 1: return ParseArguments(p, funcNameSpan, funcName, funcDefs.First(), argsStartPos);
+            }
+
+            FunctionCallNode bestNode = null;
+            float bestScore = 0.0f;
+            FunctionCallNode firstNode = null;
+
+            foreach (var funcDef in funcDefs)
+            {
+                var resetPos = p.Code.Position;
+                var funcNode = ParseArguments(p, funcNameSpan, funcName, funcDef, argsStartPos);
+                p.Code.Position = resetPos;
+                if (funcNode == null) continue;
+                var score = funcNode.CalcArgumentMatchScore();
+                if (score > bestScore)
+                {
+                    bestNode = funcNode;
+                    bestScore = score;
+                }
+                if (firstNode == null) firstNode = funcNode;
+            }
+
+            if (bestNode != null)
+            {
+                p.Code.Position = bestNode.Span.End;
+                return bestNode;
+            }
+
+            p.Code.Position = firstNode.Span.End;
+            return firstNode;
+        }
+
+        private static FunctionCallNode ParseArguments(ReadParams p, CodeSpan funcNameSpan, string funcName,
+            Definition funcDef, int argsStartPos)
         {
             var funcCallNode = new FunctionCallNode(p.Statement, funcNameSpan, funcName, funcDef);
             var code = p.Code;
@@ -79,27 +119,34 @@ namespace DK.CodeAnalysis.Nodes
                 return null;
             }
 
-            if (funcDef.HasVariableArgumentCount == false && argDefs.Length != funcCallNode.NumArguments)
-            {
-                funcCallNode.ReportError(new CodeSpan(argsStartPos, closePos), CAError.CA0121,
-                    argDefs.Length, funcCallNode.NumArguments);  // Function requires {0} arguments. ({1} passed)
-            }
+            funcCallNode._argumentSpan = new CodeSpan(argsStartPos, closePos);
 
             funcCallNode.Span = new CodeSpan(funcNameSpan.Start, closePos);
             return funcCallNode;
         }
 
-        public static FunctionCallNode Read(ReadParams p, CodeSpan funcNameSpan, string funcName, Definition funcDef, int argsStartPos)
+        public static FunctionCallNode Read(ReadParams p, CodeSpan funcNameSpan, string funcName,
+            IEnumerable<Definition> funcDefs, int argsStartPos)
         {
-            if (funcDef != null)
+            if (funcDefs != null)
             {
-                var node = ParseArguments(p, funcNameSpan, funcName, funcDef, argsStartPos);
-                if (node != null) return node;
+                var node = ParseArguments(p, funcNameSpan, funcName, funcDefs, argsStartPos);
+                if (node != null)
+                {
+                    var numArgumentsRequired = node.Definition.Arguments.Count();
+                    if (node.NumArguments != numArgumentsRequired)
+                    {
+                        node.ReportError(node.ArgumentSpan, CAError.CA0121,
+                            numArgumentsRequired, node.NumArguments);  // Function requires {0} arguments. ({1} passed)
+                    }
+
+                    return node;
+                }
             }
 
-            var funcDefs = (from d in p.Statement.CodeAnalyzer.PreprocessorModel.DefinitionProvider.GetAny(funcNameSpan.Start, funcName)
+            funcDefs = (from d in p.Statement.CodeAnalyzer.PreprocessorModel.DefinitionProvider.GetAny(funcNameSpan.Start, funcName)
                             where d.ArgumentsRequired && !d.RequiresParent(p.CodeAnalyzer.CodeModel.ClassName)
-                            select d).ToArray();
+                            select d).ToList();
             foreach (var def in funcDefs)
             {
                 var fd = def as FunctionDefinition;
@@ -109,7 +156,7 @@ namespace DK.CodeAnalysis.Nodes
                 if (node != null) return node;
             }
 
-            var funcCallNode = new FunctionCallNode(p.Statement, funcNameSpan, funcName, null);
+            var funcCallNode = new FunctionCallNode(p.Statement, funcNameSpan, funcName, funcDef: null);
             funcCallNode.ReportError(funcNameSpan, CAError.CA0003, funcName);	// Function '{0}' not found.
             return funcCallNode;
         }
@@ -125,6 +172,8 @@ namespace DK.CodeAnalysis.Nodes
         {
             get { return _args.Count; }
         }
+
+        public CodeSpan ArgumentSpan => _argumentSpan;
 
         public Definition Definition
         {
@@ -301,6 +350,13 @@ namespace DK.CodeAnalysis.Nodes
             }
 
             return new NumberValue(DataType.Int, null);
+        }
+
+        private float CalcArgumentMatchScore()
+        {
+            return DataType.CalcArgumentListCompatibility(
+                sigArguments: _def.Signature.Arguments,
+                passedDataTypes: _args.Select(x => x.DataType).ToList());
         }
     }
 }

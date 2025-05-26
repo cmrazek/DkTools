@@ -130,27 +130,13 @@ namespace DK.Modeling.Tokens
 					else break;
 				}
 
-				if (dataTypes.Count == args.Length)
-				{
-					var confidence = 1.0f;
-					for (int i = 0, ii = args.Length; i < ii; i++)
-					{
-						confidence *= DataType.CalcArgumentCompatibility(args[i].DataType, dataTypes[i]);
-					}
-
-					if (confidence > bestConfidence)
-					{
-						bestConfidence = confidence;
-						bestTokens = tokens;
-						bestSigDef = sigDef;
-					}
-				}
-				else if (bestTokens == null)
-				{
-					bestTokens = tokens;
-					bestConfidence = 0.0f;
-					bestSigDef = sigDef;
-				}
+				var confidence = DataType.CalcArgumentListCompatibility(args, dataTypes);
+                if (confidence > bestConfidence)
+                {
+                    bestConfidence = confidence;
+                    bestTokens = tokens;
+                    bestSigDef = sigDef;
+                }
 			}
 
 			ret.AddTokens(bestTokens);
