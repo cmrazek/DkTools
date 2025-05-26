@@ -49,5 +49,9 @@ namespace DK
 
 			return TriState.False;
 		}
+
+		public static TriState Create(bool value) => value ? TriState.True : TriState.False;
+
+		public static TriState Create(bool? value) => value.HasValue ? (value.Value ? TriState.True : TriState.False) : TriState.Indeterminate;
 	}
 }

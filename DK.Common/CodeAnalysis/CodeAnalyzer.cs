@@ -103,8 +103,15 @@ namespace DK.CodeAnalysis
 
 			foreach (var v in func.Variables)
 			{
-				_scope.AddVariable(new Variable(v.Definition, v.Definition.Name, v.Definition.DataType,
-					Value.CreateUnknownFromDataType(v.Definition.DataType), false, TriState.False, false, v.RawSpan));
+				_scope.AddVariable(new Variable(
+					def: v.Definition,
+					name: v.Definition.Name,
+					dataType: v.Definition.DataType,
+					value: Value.CreateUnknownFromDataType(v.Definition.DataType),
+					isArg: false,
+					isInitialized: TriStateUtil.Create(v.Definition.DataType.IsVariableInitializedAutomatically),
+					isUsed: false,
+					rawSpan: v.RawSpan));
 			}
 
 			foreach (var v in _prepModel.GlobalVariables)

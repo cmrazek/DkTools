@@ -1785,5 +1785,8 @@ namespace DK.Modeling
 
 		public bool InterfaceArray { get => _array; set => _array = value; }
 		public bool InterfacePointer { get => _pointer; set => _pointer = value; }
-	}
+
+		public bool IsVariableInitializedAutomatically => _valueType == ValType.Variant;
+
+    }
 }
