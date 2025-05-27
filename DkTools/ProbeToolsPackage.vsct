@@ -768,8 +768,8 @@
 		<KeyBinding guid="guidProbeToolsCmdSet" id="cmdFindInProbeFiles" key1="O" mod1="ALT" key2="I" mod2="ALT" editor="guidVSStd97" />
 		<KeyBinding guid="guidProbeToolsCmdSet" id="cmdFecFile" key1="O" mod1="ALT" key2="L" mod2="ALT" editor="guidVSStd97" />
 		<KeyBinding guid="guidProbeToolsCmdSet" id="cmdMergeFile" key1="O" mod1="ALT" key2="M" mod2="ALT" editor="guidVSStd97" />
-    <KeyBinding guid="guidProbeToolsCmdSet" id="cmdGoToNextReference" key1="VK_OEM_6" mod1="ALT" editor="guidVSStd97" />
-    <KeyBinding guid="guidProbeToolsCmdSet" id="cmdGoToPrevReference" key1="VK_OEM_4" mod1="ALT" editor="guidVSStd97" />
+    <KeyBinding guid="guidProbeToolsCmdSet" id="cmdGoToNextReference" key1="VK_OEM_6" mod1="CONTROL ALT" editor="guidVSStd97" />
+    <KeyBinding guid="guidProbeToolsCmdSet" id="cmdGoToPrevReference" key1="VK_OEM_4" mod1="CONTROL ALT" editor="guidVSStd97" />
 		<KeyBinding guid="guidProbeToolsCmdSet" id="cmdShowFunctions" key1="O" mod1="Alt" key2="F" mod2="Alt" editor="guidVSStd97"/>
 		<KeyBinding guid="guidProbeToolsCmdSet" id="cmdRunCodeAnalysis" key1="O" mod1="Alt" key2="A" mod2="Alt" editor="guidVSStd97"/>
 		<KeyBinding guid="guidProbeToolsCmdSet" id="cmdRunFecErrors" key1="O" mod1="Alt" key2="E" mod2="Alt" editor="guidVSStd97"/>

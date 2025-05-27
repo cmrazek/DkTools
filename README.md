@@ -33,6 +33,7 @@ Visual Studio Extension for WBDK
 - Add support for methods and properties on interface types.
 - Added many missing built-in variant functions.
 - Fixed code analysis issues when a switch statement has case-bodies wrapper in braces { }.
+- Fixed keyboard shortcut for goto next/previous reference commands (Ctrl+Alt+[/])
 
 **Version 1.6.9 Changes:**
 - Added code analysis support for the new 'like' operator.
