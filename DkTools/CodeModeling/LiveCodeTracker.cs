@@ -471,6 +471,18 @@ namespace DkTools.CodeModeling
                                 Delimiter = dotItem.Value.Text[0]
                             };
                         }
+                        else
+                        {
+                            return new FindContainingFunctionCallPositionResult
+                            {
+                                Success = true,
+                                Snapshot = _snapshot,
+                                OpenBracketSpan = openBracketSpan.Value,
+                                ArgumentIndex = argIndex,
+                                FunctionName = $"${funcItem1.Value.Text}",
+                                FunctionNameSpan = dotItem.Value.Span.Envelope(funcItem1.Value.Span)
+                            };
+                        }
                     }
                     else
                     {

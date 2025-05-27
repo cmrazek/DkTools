@@ -84,12 +84,13 @@ namespace DkTools.SignatureHelp
                 }
                 else if (itemDot?.Type == CodeType.Operator && itemDot?.Text == "$")
                 {
-                    var item2 = revCode.GetPreviousItem();
-                    if (item2?.Type == CodeType.Word)
+                    var defProv = FileStoreHelper.GetDefinitionProviderOrNull(_textBuffer);
+                    if (defProv != null)
                     {
-                        var defProv = FileStoreHelper.GetDefinitionProviderOrNull(_textBuffer);
-                        if (defProv != null)
+                        var item2 = revCode.GetPreviousItem();
+                        if (item2?.Type == CodeType.Word)
                         {
+                        
                             foreach (var def in defProv.GetGlobalFromAnywhere(item2.Value.Text)
                                 .Where(x => x.AllowsDollarChild)
                                 .SelectMany(x => x.GetDollarChildDefinitions(item1.Value.Text, ProbeToolsPackage.Instance.App.Settings))
@@ -102,6 +103,15 @@ namespace DkTools.SignatureHelp
                             foreach (var def in defProv.GetLocal(item2.Value.Span.Start, item2.Value.Text)
                                 .Where(x => x.AllowsDollarChild)
                                 .SelectMany(x => x.GetDollarChildDefinitions(item1.Value.Text, ProbeToolsPackage.Instance.App.Settings))
+                                .Where(x => x.ArgumentsRequired))
+                            {
+                                var applicableToSpan = liveCodeTracker.Snapshot.CreateTrackingSpan(triggerPt.Position, 0, SpanTrackingMode.EdgeInclusive);
+                                yield return CreateSignature(_textBuffer, def.ArgumentsSignature, applicableToSpan, triggerPt);
+                            }
+                        }
+                        else
+                        {
+                            foreach (var def in defProv.GetGlobalFromAnywhere($"${item1.Value.Text}")
                                 .Where(x => x.ArgumentsRequired))
                             {
                                 var applicableToSpan = liveCodeTracker.Snapshot.CreateTrackingSpan(triggerPt.Position, 0, SpanTrackingMode.EdgeInclusive);
