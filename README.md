@@ -17,6 +17,9 @@ Visual Studio Extension for WBDK
 
 ## Change Log
 
+**Version 1.6.11 Changes:**
+- Fix code analysis no longer detecting when a function is called with the wrong number of arguments.
+
 **Version 1.6.10 Changes:**
 - Fixed bug in code analysis reporting CA0016 (unreachable code) after a for/while loop with a return statement in it.
 - Re-enabled the Comment Selection command in the text editor.

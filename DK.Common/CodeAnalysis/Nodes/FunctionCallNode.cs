@@ -133,11 +133,14 @@ namespace DK.CodeAnalysis.Nodes
                 var node = ParseArguments(p, funcNameSpan, funcName, funcDefs, argsStartPos);
                 if (node != null)
                 {
-                    var numArgumentsRequired = node.Definition.Arguments.Count();
-                    if (node.NumArguments != numArgumentsRequired)
+                    if (!node.Definition.HasVariableArgumentCount)
                     {
-                        node.ReportError(node.ArgumentSpan, CAError.CA0121,
-                            numArgumentsRequired, node.NumArguments);  // Function requires {0} arguments. ({1} passed)
+                        var numArgumentsRequired = node.Definition.Arguments.Count();
+                        if (node.NumArguments != numArgumentsRequired)
+                        {
+                            node.ReportError(node.ArgumentSpan, CAError.CA0121,
+                                numArgumentsRequired, node.NumArguments);  // Function requires {0} arguments. ({1} passed)
+                        }
                     }
 
                     return node;
@@ -153,7 +156,20 @@ namespace DK.CodeAnalysis.Nodes
                 if (fd == null) continue;
 
                 var node = ParseArguments(p, funcNameSpan, funcName, fd, argsStartPos);
-                if (node != null) return node;
+                if (node != null)
+                {
+                    if (!fd.HasVariableArgumentCount)
+                    {
+                        var numArgumentsRequired = node.Definition.Arguments.Count();
+                        if (node.NumArguments != numArgumentsRequired)
+                        {
+                            node.ReportError(node.ArgumentSpan, CAError.CA0121,
+                                numArgumentsRequired, node.NumArguments);  // Function requires {0} arguments. ({1} passed)
+                        }
+                    }
+
+                    return node;
+                }
             }
 
             var funcCallNode = new FunctionCallNode(p.Statement, funcNameSpan, funcName, funcDef: null);
