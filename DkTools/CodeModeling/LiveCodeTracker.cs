@@ -543,10 +543,10 @@ namespace DkTools.CodeModeling
                 if (pos.Delimiter == '.')
                 {
                     var def = FileStoreHelper.GetDefinitionProviderOrNull(_textBuffer)?.GetGlobalFromAnywhere(pos.ParentName)
-                    .Where(x => x.AllowsChild)
-                    .SelectMany(x => x.GetChildDefinitions(pos.FunctionName, appSettings))
-                    .Where(x => x.ArgumentsRequired)
-                    .FirstOrDefault();
+                        .Where(x => x.AllowsChild)
+                        .SelectMany(x => x.GetChildDefinitions(pos.FunctionName, appSettings))
+                        .Where(x => x.ArgumentsRequired)
+                        .FirstOrDefault();
                     if (def != null)
                     {
                         return new FindContainingFunctionCallResult
@@ -563,10 +563,10 @@ namespace DkTools.CodeModeling
                 else if (pos.Delimiter == '$')
                 {
                     var def = FileStoreHelper.GetDefinitionProviderOrNull(_textBuffer)?.GetGlobalFromAnywhere(pos.ParentName)
-                    .Where(x => x.AllowsDollarChild)
-                    .SelectMany(x => x.GetDollarChildDefinitions(pos.FunctionName, appSettings))
-                    .Where(x => x.ArgumentsRequired)
-                    .FirstOrDefault();
+                        .Where(x => x.AllowsDollarChild)
+                        .SelectMany(x => x.GetDollarChildDefinitions(pos.FunctionName, appSettings))
+                        .Where(x => x.ArgumentsRequired)
+                        .FirstOrDefault();
                     if (def != null)
                     {
                         return new FindContainingFunctionCallResult
