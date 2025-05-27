@@ -203,9 +203,29 @@ namespace DK.Definitions
                         new ArgumentDescriptor[] { new ArgumentDescriptor("name", null) },
                         ServerContext.Neutral), hasVariableArgumentCount: false),
 
+                    new FunctionDefinition(new FunctionSignature(true, FunctionPrivacy.Public, DataType.Void, null, "$ConnectEvents",
+                        "Notifies the application of any special event while performing AFSH methods on any form.",
+                        new ArgumentDescriptor[] { new ArgumentDescriptor("SuffixName", DataType.Char255) },
+                        ServerContext.Neutral), hasVariableArgumentCount: false),
+
                     new FunctionDefinition(new FunctionSignature(true, FunctionPrivacy.Public, DataType.Char255, null, "$ErrorItems",
                         "Returns the string of the error message, identified by the item.",
                         new ArgumentDescriptor[] { new ArgumentDescriptor("item", DataType.Int) },
+                        ServerContext.Neutral), hasVariableArgumentCount: false),
+
+                    new FunctionDefinition(new FunctionSignature(true, FunctionPrivacy.Public, DataType.Void, null, "$InsertGermaneKey",
+                        "Inserts a germane key into the AFS context.",
+                        new ArgumentDescriptor[] { new ArgumentDescriptor("key", DataType.Char255) },
+                        ServerContext.Neutral), hasVariableArgumentCount: false),
+
+                    new FunctionDefinition(new FunctionSignature(true, FunctionPrivacy.Public, DataType.Void, null, "$ReleaseEvents",
+                        "Deactivates an event connection created by $ConnectEvents.",
+                        new ArgumentDescriptor[] { new ArgumentDescriptor("SuffixName", DataType.Char255) },
+                        ServerContext.Neutral), hasVariableArgumentCount: false),
+
+                    new FunctionDefinition(new FunctionSignature(true, FunctionPrivacy.Public, DataType.Void, null, "$RemoveGermaneKey",
+                        "Removes a germane key from the AFS context.",
+                        new ArgumentDescriptor[] { new ArgumentDescriptor("key", DataType.Char255) },
                         ServerContext.Neutral), hasVariableArgumentCount: false),
 
                     // Data types

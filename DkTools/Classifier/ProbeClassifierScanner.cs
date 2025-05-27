@@ -62,10 +62,9 @@ namespace DkTools.Classifier
 
 		private static Regex _rxWord = new Regex(@"\G[a-zA-Z_]\w*");
 		private static Regex _rxNumber = new Regex(@"\G\d+(?:\.\d+)?");
-		private static Regex _rxCharLiteral = new Regex(@"\G'(?:\\'|[^'])*'");
 		private static Regex _rxPreprocessor = new Regex(@"\G\#\w+");
 		private static Regex _rxIncludeString = new Regex(@"\G(?:<[^>]+>|""[^""]+"")");
-		private static Regex _rxErrorCountItems = new Regex(@"\G\$(?:ErrorCount|ErrorItems)\b");
+		private static Regex _rxErrorCountItems = new Regex(@"\G\$(?:ConnectEvents|ErrorCount|ErrorItems|InsertGermaneKey|ReleaseEvents|RemoveGermaneKey)\b");
 
 		private static readonly char[] k_commentEndKickOffChars = new char[] { '*', '/' };
 

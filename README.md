@@ -29,7 +29,7 @@ Visual Studio Extension for WBDK
 - Add support for onerror.
 - Fix incorrect implicit columns on many-to-many relationships.
 - Added many AFS table methods/properties.
-- Add support for $ErrorCount and $ErrorItems()
+- Add support for global AFS methods.
 - Add support for methods and properties on interface types.
 - Added many missing built-in variant functions.
 - Fixed code analysis issues when a switch statement has case-bodies wrapper in braces { }.
