@@ -359,6 +359,40 @@ namespace DK.CodeAnalysis.Nodes
                     return new UnknownNode(p.Statement, wordSpan.Envelope(dotSpan), string.Concat(word, "."));
                 }
             }
+            else if (code.ReadExact("$$"))
+            {
+                var dollarSpan = code.Span;
+
+                if (code.ReadWord())
+                {
+                    var childWord = code.Text;
+                    var combinedWord = string.Concat(word, "$$", childWord);
+                    var combinedSpan = wordSpan.Envelope(code.Span);
+
+                    // Double-dollar does not currently have any methods available.
+
+                    foreach (var parentDef in (from d in p.CodeAnalyzer.PreprocessorModel.DefinitionProvider.GetAny(code.Position + p.FuncOffset, word)
+                                                where d.AllowsDoubleDollarChild
+                                                select d))
+                    {
+                        var childDef = parentDef.GetDoubleDollarChildDefinitions(childWord, p.AppSettings).FirstOrDefault(c => !c.ArgumentsRequired);
+                        if (childDef != null)
+                        {
+                            var parentNode = new IdentifierNode(p.Statement, wordSpan, word, parentDef);
+                            var childNode = TryReadSubscript(p, combinedSpan, combinedWord, childDef);
+                            return new ParentChildNode(parentNode, childNode);
+                        }
+                    }
+
+                    ReportError(combinedSpan, CAError.CA0001, combinedWord);	// Unknown '{0}'.
+                    return new UnknownNode(p.Statement, combinedSpan, combinedWord);
+                }
+                else // No word after double-dollar
+                {
+                    ReportError(dollarSpan, CAError.CA0005);	// Expected identifier to follow '$'.
+                    return new UnknownNode(p.Statement, wordSpan.Envelope(dollarSpan), string.Concat(word, "$$"));
+                }
+            }
             else if (code.ReadExact('$'))
             {
                 var dollarSpan = code.Span;
@@ -412,7 +446,7 @@ namespace DK.CodeAnalysis.Nodes
                 else // No word after dollar
                 {
                     ReportError(dollarSpan, CAError.CA0005);	// Expected identifier to follow '$'.
-                    return new UnknownNode(p.Statement, wordSpan.Envelope(dollarSpan), string.Concat(word, "."));
+                    return new UnknownNode(p.Statement, wordSpan.Envelope(dollarSpan), string.Concat(word, "$"));
                 }
             }
 

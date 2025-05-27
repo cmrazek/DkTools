@@ -126,6 +126,7 @@
     <Compile Include="Definitions\AfsPropertyDefinition.cs" />
     <Compile Include="Definitions\ClassDefinition.cs" />
     <Compile Include="Definitions\ColumnDefinition.cs" />
+    <Compile Include="Definitions\ColumnFieldNumberDefinition.cs" />
     <Compile Include="Definitions\ConstantDefinition.cs" />
     <Compile Include="Definitions\DataTypeDefinition.cs" />
     <Compile Include="Definitions\Definition.cs" />
@@ -149,6 +150,7 @@
     <Compile Include="Diagnostics\Output.cs" />
     <Compile Include="Modeling\SignatureDocumentor.cs" />
     <Compile Include="Modeling\Tokens\DollarToken.cs" />
+    <Compile Include="Modeling\Tokens\DoubleDollarToken.cs" />
     <Compile Include="Modeling\Tokens\Operators\InOperator.cs" />
     <Compile Include="Preprocessing\IncludeDependency.cs" />
     <Compile Include="Schema\Column.cs" />

@@ -15,8 +15,10 @@ namespace DK.Definitions
 		private DataType _dataType;
 		private string _desc;
 		private string _repoDesc;
+		private ColumnFieldNumberDefinition _fieldNumberDefinition;
 
-		public ColumnDefinition(string tableName, string fieldName, string prompt, string comment, DataType dataType, string description, FilePosition filePos)
+		public ColumnDefinition(string tableName, string fieldName, string prompt, string comment, DataType dataType,
+			string description, FilePosition filePos)
 			: base(fieldName, filePos, Column.GetTableFieldExternalRefId(tableName, fieldName))
 		{
 			_tableName = tableName;
@@ -155,6 +157,18 @@ namespace DK.Definitions
 		public override bool RequiresParent(string curClassName)
 		{
 			return true;
+		}
+
+		public ColumnFieldNumberDefinition FieldNumberDefinition
+		{
+			get
+			{
+				if (_fieldNumberDefinition == null)
+				{
+					_fieldNumberDefinition = new ColumnFieldNumberDefinition(_tableName, Name);
+				}
+				return _fieldNumberDefinition;
+			}
 		}
 	}
 }

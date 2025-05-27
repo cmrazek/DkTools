@@ -23,7 +23,7 @@ Visual Studio Extension for WBDK
 - Fixed definitions from include files not refreshing if the include path contains '..'
 - Stopped code analysis errors when assigning a value to/from a variant.
 - Stopped code analysis errors for uninitialized interface types.
-- Added support for table$column
+- Added support for table$column and table$$column.
 - Fixed enum value not getting detected properly when used with an array.
 - Removed code snippets. (haven't worked for a long time and nobody complained)
 - Add support for onerror.

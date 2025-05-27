@@ -118,6 +118,8 @@ namespace DK.Definitions
 
 		public override bool AllowsDollarChild => true;
 
+        public override bool AllowsDoubleDollarChild => true;
+
         public override IEnumerable<Definition> GetChildDefinitions(DkAppSettings appSettings) => _table.ColumnDefinitions;
 
         public override bool ArgumentsRequired
@@ -210,6 +212,17 @@ namespace DK.Definitions
             yield return SearchIndexDefinition;
             yield return TableDefinition_;
             yield return UpdateDefinition;
+        }
+
+        public override IEnumerable<Definition> GetDoubleDollarChildDefinitions(string name, DkAppSettings appSettings)
+        {
+            var col = _table.GetColumn(name);
+            if (col != null) yield return col.Definition.FieldNumberDefinition;
+        }
+
+        public override IEnumerable<Definition> GetDoubleDollarChildDefinitions(DkAppSettings appSettings)
+        {
+            foreach (var cd in _table.ColumnDefinitions) yield return cd.FieldNumberDefinition;
         }
 
         Definition _actionDef;
