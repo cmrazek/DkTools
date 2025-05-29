@@ -266,7 +266,7 @@ namespace DK.CodeAnalysis.Values
             {
                 case ConversionMethod.Assignment:
                 case ConversionMethod.FunctionArgument:
-                    if (toDataType.IsNumeric)
+                    if (toDataType.IsNumeric && DataType.Scale != 0 && toDataType.Scale != 0)
                     {
                         bool conversionWarning = false;
 
@@ -289,7 +289,7 @@ namespace DK.CodeAnalysis.Values
                             else
                             {
                                 // Numeric to integer
-                                if (DataType.Scale > 0 && DataType.Precision > 0)
+                                if (DataType.Precision > 0)
                                 {
                                     conversionWarning = true;
                                 }

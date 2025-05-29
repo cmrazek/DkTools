@@ -875,6 +875,7 @@ namespace DK.Modeling
             var signed = tokenText == "signed";
             int scale = 0;
             int precision = 0;
+            bool? isInteger = null;
 
             if (code.ReadNumber())
             {
@@ -882,6 +883,7 @@ namespace DK.Modeling
                 pcs.AddSpace();
                 pcs.AddNumber(code.Text);
                 a.OnNumber(code.Span, code.Text);
+                isInteger = false;
             }
             else if (code.ReadExact('('))
             {
@@ -929,31 +931,50 @@ namespace DK.Modeling
                     }
                 }
                 else return MakeNumeric(scale, precision, signed, a.TypeName, pcs.ToClassifiedString());
+
+                isInteger = false;
             }
 
-            if (code.ReadExactWholeWord("int"))
+            if (isInteger == null)
             {
-                pcs.AddSpace();
-                pcs.AddDataType("int");
-                a.OnDataTypeKeyword(code.Span, code.Text, null);
-            }
-            else if (code.ReadExactWholeWord("short"))
-            {
-                pcs.AddSpace();
-                pcs.AddDataType("short");
-                a.OnDataTypeKeyword(code.Span, code.Text, null);
-            }
-            else if (code.ReadExactWholeWord("long"))
-            {
-                pcs.AddSpace();
-                pcs.AddDataType("long");
-                a.OnDataTypeKeyword(code.Span, code.Text, null);
-            }
-            else if (code.ReadExactWholeWord("char"))
-            {
-                pcs.AddSpace();
-                pcs.AddDataType("char");
-                a.OnDataTypeKeyword(code.Span, code.Text, null);
+                if (code.ReadExactWholeWord("int"))
+                {
+                    pcs.AddSpace();
+                    pcs.AddDataType("int");
+                    a.OnDataTypeKeyword(code.Span, code.Text, null);
+                    scale = 4;
+                    isInteger = true;
+                }
+                else if (code.ReadExactWholeWord("short"))
+                {
+                    pcs.AddSpace();
+                    pcs.AddDataType("short");
+                    a.OnDataTypeKeyword(code.Span, code.Text, null);
+                    scale = 2;
+                    isInteger = true;
+                }
+                else if (code.ReadExactWholeWord("long"))
+                {
+                    pcs.AddSpace();
+                    pcs.AddDataType("long");
+                    a.OnDataTypeKeyword(code.Span, code.Text, null);
+                    scale = 4;
+                    isInteger = true;
+                }
+                else if (code.ReadExactWholeWord("char"))
+                {
+                    pcs.AddSpace();
+                    pcs.AddDataType("char");
+                    a.OnDataTypeKeyword(code.Span, code.Text, null);
+                    scale = 1;
+                    isInteger = true;
+                }
+                else
+                {
+                    // Just the word 'unsigned' and that's it.
+                    scale = 4;
+                    isInteger = true;
+                }
             }
 
             var gotMask = false;
@@ -970,6 +991,7 @@ namespace DK.Modeling
                 else break;
             }
 
+            if (isInteger == true) return MakeInteger(scale, signed, a.TypeName, pcs.ToClassifiedString());
             return MakeNumeric(scale, precision, signed, a.TypeName, pcs.ToClassifiedString());
         }
 
