@@ -648,19 +648,8 @@ namespace DK.Schema
 			}
 
 			// Special implicit columns for updates
-			updates.AddColumn(new Column("updates", "column", new DataType(ValType.String, null,
-				new ProbeClassifiedString(
-					new ProbeClassifiedRun(ProbeClassifierType.DataType, "char"),
-					new ProbeClassifiedRun(ProbeClassifierType.Operator, "("),
-					new ProbeClassifiedRun(ProbeClassifierType.Number, "30"),
-					new ProbeClassifiedRun(ProbeClassifierType.Operator, ")")
-				)), updatesFilePos, true));
-			updates.AddColumn(new Column("updates", "tablename", new DataType(ValType.String, null, new ProbeClassifiedString(
-					new ProbeClassifiedRun(ProbeClassifierType.DataType, "char"),
-					new ProbeClassifiedRun(ProbeClassifierType.Operator, "("),
-					new ProbeClassifiedRun(ProbeClassifierType.Number, "8"),
-					new ProbeClassifiedRun(ProbeClassifierType.Operator, ")")
-				)), updatesFilePos, true));
+			updates.AddColumn(new Column("updates", "column", DataType.Char30, updatesFilePos, true));
+			updates.AddColumn(new Column("updates", "tablename", DataType.Char8, updatesFilePos, true));
 			updates.AddColumn(new Column("updates", "urowno", DataType.Unsigned9, updatesFilePos, true));
 			updates.AddColumn(new Column("updates", "entered", DataType.Date, updatesFilePos, true));
 			updates.AddColumn(new Column("updates", "new", DataType.Char255, updatesFilePos, true));
@@ -1572,8 +1561,8 @@ namespace DK.Schema
 				pcs.AddOperator("}");
 
 				historyTable.AddColumn(new Column(historyTable.Name, "field",
-					new DataType(ValType.Enum, string.Format("like {0}.field", historyTable.Name),
-					pcs.ToClassifiedString(), completionOptions), nameFilePos, true));
+					DataType.MakeEnum(completionOptions, string.Format("like {0}.field", historyTable.Name),
+					pcs.ToClassifiedString()), nameFilePos, true));
 
 				historyTable.AddColumn(new Column(historyTable.Name, "value", DataType.Char255, nameFilePos, true));
 

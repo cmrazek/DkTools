@@ -29,7 +29,7 @@ namespace DK.CodeAnalysis.Statements
 						errorSpan = code.MovePeekedSpan();
 						if (!code.ReadExact('='))
 						{
-							ReportError(errorSpan, CAError.CA0033);	// Expected '='.
+							ReportError(errorSpan, CAError.CA10033);	// Expected '='.
 							return;
 						}
 						else errorSpan = code.Span;
@@ -41,7 +41,7 @@ namespace DK.CodeAnalysis.Statements
 						errorSpan = code.MovePeekedSpan();
 						if (!code.ReadExact('='))
 						{
-							ReportError(errorSpan, CAError.CA0033);	// Expected '='.
+							ReportError(errorSpan, CAError.CA10033);	// Expected '='.
 							return;
 						}
 						else errorSpan = code.Span;
@@ -53,7 +53,7 @@ namespace DK.CodeAnalysis.Statements
 						errorSpan = code.MovePeekedSpan();
 						if (!code.ReadExact('='))
 						{
-							ReportError(errorSpan, CAError.CA0033);	// Expected '='.
+							ReportError(errorSpan, CAError.CA10033);	// Expected '='.
 							return;
 						}
 						else errorSpan = code.Span;
@@ -65,7 +65,7 @@ namespace DK.CodeAnalysis.Statements
 						errorSpan = code.MovePeekedSpan();
 						if (!code.ReadExact('='))
 						{
-							ReportError(errorSpan, CAError.CA0033);	// Expected '='.
+							ReportError(errorSpan, CAError.CA10033);	// Expected '='.
 							return;
 						}
 						else errorSpan = code.Span;
@@ -74,7 +74,7 @@ namespace DK.CodeAnalysis.Statements
 						if (_outfileExp != null) errorSpan = _outfileExp.Span;
 						break;
 					default:
-						ReportError(errorSpan, CAError.CA0015);	// Expected ';'.
+						ReportError(errorSpan, CAError.CA10015);	// Expected ';'.
 						return;
 				}
 			}

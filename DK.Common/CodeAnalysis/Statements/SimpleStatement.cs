@@ -44,7 +44,7 @@ namespace DK.CodeAnalysis.Statements
 					{
 						if (scope.Options.HighlightReportOutput)
 						{
-							ReportError(_root.Span, CAError.CA0070);    // This expression writes to the report stream.
+							ReportError(_root.Span, CAError.CA10070);    // This expression writes to the report stream.
 						}
 					}
 					scope.Merge(readScope);

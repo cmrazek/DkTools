@@ -33,12 +33,7 @@ namespace DK.Schema
 			_name = name;
 			_filePos = filePos;
 			_def = new InterfaceTypeDefinition(this, filePos);
-			_dataType = new DataType(ValType.Interface, "",
-				new ProbeClassifiedString(ProbeClassifierType.Interface, _name),
-				DK.Definitions.Definition.EmptyArray, DataType.CompletionOptionsType.InterfaceMembers)
-			{
-				Interface = this
-			};
+			_dataType = DataType.MakeInterface(this, null, new ProbeClassifiedString(ProbeClassifierType.Interface, _name));
 		}
 
 		public void AddTag(Tag tag)

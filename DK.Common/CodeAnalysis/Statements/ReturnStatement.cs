@@ -21,11 +21,11 @@ namespace DK.CodeAnalysis.Statements
 				_exp = ExpressionNode.Read(p, retDataType);
 				if (_exp == null)
 				{
-					ReportError(keywordSpan, CAError.CA0014);	// Expected value after 'return'.
+					ReportError(keywordSpan, CAError.CA10014);	// Expected value after 'return'.
 				}
 			}
 
-			if (!p.Code.ReadExact(';')) ReportError(p.Code.Span, CAError.CA0015);	// Expected ';'.
+			if (!p.Code.ReadExact(';')) ReportError(p.Code.Span, CAError.CA10015);	// Expected ';'.
 		}
 
 		public override string ToString() => new string[] { "return", _exp.ToString() }.Combine(" ");
@@ -38,7 +38,7 @@ namespace DK.CodeAnalysis.Statements
 			{
 				var returnScope = scope.Clone();
 				var returnValue = _exp.ReadValue(returnScope);
-				returnValue.CheckTypeConversion(scope, _exp.Span, _returnDataType);
+				returnValue.CheckTypeConversion(scope, _exp.Span, _returnDataType, Values.Value.ConversionMethod.Return);
 				scope.Merge(returnScope);
 			}
 

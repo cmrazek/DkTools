@@ -212,7 +212,7 @@ namespace DK.CodeAnalysis.Nodes
 				return;
 			}
 
-			ReportError(Span, CAError.CA0101);  // Syntax error.
+			ReportError(Span, CAError.CA10101);  // Syntax error.
 		}
 
 		public override Value ReadValue(CAScope scope)
@@ -224,7 +224,7 @@ namespace DK.CodeAnalysis.Nodes
 				return _nodes[0].ReadValue(scope);
 			}
 
-			ReportError(Span, CAError.CA0101);  // Syntax error.
+			ReportError(Span, CAError.CA10101);  // Syntax error.
 			return Value.Void;
 		}
 

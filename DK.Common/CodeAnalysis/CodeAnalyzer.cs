@@ -128,7 +128,7 @@ namespace DK.CodeAnalysis
 			if (func.Definition.DataType.ValueType != ValType.Void && _scope.Returned != TriState.True &&
 				func.Definition.Name != "staticinitialize")
 			{
-				ReportErrorAbsolute(func.NameSpan, CAError.CA0017);	// Function does not return a value.
+				ReportErrorAbsolute(func.NameSpan, CAError.CA10017);	// Function does not return a value.
 			}
 
 			foreach (var v in _scope.Variables)
@@ -138,12 +138,12 @@ namespace DK.CodeAnalysis
 					if (v.IsInitialized != TriState.False)
 					{
 						var def = v.Definition;
-						ReportErrorAbsolute(v.RawSpan, CAError.CA0111, v.Name); // Variable '{0}' is assigned a value, but is never used.
+						ReportErrorAbsolute(v.RawSpan, CAError.CA10111, v.Name); // Variable '{0}' is assigned a value, but is never used.
 					}
 					else
 					{
 						var def = v.Definition;
-						ReportErrorAbsolute(v.RawSpan, CAError.CA0112, v.Name); // Variable '{0}' is not used.
+						ReportErrorAbsolute(v.RawSpan, CAError.CA10112, v.Name); // Variable '{0}' is not used.
 					}
 				}
 			}

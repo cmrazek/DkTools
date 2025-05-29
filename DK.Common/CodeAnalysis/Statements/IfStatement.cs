@@ -26,7 +26,7 @@ namespace DK.CodeAnalysis.Statements
 				var condition = ExpressionNode.Read(p, null);
 				if (condition == null)
 				{
-					ReportError(stmtSpan, CAError.CA0018, "if");	// Expected condition after '{0}'.
+					ReportError(stmtSpan, CAError.CA10018, "if");	// Expected condition after '{0}'.
 					break;
 				}
 
@@ -34,7 +34,7 @@ namespace DK.CodeAnalysis.Statements
 
 				if (!code.ReadExact("{"))
 				{
-					ReportError(stmtSpan, CAError.CA0019);	// Expected '{'.
+					ReportError(stmtSpan, CAError.CA10019);	// Expected '{'.
 					break;
 				}
 
@@ -59,7 +59,7 @@ namespace DK.CodeAnalysis.Statements
 
 					if (!code.ReadExact("{"))
 					{
-						ReportError(stmtSpan, CAError.CA0019);	// Expected '{'.
+						ReportError(stmtSpan, CAError.CA10019);	// Expected '{'.
 						break;
 					}
 

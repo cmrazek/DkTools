@@ -138,7 +138,7 @@ namespace DK.CodeAnalysis.Nodes
                         var numArgumentsRequired = node.Definition.Arguments.Count();
                         if (node.NumArguments != numArgumentsRequired)
                         {
-                            node.ReportError(node.ArgumentSpan, CAError.CA0121,
+                            node.ReportError(node.ArgumentSpan, CAError.CA10121,
                                 numArgumentsRequired, node.NumArguments);  // Function requires {0} arguments. ({1} passed)
                         }
                     }
@@ -163,7 +163,7 @@ namespace DK.CodeAnalysis.Nodes
                         var numArgumentsRequired = node.Definition.Arguments.Count();
                         if (node.NumArguments != numArgumentsRequired)
                         {
-                            node.ReportError(node.ArgumentSpan, CAError.CA0121,
+                            node.ReportError(node.ArgumentSpan, CAError.CA10121,
                                 numArgumentsRequired, node.NumArguments);  // Function requires {0} arguments. ({1} passed)
                         }
                     }
@@ -173,7 +173,7 @@ namespace DK.CodeAnalysis.Nodes
             }
 
             var funcCallNode = new FunctionCallNode(p.Statement, funcNameSpan, funcName, funcDef: null);
-            funcCallNode.ReportError(funcNameSpan, CAError.CA0003, funcName);	// Function '{0}' not found.
+            funcCallNode.ReportError(funcNameSpan, CAError.CA10003, funcName);	// Function '{0}' not found.
             return funcCallNode;
         }
 
@@ -247,7 +247,7 @@ namespace DK.CodeAnalysis.Nodes
             {
                 if (funcDef.Deprecated)
                 {
-                    ReportError(_funcNameSpan, CAError.CA0120, funcDef.Signature.Description);
+                    ReportError(_funcNameSpan, CAError.CA10120, funcDef.Signature.Description);
                 }
             }
 
@@ -263,7 +263,10 @@ namespace DK.CodeAnalysis.Nodes
                         var readScope = scope.Clone();
                         readScope.SuppressInitializedCheck = true;
                         var argValue = arg.ReadValue(readScope);
-                        if (argValue != null && defArg.DataType != null) argValue.CheckTypeConversion(scope, arg.Span, defArg.DataType);
+                        if (argValue != null && defArg.DataType != null)
+                        {
+                            argValue.CheckTypeConversion(scope, arg.Span, defArg.DataType, Value.ConversionMethod.FunctionArgument);
+                        }
                         scope.Merge(readScope);
 
                         var writeScope = scope.Clone();
@@ -273,7 +276,10 @@ namespace DK.CodeAnalysis.Nodes
                     else
                     {
                         var argValue = arg.ReadValue(scope);
-                        if (argValue != null && defArg.DataType != null) argValue.CheckTypeConversion(scope, arg.Span, defArg.DataType);
+                        if (argValue != null && defArg.DataType != null)
+                        {
+                            argValue.CheckTypeConversion(scope, arg.Span, defArg.DataType, Value.ConversionMethod.FunctionArgument);
+                        }
                     }
                 }
                 else
@@ -301,7 +307,7 @@ namespace DK.CodeAnalysis.Nodes
         {
             if (_args.Count != 1)
             {
-                ReportError(_funcNameSpan, CAError.CA0057, 1);	// Function expects {0} argument(s).
+                ReportError(_funcNameSpan, CAError.CA10057, 1);	// Function expects {0} argument(s).
             }
 
             return Value.CreateUnknownFromDataType(_args[0].ReadValue(scope).DataType);
@@ -311,7 +317,7 @@ namespace DK.CodeAnalysis.Nodes
         {
             if (_args.Count != 1)
             {
-                ReportError(_funcNameSpan, CAError.CA0057, 1);	// Function expects {0} argument(s).
+                ReportError(_funcNameSpan, CAError.CA10057, 1);	// Function expects {0} argument(s).
             }
 
             return _args[0].ReadValue(scope);
@@ -322,7 +328,7 @@ namespace DK.CodeAnalysis.Nodes
         {
             if (_args.Count < 1 || _args.Count > 2)
             {
-                ReportError(_funcNameSpan, CAError.CA0057, "1 or 2");	// Function expects {0} argument(s).
+                ReportError(_funcNameSpan, CAError.CA10057, "1 or 2");	// Function expects {0} argument(s).
             }
 
             return Value.CreateUnknownFromDataType(DataType.Int);
@@ -332,7 +338,7 @@ namespace DK.CodeAnalysis.Nodes
         {
             if (_args.Count < 1 || _args.Count > 2)
             {
-                ReportError(_funcNameSpan, CAError.CA0057, "1 or 2");	// Function expects {0} argument(s).
+                ReportError(_funcNameSpan, CAError.CA10057, "1 or 2");	// Function expects {0} argument(s).
             }
 
             return Value.CreateUnknownFromDataType(DataType.Int);
@@ -342,7 +348,7 @@ namespace DK.CodeAnalysis.Nodes
         {
             if (_args.Count != 1)
             {
-                ReportError(_funcNameSpan, CAError.CA0057, 1);	// Function expects {0} argument(s).
+                ReportError(_funcNameSpan, CAError.CA10057, 1);	// Function expects {0} argument(s).
             }
 
             return Value.CreateUnknownFromDataType(_args[0].ReadValue(scope).DataType);
@@ -352,7 +358,7 @@ namespace DK.CodeAnalysis.Nodes
         {
             if (_args.Count != 1)
             {
-                ReportError(_funcNameSpan, CAError.CA0057, 1);	// Function expects {0} argument(s).
+                ReportError(_funcNameSpan, CAError.CA10057, 1);	// Function expects {0} argument(s).
             }
 
             return Value.CreateUnknownFromDataType(_args[0].ReadValue(scope).DataType);
@@ -362,7 +368,7 @@ namespace DK.CodeAnalysis.Nodes
         {
             if (_args.Count != 1)
             {
-                ReportError(_funcNameSpan, CAError.CA0057, 1);	// Function expects {0} argument(s).
+                ReportError(_funcNameSpan, CAError.CA10057, 1);	// Function expects {0} argument(s).
             }
 
             return new NumberValue(DataType.Int, null);

@@ -15,7 +15,7 @@ namespace DK.CodeAnalysis.Statements
 
 			if (!code.ReadExact('{'))
 			{
-				ReportError(keywordSpan, CAError.CA0019);	// Expected '{'.
+				ReportError(keywordSpan, CAError.CA10019);	// Expected '{'.
 				return;
 			}
 

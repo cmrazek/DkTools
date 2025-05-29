@@ -32,7 +32,7 @@ namespace DK.CodeAnalysis.Nodes
 			var trueExp = ExpressionNode.Read(p, refDataType, condStopStrings);
 			if (trueExp == null)
 			{
-				p.Statement.ReportError(new CodeSpan(code.Position, code.Position + 1), CAError.CA0042);	// Expected value to follow conditional '?'.
+				p.Statement.ReportError(new CodeSpan(code.Position, code.Position + 1), CAError.CA10042);	// Expected value to follow conditional '?'.
 				return ret;
 			}
 			ret._trueExp = trueExp;
@@ -40,14 +40,14 @@ namespace DK.CodeAnalysis.Nodes
 
 			if (!code.ReadExact(':'))
 			{
-				p.Statement.ReportError(new CodeSpan(code.Position, code.Position + 1), CAError.CA0041);	// Expected ':' to follow conditional result.
+				p.Statement.ReportError(new CodeSpan(code.Position, code.Position + 1), CAError.CA10041);	// Expected ':' to follow conditional result.
 				return ret;
 			}
 
 			var falseExp = ExpressionNode.Read(p, refDataType, condStopStrings);
 			if (falseExp == null)
 			{
-				p.Statement.ReportError(new CodeSpan(code.Position, code.Position + 1), CAError.CA0043);	// Expected value to follow conditional ':'.
+				p.Statement.ReportError(new CodeSpan(code.Position, code.Position + 1), CAError.CA10043);	// Expected value to follow conditional ':'.
 				return ret;
 			}
 
@@ -85,13 +85,13 @@ namespace DK.CodeAnalysis.Nodes
 			var leftNode = Parent.GetLeftSibling(leftScope, this);
 			if (leftNode == null)
 			{
-				ReportError(_opSpan, CAError.CA0007, "?");	// Operator '{0}' expects value on left.
+				ReportError(_opSpan, CAError.CA10007, "?");	// Operator '{0}' expects value on left.
 				Parent.ReplaceWithResult(Value.Void, false, ResultSource.Conditional1, this);
 			}
 			else
 			{
 				var leftValue = leftNode.ReadValue(leftScope);
-				if (leftValue.IsVoid) leftNode.ReportError(_opSpan, CAError.CA0007, "?");	// Operator '{0}' expects value on left.
+				if (leftValue.IsVoid) leftNode.ReportError(_opSpan, CAError.CA10007, "?");	// Operator '{0}' expects value on left.
 
 				Value result = null;
 				if (leftValue.IsTrue)
@@ -128,7 +128,7 @@ namespace DK.CodeAnalysis.Nodes
 						if (_trueExp != null) fullSpan = fullSpan.Envelope(_trueExp.Span);
 						if (_falseExp != null) fullSpan = fullSpan.Envelope(_falseExp.Span);
 
-						ReportError(fullSpan, CAError.CA0071);
+						ReportError(fullSpan, CAError.CA10071);
 					}
 				}
 			}

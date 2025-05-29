@@ -80,7 +80,7 @@ namespace DK.CodeAnalysis.Nodes
 						&& !scope.SuppressInitializedCheck
 						&& v.DataType.ValueType != ValType.Interface)
 					{
-						ReportError(Span, CAError.CA0110, v.Name);  // Use of uninitialized variable '{0}'.
+						ReportError(Span, CAError.CA10110, v.Name);  // Use of uninitialized variable '{0}'.
 					}
 					return v.Value;
 				}

@@ -34,14 +34,14 @@ namespace DK.CodeAnalysis.Values
 
 		public override DkDate? ToDate(CAScope scope, CodeSpan span)
 		{
-			scope.CodeAnalyzer.ReportError(span, CAError.CA0055, "char", "date");	// Converting {0} to {1}.
+			scope.CodeAnalyzer.ReportError(span, CAError.CA10055, "char", "date");	// Converting {0} to {1}.
 			if (_char.HasValue) return new DkDate((int)_char.Value);
 			return null;
 		}
 
 		public override DkTime? ToTime(CAScope scope, CodeSpan span)
 		{
-			scope.CodeAnalyzer.ReportError(span, CAError.CA0055, "char", "time");	// Converting {0} to {1}.
+			scope.CodeAnalyzer.ReportError(span, CAError.CA10055, "char", "time");	// Converting {0} to {1}.
 			if (_char.HasValue) return new DkTime((int)_char.Value);
 			return null;
 		}
@@ -56,7 +56,7 @@ namespace DK.CodeAnalysis.Values
 					var result = (int)_char.Value * (int)right.Value;
 					if (result < 0 || result > 65535)
 					{
-						scope.CodeAnalyzer.ReportError(span, CAError.CA0056);	// Char math results in an out-of-bounds value.
+						scope.CodeAnalyzer.ReportError(span, CAError.CA10056);	// Char math results in an out-of-bounds value.
 						return new CharValue(DataType, null);
 					}
 
@@ -77,14 +77,14 @@ namespace DK.CodeAnalysis.Values
 					var rightNum = (int)right.Value;
 					if (rightNum == 0)
 					{
-						scope.CodeAnalyzer.ReportError(span, CAError.CA0051);	// Division by zero.
+						scope.CodeAnalyzer.ReportError(span, CAError.CA10051);	// Division by zero.
 						return new CharValue(DataType, null);
 					}
 
 					var result = (int)_char.Value / rightNum;
 					if (result < 0 || result > 65535)
 					{
-						scope.CodeAnalyzer.ReportError(span, CAError.CA0056);	// Char math results in an out-of-bounds value.
+						scope.CodeAnalyzer.ReportError(span, CAError.CA10056);	// Char math results in an out-of-bounds value.
 						return new CharValue(DataType, null);
 					}
 
@@ -105,14 +105,14 @@ namespace DK.CodeAnalysis.Values
 					var rightNum = (int)right.Value;
 					if (rightNum == 0)
 					{
-						scope.CodeAnalyzer.ReportError(span, CAError.CA0051);	// Division by zero.
+						scope.CodeAnalyzer.ReportError(span, CAError.CA10051);	// Division by zero.
 						return new CharValue(DataType, null);
 					}
 
 					var result = (int)_char.Value % rightNum;
 					if (result < 0 || result > 65535)
 					{
-						scope.CodeAnalyzer.ReportError(span, CAError.CA0056);	// Char math results in an out-of-bounds value.
+						scope.CodeAnalyzer.ReportError(span, CAError.CA10056);	// Char math results in an out-of-bounds value.
 						return new CharValue(DataType, null);
 					}
 
@@ -133,7 +133,7 @@ namespace DK.CodeAnalysis.Values
 					var result = (int)_char.Value + (int)right.Value;
 					if (result < 0 || result > 65535)
 					{
-						scope.CodeAnalyzer.ReportError(span, CAError.CA0056);	// Char math results in an out-of-bounds value.
+						scope.CodeAnalyzer.ReportError(span, CAError.CA10056);	// Char math results in an out-of-bounds value.
 						return new CharValue(DataType, null);
 					}
 
@@ -154,7 +154,7 @@ namespace DK.CodeAnalysis.Values
 					var result = (int)_char.Value - (int)right.Value;
 					if (result < 0 || result > 65535)
 					{
-						scope.CodeAnalyzer.ReportError(span, CAError.CA0056);	// Char math results in an out-of-bounds value.
+						scope.CodeAnalyzer.ReportError(span, CAError.CA10056);	// Char math results in an out-of-bounds value.
 						return new CharValue(DataType, null);
 					}
 
@@ -167,7 +167,7 @@ namespace DK.CodeAnalysis.Values
 
 		public override Value Invert(CAScope scope, CodeSpan span)
 		{
-			scope.CodeAnalyzer.ReportError(span, CAError.CA0056);	// Char math results in an out-of-bounds value.
+			scope.CodeAnalyzer.ReportError(span, CAError.CA10056);	// Char math results in an out-of-bounds value.
 			return new CharValue(DataType, null);
 		}
 

@@ -7,7 +7,7 @@ namespace DK.CodeAnalysis.Statements
 		public ContinueStatement(ReadParams p, CodeSpan keywordSpan)
 			: base(p.CodeAnalyzer, keywordSpan)
 		{
-			if (!p.Code.ReadExact(';')) ReportError(p.Code.Span, CAError.CA0015);	// Expected ';'.
+			if (!p.Code.ReadExact(';')) ReportError(p.Code.Span, CAError.CA10015);	// Expected ';'.
 		}
 
 		public override string ToString() => "continue";
@@ -18,7 +18,7 @@ namespace DK.CodeAnalysis.Statements
 
 			if (!scope.CanContinue)
 			{
-				ReportError(Span, CAError.CA0024);	// 'continue' is not valid here.
+				ReportError(Span, CAError.CA10024);	// 'continue' is not valid here.
 				return;
 			}
 

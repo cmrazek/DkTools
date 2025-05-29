@@ -48,7 +48,7 @@ namespace DK.CodeAnalysis.Values
 
 		public override DkTime? ToTime(CAScope scope, CodeSpan span)
 		{
-			scope.CodeAnalyzer.ReportError(span, CAError.CA0055, "date", "time");	// Converting {0} to {1}.
+			scope.CodeAnalyzer.ReportError(span, CAError.CA10055, "date", "time");	// Converting {0} to {1}.
 			if (_date.HasValue)
 			{
 				return new DkTime(_date.Value.Number);
@@ -59,7 +59,7 @@ namespace DK.CodeAnalysis.Values
 
 		public override char? ToChar(CAScope scope, CodeSpan span)
 		{
-			scope.CodeAnalyzer.ReportError(span, CAError.CA0055, "date", "char");	// Converting {0} to {1}.
+			scope.CodeAnalyzer.ReportError(span, CAError.CA10055, "date", "char");	// Converting {0} to {1}.
 			if (_date.HasValue) return (char)_date.Value.Number;
 			return null;
 		}
@@ -75,7 +75,7 @@ namespace DK.CodeAnalysis.Values
 					var result = left.Value * right.Value;
 					if (result < 0 || result > 65535)
 					{
-						scope.CodeAnalyzer.ReportError(span, CAError.CA0052);	// Date math results in an out-of-bounds value.
+						scope.CodeAnalyzer.ReportError(span, CAError.CA10052);	// Date math results in an out-of-bounds value.
 						return new DateValue(DataType, null);
 					}
 					else
@@ -98,7 +98,7 @@ namespace DK.CodeAnalysis.Values
 				{
 					if (right.Value == 0)
 					{
-						scope.CodeAnalyzer.ReportError(span, CAError.CA0051);	// Division by zero.
+						scope.CodeAnalyzer.ReportError(span, CAError.CA10051);	// Division by zero.
 						return new DateValue(DataType, null);
 					}
 					else
@@ -106,7 +106,7 @@ namespace DK.CodeAnalysis.Values
 						var result = left.Value / right.Value;
 						if (result < 0 || result > 65535)
 						{
-							scope.CodeAnalyzer.ReportError(span, CAError.CA0052);	// Date math results in an out-of-bounds value.
+							scope.CodeAnalyzer.ReportError(span, CAError.CA10052);	// Date math results in an out-of-bounds value.
 							return new DateValue(DataType, null);
 						}
 						else
@@ -130,7 +130,7 @@ namespace DK.CodeAnalysis.Values
 				{
 					if (right.Value == 0)
 					{
-						scope.CodeAnalyzer.ReportError(span, CAError.CA0051);	// Division by zero.
+						scope.CodeAnalyzer.ReportError(span, CAError.CA10051);	// Division by zero.
 						return new DateValue(DataType, null);
 					}
 					else
@@ -138,7 +138,7 @@ namespace DK.CodeAnalysis.Values
 						var result = left.Value % right.Value;
 						if (result < 0 || result > 65535)
 						{
-							scope.CodeAnalyzer.ReportError(span, CAError.CA0052);	// Date math results in an out-of-bounds value.
+							scope.CodeAnalyzer.ReportError(span, CAError.CA10052);	// Date math results in an out-of-bounds value.
 							return new DateValue(DataType, null);
 						}
 						else
@@ -163,7 +163,7 @@ namespace DK.CodeAnalysis.Values
 					var result = left.Value + right.Value;
 					if (result < 0 || result > 65535)
 					{
-						scope.CodeAnalyzer.ReportError(span, CAError.CA0052);	// Date math results in an out-of-bounds value.
+						scope.CodeAnalyzer.ReportError(span, CAError.CA10052);	// Date math results in an out-of-bounds value.
 						return new DateValue(DataType, null);
 					}
 					else
@@ -187,7 +187,7 @@ namespace DK.CodeAnalysis.Values
 					var result = left.Value - right.Value;
 					if (result < 0 || result > 65535)
 					{
-						scope.CodeAnalyzer.ReportError(span, CAError.CA0052);	// Date math results in an out-of-bounds value.
+						scope.CodeAnalyzer.ReportError(span, CAError.CA10052);	// Date math results in an out-of-bounds value.
 						return new DateValue(DataType, null);
 					}
 					else
@@ -202,7 +202,7 @@ namespace DK.CodeAnalysis.Values
 
 		public override Value Invert(CAScope scope, CodeSpan span)
 		{
-			scope.CodeAnalyzer.ReportError(span, CAError.CA0052);	// Date math results in an out-of-bounds value.
+			scope.CodeAnalyzer.ReportError(span, CAError.CA10052);	// Date math results in an out-of-bounds value.
 			return new DateValue(DataType, null);
 		}
 

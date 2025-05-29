@@ -19,6 +19,7 @@ Visual Studio Extension for WBDK
 
 **Version 1.6.11 Changes:**
 - Fix code analysis no longer detecting when a function is called with the wrong number of arguments.
+- Code analysis now detects some numeric data conversion warnings.
 
 **Version 1.6.10 Changes:**
 - Fixed bug in code analysis reporting CA0016 (unreachable code) after a for/while loop with a return statement in it.

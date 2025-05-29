@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Xml.Schema;
 
 namespace DK.Syntax
 {
@@ -24,6 +25,8 @@ namespace DK.Syntax
 		{
 			get { return Text.Length; }
 		}
+
+		public readonly static ProbeClassifiedRun Space = new ProbeClassifiedRun(ProbeClassifierType.Normal, " ");
 	}
 
 	public class ProbeClassifiedString

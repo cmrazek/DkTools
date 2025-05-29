@@ -17,13 +17,13 @@ namespace DK.CodeAnalysis.Statements
 			_cond = ExpressionNode.Read(p, null);
 			if (_cond == null)
 			{
-				ReportError(keywordSpan, CAError.CA0018, "if");	// Expected condition after '{0}'.
+				ReportError(keywordSpan, CAError.CA10018, "if");	// Expected condition after '{0}'.
 				return;
 			}
 
 			if (!p.Code.ReadExact("{"))
 			{
-				ReportError(keywordSpan, CAError.CA0019);	// Expected '{'.
+				ReportError(keywordSpan, CAError.CA10019);	// Expected '{'.
 				return;
 			}
 

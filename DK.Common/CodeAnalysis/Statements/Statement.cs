@@ -104,7 +104,7 @@ namespace DK.CodeAnalysis.Statements
 			{
 				if (scope.UnreachableCodeReported != TriState.True)
 				{
-					ReportError(Span, CAError.CA0016);  // Unreachable code.
+					ReportError(Span, CAError.CA10016);  // Unreachable code.
 					scope.UnreachableCodeReported = TriState.True;
 				}
 			}
@@ -142,7 +142,7 @@ namespace DK.CodeAnalysis.Statements
                 var resumeSpan = code.Span;
                 if (!code.ReadExact(';'))
                 {
-                    ReportError(resumeSpan, CAError.CA0015);  // Expected ';'.
+                    ReportError(resumeSpan, CAError.CA10015);  // Expected ';'.
                 }
             }
             else if (code.ReadExactWholeWord("goto"))
@@ -150,12 +150,12 @@ namespace DK.CodeAnalysis.Statements
                 var gotoSpan = code.Span;
                 if (!code.ReadWord())
                 {
-                    ReportError(gotoSpan, CAError.CA0150); // Expected goto label.
+                    ReportError(gotoSpan, CAError.CA10150); // Expected goto label.
                 }
                 else if (!code.ReadExact(';'))
                 {
                     var labelSpan = code.Span;
-                    ReportError(labelSpan, CAError.CA0015);  // Expected ';'.
+                    ReportError(labelSpan, CAError.CA10015);  // Expected ';'.
                 }
             }
             else if (code.ReadExact('{'))
@@ -170,7 +170,7 @@ namespace DK.CodeAnalysis.Statements
             }
             else
             {
-                ReportError(keywordSpan, CAError.CA0019);   // Expected '{'.
+                ReportError(keywordSpan, CAError.CA10019);   // Expected '{'.
             }
         }
 	}

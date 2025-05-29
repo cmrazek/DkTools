@@ -7,7 +7,7 @@ namespace DK.CodeAnalysis.Statements
 		public BreakStatement(ReadParams p, CodeSpan keywordSpan)
 			: base(p.CodeAnalyzer, keywordSpan)
 		{
-			if (!p.Code.ReadExact(';')) ReportError(p.Code.Span, CAError.CA0015);	// Expected ';'.
+			if (!p.Code.ReadExact(';')) ReportError(p.Code.Span, CAError.CA10015);	// Expected ';'.
 		}
 
 		public override string ToString() => "break";
@@ -18,7 +18,7 @@ namespace DK.CodeAnalysis.Statements
 
 			if (!scope.CanBreak)
 			{
-				ReportError(Span, CAError.CA0023);	// 'break' is not valid here.
+				ReportError(Span, CAError.CA10023);	// 'break' is not valid here.
 				return;
 			}
 

@@ -20,7 +20,7 @@ namespace DK.CodeAnalysis.Statements
 
 			if (!code.ReadWord())
 			{
-				ReportError(keywordSpan, CAError.CA0044);	// Expected temp table name to follow 'extract'.
+				ReportError(keywordSpan, CAError.CA10044);	// Expected temp table name to follow 'extract'.
 				return;
 			}
 			var tableName = code.Text;
@@ -28,7 +28,7 @@ namespace DK.CodeAnalysis.Statements
 			var def = p.CodeAnalyzer.PreprocessorModel.DefinitionProvider.GetGlobalFromFile<ExtractTableDefinition>(tableName).FirstOrDefault();
 			if (def == null)
 			{
-				ReportError(code.Span, CAError.CA0045, tableName);	// Extract table '{0}' does not exist.
+				ReportError(code.Span, CAError.CA10045, tableName);	// Extract table '{0}' does not exist.
 				return;
 			}
 
@@ -36,20 +36,20 @@ namespace DK.CodeAnalysis.Statements
 			{
 				if (!code.ReadWord())
 				{
-					ReportError(new CodeSpan(code.Position, code.Position + 1), CAError.CA0046);	// Expected extract column name.
+					ReportError(new CodeSpan(code.Position, code.Position + 1), CAError.CA10046);	// Expected extract column name.
 					return;
 				}
 				var colSpan = code.Span;
 				var colDef = def.GetChildDefinitions(code.Text, p.AppSettings).FirstOrDefault();
 				if (colDef == null)
 				{
-					ReportError(code.Span, CAError.CA0046);	// Expected extract column name.
+					ReportError(code.Span, CAError.CA10046);	// Expected extract column name.
 					return;
 				}
 
 				if (!code.ReadExact('='))
 				{
-					ReportError(new CodeSpan(code.Position, code.Position + 1), CAError.CA0047);	// Expected '=' to follow extract column name.
+					ReportError(new CodeSpan(code.Position, code.Position + 1), CAError.CA10047);	// Expected '=' to follow extract column name.
 					return;
 				}
 				var assignSpan = code.Span;
@@ -57,7 +57,7 @@ namespace DK.CodeAnalysis.Statements
 				var exp = ExpressionNode.Read(p, null, true);
 				if (exp == null)
 				{
-					ReportError(new CodeSpan(code.Position, code.Position + 1), CAError.CA0048);	// Expected extract column expression.
+					ReportError(new CodeSpan(code.Position, code.Position + 1), CAError.CA10048);	// Expected extract column expression.
 					return;
 				}
 

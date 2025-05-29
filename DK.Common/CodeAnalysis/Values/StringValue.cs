@@ -106,7 +106,7 @@ namespace DK.CodeAnalysis.Values
         {
             if (rightValue.DataType.ValueType != ValType.String)
 			{
-				scope.CodeAnalyzer.ReportError(span, CAError.CA0140);   // 'like' operator may only be used with a string.
+				scope.CodeAnalyzer.ReportError(span, CAError.CA10140);   // 'like' operator may only be used with a string.
             }
 
 			return new NumberValue(DataType.Int, null);
@@ -161,7 +161,7 @@ namespace DK.CodeAnalysis.Values
 
 		public override char? ToChar(CAScope scope, CodeSpan span)
 		{
-			scope.CodeAnalyzer.ReportError(span, CAError.CA0055, "string", "char");	// Converting {0} to {1}.
+			scope.CodeAnalyzer.ReportError(span, CAError.CA10055, "string", "char");	// Converting {0} to {1}.
 
 			if (_value != null && _value.Length == 1)
 			{
@@ -184,7 +184,7 @@ namespace DK.CodeAnalysis.Values
 			return _value == o._value;
 		}
 
-		public override void CheckTypeConversion(CAScope scope, CodeSpan span, DataType dataType)
+		public override void CheckTypeConversion(CAScope scope, CodeSpan span, DataType dataType, ConversionMethod method)
 		{
 			if (_value != null && dataType.HasEnumOptions)
 			{
@@ -192,11 +192,11 @@ namespace DK.CodeAnalysis.Values
 				{
 					if (_value.Length == 0 && dataType.IsValidEnumOption(" "))
 					{
-						scope.CodeAnalyzer.ReportError(span, CAError.CA0060, "\"\"");   // Enum option {0} does not exist; use a single space instead of a blank string.
+						scope.CodeAnalyzer.ReportError(span, CAError.CA10060, "\"\"");   // Enum option {0} does not exist; use a single space instead of a blank string.
 					}
 					else
 					{
-						scope.CodeAnalyzer.ReportError(span, CAError.CA0059, CodeParser.StringToStringLiteral(_value));   // Enum option {0} does not exist.
+						scope.CodeAnalyzer.ReportError(span, CAError.CA10059, CodeParser.StringToStringLiteral(_value));   // Enum option {0} does not exist.
 					}
 				}
 				//else if (_value.IsWord())

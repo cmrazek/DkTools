@@ -483,8 +483,7 @@ namespace DK.Definitions
                             new ProbeClassifiedRun(ProbeClassifierType.Operator, "}")
                         });
 
-                    var enumDataType = new DataType(ValType.Enum, "afsnavigate_t", enumSource,
-                        enumOptions, DataType.CompletionOptionsType.EnumOptionsList);
+                    var enumDataType = DataType.MakeEnum(enumOptions, "afsnavigate_t", enumSource);
 
                     foreach (var o in enumOptions) o.SetEnumDataType(enumDataType);
 
@@ -614,8 +613,7 @@ namespace DK.Definitions
                             new ProbeClassifiedRun(ProbeClassifierType.Operator, "}")
                         });
 
-                    _afssearch_t = new DataType(ValType.Enum, "afssearch_t", enumSource,
-                        enumOptions, DataType.CompletionOptionsType.EnumOptionsList);
+                    _afssearch_t = DataType.MakeEnum(enumOptions, "afssearch_t", enumSource);
 
                     foreach (var o in enumOptions) o.SetEnumDataType(_afssearch_t);
                 }

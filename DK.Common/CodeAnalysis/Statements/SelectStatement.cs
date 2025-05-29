@@ -39,12 +39,12 @@ namespace DK.CodeAnalysis.Statements
 			{
 				var topSpan = code.Span;
 				if (code.ReadNumber()) _topNumber = code.Text;
-				else ReportError(topSpan, CAError.CA0072);  // Expected number after 'top'.
+				else ReportError(topSpan, CAError.CA10072);  // Expected number after 'top'.
             }
 
 			if (!code.ReadExact('*'))
 			{
-				ReportError(new CodeSpan(code.Position, code.Position + 1), CAError.CA0034, "*");	// Expected '{0}'.
+				ReportError(new CodeSpan(code.Position, code.Position + 1), CAError.CA10034, "*");	// Expected '{0}'.
 				return;
 			}
 
@@ -80,7 +80,7 @@ namespace DK.CodeAnalysis.Statements
 							{
 								if (!code.ReadWord())
 								{
-									ReportError(new CodeSpan(code.Position, code.Position + 1), CAError.CA0036);    // Expected table name after 'of'.
+									ReportError(new CodeSpan(code.Position, code.Position + 1), CAError.CA10036);    // Expected table name after 'of'.
 									return;
 								}
 							}
@@ -90,7 +90,7 @@ namespace DK.CodeAnalysis.Statements
 									   select d).FirstOrDefault();
 							if (def == null)
 							{
-								ReportError(code.Span, CAError.CA0035, code.Text);  // Table or relationship '{0}' does not exist.
+								ReportError(code.Span, CAError.CA10035, code.Text);  // Table or relationship '{0}' does not exist.
 								return;
 							}
 							else
@@ -101,7 +101,7 @@ namespace DK.CodeAnalysis.Statements
 						else if (code.ReadExact(',')) { }
 						else
 						{
-							ReportError(code.Span, CAError.CA0034, "{");    // Expected '{0}'.
+							ReportError(code.Span, CAError.CA10034, "{");    // Expected '{0}'.
 							return;
 						}
 					}
@@ -136,7 +136,7 @@ namespace DK.CodeAnalysis.Statements
 				{
 					if (!code.ReadExactWholeWord("by"))
 					{
-						ReportError(new CodeSpan(code.Position, code.Position + 1), CAError.CA0034, "by");  // Expected '{0}'.
+						ReportError(new CodeSpan(code.Position, code.Position + 1), CAError.CA10034, "by");  // Expected '{0}'.
 						return;
 					}
 
@@ -172,7 +172,7 @@ namespace DK.CodeAnalysis.Statements
 					{
 						if (!code.ReadExactWholeWord("group"))
 						{
-							ReportError(new CodeSpan(code.Position, code.Position + 1), CAError.CA0034, "group");   // Expected '{0}'.
+							ReportError(new CodeSpan(code.Position, code.Position + 1), CAError.CA10034, "group");   // Expected '{0}'.
 							return;
 						}
 
@@ -181,7 +181,7 @@ namespace DK.CodeAnalysis.Statements
 
 						if (!code.ReadExact(':'))
 						{
-							ReportError(new CodeSpan(code.Position, code.Position + 1), CAError.CA0034, ":");   // Expected '{0}'.
+							ReportError(new CodeSpan(code.Position, code.Position + 1), CAError.CA10034, ":");   // Expected '{0}'.
 							return;
 						}
 
@@ -191,13 +191,13 @@ namespace DK.CodeAnalysis.Statements
 					{
 						if (!code.ReadExactWholeWord("each"))
 						{
-							ReportError(new CodeSpan(code.Position, code.Position + 1), CAError.CA0034, "each");    // Expected '{0}'.
+							ReportError(new CodeSpan(code.Position, code.Position + 1), CAError.CA10034, "each");    // Expected '{0}'.
 							return;
 						}
 
 						if (!code.ReadExact(':'))
 						{
-							ReportError(new CodeSpan(code.Position, code.Position + 1), CAError.CA0034, ":");   // Expected '{0}'.
+							ReportError(new CodeSpan(code.Position, code.Position + 1), CAError.CA10034, ":");   // Expected '{0}'.
 							return;
 						}
 
@@ -207,7 +207,7 @@ namespace DK.CodeAnalysis.Statements
 					{
 						if (!code.ReadExact(':'))
 						{
-							ReportError(new CodeSpan(code.Position, code.Position + 1), CAError.CA0034, ":");   // Expected '{0}'.
+							ReportError(new CodeSpan(code.Position, code.Position + 1), CAError.CA10034, ":");   // Expected '{0}'.
 							return;
 						}
 
@@ -224,7 +224,7 @@ namespace DK.CodeAnalysis.Statements
 
 			if (!code.ReadWord())
 			{
-				ReportError(new CodeSpan(code.Position, code.Position + 1), CAError.CA0038);	// Expected table or relationship name.
+				ReportError(new CodeSpan(code.Position, code.Position + 1), CAError.CA10038);	// Expected table or relationship name.
 				return false;
 			}
 
@@ -234,7 +234,7 @@ namespace DK.CodeAnalysis.Statements
 				def = CodeAnalyzer.PreprocessorModel.DefinitionProvider.GetGlobalFromAnywhere<RelIndDefinition>(code.Text).FirstOrDefault();
 				if (def == null && allowIndexes)
 				{
-					ReportError(code.Span, CAError.CA0037, code.Text);	// Table or relationship '{0}' is not referenced in the 'from' clause.
+					ReportError(code.Span, CAError.CA10037, code.Text);	// Table or relationship '{0}' is not referenced in the 'from' clause.
 					return false;
 				}
 			}
@@ -245,20 +245,20 @@ namespace DK.CodeAnalysis.Statements
 			{
 				if (!code.ReadExact('.'))
 				{
-					ReportError(new CodeSpan(code.Position, code.Position + 1), CAError.CA0034, ".");	// Expected '{0}'.
+					ReportError(new CodeSpan(code.Position, code.Position + 1), CAError.CA10034, ".");	// Expected '{0}'.
 					return false;
 				}
 
 				if (!code.ReadWord())
 				{
-					ReportError(new CodeSpan(code.Position, code.Position + 1), CAError.CA0039);	// Expected column name to follow table name.
+					ReportError(new CodeSpan(code.Position, code.Position + 1), CAError.CA10039);	// Expected column name to follow table name.
 					return false;
 				}
 
 				var fieldDef = tableDef.GetChildDefinitions(code.Text, p.AppSettings).FirstOrDefault();
 				if (fieldDef == null)
 				{
-					ReportError(code.Span, CAError.CA0040, tableDef.Name, code.Text);	// Table '{0}' has no column '{1}'.
+					ReportError(code.Span, CAError.CA10040, tableDef.Name, code.Text);	// Table '{0}' has no column '{1}'.
 					return false;
 				}
 			}

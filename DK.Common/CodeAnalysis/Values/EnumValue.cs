@@ -77,7 +77,7 @@ namespace DK.CodeAnalysis.Values
 			{
 				if (_ordinal.Value < 0 || _ordinal.Value > 65535)
 				{
-					scope.CodeAnalyzer.ReportError(span, CAError.CA0056);	// Char math results in an out-of-bounds value.
+					scope.CodeAnalyzer.ReportError(span, CAError.CA10056);	// Char math results in an out-of-bounds value.
 					return null;
 				}
 
@@ -100,7 +100,7 @@ namespace DK.CodeAnalysis.Values
 				if (right.HasValue)
 				{
 					var result = (int)_ordinal.Value * (int)right.Value;
-					if (result < 0 || result >= NumEnumOptions) scope.CodeAnalyzer.ReportError(span, CAError.CA0053);	// Enum math results in an out-of-bounds value.
+					if (result < 0 || result >= NumEnumOptions) scope.CodeAnalyzer.ReportError(span, CAError.CA10053);	// Enum math results in an out-of-bounds value.
 					return new EnumValue(DataType, result);
 				}
 			}
@@ -117,12 +117,12 @@ namespace DK.CodeAnalysis.Values
 				{
 					if (right.Value == 0)
 					{
-						scope.CodeAnalyzer.ReportError(span, CAError.CA0051);	// Division by zero.
+						scope.CodeAnalyzer.ReportError(span, CAError.CA10051);	// Division by zero.
 						return new EnumValue(DataType, null, null);
 					}
 
 					var result = (int)_ordinal.Value / (int)right.Value;
-					if (result < 0 || result >= NumEnumOptions) scope.CodeAnalyzer.ReportError(span, CAError.CA0053);	// Enum math results in an out-of-bounds value.
+					if (result < 0 || result >= NumEnumOptions) scope.CodeAnalyzer.ReportError(span, CAError.CA10053);	// Enum math results in an out-of-bounds value.
 					return new EnumValue(DataType, result);
 				}
 			}
@@ -139,12 +139,12 @@ namespace DK.CodeAnalysis.Values
 				{
 					if (right.Value == 0)
 					{
-						scope.CodeAnalyzer.ReportError(span, CAError.CA0051);	// Division by zero.
+						scope.CodeAnalyzer.ReportError(span, CAError.CA10051);	// Division by zero.
 						return new EnumValue(DataType, null, null);
 					}
 
 					var result = (int)_ordinal.Value % (int)right.Value;
-					if (result < 0 || result >= NumEnumOptions) scope.CodeAnalyzer.ReportError(span, CAError.CA0053);	// Enum math results in an out-of-bounds value.
+					if (result < 0 || result >= NumEnumOptions) scope.CodeAnalyzer.ReportError(span, CAError.CA10053);	// Enum math results in an out-of-bounds value.
 					return new EnumValue(DataType, result);
 				}
 			}
@@ -160,7 +160,7 @@ namespace DK.CodeAnalysis.Values
 				if (right.HasValue)
 				{
 					var result = (int)_ordinal.Value + (int)right.Value;
-					if (result < 0 || result >= NumEnumOptions) scope.CodeAnalyzer.ReportError(span, CAError.CA0053);	// Enum math results in an out-of-bounds value.
+					if (result < 0 || result >= NumEnumOptions) scope.CodeAnalyzer.ReportError(span, CAError.CA10053);	// Enum math results in an out-of-bounds value.
 					return new EnumValue(DataType, result);
 				}
 			}
@@ -176,7 +176,7 @@ namespace DK.CodeAnalysis.Values
 				if (right.HasValue)
 				{
 					var result = (int)_ordinal.Value - (int)right.Value;
-					if (result < 0 || result >= NumEnumOptions) scope.CodeAnalyzer.ReportError(span, CAError.CA0053);	// Enum math results in an out-of-bounds value.
+					if (result < 0 || result >= NumEnumOptions) scope.CodeAnalyzer.ReportError(span, CAError.CA10053);	// Enum math results in an out-of-bounds value.
 					return new EnumValue(DataType, result);
 				}
 			}
@@ -186,7 +186,7 @@ namespace DK.CodeAnalysis.Values
 
 		public override Value Invert(CAScope scope, CodeSpan span)
 		{
-			scope.CodeAnalyzer.ReportError(span, CAError.CA0053);	// Enum math results in an out-of-bounds value.
+			scope.CodeAnalyzer.ReportError(span, CAError.CA10053);	// Enum math results in an out-of-bounds value.
 			return new EnumValue(DataType, null, null);
 		}
 

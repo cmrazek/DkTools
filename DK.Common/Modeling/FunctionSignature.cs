@@ -255,8 +255,7 @@ namespace DK.Modeling
 							if (returnDataType == null)
 							{
 								appSettings.Log.Debug("Unable to parse return data type from: {0}", dtString);
-								returnDataType = new DataType(ValType.Unknown, null,
-									new ProbeClassifiedString(ProbeClassifierType.DataType, dtString));
+								returnDataType = DataType.MakeUnknown(null, new ProbeClassifiedString(ProbeClassifierType.DataType, dtString));
 							}
 						}
 						break;

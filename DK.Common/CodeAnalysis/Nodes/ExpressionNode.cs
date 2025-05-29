@@ -206,7 +206,7 @@ namespace DK.CodeAnalysis.Nodes
                                             {
                                                 if (!expectComma && gotItem)
                                                 {
-                                                    if (exp.ErrorReported == null) exp.ReportError(errorSpan, CAError.CA0132);   // Expected expression.
+                                                    if (exp.ErrorReported == null) exp.ReportError(errorSpan, CAError.CA10132);   // Expected expression.
                                                 }
                                                 break;
                                             }
@@ -220,7 +220,7 @@ namespace DK.CodeAnalysis.Nodes
                                                 }
                                                 else
                                                 {
-                                                    if (exp.ErrorReported == null) exp.ReportError(errorSpan, CAError.CA0131);  // Expected ','.
+                                                    if (exp.ErrorReported == null) exp.ReportError(errorSpan, CAError.CA10131);  // Expected ','.
                                                     break;
                                                 }
                                             }
@@ -237,7 +237,7 @@ namespace DK.CodeAnalysis.Nodes
                                                 }
                                                 else
                                                 {
-                                                    if (exp.ErrorReported == null) exp.ReportError(errorSpan, CAError.CA0132);   // Expected expression.
+                                                    if (exp.ErrorReported == null) exp.ReportError(errorSpan, CAError.CA10132);   // Expected expression.
                                                     break;
                                                 }
                                             }
@@ -245,7 +245,7 @@ namespace DK.CodeAnalysis.Nodes
 
                                         if (!gotItem)
                                         {
-                                            if (exp.ErrorReported == null) exp.ReportError(errorSpan, CAError.CA0133);    // 'in' operator requires at least 1 expression.
+                                            if (exp.ErrorReported == null) exp.ReportError(errorSpan, CAError.CA10133);    // 'in' operator requires at least 1 expression.
                                         }
                                     }
                                 }
@@ -270,7 +270,7 @@ namespace DK.CodeAnalysis.Nodes
                         }
                         break;
                     default:
-                        exp.ReportError(code.Span, CAError.CA0001, code.Text);	// Unknown '{0}'.
+                        exp.ReportError(code.Span, CAError.CA10001, code.Text);	// Unknown '{0}'.
                         exp.AddChild(new UnknownNode(p.Statement, code.Span, code.Text));
                         break;
                 }
@@ -331,7 +331,7 @@ namespace DK.CodeAnalysis.Nodes
                             }
                         }
 
-                        ReportError(combinedSpan, CAError.CA0003, combinedWord);	// Function '{0}' not found.
+                        ReportError(combinedSpan, CAError.CA10003, combinedWord);	// Function '{0}' not found.
                         return new UnknownNode(p.Statement, combinedSpan, combinedWord);
                     }
                     else // No opening bracket
@@ -349,13 +349,13 @@ namespace DK.CodeAnalysis.Nodes
                             }
                         }
 
-                        ReportError(combinedSpan, CAError.CA0001, combinedWord);	// Unknown '{0}'.
+                        ReportError(combinedSpan, CAError.CA10001, combinedWord);	// Unknown '{0}'.
                         return new UnknownNode(p.Statement, combinedSpan, combinedWord);
                     }
                 }
                 else // No word after dot
                 {
-                    ReportError(dotSpan, CAError.CA0004);	// Expected identifier to follow '.'
+                    ReportError(dotSpan, CAError.CA10004);	// Expected identifier to follow '.'
                     return new UnknownNode(p.Statement, wordSpan.Envelope(dotSpan), string.Concat(word, "."));
                 }
             }
@@ -384,12 +384,12 @@ namespace DK.CodeAnalysis.Nodes
                         }
                     }
 
-                    ReportError(combinedSpan, CAError.CA0001, combinedWord);	// Unknown '{0}'.
+                    ReportError(combinedSpan, CAError.CA10001, combinedWord);	// Unknown '{0}'.
                     return new UnknownNode(p.Statement, combinedSpan, combinedWord);
                 }
                 else // No word after double-dollar
                 {
-                    ReportError(dollarSpan, CAError.CA0005);	// Expected identifier to follow '$'.
+                    ReportError(dollarSpan, CAError.CA10005);	// Expected identifier to follow '$'.
                     return new UnknownNode(p.Statement, wordSpan.Envelope(dollarSpan), string.Concat(word, "$$"));
                 }
             }
@@ -421,7 +421,7 @@ namespace DK.CodeAnalysis.Nodes
                             }
                         }
 
-                        ReportError(combinedSpan, CAError.CA0003, combinedWord);	// Function '{0}' not found.
+                        ReportError(combinedSpan, CAError.CA10003, combinedWord);	// Function '{0}' not found.
                         return new UnknownNode(p.Statement, combinedSpan, combinedWord);
                     }
                     else // No opening bracket
@@ -439,13 +439,13 @@ namespace DK.CodeAnalysis.Nodes
                             }
                         }
 
-                        ReportError(combinedSpan, CAError.CA0001, combinedWord);	// Unknown '{0}'.
+                        ReportError(combinedSpan, CAError.CA10001, combinedWord);	// Unknown '{0}'.
                         return new UnknownNode(p.Statement, combinedSpan, combinedWord);
                     }
                 }
                 else // No word after dollar
                 {
-                    ReportError(dollarSpan, CAError.CA0005);	// Expected identifier to follow '$'.
+                    ReportError(dollarSpan, CAError.CA10005);	// Expected identifier to follow '$'.
                     return new UnknownNode(p.Statement, wordSpan.Envelope(dollarSpan), string.Concat(word, "$"));
                 }
             }

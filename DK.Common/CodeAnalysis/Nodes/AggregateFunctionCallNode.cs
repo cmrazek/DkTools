@@ -38,7 +38,7 @@ namespace DK.CodeAnalysis.Nodes
 				var exp = ExpressionNode.Read(p, null, ",", ")");
 				if (exp == null)
 				{
-					ret.ReportError(CAError.CA0061);	// Expected aggregate expression.
+					ret.ReportError(CAError.CA10061);	// Expected aggregate expression.
 					return ret;
 				}
 				ret._aggExp = exp;
@@ -64,7 +64,7 @@ namespace DK.CodeAnalysis.Nodes
 					var exp = ExpressionNode.Read(p, null, ",", ")");
 					if (exp == null)
 					{
-						ret.ReportError(code.Span, CAError.CA0062, "where");    // Expected expression to follow '{0}'.
+						ret.ReportError(code.Span, CAError.CA10062, "where");    // Expected expression to follow '{0}'.
 						break;
 					}
 					ret._whereExp = exp;
@@ -79,26 +79,26 @@ namespace DK.CodeAnalysis.Nodes
 										select d).FirstOrDefault();
 						if (tableDef == null)
 						{
-							ret.ReportError(code.Span, CAError.CA0064, code.Text);  // Table '{0}' does not exist.
+							ret.ReportError(code.Span, CAError.CA10064, code.Text);  // Table '{0}' does not exist.
 							break;
 						}
 
 						if (!code.ReadExact('.'))
 						{
-							ret.ReportError(code.Span, CAError.CA0066); // Expected '.'
+							ret.ReportError(code.Span, CAError.CA10066); // Expected '.'
 							break;
 						}
 
 						Definition fieldDef = null;
 						if (!code.ReadWord() || (fieldDef = tableDef.GetChildDefinitions(code.Text, p.AppSettings).FirstOrDefault()) == null)
 						{
-							ret.ReportError(code.Span, CAError.CA0067); // Expected column name.
+							ret.ReportError(code.Span, CAError.CA10067); // Expected column name.
 							break;
 						}
 					}
 					else
 					{
-						ret.ReportError(code.Span, CAError.CA0065); // Expected table name to follow 'group'.
+						ret.ReportError(code.Span, CAError.CA10065); // Expected table name to follow 'group'.
 						break;
 					}
 				}
@@ -110,13 +110,13 @@ namespace DK.CodeAnalysis.Nodes
 				{
 					if (!code.ReadStringLiteral() && !code.ReadWord())
 					{
-						ret.ReportError(code.Span, CAError.CA0068); // Expected select name to follow 'in'.
+						ret.ReportError(code.Span, CAError.CA10068); // Expected select name to follow 'in'.
 						break;
 					}
 				}
 				else
 				{
-					ret.ReportError(CAError.CA0063);    // Expected ')'.
+					ret.ReportError(CAError.CA10063);    // Expected ')'.
 					break;
 				}
 			}

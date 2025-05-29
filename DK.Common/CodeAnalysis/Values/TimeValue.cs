@@ -25,7 +25,7 @@ namespace DK.CodeAnalysis.Values
 					var result = _time.Value.Ticks * right.Value.Ticks;
 					if (result < 0 || result > 43200)
 					{
-						scope.CodeAnalyzer.ReportError(span, CAError.CA0054);	// Time math results in an out-of-bounds value.
+						scope.CodeAnalyzer.ReportError(span, CAError.CA10054);	// Time math results in an out-of-bounds value.
 						return new TimeValue(DataType, null);
 					}
 
@@ -46,14 +46,14 @@ namespace DK.CodeAnalysis.Values
 					var rightNum = right.Value.Ticks;
 					if (rightNum == 0)
 					{
-						scope.CodeAnalyzer.ReportError(span, CAError.CA0051);	// Division by zero.
+						scope.CodeAnalyzer.ReportError(span, CAError.CA10051);	// Division by zero.
 						return new TimeValue(DataType, null);
 					}
 
 					var result = _time.Value.Ticks / rightNum;
 					if (result < 0 || result > 43200)
 					{
-						scope.CodeAnalyzer.ReportError(span, CAError.CA0054);	// Time math results in an out-of-bounds value.
+						scope.CodeAnalyzer.ReportError(span, CAError.CA10054);	// Time math results in an out-of-bounds value.
 						return new TimeValue(DataType, null);
 					}
 
@@ -74,14 +74,14 @@ namespace DK.CodeAnalysis.Values
 					var rightNum = right.Value.Ticks;
 					if (rightNum == 0)
 					{
-						scope.CodeAnalyzer.ReportError(span, CAError.CA0051);	// Division by zero.
+						scope.CodeAnalyzer.ReportError(span, CAError.CA10051);	// Division by zero.
 						return new TimeValue(DataType, null);
 					}
 
 					var result = _time.Value.Ticks % rightNum;
 					if (result < 0 || result > 43200)
 					{
-						scope.CodeAnalyzer.ReportError(span, CAError.CA0054);	// Time math results in an out-of-bounds value.
+						scope.CodeAnalyzer.ReportError(span, CAError.CA10054);	// Time math results in an out-of-bounds value.
 						return new TimeValue(DataType, null);
 					}
 
@@ -102,7 +102,7 @@ namespace DK.CodeAnalysis.Values
 					var result = _time.Value.Ticks + right.Value.Ticks;
 					if (result < 0 || result > 43200)
 					{
-						scope.CodeAnalyzer.ReportError(span, CAError.CA0054);	// Time math results in an out-of-bounds value.
+						scope.CodeAnalyzer.ReportError(span, CAError.CA10054);	// Time math results in an out-of-bounds value.
 						return new TimeValue(DataType, null);
 					}
 
@@ -123,7 +123,7 @@ namespace DK.CodeAnalysis.Values
 					var result = _time.Value.Ticks - right.Value.Ticks;
 					if (result < 0 || result > 43200)
 					{
-						scope.CodeAnalyzer.ReportError(span, CAError.CA0054);	// Time math results in an out-of-bounds value.
+						scope.CodeAnalyzer.ReportError(span, CAError.CA10054);	// Time math results in an out-of-bounds value.
 						return new TimeValue(DataType, null);
 					}
 
@@ -136,7 +136,7 @@ namespace DK.CodeAnalysis.Values
 
 		public override Value Invert(CAScope scope, CodeSpan span)
 		{
-			scope.CodeAnalyzer.ReportError(span, CAError.CA0054);	// Time math results in an out-of-bounds value.
+			scope.CodeAnalyzer.ReportError(span, CAError.CA10054);	// Time math results in an out-of-bounds value.
 			return new TimeValue(DataType, null);
 		}
 
@@ -254,7 +254,7 @@ namespace DK.CodeAnalysis.Values
 
 		public override DkDate? ToDate(CAScope scope, CodeSpan span)
 		{
-			scope.CodeAnalyzer.ReportError(span, CAError.CA0055, "time", "date");	// Converting {0} to {1}.
+			scope.CodeAnalyzer.ReportError(span, CAError.CA10055, "time", "date");	// Converting {0} to {1}.
 
 			if (_time.HasValue) return new DkDate(_time.Value.Ticks);
 			return null;
@@ -268,7 +268,7 @@ namespace DK.CodeAnalysis.Values
 
 		public override char? ToChar(CAScope scope, CodeSpan span)
 		{
-			scope.CodeAnalyzer.ReportError(span, CAError.CA0055, "time", "char");	// Converting {0} to {1}.
+			scope.CodeAnalyzer.ReportError(span, CAError.CA10055, "time", "char");	// Converting {0} to {1}.
 			if (_time.HasValue) return (char)_time.Value.Ticks;
 			return null;
 		}

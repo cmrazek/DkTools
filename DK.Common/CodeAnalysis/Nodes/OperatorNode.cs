@@ -79,7 +79,7 @@ namespace DK.CodeAnalysis.Nodes
 					_prec = 7;
 					break;
 				default:
-					Statement.CodeAnalyzer.ReportError(Span, CAError.CA0006, text);	// Unknown operator '{0}'.
+					Statement.CodeAnalyzer.ReportError(Span, CAError.CA10006, text);	// Unknown operator '{0}'.
 					_prec = 0;
 					break;
 			}
@@ -147,19 +147,19 @@ namespace DK.CodeAnalysis.Nodes
 		{
 			var leftNode = Parent.GetLeftSibling(scope, this);
 			var rightNode = Parent.GetRightSibling(scope, this);
-			if (leftNode == null) ReportError(Span, CAError.CA0007, Text);			// Operator '{0}' expects value on left.
-			else if (rightNode == null) ReportError(Span, CAError.CA0008, Text);	// Operator '{0}' expects value on right.
+			if (leftNode == null) ReportError(Span, CAError.CA10007, Text);			// Operator '{0}' expects value on left.
+			else if (rightNode == null) ReportError(Span, CAError.CA10008, Text);	// Operator '{0}' expects value on right.
 			if (leftNode != null && rightNode != null)
 			{
 				var leftValue = leftNode.ReadValue(scope);
 				var rightScope = scope.Clone();
 				var rightValue = rightNode.ReadValue(rightScope);
 				scope.Merge(rightScope);
-				if (leftValue.IsVoid) leftNode.ReportError(leftNode.Span, CAError.CA0007, Text);		// Operator '{0}' expects value on left.
-				else if (rightValue.IsVoid) rightNode.ReportError(rightNode.Span, CAError.CA0008, Text);    // Operator '{0}' expects value on right.
+				if (leftValue.IsVoid) leftNode.ReportError(leftNode.Span, CAError.CA10007, Text);		// Operator '{0}' expects value on left.
+				else if (rightValue.IsVoid) rightNode.ReportError(rightNode.Span, CAError.CA10008, Text);    // Operator '{0}' expects value on right.
 
 				var leftDataType = leftNode.DataType;
-				if (leftDataType != null) rightValue.CheckTypeConversion(scope, rightNode.Span, leftDataType);
+				if (leftDataType != null) rightValue.CheckTypeConversion(scope, rightNode.Span, leftDataType, Value.ConversionMethod.Math);
 
 				Value result = null;
 				switch (Text)
@@ -197,11 +197,11 @@ namespace DK.CodeAnalysis.Nodes
 		private void ExecuteMinus(CAScope scope)
 		{
 			var rightNode = Parent.GetRightSibling(scope, this);
-			if (rightNode == null) ReportError(Span, CAError.CA0008, Text);	// Operator '{0}' expects value on right.
+			if (rightNode == null) ReportError(Span, CAError.CA10008, Text);	// Operator '{0}' expects value on right.
 			else
 			{
 				var rightValue = rightNode.ReadValue(scope).Invert(scope, Span);
-				if (rightValue.IsVoid) rightNode.ReportError(rightNode.Span, CAError.CA0008, Text);	// Operator '{0}' expects value on right.
+				if (rightValue.IsVoid) rightNode.ReportError(rightNode.Span, CAError.CA10008, Text);	// Operator '{0}' expects value on right.
 
 				Parent.ReplaceWithResult(rightValue, !rightValue.IsVoid, this, rightNode);
 			}
@@ -211,16 +211,16 @@ namespace DK.CodeAnalysis.Nodes
 		{
 			var leftNode = Parent.GetLeftSibling(scope, this);
 			var rightNode = Parent.GetRightSibling(scope, this);
-			if (leftNode == null) ReportError(Span, CAError.CA0007, Text);	// Operator '{0}' expects value on left.
-			else if (rightNode == null) ReportError(Span, CAError.CA0008, Text);	// Operator '{0}' expects value on right.
+			if (leftNode == null) ReportError(Span, CAError.CA10007, Text);	// Operator '{0}' expects value on left.
+			else if (rightNode == null) ReportError(Span, CAError.CA10008, Text);	// Operator '{0}' expects value on right.
 			if (leftNode != null && rightNode != null)
 			{
 				var leftValue = leftNode.ReadValue(scope);
 				var rightScope = scope.Clone();
 				var rightValue = rightNode.ReadValue(rightScope);
 				scope.Merge(rightScope);
-				if (leftValue.IsVoid) leftNode.ReportError(leftNode.Span, CAError.CA0007, Text);		// Operator '{0}' expects value on left.
-				else if (rightValue.IsVoid) rightNode.ReportError(rightNode.Span, CAError.CA0008, Text);    // Operator '{0}' expects value on right.
+				if (leftValue.IsVoid) leftNode.ReportError(leftNode.Span, CAError.CA10007, Text);		// Operator '{0}' expects value on left.
+				else if (rightValue.IsVoid) rightNode.ReportError(rightNode.Span, CAError.CA10008, Text);    // Operator '{0}' expects value on right.
 
 				var leftDataType = leftNode.DataType;
 
@@ -228,27 +228,27 @@ namespace DK.CodeAnalysis.Nodes
 				switch (Text)
 				{
 					case "==":
-						if (leftDataType != null) rightValue.CheckTypeConversion(scope, rightNode.Span, leftDataType);
+						if (leftDataType != null) rightValue.CheckTypeConversion(scope, rightNode.Span, leftDataType, Value.ConversionMethod.Comparison);
 						result = leftValue.CompareEqual(scope, Span, rightValue);
 						break;
 					case "!=":
-						if (leftDataType != null) rightValue.CheckTypeConversion(scope, rightNode.Span, leftDataType);
+						if (leftDataType != null) rightValue.CheckTypeConversion(scope, rightNode.Span, leftDataType, Value.ConversionMethod.Comparison);
 						result = leftValue.CompareNotEqual(scope, Span, rightValue);
 						break;
 					case "<":
-						if (leftDataType != null) rightValue.CheckTypeConversion(scope, rightNode.Span, leftDataType);
+						if (leftDataType != null) rightValue.CheckTypeConversion(scope, rightNode.Span, leftDataType, Value.ConversionMethod.Comparison);
 						result = leftValue.CompareLessThan(scope, Span, rightValue);
 						break;
 					case ">":
-						if (leftDataType != null) rightValue.CheckTypeConversion(scope, rightNode.Span, leftDataType);
+						if (leftDataType != null) rightValue.CheckTypeConversion(scope, rightNode.Span, leftDataType, Value.ConversionMethod.Comparison);
 						result = leftValue.CompareGreaterThan(scope, Span, rightValue);
 						break;
 					case "<=":
-						if (leftDataType != null) rightValue.CheckTypeConversion(scope, rightNode.Span, leftDataType);
+						if (leftDataType != null) rightValue.CheckTypeConversion(scope, rightNode.Span, leftDataType, Value.ConversionMethod.Comparison);
 						result = leftValue.CompareLessEqual(scope, Span, rightValue);
 						break;
 					case ">=":
-						if (leftDataType != null) rightValue.CheckTypeConversion(scope, rightNode.Span, leftDataType);
+						if (leftDataType != null) rightValue.CheckTypeConversion(scope, rightNode.Span, leftDataType, Value.ConversionMethod.Comparison);
 						result = leftValue.CompareGreaterEqual(scope, Span, rightValue);
 						break;
 					case "and":
@@ -270,7 +270,7 @@ namespace DK.CodeAnalysis.Nodes
 						}
 						break;
 					case "like":
-						if (leftDataType != null) rightValue.CheckTypeConversion(scope, rightNode.Span, leftDataType);
+						if (leftDataType != null) rightValue.CheckTypeConversion(scope, rightNode.Span, leftDataType, Value.ConversionMethod.Comparison);
 						result = rightValue.CompareLike(scope, Span, rightValue);
 						break;
 					default:
@@ -292,17 +292,17 @@ namespace DK.CodeAnalysis.Nodes
         {
 			var leftNode = Parent.GetLeftSibling(scope, this);
 			var rightNode = Parent.GetRightSibling(scope, this);
-			if (leftNode == null) ReportError(Span, CAError.CA0007, Text);  // Operator '{0}' expects value on left.
-			else if (rightNode == null) ReportError(Span, CAError.CA0008, Text);    // Operator '{0}' expects value on right.
+			if (leftNode == null) ReportError(Span, CAError.CA10007, Text);  // Operator '{0}' expects value on left.
+			else if (rightNode == null) ReportError(Span, CAError.CA10008, Text);    // Operator '{0}' expects value on right.
 
 			var rightBrackets = rightNode as BracketsNode;
-			if (rightBrackets == null && rightNode != null) ReportError(rightNode.Span, CAError.CA0130); // Expected '('.
+			if (rightBrackets == null && rightNode != null) ReportError(rightNode.Span, CAError.CA10130); // Expected '('.
 
 			if (leftNode != null && rightBrackets != null)
 			{
 				var leftValue = leftNode.ReadValue(scope);
 				var rightScope = scope.Clone();
-				if (leftValue.IsVoid) leftNode.ReportError(leftNode.Span, CAError.CA0007, Text);        // Operator '{0}' expects value on left.
+				if (leftValue.IsVoid) leftNode.ReportError(leftNode.Span, CAError.CA10007, Text);        // Operator '{0}' expects value on left.
 
 				var leftDataType = leftNode.DataType;
 
@@ -311,7 +311,7 @@ namespace DK.CodeAnalysis.Nodes
 				foreach (var itemNode in rightBrackets.Children)
 				{
 					var itemValue = itemNode.ReadValue(rightScope);
-					if (leftDataType != null) itemValue.CheckTypeConversion(scope, rightNode.Span, leftDataType);
+					if (leftDataType != null) itemValue.CheckTypeConversion(scope, rightNode.Span, leftDataType, Value.ConversionMethod.Comparison);
 					result = leftValue.CompareEqual(scope, Span, itemValue);
 				}
 
@@ -332,8 +332,8 @@ namespace DK.CodeAnalysis.Nodes
 		{
 			var leftNode = Parent.GetLeftSibling(scope, this);
 			var rightNode = Parent.GetRightSibling(scope, this);
-			if (leftNode == null) ReportError(Span, CAError.CA0100, Text);			// Operator '{0}' expects assignable value on left.
-			else if (rightNode == null) ReportError(Span, CAError.CA0008, Text);	// Operator '{0}' expects value on right.
+			if (leftNode == null) ReportError(Span, CAError.CA10100, Text);			// Operator '{0}' expects assignable value on left.
+			else if (rightNode == null) ReportError(Span, CAError.CA10008, Text);	// Operator '{0}' expects value on right.
 			if (leftNode != null && rightNode != null)
 			{
 				Value leftValue = null;
@@ -348,11 +348,11 @@ namespace DK.CodeAnalysis.Nodes
 				var rightValue = rightNode.ReadValue(rightScope);
 				scope.Merge(rightScope);
 
-				if (!leftNode.CanAssignValue(scope)) leftNode.ReportError(leftNode.Span, CAError.CA0100, Text);				// Operator '{0}' expects assignable value on left.
-				else if (rightValue.IsVoid) rightNode.ReportError(rightNode.Span, CAError.CA0008, Text);                // Operator '{0}' expects value on right.
+				if (!leftNode.CanAssignValue(scope)) leftNode.ReportError(leftNode.Span, CAError.CA10100, Text);				// Operator '{0}' expects assignable value on left.
+				else if (rightValue.IsVoid) rightNode.ReportError(rightNode.Span, CAError.CA10008, Text);                // Operator '{0}' expects value on right.
 
 				var leftDataType = leftNode.DataType;
-				if (leftDataType != null) rightValue.CheckTypeConversion(scope, rightNode.Span, leftDataType);
+				if (leftDataType != null) rightValue.CheckTypeConversion(scope, rightNode.Span.Envelope(leftNode.Span), leftDataType, Value.ConversionMethod.Assignment);
 
 				Value result = null;
 				switch (Text)

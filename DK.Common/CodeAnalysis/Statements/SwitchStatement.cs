@@ -33,7 +33,7 @@ namespace DK.CodeAnalysis.Statements
 			_condExp = ExpressionNode.Read(p, null);
 			if (_condExp == null)
 			{
-				ReportError(keywordSpan, CAError.CA0018, "switch");	// Expected condition after '{0}'.
+				ReportError(keywordSpan, CAError.CA10018, "switch");	// Expected condition after '{0}'.
 				return;
 			}
 			var errorSpan = keywordSpan;
@@ -46,7 +46,7 @@ namespace DK.CodeAnalysis.Statements
 
 			if (!code.ReadExact('{'))
 			{
-				ReportError(errorSpan, CAError.CA0019);	// Expected '{'.
+				ReportError(errorSpan, CAError.CA10019);	// Expected '{'.
 				return;
 			}
 			errorSpan = code.Span;
@@ -75,20 +75,20 @@ namespace DK.CodeAnalysis.Statements
 					insideDefault = false;
 
 					var exp = ExpressionNode.Read(p, _condExp.DataType, ":");
-					if (exp == null) ReportError(errorSpan, CAError.CA0028);	// Expected case value.
+					if (exp == null) ReportError(errorSpan, CAError.CA10028);	// Expected case value.
 					else
 					{
 						_cases.Last().exp = exp;
 						errorSpan = exp.Span;
 					}
 
-					if (!code.ReadExact(':')) ReportError(errorSpan, CAError.CA0029);	// Expected ':'.
+					if (!code.ReadExact(':')) ReportError(errorSpan, CAError.CA10029);	// Expected ':'.
 				}
 				else if (code.ReadExactWholeWord("default"))
 				{
 					if (_default != null)
 					{
-						ReportError(code.Span, CAError.CA0032);	// Duplicate default case.
+						ReportError(code.Span, CAError.CA10032);	// Duplicate default case.
 					}
 
 					if (_cases.Count > 0)
@@ -103,13 +103,13 @@ namespace DK.CodeAnalysis.Statements
 					insideDefault = true;
 					_default = new List<Statement>();
 
-					if (!code.ReadExact(':')) ReportError(errorSpan, CAError.CA0029);	// Expected ':'.
+					if (!code.ReadExact(':')) ReportError(errorSpan, CAError.CA10029);	// Expected ':'.
 				}
 				else if (code.ReadExactWholeWord("break"))
 				{
 					if (insideDefault) _default.Add(new BreakStatement(p, code.Span));
 					else if (_cases.Any()) _cases.Last().body.Add(new BreakStatement(p, code.Span));
-					else ReportError(code.Span, CAError.CA0023);	// 'break' is not valid here.
+					else ReportError(code.Span, CAError.CA10023);	// 'break' is not valid here.
 				}
 				else
 				{
@@ -117,7 +117,7 @@ namespace DK.CodeAnalysis.Statements
 					if (stmt == null) break;
 					if (insideDefault) _default.Add(stmt);
 					else if (_cases.Any()) _cases.Last().body.Add(stmt);
-					else ReportError(stmt.Span, CAError.CA0030);	// Statement is not valid here.
+					else ReportError(stmt.Span, CAError.CA10030);	// Statement is not valid here.
 				}
 			}
 		}
@@ -163,7 +163,7 @@ namespace DK.CodeAnalysis.Statements
 						}
 						else
 						{
-							ReportError(cas.caseSpan, CAError.CA0031);  // Switch fall-throughs are inadvisable.
+							ReportError(cas.caseSpan, CAError.CA10031);  // Switch fall-throughs are inadvisable.
 						}
 					}
 				}
