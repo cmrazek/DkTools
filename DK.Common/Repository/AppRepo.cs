@@ -516,6 +516,12 @@ namespace DK.Repository
             switch (model.FileContext)
             {
                 case FileContext.Function:
+                    {
+                        var fileName = PathUtil.GetFileNameWithoutExtension(model.FilePath);
+                        funcs.AddRange(model.DefinitionProvider.GetGlobalFromFile<FunctionDefinition>()
+                            .Where(x => string.Equals(fileName, x.Name, StringComparison.OrdinalIgnoreCase) && !x.Extern));
+                    }
+                    break;
                 case FileContext.ClientClass:
                 case FileContext.ServerClass:
                 case FileContext.NeutralClass:

@@ -22,6 +22,7 @@ Visual Studio Extension for WBDK
 - Code analysis now detects some numeric data conversion warnings.
 - Code analysis now detects error 106 (immutable strings passed by value).
 - When Run FEC Errors is run, DK files are automatically saved first.
+- Functions in .f files that don't match the file name are no longer considered global.
 
 **Version 1.6.10 Changes:**
 - Fixed bug in code analysis reporting CA0016 (unreachable code) after a for/while loop with a return statement in it.
