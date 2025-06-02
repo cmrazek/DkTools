@@ -111,9 +111,19 @@ namespace DK.Code
 					return true;
 				}
 
-				if (char.IsDigit(ch) || (ch == '.' && _pos + 1 < _length && char.IsDigit(_source[_pos + 1])))
+				if (char.IsDigit(ch) ||
+					(ch == '.' && _pos + 1 < _length && char.IsDigit(_source[_pos + 1])) ||
+					(ch == '-' && _pos + 1 < _length && char.IsDigit(_source[_pos + 1])) ||
+					(ch == '-' && _pos + 2 < _length && _source[_pos + 1] == '.' && char.IsDigit(_source[_pos + 2])))
 				{
+					if (ch == '-')
+					{
+						_tokenText.Append(ch);
+						ch = _source[++_pos];
+					}
+
 					var gotDot = false;
+
 					while (_pos < _length)
 					{
 						ch = _source[_pos];

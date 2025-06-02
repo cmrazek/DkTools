@@ -48,6 +48,7 @@
     <Reference Include="System.Core" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="CodeParserTests.cs" />
     <Compile Include="NumericDataTypes.cs" />
     <Compile Include="PathUtilTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
