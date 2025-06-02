@@ -841,6 +841,8 @@ namespace DkTools
         {
             ThreadHelper.JoinableTaskFactory.Run(async () =>
             {
+                SaveProbeFiles();
+
                 await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
 
                 var view = Shell.ActiveView;
