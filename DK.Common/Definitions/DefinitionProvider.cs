@@ -241,7 +241,7 @@ namespace DK.Definitions
                     RelIndDefinition.Physical,
 
                     // Global properties
-                    new VariableDefinition("$ErrorCount", FilePosition.Empty, DataType.Int, arg: false, null, VariableType.Global)
+                    new VariableDefinition("$ErrorCount", FilePosition.Empty, DataType.Int, arg: false, null, VariableType.Global, argPassByMethod: null)
                 };
             }
             AddGlobalFromAnywhere(_builtInDefs);

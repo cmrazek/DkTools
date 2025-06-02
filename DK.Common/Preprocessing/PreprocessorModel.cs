@@ -140,14 +140,14 @@ namespace DK.Preprocessing
 				else if (_code.ReadExact(';'))
 				{
 					var localPos = _source.GetFilePosition(nameSpan.Start);
-					var def = new VariableDefinition(name, localPos, dataType, false, arrayLength, VariableType.Global);
+					var def = new VariableDefinition(name, localPos, dataType, false, arrayLength, VariableType.Global, argPassByMethod: null);
 					_globalVars[name] = new PrepVariable(def, nameSpan);
 					AddGlobalDefinition(def);
 				}
 				else if (_code.ReadExact(','))
 				{
 					var localPos = _source.GetFilePosition(nameSpan.Start);
-					var def = new VariableDefinition(name, localPos, dataType, false, arrayLength, VariableType.Global);
+					var def = new VariableDefinition(name, localPos, dataType, false, arrayLength, VariableType.Global, argPassByMethod: null);
 					_globalVars[name] = new PrepVariable(def, nameSpan);
 					AddGlobalDefinition(def);
 					AfterRootDataType(dataType, dataTypeStartPos, privacy, isExtern);
@@ -529,7 +529,7 @@ namespace DK.Preprocessing
 				var arrayLength = TryReadArrayDecl();
 
 				var localPos = _source.GetFilePosition(_code.TokenStartPostion);
-				var def = new VariableDefinition(_code.Text, localPos, dataType, true, arrayLength, VariableType.Argument);
+				var def = new VariableDefinition(_code.Text, localPos, dataType, true, arrayLength, VariableType.Argument, passByMethod);
 				scope.AddDefinition(def);
 				if (!_visible || localPos.PrimaryFile)
 				{
@@ -561,7 +561,7 @@ namespace DK.Preprocessing
 
 				var arrayLength = TryReadArrayDecl();
 
-				var def = new VariableDefinition(varName, localPos, dataType, false, arrayLength, VariableType.Local);
+				var def = new VariableDefinition(varName, localPos, dataType, false, arrayLength, VariableType.Local, argPassByMethod: null);
 				scope.AddDefinition(def);
 				if (!_visible || localPos.PrimaryFile)
 				{

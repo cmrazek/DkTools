@@ -133,8 +133,14 @@ namespace DK.CodeAnalysis.Nodes
 				}
 			}
 
-			if (_def is VariableDefinition)
+			if (_def is VariableDefinition varDef)
 			{
+				if (varDef.Argument && varDef.ArgumentPassByMethod == PassByMethod.Value &&
+					varDef.DataType.ValueType == ValType.String)
+				{
+					ReportError(CAError.CA00106);   // Strings passed by reference are immutable; changes are not reflected back to the caller
+                }
+
 				var v = scope.GetVariable(Text);
 				if (v != null)
 				{

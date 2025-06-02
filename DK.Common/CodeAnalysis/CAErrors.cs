@@ -6,6 +6,10 @@ namespace DK.CodeAnalysis
     public enum CAError
     {
         #region DK Errors
+        [ErrorMessage("Strings passed by reference are immutable; changes are not reflected back to the caller.")]
+        [Warning]
+        CA00106,
+
         [ErrorMessage("Converting from '{0}' to '{1}'; possible data loss.")]
         [Warning]
         CA00108,

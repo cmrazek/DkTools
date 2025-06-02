@@ -22,8 +22,10 @@ namespace DK.Definitions
 		private int[] _arrayLengths;
 		private string _declText;
 		private VariableType _varType;
+		private PassByMethod? _argPassByMethod;
 
-		public VariableDefinition(string name, FilePosition filePos, DataType dataType, bool arg, int[] arrayLengths, VariableType varType)
+		public VariableDefinition(string name, FilePosition filePos, DataType dataType, bool arg, int[] arrayLengths,
+			VariableType varType, PassByMethod? argPassByMethod)
 			: base(name, filePos, null)
 		{
 #if DEBUG
@@ -33,6 +35,7 @@ namespace DK.Definitions
 			_arg = arg;
 			_arrayLengths = arrayLengths;
 			_varType = varType;
+			_argPassByMethod = argPassByMethod;
 
 			// Build the declaration text
 			var sb = new StringBuilder();
@@ -66,6 +69,8 @@ namespace DK.Definitions
 		{
 			get { return _arg; }
 		}
+
+		public PassByMethod? ArgumentPassByMethod => _argPassByMethod;
 
 		public override bool CompletionVisible
 		{
