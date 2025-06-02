@@ -24,6 +24,7 @@ Visual Studio Extension for WBDK
 - When Run FEC Errors is run, DK files are automatically saved first.
 - Functions in .f files that don't match the file name are no longer considered global.
 - Fixed code analysis not detecting negative numbers properly.
+- Code analysis now detects when a wrong number of arguments is passed to a macro.
 
 **Version 1.6.10 Changes:**
 - Fixed bug in code analysis reporting CA0016 (unreachable code) after a for/while loop with a return statement in it.

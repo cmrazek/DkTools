@@ -1,5 +1,6 @@
 ﻿using DK.AppEnvironment;
 using DK.Code;
+using DK.CodeAnalysis;
 using DK.Definitions;
 using DK.Modeling;
 using DK.Preprocessing.Tokens;
@@ -19,6 +20,7 @@ namespace DK.Preprocessing
         private List<IncludeDependency> _includeDependencies = new List<IncludeDependency>();
         private List<Reference> _refs = new List<Reference>();
         private WarningSuppressionTracker _warningSuppressions = new WarningSuppressionTracker();
+        private List<PrepError> _errors = new List<PrepError>();
 
         public Preprocessor(DkAppSettings appSettings, FileStore store)
         {
@@ -77,7 +79,7 @@ namespace DK.Preprocessing
             string str;
             var sb = new StringBuilder();
             var rdr = p.reader;
-            p.reader.SetWriter(p.writer);
+            p.reader.Writer = p.writer;
 
             while (!rdr.EOF && !p.result.IncludeFileReached)
             {
@@ -375,6 +377,8 @@ namespace DK.Preprocessing
         {
             var rdr = p.reader;
 
+            var nameStartPos = rdr.Writer.Position;
+
             if (p.suppress)
             {
                 rdr.Use(name.Length);
@@ -489,7 +493,12 @@ namespace DK.Preprocessing
                     paramList.Add(resolvedParamText.Trim());
                 }
 
-                if (define.ParamNames.Count != paramList.Count) return;
+                if (define.ParamNames.Count != paramList.Count)
+                {
+                    rdr.Insert(name);
+                    ReportError(new CodeSpan(nameStartPos, rdr.Writer.Position), CAError.CA10160, paramList.Count, define.ParamNames.Count);    // Wrong number of arguments passed to macro. {0} passed, {1} expected.
+                    return;
+                }
             }
 
             var oldArgs = p.args;
@@ -1140,6 +1149,13 @@ namespace DK.Preprocessing
             public Definition Definition => _def;
             public FilePosition FilePosition => _filePos;
             public int RawPosition => _rawPos;
+        }
+
+        public List<PrepError> Errors => _errors;
+
+        public void ReportError(CodeSpan span, CAError errorCode, params object[] args)
+        {
+            _errors.Add(new PrepError { Span = span, ErrorCode = errorCode, Args = args });
         }
     }
 }

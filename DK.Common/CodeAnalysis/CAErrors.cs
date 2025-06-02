@@ -299,9 +299,14 @@ namespace DK.CodeAnalysis
         CA10140,
         #endregion
 
-        #region Goto Operator (0150-0159)
+        #region Goto Operator (10150-10159)
         [ErrorMessage("Expected goto label.")]
         CA10150,
+        #endregion
+
+        #region Preprocessor (10160-10169)
+        [ErrorMessage("Wrong number of arguments passed to macro. {0} passed, {1} expected.")]
+        CA10160,
         #endregion
     }
 

@@ -1,5 +1,6 @@
 ﻿using DK.AppEnvironment;
 using DK.Code;
+using DK.CodeAnalysis;
 using DK.Definitions;
 using DK.Modeling;
 using System;
@@ -28,8 +29,9 @@ namespace DK.Preprocessing
 		private Preprocessor _prep;
 		private List<Definition> _globalDefs = new List<Definition>();
 		private CancellationToken _cancel;
+        private List<PrepError> _errors = new List<PrepError>();
 
-		internal PreprocessorModel(
+        internal PreprocessorModel(
 			DkAppSettings appSettings,
 			CodeSource source,
 			DefinitionProvider definitionProvider,
@@ -861,5 +863,19 @@ namespace DK.Preprocessing
 			public string Dump() => Definition.Dump();
 #endif
 		}
-	}
+
+        public List<PrepError> Errors { get => _errors; set => _errors.AddRange(value); }
+
+		public void ReportError(CodeSpan span, CAError errorCode, params object[] args)
+		{
+			_errors.Add(new PrepError { Span = span, ErrorCode = errorCode, Args = args });
+		}
+    }
+
+    public struct PrepError
+    {
+        public CodeSpan Span { get; set; }
+        public CAError ErrorCode { get; set; }
+        public object[] Args { get; set; }
+    }
 }

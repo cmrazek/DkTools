@@ -561,9 +561,10 @@ namespace DK.Code
 				_segLength = state.segLength;
 			}
 
-			public void SetWriter(IPreprocessorWriter writer)
+			public IPreprocessorWriter Writer
 			{
-				_writer = writer;
+				get => _writer;
+				set => _writer = value;
 			}
 
 			public bool EOF

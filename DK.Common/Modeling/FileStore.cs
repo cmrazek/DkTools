@@ -191,7 +191,8 @@ namespace DK.Modeling
 
 			var prepModel = new PreprocessorModel(appSettings, prepSource, defProvider, fileName, visible, prep.IncludeDependencies, cancel)
 			{
-				Preprocessor = prep
+				Preprocessor = prep,
+				Errors = prep.Errors
 			};
 
 #if DEBUG

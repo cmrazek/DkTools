@@ -54,7 +54,12 @@ namespace DK.CodeAnalysis
 			_fullSource = _codeModel.Source.Text;
 			_warningSuppressions = _codeModel.PreprocessorModel.WarningSuppressions;
 
-			foreach (var func in _prepModel.LocalFunctions)
+            foreach (var err in _prepModel.Errors)
+            {
+                ReportErrorAbsolute(err.Span, err.ErrorCode, err.Args);
+            }
+
+            foreach (var func in _prepModel.LocalFunctions)
 			{
 				_cancel.ThrowIfCancellationRequested();
 

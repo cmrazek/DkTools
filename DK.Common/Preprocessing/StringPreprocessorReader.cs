@@ -23,9 +23,10 @@ namespace DK.Preprocessing
 			_len = _str.Length;
 		}
 
-		public void SetWriter(IPreprocessorWriter writer)
+		public IPreprocessorWriter Writer
 		{
-			_writer = writer;
+			get => _writer;
+			set => _writer = value;
 		}
 
 		public bool EOF

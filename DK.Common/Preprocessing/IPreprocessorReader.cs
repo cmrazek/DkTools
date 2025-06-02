@@ -8,7 +8,7 @@ namespace DK.Preprocessing
 {
 	internal interface IPreprocessorReader
 	{
-		void SetWriter(IPreprocessorWriter writer);
+		IPreprocessorWriter Writer { get; set; }
 		bool EOF { get; }
 
 		char Peek();
