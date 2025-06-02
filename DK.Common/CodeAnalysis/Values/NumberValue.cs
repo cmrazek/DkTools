@@ -266,7 +266,6 @@ namespace DK.CodeAnalysis.Values
             {
                 case ConversionMethod.Assignment:
                 case ConversionMethod.FunctionArgument:
-                case ConversionMethod.Math:
                 case ConversionMethod.Return:
                     if (toDataType.IsNumeric && DataType.Scale != 0 && toDataType.Scale != 0)
                     {
@@ -323,6 +322,38 @@ namespace DK.CodeAnalysis.Values
                         }
                     }
                     break;
+            }
+        }
+
+        public override void CheckTypeMath(CAScope scope, CodeSpan span, Value rightValue)
+        {
+            base.CheckTypeMath(scope, span, rightValue);
+
+            if (rightValue is NumberValue numRightValue)
+            {
+                if (_num.HasValue)
+                {
+                    if (numRightValue._num.HasValue)
+                    {
+                        // literal + literal
+                    }
+                    else
+                    {
+                        // literal + variable
+                    }
+                }
+                else
+                {
+                    if (numRightValue._num.HasValue)
+                    {
+                        // variable + literal
+                    }
+                    else
+                    {
+                        // variable + variable
+                        rightValue.CheckTypeConversion(scope, span, DataType, ConversionMethod.Math);
+                    }
+                }
             }
         }
     }

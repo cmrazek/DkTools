@@ -7,6 +7,7 @@ namespace DK.CodeAnalysis
     {
         #region DK Errors
         [ErrorMessage("Converting from '{0}' to '{1}'; possible data loss.")]
+        [Warning]
         CA00108,
         #endregion
 

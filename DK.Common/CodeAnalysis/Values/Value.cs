@@ -181,5 +181,9 @@ namespace DK.CodeAnalysis.Values
         public virtual void CheckTypeConversion(CAScope scope, CodeSpan span, DataType toDataType, ConversionMethod method)
         {
         }
+
+        public virtual void CheckTypeMath(CAScope scope, CodeSpan span, Value rightValue)
+        {
+        }
     }
 }

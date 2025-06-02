@@ -158,8 +158,7 @@ namespace DK.CodeAnalysis.Nodes
 				if (leftValue.IsVoid) leftNode.ReportError(leftNode.Span, CAError.CA10007, Text);		// Operator '{0}' expects value on left.
 				else if (rightValue.IsVoid) rightNode.ReportError(rightNode.Span, CAError.CA10008, Text);    // Operator '{0}' expects value on right.
 
-				var leftDataType = leftNode.DataType;
-				if (leftDataType != null) rightValue.CheckTypeConversion(scope, rightNode.Span, leftDataType, Value.ConversionMethod.Math);
+                leftValue.CheckTypeMath(scope, leftNode.Span.Envelope(rightNode.Span), rightValue);
 
 				Value result = null;
 				switch (Text)
