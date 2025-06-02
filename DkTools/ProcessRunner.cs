@@ -42,6 +42,12 @@ namespace DkTools
 			return await DoCaptureAsync(fileName, args, workingDir, cancel);
 		}
 
+		public int CaptureProcess(string fileName, string args, string workingDir, Output output)
+		{
+			_output = output;
+			return DoCapture(fileName, args, workingDir);
+		}
+
 		public int ExecuteProcess(string fileName, string args, string workingDir, bool waitForExit)
 		{
 			using (Process proc = new Process())
@@ -163,7 +169,97 @@ namespace DkTools
 			return exitCode;
 		}
 
-		void OutputLine(string line)
+        private int DoCapture(string fileName, string args, string workingDir)
+        {
+            Kill();
+
+            _proc = new Process();
+            ProcessStartInfo info = new ProcessStartInfo(fileName, args);
+            info.UseShellExecute = false;
+            info.RedirectStandardOutput = _captureOutput;
+            info.RedirectStandardError = _captureError;
+            info.CreateNoWindow = true;
+            info.WorkingDirectory = workingDir;
+            _proc.StartInfo = info;
+            if (!_proc.Start()) throw new ProcessRunnerException(string.Format("Failed to start process '{0}'.", fileName));
+
+            lock (_outputLines)
+            {
+                _outputLines.Clear();
+            }
+
+            _outputThread = null;
+            _errorThread = null;
+            if (_captureOutput)
+            {
+                _outputThread = new ProcessRunnerThread(this, false, _proc);
+                _outputThread.Start("StdOut Capture Thread");
+            }
+            if (_captureError)
+            {
+                _errorThread = new ProcessRunnerThread(this, true, _proc);
+                _errorThread.Start("StdErr Capture Thread");
+            }
+
+            var linesToWrite = new List<string>();
+
+            // Grabs the lines while the process runs.
+            while (_outputThread?.IsAlive == true || _errorThread?.IsAlive == true)
+            {
+                lock (_outputLines)
+                {
+                    if (_outputLines.Count > 0)
+                    {
+                        linesToWrite.AddRange(_outputLines);
+                        _outputLines.Clear();
+                    }
+                }
+
+                if (linesToWrite.Count > 0)
+                {
+                    if (_output != null)
+                    {
+                        foreach (var lineToWrite in linesToWrite)
+                        {
+                            _output.WriteLine(lineToWrite);
+                        }
+                    }
+                    linesToWrite.Clear();
+                }
+
+				Thread.Sleep(100);
+            }
+
+            // Process has finished. Grab the rest of the lines.
+            lock (_outputLines)
+            {
+                linesToWrite.AddRange(_outputLines);
+                _outputLines.Clear();
+            }
+
+            if (linesToWrite.Count > 0)
+            {
+                if (_output != null)
+                {
+                    foreach (var lineToWrite in linesToWrite)
+                    {
+                        _output.WriteLine(lineToWrite);
+                    }
+                }
+                linesToWrite.Clear();
+            }
+
+            while (!_proc.HasExited)
+            {
+				Thread.Sleep(100);
+            }
+
+            int exitCode = _proc.ExitCode;
+            _proc = null;
+            return exitCode;
+        }
+
+        void OutputLine(string line)
 		{
 			lock(_outputLines)
 			{

@@ -526,21 +526,20 @@ namespace DkTools
 
                 var mapFileName = Path.Combine(repoDir, e.AppSettings.Repo.AppNameEncode(e.AppSettings.AppName) + ".intf");
 
-                ProcessStartInfo startInfo = new ProcessStartInfo
-                {
-                    FileName = pwshFileName,
-                    Arguments = $"-ExecutionPolicy Bypass -File \"{scriptFileName}\" -outputFileName \"{mapFileName}\" -appName \"{e.AppSettings.AppName}\"",
-                    WorkingDirectory = repoDir,
-                    CreateNoWindow = true,
-                    UseShellExecute = false
-                };
-
                 _app.Log.Info("Running MapInterfaces script.");
-                var proc = Process.Start(startInfo);
-                proc.WaitForExit();
-                if (proc.ExitCode != 0)
+                var processOutput = new StringOutput();
+                var processRunner = new ProcessRunner();
+                processRunner.CaptureOutput = true;
+                processRunner.CaptureError = true;
+                var exitCode = processRunner.CaptureProcess(
+                    fileName: pwshFileName,
+                    args: $"-ExecutionPolicy Bypass -File \"{scriptFileName}\" -outputFileName \"{mapFileName}\" -appName \"{e.AppSettings.AppName}\"",
+                    workingDir: repoDir,
+                    output: processOutput);
+                _app.Log.Info("MapInterfaces script output:\r\n{0}", processOutput.Text);
+                if (exitCode != 0)
                 {
-                    _app.Log.Warning("MapInterfaces script returned with exit code '{0}'.", proc.ExitCode);
+                    _app.Log.Warning("MapInterfaces script returned with exit code '{0}'.", exitCode);
                     return;
                 }
 
