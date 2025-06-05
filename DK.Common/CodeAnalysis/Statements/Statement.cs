@@ -84,10 +84,12 @@ namespace DK.CodeAnalysis.Statements
                 {
                     stmt.ProcessOnError(p, p.Code.Span);
                 }
-
-                if (!p.Code.ReadExact(';'))
-                {
-                    p.CodeAnalyzer.ReportError(exp.Span.Last(3), CAError.CA10015);  // Expected ';'.
+				else
+				{
+                    if (!p.Code.ReadExact(';'))
+                    {
+                        p.CodeAnalyzer.ReportError(exp.Span.Last(3), CAError.CA10015);  // Expected ';'.
+                    }
                 }
             }
 
