@@ -269,6 +269,7 @@ namespace DK.CodeAnalysis.Values
                 case ConversionMethod.Assignment:
                 case ConversionMethod.FunctionArgument:
                 case ConversionMethod.Return:
+                case ConversionMethod.Comparison:
                     if (toDataType.IsNumeric && DataType.Scale != 0 && toDataType.Scale != 0)
                     {
                         bool conversionWarning = false;
