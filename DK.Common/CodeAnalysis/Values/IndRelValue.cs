@@ -7,15 +7,17 @@ namespace DK.CodeAnalysis.Values
 	{
 		private string _indRelName;
 
-		public IndRelValue(DataType dataType, string indRelName)
-			: base(dataType)
+		public IndRelValue(DataType dataType, string indRelName, bool literal)
+			: base(dataType, literal)
 		{
 			_indRelName = indRelName;
 		}
 
 		public override string ToString() => _indRelName;
 
-		public override string ToStringValue(CAScope scope, CodeSpan span)
+		public override Value CloneNonLiteral() => this;
+
+        public override string ToStringValue(CAScope scope, CodeSpan span)
 		{
 			return null;
 		}

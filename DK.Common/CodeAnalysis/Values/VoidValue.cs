@@ -6,13 +6,15 @@ namespace DK.CodeAnalysis.Values
 	class VoidValue : Value
 	{
 		public VoidValue()
-			: base(DataType.Void)
+			: base(DataType.Void, literal: false)
 		{
 		}
 
 		public override string ToString() => "void";
 
-		public override string ToStringValue(CAScope scope, CodeSpan span)
+		public override Value CloneNonLiteral() => this;
+
+        public override string ToStringValue(CAScope scope, CodeSpan span)
 		{
 			return null;
 		}

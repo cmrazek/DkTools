@@ -108,7 +108,7 @@ namespace DK.CodeAnalysis.Nodes
                 result = leftValue.CompareEqual(scope, Span, itemValue);
             }
 
-            if (result == null) result = new NumberValue(DataType.Int, null);
+            if (result == null) result = new NumberValue(DataType.Int, number: null, literal: false);
 
             scope.Merge(rightScope);
             return result;

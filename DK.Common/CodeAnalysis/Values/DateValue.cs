@@ -8,16 +8,18 @@ namespace DK.CodeAnalysis.Values
 	{
 		private DkDate? _date;
 
-		public DateValue(DataType dataType, DkDate? date)
-			: base(dataType)
+		public DateValue(DataType dataType, DkDate? date, bool literal)
+			: base(dataType, literal)
 		{
 			_date = date;
 		}
 
 		public override string ToString() => _date.HasValue ? _date.Value.ToString() : "(null-date)";
 
-		public DateValue(DataType dataType, decimal num)
-			: base(dataType)
+		public override Value CloneNonLiteral() => IsLiteral ? new DateValue(DataType, _date, literal: false) : this;
+
+        public DateValue(DataType dataType, decimal num, bool literal)
+			: base(dataType, literal)
 		{
 			if (num < 0 || num > 65535) _date = null;
 			else _date = new DkDate((int)num);
@@ -76,16 +78,16 @@ namespace DK.CodeAnalysis.Values
 					if (result < 0 || result > 65535)
 					{
 						scope.CodeAnalyzer.ReportError(span, CAError.CA10052);	// Date math results in an out-of-bounds value.
-						return new DateValue(DataType, null);
+						return new DateValue(DataType, date: null, literal: false);
 					}
 					else
 					{
-						return new DateValue(DataType, result);
+						return new DateValue(DataType, result, literal: false);
 					}
 				}
 			}
 
-			return new DateValue(DataType, null);
+			return new DateValue(DataType, date: null, literal: false);
 		}
 
 		public override Value Divide(CAScope scope, CodeSpan span, Value rightValue)
@@ -99,7 +101,7 @@ namespace DK.CodeAnalysis.Values
 					if (right.Value == 0)
 					{
 						scope.CodeAnalyzer.ReportError(span, CAError.CA10051);	// Division by zero.
-						return new DateValue(DataType, null);
+						return new DateValue(DataType, date: null, literal: false);
 					}
 					else
 					{
@@ -107,17 +109,17 @@ namespace DK.CodeAnalysis.Values
 						if (result < 0 || result > 65535)
 						{
 							scope.CodeAnalyzer.ReportError(span, CAError.CA10052);	// Date math results in an out-of-bounds value.
-							return new DateValue(DataType, null);
+							return new DateValue(DataType, date: null, literal: false);
 						}
 						else
 						{
-							return new DateValue(DataType, result);
+							return new DateValue(DataType, result, literal: false);
 						}
 					}
 				}
 			}
 
-			return new DateValue(DataType, null);
+			return new DateValue(DataType, date: null, literal: false);
 		}
 
 		public override Value ModulusDivide(CAScope scope, CodeSpan span, Value rightValue)
@@ -131,7 +133,7 @@ namespace DK.CodeAnalysis.Values
 					if (right.Value == 0)
 					{
 						scope.CodeAnalyzer.ReportError(span, CAError.CA10051);	// Division by zero.
-						return new DateValue(DataType, null);
+						return new DateValue(DataType, date: null, literal: false);
 					}
 					else
 					{
@@ -139,17 +141,17 @@ namespace DK.CodeAnalysis.Values
 						if (result < 0 || result > 65535)
 						{
 							scope.CodeAnalyzer.ReportError(span, CAError.CA10052);	// Date math results in an out-of-bounds value.
-							return new DateValue(DataType, null);
+							return new DateValue(DataType, date: null, literal: false);
 						}
 						else
 						{
-							return new DateValue(DataType, result);
+							return new DateValue(DataType, result, literal: false);
 						}
 					}
 				}
 			}
 
-			return new DateValue(DataType, null);
+			return new DateValue(DataType, date: null, literal: false);
 		}
 
 		public override Value Add(CAScope scope, CodeSpan span, Value rightValue)
@@ -164,16 +166,16 @@ namespace DK.CodeAnalysis.Values
 					if (result < 0 || result > 65535)
 					{
 						scope.CodeAnalyzer.ReportError(span, CAError.CA10052);	// Date math results in an out-of-bounds value.
-						return new DateValue(DataType, null);
+						return new DateValue(DataType, date: null, literal: false);
 					}
 					else
 					{
-						return new DateValue(DataType, result);
+						return new DateValue(DataType, result, literal: false);
 					}
 				}
 			}
 
-			return new DateValue(DataType, null);
+			return new DateValue(DataType, date: null, literal: false);
 		}
 
 		public override Value Subtract(CAScope scope, CodeSpan span, Value rightValue)
@@ -188,22 +190,22 @@ namespace DK.CodeAnalysis.Values
 					if (result < 0 || result > 65535)
 					{
 						scope.CodeAnalyzer.ReportError(span, CAError.CA10052);	// Date math results in an out-of-bounds value.
-						return new DateValue(DataType, null);
+						return new DateValue(DataType, date: null, literal: false);
 					}
 					else
 					{
-						return new DateValue(DataType, result);
+						return new DateValue(DataType, result, literal: false);
 					}
 				}
 			}
 
-			return new DateValue(DataType, null);
+			return new DateValue(DataType, date: null, literal: false);
 		}
 
 		public override Value Invert(CAScope scope, CodeSpan span)
 		{
 			scope.CodeAnalyzer.ReportError(span, CAError.CA10052);	// Date math results in an out-of-bounds value.
-			return new DateValue(DataType, null);
+			return new DateValue(DataType, date: null, literal: false);
 		}
 
 		public override Value CompareEqual(CAScope scope, CodeSpan span, Value rightValue)
@@ -213,11 +215,11 @@ namespace DK.CodeAnalysis.Values
 				var right = rightValue.ToDate(scope, span);
 				if (right.HasValue)
 				{
-					return new NumberValue(DataType.Int, _date.Value.Number == right.Value.Number ? 1 : 0);
+					return new NumberValue(DataType.Int, _date.Value.Number == right.Value.Number ? 1 : 0, literal: false);
 				}
 			}
 
-			return new NumberValue(DataType.Int, null);
+			return new NumberValue(DataType.Int, number: null, literal: false);
 		}
 
 		public override Value CompareNotEqual(CAScope scope, CodeSpan span, Value rightValue)
@@ -227,11 +229,11 @@ namespace DK.CodeAnalysis.Values
 				var right = rightValue.ToDate(scope, span);
 				if (right.HasValue)
 				{
-					return new NumberValue(DataType.Int, _date.Value.Number != right.Value.Number ? 1 : 0);
+					return new NumberValue(DataType.Int, _date.Value.Number != right.Value.Number ? 1 : 0, literal: false);
 				}
 			}
 
-			return new NumberValue(DataType.Int, null);
+			return new NumberValue(DataType.Int, number: null, literal: false);
 		}
 
 		public override Value CompareLessThan(CAScope scope, CodeSpan span, Value rightValue)
@@ -241,11 +243,11 @@ namespace DK.CodeAnalysis.Values
 				var right = rightValue.ToDate(scope, span);
 				if (right.HasValue)
 				{
-					return new NumberValue(DataType.Int, _date.Value.Number < right.Value.Number ? 1 : 0);
+					return new NumberValue(DataType.Int, _date.Value.Number < right.Value.Number ? 1 : 0, literal: false);
 				}
 			}
 
-			return new NumberValue(DataType.Int, null);
+			return new NumberValue(DataType.Int, number: null, literal: false);
 		}
 
 		public override Value CompareGreaterThan(CAScope scope, CodeSpan span, Value rightValue)
@@ -255,11 +257,11 @@ namespace DK.CodeAnalysis.Values
 				var right = rightValue.ToDate(scope, span);
 				if (right.HasValue)
 				{
-					return new NumberValue(DataType.Int, _date.Value.Number > right.Value.Number ? 1 : 0);
+					return new NumberValue(DataType.Int, _date.Value.Number > right.Value.Number ? 1 : 0, literal: false);
 				}
 			}
 
-			return new NumberValue(DataType.Int, null);
+			return new NumberValue(DataType.Int, number: null, literal: false);
 		}
 
 		public override Value CompareLessEqual(CAScope scope, CodeSpan span, Value rightValue)
@@ -269,11 +271,11 @@ namespace DK.CodeAnalysis.Values
 				var right = rightValue.ToDate(scope, span);
 				if (right.HasValue)
 				{
-					return new NumberValue(DataType.Int, _date.Value.Number <= right.Value.Number ? 1 : 0);
+					return new NumberValue(DataType.Int, _date.Value.Number <= right.Value.Number ? 1 : 0, literal: false);
 				}
 			}
 
-			return new NumberValue(DataType.Int, null);
+			return new NumberValue(DataType.Int, number: null, literal: false);
 		}
 
 		public override Value CompareGreaterEqual(CAScope scope, CodeSpan span, Value rightValue)
@@ -283,11 +285,11 @@ namespace DK.CodeAnalysis.Values
 				var right = rightValue.ToDate(scope, span);
 				if (right.HasValue)
 				{
-					return new NumberValue(DataType.Int, _date.Value.Number >= right.Value.Number ? 1 : 0);
+					return new NumberValue(DataType.Int, _date.Value.Number >= right.Value.Number ? 1 : 0, literal: false);
 				}
 			}
 
-			return new NumberValue(DataType.Int, null);
+			return new NumberValue(DataType.Int, number: null, literal: false);
 		}
 
 		public override bool IsTrue
@@ -310,7 +312,7 @@ namespace DK.CodeAnalysis.Values
 
 		public override Value Convert(CAScope scope, CodeSpan span, Value value)
 		{
-			return new DateValue(DataType, value.ToDate(scope, span));
+			return new DateValue(DataType, value.ToDate(scope, span), value.IsLiteral);
 		}
 
 		public override bool IsEqualTo(Value other)

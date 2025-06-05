@@ -7,23 +7,25 @@ namespace DK.CodeAnalysis.Values
     {
         private decimal? _num;
 
-        public NumberValue(DataType dataType, decimal? number)
-            : base(dataType)
+        public NumberValue(DataType dataType, decimal? number, bool literal)
+            : base(dataType, literal)
         {
             _num = number;
         }
 
         public override string ToString() => _num.HasValue ? _num.Value.ToString() : "(null)";
 
+        public override Value CloneNonLiteral() => IsLiteral ? new NumberValue(DataType, _num, literal: false) : this;
+
         public override Value Multiply(CAScope scope, CodeSpan span, Value rightValue)
         {
             if (_num.HasValue)
             {
                 var right = rightValue.ToNumber(scope, span);
-                if (right.HasValue) return new NumberValue(DataType, _num.Value * right.Value);
+                if (right.HasValue) return new NumberValue(DataType, _num.Value * right.Value, literal: false);
             }
 
-            return new NumberValue(DataType, null);
+            return new NumberValue(DataType, number: null, literal: false);
         }
 
         public override Value Divide(CAScope scope, CodeSpan span, Value rightValue)
@@ -39,12 +41,12 @@ namespace DK.CodeAnalysis.Values
                     }
                     else
                     {
-                        return new NumberValue(DataType, _num.Value / right.Value);
+                        return new NumberValue(DataType, _num.Value / right.Value, literal: false);
                     }
                 }
             }
 
-            return new NumberValue(DataType, null);
+            return new NumberValue(DataType, number: null, literal: false);
         }
 
         public override Value ModulusDivide(CAScope scope, CodeSpan span, Value rightValue)
@@ -60,12 +62,12 @@ namespace DK.CodeAnalysis.Values
                     }
                     else
                     {
-                        return new NumberValue(DataType, _num.Value % right.Value);
+                        return new NumberValue(DataType, _num.Value % right.Value, literal: false);
                     }
                 }
             }
 
-            return new NumberValue(DataType, null);
+            return new NumberValue(DataType, number: null, literal: false);
         }
 
         public override Value Add(CAScope scope, CodeSpan span, Value rightValue)
@@ -73,10 +75,10 @@ namespace DK.CodeAnalysis.Values
             if (_num.HasValue)
             {
                 var right = rightValue.ToNumber(scope, span);
-                if (right.HasValue) return new NumberValue(DataType, _num.Value + right.Value);
+                if (right.HasValue) return new NumberValue(DataType, _num.Value + right.Value, literal: false);
             }
 
-            return new NumberValue(DataType, null);
+            return new NumberValue(DataType, number: null, literal: false);
         }
 
         public override Value Subtract(CAScope scope, CodeSpan span, Value rightValue)
@@ -84,20 +86,20 @@ namespace DK.CodeAnalysis.Values
             if (_num.HasValue)
             {
                 var right = rightValue.ToNumber(scope, span);
-                if (right.HasValue) return new NumberValue(DataType, _num.Value - right.Value);
+                if (right.HasValue) return new NumberValue(DataType, _num.Value - right.Value, literal: false);
             }
 
-            return new NumberValue(DataType, null);
+            return new NumberValue(DataType, number: null, literal: false);
         }
 
         public override Value Invert(CAScope scope, CodeSpan span)
         {
             if (_num.HasValue)
             {
-                return new NumberValue(DataType, -_num.Value);
+                return new NumberValue(DataType, -_num.Value, IsLiteral);
             }
 
-            return new NumberValue(DataType, null);
+            return new NumberValue(DataType, number: null, literal: false);
         }
 
         public override Value CompareEqual(CAScope scope, CodeSpan span, Value rightValue)
@@ -105,10 +107,10 @@ namespace DK.CodeAnalysis.Values
             if (_num.HasValue)
             {
                 var right = rightValue.ToNumber(scope, span);
-                if (right.HasValue) return new NumberValue(DataType.Int, _num.Value == right.Value ? 1 : 0);
+                if (right.HasValue) return new NumberValue(DataType.Int, _num.Value == right.Value ? 1 : 0, literal: false);
             }
 
-            return new NumberValue(DataType.Int, null);
+            return new NumberValue(DataType.Int, number: null, literal: false);
         }
 
         public override Value CompareNotEqual(CAScope scope, CodeSpan span, Value rightValue)
@@ -116,10 +118,10 @@ namespace DK.CodeAnalysis.Values
             if (_num.HasValue)
             {
                 var right = rightValue.ToNumber(scope, span);
-                if (right.HasValue) return new NumberValue(DataType.Int, _num.Value != right.Value ? 1 : 0);
+                if (right.HasValue) return new NumberValue(DataType.Int, _num.Value != right.Value ? 1 : 0, literal: false);
             }
 
-            return new NumberValue(DataType.Int, null);
+            return new NumberValue(DataType.Int, number: null, literal: false);
         }
 
         public override Value CompareLessThan(CAScope scope, CodeSpan span, Value rightValue)
@@ -127,10 +129,10 @@ namespace DK.CodeAnalysis.Values
             if (_num.HasValue)
             {
                 var right = rightValue.ToNumber(scope, span);
-                if (right.HasValue) return new NumberValue(DataType.Int, _num.Value < right.Value ? 1 : 0);
+                if (right.HasValue) return new NumberValue(DataType.Int, _num.Value < right.Value ? 1 : 0, literal: false);
             }
 
-            return new NumberValue(DataType.Int, null);
+            return new NumberValue(DataType.Int, number: null, literal: false);
         }
 
         public override Value CompareGreaterThan(CAScope scope, CodeSpan span, Value rightValue)
@@ -138,10 +140,10 @@ namespace DK.CodeAnalysis.Values
             if (_num.HasValue)
             {
                 var right = rightValue.ToNumber(scope, span);
-                if (right.HasValue) return new NumberValue(DataType.Int, _num.Value > right.Value ? 1 : 0);
+                if (right.HasValue) return new NumberValue(DataType.Int, _num.Value > right.Value ? 1 : 0, literal: false);
             }
 
-            return new NumberValue(DataType.Int, null);
+            return new NumberValue(DataType.Int, number: null, literal: false);
         }
 
         public override Value CompareLessEqual(CAScope scope, CodeSpan span, Value rightValue)
@@ -149,10 +151,10 @@ namespace DK.CodeAnalysis.Values
             if (_num.HasValue)
             {
                 var right = rightValue.ToNumber(scope, span);
-                if (right.HasValue) return new NumberValue(DataType.Int, _num.Value <= right.Value ? 1 : 0);
+                if (right.HasValue) return new NumberValue(DataType.Int, _num.Value <= right.Value ? 1 : 0, literal: false);
             }
 
-            return new NumberValue(DataType.Int, null);
+            return new NumberValue(DataType.Int, number: null, literal: false);
         }
 
         public override Value CompareGreaterEqual(CAScope scope, CodeSpan span, Value rightValue)
@@ -160,10 +162,10 @@ namespace DK.CodeAnalysis.Values
             if (_num.HasValue)
             {
                 var right = rightValue.ToNumber(scope, span);
-                if (right.HasValue) return new NumberValue(DataType.Int, _num.Value >= right.Value ? 1 : 0);
+                if (right.HasValue) return new NumberValue(DataType.Int, _num.Value >= right.Value ? 1 : 0, literal: false);
             }
 
-            return new NumberValue(DataType.Int, null);
+            return new NumberValue(DataType.Int, number: null, literal: false);
         }
 
         public override bool IsTrue
@@ -247,7 +249,7 @@ namespace DK.CodeAnalysis.Values
 
         public override Value Convert(CAScope scope, CodeSpan span, Value value)
         {
-            return new NumberValue(DataType, value.ToNumber(scope, span));
+            return new NumberValue(DataType, value.ToNumber(scope, span), value.IsLiteral);
         }
 
         public override bool IsEqualTo(Value other)
@@ -322,6 +324,11 @@ namespace DK.CodeAnalysis.Values
                         }
                     }
                     break;
+            }
+
+            if (method == ConversionMethod.FunctionArgument && toDataType.ValueType == ValType.String && IsLiteral)
+            {
+                scope.CodeAnalyzer.ReportError(span, CAError.CA10170);  // String constant must be quoted.
             }
         }
 

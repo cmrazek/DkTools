@@ -5,10 +5,12 @@ namespace DK.CodeAnalysis.Values
     internal class VariantValue : Value
     {
         public VariantValue()
-            : base(Modeling.DataType.Variant)
+            : base(Modeling.DataType.Variant, literal: false)
         { }
 
         public override string ToString() => "variant";
+
+        public override Value CloneNonLiteral() => this;
 
         public override string ToStringValue(CAScope scope, CodeSpan span) => null;
 

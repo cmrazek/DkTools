@@ -311,6 +311,11 @@ namespace DK.CodeAnalysis
         [ErrorMessage("Wrong number of arguments passed to macro. {0} passed, {1} expected.")]
         CA10160,
         #endregion
+
+        #region Function Arguments (10170-10179)
+        [ErrorMessage("String constant must be quoted.")]
+        CA10170,
+        #endregion
     }
 
     [AttributeUsage(AttributeTargets.Field, AllowMultiple = false)]

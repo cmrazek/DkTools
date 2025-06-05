@@ -23,7 +23,7 @@ namespace DK.CodeAnalysis.Nodes
 
         public override void Execute(CAScope scope) { }
         public override bool IsReportable => true;
-        public override Value ReadValue(CAScope scope) => new NumberValue(DataType, _value);
+        public override Value ReadValue(CAScope scope) => new NumberValue(DataType, _value, literal: true);
         public override string ToString() => _value.ToString();
 
         private static DataType DetectDataTypeFromNumberLiteral(string text)

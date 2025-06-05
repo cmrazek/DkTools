@@ -5,10 +5,12 @@ namespace DK.CodeAnalysis.Values
     internal class InterfaceValue : Value
     {
         public InterfaceValue()
-            : base(Modeling.DataType.InterfaceType)
+            : base(Modeling.DataType.InterfaceType, literal: false)
         { }
 
         public override string ToString() => "interfacetype";
+
+        public override Value CloneNonLiteral() => this;
 
         public override string ToStringValue(CAScope scope, CodeSpan span) => null;
 

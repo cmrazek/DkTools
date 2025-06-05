@@ -7,15 +7,17 @@ namespace DK.CodeAnalysis.Values
 	{
 		private string _tableName;
 
-		public TableValue(DataType dataType, string tableName)
-			: base(dataType)
+		public TableValue(DataType dataType, string tableName, bool literal)
+			: base(dataType, literal)
 		{
 			_tableName = tableName;
 		}
 
 		public override string ToString() => _tableName;
 
-		public override string ToStringValue(CAScope scope, CodeSpan span)
+		public override Value CloneNonLiteral() => IsLiteral ? new TableValue(DataType, _tableName, literal: false) : this;
+
+        public override string ToStringValue(CAScope scope, CodeSpan span)
 		{
 			return null;
 		}

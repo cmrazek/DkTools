@@ -93,15 +93,15 @@ namespace DK.CodeAnalysis.Nodes
 			}
 			else if (_def is EnumOptionDefinition)
 			{
-				return new EnumValue(_def.DataType, _def.Name);
+				return new EnumValue(_def.DataType, _def.Name, literal: true);
 			}
 			else if (_def is TableDefinition || _def is ExtractTableDefinition)
 			{
-				return new TableValue(_def.DataType, _def.Name);
+				return new TableValue(_def.DataType, _def.Name, literal: true);
 			}
 			else if (_def is RelIndDefinition)
 			{
-				return new IndRelValue(_def.DataType, _def.Name);
+				return new IndRelValue(_def.DataType, _def.Name, literal: true);
 			}
 			else if (_def.CanRead && _def.DataType != null)
 			{

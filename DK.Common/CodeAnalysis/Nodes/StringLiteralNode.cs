@@ -14,7 +14,7 @@ namespace DK.CodeAnalysis.Nodes
 
 		public override void Execute(CAScope scope) { }
 		public override bool IsReportable => true;
-		public override Value ReadValue(CAScope scope) => new StringValue(DataType.String, CodeParser.StringLiteralToString(Text));
+		public override Value ReadValue(CAScope scope) => new StringValue(DataType.String, CodeParser.StringLiteralToString(Text), literal: true);
 		public override string ToString() => $"\"{Text}\"";
 	}
 }

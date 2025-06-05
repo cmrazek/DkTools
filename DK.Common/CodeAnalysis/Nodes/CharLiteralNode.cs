@@ -17,7 +17,7 @@ namespace DK.CodeAnalysis.Nodes
 
 		public override void Execute(CAScope scope) { }
 		public override bool IsReportable => true;
-		public override Value ReadValue(CAScope scope) => new CharValue(DataType.Char, _char);
+		public override Value ReadValue(CAScope scope) => new CharValue(DataType.Char, _char, literal: true);
 		public override string ToString() => string.Concat("'", _char.ToString(), "'");
 	}
 }

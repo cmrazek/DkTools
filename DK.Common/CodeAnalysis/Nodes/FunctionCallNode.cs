@@ -376,7 +376,7 @@ namespace DK.CodeAnalysis.Nodes
                 ReportError(_funcNameSpan, CAError.CA10057, 1);	// Function expects {0} argument(s).
             }
 
-            return new NumberValue(DataType.Int, null);
+            return new NumberValue(DataType.Int, number: null, literal: false);
         }
 
         private float CalcArgumentMatchScore()

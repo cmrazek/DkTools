@@ -293,19 +293,19 @@ namespace DK.CodeAnalysis.Nodes
                 switch (_type)
                 {
                     case OperatorType.Multiply:
-                        result = leftValue.Multiply(scope, Span, rightValue);
+                        result = leftValue.Multiply(scope, Span, rightValue).CloneNonLiteral();
                         break;
                     case OperatorType.Divide:
-                        result = leftValue.Divide(scope, Span, rightValue);
+                        result = leftValue.Divide(scope, Span, rightValue).CloneNonLiteral();
                         break;
                     case OperatorType.Modulus:
-                        result = leftValue.ModulusDivide(scope, Span, rightValue);
+                        result = leftValue.ModulusDivide(scope, Span, rightValue).CloneNonLiteral();
                         break;
                     case OperatorType.Add:
-                        result = leftValue.Add(scope, Span, rightValue);
+                        result = leftValue.Add(scope, Span, rightValue).CloneNonLiteral();
                         break;
                     case OperatorType.Subtract:
-                        result = leftValue.Subtract(scope, Span, rightValue);
+                        result = leftValue.Subtract(scope, Span, rightValue).CloneNonLiteral();
                         break;
                     default:
                         throw new InvalidOperatorTypeException();
@@ -331,7 +331,7 @@ namespace DK.CodeAnalysis.Nodes
                 return Value.Void;
             }
 
-            var rightValue = _rightNode.ReadValue(scope).Invert(scope, Span);
+            var rightValue = _rightNode.ReadValue(scope).Invert(scope, Span).CloneNonLiteral();
             if (rightValue.IsVoid) _rightNode.ReportError(_rightNode.Span, CAError.CA10008, OperatorText(_type));	// Operator '{0}' expects value on right.
             return rightValue;
         }
@@ -356,47 +356,47 @@ namespace DK.CodeAnalysis.Nodes
                 {
                     case OperatorType.CompareEqual:
                         if (leftDataType != null) rightValue.CheckTypeConversion(scope, _rightNode.Span, leftDataType, Value.ConversionMethod.Comparison);
-                        result = leftValue.CompareEqual(scope, Span, rightValue);
+                        result = leftValue.CompareEqual(scope, Span, rightValue).CloneNonLiteral();
                         break;
                     case OperatorType.CompareNotEqual:
                         if (leftDataType != null) rightValue.CheckTypeConversion(scope, _rightNode.Span, leftDataType, Value.ConversionMethod.Comparison);
-                        result = leftValue.CompareNotEqual(scope, Span, rightValue);
+                        result = leftValue.CompareNotEqual(scope, Span, rightValue).CloneNonLiteral();
                         break;
                     case OperatorType.CompareLessThan:
                         if (leftDataType != null) rightValue.CheckTypeConversion(scope, _rightNode.Span, leftDataType, Value.ConversionMethod.Comparison);
-                        result = leftValue.CompareLessThan(scope, Span, rightValue);
+                        result = leftValue.CompareLessThan(scope, Span, rightValue).CloneNonLiteral();
                         break;
                     case OperatorType.CompareGreaterThan:
                         if (leftDataType != null) rightValue.CheckTypeConversion(scope, _rightNode.Span, leftDataType, Value.ConversionMethod.Comparison);
-                        result = leftValue.CompareGreaterThan(scope, Span, rightValue);
+                        result = leftValue.CompareGreaterThan(scope, Span, rightValue).CloneNonLiteral();
                         break;
                     case OperatorType.CompareLessThanOrEqual:
                         if (leftDataType != null) rightValue.CheckTypeConversion(scope, _rightNode.Span, leftDataType, Value.ConversionMethod.Comparison);
-                        result = leftValue.CompareLessEqual(scope, Span, rightValue);
+                        result = leftValue.CompareLessEqual(scope, Span, rightValue).CloneNonLiteral();
                         break;
                     case OperatorType.CompareGreaterThanOrEqual:
                         if (leftDataType != null) rightValue.CheckTypeConversion(scope, _rightNode.Span, leftDataType, Value.ConversionMethod.Comparison);
-                        result = leftValue.CompareGreaterEqual(scope, Span, rightValue);
+                        result = leftValue.CompareGreaterEqual(scope, Span, rightValue).CloneNonLiteral();
                         break;
                     case OperatorType.And:
                         {
                             var left = leftValue.ToNumber(scope, Span);
                             var right = rightValue.ToNumber(scope, Span);
-                            if (left.HasValue && right.HasValue) result = new NumberValue(DataType.Int, left.Value != 0 && right.Value != 0 ? 1 : 0);
-                            else result = new NumberValue(DataType.Int, null);
+                            if (left.HasValue && right.HasValue) result = new NumberValue(DataType.Int, left.Value != 0 && right.Value != 0 ? 1 : 0, literal: false);
+                            else result = new NumberValue(DataType.Int, number: null, literal: false);
                         }
                         break;
                     case OperatorType.Or:
                         {
                             var left = leftValue.ToNumber(scope, Span);
                             var right = rightValue.ToNumber(scope, Span);
-                            if (left.HasValue && right.HasValue) result = new NumberValue(DataType.Int, left.Value != 0 || right.Value != 0 ? 1 : 0);
-                            else result = new NumberValue(DataType.Int, null);
+                            if (left.HasValue && right.HasValue) result = new NumberValue(DataType.Int, left.Value != 0 || right.Value != 0 ? 1 : 0, literal: false);
+                            else result = new NumberValue(DataType.Int, number: null, literal: false);
                         }
                         break;
                     case OperatorType.Like:
                         if (leftDataType != null) rightValue.CheckTypeConversion(scope, _rightNode.Span, leftDataType, Value.ConversionMethod.Comparison);
-                        result = rightValue.CompareLike(scope, Span, rightValue);
+                        result = rightValue.CompareLike(scope, Span, rightValue).CloneNonLiteral();
                         break;
                     default:
                         throw new InvalidOperatorTypeException();
@@ -410,7 +410,7 @@ namespace DK.CodeAnalysis.Nodes
                 if (_leftNode != null && _rightNode == null) resultValue = _leftNode.ReadValue(scope);
                 else if (_leftNode == null && _rightNode != null) resultValue = _rightNode.ReadValue(scope);
 
-                return resultValue;
+                return resultValue.CloneNonLiteral();
             }
         }
 
@@ -442,28 +442,28 @@ namespace DK.CodeAnalysis.Nodes
                 switch (_type)
                 {
                     case OperatorType.Assign:
-                        result = rightValue;
+                        result = rightValue.CloneNonLiteral();
                         break;
                     case OperatorType.AssignMultiply:
-                        result = leftValue.Multiply(scope, Span, rightValue);
+                        result = leftValue.Multiply(scope, Span, rightValue).CloneNonLiteral();
                         break;
                     case OperatorType.AssignDivide:
-                        result = leftValue.Divide(scope, Span, rightValue);
+                        result = leftValue.Divide(scope, Span, rightValue).CloneNonLiteral();
                         break;
                     case OperatorType.AssignModulus:
-                        result = leftValue.ModulusDivide(scope, Span, rightValue);
+                        result = leftValue.ModulusDivide(scope, Span, rightValue).CloneNonLiteral();
                         break;
                     case OperatorType.AssignAdd:
-                        result = leftValue.Add(scope, Span, rightValue);
+                        result = leftValue.Add(scope, Span, rightValue).CloneNonLiteral();
                         break;
                     case OperatorType.AssignSubtract:
-                        result = leftValue.Subtract(scope, Span, rightValue);
+                        result = leftValue.Subtract(scope, Span, rightValue).CloneNonLiteral();
                         break;
                     default:
                         throw new InvalidOperatorTypeException();
                 }
 
-                _leftNode.WriteValue(scope, rightValue);
+                _leftNode.WriteValue(scope, result);
                 _leftNode.IsReportable = false;
                 return result;
             }
@@ -473,7 +473,7 @@ namespace DK.CodeAnalysis.Nodes
                 if (_leftNode != null && _rightNode == null) resultValue = _leftNode.ReadValue(scope);
                 else if (_leftNode == null && _rightNode != null) resultValue = _rightNode.ReadValue(scope);
 
-                return resultValue;
+                return resultValue.CloneNonLiteral();
             }
         }
     }

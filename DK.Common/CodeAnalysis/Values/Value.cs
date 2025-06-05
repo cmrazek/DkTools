@@ -8,6 +8,7 @@ namespace DK.CodeAnalysis.Values
     abstract class Value
     {
         private DataType _dataType;
+        private bool _literal;
 
         public static readonly Value Void = new VoidValue();
 
@@ -18,16 +19,20 @@ namespace DK.CodeAnalysis.Values
         public abstract char? ToChar(CAScope scope, CodeSpan span);
         public abstract Value Convert(CAScope scope, CodeSpan span, Value value);
         public abstract bool IsEqualTo(Value other);
+        public abstract Value CloneNonLiteral();
 
-        protected Value(DataType dataType)
+        protected Value(DataType dataType, bool literal)
         {
             _dataType = dataType;
+            _literal = literal;
         }
 
         public DataType DataType
         {
             get { return _dataType; }
         }
+
+        public bool IsLiteral => _literal;
 
         public bool IsVoid
         {
@@ -46,21 +51,21 @@ namespace DK.CodeAnalysis.Values
             switch (dataType.ValueType)
             {
                 case ValType.Numeric:
-                    return new NumberValue(dataType, null);
+                    return new NumberValue(dataType, null, literal: false);
                 case ValType.String:
-                    return new StringValue(dataType, null);
+                    return new StringValue(dataType, null, literal: false);
                 case ValType.Char:
-                    return new CharValue(dataType, null);
+                    return new CharValue(dataType, null, literal: false);
                 case ValType.Enum:
-                    return new EnumValue(dataType, null, null);
+                    return new EnumValue(dataType, null, null, literal: false);
                 case ValType.Date:
-                    return new DateValue(dataType, null);
+                    return new DateValue(dataType, null, literal: false);
                 case ValType.Time:
-                    return new TimeValue(dataType, null);
+                    return new TimeValue(dataType, null, literal: false);
                 case ValType.Table:
-                    return new TableValue(dataType, null);
+                    return new TableValue(dataType, null, literal: false);
                 case ValType.IndRel:
-                    return new IndRelValue(dataType, null);
+                    return new IndRelValue(dataType, null, literal: false);
                 case ValType.Variant:
                     return new VariantValue();
                 case ValType.Interface:
