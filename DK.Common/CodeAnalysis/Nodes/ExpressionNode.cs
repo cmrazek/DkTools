@@ -176,7 +176,7 @@ namespace DK.CodeAnalysis.Nodes
             if (code.ReadExact('('))
             {
                 // This is a function call
-                int argsStartPos = code.Span.Start;
+                var openBracketSpan = code.Span;
 
                 switch (word)
                 {
@@ -188,7 +188,7 @@ namespace DK.CodeAnalysis.Nodes
                         return AggregateFunctionCallNode.Read(p, wordSpan, word);
                 }
 
-                return FunctionCallNode.Read(p, wordSpan, word, funcDefs: null, argsStartPos);
+                return FunctionCallNode.Read(p, wordSpan, word, funcDefs: null, openBracketSpan);
             }
 
             if (code.ReadExact('.'))
@@ -203,7 +203,7 @@ namespace DK.CodeAnalysis.Nodes
 
                     if (code.ReadExact('('))
                     {
-                        var argsStartPos = code.Span.Start;
+                        var openBracketSpan = code.Span;
 
                         foreach (var parentDef in (from d in p.CodeAnalyzer.PreprocessorModel.DefinitionProvider.GetAny(code.Position + p.FuncOffset, word)
                                                    where d.AllowsChild
@@ -214,7 +214,7 @@ namespace DK.CodeAnalysis.Nodes
                             if (childDefs.Count > 0)
                             {
                                 var parentNode = new IdentifierNode(p.Statement, wordSpan, word, parentDef);
-                                var childNode = FunctionCallNode.Read(p, combinedSpan, combinedWord, childDefs, argsStartPos);
+                                var childNode = FunctionCallNode.Read(p, combinedSpan, combinedWord, childDefs, openBracketSpan);
                                 return new ParentChildNode(parentNode, childNode);
                             }
                         }
@@ -293,7 +293,7 @@ namespace DK.CodeAnalysis.Nodes
 
                     if (code.ReadExact('('))
                     {
-                        var argsStartPos = code.Span.Start;
+                        var openBracketSpan = code.Span;
 
                         foreach (var parentDef in (from d in p.CodeAnalyzer.PreprocessorModel.DefinitionProvider.GetAny(code.Position + p.FuncOffset, word)
                                                    where d.AllowsDollarChild
@@ -304,7 +304,7 @@ namespace DK.CodeAnalysis.Nodes
                             if (childDefs != null)
                             {
                                 var parentNode = new IdentifierNode(p.Statement, wordSpan, word, parentDef);
-                                var childNode = FunctionCallNode.Read(p, combinedSpan, combinedWord, childDefs, argsStartPos);
+                                var childNode = FunctionCallNode.Read(p, combinedSpan, combinedWord, childDefs, openBracketSpan);
                                 return new ParentChildNode(parentNode, childNode);
                             }
                         }

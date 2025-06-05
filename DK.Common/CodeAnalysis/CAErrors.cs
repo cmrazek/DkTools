@@ -315,6 +315,12 @@ namespace DK.CodeAnalysis
         #region Function Arguments (10170-10179)
         [ErrorMessage("String constant must be quoted.")]
         CA10170,
+
+        [ErrorMessage("Function arguments could not be parsed.")]
+        CA10171,
+
+        [ErrorMessage("Expected ','.")]
+        CA10172,
         #endregion
     }
 

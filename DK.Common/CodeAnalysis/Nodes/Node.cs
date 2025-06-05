@@ -69,14 +69,6 @@ namespace DK.CodeAnalysis.Nodes
             _errorReported = CAErrorType.Error;
         }
 
-        public void ReportErrorAbsolute(CodeSpan span, CAError errorCode, params object[] args)
-        {
-            if (_errorReported.HasValue && _errorReported.Value == CAErrorType.Error) return;
-
-            Statement.CodeAnalyzer.ReportErrorAbsolute(span, errorCode, args);
-            _errorReported = CAErrorType.Error;
-        }
-
         public CAErrorType? ErrorReported
         {
             get { return _errorReported; }
