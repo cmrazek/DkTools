@@ -357,7 +357,7 @@ namespace DK.Modeling
 
         public static DataType MakeUnknown(string name = null, ProbeClassifiedString source = null)
         {
-            if (source == null) source = new ProbeClassifiedString(ProbeClassifierType.Normal, "?");
+            if (source == null) source = new ProbeClassifiedString();
             return new DataType(name, source, ValType.Unknown);
         }
 
