@@ -9,8 +9,8 @@ namespace DK.CodeAnalysis.Statements
 	class SelectStatement : Statement
 	{
 		private List<Definition> _tables = new List<Definition>();
-		private ExpressionNode _whereExp;
-		private ExpressionNode _filterByExp;
+		private Node _whereExp;
+		private Node _filterByExp;
 		private List<GroupBody> _groups = new List<GroupBody>();
 		private bool _distinct = false;
 		private string _topNumber = null;
@@ -110,7 +110,7 @@ namespace DK.CodeAnalysis.Statements
 				#region where
 				else if (code.ReadExact("where"))
 				{
-					_whereExp = ExpressionNode.Read(p, null, "from", "where", "order", "filterby");
+					_whereExp = ExpressionNode.Read(p, null);
 
 					if (code.ReadExact(';'))
 					{
@@ -122,7 +122,7 @@ namespace DK.CodeAnalysis.Statements
 				#region filterby
 				else if (code.ReadExact("filterby"))
                 {
-					_filterByExp = ExpressionNode.Read(p, null, "from", "where", "order", "filterby");
+					_filterByExp = ExpressionNode.Read(p, null);
 
 					if (code.ReadExact(';'))
 					{

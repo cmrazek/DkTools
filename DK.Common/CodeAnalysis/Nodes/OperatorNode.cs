@@ -23,379 +23,460 @@ using System;
 
 namespace DK.CodeAnalysis.Nodes
 {
-	class OperatorNode : TextNode
-	{
-		private int _prec;
-		private SpecialOperator? _special;
+    enum OperatorType
+    {
+        None,
+        Assign,
+        AssignMultiply,
+        AssignDivide,
+        AssignModulus,
+        AssignAdd,
+        AssignSubtract,
+        CompareEqual,
+        CompareNotEqual,
+        CompareLessThan,
+        CompareGreaterThan,
+        CompareLessThanOrEqual,
+        CompareGreaterThanOrEqual,
+        And,
+        Or,
+        Multiply,
+        Divide,
+        Modulus,
+        Add,
+        Subtract,
+        Negate,
+        In,
+        Like,
+        Ternary
+    }
 
-		public OperatorNode(Statement stmt, CodeSpan span, string text, SpecialOperator? special)
-			: base(stmt, null, span, text)
-		{
-			_special = special;
+    class OperatorNode : Node
+    {
+        private OperatorType _type;
+        private int _prec;
+        private Node _leftNode;
+        private Node _rightNode;
 
-			// Determine the operator precedence
-			// Even numbers are left-to-right, odd are right-to-left
-			switch (text)
-			{
-				case "*":
-				case "/":
-				case "%":
-					_prec = 26;
-					break;
-				case "+":
-					_prec = 24;
-					break;
-				case "-":
-					_prec = _special == SpecialOperator.UnaryMinus ? 26 : 22;
-					break;
-				case "<":
-				case ">":
-				case "<=":
-				case ">=":
-					_prec = 22;
-					break;
-				case "==":
-				case "!=":
-					_prec = 20;
-					break;
-				case "in":
-				case "like":
-					_prec = 18;
-					break;
-				case "and":
-				case "&&":
-					_prec = 16;
-					break;
-				case "or":
-				case "||":
-					_prec = 14;
-					break;
-				case "=":
-				case "*=":
-				case "/=":
-				case "%=":
-				case "+=":
-				case "-=":
-					_prec = 7;
-					break;
-				default:
-					Statement.CodeAnalyzer.ReportError(Span, CAError.CA10006, text);	// Unknown operator '{0}'.
-					_prec = 0;
-					break;
-			}
-		}
-
-		public override bool IsReportable => false;
-		public override string ToString() => Text;
-
-		public override int Precedence
-		{
-			get
-			{
-				return _prec;
-			}
-		}
-
-		public override void Simplify(CAScope scope)
-		{
-			if (Parent == null) throw new InvalidOperationException("Operator node must have a parent.");
-
-			switch (Text)
-			{
-				case "*":
-				case "/":
-				case "%":
-				case "+":
-					ExecuteMath(scope);
-					break;
-
-				case "-":
-					if (_special == SpecialOperator.UnaryMinus) ExecuteMinus(scope);
-					else ExecuteMath(scope);
-					break;
-
-				case "<":
-				case ">":
-				case "<=":
-				case ">=":
-				case "==":
-				case "!=":
-				case "and":
-				case "&&":
-				case "or":
-				case "||":
-				case "like":
-					ExecuteComparison(scope);
-					break;
-
-				case "in":
-					ExecuteIn(scope);
-					break;
-
-				case "=":
-				case "*=":
-				case "/=":
-				case "%=":
-				case "+=":
-				case "-=":
-					ExecuteAssignment(scope);
-					break;
-			}
-		}
-
-		private void ExecuteMath(CAScope scope)	// * / % + -
-		{
-			var leftNode = Parent.GetLeftSibling(scope, this);
-			var rightNode = Parent.GetRightSibling(scope, this);
-			if (leftNode == null) ReportError(Span, CAError.CA10007, Text);			// Operator '{0}' expects value on left.
-			else if (rightNode == null) ReportError(Span, CAError.CA10008, Text);	// Operator '{0}' expects value on right.
-			if (leftNode != null && rightNode != null)
-			{
-				var leftValue = leftNode.ReadValue(scope);
-				var rightScope = scope.Clone();
-				var rightValue = rightNode.ReadValue(rightScope);
-				scope.Merge(rightScope);
-				if (leftValue.IsVoid) leftNode.ReportError(leftNode.Span, CAError.CA10007, Text);		// Operator '{0}' expects value on left.
-				else if (rightValue.IsVoid) rightNode.ReportError(rightNode.Span, CAError.CA10008, Text);    // Operator '{0}' expects value on right.
-
-                leftValue.CheckTypeMath(scope, leftNode.Span.Envelope(rightNode.Span), rightValue);
-
-				Value result = null;
-				switch (Text)
-				{
-					case "*":
-						result = leftValue.Multiply(scope, Span, rightValue);
-						break;
-					case "/":
-						result = leftValue.Divide(scope, Span, rightValue);
-						break;
-					case "%":
-						result = leftValue.ModulusDivide(scope, Span, rightValue);
-						break;
-					case "+":
-						result = leftValue.Add(scope, Span, rightValue);
-						break;
-					case "-":
-						result = leftValue.Subtract(scope, Span, rightValue);
-						break;
-					default:
-						throw new InvalidOperationException();
-				}
-
-				Parent.ReplaceWithResult(result, !result.IsVoid, leftNode, this, rightNode);
-			}
-			else
-			{
-				Value resultValue = Value.Void;
-				if (leftNode != null && rightNode == null) resultValue = leftNode.ReadValue(scope);
-				else if (leftNode == null && rightNode != null) resultValue = rightNode.ReadValue(scope);
-				Parent.ReplaceWithResult(resultValue, false, leftNode, this, rightNode);
-			}
-		}
-
-		private void ExecuteMinus(CAScope scope)
-		{
-			var rightNode = Parent.GetRightSibling(scope, this);
-			if (rightNode == null) ReportError(Span, CAError.CA10008, Text);	// Operator '{0}' expects value on right.
-			else
-			{
-				var rightValue = rightNode.ReadValue(scope).Invert(scope, Span);
-				if (rightValue.IsVoid) rightNode.ReportError(rightNode.Span, CAError.CA10008, Text);	// Operator '{0}' expects value on right.
-
-				Parent.ReplaceWithResult(rightValue, !rightValue.IsVoid, this, rightNode);
-			}
-		}
-
-		private void ExecuteComparison(CAScope scope)	// < > <= >= == !=
-		{
-			var leftNode = Parent.GetLeftSibling(scope, this);
-			var rightNode = Parent.GetRightSibling(scope, this);
-			if (leftNode == null) ReportError(Span, CAError.CA10007, Text);	// Operator '{0}' expects value on left.
-			else if (rightNode == null) ReportError(Span, CAError.CA10008, Text);	// Operator '{0}' expects value on right.
-			if (leftNode != null && rightNode != null)
-			{
-				var leftValue = leftNode.ReadValue(scope);
-				var rightScope = scope.Clone();
-				var rightValue = rightNode.ReadValue(rightScope);
-				scope.Merge(rightScope);
-				if (leftValue.IsVoid) leftNode.ReportError(leftNode.Span, CAError.CA10007, Text);		// Operator '{0}' expects value on left.
-				else if (rightValue.IsVoid) rightNode.ReportError(rightNode.Span, CAError.CA10008, Text);    // Operator '{0}' expects value on right.
-
-				var leftDataType = leftNode.DataType;
-
-				Value result = null;
-				switch (Text)
-				{
-					case "==":
-						if (leftDataType != null) rightValue.CheckTypeConversion(scope, rightNode.Span, leftDataType, Value.ConversionMethod.Comparison);
-						result = leftValue.CompareEqual(scope, Span, rightValue);
-						break;
-					case "!=":
-						if (leftDataType != null) rightValue.CheckTypeConversion(scope, rightNode.Span, leftDataType, Value.ConversionMethod.Comparison);
-						result = leftValue.CompareNotEqual(scope, Span, rightValue);
-						break;
-					case "<":
-						if (leftDataType != null) rightValue.CheckTypeConversion(scope, rightNode.Span, leftDataType, Value.ConversionMethod.Comparison);
-						result = leftValue.CompareLessThan(scope, Span, rightValue);
-						break;
-					case ">":
-						if (leftDataType != null) rightValue.CheckTypeConversion(scope, rightNode.Span, leftDataType, Value.ConversionMethod.Comparison);
-						result = leftValue.CompareGreaterThan(scope, Span, rightValue);
-						break;
-					case "<=":
-						if (leftDataType != null) rightValue.CheckTypeConversion(scope, rightNode.Span, leftDataType, Value.ConversionMethod.Comparison);
-						result = leftValue.CompareLessEqual(scope, Span, rightValue);
-						break;
-					case ">=":
-						if (leftDataType != null) rightValue.CheckTypeConversion(scope, rightNode.Span, leftDataType, Value.ConversionMethod.Comparison);
-						result = leftValue.CompareGreaterEqual(scope, Span, rightValue);
-						break;
-					case "and":
-					case "&&":
-						{
-							var left = leftValue.ToNumber(scope, Span);
-							var right = rightValue.ToNumber(scope, Span);
-							if (left.HasValue && right.HasValue) result = new NumberValue(DataType.Int, left.Value != 0 && right.Value != 0 ? 1 : 0);
-							else result = new NumberValue(DataType.Int, null);
-						}
-						break;
-					case "or":
-					case "||":
-						{
-							var left = leftValue.ToNumber(scope, Span);
-							var right = rightValue.ToNumber(scope, Span);
-							if (left.HasValue && right.HasValue) result = new NumberValue(DataType.Int, left.Value != 0 || right.Value != 0 ? 1 : 0);
-							else result = new NumberValue(DataType.Int, null);
-						}
-						break;
-					case "like":
-						if (leftDataType != null) rightValue.CheckTypeConversion(scope, rightNode.Span, leftDataType, Value.ConversionMethod.Comparison);
-						result = rightValue.CompareLike(scope, Span, rightValue);
-						break;
-					default:
-						throw new InvalidOperationException();
-				}
-
-				Parent.ReplaceWithResult(result, !result.IsVoid, leftNode, this, rightNode);
-			}
-			else
-			{
-				Value resultValue = Value.Void;
-				if (leftNode != null && rightNode == null) resultValue = leftNode.ReadValue(scope);
-				else if (leftNode == null && rightNode != null) resultValue = rightNode.ReadValue(scope);
-				Parent.ReplaceWithResult(resultValue, false, leftNode, this, rightNode);
-			}
-		}
-
-		private void ExecuteIn(CAScope scope)
+        public OperatorNode(Statement stmt, CodeSpan span, OperatorType type, Node leftNode, Node rightNode)
+            : base(stmt, null, span)
         {
-			var leftNode = Parent.GetLeftSibling(scope, this);
-			var rightNode = Parent.GetRightSibling(scope, this);
-			if (leftNode == null) ReportError(Span, CAError.CA10007, Text);  // Operator '{0}' expects value on left.
-			else if (rightNode == null) ReportError(Span, CAError.CA10008, Text);    // Operator '{0}' expects value on right.
+            _type = type;
+            _prec = OperatorPrecedence(type);
+            _leftNode = leftNode;
+            _rightNode = rightNode;
 
-			var rightBrackets = rightNode as BracketsNode;
-			if (rightBrackets == null && rightNode != null) ReportError(rightNode.Span, CAError.CA10130); // Expected '('.
+            if (_leftNode != null) _leftNode.Parent = this;
+            if (_rightNode != null) _rightNode.Parent = this;
+        }
 
-			if (leftNode != null && rightBrackets != null)
-			{
-				var leftValue = leftNode.ReadValue(scope);
-				var rightScope = scope.Clone();
-				if (leftValue.IsVoid) leftNode.ReportError(leftNode.Span, CAError.CA10007, Text);        // Operator '{0}' expects value on left.
+        // Even numbers are left-to-right, odd are right-to-left
+        public const int MultiplyPrecedence = 26;
+        public const int AddPrecedence = 24;
+        public const int CompareLessGreaterPrecedence = 22;
+        public const int CompareEqualPrecedence = 20;
+        public const int TernaryPrecedence = 12;
+        public const int LikePrecedence = 18;
+        public const int AndPrecedence = 16;
+        public const int OrPrecedence = 14;
+        public const int AssignPrecedence = 7;
 
-				var leftDataType = leftNode.DataType;
+        public static int OperatorPrecedence(OperatorType op)
+        {
+            switch (op)
+            {
+                case OperatorType.Multiply:
+                case OperatorType.Divide:
+                case OperatorType.Modulus:
+                case OperatorType.Negate:
+                    return MultiplyPrecedence;
+                case OperatorType.Add:
+                case OperatorType.Subtract:
+                    return AddPrecedence;
+                case OperatorType.CompareLessThan:
+                case OperatorType.CompareGreaterThan:
+                case OperatorType.CompareLessThanOrEqual:
+                case OperatorType.CompareGreaterThanOrEqual:
+                    return CompareLessGreaterPrecedence;
+                case OperatorType.CompareEqual:
+                case OperatorType.CompareNotEqual:
+                    return CompareEqualPrecedence;
+                case OperatorType.In:
+                case OperatorType.Like:
+                    return LikePrecedence;
+                case OperatorType.And:
+                    return AndPrecedence;
+                case OperatorType.Or:
+                    return OrPrecedence;
+                case OperatorType.Ternary:
+                    return TernaryPrecedence;
+                case OperatorType.Assign:
+                case OperatorType.AssignMultiply:
+                case OperatorType.AssignDivide:
+                case OperatorType.AssignModulus:
+                case OperatorType.AssignAdd:
+                case OperatorType.AssignSubtract:
+                    return AssignPrecedence;
+                default:
+                    return 0;
+            }
+        }
 
-				Value result = null;
-				
-				foreach (var itemNode in rightBrackets.Children)
-				{
-					var itemValue = itemNode.ReadValue(rightScope);
-					if (leftDataType != null) itemValue.CheckTypeConversion(scope, rightNode.Span, leftDataType, Value.ConversionMethod.Comparison);
-					result = leftValue.CompareEqual(scope, Span, itemValue);
-				}
+        public static string OperatorText(OperatorType op)
+        {
+            switch (op)
+            {
+                case OperatorType.Assign: return "=";
+                case OperatorType.AssignMultiply: return "*=";
+                case OperatorType.AssignDivide: return "/=";
+                case OperatorType.AssignModulus: return "%=";
+                case OperatorType.AssignAdd: return "+=";
+                case OperatorType.AssignSubtract: return "-=";
+                case OperatorType.CompareEqual: return "==";
+                case OperatorType.CompareNotEqual: return "!=";
+                case OperatorType.CompareLessThan: return "<";
+                case OperatorType.CompareGreaterThan: return ">";
+                case OperatorType.CompareLessThanOrEqual: return "<=";
+                case OperatorType.CompareGreaterThanOrEqual: return ">=";
+                case OperatorType.And: return "and";
+                case OperatorType.Or: return "or";
+                case OperatorType.Multiply: return "*";
+                case OperatorType.Divide: return "/";
+                case OperatorType.Modulus: return "%";
+                case OperatorType.Add: return "+";
+                case OperatorType.Subtract: return "-";
+                case OperatorType.Negate: return "-";
+                case OperatorType.In: return "in";
+                case OperatorType.Like: return "like";
+                case OperatorType.Ternary: return "?";
+                default: throw new InvalidOperatorTypeException();
+            }
+        }
 
-				if (result == null) result = new NumberValue(DataType.Int, null);
+        public static OperatorType OperatorTextToType(string text)
+        {
+            switch (text)
+            {
+                case "=": return OperatorType.Assign;
+                case "*=": return OperatorType.AssignMultiply;
+                case "/=": return OperatorType.AssignDivide;
+                case "%=": return OperatorType.AssignModulus;
+                case "+=": return OperatorType.AssignAdd;
+                case "-=": return OperatorType.AssignSubtract;
+                case "==": return OperatorType.CompareEqual;
+                case "!=": return OperatorType.CompareNotEqual;
+                case "<": return OperatorType.CompareLessThan;
+                case ">": return OperatorType.CompareGreaterThan;
+                case "<=": return OperatorType.CompareLessThanOrEqual;
+                case ">=": return OperatorType.CompareGreaterThanOrEqual;
+                case "and": case "&&": return OperatorType.And;
+                case "or": case "||": return OperatorType.Or;
+                case "*": return OperatorType.Multiply;
+                case "/": return OperatorType.Divide;
+                case "%": return OperatorType.Modulus;
+                case "+": return OperatorType.Add;
+                case "-": return OperatorType.Subtract;
+                case "in": return OperatorType.In;
+                case "like": return OperatorType.Like;
+                case "?": return OperatorType.Ternary;
+                default: return OperatorType.None;
+            }
+        }
 
-				scope.Merge(rightScope);
-				Parent.ReplaceWithResult(result, !result.IsVoid, leftNode, this, rightNode);
-			}
-			else
-			{
-				Value resultValue = Value.Void;
-				if (leftNode != null && rightNode == null) resultValue = leftNode.ReadValue(scope);
-				Parent.ReplaceWithResult(resultValue, false, leftNode, this, rightNode);
-			}
-		}
+        public override bool IsReportable => false;
+        public override string ToString() => OperatorText(_type);
 
-		private void ExecuteAssignment(CAScope scope)	// = *= /= %= += -=
-		{
-			var leftNode = Parent.GetLeftSibling(scope, this);
-			var rightNode = Parent.GetRightSibling(scope, this);
-			if (leftNode == null) ReportError(Span, CAError.CA10100, Text);			// Operator '{0}' expects assignable value on left.
-			else if (rightNode == null) ReportError(Span, CAError.CA10008, Text);	// Operator '{0}' expects value on right.
-			if (leftNode != null && rightNode != null)
-			{
-				Value leftValue = null;
-				if (Text != "=")
-				{
-					var leftScope = scope.Clone();
-					leftValue = leftNode.ReadValue(leftScope);
-					scope.Merge(leftScope);
-				}
+        public override int Precedence
+        {
+            get
+            {
+                return _prec;
+            }
+        }
 
-				var rightScope = scope.Clone();
-				var rightValue = rightNode.ReadValue(rightScope);
-				scope.Merge(rightScope);
+        public override void Execute(CAScope scope)
+        {
+            switch (_type)
+            {
+                case OperatorType.Multiply:
+                case OperatorType.Divide:
+                case OperatorType.Modulus:
+                case OperatorType.Add:
+                case OperatorType.Subtract:
+                    ExecuteMath(scope);
+                    break;
 
-				if (!leftNode.CanAssignValue(scope)) leftNode.ReportError(leftNode.Span, CAError.CA10100, Text);				// Operator '{0}' expects assignable value on left.
-				else if (rightValue.IsVoid) rightNode.ReportError(rightNode.Span, CAError.CA10008, Text);                // Operator '{0}' expects value on right.
+                case OperatorType.Negate:
+                    ExecuteMinus(scope);
+                    break;
 
-				var leftDataType = leftNode.DataType;
-				if (leftDataType != null) rightValue.CheckTypeConversion(scope, rightNode.Span.Envelope(leftNode.Span), leftDataType, Value.ConversionMethod.Assignment);
+                case OperatorType.CompareLessThan:
+                case OperatorType.CompareGreaterThan:
+                case OperatorType.CompareLessThanOrEqual:
+                case OperatorType.CompareGreaterThanOrEqual:
+                case OperatorType.CompareEqual:
+                case OperatorType.CompareNotEqual:
+                case OperatorType.And:
+                case OperatorType.Or:
+                case OperatorType.Like:
+                    ExecuteComparison(scope);
+                    break;
 
-				Value result = null;
-				switch (Text)
-				{
-					case "=":
-						result = rightValue;
-						break;
-					case "*=":
-						result = leftValue.Multiply(scope, Span, rightValue);
-						break;
-					case "/=":
-						result = leftValue.Divide(scope, Span, rightValue);
-						break;
-					case "%=":
-						result = leftValue.ModulusDivide(scope, Span, rightValue);
-						break;
-					case "+=":
-						result = leftValue.Add(scope, Span, rightValue);
-						break;
-					case "-=":
-						result = leftValue.Subtract(scope, Span, rightValue);
-						break;
-					default:
-						throw new InvalidOperationException();
-				}
+                case OperatorType.Assign:
+                case OperatorType.AssignMultiply:
+                case OperatorType.AssignDivide:
+                case OperatorType.AssignModulus:
+                case OperatorType.AssignAdd:
+                case OperatorType.AssignSubtract:
+                    ExecuteAssignment(scope);
+                    break;
 
-				leftNode.WriteValue(scope, rightValue);
-				leftNode.IsReportable = false;
-				Parent.ReplaceNodes(null, this, rightNode);
-				//Parent.ReplaceWithResult(rightValue, false, leftNode, this, rightNode);
-			}
-			else
-			{
-				Value resultValue = Value.Void;
-				if (leftNode != null && rightNode == null) resultValue = leftNode.ReadValue(scope);
-				else if (leftNode == null && rightNode != null) resultValue = rightNode.ReadValue(scope);
-				Parent.ReplaceWithResult(resultValue, false, leftNode, this, rightNode);
-			}
-		}
-	}
+                default:
+                    throw new InvalidOperatorTypeException();
+            }
+        }
 
-	enum SpecialOperator
-	{
-		None,
-		UnaryMinus
-	}
+        public override Value ReadValue(CAScope scope)
+        {
+            switch (_type)
+            {
+                case OperatorType.Multiply:
+                case OperatorType.Divide:
+                case OperatorType.Modulus:
+                case OperatorType.Add:
+                case OperatorType.Subtract:
+                    return ExecuteMath(scope);
+
+                case OperatorType.Negate:
+                    return ExecuteMinus(scope);
+
+                case OperatorType.CompareLessThan:
+                case OperatorType.CompareGreaterThan:
+                case OperatorType.CompareLessThanOrEqual:
+                case OperatorType.CompareGreaterThanOrEqual:
+                case OperatorType.CompareEqual:
+                case OperatorType.CompareNotEqual:
+                case OperatorType.And:
+                case OperatorType.Or:
+                case OperatorType.Like:
+                    return ExecuteComparison(scope);
+
+                case OperatorType.Assign:
+                case OperatorType.AssignMultiply:
+                case OperatorType.AssignDivide:
+                case OperatorType.AssignModulus:
+                case OperatorType.AssignAdd:
+                case OperatorType.AssignSubtract:
+                    return ExecuteAssignment(scope);
+
+                default:
+                    throw new InvalidOperatorTypeException();
+            }
+        }
+
+        private Value ExecuteMath(CAScope scope)	// * / % + -
+        {
+            if (_leftNode == null) ReportError(Span, CAError.CA10007, OperatorText(_type));			// Operator '{0}' expects value on left.
+            else if (_rightNode == null) ReportError(Span, CAError.CA10008, OperatorText(_type));	// Operator '{0}' expects value on right.
+            if (_leftNode != null && _rightNode != null)
+            {
+                var leftValue = _leftNode.ReadValue(scope);
+                var rightScope = scope.Clone();
+                var rightValue = _rightNode.ReadValue(rightScope);
+                scope.Merge(rightScope);
+                if (leftValue.IsVoid) _leftNode.ReportError(_leftNode.Span, CAError.CA10007, OperatorText(_type));		// Operator '{0}' expects value on left.
+                else if (rightValue.IsVoid) _rightNode.ReportError(_rightNode.Span, CAError.CA10008, OperatorText(_type));    // Operator '{0}' expects value on right.
+
+                leftValue.CheckTypeMath(scope, _leftNode.Span.Envelope(_rightNode.Span), rightValue);
+
+                Value result = null;
+                switch (_type)
+                {
+                    case OperatorType.Multiply:
+                        result = leftValue.Multiply(scope, Span, rightValue);
+                        break;
+                    case OperatorType.Divide:
+                        result = leftValue.Divide(scope, Span, rightValue);
+                        break;
+                    case OperatorType.Modulus:
+                        result = leftValue.ModulusDivide(scope, Span, rightValue);
+                        break;
+                    case OperatorType.Add:
+                        result = leftValue.Add(scope, Span, rightValue);
+                        break;
+                    case OperatorType.Subtract:
+                        result = leftValue.Subtract(scope, Span, rightValue);
+                        break;
+                    default:
+                        throw new InvalidOperatorTypeException();
+                }
+
+                return result;
+            }
+            else
+            {
+                Value resultValue = Value.Void;
+                if (_leftNode != null && _rightNode == null) resultValue = _leftNode.ReadValue(scope);
+                else if (_leftNode == null && _rightNode != null) resultValue = _rightNode.ReadValue(scope);
+
+                return resultValue;
+            }
+        }
+
+        private Value ExecuteMinus(CAScope scope)
+        {
+            if (_rightNode == null)
+            {
+                ReportError(Span, CAError.CA10008, OperatorText(_type));   // Operator '{0}' expects value on right.
+                return Value.Void;
+            }
+
+            var rightValue = _rightNode.ReadValue(scope).Invert(scope, Span);
+            if (rightValue.IsVoid) _rightNode.ReportError(_rightNode.Span, CAError.CA10008, OperatorText(_type));	// Operator '{0}' expects value on right.
+            return rightValue;
+        }
+
+        private Value ExecuteComparison(CAScope scope)	// < > <= >= == !=
+        {
+            if (_leftNode == null) ReportError(Span, CAError.CA10007, OperatorText(_type));	// Operator '{0}' expects value on left.
+            else if (_rightNode == null) ReportError(Span, CAError.CA10008, OperatorText(_type));	// Operator '{0}' expects value on right.
+            if (_leftNode != null && _rightNode != null)
+            {
+                var leftValue = _leftNode.ReadValue(scope);
+                var rightScope = scope.Clone();
+                var rightValue = _rightNode.ReadValue(rightScope);
+                scope.Merge(rightScope);
+                if (leftValue.IsVoid) _leftNode.ReportError(_leftNode.Span, CAError.CA10007, OperatorText(_type));		// Operator '{0}' expects value on left.
+                else if (rightValue.IsVoid) _rightNode.ReportError(_rightNode.Span, CAError.CA10008, OperatorText(_type));    // Operator '{0}' expects value on right.
+
+                var leftDataType = _leftNode.DataType;
+
+                Value result = null;
+                switch (_type)
+                {
+                    case OperatorType.CompareEqual:
+                        if (leftDataType != null) rightValue.CheckTypeConversion(scope, _rightNode.Span, leftDataType, Value.ConversionMethod.Comparison);
+                        result = leftValue.CompareEqual(scope, Span, rightValue);
+                        break;
+                    case OperatorType.CompareNotEqual:
+                        if (leftDataType != null) rightValue.CheckTypeConversion(scope, _rightNode.Span, leftDataType, Value.ConversionMethod.Comparison);
+                        result = leftValue.CompareNotEqual(scope, Span, rightValue);
+                        break;
+                    case OperatorType.CompareLessThan:
+                        if (leftDataType != null) rightValue.CheckTypeConversion(scope, _rightNode.Span, leftDataType, Value.ConversionMethod.Comparison);
+                        result = leftValue.CompareLessThan(scope, Span, rightValue);
+                        break;
+                    case OperatorType.CompareGreaterThan:
+                        if (leftDataType != null) rightValue.CheckTypeConversion(scope, _rightNode.Span, leftDataType, Value.ConversionMethod.Comparison);
+                        result = leftValue.CompareGreaterThan(scope, Span, rightValue);
+                        break;
+                    case OperatorType.CompareLessThanOrEqual:
+                        if (leftDataType != null) rightValue.CheckTypeConversion(scope, _rightNode.Span, leftDataType, Value.ConversionMethod.Comparison);
+                        result = leftValue.CompareLessEqual(scope, Span, rightValue);
+                        break;
+                    case OperatorType.CompareGreaterThanOrEqual:
+                        if (leftDataType != null) rightValue.CheckTypeConversion(scope, _rightNode.Span, leftDataType, Value.ConversionMethod.Comparison);
+                        result = leftValue.CompareGreaterEqual(scope, Span, rightValue);
+                        break;
+                    case OperatorType.And:
+                        {
+                            var left = leftValue.ToNumber(scope, Span);
+                            var right = rightValue.ToNumber(scope, Span);
+                            if (left.HasValue && right.HasValue) result = new NumberValue(DataType.Int, left.Value != 0 && right.Value != 0 ? 1 : 0);
+                            else result = new NumberValue(DataType.Int, null);
+                        }
+                        break;
+                    case OperatorType.Or:
+                        {
+                            var left = leftValue.ToNumber(scope, Span);
+                            var right = rightValue.ToNumber(scope, Span);
+                            if (left.HasValue && right.HasValue) result = new NumberValue(DataType.Int, left.Value != 0 || right.Value != 0 ? 1 : 0);
+                            else result = new NumberValue(DataType.Int, null);
+                        }
+                        break;
+                    case OperatorType.Like:
+                        if (leftDataType != null) rightValue.CheckTypeConversion(scope, _rightNode.Span, leftDataType, Value.ConversionMethod.Comparison);
+                        result = rightValue.CompareLike(scope, Span, rightValue);
+                        break;
+                    default:
+                        throw new InvalidOperatorTypeException();
+                }
+
+                return result;
+            }
+            else
+            {
+                Value resultValue = Value.Void;
+                if (_leftNode != null && _rightNode == null) resultValue = _leftNode.ReadValue(scope);
+                else if (_leftNode == null && _rightNode != null) resultValue = _rightNode.ReadValue(scope);
+
+                return resultValue;
+            }
+        }
+
+        private Value ExecuteAssignment(CAScope scope)	// = *= /= %= += -=
+        {
+            if (_leftNode == null) ReportError(Span, CAError.CA10100, OperatorText(_type));			// Operator '{0}' expects assignable value on left.
+            else if (_rightNode == null) ReportError(Span, CAError.CA10008, OperatorText(_type));	// Operator '{0}' expects value on right.
+            if (_leftNode != null && _rightNode != null)
+            {
+                Value leftValue = null;
+                if (_type != OperatorType.Assign)
+                {
+                    var leftScope = scope.Clone();
+                    leftValue = _leftNode.ReadValue(leftScope);
+                    scope.Merge(leftScope);
+                }
+
+                var rightScope = scope.Clone();
+                var rightValue = _rightNode.ReadValue(rightScope);
+                scope.Merge(rightScope);
+
+                if (!_leftNode.CanAssignValue(scope)) _leftNode.ReportError(_leftNode.Span, CAError.CA10100, OperatorText(_type));				// Operator '{0}' expects assignable value on left.
+                else if (rightValue.IsVoid) _rightNode.ReportError(_rightNode.Span, CAError.CA10008, OperatorText(_type));                // Operator '{0}' expects value on right.
+
+                var leftDataType = _leftNode.DataType;
+                if (leftDataType != null) rightValue.CheckTypeConversion(scope, _rightNode.Span.Envelope(_leftNode.Span), leftDataType, Value.ConversionMethod.Assignment);
+
+                Value result = null;
+                switch (_type)
+                {
+                    case OperatorType.Assign:
+                        result = rightValue;
+                        break;
+                    case OperatorType.AssignMultiply:
+                        result = leftValue.Multiply(scope, Span, rightValue);
+                        break;
+                    case OperatorType.AssignDivide:
+                        result = leftValue.Divide(scope, Span, rightValue);
+                        break;
+                    case OperatorType.AssignModulus:
+                        result = leftValue.ModulusDivide(scope, Span, rightValue);
+                        break;
+                    case OperatorType.AssignAdd:
+                        result = leftValue.Add(scope, Span, rightValue);
+                        break;
+                    case OperatorType.AssignSubtract:
+                        result = leftValue.Subtract(scope, Span, rightValue);
+                        break;
+                    default:
+                        throw new InvalidOperatorTypeException();
+                }
+
+                _leftNode.WriteValue(scope, rightValue);
+                _leftNode.IsReportable = false;
+                return result;
+            }
+            else
+            {
+                Value resultValue = Value.Void;
+                if (_leftNode != null && _rightNode == null) resultValue = _leftNode.ReadValue(scope);
+                else if (_leftNode == null && _rightNode != null) resultValue = _rightNode.ReadValue(scope);
+
+                return resultValue;
+            }
+        }
+    }
+
+    class InvalidOperatorTypeException : Exception { }
 }

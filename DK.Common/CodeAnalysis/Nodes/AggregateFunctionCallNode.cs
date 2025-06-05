@@ -10,8 +10,8 @@ namespace DK.CodeAnalysis.Nodes
 	class AggregateFunctionCallNode : Node
 	{
 		private string _name;
-		private ExpressionNode _aggExp;
-		private ExpressionNode _whereExp;
+		private Node _aggExp;
+		private Node _whereExp;
 
 		private AggregateFunctionCallNode(Statement stmt, CodeSpan funcNameSpan, string funcName)
 			: base(stmt, null, funcNameSpan)
@@ -35,7 +35,7 @@ namespace DK.CodeAnalysis.Nodes
 			}
 			else
 			{
-				var exp = ExpressionNode.Read(p, null, ",", ")");
+				var exp = ExpressionNode.Read(p, null);
 				if (exp == null)
 				{
 					ret.ReportError(CAError.CA10061);	// Expected aggregate expression.
@@ -61,7 +61,7 @@ namespace DK.CodeAnalysis.Nodes
 
 				if (code.ReadExactWholeWord("where"))
 				{
-					var exp = ExpressionNode.Read(p, null, ",", ")");
+					var exp = ExpressionNode.Read(p, null);
 					if (exp == null)
 					{
 						ret.ReportError(code.Span, CAError.CA10062, "where");    // Expected expression to follow '{0}'.

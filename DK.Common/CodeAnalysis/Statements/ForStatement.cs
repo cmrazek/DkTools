@@ -6,9 +6,9 @@ namespace DK.CodeAnalysis.Statements
 {
 	class ForStatement : Statement
 	{
-		private ExpressionNode _initExp;
-		private ExpressionNode _condExp;
-		private ExpressionNode _incExp;
+		private Node _initExp;
+		private Node _condExp;
+		private Node _incExp;
 		private List<Statement> _body = new List<Statement>();
 
 		public override string ToString() => new string[] { "for (", _condExp?.ToString(), ")..." }.Combine();
@@ -25,7 +25,7 @@ namespace DK.CodeAnalysis.Statements
 			}
 			var errSpan = code.Span;
 
-			_initExp = ExpressionNode.Read(p, null, ")");
+			_initExp = ExpressionNode.Read(p, null);
 			if (_initExp != null) errSpan = _initExp.Span;
 
 			if (!code.ReadExact(';'))
@@ -35,7 +35,7 @@ namespace DK.CodeAnalysis.Statements
 			}
 			errSpan = code.Span;
 
-			_condExp = ExpressionNode.Read(p, null, ")");
+			_condExp = ExpressionNode.Read(p, null);
 			if (_condExp != null) errSpan = _condExp.Span;
 
 			if (!code.ReadExact(';'))
@@ -45,7 +45,7 @@ namespace DK.CodeAnalysis.Statements
 			}
 			errSpan = code.Span;
 
-			_incExp = ExpressionNode.Read(p, null, ")");
+			_incExp = ExpressionNode.Read(p, null);
 			if (_incExp != null) errSpan = _incExp.Span;
 
 			if (!code.ReadExact(')'))

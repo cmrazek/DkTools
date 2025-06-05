@@ -12,7 +12,7 @@ namespace DK.CodeAnalysis.Nodes
     {
         private string _name;
         private CodeSpan _funcNameSpan;
-        private List<GroupNode> _args = new List<GroupNode>();
+        private List<Node> _args = new List<Node>();
         private CodeSpan _argumentSpan;
         private Definition _def;
 
@@ -73,7 +73,7 @@ namespace DK.CodeAnalysis.Nodes
             var commaExpected = false;
             var closed = false;
             var argIndex = 0;
-            var args = new List<GroupNode>();
+            var args = new List<Node>();
             var argDefs = funcDef.Arguments.ToArray();
             var closePos = -1;
 
@@ -105,7 +105,7 @@ namespace DK.CodeAnalysis.Nodes
                     {
                         var argDef = argDefs != null && argIndex < argDefs.Length ? argDefs[argIndex] : null;
 
-                        var arg = ExpressionNode.Read(p, argDef != null ? argDef.DataType : null, ",", ")");
+                        var arg = ExpressionNode.Read(p, argDef != null ? argDef.DataType : null);
                         if (arg != null) funcCallNode.AddArgument(arg);
                         commaExpected = true;
                         argIndex++;
@@ -172,6 +172,10 @@ namespace DK.CodeAnalysis.Nodes
                 }
             }
 
+            // Skip over the arguments
+            p.Code.Position = argsStartPos;
+            p.Code.ReadNestable();
+
             var funcCallNode = new FunctionCallNode(p.Statement, funcNameSpan, funcName, funcDef: null);
             funcCallNode.ReportError(funcNameSpan, CAError.CA10003, funcName);	// Function '{0}' not found.
             return funcCallNode;
@@ -179,9 +183,10 @@ namespace DK.CodeAnalysis.Nodes
 
         public override bool IsReportable => _def != null && _def.DataType != null && _def.DataType.IsReportable;
 
-        public void AddArgument(GroupNode node)
+        public void AddArgument(Node node)
         {
             _args.Add(node);
+            node.Parent = this;
         }
 
         public int NumArguments

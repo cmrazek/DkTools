@@ -8,278 +8,166 @@ using System.Linq;
 
 namespace DK.CodeAnalysis.Nodes
 {
-    class ExpressionNode : GroupNode
+    internal static class ExpressionNode
     {
-        public ExpressionNode(Statement stmt)
-            : base(stmt, null)
+        public static Node Read(ReadParams p, DataType refDataType, int leftOperatorPrecedence = 0)
         {
-        }
+            var code = p.Code;
+            Node node = null;
+            var resetPos = p.Code.Position;
 
-        public override int Precedence => 0;
-
-        private static readonly string[] InOperatorDelimStrings = new string[] { ",", ")" };
-
-        public static ExpressionNode Read(ReadParams p, DataType refDataType, params string[] stopStrings)
-        {
-            return Read(p, refDataType, false, stopStrings);
-        }
-
-        private static bool CheckForStopStrings(ReadParams p, string[] stopStrings)
-        {
-            if (stopStrings != null)
+            if (code.ReadWord())
             {
-                foreach (var str in stopStrings)
+                node = ReadWord(p, refDataType, overrideWord: null, overrideWordSpan: null);
+            }
+            else if (code.ReadNumber())
+            {
+                node = new NumberNode(p.Statement, code.Span, code.Text);
+            }
+            else if (code.ReadStringLiteral())
+            {
+                if (code.Text.StartsWith("'"))
                 {
-                    if (str.IsWord())
+                    node = new CharLiteralNode(p.Statement, code.Span, CodeParser.StringLiteralToString(code.Text));
+                }
+                else
+                {
+                    node = new StringLiteralNode(p.Statement, code.Span, CodeParser.StringLiteralToString(code.Text));
+                }
+            }
+            else if (code.ReadExact('('))
+            {
+                var openBracketSpan = code.Span;
+                var dataType = DataType.TryParse(new DataType.ParseArgs(code, p.AppSettings)
+                {
+                    Flags = DataType.ParseFlag.Strict,
+                    DataTypeCallback = name =>
                     {
-                        if (p.Code.PeekExactWholeWord(str)) return true;
+                        return p.Statement.CodeAnalyzer.PreprocessorModel.DefinitionProvider.
+                            GetAny<DataTypeDefinition>(openBracketSpan.Start + p.FuncOffset, name).FirstOrDefault();
+                    },
+                    VariableCallback = name =>
+                    {
+                        return p.Statement.CodeAnalyzer.PreprocessorModel.DefinitionProvider.
+                            GetAny<VariableDefinition>(openBracketSpan.Start + p.FuncOffset, name).FirstOrDefault();
+                    },
+                    TableFieldCallback = (tableName, fieldName) =>
+                    {
+                        foreach (var tableDef in p.Statement.CodeAnalyzer.PreprocessorModel.DefinitionProvider.GetGlobalFromFile(tableName))
+                        {
+                            if (tableDef.AllowsChild)
+                            {
+                                foreach (var fieldDef in tableDef.GetChildDefinitions(fieldName, p.AppSettings))
+                                {
+                                    return new Definition[] { tableDef, fieldDef };
+                                }
+                            }
+                        }
+
+                        return null;
+                    },
+                    VisibleModel = false
+                });
+                if (dataType != null && code.ReadExact(')'))
+                {
+                    var castSpan = new CodeSpan(openBracketSpan.Start, code.Span.End);
+                    var castExp = Read(p, dataType, leftOperatorPrecedence);
+                    if (castExp != null)
+                    {
+                        node = new CastNode(p.Statement, castSpan, dataType, castExp);
                     }
                     else
                     {
-                        if (p.Code.PeekExact(str)) return true;
+                        return new UnknownNode(p.Statement, castSpan, $"({dataType.Source})");
                     }
+                }
+                else
+                {
+                    node = BracketsNode.Read(p, openBracketSpan, refDataType);
+                    if (node == null) return new UnknownNode(p.Statement, openBracketSpan, "(");
+                }
+            }
+            else if (code.ReadExact('$'))
+            {
+                var dollarSpan = code.Span;
+                if (code.ReadWord())
+                {
+                    var wordSpan = code.Span.Envelope(dollarSpan);
+                    node = ReadWord(p, refDataType: null, overrideWord: $"${code.Text}", overrideWordSpan: wordSpan);
+                }
+                else
+                {
+                    code.Position = resetPos;
                 }
             }
 
+            if (node != null)
+            {
+                while (!code.EndOfFile)
+                {
+                    if (TryReadOperator(p, refDataType, leftOperatorPrecedence, node, out var operatorNode))
+                    {
+                        node = operatorNode;
+                    }
+                    else break;
+                }
+            }
+
+            return node;
+        }
+
+        private static bool TryReadOperator(ReadParams p, DataType refDataType, int leftOperatorPrecedence,
+            Node leftNode, out Node operatorNodeOut)
+        {
+            var code = p.Code;
+            var resetPos = code.Position;
+
+            if (code.ReadExact("==", "!=", "<=", ">=", "*=", "/=", "%=", "+=", "-=",
+                "=", "*", "/", "%", "+", "-", "<", ">", "&&", "||") ||
+                code.ReadExactWholeWord("like", "and", "or"))
+            {
+                var opSpan = code.Span;
+                var opType = OperatorNode.OperatorTextToType(code.Text);
+                var precedence = OperatorNode.OperatorPrecedence(opType);
+                if (precedence >= leftOperatorPrecedence)
+                {
+                    var rightNode = Read(p, leftNode.DataType ?? refDataType, precedence);
+                    if (rightNode != null)
+                    {
+                        operatorNodeOut = new OperatorNode(p.Statement, leftNode.Span.Envelope(rightNode.Span), opType, leftNode, rightNode);
+                        return true;
+                    }
+                }
+            }
+            else if (code.ReadExact('?'))
+            {
+                var opSpan = code.Span;
+                if (OperatorNode.TernaryPrecedence >= leftOperatorPrecedence)
+                {
+                    var conditionalNode = ConditionalNode.Read(p, refDataType, opSpan, leftNode);
+                    if (conditionalNode != null)
+                    {
+                        operatorNodeOut = conditionalNode;
+                        return true;
+                    }
+                }
+            }
+            else if (code.ReadExactWholeWord("in"))
+            {
+                var inNode = InNode.Read(p, code.Span, leftNode);
+                if (inNode != null)
+                {
+                    operatorNodeOut = inNode;
+                    return true;
+                }
+            }
+
+            code.Position = resetPos;
+            operatorNodeOut = null;
             return false;
         }
 
-        public static ExpressionNode Read(ReadParams p, DataType refDataType, bool stayOnSameLine, params string[] stopStrings)
-        {
-            ExpressionNode exp = null;
-            var code = p.Code;
-            var lastPos = code.Position;
-            var parseDataType = refDataType;
-
-            while (!code.EndOfFile)
-            {
-                switch (code.PeekChar())
-                {
-                    case ';':
-                    case '{':
-                    case '}':
-                        return exp;
-                }
-
-                if (code.PeekExactWholeWord("onerror")) return exp;
-
-                if (CheckForStopStrings(p, stopStrings)) return exp;
-
-                if (!code.Read()) break;
-
-                if (stayOnSameLine)
-                {
-                    if (code.PositionsAreOnDifferentLines(lastPos, code.TokenStartPostion))
-                    {
-                        code.Position = code.TokenStartPostion;
-                        break;
-                    }
-                    lastPos = code.Position;
-                }
-
-                if (exp == null) exp = new ExpressionNode(p.Statement);
-
-                switch (code.Type)
-                {
-                    case CodeType.Number:
-                        exp.AddChild(new NumberNode(p.Statement, code.Span, code.Text));
-                        break;
-                    case CodeType.StringLiteral:
-                        if (code.Text.StartsWith("'"))
-                        {
-                            exp.AddChild(new CharLiteralNode(p.Statement, code.Span, CodeParser.StringLiteralToString(code.Text)));
-                        }
-                        else
-                        {
-                            exp.AddChild(new StringLiteralNode(p.Statement, code.Span, CodeParser.StringLiteralToString(code.Text)));
-                        }
-                        break;
-                    case CodeType.Word:
-                        exp.AddChild(exp.ReadWord(p, parseDataType));
-                        break;
-                    case CodeType.Operator:
-                        switch (code.Text)
-                        {
-                            case "(":
-                                {
-                                    var opText = code.Text;
-                                    var startPos = code.Span.Start;
-                                    var resumePos = code.Position;
-                                    var dataType = DataType.TryParse(new DataType.ParseArgs(code, p.AppSettings)
-                                    {
-                                        Flags = DataType.ParseFlag.Strict,
-                                        DataTypeCallback = name =>
-                                            {
-                                                return p.Statement.CodeAnalyzer.PreprocessorModel.DefinitionProvider.
-                                                    GetAny<DataTypeDefinition>(startPos + p.FuncOffset, name).FirstOrDefault();
-                                            },
-                                        VariableCallback = name =>
-                                            {
-                                                return p.Statement.CodeAnalyzer.PreprocessorModel.DefinitionProvider.
-                                                    GetAny<VariableDefinition>(startPos + p.FuncOffset, name).FirstOrDefault();
-                                            },
-                                        TableFieldCallback = (tableName, fieldName) =>
-                                            {
-                                                foreach (var tableDef in p.Statement.CodeAnalyzer.PreprocessorModel.DefinitionProvider.GetGlobalFromFile(tableName))
-                                                {
-                                                    if (tableDef.AllowsChild)
-                                                    {
-                                                        foreach (var fieldDef in tableDef.GetChildDefinitions(fieldName, p.AppSettings))
-                                                        {
-                                                            return new Definition[] { tableDef, fieldDef };
-                                                        }
-                                                    }
-                                                }
-
-                                                return null;
-                                            },
-                                        VisibleModel = false
-                                    });
-                                    if (dataType != null && code.ReadExact(')'))
-                                    {
-                                        // This is a cast
-                                        var span = new CodeSpan(startPos, code.Span.End);
-                                        exp.AddChild(new CastNode(p.Statement, span, dataType, ExpressionNode.Read(p, dataType, stayOnSameLine, stopStrings)));
-                                    }
-                                    else
-                                    {
-                                        code.Position = resumePos;
-                                        exp.AddChild(exp.ReadNestable(p, parseDataType, code.Span, opText, null));
-                                    }
-                                }
-                                break;
-                            //case "[":
-                            //	exp.AddChild(exp.ReadNestable(p, code.Span, code.Text, stopStrings));
-                            //	break;
-                            case "-":
-                                {
-                                    var lastNode = exp.LastChild;
-                                    if (lastNode == null || lastNode is OperatorNode) exp.AddChild(new OperatorNode(p.Statement, code.Span, code.Text, SpecialOperator.UnaryMinus));
-                                    else exp.AddChild(new OperatorNode(p.Statement, code.Span, code.Text, null));
-                                }
-                                break;
-                            case "?":
-                                parseDataType = refDataType;
-                                exp.AddChild(ConditionalNode.Read(p, parseDataType, code.Span, stopStrings));
-                                break;
-                            case "=":
-                                {
-                                    var rDataType = exp.NumChildren > 0 ? exp.LastChild.DataType : null;
-                                    exp.AddChild(new OperatorNode(p.Statement, code.Span, code.Text, null));
-                                    var rExp = ExpressionNode.Read(p, rDataType, stopStrings);
-                                    if (rExp != null) exp.AddChild(rExp);
-                                }
-                                break;
-                            case "==":
-                            case "!=":
-                            case "<":
-                            case "<=":
-                            case ">":
-                            case ">=":
-                            case "like":
-                                {
-                                    if (exp.NumChildren > 0)
-                                    {
-                                        var dt = exp.LastChild.DataType;
-                                        if (dt != null) parseDataType = dt;
-                                    }
-                                    exp.AddChild(new OperatorNode(p.Statement, code.Span, code.Text, null));
-                                }
-                                break;
-                            case "in":
-                                {
-                                    var leftDataType = exp.LastChild?.DataType;
-                                    exp.AddChild(new OperatorNode(p.Statement, code.Span, "in", null));
-
-                                    if (code.ReadExact('('))
-                                    {
-                                        var brackets = new BracketsNode(p.Statement, code.Span);
-                                        exp.AddChild(brackets);
-                                        var errorSpan = code.Span;
-                                        var expectComma = false;
-                                        var gotItem = false;
-                                        var delimStopStrings = stopStrings != null ? stopStrings.Concat(InOperatorDelimStrings).ToArray() : InOperatorDelimStrings;
-
-                                        while (!code.EndOfFile)
-                                        {
-                                            if (code.ReadExact(')'))
-                                            {
-                                                if (!expectComma && gotItem)
-                                                {
-                                                    if (exp.ErrorReported == null) exp.ReportError(errorSpan, CAError.CA10132);   // Expected expression.
-                                                }
-                                                break;
-                                            }
-
-                                            if (expectComma)
-                                            {
-                                                if (code.ReadExact(','))
-                                                {
-                                                    expectComma = false;
-                                                    errorSpan = code.Span;
-                                                }
-                                                else
-                                                {
-                                                    if (exp.ErrorReported == null) exp.ReportError(errorSpan, CAError.CA10131);  // Expected ','.
-                                                    break;
-                                                }
-                                            }
-                                            else
-                                            {
-                                                if (CheckForStopStrings(p, stopStrings)) return exp;
-                                                var itemExp = ExpressionNode.Read(p, leftDataType, delimStopStrings);
-                                                if (itemExp != null)
-                                                {
-                                                    brackets.AddChild(itemExp);
-                                                    errorSpan = exp.Span;
-                                                    gotItem = true;
-                                                    expectComma = true;
-                                                }
-                                                else
-                                                {
-                                                    if (exp.ErrorReported == null) exp.ReportError(errorSpan, CAError.CA10132);   // Expected expression.
-                                                    break;
-                                                }
-                                            }
-                                        }
-
-                                        if (!gotItem)
-                                        {
-                                            if (exp.ErrorReported == null) exp.ReportError(errorSpan, CAError.CA10133);    // 'in' operator requires at least 1 expression.
-                                        }
-                                    }
-                                }
-                                break;
-                            case "$":
-                                {
-                                    var dollarSpan = code.Span;
-                                    if (code.ReadWord())
-                                    {
-                                        var wordSpan = code.Span.Envelope(dollarSpan);
-                                        exp.AddChild(exp.ReadWord(p, parseDataType, overrideWord: $"${code.Text}", overrideWordSpan: wordSpan));
-                                    }
-                                    else
-                                    {
-                                        exp.AddChild(new OperatorNode(p.Statement, code.Span, code.Text, null));
-                                    }
-                                }
-                                break;
-                            default:
-                                exp.AddChild(new OperatorNode(p.Statement, code.Span, code.Text, null));
-                                break;
-                        }
-                        break;
-                    default:
-                        exp.ReportError(code.Span, CAError.CA10001, code.Text);	// Unknown '{0}'.
-                        exp.AddChild(new UnknownNode(p.Statement, code.Span, code.Text));
-                        break;
-                }
-            }
-
-            return exp;
-        }
-
-        private Node ReadWord(ReadParams p, DataType refDataType, string overrideWord = null, CodeSpan? overrideWordSpan = null)
+        private static Node ReadWord(ReadParams p, DataType refDataType, string overrideWord = null, CodeSpan? overrideWordSpan = null)
         {
             var code = p.Code;
             var word = overrideWord ?? code.Text;
@@ -331,7 +219,7 @@ namespace DK.CodeAnalysis.Nodes
                             }
                         }
 
-                        ReportError(combinedSpan, CAError.CA10003, combinedWord);	// Function '{0}' not found.
+                        p.CodeAnalyzer.ReportError(combinedSpan, CAError.CA10003, combinedWord);	// Function '{0}' not found.
                         return new UnknownNode(p.Statement, combinedSpan, combinedWord);
                     }
                     else // No opening bracket
@@ -349,13 +237,13 @@ namespace DK.CodeAnalysis.Nodes
                             }
                         }
 
-                        ReportError(combinedSpan, CAError.CA10001, combinedWord);	// Unknown '{0}'.
+                        p.CodeAnalyzer.ReportError(combinedSpan, CAError.CA10001, combinedWord);	// Unknown '{0}'.
                         return new UnknownNode(p.Statement, combinedSpan, combinedWord);
                     }
                 }
                 else // No word after dot
                 {
-                    ReportError(dotSpan, CAError.CA10004);	// Expected identifier to follow '.'
+                    p.CodeAnalyzer.ReportError(dotSpan, CAError.CA10004);	// Expected identifier to follow '.'
                     return new UnknownNode(p.Statement, wordSpan.Envelope(dotSpan), string.Concat(word, "."));
                 }
             }
@@ -384,12 +272,12 @@ namespace DK.CodeAnalysis.Nodes
                         }
                     }
 
-                    ReportError(combinedSpan, CAError.CA10001, combinedWord);	// Unknown '{0}'.
+                    p.CodeAnalyzer.ReportError(combinedSpan, CAError.CA10001, combinedWord);	// Unknown '{0}'.
                     return new UnknownNode(p.Statement, combinedSpan, combinedWord);
                 }
                 else // No word after double-dollar
                 {
-                    ReportError(dollarSpan, CAError.CA10005);	// Expected identifier to follow '$'.
+                    p.CodeAnalyzer.ReportError(dollarSpan, CAError.CA10005);	// Expected identifier to follow '$'.
                     return new UnknownNode(p.Statement, wordSpan.Envelope(dollarSpan), string.Concat(word, "$$"));
                 }
             }
@@ -421,7 +309,7 @@ namespace DK.CodeAnalysis.Nodes
                             }
                         }
 
-                        ReportError(combinedSpan, CAError.CA10003, combinedWord);	// Function '{0}' not found.
+                        p.CodeAnalyzer.ReportError(combinedSpan, CAError.CA10003, combinedWord);	// Function '{0}' not found.
                         return new UnknownNode(p.Statement, combinedSpan, combinedWord);
                     }
                     else // No opening bracket
@@ -439,13 +327,13 @@ namespace DK.CodeAnalysis.Nodes
                             }
                         }
 
-                        ReportError(combinedSpan, CAError.CA10001, combinedWord);	// Unknown '{0}'.
+                        p.CodeAnalyzer.ReportError(combinedSpan, CAError.CA10001, combinedWord);	// Unknown '{0}'.
                         return new UnknownNode(p.Statement, combinedSpan, combinedWord);
                     }
                 }
                 else // No word after dollar
                 {
-                    ReportError(dollarSpan, CAError.CA10005);	// Expected identifier to follow '$'.
+                    p.CodeAnalyzer.ReportError(dollarSpan, CAError.CA10005);	// Expected identifier to follow '$'.
                     return new UnknownNode(p.Statement, wordSpan.Envelope(dollarSpan), string.Concat(word, "$"));
                 }
             }
@@ -455,29 +343,29 @@ namespace DK.CodeAnalysis.Nodes
             {
                 // Read a list of array accessors with a single expression
                 var arrayResetPos = code.TokenStartPostion;
-                var arrayExps = new List<ExpressionNode[]>();
+                var arrayExps = new List<Node[]>();
                 var lastArrayStartPos = code.Position;
                 while (!code.EndOfFile)
                 {
                     lastArrayStartPos = code.Position;
                     if (code.ReadExact('['))
                     {
-                        var exp1 = ExpressionNode.Read(p, null, "]", ",");
+                        var exp1 = ExpressionNode.Read(p, refDataType: null);
                         if (exp1 != null)
                         {
                             if (code.ReadExact(']'))
                             {
                                 // Brackets with single expression
-                                arrayExps.Add(new ExpressionNode[] { exp1 });
+                                arrayExps.Add(new Node[] { exp1 });
                             }
                             else if (code.ReadExact(','))
                             {
-                                var exp2 = ExpressionNode.Read(p, null, "]");
+                                var exp2 = ExpressionNode.Read(p, null);
                                 if (exp2 != null)
                                 {
                                     if (code.ReadExact(']'))
                                     {
-                                        arrayExps.Add(new ExpressionNode[] { exp1, exp2 });
+                                        arrayExps.Add(new Node[] { exp1, exp2 });
                                     }
                                     else
                                     {
@@ -593,40 +481,7 @@ namespace DK.CodeAnalysis.Nodes
             //return new IdentifierNode(p.Statement, wordSpan, word, null);
         }
 
-        private Node ReadNestable(ReadParams p, DataType refDataType, CodeSpan openSpan, string text, string[] stopStrings)
-        {
-            GroupNode groupNode;
-            string endText;
-            switch (text)
-            {
-                case "(":
-                    groupNode = new BracketsNode(p.Statement, openSpan);
-                    endText = ")";
-                    break;
-                default:
-                    throw new ArgumentOutOfRangeException("text");
-            }
-
-            if (stopStrings == null) stopStrings = new string[] { endText };
-            else stopStrings = stopStrings.Concat(new string[] { endText }).ToArray();
-
-            while (!p.Code.EndOfFile)
-            {
-                if (p.Code.ReadExact(endText))
-                {
-                    groupNode.Span = groupNode.Span.Envelope(p.Code.Span);
-                    break;
-                }
-
-                var exp = ExpressionNode.Read(p, refDataType, stopStrings);
-                if (exp == null) break;
-                groupNode.AddChild(exp);
-            }
-
-            return groupNode;
-        }
-
-        private IdentifierNode TryReadSubscript(ReadParams p, CodeSpan nameSpan, string name, Definition def)
+        private static IdentifierNode TryReadSubscript(ReadParams p, CodeSpan nameSpan, string name, Definition def)
         {
             if (def.DataType == null || def.DataType.AllowsSubscript == false)
             {
@@ -638,25 +493,25 @@ namespace DK.CodeAnalysis.Nodes
 
             if (code.ReadExact('['))
             {
-                var exp1 = ExpressionNode.Read(p, null, "]", ",");
+                var exp1 = ExpressionNode.Read(p, null);
                 if (exp1 != null)
                 {
                     if (code.ReadExact(','))
                     {
-                        var exp2 = ExpressionNode.Read(p, null, "]", ",");
+                        var exp2 = ExpressionNode.Read(p, null);
                         if (exp2 != null)
                         {
                             if (code.ReadExact(']'))
                             {
                                 return new IdentifierNode(p.Statement, nameSpan, name, def,
-                                    subscriptAccessExps: new ExpressionNode[] { exp1, exp2 });
+                                    subscriptAccessExps: new Node[] { exp1, exp2 });
                             }
                         }
                     }
                     else if (code.ReadExact(']'))
                     {
                         return new IdentifierNode(p.Statement, nameSpan, name, def,
-                            subscriptAccessExps: new ExpressionNode[] { exp1 });
+                            subscriptAccessExps: new Node[] { exp1 });
                     }
                 }
             }

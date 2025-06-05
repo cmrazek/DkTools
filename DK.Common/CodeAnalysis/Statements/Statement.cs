@@ -75,20 +75,21 @@ namespace DK.CodeAnalysis.Statements
 			var stmt = new SimpleStatement(p.CodeAnalyzer);
 			p = p.Clone(stmt);
 
-			while (!p.Code.EndOfFile)
+			var exp = ExpressionNode.Read(p, null);
+			if (exp != null)
 			{
-				if (p.Code.ReadExact(';')) return stmt;
+				stmt.AddNode(exp);
 
-				if (p.Code.ReadExactWholeWord("onerror"))
-				{
-					stmt.ProcessOnError(p, p.Code.Span);
-					return stmt;
-				}
+                if (p.Code.ReadExactWholeWord("onerror"))
+                {
+                    stmt.ProcessOnError(p, p.Code.Span);
+                }
 
-				var node = ExpressionNode.Read(p, null);
-				if (node == null) break;
-				stmt.AddNode(node);
-			}
+                if (!p.Code.ReadExact(';'))
+                {
+                    p.CodeAnalyzer.ReportError(exp.Span.Last(3), CAError.CA10015);  // Expected ';'.
+                }
+            }
 
 			if (stmt.NumChildren == 0) return null;
 			return stmt;

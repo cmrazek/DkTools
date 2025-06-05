@@ -6,34 +6,32 @@ using System;
 
 namespace DK.CodeAnalysis.Nodes
 {
-	class CastNode : GroupNode
-	{
-		private DataType _castDataType;
+    class CastNode : Node
+    {
+        private DataType _castDataType;
+        private Node _expression;
 
-		public CastNode(Statement stmt, CodeSpan span, DataType dataType, ExpressionNode exp)
-			: base(stmt, dataType, span)
-		{
-			_castDataType = dataType ?? throw new ArgumentNullException(nameof(dataType));
-			if (exp != null) AddChild(exp);
-		}
+        public CastNode(Statement stmt, CodeSpan span, DataType dataType, Node expression)
+            : base(stmt, dataType, span)
+        {
+            _castDataType = dataType ?? throw new ArgumentNullException(nameof(dataType));
+            _expression = expression;
+        }
 
-		public override string ToString() => $"(cast to {DataType.ToCodeString()})";
+        public override string ToString() => $"(cast to {DataType.ToCodeString()})";
 
-		public override void Execute(CAScope scope)
-		{
-			base.Execute(scope);
-		}
+        public override void Execute(CAScope scope) { }
 
-		public override Value ReadValue(CAScope scope)
-		{
-			var castScope = scope.Clone();
-			var value = base.ReadValue(castScope);
-			var dataTypeValue = Value.CreateUnknownFromDataType(_castDataType);
-			value = dataTypeValue.Convert(scope, Span, value);
-			scope.Merge(castScope);
-			return value;
-		}
+        public override Value ReadValue(CAScope scope)
+        {
+            var castScope = scope.Clone();
+            var value = _expression.ReadValue(castScope);
+            var dataTypeValue = Value.CreateUnknownFromDataType(_castDataType);
+            value = dataTypeValue.Convert(scope, Span, value);
+            scope.Merge(castScope);
+            return value;
+        }
 
-		public override DataType DataType => _castDataType;
-	}
+        public override DataType DataType => _castDataType;
+    }
 }

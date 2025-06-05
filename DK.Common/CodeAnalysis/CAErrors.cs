@@ -41,6 +41,9 @@ namespace DK.CodeAnalysis
         [ErrorMessage("Operator '{0}' expects value on right.")]
         CA10008,
 
+        [ErrorMessage("Expected expression.")]  // In brackets
+        CA10009,
+
         #region Operator Simplification (0100-0109)
         [ErrorMessage("Operator '{0}' expects assignable value on left.")]
         CA10100,

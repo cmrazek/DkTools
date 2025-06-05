@@ -11,14 +11,14 @@ namespace DK.CodeAnalysis.Nodes
 	class IdentifierNode : TextNode
 	{
 		private Definition _def;
-		private ExpressionNode[] _arrayAccessExps;
-		private ExpressionNode[] _subscriptAccessExps;
+		private Node[] _arrayAccessExps;
+		private Node[] _subscriptAccessExps;
 		private DataType _dataType;
 		private bool _reportable;
 
 		public IdentifierNode(Statement stmt, CodeSpan span, string name, Definition def,
-			IEnumerable<ExpressionNode> arrayAccessExps = null,
-			IEnumerable<ExpressionNode> subscriptAccessExps = null,
+			IEnumerable<Node> arrayAccessExps = null,
+			IEnumerable<Node> subscriptAccessExps = null,
 			bool reportable = true)
 			: base(stmt, def.DataType, span, name)
 		{
