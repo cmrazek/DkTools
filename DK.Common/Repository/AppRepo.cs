@@ -515,16 +515,10 @@ namespace DK.Repository
 
             switch (model.FileContext)
             {
-                case FileContext.Function:
-                    {
-                        var fileName = PathUtil.GetFileNameWithoutExtension(model.FilePath);
-                        funcs.AddRange(model.DefinitionProvider.GetGlobalFromFile<FunctionDefinition>()
-                            .Where(x => string.Equals(fileName, x.Name, StringComparison.OrdinalIgnoreCase) && !x.Extern));
-                    }
-                    break;
                 case FileContext.ClientClass:
                 case FileContext.ServerClass:
                 case FileContext.NeutralClass:
+                case FileContext.Function:
                     funcs.AddRange(model.DefinitionProvider.GetGlobalFromFile<FunctionDefinition>().Where(x => !x.Extern));
                     break;
             }
@@ -1170,10 +1164,13 @@ namespace DK.Repository
                     {
                         if (Func_GetNameId(func) == funcNameId)
                         {
+                            var sig = FunctionSignature.ParseFromDb(Func_GetSignature(func), _appSettings);
+
                             results.Add(new FunctionDefinition(
-                                signature: FunctionSignature.ParseFromDb(Func_GetSignature(func), _appSettings),
+                                signature: sig,
                                 filePos: Func_GetFilePosition(func),
-                                hasVariableArgumentCount: false
+                                hasVariableArgumentCount: false,
+                                notGlobal: sig.NotGlobal
                             ));
                         }
                         return true;
@@ -1206,7 +1203,8 @@ namespace DK.Repository
                         var funcDef = new FunctionDefinition(
                             signature: sig,
                             filePos: Func_GetFilePosition(func),
-                            hasVariableArgumentCount: false);
+                            hasVariableArgumentCount: false,
+                            notGlobal: sig.NotGlobal);
                         classDef.AddFunction(funcDef);
                         return true;
                     });
@@ -1221,7 +1219,8 @@ namespace DK.Repository
                         var funcDef = new FunctionDefinition(
                             signature: sig,
                             filePos: Func_GetFilePosition(func),
-                            hasVariableArgumentCount: false);
+                            hasVariableArgumentCount: false,
+                            notGlobal: sig.NotGlobal);
                         results.Add(funcDef);
                         return true;
                     });

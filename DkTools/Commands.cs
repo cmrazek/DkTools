@@ -13,6 +13,7 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 using DkTools.ErrorTagging;
+using DK.Modeling;
 
 namespace DkTools
 {
@@ -933,7 +934,8 @@ namespace DkTools
 
                     var fileStore = FileStoreHelper.GetOrCreateForTextBuffer(view.TextBuffer);
                     if (fileStore == null) return;
-                    var model = fileStore.CreatePreprocessedModelSync(appSettings, fileName, view.TextSnapshot, visible: false, "Code Analysis", CancellationToken.None);
+                    var model = fileStore.CreatePreprocessedModelSync(appSettings, fileName, view.TextSnapshot,
+                        visible: false, "Code Analysis", CodeScanMode.CodeAnalysis, CancellationToken.None);
 
                     var pane = Shell.CreateOutputPane(GuidList.guidCodeAnalysisPane, "DK Code Analysis");
                     pane.Clear();

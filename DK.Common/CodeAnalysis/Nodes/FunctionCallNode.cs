@@ -175,7 +175,7 @@ namespace DK.CodeAnalysis.Nodes
             FunctionDefinition funcDef = null;
 
             funcDefs = (from d in p.Statement.CodeAnalyzer.PreprocessorModel.DefinitionProvider.GetAny(funcNameSpan.Start, funcName)
-                            where d.ArgumentsRequired && !d.RequiresParent(p.CodeAnalyzer.CodeModel.ClassName)
+                            where d.ArgumentsRequired && !d.RequiresParent(p.CodeAnalyzer.CodeModel.ClassName) && !d.NotGlobal
                             select d).ToList();
             foreach (var def in funcDefs)
             {

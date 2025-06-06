@@ -146,5 +146,7 @@ namespace DK.Definitions
         public virtual int SelectionOrder => 0;
 
         public virtual bool CaseSensitive => true;
+
+        public virtual bool NotGlobal => false;
     }
 }

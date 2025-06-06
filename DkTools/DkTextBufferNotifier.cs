@@ -79,56 +79,57 @@ namespace DkTools
         private void ModelRebuildDeferrer_Idle(object sender, BackgroundDeferrer.IdleEventArgs e)
         {
             ThreadHelper.JoinableTaskFactory.Run(async () =>
-			{
-				await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
+            {
+                await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
 
                 try
                 {
-					var fileStore = FileStoreHelper.GetOrCreateForTextBuffer(_textBuffer);
-					if (fileStore != null)
+                    var fileStore = FileStoreHelper.GetOrCreateForTextBuffer(_textBuffer);
+                    if (fileStore != null)
                     {
-						var appSettings = ProbeToolsPackage.Instance.App.Settings;
-						var fileName = VsTextUtil.TryGetDocumentFileName(_textBuffer);
-						var snapshot = _textBuffer.CurrentSnapshot;
+                        var appSettings = ProbeToolsPackage.Instance.App.Settings;
+                        var fileName = VsTextUtil.TryGetDocumentFileName(_textBuffer);
+                        var snapshot = _textBuffer.CurrentSnapshot;
 
-						_modelRebuildCancellationSource?.Cancel();
-						_modelRebuildCancellationSource = new CancellationTokenSource();
-						var cancel = _modelRebuildCancellationSource.Token;
+                        _modelRebuildCancellationSource?.Cancel();
+                        _modelRebuildCancellationSource = new CancellationTokenSource();
+                        var cancel = _modelRebuildCancellationSource.Token;
 
-						ThreadPool.QueueUserWorkItem(state =>
+                        ThreadPool.QueueUserWorkItem(state =>
                         {
                             try
                             {
-								cancel.ThrowIfCancellationRequested();
+                                cancel.ThrowIfCancellationRequested();
 
-								var model = fileStore.GetCurrentModelSync(
-									appSettings: appSettings,
-									fileName: fileName,
-									snapshot: snapshot,
-									reason: "Model rebuild",
-									cancel: cancel);
+                                var model = fileStore.GetCurrentModelSync(
+                                    appSettings: appSettings,
+                                    fileName: fileName,
+                                    snapshot: snapshot,
+                                    reason: "Model rebuild",
+                                    scanMode: CodeScanMode.Modeling,
+                                    cancel: cancel);
                                 fileStore.Model = model;
 
-								cancel.ThrowIfCancellationRequested();
+                                cancel.ThrowIfCancellationRequested();
 
                                 NewModelAvailable?.Invoke(this, new NewModelAvailableEventArgs(model));
                             }
-							catch (OperationCanceledException ex)
+                            catch (OperationCanceledException ex)
                             {
-								ProbeToolsPackage.Log.Debug(ex);
+                                ProbeToolsPackage.Log.Debug(ex);
                             }
                             catch (Exception ex)
                             {
-								ProbeToolsPackage.Log.Error(ex);
+                                ProbeToolsPackage.Log.Error(ex);
                             }
                         });
                     }
                 }
                 catch (Exception ex)
                 {
-					ProbeToolsPackage.Log.Error(ex);
+                    ProbeToolsPackage.Log.Error(ex);
                 }
-			});
+            });
         }
 
         private void GlobalEvents_RefreshDocumentRequired(object sender, RefreshDocumentEventArgs e)

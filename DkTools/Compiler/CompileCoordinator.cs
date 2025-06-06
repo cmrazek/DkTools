@@ -275,7 +275,8 @@ namespace DkTools.Compiler
             await ProbeToolsPackage.Instance.SetStatusTextAsync($"Code Analysis: {_fileName} (running)");
 
             var appSettings = ProbeToolsPackage.Instance.App.Settings;
-            var model = fileStore.GetMostRecentModelSync(appSettings, _fileName, _textBuffer.CurrentSnapshot, "Code Analysis", _cancel.Token);
+            var model = fileStore.GetMostRecentModelSync(appSettings, _fileName, _textBuffer.CurrentSnapshot,
+                "Code Analysis", DK.Modeling.CodeScanMode.CodeAnalysis, _cancel.Token);
 
             if (_cancel.IsCancellationRequested) return;
             
@@ -285,7 +286,8 @@ namespace DkTools.Compiler
                 snapshot: _textBuffer.CurrentSnapshot,
                 visible: false,
                 cancel: _cancel.Token,
-                reason: "Background Code Analysis");
+                reason: "Background Code Analysis",
+                scanMode: DK.Modeling.CodeScanMode.CodeAnalysis);
 
             if (_cancel.IsCancellationRequested) return;
 

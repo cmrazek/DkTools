@@ -206,7 +206,7 @@ namespace DK.CodeAnalysis.Nodes
                         var openBracketSpan = code.Span;
 
                         foreach (var parentDef in (from d in p.CodeAnalyzer.PreprocessorModel.DefinitionProvider.GetAny(code.Position + p.FuncOffset, word)
-                                                   where d.AllowsChild
+                                                   where d.AllowsChild && !d.NotGlobal
                                                    select d))
                         {
                             var childDefs = parentDef.GetChildDefinitions(p.AppSettings)
@@ -296,7 +296,7 @@ namespace DK.CodeAnalysis.Nodes
                         var openBracketSpan = code.Span;
 
                         foreach (var parentDef in (from d in p.CodeAnalyzer.PreprocessorModel.DefinitionProvider.GetAny(code.Position + p.FuncOffset, word)
-                                                   where d.AllowsDollarChild
+                                                   where d.AllowsDollarChild && !d.NotGlobal
                                                    select d))
                         {
                             var childDefs = parentDef.GetDollarChildDefinitions(p.AppSettings)
@@ -408,22 +408,24 @@ namespace DK.CodeAnalysis.Nodes
                         if (def is VariableDefinition)
                         {
                             var vardef = def as VariableDefinition;
-                            var arrayLengths = vardef.ArrayLengths;
-                            if (arrayLengths == null) continue;
+                            var varArrayLengths = vardef.ArrayLengths;
+                            if (varArrayLengths == null) continue;
 
-                            if (arrayLengths.Length == arrayExps.Count && arrayExps.All(x => x.Length == 1))
-                            {
-                                return new IdentifierNode(p.Statement, wordSpan, word, def, (from e in arrayExps select e[0]));
-                            }
-                            else if (arrayLengths.Length == arrayExps.Count - 1 &&
+                            if (varArrayLengths.Length == arrayExps.Count - 1 &&
                                 vardef.DataType != null &&
                                 vardef.DataType.AllowsSubscript &&
-                                arrayExps.Take(arrayLengths.Length).All(x => x.Length == 1))
+                                arrayExps.Take(varArrayLengths.Length).All(x => x.Length == 1))
                             {
                                 // Last array accessor is a string subscript
                                 return new IdentifierNode(p.Statement, wordSpan, word, def,
-                                    (from e in arrayExps.Take(arrayExps.Count - 1) select e[0]),
-                                    arrayExps.Last());
+                                    arrayAccessExps: arrayExps.Take(arrayExps.Count - 1).Select(x => x[0]).ToArray(),
+                                    subscriptAccessExps: arrayExps.Last());
+                            }
+                            else if (arrayExps.All(x => x.Length == 1))
+                            {
+                                return new IdentifierNode(p.Statement, wordSpan, word, def,
+                                    arrayAccessExps: arrayExps.Select(x => x[0]).ToArray(),
+                                    subscriptAccessExps: null);
                             }
                         }
                     }

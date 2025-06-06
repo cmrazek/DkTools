@@ -147,6 +147,7 @@
     <Compile Include="Diagnostics\ILoggerExtensions.cs" />
     <Compile Include="Diagnostics\LogLevel.cs" />
     <Compile Include="Diagnostics\Output.cs" />
+    <Compile Include="Modeling\CodeScanMode.cs" />
     <Compile Include="Modeling\SignatureDocumentor.cs" />
     <Compile Include="Modeling\Tokens\DollarToken.cs" />
     <Compile Include="Modeling\Tokens\DoubleDollarToken.cs" />

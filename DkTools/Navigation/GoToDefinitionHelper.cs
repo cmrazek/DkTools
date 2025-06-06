@@ -1,6 +1,7 @@
 ﻿using DK;
 using DK.Code;
 using DK.Definitions;
+using DK.Modeling;
 using DK.Modeling.Tokens;
 using DkTools.CodeModeling;
 using Microsoft.VisualStudio.Shell;
@@ -155,7 +156,8 @@ namespace DkTools.Navigation
 
 				var appSettings = ProbeToolsPackage.Instance.App.Settings;
 				var fileName = VsTextUtil.TryGetDocumentFileName(textView.TextBuffer);
-				var fullModel = fileStore.CreatePreprocessedModelSync(appSettings, fileName, snapPt.Snapshot, visible: false, "Find Local References", cancel);
+				var fullModel = fileStore.CreatePreprocessedModelSync(appSettings, fileName, snapPt.Snapshot,
+					visible: false, "Find Local References", CodeScanMode.Modeling, cancel);
 				var fullModelPos = fullModel.PreprocessorModel.Source.PrimaryFilePositionToSource(fullModel.AdjustPosition(snapPt));
 
 				var fullToken = fullModel.File.FindDownward(fullModelPos, t => t.SourceDefinition != null).FirstOrDefault();
