@@ -322,6 +322,11 @@ namespace DK.CodeAnalysis
         [ErrorMessage("Expected ','.")]
         CA10172,
         #endregion
+
+        #region Arrays (10180-10189)
+        [ErrorMessage("Expected {0} array indexers but got {1}.")]
+        CA10180,
+        #endregion
     }
 
     [AttributeUsage(AttributeTargets.Field, AllowMultiple = false)]

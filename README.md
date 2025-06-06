@@ -22,6 +22,7 @@ Visual Studio Extension for WBDK
 - Code analysis now detects more issues.
 - When Run FEC Errors is run, DK files are automatically saved first.
 - Functions in .f files that don't match the file name are no longer considered global.
+- Fix infinite loop in code analysis when the wrong number of array indexers are used on a variable.
 
 **Version 1.6.10 Changes:**
 - Fixed bug in code analysis reporting CA0016 (unreachable code) after a for/while loop with a return statement in it.

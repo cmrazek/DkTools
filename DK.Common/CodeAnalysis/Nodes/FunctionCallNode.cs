@@ -89,6 +89,7 @@ namespace DK.CodeAnalysis.Nodes
             var argDefs = funcDef.Arguments.ToArray();
             var closePos = -1;
             var lastSpan = openBracketSpan;
+            int lastPos = 0;
 
             errorsFound = null;
 
@@ -100,6 +101,8 @@ namespace DK.CodeAnalysis.Nodes
             }
             else
             {
+                lastPos = -1;
+
                 while (!code.EndOfFile)
                 {
                     if (commaExpected)
@@ -123,6 +126,14 @@ namespace DK.CodeAnalysis.Nodes
                     }
                     else
                     {
+                        if (lastPos == code.Position)
+                        {
+                            // Prevent infinite loop.
+                            code.Position = resetPos;
+                            return null;
+                        }
+                        lastPos = code.Position;
+
                         var argDef = argDefs != null && argIndex < argDefs.Length ? argDefs[argIndex] : null;
 
                         var arg = ExpressionNode.Read(p, argDef != null ? argDef.DataType : null);
