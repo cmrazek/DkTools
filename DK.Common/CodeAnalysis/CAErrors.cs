@@ -70,6 +70,9 @@ namespace DK.CodeAnalysis
         [ErrorMessage("Variable '{0}' is not used.")]
         [Warning]
         CA10112,
+
+        [ErrorMessage("Variable '{0}' has already been declared.")]
+        CA10113,
         #endregion
 
         [ErrorMessage("Expected value after 'return'.")]
@@ -326,6 +329,14 @@ namespace DK.CodeAnalysis
         #region Arrays (10180-10189)
         [ErrorMessage("Expected {0} array indexers but got {1}.")]
         CA10180,
+        #endregion
+
+        #region Function Definitions (10190-10199)
+        [ErrorMessage("Function '{0}' has already been defined.")]
+        CA10190,
+
+        [ErrorMessage("Argument '{0}' has already been declared.")]
+        CA10191,
         #endregion
     }
 

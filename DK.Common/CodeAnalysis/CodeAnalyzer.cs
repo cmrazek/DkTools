@@ -64,6 +64,16 @@ namespace DK.CodeAnalysis
                 _cancel.ThrowIfCancellationRequested();
 
                 AnalyzeFunction(func);
+
+                var dupeFunc = _prepModel.LocalFunctions
+                    .Where(x => x.Definition is FunctionDefinition
+                        && x.Definition.Name == func.Definition.Name
+                        && x.NameSpan.Start < func.NameSpan.Start)
+                    .FirstOrDefault();
+                if (dupeFunc != null)
+                {
+                    ReportErrorAbsolute(func.NameSpan, CAError.CA10190, log:true, func.Definition.Name);  // Function '{0}' has already been defined.
+                }
             }
 
             _app.Log.Debug("Completed code analysis (elapsed: {0} msec)", DateTime.Now.Subtract(startTime).TotalMilliseconds);
@@ -104,6 +114,16 @@ namespace DK.CodeAnalysis
                     _scope.AddVariable(new Variable(arg.Definition, arg.Definition.Name, arg.Definition.DataType,
                         Value.CreateUnknownFromDataType(arg.Definition.DataType), true, TriState.True, true, arg.RawSpan));
                 }
+
+                var dupeArg = func.Arguments
+                    .Where(x => !string.IsNullOrEmpty(x.Definition.Name)
+                        && x.Definition.Name == arg.Definition.Name
+                        && x.RawSpan.Start < arg.RawSpan.Start)
+                    .FirstOrDefault();
+                if (dupeArg != null)
+                {
+                    ReportErrorAbsolute(arg.RawSpan, CAError.CA10191, log: true, arg.Definition.Name); // Argument '{0}' has already been declared.
+                }
             }
 
             foreach (var v in func.Variables)
@@ -117,6 +137,14 @@ namespace DK.CodeAnalysis
                     isInitialized: TriStateUtil.Create(v.Definition.DataType.IsVariableInitializedAutomatically),
                     isUsed: false,
                     rawSpan: v.RawSpan));
+
+                var dupeVar = func.Variables
+                    .Where(x => x.Definition.Name == v.Definition.Name && x.RawSpan.Start < v.RawSpan.Start)
+                    .FirstOrDefault();
+                if (dupeVar != null)
+                {
+                    ReportErrorAbsolute(v.RawSpan, CAError.CA10113, log: true, v.Definition.Name); // Variable '{0}' has already been declared.
+                }
             }
 
             foreach (var v in _prepModel.GlobalVariables)
