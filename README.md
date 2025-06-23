@@ -24,6 +24,7 @@ Visual Studio Extension for WBDK
 - Functions in .f files that don't match the file name are no longer considered global.
 - Fix infinite loop in code analysis when the wrong number of array indexers are used on a variable.
 - Fixed function developer descriptions containing backslashes not getting escaped properly.
+- Fixed FEC to Visual C not opening the .c file after.
 
 **Version 1.6.10 Changes:**
 - Fixed bug in code analysis reporting CA0016 (unreachable code) after a for/while loop with a return statement in it.

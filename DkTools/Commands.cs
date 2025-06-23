@@ -389,7 +389,7 @@ namespace DkTools
 
                     using (var pr = new ProcessRunner())
                     {
-                        var args = string.Concat("\"", baseFileName, "\"");
+                        var args = string.Concat(" /f \"", baseFileName, "\"");
 
                         var output = new StringOutput();
 
