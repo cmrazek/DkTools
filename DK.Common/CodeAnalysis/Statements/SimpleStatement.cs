@@ -1,4 +1,5 @@
-﻿using DK.CodeAnalysis.Nodes;
+﻿using DK.Code;
+using DK.CodeAnalysis.Nodes;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -7,6 +8,7 @@ namespace DK.CodeAnalysis.Statements
     class SimpleStatement : Statement
     {
         private List<Node> _expressions = new List<Node>();
+        private CodeSpan _headingSpan;
 
         public SimpleStatement(CodeAnalyzer ca)
             : base(ca)
@@ -47,12 +49,18 @@ namespace DK.CodeAnalysis.Statements
                     {
                         if (scope.Options.HighlightReportOutput)
                         {
-                            ReportError(exp.Span, CAError.CA10070);    // This expression writes to the report stream.
+                            ReportError(_headingSpan.IsEmpty ? exp.Span : exp.Span.Envelope(_headingSpan), CAError.CA10070);    // This expression writes to the report stream.
                         }
                     }
                     scope.Merge(readScope);
                 }
             }
+        }
+
+        public void AddColumnHeading(CodeSpan headingSpan)
+        {
+            _headingSpan = headingSpan;
+            Span = Span.Envelope(headingSpan);
         }
     }
 }
