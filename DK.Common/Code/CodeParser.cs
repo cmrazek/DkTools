@@ -669,6 +669,9 @@ namespace DK.Code
                     case '\'':
                         sb.Append("\\'");
                         break;
+                    case '\\':
+                        sb.Append("\\\\");
+                        break;
                     default:
                         if (ch >= ' ' && ch <= 0x7f)
                         {
