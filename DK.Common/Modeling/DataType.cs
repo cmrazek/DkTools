@@ -204,7 +204,7 @@ namespace DK.Modeling
                 case 2:
                     if (source == null)
                     {
-                        if (signed) source = new ProbeClassifiedString
+                        if (!signed) source = new ProbeClassifiedString
                         (
                             new ProbeClassifiedRun(ProbeClassifierType.DataType, "unsigned"),
                             ProbeClassifiedRun.Space,
@@ -216,7 +216,7 @@ namespace DK.Modeling
                 default:
                     if (source == null)
                     {
-                        if (signed) source = new ProbeClassifiedString
+                        if (!signed) source = new ProbeClassifiedString
                         (
                             new ProbeClassifiedRun(ProbeClassifierType.DataType, "unsigned"),
                             ProbeClassifiedRun.Space,
