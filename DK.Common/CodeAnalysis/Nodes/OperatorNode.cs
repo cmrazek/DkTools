@@ -465,6 +465,12 @@ namespace DK.CodeAnalysis.Nodes
 
                 _leftNode.WriteValue(scope, result);
                 _leftNode.IsReportable = false;
+
+                if (scope.InWhereClause)
+                {
+                    ReportError(Span, CAError.CA10073); // Assignment in select where clause.
+                }
+
                 return result;
             }
             else

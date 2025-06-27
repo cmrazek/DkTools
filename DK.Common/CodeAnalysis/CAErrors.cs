@@ -162,6 +162,9 @@ namespace DK.CodeAnalysis
 
         [ErrorMessage("Expected number after 'top'.")]
         CA10072,
+
+        [ErrorMessage("Assignment in select where clause.")]
+        CA10073,
         #endregion
 
         #region Conditional Statements
@@ -272,7 +275,7 @@ namespace DK.CodeAnalysis
         CA10070,
         #endregion
 
-        // Last CA0072
+        // Last CA0073
 
         #region Function Calls (10120-10129)
         /// <summary>

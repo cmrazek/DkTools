@@ -320,7 +320,10 @@ namespace DK.CodeAnalysis.Statements
 
 			if (_whereExp != null)
 			{
-				_whereExp.ReadValue(scope);
+				var whereScope = scope.Clone();
+				whereScope.InWhereClause = true;
+				_whereExp.ReadValue(whereScope);
+				scope.Merge(whereScope);
 			}
 
 			if (_filterByExp != null)

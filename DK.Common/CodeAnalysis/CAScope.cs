@@ -22,7 +22,8 @@ namespace DK.CodeAnalysis
 		private bool _canBreak;
 		private bool _canContinue;
 		private bool _suppressInitializedCheck;
-		private bool _removeHeaderString;			// Does not inherit on clone
+		private bool _removeHeaderString;           // Does not inherit on clone
+		private bool _inWhereClause;
 
 		public CAScope(CodeAnalyzer ca, FunctionDefinition funcDef, int funcOffset, DkAppSettings appSettings)
 		{
@@ -42,7 +43,8 @@ namespace DK.CodeAnalysis
 				_canBreak = _canBreak,
 				_canContinue = _canContinue,
 				_suppressInitializedCheck = _suppressInitializedCheck,
-				_unreachableCodeReported = _unreachableCodeReported
+				_unreachableCodeReported = _unreachableCodeReported,
+				_inWhereClause = _inWhereClause
 			};
 
 			if (canBreak.HasValue) scope._canBreak = canBreak.Value;
@@ -270,5 +272,11 @@ namespace DK.CodeAnalysis
 		}
 
 		public CAOptions Options => _ca.Options;
+
+		public bool InWhereClause
+		{
+			get => _inWhereClause;
+			set => _inWhereClause = value;
+		}
 	}
 }
