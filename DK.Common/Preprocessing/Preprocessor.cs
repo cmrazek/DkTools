@@ -90,7 +90,7 @@ namespace DK.Preprocessing
 
                 if (str[0] == '#')
                 {
-                    ProcessDirective(p, str);
+                    ProcessDirective(p, str, rdr.FilePosition);
                     continue;
                 }
 
@@ -146,7 +146,7 @@ namespace DK.Preprocessing
             return p.result;
         }
 
-        private void ProcessDirective(PreprocessorParams p, string directiveName)
+        private void ProcessDirective(PreprocessorParams p, string directiveName, FilePosition directiveStartPos)
         {
             // This function is called after the '#' has been read from the file.
 
@@ -164,7 +164,14 @@ namespace DK.Preprocessing
                     break;
                 case "#include":
                     p.reader.Ignore(directiveName.Length);
-                    if (!p.resolvingMacros) ProcessInclude(p);
+                    if (!p.resolvingMacros)
+                    {
+                        var localFileName = directiveStartPos.FileName;
+                        var localSpan = p.reader.FilePosition.FileName == localFileName
+                            ? new CodeSpan(directiveStartPos.Position, p.reader.FilePosition.Position)
+                            : new CodeSpan(directiveStartPos.Position, directiveStartPos.Position + "#include".Length);
+                        ProcessInclude(p, localFileName, localSpan);
+                    }
                     break;
                 case "#if":
                     ProcessIf(p, directiveName, false);
@@ -635,10 +642,11 @@ namespace DK.Preprocessing
             return sb.ToString();
         }
 
-        private void ProcessInclude(PreprocessorParams p)
+        private void ProcessInclude(PreprocessorParams p, string localFileName, CodeSpan directiveSpan)
         {
             string includeName = null;
             var searchSameDir = false;
+            FilePosition quoteEndPosition;
 
             var rdr = p.reader;
 
@@ -651,6 +659,7 @@ namespace DK.Preprocessing
                 rdr.Ignore(includeName.Length);
                 if (rdr.Peek() == '\"') rdr.Ignore(1);
                 searchSameDir = true;
+                quoteEndPosition = rdr.FilePosition;
             }
             else if (ch == '<')
             {
@@ -659,14 +668,22 @@ namespace DK.Preprocessing
                 rdr.Ignore(includeName.Length);
                 if (rdr.Peek() == '>') rdr.Ignore(1);
                 searchSameDir = false;
+                quoteEndPosition = rdr.FilePosition;
             }
             else return;
             if (string.IsNullOrEmpty(includeName)) return;
 
-            if (!p.suppress) AppendIncludeFile(p, includeName, searchSameDir);
+            if (!p.suppress)
+            {
+                var localSpan = localFileName == quoteEndPosition.FileName
+                    ? new CodeSpan(directiveSpan.Start, quoteEndPosition.Position)
+                    : directiveSpan;
+                AppendIncludeFile(p, includeName, searchSameDir, localFileName, localSpan);
+            }
         }
 
-        private void AppendIncludeFile(PreprocessorParams p, string fileName, bool searchSameDir)
+        private void AppendIncludeFile(PreprocessorParams p, string fileName, bool searchSameDir,
+            string localFileName, CodeSpan localSpan)
         {
             // Load the include file
             string[] parentFiles;
@@ -682,7 +699,11 @@ namespace DK.Preprocessing
             }
 
             var includeNode = _store.GetIncludeFile(_appSettings, p.fileName, fileName, searchSameDir, parentFiles);
-            if (includeNode == null) return;
+            if (includeNode == null)
+            {
+                ReportError_Local(localFileName, localSpan, CAError.CA10074, fileName);  // Cannot find include file '{0}'.
+                return;
+            }
 
             if (p.stopAtIncludeFile != null && includeNode.FullPathName.Equals(p.stopAtIncludeFile, StringComparison.OrdinalIgnoreCase))
             {
@@ -1155,7 +1176,12 @@ namespace DK.Preprocessing
 
         public void ReportError(CodeSpan span, CAError errorCode, params object[] args)
         {
-            _errors.Add(new PrepError { Span = span, ErrorCode = errorCode, Args = args });
+            _errors.Add(new PrepError(span, errorCode, args));
+        }
+
+        public void ReportError_Local(string localFileName, CodeSpan localSpan, CAError errorCode, params object[] args)
+        {
+            _errors.Add(new PrepError(localFileName, localSpan, errorCode, args));
         }
     }
 }

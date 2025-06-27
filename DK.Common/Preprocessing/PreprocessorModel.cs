@@ -896,14 +896,36 @@ namespace DK.Preprocessing
 
         public void ReportError(CodeSpan span, CAError errorCode, params object[] args)
         {
-            _errors.Add(new PrepError { Span = span, ErrorCode = errorCode, Args = args });
+            _errors.Add(new PrepError(span, errorCode, args));
+        }
+
+        public void ReportError_Local(string localFileName, CodeSpan localSpan, CAError errorCode, params object[] args)
+        {
+            _errors.Add(new PrepError(localFileName, localSpan, errorCode, args));
         }
     }
 
     public struct PrepError
     {
-        public CodeSpan Span { get; set; }
-        public CAError ErrorCode { get; set; }
-        public object[] Args { get; set; }
+        public string LocalFileName { get;  private set; }
+        public CodeSpan Span { get; private set; }
+        public CAError ErrorCode { get; private set; }
+        public object[] Args { get; private set; }
+
+        public PrepError(CodeSpan absoluteSpan, CAError errorCode, params object[] args)
+        {
+            LocalFileName = null;
+            Span = absoluteSpan;
+            ErrorCode = errorCode;
+            Args = args;
+        }
+
+        public PrepError(string localFileName, CodeSpan localSpan, CAError errorCode, params object[] args)
+        {
+            LocalFileName = localFileName;
+            Span = localSpan;
+            ErrorCode = errorCode;
+            Args = args;
+        }
     }
 }

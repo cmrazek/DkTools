@@ -56,7 +56,14 @@ namespace DK.CodeAnalysis
 
             foreach (var err in _prepModel.Errors)
             {
-                ReportErrorAbsolute(err.Span, err.ErrorCode, log: true, err.Args);
+                if (err.LocalFileName == null)
+                {
+                    ReportErrorAbsolute(err.Span, err.ErrorCode, log: true, err.Args);
+                }
+                else
+                {
+                    ReportError_Local(err.LocalFileName, err.Span, err.ErrorCode, log: true, err.Args);
+                }
             }
 
             foreach (var func in _prepModel.LocalFunctions)
@@ -248,6 +255,35 @@ namespace DK.CodeAnalysis
             }
 
             return ReportErrorLocal_Internal(filePath, fileSpan, mainFile, fileContent, errorCode, log, args);
+        }
+
+        public CAErrorTask? ReportError_Local(string localFileName, CodeSpan localSpan, CAError errorCode, bool log, params object[] args)
+        {
+            if (localSpan.IsEmpty) return null;
+
+            bool mainFile = false;
+            var errorType = errorCode.GetErrorType();
+            if (errorType == CAErrorType.ReportOutputTag)
+            {
+                mainFile = true;
+            }
+            else
+            {
+                if (_options.MaxWarnings != 0 && _options.MaxWarnings <= _mainFileTasks.Count) return null;
+                mainFile = string.Equals(localFileName, _filePath, StringComparison.OrdinalIgnoreCase);
+            }
+
+            string fileContent = null;
+            foreach (var incl in _prepModel.IncludeDependencies)
+            {
+                if (incl.FileName.EqualsI(localFileName))
+                {
+                    fileContent = incl.Content;
+                    break;
+                }
+            }
+
+            return ReportErrorLocal_Internal(localFileName, localSpan, mainFile, fileContent, errorCode, log, args);
         }
 
         private CAErrorTask? ReportErrorLocal_Internal(string filePath, CodeSpan fileSpan, bool mainFile, string fileContent,

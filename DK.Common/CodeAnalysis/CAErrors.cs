@@ -30,8 +30,15 @@ namespace DK.CodeAnalysis
 
         [ErrorMessage("Expected identifier to follow '$'.")]
         CA10005,
+
+        [ErrorMessage("Expected expression.")]  // In brackets
+        CA10009,
+
+        [ErrorMessage("Expected ';'.")]
+        CA10015,
         #endregion
 
+        #region Operators (0100-0109)
         [ErrorMessage("Unknown operator '{0}'.")]
         CA10006,
 
@@ -41,10 +48,6 @@ namespace DK.CodeAnalysis
         [ErrorMessage("Operator '{0}' expects value on right.")]
         CA10008,
 
-        [ErrorMessage("Expected expression.")]  // In brackets
-        CA10009,
-
-        #region Operator Simplification (0100-0109)
         [ErrorMessage("Operator '{0}' expects assignable value on left.")]
         CA10100,
 
@@ -74,20 +77,6 @@ namespace DK.CodeAnalysis
         [ErrorMessage("Variable '{0}' has already been declared.")]
         CA10113,
         #endregion
-
-        [ErrorMessage("Expected value after 'return'.")]
-        CA10014,
-
-        [ErrorMessage("Expected ';'.")]
-        CA10015,
-
-        [ErrorMessage("Unreachable code.")]
-        [Warning]
-        CA10016,
-
-        [ErrorMessage("Not all code branches return a value.")]
-        [Warning]
-        CA10017,
 
         [ErrorMessage("Expected condition after '{0}'.")]
         CA10018,
@@ -275,8 +264,6 @@ namespace DK.CodeAnalysis
         CA10070,
         #endregion
 
-        // Last CA0073
-
         #region Function Calls (10120-10129)
         /// <summary>
         /// Deprecated function call.
@@ -316,6 +303,9 @@ namespace DK.CodeAnalysis
         #region Preprocessor (10160-10169)
         [ErrorMessage("Wrong number of arguments passed to macro. {0} passed, {1} expected.")]
         CA10160,
+
+        [ErrorMessage("Cannot find include file '{0}'.")]
+        CA10074,
         #endregion
 
         #region Function Arguments (10170-10179)
@@ -335,12 +325,27 @@ namespace DK.CodeAnalysis
         #endregion
 
         #region Function Definitions (10190-10199)
+        [ErrorMessage("Unreachable code.")]
+        [Warning]
+        CA10016,
+
+        [ErrorMessage("Not all code branches return a value.")]
+        [Warning]
+        CA10017,
+
         [ErrorMessage("Function '{0}' has already been defined.")]
         CA10190,
 
         [ErrorMessage("Argument '{0}' has already been declared.")]
         CA10191,
         #endregion
+
+        #region Return Statements
+        [ErrorMessage("Expected value after 'return'.")]
+        CA10014,
+        #endregion
+
+        // Last CA0074
     }
 
     [AttributeUsage(AttributeTargets.Field, AllowMultiple = false)]
