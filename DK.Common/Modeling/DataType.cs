@@ -104,6 +104,8 @@ namespace DK.Modeling
             name: null,
             source: new ProbeClassifiedString(ProbeClassifierType.DataType, "void"),
             valueType: ValType.Void);
+        public static readonly DataType EnumNumeric = MakeInteger(2, signed: false, "enum_t",
+            new ProbeClassifiedString(ProbeClassifierType.DataType, "enum_t"));
 
         internal delegate DataTypeDefinition GetDataTypeDelegate(string name);
         internal delegate VariableDefinition GetVariableDelegate(string name);

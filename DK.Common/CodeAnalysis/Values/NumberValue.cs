@@ -270,7 +270,11 @@ namespace DK.CodeAnalysis.Values
                 case ConversionMethod.FunctionArgument:
                 case ConversionMethod.Return:
                 case ConversionMethod.Comparison:
-                    if (toDataType.IsNumeric && DataType.Scale != 0 && toDataType.Scale != 0)
+                    if (toDataType.ValueType == ValType.Enum)
+                    {
+                        CheckTypeConversion(scope, span, DataType.EnumNumeric, method);
+                    }
+                    else if (toDataType.IsNumeric && DataType.Scale != 0 && toDataType.Scale != 0)
                     {
                         bool conversionWarning = false;
 
