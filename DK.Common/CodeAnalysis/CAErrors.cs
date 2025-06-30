@@ -36,9 +36,33 @@ namespace DK.CodeAnalysis
 
         [ErrorMessage("Expected ';'.")]
         CA10015,
+
+        [ErrorMessage("Expected condition after '{0}'.")]
+        CA10018,
+
+        [ErrorMessage("Expected '{'.")]
+        CA10019,
+
+        [ErrorMessage("Expected '('.")]
+        CA10025,
+
+        [ErrorMessage("Expected ';'.")]
+        CA10026,
+
+        [ErrorMessage("Expected ')'.")]
+        CA10027,
+
+        [ErrorMessage("Statement is not valid here.")]
+        CA10030,
+
+        [ErrorMessage("Expected '='.")]
+        CA10033,
         #endregion
 
-        #region Operators (0100-0109)
+        #region Operators
+        [ErrorMessage("Operator '?' expects ':' on right.")]
+        CA10021,
+
         [ErrorMessage("Unknown operator '{0}'.")]
         CA10006,
 
@@ -78,55 +102,6 @@ namespace DK.CodeAnalysis
         CA10113,
         #endregion
 
-        [ErrorMessage("Expected condition after '{0}'.")]
-        CA10018,
-
-        [ErrorMessage("Expected '{'.")]
-        CA10019,
-
-        [ErrorMessage("Array indexer requires variable on left.")]
-        CA10020,
-
-        [ErrorMessage("Operator '?' expects ':' on right.")]
-        CA10021,
-
-        [ErrorMessage("Only 1 or 2 index accessors allowed.")]
-        CA10022,
-
-        [ErrorMessage("'break' is not valid here.")]
-        CA10023,
-
-        [ErrorMessage("'continue' is not valid here.")]
-        CA10024,
-
-        [ErrorMessage("Expected '('.")]
-        CA10025,
-
-        [ErrorMessage("Expected ';'.")]
-        CA10026,
-
-        [ErrorMessage("Expected ')'.")]
-        CA10027,
-
-        [ErrorMessage("Expected case value.")]
-        CA10028,
-
-        [ErrorMessage("Expected ':'.")]
-        CA10029,
-
-        [ErrorMessage("Statement is not valid here.")]
-        CA10030,
-
-        [ErrorMessage("Switch fall-throughs are inadvisable.")]
-        [Warning]
-        CA10031,
-
-        [ErrorMessage("Duplicate default case.")]
-        CA10032,
-
-        [ErrorMessage("Expected '='.")]
-        CA10033,
-
         #region Select Statements
         [ErrorMessage("Expected '{0}'.")]	// Used for select statements
         CA10034,
@@ -154,6 +129,21 @@ namespace DK.CodeAnalysis
 
         [ErrorMessage("Assignment in select where clause.")]
         CA10073,
+        #endregion
+
+        #region Switch Statements
+        [ErrorMessage("Expected case value.")]
+        CA10028,
+
+        [ErrorMessage("Expected ':'.")]
+        CA10029,
+
+        [ErrorMessage("Switch fall-throughs are inadvisable.")]
+        [Warning]
+        CA10031,
+
+        [ErrorMessage("Duplicate default case.")]
+        CA10032,
         #endregion
 
         #region Conditional Statements
@@ -319,9 +309,18 @@ namespace DK.CodeAnalysis
         CA10172,
         #endregion
 
-        #region Arrays (10180-10189)
+        #region Arrays
+        [ErrorMessage("Array indexer requires variable on left.")]
+        CA10020,
+
+        [ErrorMessage("Only 1 or 2 index accessors allowed.")]
+        CA10022,
+
         [ErrorMessage("Expected {0} array indexers but got {1}.")]
         CA10180,
+
+        [ErrorMessage("Expected array indexer to follow variable.")]
+        CA10075,
         #endregion
 
         #region Function Definitions (10190-10199)
@@ -345,7 +344,15 @@ namespace DK.CodeAnalysis
         CA10014,
         #endregion
 
-        // Last CA0074
+        #region Break / Continue
+        [ErrorMessage("'break' is not valid here.")]
+        CA10023,
+
+        [ErrorMessage("'continue' is not valid here.")]
+        CA10024,
+        #endregion
+
+        // Last CA10075
     }
 
     [AttributeUsage(AttributeTargets.Field, AllowMultiple = false)]

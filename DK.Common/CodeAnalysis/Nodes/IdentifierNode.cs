@@ -64,6 +64,13 @@ namespace DK.CodeAnalysis.Nodes
                     scope.CodeAnalyzer.ReportError(Span, CAError.CA10180, varDef.ArrayLengths.Length, _arrayAccessExps.Length);    // Expected {0} array indexers but got {1}.
                 }
             }
+            else
+            {
+                if (_def is VariableDefinition varDef && (varDef.ArrayLengths?.Length ?? 0) > 0)
+                {
+                    scope.CodeAnalyzer.ReportError(Span, CAError.CA10075);  // Expected array indexer to follow variable.
+                }
+            }
 
             if (_subscriptAccessExps != null)
             {
@@ -130,6 +137,13 @@ namespace DK.CodeAnalysis.Nodes
                 if (_def is VariableDefinition varDef2 && _arrayAccessExps.Length != varDef2.ArrayLengths.Length)
                 {
                     scope.CodeAnalyzer.ReportError(Span, CAError.CA10180, varDef2.ArrayLengths.Length, _arrayAccessExps.Length);    // Expected {0} array indexers but got {1}.
+                }
+            }
+            else
+            {
+                if (_def is VariableDefinition varDef2 && (varDef2.ArrayLengths?.Length ?? 0) > 0)
+                {
+                    scope.CodeAnalyzer.ReportError(Span, CAError.CA10075);  // Expected array indexer to follow variable.
                 }
             }
 
