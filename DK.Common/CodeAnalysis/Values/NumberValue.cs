@@ -270,9 +270,14 @@ namespace DK.CodeAnalysis.Values
                 case ConversionMethod.FunctionArgument:
                 case ConversionMethod.Return:
                 case ConversionMethod.Comparison:
+                case ConversionMethod.Math:
                     if (toDataType.ValueType == ValType.Enum)
                     {
                         CheckTypeConversion(scope, span, DataType.EnumNumeric, method);
+                    }
+                    else if (toDataType.ValueType == ValType.Char)
+                    {
+                        CheckTypeConversion(scope, span, DataType.CharNumeric, method);
                     }
                     else if (toDataType.IsNumeric && DataType.Scale != 0 && toDataType.Scale != 0)
                     {
@@ -352,6 +357,7 @@ namespace DK.CodeAnalysis.Values
                     else
                     {
                         // literal + variable
+                        rightValue.CheckTypeConversion(scope, span, DataType, ConversionMethod.Math);
                     }
                 }
                 else
@@ -359,6 +365,7 @@ namespace DK.CodeAnalysis.Values
                     if (numRightValue._num.HasValue)
                     {
                         // variable + literal
+                        rightValue.CheckTypeConversion(scope, span, DataType, ConversionMethod.Math);
                     }
                     else
                     {

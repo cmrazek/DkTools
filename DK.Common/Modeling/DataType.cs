@@ -106,6 +106,8 @@ namespace DK.Modeling
             valueType: ValType.Void);
         public static readonly DataType EnumNumeric = MakeInteger(2, signed: false, "enum_t",
             new ProbeClassifiedString(ProbeClassifierType.DataType, "enum_t"));
+        public static readonly DataType CharNumeric = MakeInteger(2, signed: false, "char",
+            new ProbeClassifiedString(ProbeClassifierType.DataType, "char"));
 
         internal delegate DataTypeDefinition GetDataTypeDelegate(string name);
         internal delegate VariableDefinition GetVariableDelegate(string name);

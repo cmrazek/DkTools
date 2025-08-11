@@ -482,6 +482,44 @@ namespace DK.CodeAnalysis.Nodes
                 return resultValue.CloneNonLiteral();
             }
         }
+
+        public override DataType DataType
+        {
+            get
+            {
+                switch (_type)
+                {
+                    case OperatorType.Assign:
+                    case OperatorType.AssignMultiply:
+                    case OperatorType.AssignDivide:
+                    case OperatorType.AssignModulus:
+                    case OperatorType.AssignAdd:
+                    case OperatorType.AssignSubtract:
+                        return _leftNode?.DataType;
+                    case OperatorType.Multiply:
+                    case OperatorType.Divide:
+                    case OperatorType.Modulus:
+                    case OperatorType.Add:
+                    case OperatorType.Subtract:
+                        return _leftNode?.DataType ?? _rightNode?.DataType;
+                    case OperatorType.CompareEqual:
+                    case OperatorType.CompareNotEqual:
+                    case OperatorType.CompareLessThan:
+                    case OperatorType.CompareGreaterThan:
+                    case OperatorType.CompareLessThanOrEqual:
+                    case OperatorType.CompareGreaterThanOrEqual:
+                    case OperatorType.And:
+                    case OperatorType.Or:
+                    case OperatorType.In:
+                    case OperatorType.Like:
+                        return DataType.Int;
+                    case OperatorType.Negate:
+                        return _rightNode?.DataType;
+                    default:
+                        return null;
+                }
+            }
+        }
     }
 
     class InvalidOperatorTypeException : Exception { }
