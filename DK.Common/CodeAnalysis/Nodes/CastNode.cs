@@ -20,7 +20,12 @@ namespace DK.CodeAnalysis.Nodes
 
         public override string ToString() => $"(cast to {DataType.ToCodeString()})";
 
-        public override void Execute(CAScope scope) { }
+        public override void Execute(CAScope scope)
+        {
+            // A cast would only get executed (not read) when casting a function
+            // to (void) to avoid writing to the report stream.
+            ReadValue(scope);   // Don't do anything with the return value
+        }
 
         public override Value ReadValue(CAScope scope)
         {
