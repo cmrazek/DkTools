@@ -18,7 +18,7 @@ namespace DK.CodeAnalysis.Nodes
             _expression = expression;
         }
 
-        public override string ToString() => $"(cast to {DataType.ToCodeString()})";
+        public override string ToString() => $"(cast to {DataType.ToCodeString()}){_expression}";
 
         public override void Execute(CAScope scope)
         {

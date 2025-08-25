@@ -42,5 +42,7 @@ namespace DK.CodeAnalysis.Nodes
             _parentNode.OnUsed(scope);
             _childNode.OnUsed(scope);
         }
+
+        public override string ToString() => _childNode?.ToString() ?? nameof(ParentChildNode);
     }
 }

@@ -28,7 +28,7 @@ namespace DK.CodeAnalysis.Statements
             p = p.Clone(this);
             var code = p.Code;
 
-            _condExp = ExpressionNode.Read(p, null);
+            _condExp = ExpressionNode.Read(p, refDataType: null);
             if (_condExp == null)
             {
                 ReportError(keywordSpan, CAError.CA10018, "switch");	// Expected condition after '{0}'.

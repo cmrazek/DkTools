@@ -14,7 +14,7 @@ namespace DK.CodeAnalysis.Statements
         {
             p = p.Clone(this);
 
-            _cond = ExpressionNode.Read(p, null);
+            _cond = ExpressionNode.Read(p, refDataType: null, errorIfNothingFound: true);
             if (_cond == null)
             {
                 ReportError(keywordSpan, CAError.CA10018, "if");	// Expected condition after '{0}'.
@@ -35,7 +35,7 @@ namespace DK.CodeAnalysis.Statements
             }
         }
 
-        public override string ToString() => new string[] { "while (", _cond?.ToString(), ")..." }.Combine();
+        public override string ToString() => $"while {_cond} {{...}}";
 
         public override void Execute(CAScope scope)
         {

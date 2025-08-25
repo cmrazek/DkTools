@@ -57,6 +57,9 @@ namespace DK.CodeAnalysis
 
         [ErrorMessage("Expected '='.")]
         CA10033,
+
+        [ErrorMessage("Unmatched '{0}'.")]
+        CA10076,
         #endregion
 
         #region Operators
@@ -352,7 +355,7 @@ namespace DK.CodeAnalysis
         CA10024,
         #endregion
 
-        // Last CA10075
+        // Last CA10076
     }
 
     [AttributeUsage(AttributeTargets.Field, AllowMultiple = false)]

@@ -75,7 +75,7 @@ namespace DK.CodeAnalysis.Statements
             var stmt = new SimpleStatement(p.CodeAnalyzer);
             p = p.Clone(stmt);
 
-            var exp = ExpressionNode.Read(p, null);
+            var exp = ExpressionNode.Read(p, refDataType: null, errorIfNothingFound: true);
             if (exp != null)
             {
                 stmt.AddNode(exp);
@@ -101,8 +101,6 @@ namespace DK.CodeAnalysis.Statements
             if (stmt.NumChildren == 0) return null;
             return stmt;
         }
-
-
 
         public virtual void Execute(CAScope scope)
         {

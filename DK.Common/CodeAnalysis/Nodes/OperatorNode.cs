@@ -184,7 +184,6 @@ namespace DK.CodeAnalysis.Nodes
         }
 
         public override bool IsReportable => false;
-        public override string ToString() => OperatorText(_type);
 
         public override int Precedence
         {
@@ -518,6 +517,40 @@ namespace DK.CodeAnalysis.Nodes
                     default:
                         return null;
                 }
+            }
+        }
+
+        public override string ToString()
+        {
+            switch (_type)
+            {
+                case OperatorType.Multiply:
+                case OperatorType.Divide:
+                case OperatorType.Modulus:
+                case OperatorType.Add:
+                case OperatorType.Subtract:
+                case OperatorType.CompareLessThan:
+                case OperatorType.CompareGreaterThan:
+                case OperatorType.CompareLessThanOrEqual:
+                case OperatorType.CompareGreaterThanOrEqual:
+                case OperatorType.CompareEqual:
+                case OperatorType.CompareNotEqual:
+                case OperatorType.And:
+                case OperatorType.Or:
+                case OperatorType.Like:
+                case OperatorType.Assign:
+                case OperatorType.AssignMultiply:
+                case OperatorType.AssignDivide:
+                case OperatorType.AssignModulus:
+                case OperatorType.AssignAdd:
+                case OperatorType.AssignSubtract:
+                    return $"{_leftNode?.ToString()} {OperatorText(_type)} {_rightNode?.ToString()}";
+
+                case OperatorType.Negate:
+                    return $"-{_rightNode?.ToString()}";
+
+                default:
+                    return OperatorText(_type);
             }
         }
     }

@@ -10,7 +10,15 @@ namespace DK.CodeAnalysis.Nodes
 {
     internal static class ExpressionNode
     {
-        public static Node Read(ReadParams p, DataType refDataType, int leftOperatorPrecedence = 0)
+        /// <summary>
+        /// Reads an expression from the code.
+        /// </summary>
+        /// <param name="p">Read parameters/context</param>
+        /// <param name="refDataType">The expected data type that will fit this expression.</param>
+        /// <param name="leftOperatorPrecedence">The precedence of the operator to the left.</param>
+        /// <param name="errorIfNothingFound">If true but nothing could be parsed, then an UnknownNode will be returned with an error.</param>
+        /// <returns></returns>
+        public static Node Read(ReadParams p, DataType refDataType, int leftOperatorPrecedence = 0, bool errorIfNothingFound = false)
         {
             var code = p.Code;
             Node node = null;
@@ -110,6 +118,23 @@ namespace DK.CodeAnalysis.Nodes
                         node = operatorNode;
                     }
                     else break;
+                }
+
+                return node;
+            }
+
+            // If we got here, then something is still ahead, but couldn't be anticipated.
+            // This is probably a syntax error.
+            if (errorIfNothingFound && code.Read())
+            {
+                switch (code.Text)
+                {
+                    case ")":
+                    case "]":
+                    case "}":
+                        return new UnknownNode(p.Statement, code.Span, code.Text, CAError.CA10076, code.Text);  // Unmatched '{0}'.
+                    default:
+                        return new UnknownNode(p.Statement, code.Span, code.Text);
                 }
             }
 
@@ -360,7 +385,7 @@ namespace DK.CodeAnalysis.Nodes
                             }
                             else if (code.ReadExact(','))
                             {
-                                var exp2 = ExpressionNode.Read(p, null);
+                                var exp2 = ExpressionNode.Read(p, refDataType: null);
                                 if (exp2 != null)
                                 {
                                     if (code.ReadExact(']'))
@@ -495,12 +520,12 @@ namespace DK.CodeAnalysis.Nodes
 
             if (code.ReadExact('['))
             {
-                var exp1 = ExpressionNode.Read(p, null);
+                var exp1 = ExpressionNode.Read(p, refDataType: null);
                 if (exp1 != null)
                 {
                     if (code.ReadExact(','))
                     {
-                        var exp2 = ExpressionNode.Read(p, null);
+                        var exp2 = ExpressionNode.Read(p, refDataType: null);
                         if (exp2 != null)
                         {
                             if (code.ReadExact(']'))
