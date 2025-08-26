@@ -14,24 +14,24 @@ namespace DK.Preprocessing
 {
     public class PreprocessorModel
     {
-        private DkAppSettings _appSettings;
-        private CodeSource _source;
-        private CodeParser _code;
-        private DefinitionProvider _defProv;
-        private string _fileName;
-        private string _fileNameWithoutExtension;
-        private string _className;
-        private Dictionary<string, PrepVariable> _globalVars = new Dictionary<string, PrepVariable>();
-        private Dictionary<string, FunctionDefinition> _externFuncs = new Dictionary<string, FunctionDefinition>();
-        private List<LocalFunction> _localFuncs = new List<LocalFunction>();
-        private FileContext _fileContext;
-        private bool _visible;
-        private IncludeDependency[] _includeDependencies;
+        private readonly DkAppSettings _appSettings;
+        private readonly CodeSource _source;
+        private readonly CodeParser _code;
+        private readonly DefinitionProvider _defProv;
+        private readonly string _fileName;
+        private readonly string _fileNameWithoutExtension;
+        private readonly string _className;
+        private readonly Dictionary<string, PrepVariable> _globalVars = new Dictionary<string, PrepVariable>();
+        private readonly Dictionary<string, FunctionDefinition> _externFuncs = new Dictionary<string, FunctionDefinition>();
+        private readonly List<LocalFunction> _localFuncs = new List<LocalFunction>();
+        private readonly FileContext _fileContext;
+        private readonly bool _visible;
+        private readonly IncludeDependency[] _includeDependencies;
         private Preprocessor _prep;
-        private List<Definition> _globalDefs = new List<Definition>();
-        private CancellationToken _cancel;
-        private List<PrepError> _errors = new List<PrepError>();
-        private CodeScanMode _scanMode;
+        private readonly List<Definition> _globalDefs = new List<Definition>();
+        private readonly CancellationToken _cancel;
+        private readonly List<PrepError> _errors = new List<PrepError>();
+        private readonly CodeScanMode _scanMode;
 
         internal PreprocessorModel(
             DkAppSettings appSettings,
@@ -71,16 +71,13 @@ namespace DK.Preprocessing
 
         private void Parse()
         {
-            DataType dataType;
-            int pos;
-
             while (!_code.EndOfFile)
             {
                 _cancel.ThrowIfCancellationRequested();
 
-                if (TryReadDataType(out dataType, out pos))
+                if (TryReadDataType(out DataType dataType, out int pos))
                 {
-                    AfterRootDataType(dataType, pos, FunctionPrivacy.Public, false);
+                    AfterRootDataType(dataType, pos, FunctionPrivacy.Public, false, 0);
                     continue;
                 }
 
@@ -92,26 +89,36 @@ namespace DK.Preprocessing
                         switch (_code.Text)
                         {
                             case "static":
-                                AfterRootStatic(_code.TokenStartPostion);
+                                AfterRootStatic(_code.TokenStartPostion, 0);
                                 break;
                             case "public":
-                                AfterRootPrivacy(_code.Text, _code.TokenStartPostion, FunctionPrivacy.Public);
+                                AfterRootPrivacy(_code.TokenStartPostion, FunctionPrivacy.Public, 0);
                                 break;
                             case "private":
-                                AfterRootPrivacy(_code.Text, _code.TokenStartPostion, FunctionPrivacy.Private);
+                                AfterRootPrivacy(_code.TokenStartPostion, FunctionPrivacy.Private, 0);
                                 break;
                             case "protected":
-                                AfterRootPrivacy(_code.Text, _code.TokenStartPostion, FunctionPrivacy.Protected);
+                                AfterRootPrivacy(_code.TokenStartPostion, FunctionPrivacy.Protected, 0);
                                 break;
                             case "extern":
-                                AfterRootExtern(_code.TokenStartPostion);
+                                AfterRootExtern(0);
                                 break;
                             default:
-                                AfterRootIdentifier(_code.Text, _code.TokenStartPostion, _code.Span, false);
+                                AfterRootIdentifier(_code.Text, _code.TokenStartPostion, _code.Span, false, 0);
                                 break;
                         }
                         break;
-
+                    case CodeType.Preprocessor:
+                        switch (_code.Text)
+                        {
+                            case "#SQLWhereClauseCompatibleAttribute":
+                                AfterRootSqlWherePreprocessor(FunctionFlags.SQLWhereClauseCompatibleAttribute);
+                                break;
+                            case "#SQLResultsFilteringAttribute":
+                                AfterRootSqlWherePreprocessor(FunctionFlags.SQLResultsFilteringAttribute);
+                                break;
+                        }
+                        break;
                 }
             }
         }
@@ -128,7 +135,72 @@ namespace DK.Preprocessing
             return null;
         }
 
-        private void AfterRootDataType(DataType dataType, int dataTypeStartPos, FunctionPrivacy privacy, bool isExtern)
+        private void AfterRootSqlWherePreprocessor(FunctionFlags flags)
+        {
+            if (TryReadDataType(out var dataType, out var pos))
+            {
+                AfterRootDataType(dataType, pos, FunctionPrivacy.Public, false, flags);
+                return;
+            }
+
+            if (!_code.Read()) return;
+
+            switch (_code.Type)
+            {
+                case CodeType.Word:
+                    switch (_code.Text)
+                    {
+                        case "static":
+                            AfterRootStatic(_code.TokenStartPostion, flags);
+                            break;
+                        case "public":
+                            AfterRootPrivacy(_code.TokenStartPostion, FunctionPrivacy.Public, flags);
+                            break;
+                        case "private":
+                            AfterRootPrivacy(_code.TokenStartPostion, FunctionPrivacy.Private, flags);
+                            break;
+                        case "protected":
+                            AfterRootPrivacy(_code.TokenStartPostion, FunctionPrivacy.Protected, flags);
+                            break;
+                        case "extern":
+                            AfterRootExtern(flags);
+                            break;
+                        default:
+                            AfterRootIdentifier(_code.Text, _code.TokenStartPostion, _code.Span, false, flags);
+                            break;
+                    }
+                    break;
+                case CodeType.Preprocessor:
+                    switch (_code.Text)
+                    {
+                        case "#SQLWhereClauseCompatibleAttribute":
+                            if (flags.HasFlag(FunctionFlags.SQLWhereClauseCompatibleAttribute))
+                            {
+                                ReportError(_code.Span, CAError.CA10078);   // Duplicate #SQLWhereClauseCompatibleAttribute.
+                            }
+                            else if (flags.HasFlag(FunctionFlags.SQLResultsFilteringAttribute))
+                            {
+                                ReportError(_code.Span, CAError.CA10079);   // #SQLResultsFilteringAttribute cannot be used with #SQLWhereClauseCompatibleAttribute.
+                            }
+                            AfterRootSqlWherePreprocessor(flags);
+                            break;
+                        case "#SQLResultsFilteringAttribute":
+                            if (flags.HasFlag(FunctionFlags.SQLResultsFilteringAttribute))
+                            {
+                                ReportError(_code.Span, CAError.CA10080);   // Duplicate #SQLResultsFilteringAttribute.
+                            }
+                            else if (flags.HasFlag(FunctionFlags.SQLWhereClauseCompatibleAttribute))
+                            {
+                                ReportError(_code.Span, CAError.CA10081);   // #SQLWhereClauseCompatibleAttribute cannot be used with #SQLResultsFilteringAttribute.
+                            }
+                            AfterRootSqlWherePreprocessor(FunctionFlags.SQLResultsFilteringAttribute);
+                            break;
+                    }
+                    break;
+            }
+        }
+
+        private void AfterRootDataType(DataType dataType, int dataTypeStartPos, FunctionPrivacy privacy, bool isExtern, FunctionFlags flags)
         {
 #if DEBUG
             if (dataType == null) throw new ArgumentNullException("dataType");
@@ -142,7 +214,7 @@ namespace DK.Preprocessing
 
                 if (arrayLength == null && _code.ReadExact('('))
                 {
-                    StartFunctionArgs(name, dataTypeStartPos, _code.TokenStartPostion, nameSpan, dataType, privacy, isExtern);
+                    StartFunctionArgs(name, dataTypeStartPos, _code.TokenStartPostion, nameSpan, dataType, privacy, isExtern, flags);
                 }
                 else if (_code.ReadExact(';'))
                 {
@@ -157,12 +229,12 @@ namespace DK.Preprocessing
                     var def = new VariableDefinition(name, localPos, dataType, false, arrayLength, VariableType.Global, argPassByMethod: null);
                     _globalVars[name] = new PrepVariable(def, nameSpan);
                     AddGlobalDefinition(def);
-                    AfterRootDataType(dataType, dataTypeStartPos, privacy, isExtern);
+                    AfterRootDataType(dataType, dataTypeStartPos, privacy, isExtern, flags);
                 }
             }
         }
 
-        private void AfterRootStatic(int startPos)
+        private void AfterRootStatic(int startPos, FunctionFlags flags)
         {
             var dataType = DataType.TryParse(new DataType.ParseArgs(_code, _appSettings)
             {
@@ -171,11 +243,11 @@ namespace DK.Preprocessing
             });
             if (dataType != null)
             {
-                AfterRootDataType(dataType, startPos, FunctionPrivacy.Public, false);
+                AfterRootDataType(dataType, startPos, FunctionPrivacy.Public, false, flags);
             }
         }
 
-        private void AfterRootExtern(int startPos)
+        private void AfterRootExtern(FunctionFlags flags)
         {
             var dataTypeStartPos = _code.Position;
             var dataType = DataType.TryParse(new DataType.ParseArgs(_code, _appSettings)
@@ -185,24 +257,24 @@ namespace DK.Preprocessing
             });
             if (dataType != null)
             {
-                AfterRootDataType(dataType, dataTypeStartPos, FunctionPrivacy.Public, true);
+                AfterRootDataType(dataType, dataTypeStartPos, FunctionPrivacy.Public, true, flags);
             }
             else if (_code.ReadWord())
             {
-                AfterRootIdentifier(_code.Text, _code.TokenStartPostion, _code.Span, true);
+                AfterRootIdentifier(_code.Text, _code.TokenStartPostion, _code.Span, true, flags);
             }
         }
 
-        private void AfterRootIdentifier(string word, int startPos, CodeSpan wordSpan, bool isExtern)
+        private void AfterRootIdentifier(string word, int startPos, CodeSpan wordSpan, bool isExtern, FunctionFlags flags)
         {
             if (_code.ReadExact('('))
             {
                 // This function only gets called when no datatype was found. Assume int return type and public.
-                StartFunctionArgs(word, startPos, _code.TokenStartPostion, wordSpan, DataType.Int, FunctionPrivacy.Public, isExtern);
+                StartFunctionArgs(word, startPos, _code.TokenStartPostion, wordSpan, DataType.Int, FunctionPrivacy.Public, isExtern, flags);
             }
         }
 
-        private void AfterRootPrivacy(string word, int startPos, FunctionPrivacy privacy)
+        private void AfterRootPrivacy(int startPos, FunctionPrivacy privacy, FunctionFlags flags)
         {
             _code.SkipWhiteSpace();
             var dataTypeStartPos = _code.Position;
@@ -213,7 +285,7 @@ namespace DK.Preprocessing
             });
             if (dataType != null)
             {
-                AfterRootDataType(dataType, dataTypeStartPos, privacy, false);
+                AfterRootDataType(dataType, dataTypeStartPos, privacy, false, flags);
             }
             else if (_code.ReadWord())
             {
@@ -221,7 +293,7 @@ namespace DK.Preprocessing
                 var funcNameSpan = _code.Span;
                 if (_code.ReadExact('('))
                 {
-                    StartFunctionArgs(funcName, startPos, _code.TokenStartPostion, funcNameSpan, DataType.Int, privacy, false);
+                    StartFunctionArgs(funcName, startPos, _code.TokenStartPostion, funcNameSpan, DataType.Int, privacy, false, flags);
                 }
             }
         }
@@ -248,7 +320,7 @@ namespace DK.Preprocessing
         }
 
         private void StartFunctionArgs(string funcName, int allStartPos, int argStartPos, CodeSpan nameSpan,
-            DataType returnDataType, FunctionPrivacy privacy, bool isExtern)
+            DataType returnDataType, FunctionPrivacy privacy, bool isExtern, FunctionFlags flags)
         {
             var localArgStartPos = _source.GetFilePosition(argStartPos);
             var argScope = new CodeScope(localArgStartPos.Position);
@@ -272,9 +344,14 @@ namespace DK.Preprocessing
                 return;
             }
 
-            int bodyStartPos;
-            string description;
-            if (!ReadFunctionAttributes(funcName, out bodyStartPos, out description, isExtern)) return;
+            if (!ReadFunctionAttributes(funcName, out int bodyStartPos, out string description, isExtern)) return;
+
+            FunctionFlags funcFlags = flags;
+            if (_scanMode == CodeScanMode.BackgroundScanner && _fileContext == FileContext.Function &&
+                !string.Equals(funcName, _fileNameWithoutExtension, StringComparison.OrdinalIgnoreCase))
+            {
+                funcFlags |= FunctionFlags.NotGlobal;
+            }
 
             if (isExtern)
             {
@@ -289,8 +366,7 @@ namespace DK.Preprocessing
                     devDesc: description,
                     args: args,
                     serverContext: _fileContext.ToServerContext(),
-                    notGlobal: _scanMode == CodeScanMode.BackgroundScanner && _fileContext == FileContext.Function &&
-                        !string.Equals(funcName, _fileNameWithoutExtension, StringComparison.OrdinalIgnoreCase));
+                    flags: funcFlags);
                 funcSig.ApplyDocumentation(localPos.FileName);
                 var def = new FunctionDefinition(
                     signature: funcSig,
@@ -300,7 +376,7 @@ namespace DK.Preprocessing
                     bodyStartPos: 0,
                     entireSpan: CodeSpan.Empty,
                     hasVariableArgumentCount: false,
-                    notGlobal: funcSig.NotGlobal);
+                    flags: funcFlags);
                 _externFuncs[funcName] = def;
                 AddGlobalDefinition(def);
                 return;
@@ -330,6 +406,13 @@ namespace DK.Preprocessing
             var argEndPrimaryPos = _source.GetPrimaryFilePosition(argEndPos);
             var entireSpan = _source.GetPrimaryFileSpan(new CodeSpan(allStartPos, bodyEndPos));
 
+            funcFlags = flags;
+            if (_scanMode == CodeScanMode.BackgroundScanner && _fileContext == FileContext.Function &&
+                !string.Equals(funcName, _fileNameWithoutExtension, StringComparison.OrdinalIgnoreCase))
+            {
+                funcFlags |= FunctionFlags.NotGlobal;
+            }
+
             var sig = new FunctionSignature(
                 isExtern: false,
                 privacy: privacy,
@@ -339,8 +422,7 @@ namespace DK.Preprocessing
                 devDesc: description,
                 args: args,
                 serverContext: _fileContext.ToServerContext(),
-                notGlobal: _scanMode == CodeScanMode.BackgroundScanner && _fileContext == FileContext.Function &&
-                    !string.Equals(funcName, _fileNameWithoutExtension, StringComparison.OrdinalIgnoreCase));
+                flags: funcFlags);
             var funcDef = new FunctionDefinition(
                 signature: sig,
                 filePos: nameActualPos,
@@ -349,7 +431,7 @@ namespace DK.Preprocessing
                 bodyStartPos: bodyStartLocalPos,
                 entireSpan: entireSpan,
                 hasVariableArgumentCount: false,
-                notGlobal: sig.NotGlobal);
+                flags: funcFlags);
 
             _localFuncs.Add(new LocalFunction(funcDef, nameSpan, statementsStartPos, bodyEndPos, argDefList, varList));
             AddGlobalDefinition(funcDef);
@@ -389,7 +471,7 @@ namespace DK.Preprocessing
                     switch (_code.Text)
                     {
                         case "extract":
-                            ReadExtract(_code.Span);
+                            ReadExtract();
                             break;
                         default:
                             // unknown word
@@ -669,11 +751,9 @@ namespace DK.Preprocessing
             get { return _localFuncs; }
         }
 
-        private void ReadExtract(CodeSpan extractWordSpan)
+        private void ReadExtract()
         {
-            var errorSpan = extractWordSpan;
             var permanent = _code.ReadExact("permanent");
-            if (permanent) errorSpan = _code.Span;
 
             // Table name
             if (!_code.ReadWord()) return;
@@ -748,13 +828,12 @@ namespace DK.Preprocessing
         {
             var resetPos = _code.Position;
             List<int> arrayLengths = null;
-            int len;
 
             while (!_code.EndOfFile)
             {
                 if (_code.ReadExact('[') &&
                     _code.ReadNumber() &&
-                    int.TryParse(_code.Text, out len) &&
+                    int.TryParse(_code.Text, out int len) &&
                     _code.ReadExact(']'))
                 {
                     if (arrayLengths == null) arrayLengths = new List<int>();
@@ -768,7 +847,7 @@ namespace DK.Preprocessing
                 }
             }
 
-            return arrayLengths != null ? arrayLengths.ToArray() : null;
+            return arrayLengths?.ToArray();
         }
 
         public IEnumerable<IncludeDependency> IncludeDependencies
@@ -784,9 +863,9 @@ namespace DK.Preprocessing
 
         private class CodeScope
         {
-            private CodeScope _parent;
-            private int _startPos;
-            private DefinitionCollection _defs = new DefinitionCollection();
+            private readonly CodeScope _parent;
+            private readonly int _startPos;
+            private readonly DefinitionCollection _defs = new DefinitionCollection();
 
             public CodeScope(int scopeTokenStartPos)
             {
@@ -796,10 +875,7 @@ namespace DK.Preprocessing
 
             public CodeScope(CodeScope parent, int scopeTokenStartPos)
             {
-#if DEBUG
-                if (parent == null) throw new ArgumentNullException("parent");
-#endif
-                _parent = parent;
+                _parent = parent ?? throw new ArgumentNullException("parent");
                 _startPos = scopeTokenStartPos;
             }
 
@@ -826,12 +902,12 @@ namespace DK.Preprocessing
 
         public class LocalFunction
         {
-            private FunctionDefinition _def;
-            private int _startPos;
-            private int _endPos;
-            private PrepVariable[] _args;
-            private PrepVariable[] _vars;
-            private CodeSpan _nameSpan;
+            private readonly FunctionDefinition _def;
+            private readonly int _startPos;
+            private readonly int _endPos;
+            private readonly PrepVariable[] _args;
+            private readonly PrepVariable[] _vars;
+            private readonly CodeSpan _nameSpan;
 
             public LocalFunction(FunctionDefinition def, CodeSpan nameSpan, int startPos, int endPos, IEnumerable<PrepVariable> args, IEnumerable<PrepVariable> vars)
             {

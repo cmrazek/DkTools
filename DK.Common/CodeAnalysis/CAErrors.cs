@@ -267,6 +267,9 @@ namespace DK.CodeAnalysis
 
         [ErrorMessage("Function requires {0} arguments. ({1} passed)")]
         CA10121,
+
+        [ErrorMessage("This function should not be called in a select where clause.")]
+        CA10077,
         #endregion
 
         #region In Operator (0130-0139)
@@ -340,6 +343,18 @@ namespace DK.CodeAnalysis
 
         [ErrorMessage("Argument '{0}' has already been declared.")]
         CA10191,
+
+        [ErrorMessage("Duplicate #SQLWhereClauseCompatibleAttribute.")]
+        CA10078,
+
+        [ErrorMessage("#SQLResultsFilteringAttribute cannot be used with #SQLWhereClauseCompatibleAttribute.")]
+        CA10079,
+
+        [ErrorMessage("Duplicate #SQLResultsFilteringAttribute.")]
+        CA10080,
+
+        [ErrorMessage("#SQLWhereClauseCompatibleAttribute cannot be used with #SQLResultsFilteringAttribute.")]
+        CA10081,
         #endregion
 
         #region Return Statements
@@ -355,7 +370,7 @@ namespace DK.CodeAnalysis
         CA10024,
         #endregion
 
-        // Last CA10076
+        // Last CA10081
     }
 
     [AttributeUsage(AttributeTargets.Field, AllowMultiple = false)]

@@ -16,7 +16,7 @@ namespace DK.Definitions
         private CodeSpan _entireSpan;
         private bool _deprecated;
         private bool _hasVariableArgumentCount;
-        private bool _notGlobal;
+        private FunctionFlags _flags;
 
         private static readonly Regex _rxDeprecated = new Regex(@"\bdeprecated\b", RegexOptions.IgnoreCase);
 
@@ -28,7 +28,7 @@ namespace DK.Definitions
             int bodyStartPos,
             CodeSpan entireSpan,
             bool hasVariableArgumentCount,
-            bool notGlobal)
+            FunctionFlags flags)
             : base(signature.FunctionName, filePos, MakeExtRefId(signature.ClassName, signature.FunctionName))
         {
             _sig = signature ?? throw new ArgumentNullException(nameof(signature));
@@ -38,22 +38,22 @@ namespace DK.Definitions
             _entireSpan = entireSpan;
             _deprecated = _sig.Description != null ? _rxDeprecated.IsMatch(_sig.Description) : false;
             _hasVariableArgumentCount = hasVariableArgumentCount;
-            _notGlobal = notGlobal;
+            _flags = flags;
         }
 
         public FunctionDefinition(
             FunctionSignature signature,
             FilePosition filePos,
             bool hasVariableArgumentCount,
-            bool notGlobal)
+            FunctionFlags flags)
             : base(signature.FunctionName, filePos, MakeExtRefId(signature.ClassName, signature.FunctionName))
         {
             _sig = signature ?? throw new ArgumentNullException(nameof(signature));
             _argsStartPos = _argsEndPos = _bodyStartPos = 0;
             _entireSpan = CodeSpan.Empty;
-            _deprecated = _sig.Description != null ? _rxDeprecated.IsMatch(_sig.Description) : false;
+            _deprecated = _sig.Description != null && _rxDeprecated.IsMatch(_sig.Description);
             _hasVariableArgumentCount = hasVariableArgumentCount;
-            _notGlobal = notGlobal;
+            _flags = flags;
         }
 
         public FunctionDefinition(FunctionSignature signature, bool hasVariableArgumentCount)
@@ -80,7 +80,11 @@ namespace DK.Definitions
         public override bool CompletionVisible => true;
         public override ProbeCompletionType CompletionType => ProbeCompletionType.Function;
         public override ProbeClassifierType ClassifierType => ProbeClassifierType.Function;
-        public override bool NotGlobal => _notGlobal;
+
+        /// <summary>
+        /// Indicates if the function is not globally accessible (e.g. functions in .f files that don't match the file name)
+        /// </summary>
+        public override bool NotGlobal => _flags.HasFlag(FunctionFlags.NotGlobal);
 
         public override string QuickInfoTextStr
         {
@@ -179,5 +183,7 @@ namespace DK.Definitions
             return match.Groups[2].Value;
         }
         #endregion
+
+        public bool IsSafeForWhereClause => (_sig.Flags & (FunctionFlags.SQLWhereClauseCompatibleAttribute | FunctionFlags.SQLResultsFilteringAttribute)) != 0;
     }
 }

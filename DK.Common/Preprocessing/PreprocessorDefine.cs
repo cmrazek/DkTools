@@ -87,7 +87,7 @@ namespace DK.Preprocessing
                         }
 
                         var sig = new FunctionSignature(false, FunctionPrivacy.Public, DataType.Unknown, null, _name, null, args,
-                            _serverContext, notGlobal: false);
+                            _serverContext, flags: 0);
 
                         _def = new Definitions.MacroDefinition(_name, _filePos, sig, CodeParser.NormalizeText(_content));
                     }

@@ -301,6 +301,11 @@ namespace DK.CodeAnalysis.Nodes
                 {
                     ReportError(_funcNameSpan, CAError.CA10120, funcDef.Signature.Description);
                 }
+
+                if (scope.InWhereClause && !funcDef.IsSafeForWhereClause)
+                {
+                    ReportError(_funcNameSpan, CAError.CA10077); // This function should not be called in a select where clause.
+                }
             }
 
             var defArgs = _def != null ? _def.Arguments.ToArray() : new ArgumentDescriptor[0];

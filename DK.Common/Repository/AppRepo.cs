@@ -1170,7 +1170,7 @@ namespace DK.Repository
                                 signature: sig,
                                 filePos: Func_GetFilePosition(func),
                                 hasVariableArgumentCount: false,
-                                notGlobal: sig.NotGlobal
+                                flags: sig.Flags
                             ));
                         }
                         return true;
@@ -1204,7 +1204,7 @@ namespace DK.Repository
                             signature: sig,
                             filePos: Func_GetFilePosition(func),
                             hasVariableArgumentCount: false,
-                            notGlobal: sig.NotGlobal);
+                            flags: sig.Flags);
                         classDef.AddFunction(funcDef);
                         return true;
                     });
@@ -1220,7 +1220,7 @@ namespace DK.Repository
                             signature: sig,
                             filePos: Func_GetFilePosition(func),
                             hasVariableArgumentCount: false,
-                            notGlobal: sig.NotGlobal);
+                            flags: sig.Flags);
                         results.Add(funcDef);
                         return true;
                     });

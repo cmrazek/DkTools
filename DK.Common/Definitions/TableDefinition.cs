@@ -238,7 +238,7 @@ namespace DK.Definitions
                     new ArgumentDescriptor("ActionName", DataType.Char255)
                 },
                 serverContext: ServerContext.Neutral,
-                notGlobal: false)));
+                flags: 0)));
 
         Definition _clearDef;
         Definition ClearDefinition => _clearDef ?? (_clearDef = new AfsMethodDefinition(Name, "Clear",
@@ -251,7 +251,7 @@ namespace DK.Definitions
                 devDesc: "Executes the Clear form event.",
                 args: ArgumentDescriptor.EmptyArray,
                 serverContext: ServerContext.Neutral,
-                notGlobal: false)));
+                flags: 0)));
 
         Definition _connectErrorsDef;
         Definition ConnectErrorsDefinition => _connectErrorsDef ?? (_connectErrorsDef = new AfsMethodDefinition(Name, "ConnectErrors",
@@ -266,7 +266,7 @@ namespace DK.Definitions
 					new ArgumentDescriptor("SuffixName", DataType.Char255)
 				},
                 serverContext: ServerContext.Neutral,
-                notGlobal: false)));
+                flags: 0)));
 
         Definition _fieldCountDef;
         Definition FieldCountDefinition => _fieldCountDef ?? (_fieldCountDef = new AfsPropertyDefinition(
@@ -289,7 +289,7 @@ namespace DK.Definitions
                     new ArgumentDescriptor("FieldNumber ", DataType.Int)
                 },
                 serverContext: ServerContext.Neutral,
-                notGlobal: false)));
+                flags: 0)));
 
         Definition _fieldFKDef;
         Definition FieldFKDefinition => _fieldFKDef ?? (_fieldFKDef = new AfsMethodDefinition(Name, "FieldFK",
@@ -305,7 +305,7 @@ namespace DK.Definitions
                     new ArgumentDescriptor("FieldNumber", DataType.Int)
                 },
                 serverContext: ServerContext.Neutral,
-                notGlobal: false)
+                flags: 0)
             )
         );
 
@@ -323,7 +323,7 @@ namespace DK.Definitions
                     new ArgumentDescriptor("FieldNumber", DataType.Int)
                 },
                 serverContext: ServerContext.Neutral,
-                notGlobal: false)
+                flags: 0)
             )
         );
 
@@ -341,7 +341,7 @@ namespace DK.Definitions
                     new ArgumentDescriptor("FieldNumber", DataType.Int)
                 },
                 serverContext: ServerContext.Neutral,
-                notGlobal: false)
+                flags: 0)
             )
         );
 
@@ -359,7 +359,7 @@ namespace DK.Definitions
                     new ArgumentDescriptor("FieldNumber", DataType.Int)
                 },
                 serverContext: ServerContext.Neutral,
-                notGlobal: false)
+                flags: 0)
             )
         );
 
@@ -377,7 +377,7 @@ namespace DK.Definitions
                     new ArgumentDescriptor("FieldNumber", DataType.Int)
                 },
                 serverContext: ServerContext.Neutral,
-                notGlobal: false)
+                flags: 0)
             )
         );
 
@@ -432,7 +432,7 @@ namespace DK.Definitions
                 devDesc: "Executes all but the first step (Exit field) in the Add event.",
                 args: ArgumentDescriptor.EmptyArray,
                 serverContext: ServerContext.Neutral,
-                notGlobal: false)
+                flags: 0)
             )
         );
 
@@ -450,7 +450,7 @@ namespace DK.Definitions
                     new ArgumentDescriptor("ListingName", DataType.Char255)
                 },
                 serverContext: ServerContext.Neutral,
-                notGlobal: false)
+                flags: 0)
             )
         );
 
@@ -511,7 +511,7 @@ namespace DK.Definitions
                                 new ArgumentDescriptor("type", enumDataType)
                             },
                             serverContext: ServerContext.Neutral,
-                            notGlobal: false));
+                            flags: 0));
                 }
                 return _navigateDef;
             }
@@ -531,7 +531,7 @@ namespace DK.Definitions
                     new ArgumentDescriptor("SuffixName", DataType.Char255)
                 },
                 serverContext: ServerContext.Neutral,
-                notGlobal: false)
+                flags: 0)
             )
         );
 
@@ -549,7 +549,7 @@ namespace DK.Definitions
                     new ArgumentDescriptor("type", afssearch_t)
                 },
                 serverContext: ServerContext.Neutral,
-                notGlobal: false)));
+                flags: 0)));
 
         Definition _searchIndexDef;
         Definition SearchIndexDefinition => _searchIndexDef ?? (_searchIndexDef = new AfsMethodDefinition(Name, "SearchIndex",
@@ -566,7 +566,7 @@ namespace DK.Definitions
                     new ArgumentDescriptor("IndexName", DataType.Char255)
                 },
                 serverContext: ServerContext.Neutral,
-                notGlobal: false)));
+                flags: 0)));
 
         Definition _tableDef;
         Definition TableDefinition_ => _tableDef ?? (_tableDef = new AfsPropertyDefinition(
@@ -587,7 +587,7 @@ namespace DK.Definitions
                 devDesc: "Executes all but the first step (Exit field) in the Update event.",
                 args: ArgumentDescriptor.EmptyArray,
                 serverContext: ServerContext.Neutral,
-                notGlobal: false)));
+                flags: 0)));
 
         static DataType _afssearch_t;
         static DataType afssearch_t

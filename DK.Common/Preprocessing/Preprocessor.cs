@@ -213,6 +213,10 @@ namespace DK.Preprocessing
                 case "#label":
                     ProcessLabel(p, directiveName);
                     break;
+                case "#SQLWhereClauseCompatibleAttribute":
+                case "#SQLResultsFilteringAttribute":
+                    ProcessSqlFunctionDirective(p, directiveName);
+                    break;
                 default:
                     p.reader.Ignore(directiveName.Length);
                     break;
@@ -1046,6 +1050,11 @@ namespace DK.Preprocessing
             p.reader.IgnoreWhiteSpaceAndComments(true);
             var name = p.reader.PeekToken(true);
             if (name.IsWord()) p.reader.Ignore(name.Length);
+        }
+
+        private void ProcessSqlFunctionDirective(PreprocessorParams p, string directiveName)
+        {
+            p.reader.Use(directiveName.Length);
         }
 
         public enum ConditionResult

@@ -2,12 +2,33 @@
 using DK.Code;
 using DK.Diagnostics;
 using DK.Syntax;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
 namespace DK.Modeling
 {
+    [Flags]
+    public enum FunctionFlags : int
+    {
+        /// <summary>
+        /// Indicates if the function is not globally accessible (e.g. functions in .f files that don't match the file name)
+        /// </summary>
+        NotGlobal = 1,
+
+        /// <summary>
+        /// Indicates that the function is safe to use in SQL where clauses.
+        /// </summary>
+        SQLWhereClauseCompatibleAttribute = 2,
+
+        /// <summary>
+        /// Indicates that the function can be used in SQL where clauses with the acknowledgement
+        /// that it will filter results after the row is loaded.
+        /// </summary>
+        SQLResultsFilteringAttribute = 4
+    }
+
     public class FunctionSignature
     {
         private bool _extern;
@@ -19,7 +40,7 @@ namespace DK.Modeling
         private ProbeClassifiedString _prettySignature;
         private string _devDesc;
         private ServerContext _serverContext;
-        private bool _notGlobal;
+        private FunctionFlags _flags;
 
         public static readonly FunctionSignature[] EmptyArray = new FunctionSignature[0];
 
@@ -35,7 +56,7 @@ namespace DK.Modeling
             string devDesc,
             IEnumerable<ArgumentDescriptor> args,
             ServerContext serverContext,
-            bool notGlobal)
+            FunctionFlags flags)
         {
             _extern = isExtern;
             _privacy = privacy;
@@ -45,7 +66,7 @@ namespace DK.Modeling
             _devDesc = devDesc;
             _args = args.ToArray();
             _serverContext = serverContext;
-            _notGlobal = notGlobal;
+            _flags = flags;
         }
 
         public FunctionSignature Clone()
@@ -72,7 +93,12 @@ namespace DK.Modeling
         public FunctionPrivacy Privacy => _privacy;
         public DataType ReturnDataType => _returnDataType;
         public string Description => _devDesc;
-        public bool NotGlobal => _notGlobal;
+        public FunctionFlags Flags => _flags;
+
+        /// <summary>
+        /// Indicates if the function is not globally accessible (e.g. functions in .f files that don't match the file name)
+        /// </summary>
+        public bool NotGlobal => (_flags & FunctionFlags.NotGlobal) != 0;
 
         public IEnumerable<ArgumentDescriptor> Arguments
         {
@@ -220,10 +246,22 @@ namespace DK.Modeling
                 sb.Append(_serverContext == ServerContext.Server ? "sc" : "cc");
             }
 
-            if (_notGlobal)
+            if ((_flags & FunctionFlags.NotGlobal) != 0)
             {
                 if (sb.Length > 0) sb.Append(' ');
                 sb.Append("ng");
+            }
+
+            if ((_flags & FunctionFlags.SQLWhereClauseCompatibleAttribute) != 0)
+            {
+                if (sb.Length > 0) sb.Append(' ');
+                sb.Append("sqlw");
+            }
+
+            if ((_flags & FunctionFlags.SQLResultsFilteringAttribute) != 0)
+            {
+                if (sb.Length > 0) sb.Append(' ');
+                sb.Append("sqlf");
             }
 
             return sb.ToString();
@@ -241,7 +279,7 @@ namespace DK.Modeling
             string devDesc = null;
             var args = new List<ArgumentDescriptor>();
             var serverContext = ServerContext.Neutral;
-            bool notGlobal = false;
+            FunctionFlags flags = 0;
 
             var stopParsing = false;
             while (code.ReadWord() && !stopParsing)
@@ -299,7 +337,13 @@ namespace DK.Modeling
                         serverContext = ServerContext.Client;
                         break;
                     case "ng":
-                        notGlobal = true;
+                        flags |= FunctionFlags.NotGlobal;
+                        break;
+                    case "sqlw":
+                        flags |= FunctionFlags.SQLWhereClauseCompatibleAttribute;
+                        break;
+                    case "sqlf":
+                        flags |= FunctionFlags.SQLResultsFilteringAttribute;
                         break;
                     default:
                         appSettings.Log.Debug("Unexpected word '{0}' in function signature: {1}", code.Text, str);
@@ -308,7 +352,7 @@ namespace DK.Modeling
                 }
             }
 
-            return new FunctionSignature(isExtern, privacy, returnDataType, className, funcName, devDesc, args, serverContext, notGlobal);
+            return new FunctionSignature(isExtern, privacy, returnDataType, className, funcName, devDesc, args, serverContext, flags);
         }
 
         public bool Extern

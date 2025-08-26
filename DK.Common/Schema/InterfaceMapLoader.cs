@@ -107,7 +107,7 @@ namespace DK.Schema
                             devDesc: null,
                             args: args,
                             serverContext: ServerContext.Neutral,
-                            notGlobal: false);
+                            flags: 0);
 
                         var methodDef = new InterfaceMethodDefinition(intf.Definition, name, sig, dataType);
 
