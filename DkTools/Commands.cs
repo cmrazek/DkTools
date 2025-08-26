@@ -84,7 +84,6 @@ namespace DkTools
             AddCommand(mcs, CommandId.ShowDrv, ShowDrv);
             AddCommand(mcs, CommandId.DisableDeadCode, DisableDeadCode, checkedCallback: DisableDeadCode_Checked);
             AddCommand(mcs, CommandId.ShowProbeNV, ShowProbeNV);
-            AddCommand(mcs, CommandId.ShowErrors, ShowErrors, checkedCallback: ShowErrors_Checked);
             AddCommand(mcs, CommandId.RunFecErrors, RunFecErrors);
             AddCommand(mcs, CommandId.GoToNextReference, GoToNextReference);
             AddCommand(mcs, CommandId.GoToPrevReference, GoToPrevReference);
@@ -812,32 +811,6 @@ namespace DkTools
             });
         }
 
-        private static void ShowErrors(object sender, EventArgs e)
-        {
-            ThreadHelper.JoinableTaskFactory.Run(async () =>
-            {
-                await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
-                try
-                {
-                    var options = ProbeToolsPackage.Instance.EditorOptions;
-                    options.RunBackgroundFecOnSave = !options.RunBackgroundFecOnSave;
-                    options.SaveSettingsToStorage();
-
-                    ErrorTaskProvider.Instance?.RemoveAllForSource(ErrorTaskSource.BackgroundFec);
-                    ProbeToolsPackage.Instance.App?.OnRefreshAllDocumentsRequired();
-                }
-                catch (Exception ex)
-                {
-                    Shell.ShowError(ex);
-                }
-            });
-        }
-
-        private static bool ShowErrors_Checked(CommandId id)
-        {
-            return ProbeToolsPackage.Instance.EditorOptions.RunBackgroundFecOnSave;
-        }
-
         private static void RunFecErrors(object sender, EventArgs e)
         {
             ThreadHelper.JoinableTaskFactory.Run(async () =>
@@ -866,7 +839,7 @@ namespace DkTools
                 try
                 {
                     var options = ProbeToolsPackage.Instance.EditorOptions;
-                    options.RunCodeAnalysisOnSave = !options.RunCodeAnalysisOnSave;
+                    options.RunCodeAnalysisOnUserInput = !options.RunCodeAnalysisOnUserInput;
                     options.SaveSettingsToStorage();
 
                     ErrorTaskProvider.Instance?.RemoveAllForSource(ErrorTaskSource.CodeAnalysis);
@@ -881,7 +854,7 @@ namespace DkTools
 
         private static bool ShowCodeAnalysis_Checked(CommandId id)
         {
-            return ProbeToolsPackage.Instance.EditorOptions.RunCodeAnalysisOnSave;
+            return ProbeToolsPackage.Instance.EditorOptions.RunCodeAnalysisOnUserInput;
         }
 
         private static void GoToNextReference(object sender, EventArgs e)

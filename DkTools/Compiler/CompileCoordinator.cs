@@ -13,8 +13,7 @@ namespace DkTools.Compiler
     class CompileCoordinator
     {
         private ITextBuffer _textBuffer;
-        private string _fileName;
-        private bool _fecScanned;
+        private readonly string _fileName;
         private bool _codeAnalysisScanned;
         private BackgroundDeferrer _scannerDefer;
         private static SemaphoreSlim _semaphore;
@@ -41,18 +40,13 @@ namespace DkTools.Compiler
 
             _semaphore = new SemaphoreSlim(1);
 
-            if (!ProbeToolsPackage.Instance.EditorOptions.RunBackgroundFecOnSave)
-                _fecScanned = true;
-
-            if (!ProbeToolsPackage.Instance.EditorOptions.RunCodeAnalysisOnSave && !ProbeToolsPackage.Instance.EditorOptions.RunCodeAnalysisOnUserInput)
-                _codeAnalysisScanned = true;
+            if (!ProbeToolsPackage.Instance.EditorOptions.RunCodeAnalysisOnUserInput) _codeAnalysisScanned = true;
 
             _scannerDefer = new BackgroundDeferrer(Constants.BackgroundFecDelay);
             _scannerDefer.Idle += ScannerDefer_Idle;
 
             _textBuffer.Changed += TextBuffer_Changed;
             _textBuffer.ContentTypeChanged += TextBuffer_ContentTypeChanged;
-            ProbeToolsPackage.Instance.App.FileChanged += App_FileChanged;
             ProbeToolsPackage.Instance.App.RefreshAllDocumentsRequired += App_RefreshAllDocumentsRequired;
             ProbeToolsPackage.Instance.App.RefreshDocumentRequired += App_RefreshDocumentRequired;
 
@@ -78,7 +72,6 @@ namespace DkTools.Compiler
             var app = ProbeToolsPackage.Instance.App;
             if (app != null)
             {
-                app.FileChanged -= App_FileChanged;
                 app.RefreshAllDocumentsRequired -= App_RefreshAllDocumentsRequired;
                 app.RefreshDocumentRequired -= App_RefreshDocumentRequired;
             }
@@ -104,44 +97,11 @@ namespace DkTools.Compiler
             }
         }
 
-        private void App_FileChanged(object sender, DK.AppEnvironment.FileEventArgs e)
-        {
-            if (e.FilePath.Equals(_fileName, StringComparison.OrdinalIgnoreCase))
-            {
-                var actionRequired = false;
-
-                if (ProbeToolsPackage.Instance.EditorOptions.RunCodeAnalysisOnSave)
-                {
-                    _codeAnalysisScanned = false;
-                    actionRequired = true;
-
-                }
-                if (ProbeToolsPackage.Instance.EditorOptions.RunBackgroundFecOnSave)
-                {
-                    _fecScanned = false;
-                    actionRequired = true;
-                }
-
-                if (actionRequired)
-                {
-                    _cancel?.Cancel();
-                    _cancel = new CancellationTokenSource();
-                    _scannerDefer.OnActivity();
-                }
-            }
-        }
-
         private void App_RefreshAllDocumentsRequired(object sender, EventArgs e)
         {
             var actionRequired = false;
 
-            if (ProbeToolsPackage.Instance.EditorOptions.RunBackgroundFecOnSave)
-            {
-                _fecScanned = false;
-                actionRequired = true;
-            }
-
-            if (ProbeToolsPackage.Instance.EditorOptions.RunCodeAnalysisOnSave || ProbeToolsPackage.Instance.EditorOptions.RunCodeAnalysisOnUserInput)
+            if (ProbeToolsPackage.Instance.EditorOptions.RunCodeAnalysisOnUserInput)
             {
                 _codeAnalysisScanned = false;
                 actionRequired = true;
@@ -161,13 +121,7 @@ namespace DkTools.Compiler
             {
                 var actionRequired = false;
 
-                if (ProbeToolsPackage.Instance.EditorOptions.RunBackgroundFecOnSave)
-                {
-                    _fecScanned = false;
-                    actionRequired = true;
-                }
-
-                if (ProbeToolsPackage.Instance.EditorOptions.RunCodeAnalysisOnSave || ProbeToolsPackage.Instance.EditorOptions.RunCodeAnalysisOnUserInput)
+                if (ProbeToolsPackage.Instance.EditorOptions.RunCodeAnalysisOnUserInput)
                 {
                     _codeAnalysisScanned = false;
                     actionRequired = true;
@@ -185,7 +139,7 @@ namespace DkTools.Compiler
         private void ScannerDefer_Idle(object sender, BackgroundDeferrer.IdleEventArgs e)
         {
             if (_fileName == null) return;
-            if (_fecScanned && _codeAnalysisScanned) return;
+            if (_codeAnalysisScanned) return;
             if (_textBuffer == null) return;
 
             if (_cancel == null) _cancel = new CancellationTokenSource();
@@ -205,26 +159,6 @@ namespace DkTools.Compiler
 
                 try
                 {
-                    if (!_fecScanned)
-                    {
-                        try
-                        {
-                            await RunBackgroundFecAsync();
-                        }
-                        catch (OperationCanceledException ex)
-                        {
-                            ProbeToolsPackage.Log.Debug(ex);
-                        }
-                        catch (Exception ex)
-                        {
-                            ProbeToolsPackage.Log.Error(ex);
-                        }
-                        finally
-                        {
-                            _fecScanned = true;
-                        }
-                    }
-
                     if (!_codeAnalysisScanned)
                     {
                         try
