@@ -312,37 +312,46 @@ namespace DK.CodeAnalysis.Nodes
             var argIndex = 0;
             foreach (var arg in _args)
             {
-                var defArg = argIndex < defArgs.Length ? defArgs[argIndex] : null;
-                if (defArg != null)
+                var definitionArg = argIndex < defArgs.Length ? defArgs[argIndex] : null;
+                if (definitionArg != null)
                 {
-                    if (defArg.PassByMethod == PassByMethod.Reference || defArg.PassByMethod == PassByMethod.ReferencePlus)
+                    if (definitionArg.PassByMethod == PassByMethod.Reference || definitionArg.PassByMethod == PassByMethod.ReferencePlus)
                     {
                         var readScope = scope.Clone();
                         readScope.SuppressInitializedCheck = true;
                         var argValue = arg.ReadValue(readScope);
-                        if (argValue != null && defArg.DataType != null)
+                        if (argValue != null && definitionArg.DataType != null)
                         {
-                            argValue.CheckTypeConversion(scope, arg.Span, defArg.DataType, Value.ConversionMethod.FunctionArgument);
+                            argValue.CheckTypeConversion(scope, arg.Span, definitionArg.DataType, Value.ConversionMethod.FunctionArgument);
                         }
                         scope.Merge(readScope);
 
                         var writeScope = scope.Clone();
-                        arg.WriteValue(writeScope, Value.CreateUnknownFromDataType(defArg.DataType));
+                        arg.WriteValue(writeScope, Value.CreateUnknownFromDataType(definitionArg.DataType));
                         scope.Merge(writeScope);
                     }
                     else
                     {
                         var argValue = arg.ReadValue(scope);
-                        if (argValue != null && defArg.DataType != null)
+                        if (argValue != null && definitionArg.DataType != null)
                         {
-                            argValue.CheckTypeConversion(scope, arg.Span, defArg.DataType, Value.ConversionMethod.FunctionArgument);
+                            argValue.CheckTypeConversion(scope, arg.Span, definitionArg.DataType, Value.ConversionMethod.FunctionArgument);
                         }
+                    }
+
+                    if (arg is OperatorNode opNode &&
+                        opNode.OperatorType == OperatorType.Divide &&
+                        opNode.DataType.IsNumeric &&
+                        definitionArg.DataType?.IsString == true)
+                    {
+                        ReportError(Span, CAError.CA10082); // Passing the result of division into a string argument will trigger a compiler bug.
                     }
                 }
                 else
                 {
                     arg.ReadValue(scope);
                 }
+
                 argIndex++;
             }
 

@@ -103,6 +103,9 @@ namespace DK.CodeAnalysis
 
         [ErrorMessage("Variable '{0}' has already been declared.")]
         CA10113,
+
+        [ErrorMessage("Passing the result of division into a string argument will trigger a compiler bug.")]
+        CA10082,
         #endregion
 
         #region Select Statements
@@ -370,7 +373,7 @@ namespace DK.CodeAnalysis
         CA10024,
         #endregion
 
-        // Last CA10081
+        // Last CA10082
     }
 
     [AttributeUsage(AttributeTargets.Field, AllowMultiple = false)]

@@ -553,6 +553,8 @@ namespace DK.CodeAnalysis.Nodes
                     return OperatorText(_type);
             }
         }
+
+        public OperatorType OperatorType => _type;
     }
 
     class InvalidOperatorTypeException : Exception { }

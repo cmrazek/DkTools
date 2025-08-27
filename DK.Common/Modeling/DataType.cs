@@ -2054,6 +2054,7 @@ namespace DK.Modeling
         public bool Signed => _flags.HasFlag(DataTypeFlags.Signed);
         public bool IsNumeric => _valueType == ValType.Numeric;
         public bool IsInteger => _valueType == ValType.Numeric && _scale < 0;
+        public bool IsString => _valueType == ValType.String;
 
         public decimal MaxNumericValue
         {
