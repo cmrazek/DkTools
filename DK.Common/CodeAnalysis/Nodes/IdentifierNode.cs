@@ -70,6 +70,10 @@ namespace DK.CodeAnalysis.Nodes
                 {
                     scope.CodeAnalyzer.ReportError(Span, CAError.CA10075);  // Expected array indexer to follow variable.
                 }
+                else if (_def is EnumOptionDefinition && scope.IsVariable(_def.Name))
+                {
+                    scope.CodeAnalyzer.ReportError(Span, CAError.CA10083, _def.Name);  // Enum option '{0}' is ambigious with variable/argument of the same name.
+                }
             }
 
             if (_subscriptAccessExps != null)

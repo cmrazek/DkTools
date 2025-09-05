@@ -226,6 +226,10 @@ namespace DK.CodeAnalysis
         [ErrorMessage("Enum option {0} does not exist; use a single space instead of an empty string.")]
         [Warning]
         CA10060,
+
+        [ErrorMessage("Enum option '{0}' is ambigious with variable/argument of the same name.")]
+        [Warning]
+        CA10083,
         #endregion
 
         #region Aggregate Functions
@@ -373,7 +377,7 @@ namespace DK.CodeAnalysis
         CA10024,
         #endregion
 
-        // Last CA10082
+        // Last CA10083
     }
 
     [AttributeUsage(AttributeTargets.Field, AllowMultiple = false)]

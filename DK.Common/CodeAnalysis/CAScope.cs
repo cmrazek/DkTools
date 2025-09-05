@@ -170,6 +170,8 @@ namespace DK.CodeAnalysis
 			return null;
 		}
 
+		public bool IsVariable(string name) => _vars.ContainsKey(name);
+
 		public IEnumerable<Variable> Variables
 		{
 			get { return _vars.Values; }
