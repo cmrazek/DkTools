@@ -190,7 +190,7 @@ namespace DkTools.Compiler
         {
             await ProbeToolsPackage.Instance.SetStatusTextAsync($"FEC: {_fileName} (running)");
 
-            await BackgroundFec.RunAsync(_fileName, _cancel.Token);
+            await BackgroundFec.RunAsync(_fileName, _cancel?.Token ?? new CancellationToken());
 
             await ProbeToolsPackage.Instance.SetStatusTextAsync($"FEC: {_fileName} (complete)");
         }
