@@ -17,6 +17,9 @@ Visual Studio Extension for WBDK
 
 ## Change Log
 
+**Version 1.6.12 Changes:**
+- Added support for the 'longchar' data type.
+
 **Version 1.6.11 Changes:**
 - Fix code analysis no longer detecting when a function is called with the wrong number of arguments.
 - Code analysis now detects more issues.

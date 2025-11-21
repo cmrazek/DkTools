@@ -320,6 +320,24 @@ namespace DK.Modeling
             };
         }
 
+        public static DataType MakeLongString(int length, string name = null, ProbeClassifiedString source = null)
+        {
+            if (source == null)
+            {
+                var sb = new ProbeClassifiedStringBuilder();
+                sb.AddDataType("longchar");
+                sb.AddOperator("(");
+                sb.AddNumber(length.ToString());
+                sb.AddOperator(")");
+                source = sb.ToClassifiedString();
+            }
+
+            return new DataType(name, source, ValType.String)
+            {
+                _scale = length
+            };
+        }
+
         public static DataType MakeCommand(string name = null, ProbeClassifiedString source = null)
         {
             if (source == null) source = new ProbeClassifiedString(ProbeClassifierType.DataType, "command");
@@ -676,7 +694,11 @@ namespace DK.Modeling
                 case "varchar":
                 case "CHAR":
                     a.OnDataTypeKeyword(code.Span, code.Text, null);
-                    dataType = ProcessChar(a, code.Text);
+                    dataType = ProcessChar(a, code.Text, longchar: false);
+                    break;
+                case "longchar":
+                    a.OnDataTypeKeyword(code.Span, code.Text, null);
+                    dataType = ProcessChar(a, code.Text, longchar: true);
                     break;
 
                 case "string":
@@ -1040,7 +1062,7 @@ namespace DK.Modeling
             return MakeInteger(scale, signed, a.TypeName, pcs.ToClassifiedString());
         }
 
-        private static DataType ProcessChar(ParseArgs a, string tokenText)
+        private static DataType ProcessChar(ParseArgs a, string tokenText, bool longchar)
         {
             var code = a.Code;
             if (!code.ReadExact('(')) return DataType.Char;
@@ -1070,6 +1092,7 @@ namespace DK.Modeling
                         a.OnToken(brackets);
                     }
                 }
+                else if (longchar) return MakeLongString(length, a.TypeName, pcs.ToClassifiedString());
                 else return MakeString(length, a.TypeName, pcs.ToClassifiedString());
 
                 var done = false;
@@ -1087,7 +1110,8 @@ namespace DK.Modeling
                     else break;
                 }
 
-                return MakeString(length, a.TypeName, pcs.ToClassifiedString());
+                return longchar ? MakeLongString(length, a.TypeName, pcs.ToClassifiedString())
+                    : MakeString(length, a.TypeName, pcs.ToClassifiedString());
             }
             else if (a.VisibleModel)
             {
@@ -1109,16 +1133,19 @@ namespace DK.Modeling
                         }
                     }
 
-                    return MakeString(0, a.TypeName, pcs.ToClassifiedString());
+                    return longchar ? MakeLongString(0, a.TypeName, pcs.ToClassifiedString())
+                        : MakeString(0, a.TypeName, pcs.ToClassifiedString());
                 }
                 else
                 {
-                    return MakeString(0, a.TypeName, new ProbeClassifiedString(ProbeClassifierType.DataType, tokenText));
+                    return longchar ? MakeLongString(0, a.TypeName, new ProbeClassifiedString(ProbeClassifierType.DataType, tokenText))
+                        : MakeString(0, a.TypeName, new ProbeClassifiedString(ProbeClassifierType.DataType, tokenText));
                 }
             }
             else
             {
-                return MakeString(0, a.TypeName, new ProbeClassifiedString(ProbeClassifierType.DataType, tokenText));
+                return longchar ? MakeLongString(0, a.TypeName, new ProbeClassifiedString(ProbeClassifierType.DataType, tokenText))
+                    : MakeString(0, a.TypeName, new ProbeClassifiedString(ProbeClassifierType.DataType, tokenText));
             }
         }
 
